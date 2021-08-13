@@ -21,5 +21,6 @@
 	<classpathentry kind="lib" path="lib/commons-lang-2.1.jar"/>
 	<classpathentry kind="lib" path="lib/log4j-1.2.12.jar"/>
 	<classpathentry kind="lib" path="lib/xstream-1.1.2.jar"/>
+	<classpathentry kind="src" path="netosuma/src/main/java/org/emulinker"/>
 	<classpathentry kind="output" path="build"/>
 </classpath>
