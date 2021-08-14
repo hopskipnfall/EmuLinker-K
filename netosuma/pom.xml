@@ -113,23 +113,33 @@
       <systemPath>${project.basedir}/lib/commons-pool-1.2.jar</systemPath>
     </dependency>
 
+    <dependency>
+      <groupId>org.apache.commons.log4j</groupId>
+      <artifactId>log4j</artifactId>
+      <version>1.0</version>
+      <scope>system</scope>
+      <systemPath>${project.basedir}/lib/log4j-1.2.12.jar</systemPath>
+    </dependency>
+
+    <dependency>
+      <groupId>com.thoughhtworks.xstream</groupId>
+      <artifactId>xstream</artifactId>
+      <version>1.0</version>
+      <scope>system</scope>
+      <systemPath>${project.basedir}/lib/xstream-1.1.2.jar</systemPath>
+    </dependency>
+
 <!-- 
-  1 jonn  staff     8412  8 13 23:29 ant-launcher.jar
-  1 jonn  staff   958858  8 13 23:29 ant.jar
   1 jonn  staff    46725  8 13 23:17 commons-codec-1.3.jar
   1 jonn  staff   112341  8 13 23:29 commons-el.jar
   1 jonn  staff    42492  8 13 23:29 commons-pool-1.2.jar
-  1 jonn  staff    45024  8 13 23:29 hamcrest-core-1.3.jar
   1 jonn  staff   351903  8 13 23:29 jasper-compiler.jar
   1 jonn  staff   105502  8 13 23:29 jasper-runtime.jar
   1 jonn  staff   132263  8 13 23:29 javax.servlet.jar
-  1 jonn  staff   384581  8 13 23:29 junit-4.13.2.jar
-  1 jonn  staff   358085  8 13 23:29 log4j-1.2.12.jar
   1 jonn  staff   107865  8 13 23:29 nanocontainer-1.0-beta-3.jar
   1 jonn  staff   661272  8 13 23:29 org.mortbay.jetty.jar
   1 jonn  staff    76958  8 13 23:20 picocontainer-1.1.jar
-  1 jonn  staff  1203318  8 13 23:29 xercesImpl.jar
-  1 jonn  staff   246867  8 13 23:29 xstream-1.1.2.jar -->
+  1 jonn  staff  1203318  8 13 23:29 xercesImpl.jar -->
 
   </dependencies>
 
@@ -177,5 +187,11 @@
         </plugin>
       </plugins>
     </pluginManagement>
+
+    <resources>
+     <resource>
+       <directory>conf/</directory>
+     </resource>
+   </resources>
   </build>
 </project>
