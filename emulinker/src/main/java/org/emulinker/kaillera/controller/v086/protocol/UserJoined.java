@@ -74,6 +74,7 @@ public class UserJoined extends V086Message
 		return getInfoString() + "[userName=" + userName + " userID=" + userID + " ping=" + ping + " connectionType=" + org.emulinker.kaillera.model.KailleraUser.CONNECTION_TYPE_NAMES[connectionType] + "]";
 	}
 
+	@Override
 	public int getBodyLength()
 	{
 		return getNumBytes(userName) + 8;
