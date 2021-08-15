@@ -8,7 +8,7 @@ This version includes bug fixes and other improvements.
 
 ## Development
 
-From the netosuma/ directory:
+From the emulinker/ directory:
 
 | Command       | Description       |
 | ------------- | ----------------- |

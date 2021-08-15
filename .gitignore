@@ -1,6 +1,6 @@
 # Compiled class file
 build/
-netosuma/target/
+emulinker/target/
 *.class
 
 # Log file
