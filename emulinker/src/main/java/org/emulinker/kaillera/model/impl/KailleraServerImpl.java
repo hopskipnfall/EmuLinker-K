@@ -1,9 +1,9 @@
 package org.emulinker.kaillera.model.impl;
 
+import com.google.common.collect.ImmutableList;
 import java.net.InetSocketAddress;
 import java.util.*;
 import java.util.concurrent.*;
-import com.google.common.collect.ImmutableList;
 import org.apache.commons.configuration.*;
 import org.apache.commons.logging.*;
 import org.emulinker.kaillera.access.AccessManager;
