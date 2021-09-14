@@ -188,7 +188,8 @@ public class EmuUtil {
 
   public static String dumpBuffer(ByteBuffer buffer, boolean allHex) {
     StringBuilder sb = new StringBuilder();
-    buffer.mark();
+    // Cast to avoid issue with java version mismatch: https://stackoverflow.com/a/61267496/2875073
+    ((Buffer) buffer).mark();
     while (buffer.hasRemaining()) {
       byte b = buffer.get();
       if (!allHex && Character.isLetterOrDigit((char) b)) sb.append((char) b);
