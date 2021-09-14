@@ -437,7 +437,8 @@ public class V086Controller implements KailleraServerController {
     @Override
     protected ByteBuffer getBuffer() {
       // return ByteBufferMessage.getBuffer(bufferSize);
-      inBuffer.clear();
+      // Cast to avoid issue with java version mismatch: https://stackoverflow.com/a/61267496/2875073
+      ((Buffer) inBuffer).clear();
       return inBuffer;
     }
 
@@ -612,7 +613,7 @@ public class V086Controller implements KailleraServerController {
         // Cast to avoid issue with java version mismatch: https://stackoverflow.com/a/61267496/2875073
         ((Buffer) outBuffer).flip();
         super.send(outBuffer);
-        outBuffer.clear();
+        ((Buffer) outBuffer).clear();
       }
     }
   }

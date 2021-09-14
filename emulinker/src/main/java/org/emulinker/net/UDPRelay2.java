@@ -202,7 +202,8 @@ public abstract class UDPRelay2 {
         while (!stopFlag) {
           running = true;
 
-          receiveBuffer.clear();
+          // Cast to avoid issue with java version mismatch: https://stackoverflow.com/a/61267496/2875073
+          ((Buffer) receiveBuffer).clear();
 
           InetSocketAddress fromAddress = (InetSocketAddress) channel.receive(receiveBuffer);
           // Cast to avoid issue with java version mismatch: https://stackoverflow.com/a/61267496/2875073
