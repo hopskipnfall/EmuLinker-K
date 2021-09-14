@@ -2,6 +2,7 @@ package org.emulinker.net;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.channels.DatagramChannel;
 import java.util.*;
@@ -204,7 +205,8 @@ public abstract class UDPRelay2 {
           receiveBuffer.clear();
 
           InetSocketAddress fromAddress = (InetSocketAddress) channel.receive(receiveBuffer);
-          receiveBuffer.flip();
+          // Cast to avoid issue with java version mismatch: https://stackoverflow.com/a/61267496/2875073
+          ((Buffer) receiveBuffer).flip();
 
           lastActivity = System.currentTimeMillis();
 

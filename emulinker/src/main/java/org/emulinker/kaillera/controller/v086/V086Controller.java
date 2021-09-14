@@ -609,7 +609,8 @@ public class V086Controller implements KailleraServerController {
         V086Bundle outBundle = new V086Bundle(outMessages, numToSend);
         //				log.debug("<- " + outBundle);
         outBundle.writeTo(outBuffer);
-        outBuffer.flip();
+        // Cast to avoid issue with java version mismatch: https://stackoverflow.com/a/61267496/2875073
+        ((Buffer) outBuffer).flip();
         super.send(outBuffer);
         outBuffer.clear();
       }
