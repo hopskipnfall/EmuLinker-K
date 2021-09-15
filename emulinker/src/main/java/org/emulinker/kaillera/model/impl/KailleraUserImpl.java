@@ -555,9 +555,9 @@ public final class KailleraUserImpl implements KailleraUser, Executable {
       throws CreateGameException, FloodException {
     updateLastActivity();
     if (server.getUser(getID()) == null) {
-			log.error(this + " create game failed: User don't exist!");
-			return null;
-		}
+      log.error(this + " create game failed: User don't exist!");
+      return null;
+    }
 
     if (getStatus() == KailleraUser.STATUS_PLAYING) {
       log.warn(this + " create game failed: User status is Playing!"); // $NON-NLS-1$
