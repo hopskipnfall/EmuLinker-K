@@ -26,4 +26,4 @@ jobs:
     - name: Run tests
       run: mvn test --file=emulinker/pom.xml
     - name: Lint
-      run: mvn spotless:check
+      run: mvn com.diffplug.spotless:spotless-maven-plugin:check
