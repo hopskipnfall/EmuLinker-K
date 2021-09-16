@@ -1,6 +1,7 @@
 package org.emulinker.kaillera.controller.v086.protocol;
 
 import java.nio.ByteBuffer;
+import com.google.common.base.Strings;
 import org.emulinker.kaillera.controller.messaging.*;
 import org.emulinker.kaillera.relay.KailleraRelay;
 import org.emulinker.util.EmuUtil;
@@ -33,7 +34,7 @@ public abstract class Chat extends V086Message {
 
     String message = EmuUtil.readString(buffer, 0x00, KailleraRelay.config.charset());
 
-    if (userName.length() == 0) {
+    if (Strings.isNullOrEmpty(userName)) {
       return Chat_Request.create(messageNumber, message);
     } else {
       return Chat_Notification.create(messageNumber, userName, message);
