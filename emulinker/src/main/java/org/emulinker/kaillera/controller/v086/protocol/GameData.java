@@ -1,11 +1,13 @@
 package org.emulinker.kaillera.controller.v086.protocol;
 
+import com.google.auto.value.AutoValue;
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import org.emulinker.kaillera.controller.messaging.*;
 import org.emulinker.util.*;
 
-public class GameData extends V086Message {
+@AutoValue
+public abstract class GameData extends V086Message {
   public static final byte ID = 0x12;
   public static final String DESC = "Game Data";
 
@@ -14,7 +16,7 @@ public class GameData extends V086Message {
   public static void main(String args[]) throws Exception {
     byte[] data = new byte[9];
     long st = System.currentTimeMillis();
-    GameData msg = new GameData(0, data);
+    GameData msg = GameData.create(0, data);
     ByteBuffer byteByffer = ByteBuffer.allocateDirect(4096);
     for (int i = 0; i < 0xFFFF; i++) {
       msg.writeTo(byteByffer);
@@ -25,38 +27,20 @@ public class GameData extends V086Message {
     System.out.println("et=" + (System.currentTimeMillis() - st));
   }
 
-  public GameData(int messageNumber, byte[] gameData) throws MessageFormatException {
-    super(messageNumber);
+  public static AutoValue_GameData create(int messageNumber, byte[] gameData)
+      throws MessageFormatException {
+    V086Message.validateMessageNumber(messageNumber, DESC);
 
-    if (gameData.length <= 0 || gameData.length > 0xFFFF)
+    if (gameData.length <= 0 || gameData.length > 0xFFFF) {
       throw new MessageFormatException(
-          "Invalid " + getDescription() + " format: gameData.remaining() = " + gameData.length);
+          "Invalid " + DESC + " format: gameData.remaining() = " + gameData.length);
+    }
 
-    this.gameData = gameData;
-  }
-
-  @Override
-  public byte getID() {
-    return ID;
-  }
-
-  @Override
-  public String getDescription() {
-    return DESC;
+    return new AutoValue_GameData(DESC, ID, messageNumber);
   }
 
   public byte[] getGameData() {
     return gameData;
-  }
-
-  @Override
-  public String toString() {
-    StringBuilder sb = new StringBuilder();
-    sb.append(getInfoString());
-    sb.append("[gameData=");
-    sb.append(EmuUtil.arrayToString(gameData, ','));
-    sb.append("]");
-    return sb.toString();
   }
 
   @Override
@@ -88,6 +72,6 @@ public class GameData extends V086Message {
     byte[] gameData = new byte[dataSize];
     buffer.get(gameData);
 
-    return new GameData(messageNumber, gameData);
+    return GameData.create(messageNumber, gameData);
   }
 }

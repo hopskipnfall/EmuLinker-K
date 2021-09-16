@@ -25,8 +25,8 @@ public class V086BundleTest {
 
     UserInformation userInformation = (UserInformation) parsedBundle.getMessages()[0];
     // TODO: Consider using AutoValue so we can just directly compare objects.
-    assertThat(userInformation.getClientType()).isEqualTo("Project 64k 0.13 (01 Aug 2003)");
-    assertThat(userInformation.getUserName()).isEqualTo("鵺");
+    assertThat(userInformation.clientType()).isEqualTo("Project 64k 0.13 (01 Aug 2003)");
+    assertThat(userInformation.username()).isEqualTo("鵺");
   }
 
   @Test

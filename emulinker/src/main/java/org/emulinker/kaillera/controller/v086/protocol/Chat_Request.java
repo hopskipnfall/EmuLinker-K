@@ -1,21 +1,17 @@
 package org.emulinker.kaillera.controller.v086.protocol;
 
+import com.google.auto.value.AutoValue;
 import org.emulinker.kaillera.controller.messaging.MessageFormatException;
 
-public class Chat_Request extends Chat {
-  public static final String DESC = "Chat Request";
+@AutoValue
+public abstract class Chat_Request extends Chat {
+  private static final String DESC = "Chat Request";
 
-  public Chat_Request(int messageNumber, String message) throws MessageFormatException {
-    super(messageNumber, "", message);
-  }
+  private static final String EMPTY_USERNAME = "";
 
-  @Override
-  public String getDescription() {
-    return DESC;
-  }
-
-  @Override
-  public String toString() {
-    return getInfoString() + "[message=" + getMessage() + "]";
+  public static AutoValue_Chat_Request create(int messageNumber, String message)
+      throws MessageFormatException {
+    V086Message.validateMessageNumber(messageNumber, DESC);
+    return new AutoValue_Chat_Request(DESC, Chat.ID, messageNumber, message, EMPTY_USERNAME);
   }
 }
