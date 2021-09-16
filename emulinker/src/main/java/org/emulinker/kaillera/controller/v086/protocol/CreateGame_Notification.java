@@ -27,6 +27,6 @@ public abstract class CreateGame_Notification extends CreateGame {
     }
 
     return new AutoValue_CreateGame_Notification(
-        DESC, CreateGame.ID, messageNumber, clientType, gameId, romName, username, val1);
+        messageNumber, ID, DESC, username, romName, clientType, gameId, val1);
   }
 }

@@ -10,7 +10,7 @@ public abstract class JoinGame_Request extends JoinGame {
   private static final int VAL1 = 0;
   private static final String USERNAME = "";
   private static final int PING = 0;
-  private static final int USERID = 0xFFFF;
+  private static final int USER_ID = 0xFFFF;
 
   public static AutoValue_JoinGame_Request create(
       int messageNumber, int gameId, byte connectionType) throws MessageFormatException {
@@ -27,6 +27,6 @@ public abstract class JoinGame_Request extends JoinGame {
     }
 
     return new AutoValue_JoinGame_Request(
-        DESC, JoinGame.ID, messageNumber, connectionType, gameId, PING, USERID, USERNAME, VAL1);
+        messageNumber, JoinGame.ID, DESC, gameId, VAL1, USERNAME, PING, USER_ID, connectionType);
   }
 }

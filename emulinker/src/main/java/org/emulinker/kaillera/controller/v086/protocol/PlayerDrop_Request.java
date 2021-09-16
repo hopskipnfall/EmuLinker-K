@@ -14,7 +14,6 @@ public abstract class PlayerDrop_Request extends PlayerDrop {
       throws MessageFormatException {
     V086Message.validateMessageNumber(messageNumber, DESC);
 
-    return new AutoValue_PlayerDrop_Request(
-        DESC, PlayerDrop.ID, messageNumber, PLAYER_NUMBER, USERNAME);
+    return new AutoValue_PlayerDrop_Request(messageNumber, ID, DESC, USERNAME, PLAYER_NUMBER);
   }
 }

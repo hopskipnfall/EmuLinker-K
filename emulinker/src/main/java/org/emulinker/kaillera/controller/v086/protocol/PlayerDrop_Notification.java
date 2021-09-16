@@ -19,7 +19,6 @@ public abstract class PlayerDrop_Notification extends PlayerDrop {
     if (username.length() == 0) {
       throw new MessageFormatException("Invalid " + DESC + " format: userName.length == 0");
     }
-    return new AutoValue_PlayerDrop_Notification(
-        DESC, PlayerDrop.ID, messageNumber, playerNumber, username);
+    return new AutoValue_PlayerDrop_Notification(messageNumber, ID, DESC, username, playerNumber);
   }
 }

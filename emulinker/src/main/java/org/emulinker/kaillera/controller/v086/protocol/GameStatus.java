@@ -52,7 +52,7 @@ public abstract class GameStatus extends V086Message {
     }
 
     return new AutoValue_GameStatus(
-        DESC, ID, messageNumber, gameId, val1, gameStatus, numPlayers, maxPlayers);
+        messageNumber, ID, DESC, gameId, val1, gameStatus, numPlayers, maxPlayers);
   }
 
   // TODO(nue): See if we can remove this.

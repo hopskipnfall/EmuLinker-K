@@ -43,7 +43,7 @@ public abstract class UserJoined extends V086Message {
           "Invalid " + DESC + " format: connectionType out of acceptable range: " + connectionType);
 
     return new AutoValue_UserJoined(
-        DESC, ID, messageNumber, username, userId, ping, connectionType);
+        messageNumber, ID, DESC, username, userId, ping, connectionType);
   }
 
   // TODO(nue): Get rid of this.

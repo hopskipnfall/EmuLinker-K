@@ -22,7 +22,7 @@ public abstract class PlayerInformation extends V086Message {
       throws MessageFormatException {
     V086Message.validateMessageNumber(messageNumber, DESC);
 
-    return new AutoValue_PlayerInformation(DESC, ID, messageNumber, ImmutableList.copyOf(players));
+    return new AutoValue_PlayerInformation(messageNumber, ID, DESC, ImmutableList.copyOf(players));
   }
 
   public int getNumPlayers() {

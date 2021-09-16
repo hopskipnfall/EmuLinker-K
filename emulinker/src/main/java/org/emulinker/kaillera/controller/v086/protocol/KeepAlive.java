@@ -26,7 +26,7 @@ public abstract class KeepAlive extends V086Message {
           "Invalid " + DESC + " format: val out of acceptable range: " + val);
     }
 
-    return new AutoValue_KeepAlive(DESC, ID, messageNumber, val);
+    return new AutoValue_KeepAlive(messageNumber, ID, DESC, val);
   }
 
   @Override

@@ -11,6 +11,6 @@ public abstract class GameChat_Notification extends GameChat {
       int messageNumber, String username, String message) throws MessageFormatException {
     V086Message.validateMessageNumber(messageNumber, DESC);
 
-    return new AutoValue_GameChat_Notification(DESC, GameChat.ID, messageNumber, message, username);
+    return new AutoValue_GameChat_Notification(messageNumber, ID, DESC, username, message);
   }
 }

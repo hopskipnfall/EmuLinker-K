@@ -12,6 +12,6 @@ public abstract class QuitGame_Request extends QuitGame {
   public static AutoValue_QuitGame_Request create(int messageNumber) throws MessageFormatException {
     V086Message.validateMessageNumber(messageNumber, DESC);
 
-    return new AutoValue_QuitGame_Request(DESC, QuitGame.ID, messageNumber, USER_ID, USERNAME);
+    return new AutoValue_QuitGame_Request(messageNumber, ID, DESC, USERNAME, USER_ID);
   }
 }

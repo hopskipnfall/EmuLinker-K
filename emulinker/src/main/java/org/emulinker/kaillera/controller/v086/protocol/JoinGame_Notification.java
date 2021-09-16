@@ -43,7 +43,7 @@ public abstract class JoinGame_Notification extends JoinGame {
       throw new MessageFormatException("Invalid " + DESC + " format: userName.length() == 0");
     }
     return new AutoValue_JoinGame_Notification(
-        JoinGame.ID, messageNumber, connectionType, gameId, ping, userId, username, val1);
+        messageNumber, JoinGame.ID, gameId, val1, username, ping, userId, connectionType);
   }
 
   @Override

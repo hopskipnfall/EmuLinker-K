@@ -26,7 +26,7 @@ public abstract class ServerStatus extends V086Message {
     V086Message.validateMessageNumber(messageNumber, DESC);
 
     return new AutoValue_ServerStatus(
-        DESC, ID, messageNumber, ImmutableList.copyOf(users), ImmutableList.copyOf(games));
+        messageNumber, ID, DESC, ImmutableList.copyOf(users), ImmutableList.copyOf(games));
   }
 
   // TODO(nue): Get rid of this.

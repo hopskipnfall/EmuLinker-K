@@ -16,7 +16,7 @@ public abstract class CachedGameData extends V086Message {
   public static AutoValue_CachedGameData create(int messageNumber, int key)
       throws MessageFormatException {
     V086Message.validateMessageNumber(messageNumber, DESC);
-    return new AutoValue_CachedGameData(DESC, ID, messageNumber, key);
+    return new AutoValue_CachedGameData(messageNumber, ID, DESC, key);
   }
 
   @Override

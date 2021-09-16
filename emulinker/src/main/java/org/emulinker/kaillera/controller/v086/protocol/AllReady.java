@@ -13,7 +13,7 @@ public abstract class AllReady extends V086Message {
 
   public static AutoValue_AllReady create(int messageNumber) throws MessageFormatException {
     V086Message.validateMessageNumber(messageNumber, DESC);
-    return new AutoValue_AllReady(DESC, ID, messageNumber);
+    return new AutoValue_AllReady(messageNumber, ID, DESC);
   }
 
   @Override

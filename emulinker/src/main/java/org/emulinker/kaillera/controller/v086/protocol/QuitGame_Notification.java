@@ -15,6 +15,6 @@ public abstract class QuitGame_Notification extends QuitGame {
       throw new MessageFormatException(
           "Invalid " + DESC + " format: userID out of acceptable range: " + userId);
     }
-    return new AutoValue_QuitGame_Notification(DESC, QuitGame.ID, messageNumber, userId, username);
+    return new AutoValue_QuitGame_Notification(messageNumber, ID, DESC, username, userId);
   }
 }

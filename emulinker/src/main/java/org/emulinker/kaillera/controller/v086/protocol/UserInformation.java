@@ -29,7 +29,7 @@ public abstract class UserInformation extends V086Message {
     }
 
     return new AutoValue_UserInformation(
-        DESC, ID, messageNumber, username, clientType, connectionType);
+        messageNumber, ID, DESC, username, clientType, connectionType);
   }
 
   @Override

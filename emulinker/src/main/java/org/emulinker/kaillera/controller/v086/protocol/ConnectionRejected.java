@@ -35,7 +35,7 @@ public abstract class ConnectionRejected extends V086Message {
       throw new MessageFormatException("Invalid " + DESC + " format: message.length == 0");
     }
 
-    return new AutoValue_ConnectionRejected(DESC, ID, messageNumber, username, userId, message);
+    return new AutoValue_ConnectionRejected(messageNumber, ID, DESC, username, userId, message);
   }
 
   @Override

@@ -24,6 +24,6 @@ public abstract class Quit_Notification extends Quit {
       throw new MessageFormatException(
           "Invalid " + DESC + " format: userName.length == 0, (userID = " + userId + ")");
     }
-    return new AutoValue_Quit_Notification(DESC, Quit.ID, messageNumber, message, userId, username);
+    return new AutoValue_Quit_Notification(messageNumber, ID, DESC, username, userId, message);
   }
 }

@@ -10,6 +10,6 @@ public abstract class Chat_Notification extends Chat {
   public static AutoValue_Chat_Notification create(
       int messageNumber, String username, String message) throws MessageFormatException {
     V086Message.validateMessageNumber(messageNumber, DESC);
-    return new AutoValue_Chat_Notification(DESC, Chat.ID, messageNumber, message, username);
+    return new AutoValue_Chat_Notification(messageNumber, ID, DESC, username, message);
   }
 }

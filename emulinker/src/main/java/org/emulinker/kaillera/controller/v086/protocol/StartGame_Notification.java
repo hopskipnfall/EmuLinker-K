@@ -25,6 +25,6 @@ public abstract class StartGame_Notification extends StartGame {
           "Invalid " + DESC + " format: numPlayers out of acceptable range: " + numPlayers);
 
     return new AutoValue_StartGame_Notification(
-        DESC, StartGame.ID, messageNumber, numPlayers, playerNumber, val1);
+        messageNumber, ID, DESC, val1, playerNumber, numPlayers);
   }
 }

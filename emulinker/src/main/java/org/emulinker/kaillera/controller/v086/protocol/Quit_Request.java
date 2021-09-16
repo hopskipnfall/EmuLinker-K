@@ -14,6 +14,6 @@ public abstract class Quit_Request extends Quit {
       throws MessageFormatException {
     V086Message.validateMessageNumber(messageNumber, DESC);
 
-    return new AutoValue_Quit_Request(DESC, Quit.ID, messageNumber, message, USER_ID, USERNAME);
+    return new AutoValue_Quit_Request(messageNumber, ID, DESC, USERNAME, USER_ID, message);
   }
 }

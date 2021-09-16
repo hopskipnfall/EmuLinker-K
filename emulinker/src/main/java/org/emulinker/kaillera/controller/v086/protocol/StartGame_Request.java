@@ -15,6 +15,6 @@ public abstract class StartGame_Request extends StartGame {
     V086Message.validateMessageNumber(messageNumber, DESC);
 
     return new AutoValue_StartGame_Request(
-        DESC, StartGame.ID, messageNumber, NUM_PLAYERS, PLAYER_NUMBER, VAL1);
+        messageNumber, ID, DESC, VAL1, PLAYER_NUMBER, NUM_PLAYERS);
   }
 }

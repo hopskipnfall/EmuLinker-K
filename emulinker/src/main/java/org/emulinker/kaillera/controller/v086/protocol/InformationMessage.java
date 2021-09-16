@@ -26,7 +26,7 @@ public abstract class InformationMessage extends V086Message {
     if (message.length() == 0) {
       throw new MessageFormatException("Invalid " + DESC + " format: message.length == 0");
     }
-    return new AutoValue_InformationMessage(DESC, ID, messageNumber, source, message);
+    return new AutoValue_InformationMessage(messageNumber, ID, DESC, source, message);
   }
 
   @Override

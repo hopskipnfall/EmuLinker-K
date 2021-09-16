@@ -21,7 +21,7 @@ public abstract class GameKick extends V086Message {
           "Invalid " + DESC + " format: userID out of acceptable range: " + userId);
     }
 
-    return new AutoValue_GameKick(DESC, ID, messageNumber, userId);
+    return new AutoValue_GameKick(messageNumber, ID, DESC, userId);
   }
 
   @Override

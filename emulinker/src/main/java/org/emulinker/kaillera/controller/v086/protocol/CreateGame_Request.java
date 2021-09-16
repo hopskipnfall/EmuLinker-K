@@ -17,6 +17,6 @@ public abstract class CreateGame_Request extends CreateGame {
     V086Message.validateMessageNumber(messageNumber, DESC);
 
     return new AutoValue_CreateGame_Request(
-        DESC, CreateGame.ID, messageNumber, CLIENT_TYPE, GAME_ID, romName, USERNAME, VAL1);
+        messageNumber, ID, DESC, USERNAME, romName, CLIENT_TYPE, GAME_ID, VAL1);
   }
 }

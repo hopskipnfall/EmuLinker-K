@@ -29,7 +29,7 @@ public abstract class CloseGame extends V086Message {
           "Invalid " + DESC + " format: val1 out of acceptable range: " + val1);
     }
 
-    return new AutoValue_CloseGame(DESC, ID, messageNumber, gameId, val1);
+    return new AutoValue_CloseGame(messageNumber, ID, DESC, gameId, val1);
   }
 
   @Override

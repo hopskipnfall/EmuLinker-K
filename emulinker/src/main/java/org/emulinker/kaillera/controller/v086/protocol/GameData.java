@@ -36,7 +36,7 @@ public abstract class GameData extends V086Message {
           "Invalid " + DESC + " format: gameData.remaining() = " + gameData.length);
     }
 
-    return new AutoValue_GameData(DESC, ID, messageNumber);
+    return new AutoValue_GameData(messageNumber, ID, DESC);
   }
 
   public byte[] getGameData() {
