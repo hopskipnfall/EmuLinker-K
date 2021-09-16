@@ -3,6 +3,7 @@ package org.emulinker.kaillera.controller.v086.protocol;
 import com.google.auto.value.AutoValue;
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 import org.emulinker.kaillera.controller.messaging.*;
 import org.emulinker.util.*;
 
@@ -11,7 +12,7 @@ public abstract class GameData extends V086Message {
   public static final byte ID = 0x12;
   public static final String DESC = "Game Data";
 
-  private byte[] gameData;
+  public abstract byte[] gameData();
 
   public static void main(String args[]) throws Exception {
     byte[] data = new byte[9];
@@ -36,23 +37,20 @@ public abstract class GameData extends V086Message {
           "Invalid " + DESC + " format: gameData.remaining() = " + gameData.length);
     }
 
-    return new AutoValue_GameData(messageNumber, ID, DESC);
-  }
-
-  public byte[] getGameData() {
-    return gameData;
+    return new AutoValue_GameData(
+        messageNumber, ID, DESC, Arrays.copyOf(gameData, gameData.length));
   }
 
   @Override
   public int getBodyLength() {
-    return gameData.length + 3;
+    return gameData().length + 3;
   }
 
   @Override
   public void writeBodyTo(ByteBuffer buffer) {
     buffer.put((byte) 0x00);
-    UnsignedUtil.putUnsignedShort(buffer, gameData.length);
-    buffer.put(gameData);
+    UnsignedUtil.putUnsignedShort(buffer, gameData().length);
+    buffer.put(gameData());
   }
 
   public static GameData parse(int messageNumber, ByteBuffer buffer)

@@ -43,7 +43,7 @@ public class GameDataAction implements V086Action, V086GameEventHandler {
       throws FatalActionException {
     try {
       KailleraUser user = clientHandler.getUser();
-      byte[] data = ((GameData) message).getGameData();
+      byte[] data = ((GameData) message).gameData();
 
       clientHandler.getClientGameDataCache().add(data);
       user.addGameData(data);
