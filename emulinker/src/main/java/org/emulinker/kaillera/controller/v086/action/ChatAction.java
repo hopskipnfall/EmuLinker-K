@@ -1,8 +1,8 @@
 package org.emulinker.kaillera.controller.v086.action;
 
+import com.google.common.base.Strings;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
-import com.google.common.base.Strings;
 import org.apache.commons.logging.*;
 import org.emulinker.kaillera.access.AccessManager;
 import org.emulinker.kaillera.controller.messaging.MessageFormatException;

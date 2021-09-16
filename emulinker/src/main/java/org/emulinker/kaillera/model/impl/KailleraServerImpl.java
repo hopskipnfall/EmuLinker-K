@@ -474,7 +474,8 @@ public class KailleraServerImpl implements KailleraServer, Executable {
           EmuLang.getString("KailleraServerImpl.LoginErrorInvalidPing", user.getPing()));
     }
 
-    if (access == AccessManager.ACCESS_NORMAL && Strings.isNullOrEmpty(user.getName()) || user.getName().isBlank()) {
+    if (access == AccessManager.ACCESS_NORMAL && Strings.isNullOrEmpty(user.getName())
+        || user.getName().isBlank()) {
       log.info(user + " login denied: Empty UserName");
       users.remove(userListKey);
       throw new UserNameException(EmuLang.getString("KailleraServerImpl.LoginDeniedUserNameEmpty"));
@@ -768,7 +769,8 @@ public class KailleraServerImpl implements KailleraServer, Executable {
     }
 
     message = message.trim();
-    if (Strings.isNullOrEmpty(message) || message.startsWith("�") || message.startsWith("�")) return;
+    if (Strings.isNullOrEmpty(message) || message.startsWith("�") || message.startsWith("�"))
+      return;
 
     if (access == AccessManager.ACCESS_NORMAL) {
       char[] chars = message.toCharArray();

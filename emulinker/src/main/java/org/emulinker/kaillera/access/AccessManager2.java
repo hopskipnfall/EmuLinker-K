@@ -1,10 +1,10 @@
 package org.emulinker.kaillera.access;
 
+import com.google.common.base.Strings;
 import java.io.*;
 import java.net.*;
 import java.util.*;
 import java.util.concurrent.*;
-import com.google.common.base.Strings;
 import org.apache.commons.logging.*;
 import org.emulinker.kaillera.relay.KailleraRelay;
 import org.emulinker.util.WildcardStringPattern;
