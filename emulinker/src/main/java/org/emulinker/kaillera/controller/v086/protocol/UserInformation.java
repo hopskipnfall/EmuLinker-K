@@ -39,7 +39,7 @@ public abstract class UserInformation extends V086Message {
 
   // TODO(nue): Get rid of this.
   @Override
-  public String toString() {
+  public final String toString() {
     return getInfoString()
         + "[userName="
         + username()
