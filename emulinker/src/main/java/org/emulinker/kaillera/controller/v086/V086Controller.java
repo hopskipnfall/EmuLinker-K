@@ -1,10 +1,13 @@
 package org.emulinker.kaillera.controller.v086;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import java.net.InetSocketAddress;
 import java.nio.*;
 import java.util.*;
 import java.util.concurrent.*;
+import javax.inject.Inject;
+import javax.inject.Singleton;
 import org.apache.commons.configuration.*;
 import org.apache.commons.logging.*;
 import org.emulinker.kaillera.access.AccessManager;
@@ -18,7 +21,8 @@ import org.emulinker.kaillera.model.exception.*;
 import org.emulinker.net.*;
 import org.emulinker.util.*;
 
-public class V086Controller implements KailleraServerController {
+@Singleton
+public final class V086Controller implements KailleraServerController {
   private static Log log = LogFactory.getLog(V086Controller.class);
 
   private int MAX_BUNDLE_SIZE = 9;
@@ -42,12 +46,12 @@ public class V086Controller implements KailleraServerController {
 
   private V086Action[] actions = new V086Action[25];
 
+  @Inject
   public V086Controller(
       KailleraServer server,
       ThreadPoolExecutor threadPool,
       AccessManager accessManager,
-      Configuration config)
-      throws NoSuchElementException, ConfigurationException {
+      Configuration config) {
     this.threadPool = threadPool;
     this.server = server;
     this.bufferSize = config.getInt("controllers.v086.bufferSize");
@@ -68,8 +72,7 @@ public class V086Controller implements KailleraServerController {
             + maxPort
             + ".  Make sure these ports are open in your firewall!");
 
-    if (bufferSize <= 0)
-      throw new ConfigurationException("controllers.v086.bufferSize must be > 0");
+    Preconditions.checkArgument(bufferSize > 0, "controllers.v086.bufferSize must be > 0");
 
     // array access should be faster than a hash and we won't have to create
     // a new Integer each time

@@ -1,10 +1,14 @@
 package org.emulinker.kaillera.model.impl;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import java.net.InetSocketAddress;
 import java.util.*;
 import java.util.concurrent.*;
+import javax.inject.Inject;
+import javax.inject.Singleton;
 import org.apache.commons.configuration.*;
 import org.apache.commons.logging.*;
 import org.emulinker.kaillera.access.AccessManager;
@@ -15,7 +19,8 @@ import org.emulinker.kaillera.model.exception.*;
 import org.emulinker.release.*;
 import org.emulinker.util.*;
 
-public class KailleraServerImpl implements KailleraServer, Executable {
+@Singleton
+public final class KailleraServerImpl implements KailleraServer, Executable {
   protected static Log log = LogFactory.getLog(KailleraServerImpl.class);
 
   protected int maxPing;
@@ -62,14 +67,14 @@ public class KailleraServerImpl implements KailleraServer, Executable {
   private Thread triviaThread;
   private boolean switchTrivia = false;
 
+  @Inject
   public KailleraServerImpl(
       ThreadPoolExecutor threadPool,
       AccessManager accessManager,
       Configuration config,
       StatsCollector statsCollector,
       ReleaseInfo releaseInfo,
-      AutoFireDetectorFactory autoFireDetectorFactory)
-      throws NoSuchElementException, ConfigurationException {
+      AutoFireDetectorFactory autoFireDetectorFactory) {
     this.threadPool = threadPool;
     this.accessManager = accessManager;
     this.releaseInfo = releaseInfo;
@@ -101,42 +106,43 @@ public class KailleraServerImpl implements KailleraServer, Executable {
     loginMessages = loginMessagesBuilder.build();
 
     gameBufferSize = config.getInt("game.bufferSize");
-    if (gameBufferSize <= 0) throw new ConfigurationException("game.bufferSize can not be <= 0");
+    checkArgument(gameBufferSize > 0, "game.bufferSize can not be <= 0");
 
     gameTimeoutMillis = config.getInt("game.timeoutMillis");
-    if (gameTimeoutMillis <= 0)
-      throw new ConfigurationException("game.timeoutMillis can not be <= 0");
+    checkArgument(gameTimeoutMillis > 0, "game.timeoutMillis can not be <= 0");
 
     gameDesynchTimeouts = config.getInt("game.desynchTimeouts");
 
     gameAutoFireSensitivity = config.getInt("game.defaultAutoFireSensitivity");
-    if (gameAutoFireSensitivity < 0 || gameAutoFireSensitivity > 5)
-      throw new ConfigurationException("game.defaultAutoFireSensitivity must be 0-5");
+    checkArgument(
+        gameAutoFireSensitivity >= 0 && gameAutoFireSensitivity <= 5,
+        "game.defaultAutoFireSensitivity must be 0-5");
 
     List<String> connectionTypes = config.getList("server.allowedConnectionTypes");
     for (String s : connectionTypes) {
       try {
         int ct = Integer.parseInt(s);
-        if (ct < 1 || ct > 6) throw new ConfigurationException("Invalid connectionType: " + s);
+        checkArgument(ct >= 1 && ct <= 6, "Invalid connectionType: " + s);
         allowedConnectionTypes[ct] = true;
       } catch (NumberFormatException e) {
-        throw new ConfigurationException("Invalid connectionType: " + s);
+        throw new IllegalStateException("Invalid connectionType: " + s);
       }
     }
 
-    if (maxPing <= 0) throw new ConfigurationException("server.maxPing can not be <= 0");
+    checkArgument(maxPing > 0, "server.maxPing can not be <= 0");
 
-    if (maxPing > 1000) throw new ConfigurationException("server.maxPing can not be > 1000");
+    checkArgument(maxPing <= 1000, "server.maxPing can not be > 1000");
 
-    if (keepAliveTimeout <= 0)
-      throw new ConfigurationException("server.keepAliveTimeout must be > 0 (190 is recommended)");
+    checkArgument(keepAliveTimeout > 0, "server.keepAliveTimeout must be > 0 (190 is recommended)");
 
-    users = new ConcurrentHashMap<Integer, KailleraUserImpl>(maxUsers);
-    games = new ConcurrentHashMap<Integer, KailleraGameImpl>(maxGames);
+    users = new ConcurrentHashMap<>(maxUsers);
+    games = new ConcurrentHashMap<>(maxGames);
 
     boolean touchKaillera = config.getBoolean("masterList.touchKaillera", false);
 
-    if (touchKaillera) this.statsCollector = statsCollector;
+    if (touchKaillera) {
+      this.statsCollector = statsCollector;
+    }
   }
 
   @Override

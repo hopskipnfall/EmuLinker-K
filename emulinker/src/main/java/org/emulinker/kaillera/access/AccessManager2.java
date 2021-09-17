@@ -1,16 +1,19 @@
 package org.emulinker.kaillera.access;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 import com.google.common.base.Strings;
 import java.io.*;
 import java.net.*;
 import java.util.*;
 import java.util.concurrent.*;
+import javax.inject.Inject;
 import org.apache.commons.logging.*;
 import org.emulinker.kaillera.relay.KailleraRelay;
 import org.emulinker.util.WildcardStringPattern;
 import org.picocontainer.Startable;
 
-public class AccessManager2 implements AccessManager, Startable, Runnable {
+public final class AccessManager2 implements AccessManager, Startable, Runnable {
   static {
     java.security.Security.setProperty("networkaddress.cache.ttl", "60");
     java.security.Security.setProperty("networkaddress.cache.negative.ttl", "60");
@@ -35,22 +38,27 @@ public class AccessManager2 implements AccessManager, Startable, Runnable {
   private List<TempElevated> tempElevatedList = new CopyOnWriteArrayList<TempElevated>();
   private List<Silence> silenceList = new CopyOnWriteArrayList<Silence>();
 
-  public AccessManager2(ThreadPoolExecutor threadPool)
-      throws NoSuchElementException, FileNotFoundException {
+  @Inject
+  public AccessManager2(ThreadPoolExecutor threadPool) {
     this.threadPool = threadPool;
 
     URL url = AccessManager2.class.getResource("/access.cfg");
-    if (url == null) throw new FileNotFoundException("Resource not found: /access.conf");
+    checkArgument(url != null, "Resource not found: /access.conf");
 
     try {
       accessFile = new File(url.toURI());
     } catch (URISyntaxException e) {
-      throw new FileNotFoundException(e.getMessage());
+      throw new IllegalStateException("Could not parse URI", e);
     }
 
-    if (!accessFile.exists()) throw new FileNotFoundException("Resource not found: /access.conf");
+    if (!accessFile.exists()) {
+      throw new IllegalStateException(
+          new FileNotFoundException("Resource not found: /access.conf"));
+    }
 
-    if (!accessFile.canRead()) throw new FileNotFoundException("Can not read: /access.conf");
+    if (!accessFile.canRead()) {
+      throw new IllegalStateException(new FileNotFoundException("Can not read: /access.conf"));
+    }
 
     loadAccess();
 

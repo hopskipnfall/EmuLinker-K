@@ -1,9 +1,12 @@
 package org.emulinker.kaillera.controller.connectcontroller;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.concurrent.ThreadPoolExecutor;
+import javax.inject.Inject;
+import javax.inject.Singleton;
 import org.apache.commons.configuration.*;
 import org.apache.commons.logging.*;
 import org.emulinker.kaillera.access.AccessManager;
@@ -14,7 +17,9 @@ import org.emulinker.kaillera.model.exception.*;
 import org.emulinker.net.*;
 import org.emulinker.util.EmuUtil;
 
-public class ConnectController extends UDPServer {
+/** The UDP Server implementation. */
+@Singleton
+public final class ConnectController extends UDPServer {
   private static Log log = LogFactory.getLog(ConnectController.class);
 
   private ThreadPoolExecutor threadPool;
@@ -35,24 +40,23 @@ public class ConnectController extends UDPServer {
   private int connectedCount = 0;
   private int pingCount = 0;
 
+  @Inject
   public ConnectController(
       ThreadPoolExecutor threadPool,
-      KailleraServerController[] controllersArray,
+      Set<KailleraServerController> kailleraServerControllers,
       AccessManager accessManager,
-      Configuration config)
-      throws NoSuchElementException, ConfigurationException, BindException {
-    super(true);
+      Configuration config) {
+    super(/* shutdownOnExit= */ true);
 
     this.threadPool = threadPool;
     this.accessManager = accessManager;
 
     int port = config.getInt("controllers.connect.port");
     bufferSize = config.getInt("controllers.connect.bufferSize");
-    if (bufferSize <= 0)
-      throw new ConfigurationException("controllers.connect.bufferSize must be > 0");
+    checkArgument(bufferSize > 0, "controllers.connect.bufferSize must be > 0");
 
     controllersMap = new HashMap<String, KailleraServerController>();
-    for (KailleraServerController controller : controllersArray) {
+    for (KailleraServerController controller : kailleraServerControllers) {
       String[] clientTypes = controller.getClientTypes();
       for (int j = 0; j < clientTypes.length; j++) {
         log.debug("Mapping client type " + clientTypes[j] + " to " + controller);
@@ -60,7 +64,11 @@ public class ConnectController extends UDPServer {
       }
     }
 
-    super.bind(port);
+    try {
+      super.bind(port);
+    } catch (BindException e) {
+      throw new IllegalStateException(e);
+    }
 
     System.out.println("Ready to accept connections on port " + port);
     log.info("Ready to accept connections on port " + port);
