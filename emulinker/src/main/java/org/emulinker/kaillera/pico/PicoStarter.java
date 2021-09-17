@@ -1,8 +1,10 @@
 package org.emulinker.kaillera.pico;
 
 import java.time.Instant;
+import com.google.common.flogger.FluentLogger;
 
 public class PicoStarter {
+  public static final FluentLogger logger = FluentLogger.forEnclosingClass();
 
   /**
    * Main entry point for the EmuLinker Kaillera server. This method accepts no arguments. It starts
@@ -11,11 +13,14 @@ public class PicoStarter {
    * be located by using the classpath.
    */
   public static void main(String args[]) {
+    System.setProperty(
+      "flogger.backend_factory", "com.google.common.flogger.backend.log4j2.Log4j2BackendFactory#getInstance");
+
     AppComponent component = DaggerAppComponent.create();
 
-    System.out.println("EmuLinker server Starting...");
-    System.out.println(component.getReleaseInfo().getWelcome());
-    System.out.println("EmuLinker server is running @ " + Instant.now());
+    logger.atInfo().log("EmuLinker server Starting...");
+    logger.atInfo().log(component.getReleaseInfo().getWelcome());
+    logger.atInfo().log("EmuLinker server is running @ " + Instant.now());
 
     component.getKailleraServerController().start();
     component.getServer().start();
