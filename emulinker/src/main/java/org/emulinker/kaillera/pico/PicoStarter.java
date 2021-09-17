@@ -1,11 +1,8 @@
 package org.emulinker.kaillera.pico;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import java.time.Instant;
 
 public class PicoStarter {
-  private static Log log = LogFactory.getLog(PicoStarter.class);
-  public static final String CONFIG_FILE = "components.xml";
 
   /**
    * Main entry point for the EmuLinker Kaillera server. This method accepts no arguments. It starts
@@ -18,7 +15,7 @@ public class PicoStarter {
 
     System.out.println("EmuLinker server Starting...");
     System.out.println(component.getReleaseInfo().getWelcome());
-    System.out.println("EmuLinker server is running @ " + new Date());
+    System.out.println("EmuLinker server is running @ " + Instant.now());
 
     component.getKailleraServerController().start();
     component.getServer().start();
