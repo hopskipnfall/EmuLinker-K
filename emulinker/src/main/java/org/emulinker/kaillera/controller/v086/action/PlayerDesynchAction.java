@@ -1,6 +1,6 @@
 package org.emulinker.kaillera.controller.v086.action;
 
-import org.apache.commons.logging.*;
+import com.google.common.flogger.FluentLogger;
 import org.emulinker.kaillera.controller.messaging.MessageFormatException;
 import org.emulinker.kaillera.controller.v086.V086Controller;
 import org.emulinker.kaillera.controller.v086.protocol.GameChat_Notification;
@@ -8,7 +8,8 @@ import org.emulinker.kaillera.model.event.*;
 import org.emulinker.util.EmuLang;
 
 public class PlayerDesynchAction implements V086GameEventHandler {
-  private static Log log = LogFactory.getLog(PlayerDesynchAction.class);
+  private static final FluentLogger logger = FluentLogger.forEnclosingClass();
+
   private static final String desc = PlayerDesynchAction.class.getSimpleName();
   private static PlayerDesynchAction singleton = new PlayerDesynchAction();
 
@@ -45,11 +46,11 @@ public class PlayerDesynchAction implements V086GameEventHandler {
       // if (clientHandler.getUser().getStatus() == KailleraUser.STATUS_PLAYING)
       //	clientHandler.getUser().dropGame();
     } catch (MessageFormatException e) {
-      log.error("Failed to contruct GameChat_Notification message: " + e.getMessage(), e);
+      logger.atSevere().withCause(e).log("Failed to contruct GameChat_Notification message");
     }
     // catch (DropGameException e)
     // {
-    //	log.error("Failed to drop game during desynch: " + e.getMessage(), e);
+    //	logger.atSevere().withCause(e).log("Failed to drop game during desynch");
     // }
   }
 }

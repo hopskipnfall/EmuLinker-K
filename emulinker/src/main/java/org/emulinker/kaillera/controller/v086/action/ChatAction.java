@@ -1,9 +1,9 @@
 package org.emulinker.kaillera.controller.v086.action;
 
 import com.google.common.base.Strings;
+import com.google.common.flogger.FluentLogger;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
-import org.apache.commons.logging.*;
 import org.emulinker.kaillera.access.AccessManager;
 import org.emulinker.kaillera.controller.messaging.MessageFormatException;
 import org.emulinker.kaillera.controller.v086.V086Controller;
@@ -15,9 +15,9 @@ import org.emulinker.release.ReleaseInfo;
 import org.emulinker.util.EmuLang;
 
 public class ChatAction implements V086Action, V086ServerEventHandler {
-  public static final String ADMIN_COMMAND_ESCAPE_STRING = "/";
+  private static final FluentLogger logger = FluentLogger.forEnclosingClass();
 
-  private static Log log = LogFactory.getLog(ChatAction.class);
+  public static final String ADMIN_COMMAND_ESCAPE_STRING = "/";
   private static final String desc = "ChatAction";
   private static ChatAction singleton = new ChatAction();
 
@@ -63,7 +63,7 @@ public class ChatAction implements V086Action, V086ServerEventHandler {
             if (chatMessage.message().equals("/help")) checkCommands(chatMessage, clientHandler);
           } else checkCommands(chatMessage, clientHandler);
         } catch (FatalActionException e) {
-          log.warn("Admin command failed: " + e.getMessage());
+          logger.atWarning().withCause(e).log("Admin command failed");
         }
         return;
       }
@@ -76,7 +76,8 @@ public class ChatAction implements V086Action, V086ServerEventHandler {
     try {
       clientHandler.getUser().chat(chatMessage.message());
     } catch (ActionException e) {
-      log.info("Chat Denied: " + clientHandler.getUser() + ": " + chatMessage.message());
+      logger.atInfo().withCause(e).log(
+          "Chat Denied: " + clientHandler.getUser() + ": " + chatMessage.message());
 
       try {
         clientHandler.send(
@@ -85,7 +86,7 @@ public class ChatAction implements V086Action, V086ServerEventHandler {
                 "server",
                 EmuLang.getString("ChatAction.ChatDenied", e.getMessage())));
       } catch (MessageFormatException e2) {
-        log.error("Failed to contruct InformationMessage message: " + e.getMessage(), e);
+        logger.atSevere().withCause(e2).log("Failed to contruct InformationMessage message");
       }
     }
   }
@@ -294,7 +295,7 @@ public class ChatAction implements V086Action, V086ServerEventHandler {
             char[] chars = m.toCharArray();
             for (int i = 0; i < chars.length; i++) {
               if (chars[i] < 32) {
-                log.warn(user + " /msg denied: Illegal characters in message");
+                logger.atWarning().log(user + " /msg denied: Illegal characters in message");
                 try {
                   clientHandler.send(
                       InformationMessage.create(
@@ -308,7 +309,7 @@ public class ChatAction implements V086Action, V086ServerEventHandler {
             }
 
             if (m.length() > 320) {
-              log.warn(user + " /msg denied: Message Length > " + 320);
+              logger.atWarning().log(user + " /msg denied: Message Length > " + 320);
               try {
                 clientHandler.send(
                     InformationMessage.create(
@@ -413,7 +414,7 @@ public class ChatAction implements V086Action, V086ServerEventHandler {
                 char[] chars = m.toCharArray();
                 for (int i = 0; i < chars.length; i++) {
                   if (chars[i] < 32) {
-                    log.warn(user + " /msg denied: Illegal characters in message");
+                    logger.atWarning().log(user + " /msg denied: Illegal characters in message");
                     try {
                       clientHandler.send(
                           InformationMessage.create(
@@ -427,7 +428,7 @@ public class ChatAction implements V086Action, V086ServerEventHandler {
                 }
 
                 if (m.length() > 320) {
-                  log.warn(user + " /msg denied: Message Length > " + 320);
+                  logger.atWarning().log(user + " /msg denied: Message Length > " + 320);
                   try {
                     clientHandler.send(
                         InformationMessage.create(
@@ -501,9 +502,7 @@ public class ChatAction implements V086Action, V086ServerEventHandler {
           clientHandler.getUser().setIgnoreAll(true);
           user.getServer()
               .announce(
-                  clientHandler.getUser().getName() + " is now ignoring everyone!",
-                  false,
-                  null); //$NON-NLS-1$ //$NON-NLS-2$
+                  clientHandler.getUser().getName() + " is now ignoring everyone!", false, null);
         } catch (Exception e) {
         }
       } else if (chatMessage.message().equals("/unignoreall")) {
@@ -512,9 +511,7 @@ public class ChatAction implements V086Action, V086ServerEventHandler {
           clientHandler.getUser().setIgnoreAll(false);
           user.getServer()
               .announce(
-                  clientHandler.getUser().getName() + " is now unignoring everyone!",
-                  false,
-                  null); //$NON-NLS-1$ //$NON-NLS-2$
+                  clientHandler.getUser().getName() + " is now unignoring everyone!", false, null);
         } catch (Exception e) {
         }
       } else if (chatMessage.message().startsWith("/ignore")) {
@@ -582,12 +579,11 @@ public class ChatAction implements V086Action, V086ServerEventHandler {
                       + "> ID: "
                       + user.getID(),
                   false,
-                  null); //$NON-NLS-1$ //$NON-NLS-2$
+                  null);
         } catch (NoSuchElementException e) {
           KailleraUserImpl user = (KailleraUserImpl) clientHandler.getUser();
-          user.getServer()
-              .announce("Ignore User Error: /ignore <UserID>", false, user); // $NON-NLS-2$
-          log.info(
+          user.getServer().announce("Ignore User Error: /ignore <UserID>", false, user);
+          logger.atInfo().log(
               "IGNORE USER ERROR: "
                   + user.getName()
                   + ": "
@@ -639,7 +635,7 @@ public class ChatAction implements V086Action, V086ServerEventHandler {
                         + "> ID: "
                         + user.getID(),
                     false,
-                    null); //$NON-NLS-1$ //$NON-NLS-2$
+                    null);
           else
             try {
               clientHandler.send(
@@ -649,12 +645,8 @@ public class ChatAction implements V086Action, V086ServerEventHandler {
             }
         } catch (NoSuchElementException e) {
           KailleraUserImpl user = (KailleraUserImpl) clientHandler.getUser();
-          user.getServer()
-              .announce(
-                  "Unignore User Error: /ignore <UserID>",
-                  false,
-                  user); //$NON-NLS-1$ //$NON-NLS-2$
-          log.info(
+          user.getServer().announce("Unignore User Error: /ignore <UserID>", false, user);
+          logger.atInfo().withCause(e).log(
               "UNIGNORE USER ERROR: "
                   + user.getName()
                   + ": "
@@ -848,7 +840,7 @@ public class ChatAction implements V086Action, V086ServerEventHandler {
           Chat_Notification.create(
               clientHandler.getNextMessageNumber(), chatEvent.getUser().getName(), m));
     } catch (MessageFormatException e) {
-      log.error("Failed to contruct Chat_Notification message: " + e.getMessage(), e);
+      logger.atSevere().withCause(e).log("Failed to contruct Chat_Notification message");
     }
   }
 }

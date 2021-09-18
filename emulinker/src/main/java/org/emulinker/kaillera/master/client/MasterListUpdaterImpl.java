@@ -1,8 +1,8 @@
 package org.emulinker.kaillera.master.client;
 
+import com.google.common.flogger.FluentLogger;
 import java.util.concurrent.ThreadPoolExecutor;
 import org.apache.commons.configuration.Configuration;
-import org.apache.commons.logging.*;
 import org.emulinker.kaillera.controller.connectcontroller.ConnectController;
 import org.emulinker.kaillera.master.*;
 import org.emulinker.kaillera.master.StatsCollector;
@@ -12,7 +12,7 @@ import org.emulinker.util.Executable;
 import org.picocontainer.Startable;
 
 public class MasterListUpdaterImpl implements MasterListUpdater, Executable, Startable {
-  private static Log log = LogFactory.getLog(MasterListUpdaterImpl.class);
+  private static final FluentLogger logger = FluentLogger.forEnclosingClass();
 
   private ThreadPoolExecutor threadPool;
   private StatsCollector statsCollector;
@@ -71,8 +71,8 @@ public class MasterListUpdaterImpl implements MasterListUpdater, Executable, Sta
   @Override
   public synchronized void start() {
     if (publicInfo != null) {
-      log.debug("MasterListUpdater thread received start request!");
-      log.debug(
+      logger.atFine().log("MasterListUpdater thread received start request!");
+      logger.atFine().log(
           "MasterListUpdater thread starting (ThreadPool:"
               + threadPool.getActiveCount()
               + "/"
@@ -80,7 +80,7 @@ public class MasterListUpdaterImpl implements MasterListUpdater, Executable, Sta
               + ")");
       threadPool.execute(this);
       Thread.yield();
-      log.debug(
+      logger.atFine().log(
           "MasterListUpdater thread started (ThreadPool:"
               + threadPool.getActiveCount()
               + "/"
@@ -92,10 +92,10 @@ public class MasterListUpdaterImpl implements MasterListUpdater, Executable, Sta
   @Override
   public synchronized void stop() {
     if (publicInfo != null) {
-      log.debug("MasterListUpdater thread received stop request!");
+      logger.atFine().log("MasterListUpdater thread received stop request!");
 
       if (!isRunning()) {
-        log.debug("MasterListUpdater thread stop request ignored: not running!");
+        logger.atFine().log("MasterListUpdater thread stop request ignored: not running!");
         return;
       }
 
@@ -106,7 +106,7 @@ public class MasterListUpdaterImpl implements MasterListUpdater, Executable, Sta
   @Override
   public void run() {
     isRunning = true;
-    log.debug("MasterListUpdater thread running...");
+    logger.atFine().log("MasterListUpdater thread running...");
 
     try {
       while (!stopFlag) {
@@ -117,7 +117,7 @@ public class MasterListUpdaterImpl implements MasterListUpdater, Executable, Sta
 
         if (stopFlag) break;
 
-        log.info("MasterListUpdater touching masters...");
+        logger.atInfo().log("MasterListUpdater touching masters...");
 
         if (emulinkerMasterTask != null) emulinkerMasterTask.touchMaster();
 
@@ -127,7 +127,7 @@ public class MasterListUpdaterImpl implements MasterListUpdater, Executable, Sta
       }
     } finally {
       isRunning = false;
-      log.debug("MasterListUpdater thread exiting...");
+      logger.atFine().log("MasterListUpdater thread exiting...");
     }
   }
 }

@@ -3,12 +3,12 @@ package org.emulinker.kaillera.access;
 import static com.google.common.base.Preconditions.checkArgument;
 
 import com.google.common.base.Strings;
+import com.google.common.flogger.FluentLogger;
 import java.io.*;
 import java.net.*;
 import java.util.*;
 import java.util.concurrent.*;
 import javax.inject.Inject;
-import org.apache.commons.logging.*;
 import org.emulinker.kaillera.relay.KailleraRelay;
 import org.emulinker.util.WildcardStringPattern;
 import org.picocontainer.Startable;
@@ -19,7 +19,7 @@ public final class AccessManager2 implements AccessManager, Startable, Runnable 
     java.security.Security.setProperty("networkaddress.cache.negative.ttl", "60");
   }
 
-  private static Log log = LogFactory.getLog(AccessManager2.class);
+  private static final FluentLogger logger = FluentLogger.forEnclosingClass();
 
   private ThreadPoolExecutor threadPool;
   private boolean isRunning = false;
@@ -67,8 +67,8 @@ public final class AccessManager2 implements AccessManager, Startable, Runnable 
 
   @Override
   public synchronized void start() {
-    log.debug("AccessManager2 thread received start request!");
-    log.debug(
+    logger.atFine().log("AccessManager2 thread received start request!");
+    logger.atFine().log(
         "AccessManager2 thread starting (ThreadPool:"
             + threadPool.getActiveCount()
             + "/"
@@ -84,10 +84,10 @@ public final class AccessManager2 implements AccessManager, Startable, Runnable 
 
   @Override
   public synchronized void stop() {
-    log.debug("AccessManager2 thread received stop request!");
+    logger.atFine().log("AccessManager2 thread received stop request!");
 
     if (!isRunning()) {
-      log.debug("KailleraServer thread stop request ignored: not running!");
+      logger.atFine().log("KailleraServer thread stop request ignored: not running!");
       return;
     }
 
@@ -106,14 +106,14 @@ public final class AccessManager2 implements AccessManager, Startable, Runnable 
   @Override
   public void run() {
     isRunning = true;
-    log.debug("AccessManager2 thread running...");
+    logger.atFine().log("AccessManager2 thread running...");
 
     try {
       while (!stopFlag) {
         try {
           Thread.sleep(60 * 1000);
         } catch (InterruptedException e) {
-          log.error("Sleep Interrupted!", e);
+          logger.atSevere().withCause(e).log("Sleep Interrupted!");
         }
 
         if (stopFlag) break;
@@ -149,10 +149,12 @@ public final class AccessManager2 implements AccessManager, Startable, Runnable 
         }
       }
     } catch (Throwable e) {
-      if (!stopFlag) log.fatal("AccessManager2 thread caught unexpected exception: " + e, e);
+      if (!stopFlag) {
+        logger.atSevere().withCause(e).log("AccessManager2 thread caught unexpected exception");
+      }
     } finally {
       isRunning = false;
-      log.debug("AccessManager2 thread exiting...");
+      logger.atFine().log("AccessManager2 thread exiting...");
     }
   }
 
@@ -163,7 +165,7 @@ public final class AccessManager2 implements AccessManager, Startable, Runnable 
   private synchronized void loadAccess() {
     if (accessFile == null) return;
 
-    log.info("Reloading permissions...");
+    logger.atInfo().log("Reloading permissions...");
 
     lastLoadModifiedTime = accessFile.lastModified();
 
@@ -182,7 +184,7 @@ public final class AccessManager2 implements AccessManager, Startable, Runnable 
 
         StringTokenizer st = new StringTokenizer(line, ",");
         if (st.countTokens() < 3) {
-          log.error("Failed to load access line, too few tokens: " + line);
+          logger.atSevere().log("Failed to load access line, too few tokens: " + line);
           continue;
         }
 
@@ -195,13 +197,13 @@ public final class AccessManager2 implements AccessManager, Startable, Runnable 
           else if (type.equalsIgnoreCase("ipaddress")) addressList.add(new AddressAccess(st));
           else throw new Exception("Unrecognized access type: " + type);
         } catch (Exception e) {
-          log.error("Failed to load access line: " + e.getMessage() + ": " + line);
+          logger.atSevere().withCause(e).log("Failed to load access line: " + line);
         }
       }
 
       reader.close();
     } catch (IOException e) {
-      log.error("Failed to load access file: " + e.getMessage(), e);
+      logger.atSevere().withCause(e).log("Failed to load access file");
     }
   }
 
@@ -395,10 +397,10 @@ public final class AccessManager2 implements AccessManager, Startable, Runnable 
           String hostName = pat.substring(4);
           try {
             InetAddress a = InetAddress.getByName(hostName);
-            log.debug("Resolved " + hostName + " to " + a.getHostAddress());
+            logger.atFine().log("Resolved " + hostName + " to " + a.getHostAddress());
           } catch (Exception e) {
-            log.warn(
-                "Failed to resolve DNS entry to an address: " + hostName + ": " + e.getMessage());
+            logger.atWarning().withCause(e).log(
+                "Failed to resolve DNS entry to an address: " + hostName);
           }
           hostNames.add(pat.substring(4));
         } else {
@@ -418,7 +420,8 @@ public final class AccessManager2 implements AccessManager, Startable, Runnable 
           InetAddress address = InetAddress.getByName(hostName);
           resolvedAddresses.add(address.getHostAddress());
         } catch (Exception e) {
-          log.debug("Failed to resolve DNS entry to an address: " + hostName, e);
+          logger.atFine().withCause(e).log(
+              "Failed to resolve DNS entry to an address: " + hostName);
         }
       }
     }
@@ -475,10 +478,10 @@ public final class AccessManager2 implements AccessManager, Startable, Runnable 
           String hostName = pat.substring(4);
           try {
             InetAddress a = InetAddress.getByName(hostName);
-            log.debug("Resolved " + hostName + " to " + a.getHostAddress());
+            logger.atFine().log("Resolved " + hostName + " to " + a.getHostAddress());
           } catch (Exception e) {
-            log.warn(
-                "Failed to resolve DNS entry to an address: " + hostName + ": " + e.getMessage());
+            logger.atWarning().withCause(e).log(
+                "Failed to resolve DNS entry to an address: " + hostName);
           }
           hostNames.add(pat.substring(4));
         } else {
@@ -496,7 +499,8 @@ public final class AccessManager2 implements AccessManager, Startable, Runnable 
           InetAddress address = InetAddress.getByName(hostName);
           resolvedAddresses.add(address.getHostAddress());
         } catch (Exception e) {
-          log.debug("Failed to resolve DNS entry to an address: " + hostName, e);
+          logger.atFine().withCause(e).log(
+              "Failed to resolve DNS entry to an address: " + hostName);
         }
       }
     }

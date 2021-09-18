@@ -1,6 +1,6 @@
 package org.emulinker.kaillera.controller.v086.action;
 
-import org.apache.commons.logging.*;
+import com.google.common.flogger.FluentLogger;
 import org.emulinker.kaillera.controller.messaging.MessageFormatException;
 import org.emulinker.kaillera.controller.v086.V086Controller;
 import org.emulinker.kaillera.controller.v086.protocol.*;
@@ -9,7 +9,8 @@ import org.emulinker.kaillera.model.event.*;
 import org.emulinker.kaillera.model.exception.ActionException;
 
 public class QuitAction implements V086Action, V086ServerEventHandler {
-  private static Log log = LogFactory.getLog(QuitAction.class);
+  private static final FluentLogger logger = FluentLogger.forEnclosingClass();
+
   private static final String desc = "QuitAction";
 
   private static QuitAction singleton = new QuitAction();
@@ -70,7 +71,7 @@ public class QuitAction implements V086Action, V086ServerEventHandler {
               user.getID(),
               userQuitEvent.getMessage()));
     } catch (MessageFormatException e) {
-      log.error("Failed to contruct Quit_Notification message: " + e.getMessage(), e);
+      logger.atSevere().withCause(e).log("Failed to contruct Quit_Notification message");
     }
   }
 }

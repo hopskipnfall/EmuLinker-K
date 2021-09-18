@@ -1,12 +1,13 @@
 package org.emulinker.kaillera.controller.v086.action;
 
-import org.apache.commons.logging.*;
+import com.google.common.flogger.FluentLogger;
 import org.emulinker.kaillera.controller.v086.V086Controller;
 import org.emulinker.kaillera.model.KailleraUser;
 import org.emulinker.kaillera.model.event.*;
 
 public class GameTimeoutAction implements V086GameEventHandler {
-  private static Log log = LogFactory.getLog(GameTimeoutAction.class);
+  private static final FluentLogger logger = FluentLogger.forEnclosingClass();
+
   private static final String desc = "GameTimeoutAction";
   private static GameTimeoutAction singleton = new GameTimeoutAction();
 
@@ -37,7 +38,7 @@ public class GameTimeoutAction implements V086GameEventHandler {
     KailleraUser user = clientHandler.getUser();
 
     if (player.equals(user)) {
-      log.debug(
+      logger.atFine().log(
           user
               + " received timeout event "
               + timeoutEvent.getTimeoutNumber()
@@ -46,7 +47,7 @@ public class GameTimeoutAction implements V086GameEventHandler {
               + ": resending messages...");
       clientHandler.resend(timeoutEvent.getTimeoutNumber());
     } else {
-      log.debug(
+      logger.atFine().log(
           user
               + " received timeout event "
               + timeoutEvent.getTimeoutNumber()

@@ -1,6 +1,6 @@
 package org.emulinker.kaillera.controller.v086.action;
 
-import org.apache.commons.logging.*;
+import com.google.common.flogger.FluentLogger;
 import org.emulinker.kaillera.controller.messaging.MessageFormatException;
 import org.emulinker.kaillera.controller.v086.V086Controller;
 import org.emulinker.kaillera.controller.v086.protocol.GameStatus;
@@ -9,7 +9,8 @@ import org.emulinker.kaillera.model.KailleraUser;
 import org.emulinker.kaillera.model.event.*;
 
 public class GameStatusAction implements V086ServerEventHandler {
-  private static Log log = LogFactory.getLog(GameStatusAction.class);
+  private static final FluentLogger logger = FluentLogger.forEnclosingClass();
+
   private static final String desc = "GameStatusAction";
   private static GameStatusAction singleton = new GameStatusAction();
 
@@ -52,7 +53,7 @@ public class GameStatusAction implements V086ServerEventHandler {
               (byte) num,
               (byte) game.getMaxUsers()));
     } catch (MessageFormatException e) {
-      log.error("Failed to contruct CreateGame_Notification message: " + e.getMessage(), e);
+      logger.atSevere().withCause(e).log("Failed to contruct CreateGame_Notification message");
     }
   }
 }

@@ -1,13 +1,14 @@
 package org.emulinker.kaillera.controller.v086.action;
 
-import org.apache.commons.logging.*;
+import com.google.common.flogger.FluentLogger;
 import org.emulinker.kaillera.controller.messaging.MessageFormatException;
 import org.emulinker.kaillera.controller.v086.V086Controller;
 import org.emulinker.kaillera.controller.v086.protocol.GameChat_Notification;
 import org.emulinker.kaillera.model.event.*;
 
 public class GameInfoAction implements V086GameEventHandler {
-  private static Log log = LogFactory.getLog(GameInfoAction.class);
+  private static final FluentLogger logger = FluentLogger.forEnclosingClass();
+
   private static final String desc = "GameInfoAction";
   private static GameInfoAction singleton = new GameInfoAction();
 
@@ -44,7 +45,7 @@ public class GameInfoAction implements V086GameEventHandler {
           GameChat_Notification.create(
               clientHandler.getNextMessageNumber(), "Server", infoEvent.getMessage()));
     } catch (MessageFormatException e) {
-      log.error("Failed to contruct GameChat_Notification message: " + e.getMessage(), e);
+      logger.atSevere().withCause(e).log("Failed to contruct GameChat_Notification message");
     }
   }
 }

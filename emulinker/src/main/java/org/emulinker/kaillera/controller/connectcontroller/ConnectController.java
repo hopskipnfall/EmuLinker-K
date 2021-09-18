@@ -1,6 +1,8 @@
 package org.emulinker.kaillera.controller.connectcontroller;
 
 import static com.google.common.base.Preconditions.checkArgument;
+
+import com.google.common.flogger.FluentLogger;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.util.*;
@@ -8,7 +10,6 @@ import java.util.concurrent.ThreadPoolExecutor;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import org.apache.commons.configuration.*;
-import org.apache.commons.logging.*;
 import org.emulinker.kaillera.access.AccessManager;
 import org.emulinker.kaillera.controller.KailleraServerController;
 import org.emulinker.kaillera.controller.connectcontroller.protocol.*;
@@ -20,7 +21,7 @@ import org.emulinker.util.EmuUtil;
 /** The UDP Server implementation. */
 @Singleton
 public final class ConnectController extends UDPServer {
-  private static Log log = LogFactory.getLog(ConnectController.class);
+  private static final FluentLogger logger = FluentLogger.forEnclosingClass();
 
   private ThreadPoolExecutor threadPool;
   private AccessManager accessManager;
@@ -59,7 +60,7 @@ public final class ConnectController extends UDPServer {
     for (KailleraServerController controller : kailleraServerControllers) {
       String[] clientTypes = controller.getClientTypes();
       for (int j = 0; j < clientTypes.length; j++) {
-        log.debug("Mapping client type " + clientTypes[j] + " to " + controller);
+        logger.atFine().log("Mapping client type " + clientTypes[j] + " to " + controller);
         controllersMap.put(clientTypes[j], controller);
       }
     }
@@ -71,7 +72,7 @@ public final class ConnectController extends UDPServer {
     }
 
     System.out.println("Ready to accept connections on port " + port);
-    log.info("Ready to accept connections on port " + port);
+    logger.atInfo().log("Ready to accept connections on port " + port);
   }
 
   public KailleraServerController getController(String clientType) {
@@ -143,7 +144,7 @@ public final class ConnectController extends UDPServer {
   @Override
   public synchronized void start() {
     startTime = System.currentTimeMillis();
-    log.debug(
+    logger.atFine().log(
         toString()
             + " Thread starting (ThreadPool:"
             + threadPool.getActiveCount()
@@ -152,7 +153,7 @@ public final class ConnectController extends UDPServer {
             + ")");
     threadPool.execute(this);
     Thread.yield();
-    log.debug(
+    logger.atFine().log(
         toString()
             + " Thread started (ThreadPool:"
             + threadPool.getActiveCount()
@@ -179,7 +180,7 @@ public final class ConnectController extends UDPServer {
     } catch (MessageFormatException e) {
       messageFormatErrorCount++;
       buffer.rewind();
-      log.warn(
+      logger.atWarning().log(
           "Received invalid message from "
               + EmuUtil.formatSocketAddress(fromSocketAddress)
               + ": "
@@ -193,14 +194,14 @@ public final class ConnectController extends UDPServer {
 
     if (inMessage instanceof ConnectMessage_PING) {
       pingCount++;
-      log.debug("Ping from: " + EmuUtil.formatSocketAddress(fromSocketAddress));
+      logger.atFine().log("Ping from: " + EmuUtil.formatSocketAddress(fromSocketAddress));
       send(new ConnectMessage_PONG(), fromSocketAddress);
       return;
     }
 
     if (!(inMessage instanceof ConnectMessage_HELLO)) {
       messageFormatErrorCount++;
-      log.warn(
+      logger.atWarning().log(
           "Received unexpected message type from "
               + EmuUtil.formatSocketAddress(fromSocketAddress)
               + ": "
@@ -215,7 +216,7 @@ public final class ConnectController extends UDPServer {
     KailleraServerController protocolController = getController(connectMessage.getProtocol());
     if (protocolController == null) {
       protocolErrorCount++;
-      log.error(
+      logger.atSevere().log(
           "Client requested an unhandled protocol "
               + EmuUtil.formatSocketAddress(fromSocketAddress)
               + ": "
@@ -225,7 +226,7 @@ public final class ConnectController extends UDPServer {
 
     if (!accessManager.isAddressAllowed(fromSocketAddress.getAddress())) {
       deniedOtherCount++;
-      log.warn(
+      logger.atWarning().log(
           "AccessManager denied connection from " + EmuUtil.formatSocketAddress(fromSocketAddress));
       return;
     } else {
@@ -240,7 +241,7 @@ public final class ConnectController extends UDPServer {
             if (lastAddressCount >= 4) {
               lastAddressCount = 0;
               failedToStartCount++;
-              log.debug(
+              logger.atFine().log(
                   "SF MOD: HAMMER PROTECTION (2 Min Ban): "
                       + EmuUtil.formatSocketAddress(fromSocketAddress));
               accessManager.addTempBan(fromSocketAddress.getAddress().getHostAddress(), 2);
@@ -257,7 +258,7 @@ public final class ConnectController extends UDPServer {
 
         if (privatePort <= 0) {
           failedToStartCount++;
-          log.error(
+          logger.atSevere().log(
               protocolController
                   + " failed to start for "
                   + EmuUtil.formatSocketAddress(fromSocketAddress));
@@ -265,7 +266,7 @@ public final class ConnectController extends UDPServer {
         }
 
         connectedCount++;
-        log.debug(
+        logger.atFine().log(
             protocolController
                 + " allocated port "
                 + privatePort
@@ -274,18 +275,16 @@ public final class ConnectController extends UDPServer {
         send(new ConnectMessage_HELLOD00D(privatePort), fromSocketAddress);
       } catch (ServerFullException e) {
         deniedServerFullCount++;
-        log.debug(
+        logger.atFine().withCause(e).log(
             "Sending server full response to " + EmuUtil.formatSocketAddress(fromSocketAddress));
         send(new ConnectMessage_TOO(), fromSocketAddress);
         return;
       } catch (NewConnectionException e) {
         deniedOtherCount++;
-        log.warn(
+        logger.atWarning().withCause(e).log(
             protocolController
                 + " denied connection from "
-                + EmuUtil.formatSocketAddress(fromSocketAddress)
-                + ": "
-                + e.getMessage());
+                + EmuUtil.formatSocketAddress(fromSocketAddress));
         return;
       }
     }

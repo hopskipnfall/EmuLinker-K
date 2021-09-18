@@ -1,7 +1,7 @@
 package org.emulinker.kaillera.controller.v086.action;
 
+import com.google.common.flogger.FluentLogger;
 import java.util.*;
-import org.apache.commons.logging.*;
 import org.emulinker.kaillera.controller.messaging.MessageFormatException;
 import org.emulinker.kaillera.controller.v086.V086Controller;
 import org.emulinker.kaillera.controller.v086.protocol.*;
@@ -10,7 +10,7 @@ import org.emulinker.kaillera.model.event.*;
 import org.emulinker.kaillera.model.exception.LoginException;
 
 public class ACKAction implements V086Action, V086UserEventHandler {
-  private static Log log = LogFactory.getLog(ACKAction.class);
+  private static final FluentLogger logger = FluentLogger.forEnclosingClass();
   private static final String desc = "ACKAction";
   private static ACKAction singleton = new ACKAction();
   private static int numAcksForSpeedTest = 3;
@@ -53,7 +53,7 @@ public class ACKAction implements V086Action, V086UserEventHandler {
 
       user.setPing(clientHandler.getAverageNetworkSpeed());
 
-      log.debug(
+      logger.atFine().log(
           "Calculated "
               + user
               + " ping time: average="
@@ -69,7 +69,7 @@ public class ACKAction implements V086Action, V086UserEventHandler {
               ConnectionRejected.create(
                   clientHandler.getNextMessageNumber(), "server", user.getID(), e.getMessage()));
         } catch (MessageFormatException e2) {
-          log.error("Failed to contruct new ConnectionRejected", e);
+          logger.atSevere().withCause(e).log("Failed to contruct new ConnectionRejected");
         }
 
         throw new FatalActionException("Login failed: " + e.getMessage());
@@ -78,7 +78,7 @@ public class ACKAction implements V086Action, V086UserEventHandler {
       try {
         clientHandler.send(ServerACK.create(clientHandler.getNextMessageNumber()));
       } catch (MessageFormatException e) {
-        log.error("Failed to contruct new ServerACK", e);
+        logger.atSevere().withCause(e).log("Failed to contruct new ServerACK");
         return;
       }
     }
@@ -108,7 +108,7 @@ public class ACKAction implements V086Action, V086UserEventHandler {
                   user.getConnectionType()));
       }
     } catch (MessageFormatException e) {
-      log.error("Failed to contruct new ServerStatus.User", e);
+      logger.atSevere().withCause(e).log("Failed to contruct new ServerStatus.User");
       return;
     }
 
@@ -128,7 +128,7 @@ public class ACKAction implements V086Action, V086UserEventHandler {
                 (byte) game.getStatus()));
       }
     } catch (MessageFormatException e) {
-      log.error("Failed to contruct new ServerStatus.User", e);
+      logger.atSevere().withCause(e).log("Failed to contruct new ServerStatus.User");
       return;
     }
 
@@ -205,7 +205,7 @@ public class ACKAction implements V086Action, V086UserEventHandler {
       sb.append(game.gameId());
       sb.append(",");
     }
-    log.debug(
+    logger.atFine().log(
         "Sending ServerStatus to "
             + clientHandler.getUser()
             + ": "
@@ -219,7 +219,7 @@ public class ACKAction implements V086Action, V086UserEventHandler {
     try {
       clientHandler.send(ServerStatus.create(clientHandler.getNextMessageNumber(), users, games));
     } catch (MessageFormatException e) {
-      log.error("Failed to contruct new ServerStatus for users", e);
+      logger.atSevere().withCause(e).log("Failed to contruct new ServerStatus for users");
     }
   }
 }

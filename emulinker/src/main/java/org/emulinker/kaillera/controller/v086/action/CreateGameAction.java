@@ -1,6 +1,6 @@
 package org.emulinker.kaillera.controller.v086.action;
 
-import org.apache.commons.logging.*;
+import com.google.common.flogger.FluentLogger;
 import org.emulinker.kaillera.controller.messaging.MessageFormatException;
 import org.emulinker.kaillera.controller.v086.V086Controller;
 import org.emulinker.kaillera.controller.v086.protocol.*;
@@ -10,7 +10,8 @@ import org.emulinker.kaillera.model.exception.*;
 import org.emulinker.util.EmuLang;
 
 public class CreateGameAction implements V086Action, V086ServerEventHandler {
-  private static Log log = LogFactory.getLog(CreateGameAction.class);
+  private static final FluentLogger logger = FluentLogger.forEnclosingClass();
+
   private static final String desc = "CreateGameAction";
   private static CreateGameAction singleton = new CreateGameAction();
 
@@ -52,7 +53,7 @@ public class CreateGameAction implements V086Action, V086ServerEventHandler {
     try {
       clientHandler.getUser().createGame(createGameMessage.romName());
     } catch (CreateGameException e) {
-      log.info(
+      logger.atInfo().withCause(e).log(
           "Create Game Denied: " + clientHandler.getUser() + ": " + createGameMessage.romName());
 
       try {
@@ -67,10 +68,10 @@ public class CreateGameAction implements V086Action, V086ServerEventHandler {
                 clientHandler.getUser().getName(),
                 clientHandler.getUser().getID()));
       } catch (MessageFormatException e2) {
-        log.error("Failed to contruct message: " + e.getMessage(), e);
+        logger.atSevere().withCause(e2).log("Failed to contruct message");
       }
     } catch (FloodException e) {
-      log.info(
+      logger.atInfo().withCause(e).log(
           "Create Game Denied: " + clientHandler.getUser() + ": " + createGameMessage.romName());
 
       try {
@@ -85,7 +86,7 @@ public class CreateGameAction implements V086Action, V086ServerEventHandler {
                 clientHandler.getUser().getName(),
                 clientHandler.getUser().getID()));
       } catch (MessageFormatException e2) {
-        log.error("Failed to contruct message: " + e.getMessage(), e);
+        logger.atSevere().withCause(e2).log("Failed to contruct message");
       }
     }
   }
@@ -108,7 +109,7 @@ public class CreateGameAction implements V086Action, V086ServerEventHandler {
               game.getID(),
               (short) 0));
     } catch (MessageFormatException e) {
-      log.error("Failed to contruct CreateGame_Notification message: " + e.getMessage(), e);
+      logger.atSevere().withCause(e).log("Failed to contruct CreateGame_Notification message");
     }
   }
 }

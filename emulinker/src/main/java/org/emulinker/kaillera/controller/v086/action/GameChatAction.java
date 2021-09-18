@@ -1,9 +1,9 @@
 package org.emulinker.kaillera.controller.v086.action;
 
 import com.google.common.base.Strings;
+import com.google.common.flogger.FluentLogger;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
-import org.apache.commons.logging.*;
 import org.emulinker.kaillera.access.AccessManager;
 import org.emulinker.kaillera.controller.messaging.MessageFormatException;
 import org.emulinker.kaillera.controller.v086.V086Controller;
@@ -14,9 +14,9 @@ import org.emulinker.kaillera.model.exception.GameChatException;
 import org.emulinker.kaillera.model.impl.KailleraUserImpl;
 
 public class GameChatAction implements V086Action, V086GameEventHandler {
-  public static final String ADMIN_COMMAND_ESCAPE_STRING = "/";
+  private static final FluentLogger logger = FluentLogger.forEnclosingClass();
 
-  private static Log log = LogFactory.getLog(GameChatAction.class);
+  public static final String ADMIN_COMMAND_ESCAPE_STRING = "/";
   private static final String desc = "GameChatAction";
   public static final byte STATUS_IDLE = 1;
   private static GameChatAction singleton = new GameChatAction();
@@ -67,7 +67,7 @@ public class GameChatAction implements V086Action, V086GameEventHandler {
         } else checkCommands(message, clientHandler);
         return;
       } catch (FatalActionException e) {
-        log.warn("GameOwner command failed: " + e.getMessage());
+        logger.atWarning().withCause(e).log("GameOwner command failed");
       }
 
       // }
@@ -80,7 +80,7 @@ public class GameChatAction implements V086Action, V086GameEventHandler {
     try {
       clientHandler.getUser().gameChat(gameChatMessage.message(), gameChatMessage.messageNumber());
     } catch (GameChatException e) {
-      log.debug("Failed to send game chat message: " + e.getMessage());
+      logger.atSevere().withCause(e).log("Failed to send game chat message");
     }
   }
 
@@ -101,7 +101,7 @@ public class GameChatAction implements V086Action, V086GameEventHandler {
         KailleraUserImpl user = (KailleraUserImpl) clientHandler.getUser();
         try {
           clientHandler.getUser().setMsg(true);
-          user.getGame().announce("Private messages are now on.", user); // $NON-NLS-2$
+          user.getGame().announce("Private messages are now on.", user);
         } catch (Exception e) {
         }
         return;
@@ -109,7 +109,7 @@ public class GameChatAction implements V086Action, V086GameEventHandler {
         KailleraUserImpl user = (KailleraUserImpl) clientHandler.getUser();
         try {
           clientHandler.getUser().setMsg(false);
-          user.getGame().announce("Private messages are now off.", user); // $NON-NLS-2$
+          user.getGame().announce("Private messages are now off.", user);
         } catch (Exception e) {
         }
         return;
@@ -160,7 +160,7 @@ public class GameChatAction implements V086Action, V086GameEventHandler {
             }
           }
         } else {
-          user.getGame().announce("Failed P2P: /p2pon or /p2poff", user); // $NON-NLS-2$
+          user.getGame().announce("Failed P2P: /p2pon or /p2poff", user);
         }
         return;
       } else if (((GameChat) message).message().startsWith("/msg")) {
@@ -233,7 +233,7 @@ public class GameChatAction implements V086Action, V086GameEventHandler {
             char[] chars = m.toCharArray();
             for (int i = 0; i < chars.length; i++) {
               if (chars[i] < 32) {
-                log.warn(user + " /msg denied: Illegal characters in message");
+                logger.atWarning().log(user + " /msg denied: Illegal characters in message");
                 user1
                     .getGame()
                     .announce("Private Message Denied: Illegal characters in message", user1);
@@ -242,7 +242,7 @@ public class GameChatAction implements V086Action, V086GameEventHandler {
             }
 
             if (m.length() > 320) {
-              log.warn(user + " /msg denied: Message Length > " + 320);
+              logger.atWarning().log(user + " /msg denied: Message Length > " + 320);
               user1.getGame().announce("Private Message Denied: Message Too Long", user1);
               return;
             }
@@ -329,7 +329,7 @@ public class GameChatAction implements V086Action, V086GameEventHandler {
                 char[] chars = m.toCharArray();
                 for (int i = 0; i < chars.length; i++) {
                   if (chars[i] < 32) {
-                    log.warn(user + " /msg denied: Illegal characters in message");
+                    logger.atWarning().log(user + " /msg denied: Illegal characters in message");
                     user1
                         .getGame()
                         .announce("Private Message Denied: Illegal characters in message", user1);
@@ -338,7 +338,7 @@ public class GameChatAction implements V086Action, V086GameEventHandler {
                 }
 
                 if (m.length() > 320) {
-                  log.warn(user + " /msg denied: Message Length > " + 320);
+                  logger.atWarning().log(user + " /msg denied: Message Length > " + 320);
                   user1.getGame().announce("Private Message Denied: Message Too Long", user1);
                   return;
                 }
@@ -394,9 +394,7 @@ public class GameChatAction implements V086Action, V086GameEventHandler {
           clientHandler.getUser().setIgnoreAll(true);
           user.getServer()
               .announce(
-                  clientHandler.getUser().getName() + " is now ignoring everyone!",
-                  false,
-                  null); //$NON-NLS-1$ //$NON-NLS-2$
+                  clientHandler.getUser().getName() + " is now ignoring everyone!", false, null);
         } catch (Exception e) {
         }
         return;
@@ -406,9 +404,7 @@ public class GameChatAction implements V086Action, V086GameEventHandler {
           clientHandler.getUser().setIgnoreAll(false);
           user.getServer()
               .announce(
-                  clientHandler.getUser().getName() + " is now unignoring everyone!",
-                  false,
-                  null); //$NON-NLS-1$ //$NON-NLS-2$
+                  clientHandler.getUser().getName() + " is now unignoring everyone!", false, null);
         } catch (Exception e) {
         }
         return;
@@ -452,12 +448,12 @@ public class GameChatAction implements V086Action, V086GameEventHandler {
                       + "> ID: "
                       + user.getID(),
                   false,
-                  null); //$NON-NLS-1$ //$NON-NLS-2$
+                  null);
           return;
         } catch (NoSuchElementException e) {
           KailleraUserImpl user = (KailleraUserImpl) clientHandler.getUser();
-          user.getGame().announce("Ignore User Error: /ignore <UserID>", user); // $NON-NLS-2$
-          log.info(
+          user.getGame().announce("Ignore User Error: /ignore <UserID>", user);
+          logger.atInfo().withCause(e).log(
               "IGNORE USER ERROR: "
                   + user.getName()
                   + ": "
@@ -498,7 +494,7 @@ public class GameChatAction implements V086Action, V086GameEventHandler {
                         + "> ID: "
                         + user.getID(),
                     false,
-                    null); //$NON-NLS-1$ //$NON-NLS-2$
+                    null);
           else
             try {
               clientHandler.send(
@@ -509,8 +505,8 @@ public class GameChatAction implements V086Action, V086GameEventHandler {
           return;
         } catch (NoSuchElementException e) {
           KailleraUserImpl user = (KailleraUserImpl) clientHandler.getUser();
-          user.getGame().announce("Unignore User Error: /ignore <UserID>", user); // $NON-NLS-2$
-          log.info(
+          user.getGame().announce("Unignore User Error: /ignore <UserID>", user);
+          logger.atInfo().withCause(e).log(
               "UNIGNORE USER ERROR: "
                   + user.getName()
                   + ": "
@@ -627,7 +623,7 @@ public class GameChatAction implements V086Action, V086GameEventHandler {
           GameChat_Notification.create(
               clientHandler.getNextMessageNumber(), gameChatEvent.getUser().getName(), m));
     } catch (MessageFormatException e) {
-      log.error("Failed to contruct GameChat_Notification message: " + e.getMessage(), e);
+      logger.atSevere().withCause(e).log("Failed to contruct GameChat_Notification message");
     }
   }
 }

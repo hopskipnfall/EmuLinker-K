@@ -2,6 +2,7 @@ package org.emulinker.kaillera.controller.v086;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.flogger.FluentLogger;
 import java.net.InetSocketAddress;
 import java.nio.*;
 import java.util.*;
@@ -9,7 +10,6 @@ import java.util.concurrent.*;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import org.apache.commons.configuration.*;
-import org.apache.commons.logging.*;
 import org.emulinker.kaillera.access.AccessManager;
 import org.emulinker.kaillera.controller.KailleraServerController;
 import org.emulinker.kaillera.controller.messaging.*;
@@ -23,7 +23,7 @@ import org.emulinker.util.*;
 
 @Singleton
 public final class V086Controller implements KailleraServerController {
-  private static Log log = LogFactory.getLog(V086Controller.class);
+  private static final FluentLogger logger = FluentLogger.forEnclosingClass();
 
   private int MAX_BUNDLE_SIZE = 9;
 
@@ -65,7 +65,7 @@ public final class V086Controller implements KailleraServerController {
       maxPort = i;
     }
 
-    log.warn(
+    logger.atWarning().log(
         "Listening on UDP ports: "
             + portRangeStart
             + " to "
@@ -194,18 +194,18 @@ public final class V086Controller implements KailleraServerController {
     while (bindAttempts++ < 5) {
       Integer portInteger = portRangeQueue.poll();
       if (portInteger == null) {
-        log.error("No ports are available to bind for: " + user);
+        logger.atSevere().log("No ports are available to bind for: " + user);
       } else {
         int port = portInteger.intValue();
-        log.info("Private port " + port + " allocated to: " + user);
+        logger.atInfo().log("Private port " + port + " allocated to: " + user);
 
         try {
           clientHandler.bind(port);
           boundPort = port;
           break;
         } catch (BindException e) {
-          log.error("Failed to bind to port " + port + " for: " + user + ": " + e.getMessage(), e);
-          log.debug(
+          logger.atSevere().withCause(e).log("Failed to bind to port " + port + " for: " + user);
+          logger.atFine().log(
               toString()
                   + " returning port "
                   + port
@@ -364,7 +364,7 @@ public final class V086Controller implements KailleraServerController {
 
     public void start(KailleraUser user) {
       this.user = user;
-      log.debug(
+      logger.atFine().log(
           toString()
               + " thread starting (ThreadPool:"
               + threadPool.getActiveCount()
@@ -384,18 +384,18 @@ public final class V086Controller implements KailleraServerController {
       }
       catch (Exception e)
       {
-      log.error("Sleep Interrupted!", e);
+      logger.atSevere().withCause(e).log("Sleep Interrupted!");
       }
       }
 
       if (!isBound())
       {
-      log.error("V086ClientHandler failed to start for client from " + getRemoteInetAddress().getHostAddress());
+      logger.atSevere().log("V086ClientHandler failed to start for client from " + getRemoteInetAddress().getHostAddress());
       return;
       }
       */
 
-      log.debug(
+      logger.atFine().log(
           toString()
               + " thread started (ThreadPool:"
               + threadPool.getActiveCount()
@@ -412,11 +412,11 @@ public final class V086Controller implements KailleraServerController {
 
         int port = -1;
         if (isBound()) port = getBindPort();
-        log.debug(this.toString() + " Stopping!");
+        logger.atFine().log(this.toString() + " Stopping!");
         super.stop();
 
         if (port > 0) {
-          log.debug(
+          logger.atFine().log(
               toString()
                   + " returning port "
                   + port
@@ -458,22 +458,25 @@ public final class V086Controller implements KailleraServerController {
         // inBundle = V086Bundle.parse(buffer, -1);
       } catch (ParseException e) {
         buffer.rewind();
-        log.warn(toString() + " failed to parse: " + EmuUtil.dumpBuffer(buffer), e);
+        logger.atWarning().withCause(e).log(
+            toString() + " failed to parse: " + EmuUtil.dumpBuffer(buffer));
         return;
       } catch (V086BundleFormatException e) {
         buffer.rewind();
-        log.warn(toString() + " received invalid message bundle: " + EmuUtil.dumpBuffer(buffer), e);
+        logger.atWarning().withCause(e).log(
+            toString() + " received invalid message bundle: " + EmuUtil.dumpBuffer(buffer));
         return;
       } catch (MessageFormatException e) {
         buffer.rewind();
-        log.warn(toString() + " received invalid message: " + EmuUtil.dumpBuffer(buffer), e);
+        logger.atWarning().withCause(e).log(
+            toString() + " received invalid message: " + EmuUtil.dumpBuffer(buffer));
         return;
       }
 
-      // log.debug("-> " + inBundle.getNumMessages());
+      // logger.atFine().log("-> " + inBundle.getNumMessages());
 
       if (inBundle.getNumMessages() == 0) {
-        log.debug(
+        logger.atFine().log(
             toString()
                 + " received bundle of "
                 + inBundle.getNumMessages()
@@ -494,7 +497,7 @@ public final class V086Controller implements KailleraServerController {
 
             V086Action action = actions[messages[0].messageId()];
             if (action == null) {
-              log.error("No action defined to handle client message: " + messages[0]);
+              logger.atSevere().log("No action defined to handle client message: " + messages[0]);
             }
 
             action.performAction(messages[0], this);
@@ -514,7 +517,7 @@ public final class V086Controller implements KailleraServerController {
                   if (prevMessageNumber == 0xFFFF && lastMessageNumber == 0) {
                     // exception; do nothing
                   } else {
-                    log.warn(
+                    logger.atWarning().log(
                         user
                             + " dropped a packet! ("
                             + prevMessageNumber
@@ -527,18 +530,19 @@ public final class V086Controller implements KailleraServerController {
 
                 V086Action action = actions[messages[i].messageId()];
                 if (action == null) {
-                  log.error("No action defined to handle client message: " + messages[i]);
+                  logger.atSevere().log(
+                      "No action defined to handle client message: " + messages[i]);
                   continue;
                 }
 
-                // log.debug(user + " -> " + message);
+                // logger.atFine().log(user + " -> " + message);
                 action.performAction(messages[i], this);
               }
             }
           }
         }
       } catch (FatalActionException e) {
-        log.warn(toString() + " fatal action, closing connection: " + e.getMessage());
+        logger.atWarning().withCause(e).log(toString() + " fatal action, closing connection");
         Thread.yield();
         stop();
       }
@@ -549,7 +553,7 @@ public final class V086Controller implements KailleraServerController {
       if (event instanceof GameEvent) {
         V086GameEventHandler eventHandler = gameEventHandlers.get(event.getClass());
         if (eventHandler == null) {
-          log.error(
+          logger.atSevere().log(
               toString() + " found no GameEventHandler registered to handle game event: " + event);
           return;
         }
@@ -558,7 +562,7 @@ public final class V086Controller implements KailleraServerController {
       } else if (event instanceof ServerEvent) {
         V086ServerEventHandler eventHandler = serverEventHandlers.get(event.getClass());
         if (eventHandler == null) {
-          log.error(
+          logger.atSevere().log(
               toString()
                   + " found no ServerEventHandler registered to handle server event: "
                   + event);
@@ -569,7 +573,7 @@ public final class V086Controller implements KailleraServerController {
       } else if (event instanceof UserEvent) {
         V086UserEventHandler eventHandler = userEventHandlers.get(event.getClass());
         if (eventHandler == null) {
-          log.error(
+          logger.atSevere().log(
               toString() + " found no UserEventHandler registered to handle user event: " + event);
           return;
         }
@@ -587,11 +591,11 @@ public final class V086Controller implements KailleraServerController {
           int numToSend = (3 * timeoutCounter);
           if (numToSend > MAX_BUNDLE_SIZE) numToSend = MAX_BUNDLE_SIZE;
 
-          log.debug(this + ": resending last " + numToSend + " messages");
+          logger.atFine().log(this + ": resending last " + numToSend + " messages");
           send(null, numToSend);
           lastResend = System.currentTimeMillis();
         } else {
-          log.debug("Skipping resend...");
+          logger.atFine().log("Skipping resend...");
         }
       }
     }
@@ -609,7 +613,7 @@ public final class V086Controller implements KailleraServerController {
         numToSend = lastMessageBuffer.fill(outMessages, numToSend);
         // System.out.println("Server -> " + numToSend);
         V086Bundle outBundle = new V086Bundle(outMessages, numToSend);
-        //				log.debug("<- " + outBundle);
+        //				logger.atFine().log("<- " + outBundle);
         outBundle.writeTo(outBuffer);
         // Cast to avoid issue with java version mismatch:
         // https://stackoverflow.com/a/61267496/2875073

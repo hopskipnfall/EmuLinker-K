@@ -1,6 +1,6 @@
 package org.emulinker.kaillera.controller.v086.action;
 
-import org.apache.commons.logging.*;
+import com.google.common.flogger.FluentLogger;
 import org.emulinker.kaillera.controller.messaging.MessageFormatException;
 import org.emulinker.kaillera.controller.v086.V086Controller;
 import org.emulinker.kaillera.controller.v086.protocol.*;
@@ -8,7 +8,8 @@ import org.emulinker.kaillera.model.KailleraUser;
 import org.emulinker.kaillera.model.exception.GameDataException;
 
 public class CachedGameDataAction implements V086Action {
-  private static Log log = LogFactory.getLog(CachedGameDataAction.class);
+  private static final FluentLogger logger = FluentLogger.forEnclosingClass();
+
   private static final String desc = "CachedGameDataAction";
   private static CachedGameDataAction singleton = new CachedGameDataAction();
 
@@ -40,28 +41,27 @@ public class CachedGameDataAction implements V086Action {
       byte[] data = clientHandler.getClientGameDataCache().get(key);
 
       if (data == null) {
-        log.debug("Game Cache Error: null data");
+        logger.atFine().log("Game Cache Error: null data");
         return;
       }
 
       user.addGameData(data);
     } catch (GameDataException e) {
-      log.debug("Game data error: " + e.getMessage());
+      logger.atFine().withCause(e).log("Game data error");
 
       if (e.hasResponse()) {
         try {
           clientHandler.send(
               GameData.create(clientHandler.getNextMessageNumber(), e.getResponse()));
         } catch (MessageFormatException e2) {
-          log.error("Failed to contruct GameData message: " + e2.getMessage(), e2);
+          logger.atSevere().withCause(e2).log("Failed to contruct GameData message");
         }
       }
     } catch (IndexOutOfBoundsException e) {
-      log.error(
+      logger.atSevere().withCause(e).log(
           "Game data error!  The client cached key "
               + ((CachedGameData) message).key()
-              + " was not found in the cache!",
-          e);
+              + " was not found in the cache!");
 
       // This may not always be the best thing to do...
       try {
@@ -71,7 +71,7 @@ public class CachedGameDataAction implements V086Action {
                 "Error",
                 "Game Data Error!  Game state will be inconsistent!"));
       } catch (MessageFormatException e2) {
-        log.error("Failed to contruct new GameChat_Notification", e);
+        logger.atSevere().withCause(e2).log("Failed to contruct new GameChat_Notification");
       }
     }
   }

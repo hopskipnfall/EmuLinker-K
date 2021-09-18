@@ -1,7 +1,7 @@
 package org.emulinker.kaillera.pico;
 
-import java.time.Instant;
 import com.google.common.flogger.FluentLogger;
+import java.time.Instant;
 
 public class PicoStarter {
   public static final FluentLogger logger = FluentLogger.forEnclosingClass();
@@ -14,7 +14,8 @@ public class PicoStarter {
    */
   public static void main(String args[]) {
     System.setProperty(
-      "flogger.backend_factory", "com.google.common.flogger.backend.log4j2.Log4j2BackendFactory#getInstance");
+        "flogger.backend_factory",
+        "com.google.common.flogger.backend.log4j2.Log4j2BackendFactory#getInstance");
 
     AppComponent component = DaggerAppComponent.create();
 

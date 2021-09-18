@@ -1,6 +1,6 @@
 package org.emulinker.kaillera.controller.v086.action;
 
-import org.apache.commons.logging.*;
+import com.google.common.flogger.FluentLogger;
 import org.emulinker.kaillera.access.AccessManager;
 import org.emulinker.kaillera.controller.messaging.MessageFormatException;
 import org.emulinker.kaillera.controller.v086.V086Controller;
@@ -10,7 +10,8 @@ import org.emulinker.kaillera.model.event.*;
 import org.emulinker.kaillera.model.impl.*;
 
 public class LoginAction implements V086Action, V086ServerEventHandler {
-  private static Log log = LogFactory.getLog(LoginAction.class);
+  private static final FluentLogger logger = FluentLogger.forEnclosingClass();
+
   private static final String desc = "LoginAction";
   private static LoginAction singleton = new LoginAction();
 
@@ -55,7 +56,7 @@ public class LoginAction implements V086Action, V086ServerEventHandler {
     try {
       clientHandler.send(ServerACK.create(clientHandler.getNextMessageNumber()));
     } catch (MessageFormatException e) {
-      log.error("Failed to contruct ServerACK message: " + e.getMessage(), e);
+      logger.atSevere().withCause(e).log("Failed to contruct ServerACK message");
     }
   }
 
@@ -103,7 +104,7 @@ public class LoginAction implements V086Action, V086ServerEventHandler {
         }
       }
     } catch (MessageFormatException e) {
-      log.error("Failed to contruct UserJoined_Notification message: " + e.getMessage(), e);
+      logger.atSevere().withCause(e).log("Failed to contruct UserJoined_Notification message");
     }
   }
 }
