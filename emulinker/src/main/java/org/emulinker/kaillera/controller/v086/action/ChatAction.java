@@ -4,6 +4,8 @@ import com.google.common.base.Strings;
 import com.google.common.flogger.FluentLogger;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
+import javax.inject.Inject;
+import javax.inject.Singleton;
 import org.emulinker.kaillera.access.AccessManager;
 import org.emulinker.kaillera.controller.messaging.MessageFormatException;
 import org.emulinker.kaillera.controller.v086.V086Controller;
@@ -14,21 +16,22 @@ import org.emulinker.kaillera.model.impl.KailleraUserImpl;
 import org.emulinker.release.ReleaseInfo;
 import org.emulinker.util.EmuLang;
 
+@Singleton
 public class ChatAction implements V086Action, V086ServerEventHandler {
   private static final FluentLogger logger = FluentLogger.forEnclosingClass();
 
   public static final String ADMIN_COMMAND_ESCAPE_STRING = "/";
-  private static final String desc = "ChatAction";
-  private static ChatAction singleton = new ChatAction();
+  private static final String DESC = "ChatAction";
 
-  public static ChatAction getInstance() {
-    return singleton;
-  }
+  private final AdminCommandAction adminCommandAction;
 
   private int actionCount = 0;
   private int handledCount = 0;
 
-  private ChatAction() {}
+  @Inject
+  ChatAction(AdminCommandAction adminCommandAction) {
+    this.adminCommandAction = adminCommandAction;
+  }
 
   @Override
   public int getActionPerformedCount() {
@@ -42,7 +45,7 @@ public class ChatAction implements V086Action, V086ServerEventHandler {
 
   @Override
   public String toString() {
-    return desc;
+    return DESC;
   }
 
   @Override
@@ -58,8 +61,8 @@ public class ChatAction implements V086Action, V086ServerEventHandler {
     if (chatMessage.message().startsWith(ADMIN_COMMAND_ESCAPE_STRING)) {
       if (clientHandler.getUser().getAccess() > AccessManager.ACCESS_ELEVATED) {
         try {
-          if (AdminCommandAction.getInstance().isValidCommand(chatMessage.message())) {
-            AdminCommandAction.getInstance().performAction(chatMessage, clientHandler);
+          if (adminCommandAction.isValidCommand(chatMessage.message())) {
+            adminCommandAction.performAction(chatMessage, clientHandler);
             if (chatMessage.message().equals("/help")) checkCommands(chatMessage, clientHandler);
           } else checkCommands(chatMessage, clientHandler);
         } catch (FatalActionException e) {

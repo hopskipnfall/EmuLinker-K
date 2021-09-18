@@ -1,23 +1,22 @@
 package org.emulinker.kaillera.controller.v086.action;
 
 import com.google.common.flogger.FluentLogger;
+import javax.inject.Inject;
+import javax.inject.Singleton;
 import org.emulinker.kaillera.controller.v086.V086Controller;
 import org.emulinker.kaillera.model.KailleraUser;
 import org.emulinker.kaillera.model.event.*;
 
+@Singleton
 public class GameTimeoutAction implements V086GameEventHandler {
   private static final FluentLogger logger = FluentLogger.forEnclosingClass();
 
-  private static final String desc = "GameTimeoutAction";
-  private static GameTimeoutAction singleton = new GameTimeoutAction();
-
-  public static GameTimeoutAction getInstance() {
-    return singleton;
-  }
+  private static final String DESC = "GameTimeoutAction";
 
   private int handledCount = 0;
 
-  private GameTimeoutAction() {}
+  @Inject
+  GameTimeoutAction() {}
 
   @Override
   public int getHandledEventCount() {
@@ -26,7 +25,7 @@ public class GameTimeoutAction implements V086GameEventHandler {
 
   @Override
   public String toString() {
-    return desc;
+    return DESC;
   }
 
   @Override

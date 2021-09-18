@@ -4,6 +4,8 @@ import com.google.common.base.Strings;
 import com.google.common.flogger.FluentLogger;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
+import javax.inject.Inject;
+import javax.inject.Singleton;
 import org.emulinker.kaillera.access.AccessManager;
 import org.emulinker.kaillera.controller.messaging.MessageFormatException;
 import org.emulinker.kaillera.controller.v086.V086Controller;
@@ -13,22 +15,23 @@ import org.emulinker.kaillera.model.exception.ActionException;
 import org.emulinker.kaillera.model.exception.GameChatException;
 import org.emulinker.kaillera.model.impl.KailleraUserImpl;
 
+@Singleton
 public class GameChatAction implements V086Action, V086GameEventHandler {
   private static final FluentLogger logger = FluentLogger.forEnclosingClass();
 
   public static final String ADMIN_COMMAND_ESCAPE_STRING = "/";
-  private static final String desc = "GameChatAction";
+  private static final String DESC = "GameChatAction";
   public static final byte STATUS_IDLE = 1;
-  private static GameChatAction singleton = new GameChatAction();
 
-  public static GameChatAction getInstance() {
-    return singleton;
-  }
+  private final GameOwnerCommandAction gameOwnerCommandAction;
 
   private int actionCount = 0;
   private int handledCount = 0;
 
-  private GameChatAction() {}
+  @Inject
+  GameChatAction(GameOwnerCommandAction gameOwnerCommandAction) {
+    this.gameOwnerCommandAction = gameOwnerCommandAction;
+  }
 
   @Override
   public int getActionPerformedCount() {
@@ -42,7 +45,7 @@ public class GameChatAction implements V086Action, V086GameEventHandler {
 
   @Override
   public String toString() {
-    return desc;
+    return DESC;
   }
 
   @Override
@@ -61,8 +64,8 @@ public class GameChatAction implements V086Action, V086GameEventHandler {
       // if(clientHandler.getUser().getAccess() >= AccessManager.ACCESS_ADMIN ||
       // clientHandler.getUser().equals(clientHandler.getUser().getGame().getOwner())){
       try {
-        if (GameOwnerCommandAction.getInstance().isValidCommand(((GameChat) message).message())) {
-          GameOwnerCommandAction.getInstance().performAction(message, clientHandler);
+        if (gameOwnerCommandAction.isValidCommand(((GameChat) message).message())) {
+          gameOwnerCommandAction.performAction(message, clientHandler);
           if (((GameChat) message).message().equals("/help")) checkCommands(message, clientHandler);
         } else checkCommands(message, clientHandler);
         return;

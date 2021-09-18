@@ -2,6 +2,8 @@ package org.emulinker.kaillera.controller.v086.action;
 
 import com.google.common.flogger.FluentLogger;
 import java.util.*;
+import javax.inject.Inject;
+import javax.inject.Singleton;
 import org.emulinker.kaillera.controller.messaging.MessageFormatException;
 import org.emulinker.kaillera.controller.v086.V086Controller;
 import org.emulinker.kaillera.controller.v086.protocol.*;
@@ -9,20 +11,17 @@ import org.emulinker.kaillera.model.*;
 import org.emulinker.kaillera.model.event.*;
 import org.emulinker.kaillera.model.exception.LoginException;
 
+@Singleton
 public class ACKAction implements V086Action, V086UserEventHandler {
   private static final FluentLogger logger = FluentLogger.forEnclosingClass();
-  private static final String desc = "ACKAction";
-  private static ACKAction singleton = new ACKAction();
+  private static final String DESC = "ACKAction";
   private static int numAcksForSpeedTest = 3;
 
   private int actionCount = 0;
   private int handledCount = 0;
 
-  public static ACKAction getInstance() {
-    return singleton;
-  }
-
-  private ACKAction() {}
+  @Inject
+  ACKAction() {}
 
   @Override
   public int getActionPerformedCount() {
@@ -36,7 +35,7 @@ public class ACKAction implements V086Action, V086UserEventHandler {
 
   @Override
   public String toString() {
-    return desc;
+    return DESC;
   }
 
   @Override

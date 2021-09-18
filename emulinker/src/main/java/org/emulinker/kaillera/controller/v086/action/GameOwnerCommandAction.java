@@ -2,6 +2,8 @@ package org.emulinker.kaillera.controller.v086.action;
 
 import com.google.common.flogger.FluentLogger;
 import java.util.*;
+import javax.inject.Inject;
+import javax.inject.Singleton;
 import org.emulinker.kaillera.access.AccessManager;
 import org.emulinker.kaillera.controller.messaging.MessageFormatException;
 import org.emulinker.kaillera.controller.v086.V086Controller;
@@ -11,6 +13,7 @@ import org.emulinker.kaillera.model.exception.ActionException;
 import org.emulinker.kaillera.model.impl.*;
 import org.emulinker.util.EmuLang;
 
+@Singleton
 public class GameOwnerCommandAction implements V086Action {
   private static final FluentLogger logger = FluentLogger.forEnclosingClass();
 
@@ -33,16 +36,12 @@ public class GameOwnerCommandAction implements V086Action {
   public static final String COMMAND_NUM = "/num";
 
   private static long lastMaxUserChange = 0;
-  private static final String desc = "GameOwnerCommandAction";
-  private static GameOwnerCommandAction singleton = new GameOwnerCommandAction();
-
-  public static GameOwnerCommandAction getInstance() {
-    return singleton;
-  }
+  private static final String DESC = "GameOwnerCommandAction";
 
   private int actionCount = 0;
 
-  private GameOwnerCommandAction() {}
+  @Inject
+  GameOwnerCommandAction() {}
 
   @Override
   public int getActionPerformedCount() {
@@ -51,7 +50,7 @@ public class GameOwnerCommandAction implements V086Action {
 
   @Override
   public String toString() {
-    return desc;
+    return DESC;
   }
 
   public boolean isValidCommand(String chat) {

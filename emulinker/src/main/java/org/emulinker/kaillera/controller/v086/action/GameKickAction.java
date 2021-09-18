@@ -1,24 +1,23 @@
 package org.emulinker.kaillera.controller.v086.action;
 
 import com.google.common.flogger.FluentLogger;
+import javax.inject.Inject;
+import javax.inject.Singleton;
 import org.emulinker.kaillera.controller.messaging.MessageFormatException;
 import org.emulinker.kaillera.controller.v086.V086Controller;
 import org.emulinker.kaillera.controller.v086.protocol.*;
 import org.emulinker.kaillera.model.exception.GameKickException;
 
+@Singleton
 public class GameKickAction implements V086Action {
   private static final FluentLogger logger = FluentLogger.forEnclosingClass();
 
-  private static final String desc = "GameKickAction";
-  private static GameKickAction singleton = new GameKickAction();
-
-  public static GameKickAction getInstance() {
-    return singleton;
-  }
+  private static final String DESC = "GameKickAction";
 
   private int actionCount = 0;
 
-  private GameKickAction() {}
+  @Inject
+  GameKickAction() {}
 
   @Override
   public int getActionPerformedCount() {
@@ -27,7 +26,7 @@ public class GameKickAction implements V086Action {
 
   @Override
   public String toString() {
-    return desc;
+    return DESC;
   }
 
   @Override

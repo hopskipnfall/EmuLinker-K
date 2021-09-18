@@ -1,24 +1,23 @@
 package org.emulinker.kaillera.controller.v086.action;
 
 import com.google.common.flogger.FluentLogger;
+import javax.inject.Inject;
+import javax.inject.Singleton;
 import org.emulinker.kaillera.controller.messaging.MessageFormatException;
 import org.emulinker.kaillera.controller.v086.V086Controller;
 import org.emulinker.kaillera.controller.v086.protocol.CloseGame;
 import org.emulinker.kaillera.model.event.*;
 
+@Singleton
 public class CloseGameAction implements V086ServerEventHandler {
   private static final FluentLogger logger = FluentLogger.forEnclosingClass();
 
-  private static final String desc = "CloseGameAction";
-  private static CloseGameAction singleton = new CloseGameAction();
-
-  public static CloseGameAction getInstance() {
-    return singleton;
-  }
+  private static final String DESC = "CloseGameAction";
 
   private int handledCount;
 
-  private CloseGameAction() {}
+  @Inject
+  CloseGameAction() {}
 
   @Override
   public int getHandledEventCount() {
@@ -27,7 +26,7 @@ public class CloseGameAction implements V086ServerEventHandler {
 
   @Override
   public String toString() {
-    return desc;
+    return DESC;
   }
 
   @Override

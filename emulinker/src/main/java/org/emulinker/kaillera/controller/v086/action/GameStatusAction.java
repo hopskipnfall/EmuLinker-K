@@ -1,6 +1,8 @@
 package org.emulinker.kaillera.controller.v086.action;
 
 import com.google.common.flogger.FluentLogger;
+import javax.inject.Inject;
+import javax.inject.Singleton;
 import org.emulinker.kaillera.controller.messaging.MessageFormatException;
 import org.emulinker.kaillera.controller.v086.V086Controller;
 import org.emulinker.kaillera.controller.v086.protocol.GameStatus;
@@ -8,19 +10,16 @@ import org.emulinker.kaillera.model.KailleraGame;
 import org.emulinker.kaillera.model.KailleraUser;
 import org.emulinker.kaillera.model.event.*;
 
+@Singleton
 public class GameStatusAction implements V086ServerEventHandler {
   private static final FluentLogger logger = FluentLogger.forEnclosingClass();
 
-  private static final String desc = "GameStatusAction";
-  private static GameStatusAction singleton = new GameStatusAction();
-
-  public static GameStatusAction getInstance() {
-    return singleton;
-  }
+  private static final String DESC = "GameStatusAction";
 
   private int handledCount = 0;
 
-  private GameStatusAction() {}
+  @Inject
+  GameStatusAction() {}
 
   @Override
   public int getHandledEventCount() {
@@ -29,7 +28,7 @@ public class GameStatusAction implements V086ServerEventHandler {
 
   @Override
   public String toString() {
-    return desc;
+    return DESC;
   }
 
   @Override
