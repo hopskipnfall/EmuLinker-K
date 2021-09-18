@@ -68,7 +68,7 @@ public final class KailleraServerImpl implements KailleraServer, Executable {
   private boolean switchTrivia = false;
 
   @Inject
-  public KailleraServerImpl(
+  KailleraServerImpl(
       ThreadPoolExecutor threadPool,
       AccessManager accessManager,
       Configuration config,

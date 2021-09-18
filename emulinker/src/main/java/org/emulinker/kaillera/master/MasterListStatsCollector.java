@@ -10,7 +10,7 @@ public final class MasterListStatsCollector implements StatsCollector {
   private ArrayList<String> startedGamesList = new ArrayList<String>();
 
   @Inject
-  public MasterListStatsCollector() {}
+  MasterListStatsCollector() {}
 
   @Override
   public synchronized void gameStarted(KailleraServer server, KailleraGame game) {

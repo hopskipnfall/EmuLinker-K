@@ -47,7 +47,7 @@ public final class V086Controller implements KailleraServerController {
   private V086Action[] actions = new V086Action[25];
 
   @Inject
-  public V086Controller(
+  V086Controller(
       KailleraServer server,
       ThreadPoolExecutor threadPool,
       AccessManager accessManager,

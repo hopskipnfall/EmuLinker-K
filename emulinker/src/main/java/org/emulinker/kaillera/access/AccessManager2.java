@@ -40,7 +40,7 @@ public final class AccessManager2 implements AccessManager, Runnable {
   private List<Silence> silenceList = new CopyOnWriteArrayList<Silence>();
 
   @Inject
-  public AccessManager2(ThreadPoolExecutor threadPool) {
+  AccessManager2(ThreadPoolExecutor threadPool) {
     this.threadPool = threadPool;
 
     URL url = AccessManager2.class.getResource("/access.cfg");

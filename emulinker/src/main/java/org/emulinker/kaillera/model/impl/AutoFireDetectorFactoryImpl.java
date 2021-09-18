@@ -6,7 +6,7 @@ import org.emulinker.kaillera.model.*;
 public final class AutoFireDetectorFactoryImpl implements AutoFireDetectorFactory {
 
   @Inject
-  public AutoFireDetectorFactoryImpl() {}
+  AutoFireDetectorFactoryImpl() {}
 
   @Override
   public AutoFireDetector getInstance(KailleraGame game, int defaultSensitivity) {

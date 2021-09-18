@@ -31,7 +31,7 @@ public class MasterListUpdaterImpl implements MasterListUpdater, Executable {
   private boolean isRunning = false;
 
   @Inject
-  public MasterListUpdaterImpl(
+  MasterListUpdaterImpl(
       Configuration config,
       ThreadPoolExecutor threadPool,
       ConnectController connectController,
