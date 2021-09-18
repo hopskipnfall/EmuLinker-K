@@ -34,47 +34,33 @@ public abstract class AppModule {
     }
   }
 
-  @Provides
-  public static ThreadPoolExecutor providThreadPoolExecutor(EmuLinkerExecutor emuLinkerExecutor) {
-    return emuLinkerExecutor;
-  }
+  @Binds
+  public abstract ThreadPoolExecutor bindThreadPoolExecutor(EmuLinkerExecutor emuLinkerExecutor);
 
-  @Provides
-  public static ReleaseInfo provideKailleraServerReleaseInfo(
-      KailleraServerReleaseInfo kailleraServerReleaseInfo) {
-    return kailleraServerReleaseInfo;
-  }
+  @Binds
+  public abstract ReleaseInfo bindKailleraServerReleaseInfo(
+      KailleraServerReleaseInfo kailleraServerReleaseInfo);
 
-  @Provides
-  public static AccessManager provideAccessManager(AccessManager2 accessManager2) {
-    return accessManager2;
-  }
+  @Binds
+  public abstract AccessManager bindAccessManager(AccessManager2 accessManager2);
 
-  @Provides
-  public static AutoFireDetectorFactory provideAutoFireDetectorFactory(
-      AutoFireDetectorFactoryImpl autoFireDetectorFactoryImpl) {
-    return autoFireDetectorFactoryImpl;
-  }
+  @Binds
+  public abstract AutoFireDetectorFactory bindAutoFireDetectorFactory(
+      AutoFireDetectorFactoryImpl autoFireDetectorFactoryImpl);
 
-  @Provides
-  public static KailleraServer provideKailleraServer(KailleraServerImpl kailleraServerImpl) {
-    return kailleraServerImpl;
-  }
+  @Binds
+  public abstract KailleraServer bindKailleraServer(KailleraServerImpl kailleraServerImpl);
 
-  @Provides
-  public static KailleraServerController provideKailleraServerController(
-      V086Controller v086Controller) {
-    return v086Controller;
-  }
-
-  @Provides
-  public static StatsCollector providStatsCollector(
-      MasterListStatsCollector masterListStatsCollector) {
-    return masterListStatsCollector;
-  }
+  @Binds
+  public abstract KailleraServerController bindKailleraServerController(
+      V086Controller v086Controller);
 
   @Binds
   @IntoSet
-  public abstract KailleraServerController bindKailleraServerController(
+  public abstract KailleraServerController bindKailleraServerControllerToSet(
       V086Controller v086Controller);
+
+  @Binds
+  public abstract StatsCollector bindStatsCollector(
+      MasterListStatsCollector masterListStatsCollector);
 }
