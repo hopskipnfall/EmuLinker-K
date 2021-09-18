@@ -432,7 +432,7 @@ public final class KailleraServerImpl implements KailleraServer, Executable {
       throw new LoginException(EmuLang.getString("KailleraServerImpl.LoginDeniedAlreadyLoggedIn"));
     }
 
-    Integer userListKey = new Integer(user.getID());
+    Integer userListKey = user.getID();
     KailleraUser u = users.get(userListKey);
     if (u == null) {
       logger.atWarning().log(user + " login denied: Connection timed out!");

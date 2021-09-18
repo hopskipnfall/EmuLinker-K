@@ -12,9 +12,8 @@ import org.mortbay.http.handler.*;
 import org.mortbay.jetty.Server;
 import org.mortbay.jetty.servlet.*;
 import org.mortbay.util.InetAddrPort;
-import org.picocontainer.Startable;
 
-public class KailleraAdminHttpServer implements Startable {
+public class KailleraAdminHttpServer {
   private static final FluentLogger logger = FluentLogger.forEnclosingClass();
 
   protected Server appServer = new Server();
@@ -95,7 +94,6 @@ public class KailleraAdminHttpServer implements Startable {
     }
   }
 
-  @Override
   public void start() {
     logger.atInfo().log("Starting Web-based Admin Interface.");
 
@@ -108,7 +106,6 @@ public class KailleraAdminHttpServer implements Startable {
     }
   }
 
-  @Override
   public void stop() {
     logger.atInfo().log("Stoping!");
 

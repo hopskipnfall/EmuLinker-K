@@ -13,6 +13,8 @@ import org.emulinker.kaillera.controller.KailleraServerController;
 import org.emulinker.kaillera.controller.v086.V086Controller;
 import org.emulinker.kaillera.master.MasterListStatsCollector;
 import org.emulinker.kaillera.master.StatsCollector;
+import org.emulinker.kaillera.master.client.MasterListUpdater;
+import org.emulinker.kaillera.master.client.MasterListUpdaterImpl;
 import org.emulinker.kaillera.model.KailleraServer;
 import org.emulinker.kaillera.model.impl.AutoFireDetectorFactory;
 import org.emulinker.kaillera.model.impl.AutoFireDetectorFactoryImpl;
@@ -63,4 +65,8 @@ public abstract class AppModule {
   @Binds
   public abstract StatsCollector bindStatsCollector(
       MasterListStatsCollector masterListStatsCollector);
+
+  @Binds
+  public abstract MasterListUpdater bindMasterListUpdaterImpl(
+      MasterListUpdaterImpl masterListUpdaterImpl);
 }

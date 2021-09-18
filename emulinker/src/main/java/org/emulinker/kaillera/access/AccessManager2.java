@@ -9,11 +9,12 @@ import java.net.*;
 import java.util.*;
 import java.util.concurrent.*;
 import javax.inject.Inject;
+import javax.inject.Singleton;
 import org.emulinker.kaillera.relay.KailleraRelay;
 import org.emulinker.util.WildcardStringPattern;
-import org.picocontainer.Startable;
 
-public final class AccessManager2 implements AccessManager, Startable, Runnable {
+@Singleton
+public final class AccessManager2 implements AccessManager, Runnable {
   static {
     java.security.Security.setProperty("networkaddress.cache.ttl", "60");
     java.security.Security.setProperty("networkaddress.cache.negative.ttl", "60");
@@ -65,7 +66,6 @@ public final class AccessManager2 implements AccessManager, Startable, Runnable 
     threadPool.execute(this);
   }
 
-  @Override
   public synchronized void start() {
     logger.atFine().log("AccessManager2 thread received start request!");
     logger.atFine().log(
@@ -82,7 +82,6 @@ public final class AccessManager2 implements AccessManager, Startable, Runnable 
     return isRunning;
   }
 
-  @Override
   public synchronized void stop() {
     logger.atFine().log("AccessManager2 thread received stop request!");
 

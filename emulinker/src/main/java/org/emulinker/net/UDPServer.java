@@ -7,9 +7,8 @@ import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.channels.DatagramChannel;
 import org.emulinker.util.*;
-import org.picocontainer.Startable;
 
-public abstract class UDPServer implements Executable, Startable {
+public abstract class UDPServer implements Executable {
   private static final FluentLogger logger = FluentLogger.forEnclosingClass();
   /*
   	private static int		artificalPacketLossPercentage = 0;
@@ -64,7 +63,6 @@ public abstract class UDPServer implements Executable, Startable {
     return channel.isConnected();
   }
 
-  @Override
   public synchronized void start() {
     logger.atFine().log(toString() + " received start request!");
     if (isRunning) {

@@ -2,6 +2,8 @@ package org.emulinker.kaillera.master.client;
 
 import com.google.common.flogger.FluentLogger;
 import java.util.concurrent.ThreadPoolExecutor;
+import javax.inject.Inject;
+import javax.inject.Singleton;
 import org.apache.commons.configuration.Configuration;
 import org.emulinker.kaillera.controller.connectcontroller.ConnectController;
 import org.emulinker.kaillera.master.*;
@@ -9,9 +11,9 @@ import org.emulinker.kaillera.master.StatsCollector;
 import org.emulinker.kaillera.model.*;
 import org.emulinker.release.*;
 import org.emulinker.util.Executable;
-import org.picocontainer.Startable;
 
-public class MasterListUpdaterImpl implements MasterListUpdater, Executable, Startable {
+@Singleton
+public class MasterListUpdaterImpl implements MasterListUpdater, Executable {
   private static final FluentLogger logger = FluentLogger.forEnclosingClass();
 
   private ThreadPoolExecutor threadPool;
@@ -28,14 +30,14 @@ public class MasterListUpdaterImpl implements MasterListUpdater, Executable, Sta
   private boolean stopFlag = false;
   private boolean isRunning = false;
 
+  @Inject
   public MasterListUpdaterImpl(
       Configuration config,
       ThreadPoolExecutor threadPool,
       ConnectController connectController,
       KailleraServer kailleraServer,
       StatsCollector statsCollector,
-      ReleaseInfo releaseInfo)
-      throws Exception {
+      ReleaseInfo releaseInfo) {
     this.threadPool = threadPool;
     this.statsCollector = statsCollector;
 
@@ -68,7 +70,6 @@ public class MasterListUpdaterImpl implements MasterListUpdater, Executable, Sta
         + "]";
   }
 
-  @Override
   public synchronized void start() {
     if (publicInfo != null) {
       logger.atFine().log("MasterListUpdater thread received start request!");
