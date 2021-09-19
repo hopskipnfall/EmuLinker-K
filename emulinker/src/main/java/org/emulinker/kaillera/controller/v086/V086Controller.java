@@ -47,11 +47,33 @@ public final class V086Controller implements KailleraServerController {
   private V086Action[] actions = new V086Action[25];
 
   @Inject
-  public V086Controller(
+  V086Controller(
       KailleraServer server,
       ThreadPoolExecutor threadPool,
       AccessManager accessManager,
-      Configuration config) {
+      Configuration config,
+      LoginAction loginAction,
+      ACKAction ackAction,
+      ChatAction chatAction,
+      CreateGameAction createGameAction,
+      JoinGameAction joinGameAction,
+      KeepAliveAction keepAliveAction,
+      QuitGameAction quitGameAction,
+      QuitAction quitAction,
+      StartGameAction startGameAction,
+      GameChatAction gameChatAction,
+      GameKickAction gameKickAction,
+      UserReadyAction userReadyAction,
+      CachedGameDataAction cachedGameDataAction,
+      GameDataAction gameDataAction,
+      DropGameAction dropGameAction,
+      CloseGameAction closeGameAction,
+      GameStatusAction gameStatusAction,
+      GameDesynchAction gameDesynchAction,
+      PlayerDesynchAction playerDesynchAction,
+      GameInfoAction gameInfoAction,
+      GameTimeoutAction gameTimeoutAction,
+      InfoMessageAction infoMessageAction) {
     this.threadPool = threadPool;
     this.server = server;
     this.bufferSize = config.getInt("controllers.v086.bufferSize");
@@ -76,54 +98,54 @@ public final class V086Controller implements KailleraServerController {
 
     // array access should be faster than a hash and we won't have to create
     // a new Integer each time
-    actions[UserInformation.ID] = LoginAction.getInstance();
-    actions[ClientACK.ID] = ACKAction.getInstance();
-    actions[Chat.ID] = ChatAction.getInstance();
-    actions[CreateGame.ID] = CreateGameAction.getInstance();
-    actions[JoinGame.ID] = JoinGameAction.getInstance();
-    actions[KeepAlive.ID] = KeepAliveAction.getInstance();
-    actions[QuitGame.ID] = QuitGameAction.getInstance();
-    actions[Quit.ID] = QuitAction.getInstance();
-    actions[StartGame.ID] = StartGameAction.getInstance();
-    actions[GameChat.ID] = GameChatAction.getInstance();
-    actions[GameKick.ID] = GameKickAction.getInstance();
-    actions[AllReady.ID] = UserReadyAction.getInstance();
-    actions[CachedGameData.ID] = CachedGameDataAction.getInstance();
-    actions[GameData.ID] = GameDataAction.getInstance();
-    actions[PlayerDrop.ID] = DropGameAction.getInstance();
+    actions[UserInformation.ID] = loginAction;
+    actions[ClientACK.ID] = ackAction;
+    actions[Chat.ID] = chatAction;
+    actions[CreateGame.ID] = createGameAction;
+    actions[JoinGame.ID] = joinGameAction;
+    actions[KeepAlive.ID] = keepAliveAction;
+    actions[QuitGame.ID] = quitGameAction;
+    actions[Quit.ID] = quitAction;
+    actions[StartGame.ID] = startGameAction;
+    actions[GameChat.ID] = gameChatAction;
+    actions[GameKick.ID] = gameKickAction;
+    actions[AllReady.ID] = userReadyAction;
+    actions[CachedGameData.ID] = cachedGameDataAction;
+    actions[GameData.ID] = gameDataAction;
+    actions[PlayerDrop.ID] = dropGameAction;
 
     // setup the server event handlers
     serverEventHandlers =
         ImmutableMap.<Class<?>, V086ServerEventHandler>builder()
-            .put(ChatEvent.class, ChatAction.getInstance())
-            .put(GameCreatedEvent.class, CreateGameAction.getInstance())
-            .put(UserJoinedEvent.class, LoginAction.getInstance())
-            .put(GameClosedEvent.class, CloseGameAction.getInstance())
-            .put(UserQuitEvent.class, QuitAction.getInstance())
-            .put(GameStatusChangedEvent.class, GameStatusAction.getInstance())
+            .put(ChatEvent.class, chatAction)
+            .put(GameCreatedEvent.class, createGameAction)
+            .put(UserJoinedEvent.class, loginAction)
+            .put(GameClosedEvent.class, closeGameAction)
+            .put(UserQuitEvent.class, quitAction)
+            .put(GameStatusChangedEvent.class, gameStatusAction)
             .build();
 
     // setup the game event handlers
     gameEventHandlers =
         ImmutableMap.<Class<?>, V086GameEventHandler>builder()
-            .put(UserJoinedGameEvent.class, JoinGameAction.getInstance())
-            .put(UserQuitGameEvent.class, QuitGameAction.getInstance())
-            .put(GameStartedEvent.class, StartGameAction.getInstance())
-            .put(GameChatEvent.class, GameChatAction.getInstance())
-            .put(AllReadyEvent.class, UserReadyAction.getInstance())
-            .put(GameDataEvent.class, GameDataAction.getInstance())
-            .put(UserDroppedGameEvent.class, DropGameAction.getInstance())
-            .put(GameDesynchEvent.class, GameDesynchAction.getInstance())
-            .put(PlayerDesynchEvent.class, PlayerDesynchAction.getInstance())
-            .put(GameInfoEvent.class, GameInfoAction.getInstance())
-            .put(GameTimeoutEvent.class, GameTimeoutAction.getInstance())
+            .put(UserJoinedGameEvent.class, joinGameAction)
+            .put(UserQuitGameEvent.class, quitGameAction)
+            .put(GameStartedEvent.class, startGameAction)
+            .put(GameChatEvent.class, gameChatAction)
+            .put(AllReadyEvent.class, userReadyAction)
+            .put(GameDataEvent.class, gameDataAction)
+            .put(UserDroppedGameEvent.class, dropGameAction)
+            .put(GameDesynchEvent.class, gameDesynchAction)
+            .put(PlayerDesynchEvent.class, playerDesynchAction)
+            .put(GameInfoEvent.class, gameInfoAction)
+            .put(GameTimeoutEvent.class, gameTimeoutAction)
             .build();
 
     // setup the user event handlers
     userEventHandlers =
         ImmutableMap.<Class<?>, V086UserEventHandler>builder()
-            .put(ConnectedEvent.class, ACKAction.getInstance())
-            .put(InfoMessageEvent.class, InfoMessageAction.getInstance())
+            .put(ConnectedEvent.class, ackAction)
+            .put(InfoMessageEvent.class, infoMessageAction)
             .build();
   }
 

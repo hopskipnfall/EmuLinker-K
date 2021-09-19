@@ -42,7 +42,7 @@ public final class ConnectController extends UDPServer {
   private int pingCount = 0;
 
   @Inject
-  public ConnectController(
+  ConnectController(
       ThreadPoolExecutor threadPool,
       Set<KailleraServerController> kailleraServerControllers,
       AccessManager accessManager,

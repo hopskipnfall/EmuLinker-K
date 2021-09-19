@@ -1,24 +1,23 @@
 package org.emulinker.kaillera.controller.v086.action;
 
 import com.google.common.flogger.FluentLogger;
+import javax.inject.Inject;
+import javax.inject.Singleton;
 import org.emulinker.kaillera.controller.messaging.MessageFormatException;
 import org.emulinker.kaillera.controller.v086.V086Controller;
 import org.emulinker.kaillera.controller.v086.protocol.InformationMessage;
 import org.emulinker.kaillera.model.event.*;
 
+@Singleton
 public class InfoMessageAction implements V086UserEventHandler {
   private static final FluentLogger logger = FluentLogger.forEnclosingClass();
 
-  private static final String desc = "InfoMessageAction";
-  private static InfoMessageAction singleton = new InfoMessageAction();
-
-  public static InfoMessageAction getInstance() {
-    return singleton;
-  }
+  private static final String DESC = "InfoMessageAction";
 
   private int handledCount = 0;
 
-  private InfoMessageAction() {}
+  @Inject
+  InfoMessageAction() {}
 
   @Override
   public int getHandledEventCount() {
@@ -27,7 +26,7 @@ public class InfoMessageAction implements V086UserEventHandler {
 
   @Override
   public String toString() {
-    return desc;
+    return DESC;
   }
 
   @Override

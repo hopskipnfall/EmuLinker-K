@@ -1,25 +1,24 @@
 package org.emulinker.kaillera.controller.v086.action;
 
 import com.google.common.flogger.FluentLogger;
+import javax.inject.Inject;
+import javax.inject.Singleton;
 import org.emulinker.kaillera.controller.messaging.MessageFormatException;
 import org.emulinker.kaillera.controller.v086.V086Controller;
 import org.emulinker.kaillera.controller.v086.protocol.*;
 import org.emulinker.kaillera.model.KailleraUser;
 import org.emulinker.kaillera.model.exception.GameDataException;
 
+@Singleton
 public class CachedGameDataAction implements V086Action {
   private static final FluentLogger logger = FluentLogger.forEnclosingClass();
 
-  private static final String desc = "CachedGameDataAction";
-  private static CachedGameDataAction singleton = new CachedGameDataAction();
-
-  public static CachedGameDataAction getInstance() {
-    return singleton;
-  }
+  private static final String DESC = "CachedGameDataAction";
 
   private int actionCount = 0;
 
-  private CachedGameDataAction() {}
+  @Inject
+  CachedGameDataAction() {}
 
   @Override
   public int getActionPerformedCount() {
@@ -28,7 +27,7 @@ public class CachedGameDataAction implements V086Action {
 
   @Override
   public String toString() {
-    return desc;
+    return DESC;
   }
 
   @Override

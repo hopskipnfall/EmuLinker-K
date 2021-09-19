@@ -1,6 +1,8 @@
 package org.emulinker.kaillera.controller.v086.action;
 
 import com.google.common.flogger.FluentLogger;
+import javax.inject.Inject;
+import javax.inject.Singleton;
 import org.emulinker.kaillera.controller.messaging.MessageFormatException;
 import org.emulinker.kaillera.controller.v086.V086Controller;
 import org.emulinker.kaillera.controller.v086.protocol.*;
@@ -8,20 +10,17 @@ import org.emulinker.kaillera.model.KailleraUser;
 import org.emulinker.kaillera.model.event.*;
 import org.emulinker.kaillera.model.exception.*;
 
+@Singleton
 public class QuitGameAction implements V086Action, V086GameEventHandler {
   private static final FluentLogger logger = FluentLogger.forEnclosingClass();
 
-  private static final String desc = "QuitGameAction";
-  private static QuitGameAction singleton = new QuitGameAction();
-
-  public static QuitGameAction getInstance() {
-    return singleton;
-  }
+  private static final String DESC = "QuitGameAction";
 
   private int actionCount = 0;
   private int handledCount = 0;
 
-  private QuitGameAction() {}
+  @Inject
+  QuitGameAction() {}
 
   @Override
   public int getActionPerformedCount() {
@@ -35,7 +34,7 @@ public class QuitGameAction implements V086Action, V086GameEventHandler {
 
   @Override
   public String toString() {
-    return desc;
+    return DESC;
   }
 
   @Override

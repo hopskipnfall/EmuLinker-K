@@ -3,6 +3,8 @@ package org.emulinker.kaillera.controller.v086.action;
 import com.google.common.flogger.FluentLogger;
 import java.net.InetAddress;
 import java.util.*;
+import javax.inject.Inject;
+import javax.inject.Singleton;
 import org.emulinker.kaillera.access.AccessManager;
 import org.emulinker.kaillera.controller.messaging.MessageFormatException;
 import org.emulinker.kaillera.controller.v086.V086Controller;
@@ -12,6 +14,7 @@ import org.emulinker.kaillera.model.impl.*;
 import org.emulinker.release.*;
 import org.emulinker.util.*;
 
+@Singleton
 public class AdminCommandAction implements V086Action {
   private static final FluentLogger logger = FluentLogger.forEnclosingClass();
 
@@ -34,16 +37,12 @@ public class AdminCommandAction implements V086Action {
   public static final String COMMAND_STEALTH = "/stealth";
   public static final String COMMAND_TEMPELEVATED = "/tempelevated";
   public static final String COMMAND_TEMPMODERATOR = "/tempmoderator";
-  private static final String desc = "AdminCommandAction";
-  private static AdminCommandAction singleton = new AdminCommandAction();
-
-  public static AdminCommandAction getInstance() {
-    return singleton;
-  }
+  private static final String DESC = "AdminCommandAction";
 
   private int actionCount = 0;
 
-  private AdminCommandAction() {}
+  @Inject
+  AdminCommandAction() {}
 
   @Override
   public int getActionPerformedCount() {
@@ -52,7 +51,7 @@ public class AdminCommandAction implements V086Action {
 
   @Override
   public String toString() {
-    return desc;
+    return DESC;
   }
 
   public boolean isValidCommand(String chat) {

@@ -20,7 +20,7 @@ public final class KailleraServerReleaseInfo implements ReleaseInfo {
   private final String website = "https://github.com/hopskipnfall/EmuLinkerSF-Netosuma";
 
   @Inject
-  public KailleraServerReleaseInfo() {}
+  KailleraServerReleaseInfo() {}
 
   @Override
   public final String getProductName() {
