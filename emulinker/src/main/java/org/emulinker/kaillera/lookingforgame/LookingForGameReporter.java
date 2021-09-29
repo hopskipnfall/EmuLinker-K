@@ -2,9 +2,20 @@ package org.emulinker.kaillera.lookingforgame;
 
 import com.google.auto.value.AutoValue;
 import com.google.common.flogger.FluentLogger;
+
+import io.reactivex.rxjava3.core.Observable;
+import io.reactivex.rxjava3.core.Scheduler;
+import io.reactivex.rxjava3.disposables.Disposable;
+import io.reactivex.rxjava3.schedulers.Schedulers;
+
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.TimeUnit;
+
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
@@ -18,13 +29,20 @@ public final class LookingForGameReporter {
 
   private static final Duration TIME_BEFORE_REPORTING = Duration.ofSeconds(10);
 
-  private final Map<Integer, LookingForGameReport> reports = new HashMap<>();
+  private static final ConcurrentMap<LookingForGameEvent, Disposable> reports = new ConcurrentHashMap<>();
 
   @Inject
-  LookingForGameReporter() {}
+  LookingForGameReporter() {
+
+  }
 
   /** After the number of seconds defined in the config, it will report. */
-  public void reportLookingForGame() {}
+  public void reportLookingForGame() {
+    Observable.defer(() -> Observable.just(42)).delay(3, TimeUnit.SECONDS).subscribeOn(Schedulers.single())
+    .take(1)
+    .doOnNext((myNum) -> logger.atSevere().log("The number is " + myNum))
+    .subscribe();
+  }
 
   public void cancelLookingForGame() {}
 

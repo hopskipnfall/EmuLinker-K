@@ -13,6 +13,7 @@ import javax.inject.Singleton;
 import org.apache.commons.configuration.*;
 import org.emulinker.config.RuntimeFlags;
 import org.emulinker.kaillera.access.AccessManager;
+import org.emulinker.kaillera.lookingforgame.LookingForGameReporter;
 import org.emulinker.kaillera.master.StatsCollector;
 import org.emulinker.kaillera.model.*;
 import org.emulinker.kaillera.model.event.*;
@@ -56,6 +57,8 @@ public final class KailleraServerImpl implements KailleraServer, Executable {
 
   private final RuntimeFlags flags;
 
+  private final LookingForGameReporter lookingForGameReporter;
+
   @Inject
   KailleraServerImpl(
       ThreadPoolExecutor threadPool,
@@ -64,7 +67,9 @@ public final class KailleraServerImpl implements KailleraServer, Executable {
       RuntimeFlags flags,
       StatsCollector statsCollector,
       ReleaseInfo releaseInfo,
-      AutoFireDetectorFactory autoFireDetectorFactory) {
+      AutoFireDetectorFactory autoFireDetectorFactory,
+      LookingForGameReporter lookingForGameReporter) {
+    this.lookingForGameReporter = lookingForGameReporter;
     this.flags = flags;
     this.threadPool = threadPool;
     this.accessManager = accessManager;
