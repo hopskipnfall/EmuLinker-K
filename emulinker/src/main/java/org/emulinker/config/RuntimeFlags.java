@@ -70,6 +70,8 @@ public abstract class RuntimeFlags {
 
   public abstract String serverWebsite();
 
+  public abstract int v086BufferSize();
+
   public static Builder builder() {
     return new AutoValue_RuntimeFlags.Builder();
   }
@@ -104,6 +106,7 @@ public abstract class RuntimeFlags {
         .setServerWebsite(config.getString("masterList.serverWebsite", ""))
         .setTouchEmulinker(config.getBoolean("masterList.touchEmulinker", false))
         .setTouchKaillera(config.getBoolean("masterList.touchKaillera", false))
+        .setV086BufferSize(config.getInt("controllers.v086.bufferSize", 4096))
         .build();
   }
 
@@ -192,6 +195,8 @@ public abstract class RuntimeFlags {
     public abstract Builder setServerName(String serverName);
 
     public abstract Builder setServerWebsite(String serverWebsite);
+
+    public abstract Builder setV086BufferSize(int v086BufferSize);
 
     protected abstract RuntimeFlags innerBuild();
 

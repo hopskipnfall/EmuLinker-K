@@ -1,5 +1,6 @@
 package org.emulinker.kaillera.pico;
 
+import com.codahale.metrics.MetricRegistry;
 import dagger.Component;
 import javax.inject.Singleton;
 import org.apache.commons.configuration.Configuration;
@@ -26,4 +27,6 @@ public abstract class AppComponent {
   public abstract KailleraServer getKailleraServer();
 
   public abstract MasterListUpdaterImpl getMasterListUpdaterImpl();
+
+  public abstract MetricRegistry getMetricRegistry();
 }

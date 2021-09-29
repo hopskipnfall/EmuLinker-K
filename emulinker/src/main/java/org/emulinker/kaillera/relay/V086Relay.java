@@ -1,6 +1,11 @@
 package org.emulinker.kaillera.relay;
 
+import com.codahale.metrics.MetricRegistry;
+import com.codahale.metrics.Timer;
 import com.google.common.flogger.FluentLogger;
+import dagger.assisted.Assisted;
+import dagger.assisted.AssistedFactory;
+import dagger.assisted.AssistedInject;
 import java.net.InetSocketAddress;
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
@@ -9,13 +14,23 @@ import org.emulinker.kaillera.controller.v086.protocol.*;
 import org.emulinker.net.UDPRelay;
 import org.emulinker.util.EmuUtil;
 
-public class V086Relay extends UDPRelay {
+public final class V086Relay extends UDPRelay {
   private static final FluentLogger logger = FluentLogger.forEnclosingClass();
 
   private int lastServerMessageNumber = -1;
   private int lastClientMessageNumber = -1;
 
-  public V086Relay(int listenPort, InetSocketAddress serverSocketAddress) throws Exception {
+  @AssistedFactory
+  public static interface Factory {
+    public V086Relay create(int listenPort, InetSocketAddress serverSocketAddress);
+  }
+
+  // TODO(nue): Check to see if this works.. i think it doesn't.
+  @AssistedInject
+  V086Relay(
+      @Assisted int listenPort,
+      @Assisted InetSocketAddress serverSocketAddress)
+      throws Exception {
     super(listenPort, serverSocketAddress);
   }
 
@@ -26,7 +41,7 @@ public class V086Relay extends UDPRelay {
 
   @Override
   protected ByteBuffer processClientToServer(
-      ByteBuffer receiveBuffer, InetSocketAddress fromAddress, InetSocketAddress toAddress) {
+    ByteBuffer receiveBuffer, InetSocketAddress fromAddress, InetSocketAddress toAddress) {
     V086Bundle inBundle = null;
 
     logger.atFine().log("-> " + EmuUtil.dumpBuffer(receiveBuffer));
@@ -69,7 +84,7 @@ public class V086Relay extends UDPRelay {
 
   @Override
   protected ByteBuffer processServerToClient(
-      ByteBuffer receiveBuffer, InetSocketAddress fromAddress, InetSocketAddress toAddress) {
+    ByteBuffer receiveBuffer, InetSocketAddress fromAddress, InetSocketAddress toAddress) {
     V086Bundle inBundle = null;
 
     logger.atFine().log("<- " + EmuUtil.dumpBuffer(receiveBuffer));

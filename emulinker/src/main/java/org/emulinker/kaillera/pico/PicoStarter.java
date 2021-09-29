@@ -1,5 +1,11 @@
 package org.emulinker.kaillera.pico;
 
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
+
+import com.codahale.metrics.ConsoleReporter;
+import com.codahale.metrics.Meter;
+import com.codahale.metrics.MetricRegistry;
 import com.google.common.flogger.FluentLogger;
 import java.time.Instant;
 import java.time.ZoneId;
@@ -34,5 +40,23 @@ public class PicoStarter {
     component.getServer().start();
     component.getKailleraServer().start();
     component.getMasterListUpdaterImpl().start();
+
+    MetricRegistry metrics = component.getMetricRegistry();
+    ConsoleReporter reporter =
+        ConsoleReporter.forRegistry(metrics)
+            .convertRatesTo(SECONDS)
+            .convertDurationsTo(MILLISECONDS)
+            .build();
+    reporter.start(5, SECONDS);
+
+    Meter requests = metrics.meter("requests");
+    requests.mark();
+    requests.mark();
+    requests.mark();
+    requests.mark();
+    requests.mark();
+    requests.mark();
+    requests.mark();
+    requests.mark();
   }
 }

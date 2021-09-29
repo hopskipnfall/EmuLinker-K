@@ -1,5 +1,6 @@
 package org.emulinker.net;
 
+import com.codahale.metrics.MetricRegistry;
 import com.google.common.flogger.FluentLogger;
 import java.net.*;
 import java.nio.ByteBuffer;
@@ -11,8 +12,9 @@ public abstract class PrivateUDPServer extends UDPServer {
   private InetAddress remoteAddress;
   private InetSocketAddress remoteSocketAddress;
 
-  public PrivateUDPServer(boolean shutdownOnExit, InetAddress remoteAddress) {
-    super(shutdownOnExit);
+  public PrivateUDPServer(
+      boolean shutdownOnExit, InetAddress remoteAddress, MetricRegistry metrics) {
+    super(shutdownOnExit, metrics);
     this.remoteAddress = remoteAddress;
   }
 
