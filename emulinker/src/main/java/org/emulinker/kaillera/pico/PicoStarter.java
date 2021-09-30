@@ -3,13 +3,14 @@ package org.emulinker.kaillera.pico;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
-import com.codahale.metrics.ConsoleReporter;
-import com.codahale.metrics.Meter;
+import com.codahale.metrics.CsvReporter;
 import com.codahale.metrics.MetricRegistry;
 import com.google.common.flogger.FluentLogger;
+import java.io.File;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.Locale;
 
 public class PicoStarter {
   public static final FluentLogger logger = FluentLogger.forEnclosingClass();
@@ -41,22 +42,15 @@ public class PicoStarter {
     component.getKailleraServer().start();
     component.getMasterListUpdaterImpl().start();
 
+    File metricsDir = new File("./metrics/");
+    metricsDir.mkdirs();
     MetricRegistry metrics = component.getMetricRegistry();
-    ConsoleReporter reporter =
-        ConsoleReporter.forRegistry(metrics)
+    CsvReporter reporter =
+        CsvReporter.forRegistry(metrics)
+            .formatFor(Locale.US)
             .convertRatesTo(SECONDS)
             .convertDurationsTo(MILLISECONDS)
-            .build();
+            .build(metricsDir);
     reporter.start(5, SECONDS);
-
-    Meter requests = metrics.meter("requests");
-    requests.mark();
-    requests.mark();
-    requests.mark();
-    requests.mark();
-    requests.mark();
-    requests.mark();
-    requests.mark();
-    requests.mark();
   }
 }

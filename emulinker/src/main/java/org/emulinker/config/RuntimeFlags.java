@@ -83,7 +83,8 @@ public abstract class RuntimeFlags {
         .setCharset(Charset.forName(config.getString("emulinker.charset")))
         .setChatFloodTime(config.getInt("server.chatFloodTime"))
         .setConnectionTypes(config.getList("server.allowedConnectionTypes"))
-        .setCoreThreadPoolSize(config.getInt("server.coreThreadpoolSize", 10))
+        .setCoreThreadPoolSize(
+            config.getInt("server.coreThreadpoolSize", Runtime.getRuntime().availableProcessors()))
         .setCreateGameFloodTime(config.getInt("server.createGameFloodTime"))
         .setGameAutoFireSensitivity(config.getInt("game.defaultAutoFireSensitivity"))
         .setGameBufferSize(config.getInt("game.bufferSize"))
