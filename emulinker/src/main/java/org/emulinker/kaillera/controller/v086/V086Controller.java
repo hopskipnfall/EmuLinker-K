@@ -4,7 +4,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.flogger.FluentLogger;
 import java.net.InetSocketAddress;
-import java.nio.*;
 import java.util.*;
 import java.util.concurrent.*;
 import javax.inject.Inject;
@@ -13,14 +12,12 @@ import org.apache.commons.configuration.*;
 import org.emulinker.config.RuntimeFlags;
 import org.emulinker.kaillera.access.AccessManager;
 import org.emulinker.kaillera.controller.KailleraServerController;
-import org.emulinker.kaillera.controller.messaging.*;
 import org.emulinker.kaillera.controller.v086.action.*;
 import org.emulinker.kaillera.controller.v086.protocol.*;
 import org.emulinker.kaillera.model.*;
 import org.emulinker.kaillera.model.event.*;
 import org.emulinker.kaillera.model.exception.*;
 import org.emulinker.net.*;
-import org.emulinker.util.*;
 
 @Singleton
 public final class V086Controller implements KailleraServerController {
@@ -46,7 +43,7 @@ public final class V086Controller implements KailleraServerController {
 
   V086Action[] actions = new V086Action[25];
 
-  private final V086ClientHandlerFactory v086ClientHandlerFactory;
+  private final V086ClientHandler.Factory v086ClientHandlerFactory;
   private final RuntimeFlags flags;
 
   @Inject
@@ -77,7 +74,7 @@ public final class V086Controller implements KailleraServerController {
       GameInfoAction gameInfoAction,
       GameTimeoutAction gameTimeoutAction,
       InfoMessageAction infoMessageAction,
-      V086ClientHandlerFactory v086ClientHandlerFactory,
+      V086ClientHandler.Factory v086ClientHandlerFactory,
       RuntimeFlags flags) {
     this.v086ClientHandlerFactory = v086ClientHandlerFactory;
     this.flags = flags;

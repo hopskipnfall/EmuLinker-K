@@ -1,7 +1,5 @@
 package org.emulinker.kaillera.relay;
 
-import com.codahale.metrics.MetricRegistry;
-import com.codahale.metrics.Timer;
 import com.google.common.flogger.FluentLogger;
 import dagger.assisted.Assisted;
 import dagger.assisted.AssistedFactory;
@@ -21,16 +19,12 @@ public final class V086Relay extends UDPRelay {
   private int lastClientMessageNumber = -1;
 
   @AssistedFactory
-  public static interface Factory {
-    public V086Relay create(int listenPort, InetSocketAddress serverSocketAddress);
+  public interface Factory {
+    V086Relay create(int listenPort, InetSocketAddress serverSocketAddress);
   }
 
-  // TODO(nue): Check to see if this works.. i think it doesn't.
   @AssistedInject
-  V086Relay(
-      @Assisted int listenPort,
-      @Assisted InetSocketAddress serverSocketAddress)
-      throws Exception {
+  V086Relay(@Assisted int listenPort, @Assisted InetSocketAddress serverSocketAddress) {
     super(listenPort, serverSocketAddress);
   }
 
@@ -41,7 +35,7 @@ public final class V086Relay extends UDPRelay {
 
   @Override
   protected ByteBuffer processClientToServer(
-    ByteBuffer receiveBuffer, InetSocketAddress fromAddress, InetSocketAddress toAddress) {
+      ByteBuffer receiveBuffer, InetSocketAddress fromAddress, InetSocketAddress toAddress) {
     V086Bundle inBundle = null;
 
     logger.atFine().log("-> " + EmuUtil.dumpBuffer(receiveBuffer));
@@ -84,7 +78,7 @@ public final class V086Relay extends UDPRelay {
 
   @Override
   protected ByteBuffer processServerToClient(
-    ByteBuffer receiveBuffer, InetSocketAddress fromAddress, InetSocketAddress toAddress) {
+      ByteBuffer receiveBuffer, InetSocketAddress fromAddress, InetSocketAddress toAddress) {
     V086Bundle inBundle = null;
 
     logger.atFine().log("<- " + EmuUtil.dumpBuffer(receiveBuffer));

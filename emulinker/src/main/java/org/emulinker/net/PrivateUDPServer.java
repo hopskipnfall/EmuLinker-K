@@ -1,6 +1,9 @@
 package org.emulinker.net;
 
+import static com.codahale.metrics.MetricRegistry.name;
+
 import com.codahale.metrics.MetricRegistry;
+import com.codahale.metrics.Timer;
 import com.google.common.flogger.FluentLogger;
 import java.net.*;
 import java.nio.ByteBuffer;
@@ -9,13 +12,16 @@ import org.emulinker.util.*;
 public abstract class PrivateUDPServer extends UDPServer {
   private static final FluentLogger logger = FluentLogger.forEnclosingClass();
 
-  private InetAddress remoteAddress;
+  private final InetAddress remoteAddress;
+  private final Timer clientRequestTimer;
+
   private InetSocketAddress remoteSocketAddress;
 
   public PrivateUDPServer(
       boolean shutdownOnExit, InetAddress remoteAddress, MetricRegistry metrics) {
     super(shutdownOnExit, metrics);
     this.remoteAddress = remoteAddress;
+    this.clientRequestTimer = metrics.timer(name(this.getClass(), "clientRequests"));
   }
 
   public InetAddress getRemoteInetAddress() {
@@ -38,7 +44,9 @@ public abstract class PrivateUDPServer extends UDPServer {
       return;
     }
 
-    handleReceived(buffer);
+    try (final Timer.Context context = clientRequestTimer.time()) {
+      handleReceived(buffer);
+    }
   }
 
   protected abstract void handleReceived(ByteBuffer buffer);

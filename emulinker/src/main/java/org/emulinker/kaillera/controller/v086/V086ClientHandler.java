@@ -2,6 +2,7 @@ package org.emulinker.kaillera.controller.v086;
 
 import com.codahale.metrics.MetricRegistry;
 import dagger.assisted.Assisted;
+import dagger.assisted.AssistedFactory;
 import dagger.assisted.AssistedInject;
 import java.net.InetSocketAddress;
 import java.nio.Buffer;
@@ -59,6 +60,11 @@ public final class V086ClientHandler extends PrivateUDPServer implements Kailler
 
   private int clientRetryCount = 0;
   private long lastResend = 0;
+
+  @AssistedFactory
+  public interface Factory {
+    V086ClientHandler create(InetSocketAddress remoteSocketAddress, V086Controller v086Controller);
+  }
 
   @AssistedInject
   public V086ClientHandler(
