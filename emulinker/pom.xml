@@ -20,6 +20,13 @@
 
   <dependencies>
 
+    <!-- https://mvnrepository.com/artifact/io.dropwizard.metrics/metrics-jvm -->
+    <dependency>
+      <groupId>io.dropwizard.metrics</groupId>
+      <artifactId>metrics-jvm</artifactId>
+      <version>4.2.3</version>
+    </dependency>
+
     <!-- https://mvnrepository.com/artifact/io.dropwizard.metrics/metrics-core -->
     <dependency>
       <groupId>io.dropwizard.metrics</groupId>
@@ -157,12 +164,6 @@
       <artifactId>commons-pool</artifactId>
       <version>1.2</version>
     </dependency>
-
-    <!-- <dependency>
-      <groupId>log4j</groupId>
-      <artifactId>log4j</artifactId>
-      <version>1.2.12</version>
-    </dependency> -->
 
     <dependency>
       <groupId>org.apache.logging.log4j</groupId>

@@ -18,6 +18,8 @@ public abstract class RuntimeFlags {
 
   public abstract boolean allowSinglePlayer();
 
+  public abstract boolean metricsEnabled();
+
   public abstract boolean touchEmulinker();
 
   public abstract boolean touchKaillera();
@@ -83,9 +85,10 @@ public abstract class RuntimeFlags {
         .setCharset(Charset.forName(config.getString("emulinker.charset")))
         .setChatFloodTime(config.getInt("server.chatFloodTime"))
         .setConnectionTypes(config.getList("server.allowedConnectionTypes"))
-        .setCoreThreadPoolSize(
-            config.getInt("server.coreThreadpoolSize", Runtime.getRuntime().availableProcessors()))
+        // TODO(nue): Experiment with Runtime.getRuntime().availableProcessors().
+        .setCoreThreadPoolSize(config.getInt("server.coreThreadpoolSize", 5))
         .setCreateGameFloodTime(config.getInt("server.createGameFloodTime"))
+        .setMetricsEnabled(config.getBoolean("metrics.enabled", false))
         .setGameAutoFireSensitivity(config.getInt("game.defaultAutoFireSensitivity"))
         .setGameBufferSize(config.getInt("game.bufferSize"))
         .setGameDesynchTimeouts(config.getInt("game.desynchTimeouts"))
@@ -154,6 +157,8 @@ public abstract class RuntimeFlags {
     public abstract Builder setCoreThreadPoolSize(int coreThreadPoolSize);
 
     public abstract Builder setCreateGameFloodTime(int createGameFloodTime);
+
+    public abstract Builder setMetricsEnabled(boolean enableMetrics);
 
     public abstract Builder setGameAutoFireSensitivity(int gameAutoFireSensitivity);
 

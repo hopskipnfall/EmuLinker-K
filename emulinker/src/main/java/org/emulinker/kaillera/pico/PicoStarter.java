@@ -5,6 +5,8 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 
 import com.codahale.metrics.CsvReporter;
 import com.codahale.metrics.MetricRegistry;
+import com.codahale.metrics.jvm.MemoryUsageGaugeSet;
+import com.codahale.metrics.jvm.ThreadStatesGaugeSet;
 import com.google.common.flogger.FluentLogger;
 import java.io.File;
 import java.time.Instant;
@@ -45,12 +47,17 @@ public class PicoStarter {
     File metricsDir = new File("./metrics/");
     metricsDir.mkdirs();
     MetricRegistry metrics = component.getMetricRegistry();
-    CsvReporter reporter =
-        CsvReporter.forRegistry(metrics)
-            .formatFor(Locale.US)
-            .convertRatesTo(SECONDS)
-            .convertDurationsTo(MILLISECONDS)
-            .build(metricsDir);
-    reporter.start(5, SECONDS);
+    metrics.registerAll(new ThreadStatesGaugeSet());
+    metrics.registerAll(new MemoryUsageGaugeSet());
+
+    if (component.getRuntimeFlags().metricsEnabled()) {
+      CsvReporter reporter =
+          CsvReporter.forRegistry(metrics)
+              .formatFor(Locale.US)
+              .convertRatesTo(SECONDS)
+              .convertDurationsTo(MILLISECONDS)
+              .build(metricsDir);
+      reporter.start(15, SECONDS);
+    }
   }
 }
