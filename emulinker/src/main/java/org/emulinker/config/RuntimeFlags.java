@@ -5,6 +5,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import com.google.auto.value.AutoValue;
 import com.google.common.collect.ImmutableList;
 import java.nio.charset.Charset;
+import java.time.Duration;
 import java.util.List;
 import javax.inject.Singleton;
 import org.apache.commons.configuration.Configuration;
@@ -25,6 +26,8 @@ public abstract class RuntimeFlags {
   public abstract boolean touchKaillera();
 
   public abstract Charset charset();
+
+  public abstract Duration metricsLoggingFrequency();
 
   public abstract ImmutableList<String> connectionTypes();
 
@@ -89,6 +92,8 @@ public abstract class RuntimeFlags {
         .setCoreThreadPoolSize(config.getInt("server.coreThreadpoolSize", 5))
         .setCreateGameFloodTime(config.getInt("server.createGameFloodTime"))
         .setMetricsEnabled(config.getBoolean("metrics.enabled", false))
+        .setMetricsLoggingFrequency(
+            Duration.ofSeconds(config.getInt("metrics.loggingFrequencySeconds", 30)))
         .setGameAutoFireSensitivity(config.getInt("game.defaultAutoFireSensitivity"))
         .setGameBufferSize(config.getInt("game.bufferSize"))
         .setGameDesynchTimeouts(config.getInt("game.desynchTimeouts"))
@@ -159,6 +164,8 @@ public abstract class RuntimeFlags {
     public abstract Builder setCreateGameFloodTime(int createGameFloodTime);
 
     public abstract Builder setMetricsEnabled(boolean enableMetrics);
+
+    public abstract Builder setMetricsLoggingFrequency(Duration metricsLoggingFrequency);
 
     public abstract Builder setGameAutoFireSensitivity(int gameAutoFireSensitivity);
 

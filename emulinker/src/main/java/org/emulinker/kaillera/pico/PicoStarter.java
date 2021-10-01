@@ -13,6 +13,7 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
+import org.emulinker.config.RuntimeFlags;
 
 public class PicoStarter {
   public static final FluentLogger logger = FluentLogger.forEnclosingClass();
@@ -44,20 +45,21 @@ public class PicoStarter {
     component.getKailleraServer().start();
     component.getMasterListUpdaterImpl().start();
 
-    File metricsDir = new File("./metrics/");
-    metricsDir.mkdirs();
     MetricRegistry metrics = component.getMetricRegistry();
     metrics.registerAll(new ThreadStatesGaugeSet());
     metrics.registerAll(new MemoryUsageGaugeSet());
 
-    if (component.getRuntimeFlags().metricsEnabled()) {
+    RuntimeFlags flags = component.getRuntimeFlags();
+    if (flags.metricsEnabled()) {
+      File metricsDir = new File("./metrics/");
+      metricsDir.mkdirs();
       CsvReporter reporter =
           CsvReporter.forRegistry(metrics)
               .formatFor(Locale.US)
               .convertRatesTo(SECONDS)
               .convertDurationsTo(MILLISECONDS)
               .build(metricsDir);
-      reporter.start(15, SECONDS);
+      reporter.start(flags.metricsLoggingFrequency().toSeconds(), SECONDS);
     }
   }
 }
