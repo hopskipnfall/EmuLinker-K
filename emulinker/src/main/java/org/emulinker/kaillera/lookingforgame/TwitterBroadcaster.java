@@ -70,6 +70,8 @@ public final class TwitterBroadcaster {
                 flags.twitterBroadcastDelay().getSeconds(), TimeUnit.SECONDS, Schedulers.io())
             .subscribe(
                 () -> {
+                  pendingReports.remove(lookingForGameEvent);
+
                   KailleraUser user = lookingForGameEvent.user();
                   String message =
                       String.format(
@@ -83,7 +85,6 @@ public final class TwitterBroadcaster {
                   user.getGame().announce(getUrl(tweet), user);
 
                   logger.atInfo().log("Posted tweet: %s", getUrl(tweet));
-                  pendingReports.remove(lookingForGameEvent);
                   postedTweets.put(lookingForGameEvent, tweet.getId());
                 });
     pendingReports.put(lookingForGameEvent, disposable);
@@ -110,6 +111,7 @@ public final class TwitterBroadcaster {
                   if (disposable != null) {
                     disposable.dispose();
                     pendingReports.remove(event);
+                    logger.atInfo().log("Prevented pending tweet");
                   }
                   return event;
                 })
@@ -134,7 +136,7 @@ public final class TwitterBroadcaster {
                               StatusUpdate reply = new StatusUpdate("〆");
                               reply.setInReplyToStatusId(id);
                               Status tweet = twitter.updateStatus(reply);
-                              logger.atInfo().log("Posted reply: %s", getUrl(tweet));
+                              logger.atInfo().log("Posted tweet canceling LFG: %s", getUrl(tweet));
                             });
                   }
                   return event;
