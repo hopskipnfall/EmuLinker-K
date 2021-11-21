@@ -1,26 +1,23 @@
 package org.emulinker.kaillera.lookingforgame;
 
 import com.google.auto.value.AutoValue;
+import org.emulinker.kaillera.model.KailleraUser;
 
 @AutoValue
 public abstract class LookingForGameEvent {
-  public abstract int userId();
-
   public abstract int gameId();
-
-  public abstract String username();
 
   public abstract String gameTitle();
 
+  public abstract KailleraUser user();
+
   @AutoValue.Builder
   public abstract static class Builder {
-    public abstract Builder setUserId(int userId);
-
     public abstract Builder setGameId(int gameId);
 
-    public abstract Builder setUsername(String username);
-
     public abstract Builder setGameTitle(String gameTitle);
+
+    public abstract Builder setUser(KailleraUser user);
 
     public abstract LookingForGameEvent build();
   }

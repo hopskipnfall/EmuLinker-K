@@ -901,22 +901,18 @@ public final class KailleraServerImpl implements KailleraServer, Executable {
         false,
         null);
 
-    if (flags.twitterEnabled()) {
-      // TODO(nue): Suppress logic if username contains @待ち or something.
-      lookingForGameReporter.reportAndStartTimer(
-          LookingForGameEvent.builder()
-              .setGameId(game.getID())
-              .setGameTitle(game.getRomName())
-              .setUserId(user.getID())
-              .setUsername(user.getName())
-              .build());
-
-      announceInGame(
-          EmuLang.getString(
-              "KailleraServerImpl.TweetPendingAnnouncement",
-              flags.twitterBroadcastDelay().getSeconds()),
-          // TODO(nue): Remove the need to use impl here..
-          (KailleraUserImpl) user);
+    if (lookingForGameReporter.reportAndStartTimer(
+        LookingForGameEvent.builder()
+            .setGameId(game.getID())
+            .setGameTitle(game.getRomName())
+            .setUser(user)
+            .build())) {
+      user.getGame()
+          .announce(
+              EmuLang.getString(
+                  "KailleraServerImpl.TweetPendingAnnouncement",
+                  flags.twitterBroadcastDelay().getSeconds()),
+              user);
     }
     return game;
   }
