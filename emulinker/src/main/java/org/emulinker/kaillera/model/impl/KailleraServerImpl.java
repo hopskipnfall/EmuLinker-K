@@ -1,7 +1,7 @@
 package org.emulinker.kaillera.model.impl;
 
-import static com.google.common.base.Preconditions.checkArgument;
-
+import com.codahale.metrics.Gauge;
+import com.codahale.metrics.MetricRegistry;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.flogger.FluentLogger;
@@ -25,16 +25,9 @@ import org.emulinker.util.*;
 public final class KailleraServerImpl implements KailleraServer, Executable {
   private static final FluentLogger logger = FluentLogger.forEnclosingClass();
 
-  protected int gameBufferSize;
-  protected int gameTimeoutMillis;
-  protected int gameDesynchTimeouts;
-  protected int gameAutoFireSensitivity;
-
   protected boolean[] allowedConnectionTypes = new boolean[7];
 
   protected final ImmutableList<String> loginMessages;
-  protected boolean allowSinglePlayer = false;
-  protected boolean allowMultipleConnections = false;
 
   protected boolean stopFlag = false;
   protected boolean isRunning = false;
@@ -68,7 +61,8 @@ public final class KailleraServerImpl implements KailleraServer, Executable {
       StatsCollector statsCollector,
       ReleaseInfo releaseInfo,
       AutoFireDetectorFactory autoFireDetectorFactory,
-      LookingForGameReporter lookingForGameReporter) {
+      LookingForGameReporter lookingForGameReporter,
+      MetricRegistry metrics) {
     this.lookingForGameReporter = lookingForGameReporter;
     this.flags = flags;
     this.threadPool = threadPool;
@@ -96,6 +90,54 @@ public final class KailleraServerImpl implements KailleraServer, Executable {
     if (flags.touchKaillera()) {
       this.statsCollector = statsCollector;
     }
+
+    metrics.register(
+        MetricRegistry.name(this.getClass(), "users", "idle"),
+        new Gauge<Integer>() {
+          @Override
+          public Integer getValue() {
+            return (int)
+                users.values().stream()
+                    .filter(user -> user.getStatus() == KailleraUser.STATUS_IDLE)
+                    .count();
+          }
+        });
+
+    metrics.register(
+        MetricRegistry.name(this.getClass(), "users", "playing"),
+        new Gauge<Integer>() {
+          @Override
+          public Integer getValue() {
+            return (int)
+                users.values().stream()
+                    .filter(user -> user.getStatus() == KailleraUser.STATUS_PLAYING)
+                    .count();
+          }
+        });
+
+    metrics.register(
+        MetricRegistry.name(this.getClass(), "games", "waiting"),
+        new Gauge<Integer>() {
+          @Override
+          public Integer getValue() {
+            return (int)
+                games.values().stream()
+                    .filter(game -> game.getStatus() == KailleraGame.STATUS_WAITING)
+                    .count();
+          }
+        });
+
+    metrics.register(
+        MetricRegistry.name(this.getClass(), "games", "playing"),
+        new Gauge<Integer>() {
+          @Override
+          public Integer getValue() {
+            return (int)
+                games.values().stream()
+                    .filter(game -> game.getStatus() == KailleraGame.STATUS_PLAYING)
+                    .count();
+          }
+        });
   }
 
   @Override
@@ -198,7 +240,7 @@ public final class KailleraServerImpl implements KailleraServer, Executable {
   }
 
   protected boolean getAllowSinglePlayer() {
-    return allowSinglePlayer;
+    return flags.allowSinglePlayer();
   }
 
   protected int getMaxUserNameLength() {
@@ -226,7 +268,7 @@ public final class KailleraServerImpl implements KailleraServer, Executable {
   }
 
   protected boolean getAllowMultipleConnections() {
-    return allowMultipleConnections;
+    return flags.allowMultipleConnections();
   }
 
   public ThreadPoolExecutor getThreadPool() {
@@ -294,7 +336,7 @@ public final class KailleraServerImpl implements KailleraServer, Executable {
   }
 
   protected AutoFireDetector getAutoFireDetector(KailleraGame game) {
-    return autoFireDetectorFactory.getInstance(game, gameAutoFireSensitivity);
+    return autoFireDetectorFactory.getInstance(game, flags.gameAutoFireSensitivity());
   }
 
   @Override
@@ -548,7 +590,7 @@ public final class KailleraServerImpl implements KailleraServer, Executable {
                 .getAddress()
                 .equals(u2.getConnectSocketAddress().getAddress())
             && !u.getName().equals(u2.getName())
-            && !allowMultipleConnections) {
+            && !flags.allowMultipleConnections()) {
           users.remove(userListKey);
           logger.atWarning().log(
               user + " login denied: Address already logged in as " + u2.getName());
@@ -839,9 +881,9 @@ public final class KailleraServerImpl implements KailleraServer, Executable {
             romName,
             (KailleraUserImpl) user,
             this,
-            gameBufferSize,
-            gameTimeoutMillis,
-            gameDesynchTimeouts);
+            flags.gameBufferSize(),
+            flags.gameTimeoutMillis(),
+            flags.gameDesynchTimeouts());
     games.put(gameID, game);
 
     addEvent(new GameCreatedEvent(this, game));

@@ -2,6 +2,7 @@ package org.emulinker.kaillera.pico;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 
+import com.codahale.metrics.MetricRegistry;
 import dagger.Binds;
 import dagger.Module;
 import dagger.Provides;
@@ -9,6 +10,7 @@ import dagger.multibindings.IntoSet;
 import java.nio.charset.Charset;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
+import javax.inject.Singleton;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.emulinker.config.RuntimeFlags;
@@ -36,6 +38,7 @@ public abstract class AppModule {
   public static Charset charsetDoNotUse = null;
 
   @Provides
+  @Singleton
   public static Configuration provideConfiguration() {
     try {
       return new EmuLinkerPropertiesConfig();
@@ -45,6 +48,7 @@ public abstract class AppModule {
   }
 
   @Provides
+  @Singleton
   public static RuntimeFlags provideRuntimeFlags(Configuration configuration) {
     RuntimeFlags flags = RuntimeFlags.loadFromApacheConfiguration(configuration);
     AppModule.charsetDoNotUse = flags.charset();
@@ -59,6 +63,12 @@ public abstract class AppModule {
         60L,
         SECONDS,
         new SynchronousQueue<Runnable>());
+  }
+
+  @Provides
+  @Singleton
+  public static MetricRegistry provideMetricRegistry() {
+    return new MetricRegistry();
   }
 
   @Binds

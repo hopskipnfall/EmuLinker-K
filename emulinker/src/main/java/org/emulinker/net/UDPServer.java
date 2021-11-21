@@ -1,5 +1,6 @@
 package org.emulinker.net;
 
+import com.codahale.metrics.MetricRegistry;
 import com.google.common.flogger.FluentLogger;
 import java.io.IOException;
 import java.net.*;
@@ -36,11 +37,7 @@ public abstract class UDPServer implements Executable {
   private boolean isRunning = false;
   private boolean stopFlag = false;
 
-  public UDPServer() {
-    this(true);
-  }
-
-  public UDPServer(boolean shutdownOnExit) {
+  public UDPServer(boolean shutdownOnExit, MetricRegistry metrics) {
     if (shutdownOnExit) Runtime.getRuntime().addShutdownHook(new ShutdownThread());
   }
 
@@ -180,6 +177,7 @@ public abstract class UDPServer implements Executable {
           // https://stackoverflow.com/a/61267496/2875073
           ((Buffer) buffer).flip();
           //					logger.atFine().log("receive("+EmuUtil.dumpBuffer(buffer, false)+")");
+          // TODO(nue): time this
           handleReceived(buffer, fromSocketAddress);
           releaseBuffer(buffer);
         } catch (SocketException e) {
