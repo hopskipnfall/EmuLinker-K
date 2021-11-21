@@ -38,6 +38,8 @@ public final class TwitterBroadcaster {
   TwitterBroadcaster(RuntimeFlags flags, Twitter twitter) {
     this.flags = flags;
     this.twitter = twitter;
+
+    org.emulinker.Contact.testMethod();
   }
 
   /**
