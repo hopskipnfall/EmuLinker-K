@@ -11,9 +11,11 @@ import java.util.concurrent.*;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import org.apache.commons.configuration.*;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.emulinker.config.RuntimeFlags;
 import org.emulinker.kaillera.access.AccessManager;
-import org.emulinker.kaillera.lookingforgame.LookingForGameReporter;
+import org.emulinker.kaillera.lookingforgame.LookingForGameEvent;
+import org.emulinker.kaillera.lookingforgame.TwitterBroadcaster;
 import org.emulinker.kaillera.master.StatsCollector;
 import org.emulinker.kaillera.model.*;
 import org.emulinker.kaillera.model.event.*;
@@ -50,7 +52,7 @@ public final class KailleraServerImpl implements KailleraServer, Executable {
 
   private final RuntimeFlags flags;
 
-  private final LookingForGameReporter lookingForGameReporter;
+  private final TwitterBroadcaster lookingForGameReporter;
 
   @Inject
   KailleraServerImpl(
@@ -61,7 +63,7 @@ public final class KailleraServerImpl implements KailleraServer, Executable {
       StatsCollector statsCollector,
       ReleaseInfo releaseInfo,
       AutoFireDetectorFactory autoFireDetectorFactory,
-      LookingForGameReporter lookingForGameReporter,
+      TwitterBroadcaster lookingForGameReporter,
       MetricRegistry metrics) {
     this.lookingForGameReporter = lookingForGameReporter;
     this.flags = flags;
@@ -277,24 +279,17 @@ public final class KailleraServerImpl implements KailleraServer, Executable {
 
   @Override
   public String toString() {
-    return "KailleraServerImpl[numUsers="
-        + getNumUsers()
-        + " numGames="
-        + getNumGames()
-        + " isRunning="
-        + isRunning()
-        + "]";
+    return String.format(
+        "KailleraServerImpl[numUsers=%d numGames=%d isRunning=%b]",
+        getNumUsers(), getNumGames(), isRunning());
   }
 
   @Override
   public synchronized void start() {
     logger.atFine().log("KailleraServer thread received start request!");
     logger.atFine().log(
-        "KailleraServer thread starting (ThreadPool:"
-            + threadPool.getActiveCount()
-            + "/"
-            + threadPool.getPoolSize()
-            + ")");
+        "KailleraServer thread starting (ThreadPool:%d/%d)",
+        threadPool.getActiveCount(), threadPool.getPoolSize());
     stopFlag = false;
     threadPool.execute(this);
     Thread.yield();
@@ -714,6 +709,8 @@ public final class KailleraServerImpl implements KailleraServer, Executable {
   @Override
   public synchronized void quit(KailleraUser user, String message)
       throws QuitException, DropGameException, QuitGameException, CloseGameException {
+    lookingForGameReporter.cancelActionsForUser(user.getID());
+
     if (!user.isLoggedIn()) {
       users.remove(user.getID());
       logger.atSevere().log(user + " quit failed: Not logged in");
@@ -904,6 +901,23 @@ public final class KailleraServerImpl implements KailleraServer, Executable {
         false,
         null);
 
+    if (flags.twitterEnabled()) {
+      // TODO(nue): Suppress logic if username contains @待ち or something.
+      lookingForGameReporter.reportAndStartTimer(
+          LookingForGameEvent.builder()
+              .setGameId(game.getID())
+              .setGameTitle(game.getRomName())
+              .setUserId(user.getID())
+              .setUsername(user.getName())
+              .build());
+
+      announceInGame(
+          EmuLang.getString(
+              "KailleraServerImpl.TweetPendingAnnouncement",
+              flags.twitterBroadcastDelay().getSeconds()),
+          // TODO(nue): Remove the need to use impl here..
+          (KailleraUserImpl) user);
+    }
     return game;
   }
 
@@ -973,8 +987,12 @@ public final class KailleraServerImpl implements KailleraServer, Executable {
     return true;
   }
 
+  public void announceInGame(String announcement, KailleraUserImpl user) {
+    user.getGame().announce(announcement, user);
+  }
+
   @Override
-  public void announce(String announcement, boolean gamesAlso, KailleraUserImpl user) {
+  public void announce(String announcement, boolean gamesAlso, @Nullable KailleraUserImpl user) {
     if (user != null) {
       if (gamesAlso) { //   /msg and /me commands
         for (KailleraUserImpl kailleraUser : getUsers()) {
@@ -1001,18 +1019,17 @@ public final class KailleraServerImpl implements KailleraServer, Executable {
       } else {
         user.addEvent(new InfoMessageEvent(user, announcement));
       }
-      return;
-    }
+    } else {
+      for (KailleraUserImpl kailleraUser : getUsers()) {
+        if (kailleraUser.isLoggedIn()) {
+          kailleraUser.addEvent(new InfoMessageEvent(kailleraUser, announcement));
 
-    for (KailleraUserImpl kailleraUser : getUsers()) {
-      if (kailleraUser.isLoggedIn()) {
-        kailleraUser.addEvent(new InfoMessageEvent(kailleraUser, announcement));
-
-        // SF MOD
-        if (gamesAlso) {
-          if (kailleraUser.getGame() != null) {
-            kailleraUser.getGame().announce(announcement, kailleraUser);
-            Thread.yield();
+          // SF MOD
+          if (gamesAlso) {
+            if (kailleraUser.getGame() != null) {
+              kailleraUser.getGame().announce(announcement, kailleraUser);
+              Thread.yield();
+            }
           }
         }
       }
