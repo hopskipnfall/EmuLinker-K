@@ -11,6 +11,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import javax.inject.Inject;
 import javax.inject.Singleton;
+import org.emulinker.KotlinService;
 import org.emulinker.config.RuntimeFlags;
 import org.emulinker.kaillera.model.KailleraUser;
 import twitter4j.Status;
@@ -39,7 +40,7 @@ public final class TwitterBroadcaster {
     this.flags = flags;
     this.twitter = twitter;
 
-    org.emulinker.Contact.testMethod();
+    new KotlinService().sayHello();
   }
 
   /**
