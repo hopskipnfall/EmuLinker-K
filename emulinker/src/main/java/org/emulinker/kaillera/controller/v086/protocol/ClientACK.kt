@@ -12,9 +12,7 @@ private const val DESC = "Client to Server ACK"
 
 data class ClientACK
     @Throws(MessageFormatException::class)
-    constructor(
-        private val internalMessageNumber: Int,
-    ) : ACK() {
+    constructor(private val internalMessageNumber: Int) : ACK() {
 
   init {
     validateMessageNumber(internalMessageNumber, DESC)

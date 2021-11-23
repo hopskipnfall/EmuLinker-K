@@ -5,7 +5,9 @@ import java.nio.ByteBuffer
 
 abstract class ByteBufferMessage {
   private var buffer: ByteBuffer? = null
+
   abstract val length: Int
+
   abstract fun description(): String?
   abstract override fun toString(): String
   protected fun initBuffer() {

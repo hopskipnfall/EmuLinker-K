@@ -9,7 +9,7 @@ abstract class ACK : V086Message() {
   abstract val val3: Long
   abstract val val4: Long
 
-  override fun getBodyLength(): Int = 17
+  override val bodyLength = 17
 
   public override fun writeBodyTo(buffer: ByteBuffer) {
     buffer.put(0x00.toByte())
