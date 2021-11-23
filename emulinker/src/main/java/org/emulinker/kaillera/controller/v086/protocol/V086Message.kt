@@ -7,15 +7,13 @@ import kotlin.Throws
 import org.emulinker.kaillera.controller.messaging.ByteBufferMessage
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.messaging.ParseException
-import org.emulinker.kaillera.controller.v086.protocol.ClientACK.Companion.parse
 import org.emulinker.kaillera.pico.AppModule
 import org.emulinker.util.EmuUtil
 import org.emulinker.util.UnsignedUtil
 
 abstract class V086Message : ByteBufferMessage() {
-  abstract fun messageNumber(): Int
-  abstract fun messageId(): Byte
-  abstract override fun description(): String?
+  abstract val messageNumber: Int
+  abstract val messageId: Byte
 
   // return (getBodyLength() + 5);
   override val length: Int
@@ -32,7 +30,7 @@ abstract class V086Message : ByteBufferMessage() {
   // TODO(nue): Figure out how to stuff this in the AutoValue toString.
   protected val infoString: String
     protected get() =
-        messageNumber().toString() + ":" + EmuUtil.byteToHex(messageId()) + "/" + description()
+        messageNumber.toString() + ":" + EmuUtil.byteToHex(messageId) + "/" + description
 
   override fun writeTo(buffer: ByteBuffer?) {
     val len = length
@@ -42,14 +40,14 @@ abstract class V086Message : ByteBufferMessage() {
           .log(
               "Ran out of output buffer space, consider increasing the controllers.v086.bufferSize setting!")
     } else {
-      UnsignedUtil.putUnsignedShort(buffer, messageNumber())
+      UnsignedUtil.putUnsignedShort(buffer, messageNumber)
       // there no realistic reason to use unsigned here since a single packet can't be that large
       // Cast to avoid issue with java version mismatch:
       // https://stackoverflow.com/a/61267496/2875073
       (buffer as Buffer?)!!.mark()
       UnsignedUtil.putUnsignedShort(buffer, len)
       //		buffer.putShort((short)getLength());
-      buffer.put(messageId())
+      buffer.put(messageId)
       writeBodyTo(buffer)
     }
   }
@@ -83,7 +81,7 @@ abstract class V086Message : ByteBufferMessage() {
             UserInformation.ID -> UserInformation.parse(messageNumber, buffer)
             ServerStatus.ID -> ServerStatus.parse(messageNumber, buffer)
             ServerACK.ID -> ServerACK.parse(messageNumber, buffer)
-            ID -> parse(messageNumber, buffer)
+            ClientACK.ID -> ClientACK.parse(messageNumber, buffer)
             Chat.ID -> Chat.parse(messageNumber, buffer)
             GameChat.ID -> GameChat.parse(messageNumber, buffer)
             KeepAlive.ID -> KeepAlive.parse(messageNumber, buffer)

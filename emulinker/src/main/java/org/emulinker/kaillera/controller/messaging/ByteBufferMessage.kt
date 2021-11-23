@@ -8,7 +8,7 @@ abstract class ByteBufferMessage {
 
   abstract val length: Int
 
-  abstract fun description(): String?
+  abstract val description: String
   abstract override fun toString(): String
   protected fun initBuffer() {
     initBuffer(length)

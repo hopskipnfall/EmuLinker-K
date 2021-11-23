@@ -103,7 +103,7 @@ public final class V086Controller implements KailleraServerController {
     // array access should be faster than a hash and we won't have to create
     // a new Integer each time
     actions[UserInformation.ID] = loginAction;
-    actions[ClientACKKt.ID] = ackAction;
+    actions[ClientACK.ID] = ackAction;
     actions[Chat.ID] = chatAction;
     actions[CreateGame.ID] = createGameAction;
     actions[JoinGame.ID] = joinGameAction;

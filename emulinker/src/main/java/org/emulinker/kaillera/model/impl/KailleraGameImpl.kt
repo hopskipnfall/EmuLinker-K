@@ -76,7 +76,7 @@ class KailleraGameImpl(
 
   private val statsCollector: StatsCollector?
   private val kickedUsers: MutableList<String> = ArrayList()
-  val mutedUsers: List<String> = ArrayList()
+  val mutedUsers: MutableList<String> = mutableListOf()
 
   override var status = KailleraGame.STATUS_WAITING.toInt()
     private set(status) {

@@ -6,29 +6,25 @@ import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.messaging.ParseException
 import org.emulinker.util.EmuUtil
 
-const val ID: Byte = 0x06
-
-private const val DESC = "Client to Server ACK"
-
 data class ClientACK
     @Throws(MessageFormatException::class)
-    constructor(private val internalMessageNumber: Int) : ACK() {
-
-  init {
-    validateMessageNumber(internalMessageNumber, DESC)
-  }
+    constructor(override val messageNumber: Int) : ACK() {
 
   override val val1: Long = 0
   override val val2: Long = 1
   override val val3: Long = 2
   override val val4: Long = 3
 
-  // TODO(nue): Refactor these into vals.
-  override fun description() = DESC
-  override fun messageId() = ID
-  override fun messageNumber() = internalMessageNumber
+  override val description = DESC
+  override val messageId = ID
+
+  init {
+    validateMessageNumber(messageNumber, description)
+  }
 
   companion object {
+    const val ID: Byte = 0x06
+    private const val DESC = "Client to Server ACK"
 
     @JvmStatic
     @Throws(ParseException::class, MessageFormatException::class)
