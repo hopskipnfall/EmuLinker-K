@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/EmuLinkerSF-Netosuma.iml" filepath="$PROJECT_DIR$/.idea/EmuLinkerSF-Netosuma.iml" />
+      <module fileurl="file://$PROJECT_DIR$/emulinker/emulinkersf-netosuma.iml" filepath="$PROJECT_DIR$/emulinker/emulinkersf-netosuma.iml" />
     </modules>
   </component>
 </project>
