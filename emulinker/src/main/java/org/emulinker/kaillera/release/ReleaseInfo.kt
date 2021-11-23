@@ -9,6 +9,7 @@ import javax.inject.Singleton
 import org.emulinker.util.EmuUtil
 
 private val logger: FluentLogger = FluentLogger.forEnclosingClass()
+
 private val properties = Properties()
 
 /**
@@ -17,34 +18,32 @@ private val properties = Properties()
  */
 @Singleton
 class ReleaseInfo @Inject constructor() {
-    val productName by lazy { properties.getProperty("project.name") }
+  val productName: String by lazy { properties.getProperty("project.name") }
 
-    val versionString by lazy { properties.getProperty("project.version") }
+  val versionString: String by lazy { properties.getProperty("project.version") }
 
-    val buildDate by lazy { Instant.parse(properties.getProperty("project.buildDate")) }
+  val buildDate: Instant by lazy { Instant.parse(properties.getProperty("project.buildDate")) }
 
-    val websiteString by lazy { properties.getProperty("project.url") }
+  val websiteString: String by lazy { properties.getProperty("project.url") }
 
-    val licenseInfo = "Usage of this sofware is subject to the terms found in the included license"
+  val licenseInfo = "Usage of this sofware is subject to the terms found in the included license"
 
-    /**
-     * Formats release information into a welcome message. This message is printed by the server at
-     * server startup.
-     */
-    val welcome by lazy {
-        """// $productName version $versionString (${EmuUtil.toSimpleUtcDatetime(buildDate)}) 
+  /**
+   * Formats release information into a welcome message. This message is printed by the server at
+   * server startup.
+   */
+  val welcome by lazy {
+    """// $productName version $versionString (${EmuUtil.toSimpleUtcDatetime(buildDate)}) 
 // $licenseInfo
 // For the most up-to-date information please visit: $websiteString"""
-    }
+  }
 
-    init {
-        try {
-            properties.load(
-                this.javaClass.classLoader.getResourceAsStream("kailleraserver.properties")
-            )
-        } catch (e: IOException) {
-            logger.atSevere().withCause(e).log("Failed to read kailleraserver.properties file")
-            throw IllegalStateException(e)
-        }
+  init {
+    try {
+      properties.load(this.javaClass.classLoader.getResourceAsStream("kailleraserver.properties"))
+    } catch (e: IOException) {
+      logger.atSevere().withCause(e).log("Failed to read kailleraserver.properties file")
+      throw IllegalStateException(e)
     }
+  }
 }

@@ -308,7 +308,8 @@ public class GameOwnerCommandAction implements V086Action<GameChat> {
       KailleraUserImpl admin,
       V086ClientHandler clientHandler)
       throws ActionException, MessageFormatException {
-    String conn = KailleraUser.CONNECTION_TYPE_NAMES[game.getOwner().getConnectionType()];
+    String conn =
+        KailleraUser.Companion.getCONNECTION_TYPE_NAMES()[game.getOwner().getConnectionType()];
 
     if (message.equals("/setconn any")) {
       conn = "any";

@@ -140,7 +140,7 @@ public abstract class PlayerInformation extends V086Message {
           + " userID="
           + userId()
           + " connectionType="
-          + KailleraUser.CONNECTION_TYPE_NAMES[connectionType()]
+          + KailleraUser.Companion.getCONNECTION_TYPE_NAMES()[connectionType()]
           + "]";
     }
 

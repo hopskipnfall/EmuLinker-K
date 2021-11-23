@@ -190,9 +190,9 @@ public abstract class ServerStatus extends V086Message {
           "[userName=%s ping=%d status=%s userID=%d connectionType=%s]",
           username(),
           ping(),
-          KailleraUser.STATUS_NAMES[status()],
+          KailleraUser.Companion.getSTATUS_NAMES()[status()],
           userId(),
-          KailleraUser.CONNECTION_TYPE_NAMES[connectionType()]);
+          KailleraUser.Companion.getCONNECTION_TYPE_NAMES()[connectionType()]);
     }
 
     public int getNumBytes() {

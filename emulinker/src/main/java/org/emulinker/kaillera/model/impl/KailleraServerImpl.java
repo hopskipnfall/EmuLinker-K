@@ -415,9 +415,9 @@ public final class KailleraServerImpl implements KailleraServer, Executable {
             + ", client="
             + user.getClientType()
             + ", connection="
-            + KailleraUser.CONNECTION_TYPE_NAMES[user.getConnectionType()]);
+            + KailleraUser.Companion.getCONNECTION_TYPE_NAMES()[user.getConnectionType()]);
 
-    if (user.isLoggedIn()) {
+    if (user.getLoggedIn()) {
       logger.atWarning().log(user + " login denied: Already logged in!");
       throw new LoginException(EmuLang.getString("KailleraServerImpl.LoginDeniedAlreadyLoggedIn"));
     }
@@ -453,13 +453,13 @@ public final class KailleraServerImpl implements KailleraServer, Executable {
       logger.atInfo().log(
           user
               + " login denied: Connection "
-              + KailleraUser.CONNECTION_TYPE_NAMES[user.getConnectionType()]
+              + KailleraUser.Companion.getCONNECTION_TYPE_NAMES()[user.getConnectionType()]
               + " Not Allowed");
       users.remove(userListKey);
       throw new LoginException(
           EmuLang.getString(
               "KailleraServerImpl.LoginDeniedConnectionTypeDenied",
-              KailleraUser.CONNECTION_TYPE_NAMES[user.getConnectionType()]));
+              KailleraUser.Companion.getCONNECTION_TYPE_NAMES()[user.getConnectionType()]));
     }
 
     if (user.getPing() < 0) {
@@ -529,7 +529,9 @@ public final class KailleraServerImpl implements KailleraServer, Executable {
     if (u.getStatus() != KailleraUser.STATUS_CONNECTING) {
       users.remove(userListKey);
       logger.atWarning().log(
-          user + " login denied: Invalid status=" + KailleraUser.STATUS_NAMES[u.getStatus()]);
+          user
+              + " login denied: Invalid status="
+              + KailleraUser.Companion.getSTATUS_NAMES()[u.getStatus()]);
       throw new LoginException(
           EmuLang.getString("KailleraServerImpl.LoginErrorInvalidStatus", u.getStatus()));
     }
@@ -557,7 +559,7 @@ public final class KailleraServerImpl implements KailleraServer, Executable {
     }
 
     for (KailleraUserImpl u2 : getUsers()) {
-      if (u2.isLoggedIn()) {
+      if (u2.getLoggedIn()) {
         if (!u2.equals(u)
             && u.getConnectSocketAddress()
                 .getAddress()
@@ -599,7 +601,7 @@ public final class KailleraServerImpl implements KailleraServer, Executable {
 
     userImpl.setAccess(access);
     userImpl.setStatus(KailleraUser.STATUS_IDLE);
-    userImpl.setLoggedIn();
+    userImpl.setLoggedIn(true);
     users.put(userListKey, userImpl);
     userImpl.addEvent(new ConnectedEvent(this, user));
     try {
@@ -629,7 +631,7 @@ public final class KailleraServerImpl implements KailleraServer, Executable {
         sb.append(":USERINFO=");
         int sbCount = 0;
         for (KailleraUserImpl u3 : getUsers()) {
-          if (!u3.isLoggedIn()) continue;
+          if (!u3.getLoggedIn()) continue;
 
           sb.append(u3.getID());
           sb.append((char) 0x02);
@@ -711,7 +713,7 @@ public final class KailleraServerImpl implements KailleraServer, Executable {
       throws QuitException, DropGameException, QuitGameException, CloseGameException {
     lookingForGameReporter.cancelActionsForUser(user.getID());
 
-    if (!user.isLoggedIn()) {
+    if (!user.getLoggedIn()) {
       users.remove(user.getID());
       logger.atSevere().log(user + " quit failed: Not logged in");
       throw new QuitException(EmuLang.getString("KailleraServerImpl.NotLoggedIn"));
@@ -746,7 +748,7 @@ public final class KailleraServerImpl implements KailleraServer, Executable {
   @Override
   public synchronized void chat(KailleraUser user, String message)
       throws ChatException, FloodException {
-    if (!user.isLoggedIn()) {
+    if (!user.getLoggedIn()) {
       logger.atSevere().log(user + " chat failed: Not logged in");
       throw new ChatException(EmuLang.getString("KailleraServerImpl.NotLoggedIn"));
     }
@@ -805,7 +807,7 @@ public final class KailleraServerImpl implements KailleraServer, Executable {
   @Override
   public synchronized KailleraGame createGame(KailleraUser user, String romName)
       throws CreateGameException, FloodException {
-    if (!user.isLoggedIn()) {
+    if (!user.getLoggedIn()) {
       logger.atSevere().log(user + " create game failed: Not logged in");
       throw new CreateGameException(EmuLang.getString("KailleraServerImpl.NotLoggedIn"));
     }
@@ -918,7 +920,7 @@ public final class KailleraServerImpl implements KailleraServer, Executable {
   }
 
   synchronized void closeGame(KailleraGame game, KailleraUser user) throws CloseGameException {
-    if (!user.isLoggedIn()) {
+    if (!user.getLoggedIn()) {
       logger.atSevere().log(user + " close " + game + " failed: Not logged in");
       throw new CloseGameException(EmuLang.getString("KailleraServerImpl.NotLoggedIn"));
     }
@@ -938,7 +940,7 @@ public final class KailleraServerImpl implements KailleraServer, Executable {
   @Override
   public boolean checkMe(KailleraUser user, String message) {
     // >>>>>>>>>>>>>>>>>>>>
-    if (!user.isLoggedIn()) {
+    if (!user.getLoggedIn()) {
       logger.atSevere().log(user + " chat failed: Not logged in");
       return false;
     }
@@ -992,7 +994,7 @@ public final class KailleraServerImpl implements KailleraServer, Executable {
     if (user != null) {
       if (gamesAlso) { //   /msg and /me commands
         for (KailleraUserImpl kailleraUser : getUsers()) {
-          if (kailleraUser.isLoggedIn()) {
+          if (kailleraUser.getLoggedIn()) {
             int access = accessManager.getAccess(user.getConnectSocketAddress().getAddress());
             if (access < AccessManager.ACCESS_ADMIN) {
               if (!kailleraUser.searchIgnoredUsers(
@@ -1017,7 +1019,7 @@ public final class KailleraServerImpl implements KailleraServer, Executable {
       }
     } else {
       for (KailleraUserImpl kailleraUser : getUsers()) {
-        if (kailleraUser.isLoggedIn()) {
+        if (kailleraUser.getLoggedIn()) {
           kailleraUser.addEvent(new InfoMessageEvent(kailleraUser, announcement));
 
           // SF MOD
@@ -1034,7 +1036,7 @@ public final class KailleraServerImpl implements KailleraServer, Executable {
 
   protected void addEvent(ServerEvent event) {
     for (KailleraUserImpl user : users.values()) {
-      if (user.isLoggedIn()) {
+      if (user.getLoggedIn()) {
         if (user.getStatus() != KailleraUser.STATUS_IDLE) {
           if (user.getP2P()) {
             if (event.toString().equals("GameDataEvent")) user.addEvent(event);
@@ -1082,7 +1084,7 @@ public final class KailleraServerImpl implements KailleraServer, Executable {
             ((KailleraUserImpl) user).setAccess(access);
 
             // LagStat
-            if (user.isLoggedIn()) {
+            if (user.getLoggedIn()) {
               if (user.getGame() != null
                   && user.getGame().getStatus() == KailleraGame.STATUS_PLAYING
                   && !user.getGame().getStartTimeout()) {
@@ -1092,12 +1094,12 @@ public final class KailleraServerImpl implements KailleraServer, Executable {
               }
             }
 
-            if (!user.isLoggedIn()
+            if (!user.getLoggedIn()
                 && (System.currentTimeMillis() - user.getConnectTime()) > (flags.maxPing() * 15)) {
               logger.atInfo().log(user + " connection timeout!");
               user.stop();
               users.remove(user.getID());
-            } else if (user.isLoggedIn()
+            } else if (user.getLoggedIn()
                 && (System.currentTimeMillis() - user.getLastKeepAlive())
                     > (flags.keepAliveTimeout() * 1000)) {
               logger.atInfo().log(user + " keepalive timeout!");
@@ -1109,7 +1111,7 @@ public final class KailleraServerImpl implements KailleraServer, Executable {
               }
             } else if (flags.idleTimeout() > 0
                 && access == AccessManager.ACCESS_NORMAL
-                && user.isLoggedIn()
+                && user.getLoggedIn()
                 && (System.currentTimeMillis() - user.getLastActivity())
                     > (flags.idleTimeout() * 1000)) {
               logger.atInfo().log(user + " inactivity timeout!");
@@ -1119,7 +1121,7 @@ public final class KailleraServerImpl implements KailleraServer, Executable {
                 logger.atSevere().withCause(e).log(
                     "Error forcing " + user + " quit for inactivity timeout!");
               }
-            } else if (user.isLoggedIn() && access < AccessManager.ACCESS_NORMAL) {
+            } else if (user.getLoggedIn() && access < AccessManager.ACCESS_NORMAL) {
               logger.atInfo().log(user + " banned!");
               try {
                 quit(user, EmuLang.getString("KailleraServerImpl.ForcedQuitBanned"));
@@ -1127,7 +1129,7 @@ public final class KailleraServerImpl implements KailleraServer, Executable {
                 logger.atSevere().withCause(e).log(
                     "Error forcing " + user + " quit because banned!");
               }
-            } else if (user.isLoggedIn()
+            } else if (user.getLoggedIn()
                 && access == AccessManager.ACCESS_NORMAL
                 && !accessManager.isEmulatorAllowed(user.getClientType())) {
               logger.atInfo().log(user + ": emulator restricted!");

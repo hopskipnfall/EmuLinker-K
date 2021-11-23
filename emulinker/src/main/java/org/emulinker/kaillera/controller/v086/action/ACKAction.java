@@ -44,7 +44,7 @@ public class ACKAction implements V086Action<ClientACK>, V086UserEventHandler<Us
     actionCount++;
 
     KailleraUser user = clientHandler.getUser();
-    if (user.isLoggedIn()) return;
+    if (user.getLoggedIn()) return;
 
     clientHandler.addSpeedMeasurement();
 

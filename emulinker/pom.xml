@@ -381,10 +381,20 @@
           </formats>
 
           <java>
-            <googleJavaFormat></googleJavaFormat>
+            <googleJavaFormat />
           </java>
           <kotlin>
-            <ktlint />
+            <!-- These are the defaults, you can override if you want -->
+            <includes>
+              <include>src/main/java/**/*.kt</include>
+              <include>src/test/java/**/*.kt</include>
+            </includes>
+
+            <ktfmt>
+              <version>0.18</version> <!-- optional -->
+              <style>DEFAULT</style> <!-- optional, other option is DROPBOX -->
+            </ktfmt>
+
           </kotlin>
         </configuration>
       </plugin>

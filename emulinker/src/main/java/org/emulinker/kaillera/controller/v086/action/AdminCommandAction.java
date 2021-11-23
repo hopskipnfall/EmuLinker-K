@@ -372,7 +372,7 @@ public class AdminCommandAction implements V086Action<Chat> {
     // WildcardStringPattern pattern = new WildcardStringPattern
 
     for (KailleraUserImpl user : server.getUsers()) {
-      if (!user.isLoggedIn()) continue;
+      if (!user.getLoggedIn()) continue;
 
       if (user.getName().toLowerCase().contains(str.toLowerCase())) {
         StringBuilder sb = new StringBuilder();
@@ -545,7 +545,7 @@ public class AdminCommandAction implements V086Action<Chat> {
 
       if (access >= AccessManager.ACCESS_ADMIN
           && admin.getAccess() != AccessManager.ACCESS_SUPERADMIN
-          && owner.isLoggedIn())
+          && owner.getLoggedIn())
         throw new ActionException(EmuLang.getString("AdminCommandAction.CanNotCloseAdminGame"));
 
       owner.quitGame();

@@ -46,7 +46,7 @@ public abstract class UserInformation extends V086Message {
         + " clientType="
         + clientType()
         + " connectionType="
-        + KailleraUser.CONNECTION_TYPE_NAMES[connectionType()]
+        + KailleraUser.Companion.getCONNECTION_TYPE_NAMES()[connectionType()]
         + "]";
   }
 

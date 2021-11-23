@@ -768,7 +768,7 @@ public class ChatAction implements V086Action<Chat_Request>, V086ServerEventHand
         String str = (chatMessage.message().substring(space + 1));
         // WildcardStringPattern pattern = new WildcardStringPattern
         for (KailleraUserImpl user : clientHandler.getUser().getUsers()) {
-          if (!user.isLoggedIn()) continue;
+          if (!user.getLoggedIn()) continue;
 
           if (user.getName().toLowerCase().contains(str.toLowerCase())) {
             StringBuilder sb = new StringBuilder();

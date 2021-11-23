@@ -57,7 +57,7 @@ public abstract class UserJoined extends V086Message {
         + " ping="
         + ping()
         + " connectionType="
-        + KailleraUser.CONNECTION_TYPE_NAMES[connectionType()]
+        + KailleraUser.Companion.getCONNECTION_TYPE_NAMES()[connectionType()]
         + "]";
   }
 

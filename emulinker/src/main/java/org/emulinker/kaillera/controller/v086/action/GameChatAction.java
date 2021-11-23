@@ -125,7 +125,7 @@ public class GameChatAction
             clientHandler.getUser().getGame().setP2P(true);
             for (KailleraUserImpl u : clientHandler.getUser().getGame().getPlayers()) {
               u.setP2P(true);
-              if (u.isLoggedIn()) {
+              if (u.getLoggedIn()) {
                 u.getGame()
                     .announce("This game will NOT receive any server activity during gameplay!", u);
               }
@@ -133,7 +133,7 @@ public class GameChatAction
           } else {
             clientHandler.getUser().setP2P(true);
             for (KailleraUserImpl u : clientHandler.getUser().getGame().getPlayers()) {
-              if (u.isLoggedIn()) {
+              if (u.getLoggedIn()) {
                 u.getGame()
                     .announce(
                         clientHandler.getUser().getName()
@@ -147,7 +147,7 @@ public class GameChatAction
             clientHandler.getUser().getGame().setP2P(false);
             for (KailleraUserImpl u : clientHandler.getUser().getGame().getPlayers()) {
               u.setP2P(false);
-              if (u.isLoggedIn()) {
+              if (u.getLoggedIn()) {
                 u.getGame()
                     .announce("This game will NOW receive ALL server activity during gameplay!", u);
               }
@@ -155,7 +155,7 @@ public class GameChatAction
           } else {
             clientHandler.getUser().setP2P(false);
             for (KailleraUserImpl u : clientHandler.getUser().getGame().getPlayers()) {
-              if (u.isLoggedIn()) {
+              if (u.getLoggedIn()) {
                 u.getGame()
                     .announce(
                         clientHandler.getUser().getName()

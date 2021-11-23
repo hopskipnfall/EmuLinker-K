@@ -428,10 +428,11 @@ public final class KailleraGameImpl implements KailleraGame {
         logger.atWarning().log(
             user
                 + "join game denied: owner doesn't allow that connection type: "
-                + KailleraUser.CONNECTION_TYPE_NAMES[user.getConnectionType()]);
+                + KailleraUser.Companion.getCONNECTION_TYPE_NAMES()[user.getConnectionType()]);
         throw new JoinGameException(
             "Owner only allows connection type: "
-                + KailleraUser.CONNECTION_TYPE_NAMES[getOwner().getConnectionType()]);
+                + KailleraUser.Companion.getCONNECTION_TYPE_NAMES()[
+                    getOwner().getConnectionType()]);
       }
     }
 
@@ -570,7 +571,7 @@ public final class KailleraGameImpl implements KailleraGame {
                   this,
                   EmuLang.getString(
                       "KailleraGameImpl.StartGameConnectionTypeMismatchInfo",
-                      KailleraUser.CONNECTION_TYPE_NAMES[owner.getConnectionType()]),
+                      KailleraUser.Companion.getCONNECTION_TYPE_NAMES()[owner.getConnectionType()]),
                   null));
           throw new StartGameException(
               EmuLang.getString("KailleraGameImpl.StartGameDeniedConnectionTypeMismatch"));
