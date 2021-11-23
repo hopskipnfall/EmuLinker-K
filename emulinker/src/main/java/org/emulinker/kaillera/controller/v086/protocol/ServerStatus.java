@@ -260,7 +260,7 @@ public abstract class ServerStatus extends V086Message {
           + " players="
           + players()
           + " status="
-          + KailleraGame.STATUS_NAMES[status()]
+          + KailleraGame.Companion.getSTATUS_NAMES()[status()]
           + "]";
     }
 

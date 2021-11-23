@@ -545,7 +545,7 @@ public class GameOwnerCommandAction implements V086Action<GameChat> {
           game.swap = true;
           // PlayerActionQueue temp = game.getPlayerActionQueue()[0];
           for (i = 0; i < str.length(); i++) {
-            KailleraUserImpl player = game.getPlayers().get(i);
+            KailleraUserImpl player = (KailleraUserImpl) game.getPlayers().get(i);
             player.setPlayerNumber(num[i]);
             /*if(num[i] == 1){
             	game.getPlayerActionQueue()[i] = temp;
@@ -592,7 +592,7 @@ public class GameOwnerCommandAction implements V086Action<GameChat> {
         for (int w = game.getPlayers().size(); w >= 1; w--) {
           if (game.getPlayer(w).getAccess() < AccessManager.ACCESS_ADMIN
               && !game.getPlayer(w).equals(game.getOwner()))
-            game.kick(admin, game.getPlayer(w).getID());
+            game.kick(admin, game.getPlayer(w).getId());
         }
         admin.getGame().announce("All players have been kicked!", null);
         return;
@@ -601,7 +601,7 @@ public class GameOwnerCommandAction implements V086Action<GameChat> {
 
       if (playerNumber > 0 && playerNumber < 101) {
         if (game.getPlayer(playerNumber) != null)
-          game.kick(admin, game.getPlayer(playerNumber).getID());
+          game.kick(admin, game.getPlayer(playerNumber).getId());
         else {
           game.announce("Player doesn't exisit!", admin);
         }

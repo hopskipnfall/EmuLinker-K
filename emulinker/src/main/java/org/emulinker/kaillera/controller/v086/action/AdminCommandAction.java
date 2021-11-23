@@ -377,7 +377,7 @@ public class AdminCommandAction implements V086Action<Chat> {
       if (user.getName().toLowerCase().contains(str.toLowerCase())) {
         StringBuilder sb = new StringBuilder();
         sb.append("UserID: ");
-        sb.append(user.getID());
+        sb.append(user.getId());
         sb.append(", IP: ");
         sb.append(user.getConnectSocketAddress().getAddress().getHostAddress());
         sb.append(", Nick: <");
@@ -386,7 +386,7 @@ public class AdminCommandAction implements V086Action<Chat> {
         sb.append(user.getAccessStr());
         if (user.getGame() != null) {
           sb.append(", GameID: ");
-          sb.append(user.getGame().getID());
+          sb.append(user.getGame().getId());
           sb.append(", Game: ");
           sb.append(user.getGame().getRomName());
         }
@@ -421,7 +421,7 @@ public class AdminCommandAction implements V086Action<Chat> {
       if (pattern.match(game.getRomName())) {
         StringBuilder sb = new StringBuilder();
         sb.append("GameID: ");
-        sb.append(game.getID());
+        sb.append(game.getId());
         sb.append(", Owner: <");
         sb.append(game.getOwner().getName());
         sb.append(">, Game: ");
@@ -458,7 +458,7 @@ public class AdminCommandAction implements V086Action<Chat> {
       if (user == null)
         throw new ActionException(EmuLang.getString("AdminCommandAction.UserNotFound", +userID));
 
-      if (user.getID() == admin.getID())
+      if (user.getId() == admin.getId())
         throw new ActionException(EmuLang.getString("AdminCommandAction.CanNotSilenceSelf"));
 
       int access = server.getAccessManager().getAccess(user.getConnectSocketAddress().getAddress());
@@ -504,7 +504,7 @@ public class AdminCommandAction implements V086Action<Chat> {
       if (user == null)
         throw new ActionException(EmuLang.getString("AdminCommandAction.UserNotFound", userID));
 
-      if (user.getID() == admin.getID())
+      if (user.getId() == admin.getId())
         throw new ActionException(EmuLang.getString("AdminCommandAction.CanNotKickSelf"));
 
       int access = server.getAccessManager().getAccess(user.getConnectSocketAddress().getAddress());
@@ -571,7 +571,7 @@ public class AdminCommandAction implements V086Action<Chat> {
       if (user == null)
         throw new ActionException(EmuLang.getString("AdminCommandAction.UserNotFound", userID));
 
-      if (user.getID() == admin.getID())
+      if (user.getId() == admin.getId())
         throw new ActionException(EmuLang.getString("AdminCommandAction.CanNotBanSelf"));
 
       int access = server.getAccessManager().getAccess(user.getConnectSocketAddress().getAddress());
@@ -611,7 +611,7 @@ public class AdminCommandAction implements V086Action<Chat> {
       if (user == null)
         throw new ActionException(EmuLang.getString("AdminCommandAction.UserNotFound", userID));
 
-      if (user.getID() == admin.getID())
+      if (user.getId() == admin.getId())
         throw new ActionException(EmuLang.getString("AdminCommandAction.AlreadyAdmin"));
 
       int access = server.getAccessManager().getAccess(user.getConnectSocketAddress().getAddress());
@@ -653,7 +653,7 @@ public class AdminCommandAction implements V086Action<Chat> {
       if (user == null)
         throw new ActionException(EmuLang.getString("AdminCommandAction.UserNotFound", userID));
 
-      if (user.getID() == admin.getID())
+      if (user.getId() == admin.getId())
         throw new ActionException(EmuLang.getString("AdminCommandAction.AlreadyAdmin"));
 
       int access = server.getAccessManager().getAccess(user.getConnectSocketAddress().getAddress());
@@ -694,7 +694,7 @@ public class AdminCommandAction implements V086Action<Chat> {
       if (user == null)
         throw new ActionException(EmuLang.getString("AdminCommandAction.UserNotFound", userID));
 
-      if (user.getID() == admin.getID())
+      if (user.getId() == admin.getId())
         throw new ActionException(EmuLang.getString("AdminCommandAction.AlreadyAdmin"));
 
       int access = server.getAccessManager().getAccess(user.getConnectSocketAddress().getAddress());

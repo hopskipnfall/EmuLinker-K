@@ -59,7 +59,7 @@ public class QuitAction implements V086Action<Quit_Request>, V086ServerEventHand
           Quit_Notification.create(
               clientHandler.getNextMessageNumber(),
               user.getName(),
-              user.getID(),
+              user.getId(),
               userQuitEvent.getMessage()));
     } catch (MessageFormatException e) {
       logger.atSevere().withCause(e).log("Failed to contruct Quit_Notification message");

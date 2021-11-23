@@ -28,7 +28,7 @@ private val logger = FluentLogger.forEnclosingClass()
 private const val EMULINKER_CLIENT_NAME = "EmulinkerSF Admin Client"
 
 class KailleraUserImpl(
-    override val iD: Int,
+    override val id: Int,
     override val protocol: String,
     override val connectSocketAddress: InetSocketAddress,
     override val listener: KailleraEventListener,
@@ -154,9 +154,9 @@ class KailleraUserImpl(
   override fun toString(): String {
     val n = name
     return if (n == null) {
-      "User$iD(${connectSocketAddress.address.hostAddress})"
+      "User$id(${connectSocketAddress.address.hostAddress})"
     } else {
-      "User$iD(${if (n.length > 15) n.take(15) + "..." else n}/${connectSocketAddress.address.hostAddress})"
+      "User$id(${if (n.length > 15) n.take(15) + "..." else n}/${connectSocketAddress.address.hostAddress})"
     }
   }
 
@@ -178,11 +178,11 @@ class KailleraUserImpl(
     get() = AccessManager.ACCESS_NAMES[access]
 
   override fun equals(obj: Any?): Boolean {
-    return obj is KailleraUserImpl && obj.iD == iD
+    return obj is KailleraUserImpl && obj.id == id
   }
 
   fun toDetailedString(): String {
-    return ("KailleraUserImpl[id=$iD protocol=$protocol status=${KailleraUser.STATUS_NAMES[status]} name=$name clientType=$clientType ping=$ping connectionType=${KailleraUser.CONNECTION_TYPE_NAMES[connectionType.toInt()]} remoteAddress=" +
+    return ("KailleraUserImpl[id=$id protocol=$protocol status=${KailleraUser.STATUS_NAMES[status]} name=$name clientType=$clientType ping=$ping connectionType=${KailleraUser.CONNECTION_TYPE_NAMES[connectionType.toInt()]} remoteAddress=" +
         (if (socketAddress == null) EmuUtil.formatSocketAddress(connectSocketAddress)
         else EmuUtil.formatSocketAddress(socketAddress)) +
         "]")
@@ -256,7 +256,7 @@ class KailleraUserImpl(
   @Throws(CreateGameException::class, FloodException::class)
   override fun createGame(romName: String?): KailleraGame? {
     updateLastActivity()
-    if (server.getUser(iD) == null) {
+    if (server.getUser(id) == null) {
       logger.atSevere().log("$this create game failed: User don't exist!")
       return null
     }
@@ -405,8 +405,8 @@ class KailleraUserImpl(
       logger.atWarning().log("$this player ready failed: Not in a game")
       throw UserReadyException(EmuLang.getString("KailleraUserImpl.PlayerReadyErrorNotInGame"))
     }
-    if (playerNumber > game!!.playerActionQueue.size ||
-        game!!.playerActionQueue[playerNumber - 1].isSynched) {
+    if (playerNumber > game!!.playerActionQueue!!.size ||
+        game!!.playerActionQueue!![playerNumber - 1]!!.isSynched) {
       return
     }
     totalDelay = game!!.delay + tempDelay + 5
@@ -429,7 +429,7 @@ class KailleraUserImpl(
       // totalDelay = (game.getDelay() + tempDelay + 5)
       if (frameCount < totalDelay) {
         bytesPerAction = data.size / connectionType
-        arraySize = game!!.playerActionQueue.size * connectionType * bytesPerAction
+        arraySize = game!!.playerActionQueue!!.size * connectionType * bytesPerAction
         val response = ByteArray(arraySize)
         for (i in response.indices) {
           response[i] = 0

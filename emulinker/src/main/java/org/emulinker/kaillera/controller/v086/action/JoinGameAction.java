@@ -64,7 +64,7 @@ public class JoinGameAction
             QuitGame_Notification.create(
                 clientHandler.getNextMessageNumber(),
                 clientHandler.getUser().getName(),
-                clientHandler.getUser().getID()));
+                clientHandler.getUser().getId()));
       } catch (MessageFormatException e2) {
         logger.atSevere().withCause(e2).log("Failed to contruct new Message");
       }
@@ -91,7 +91,7 @@ public class JoinGameAction
                   PlayerInformation.Player.create(
                       player.getName(),
                       player.getPing(),
-                      player.getID(),
+                      player.getId(),
                       player.getConnectionType()));
           }
         }
@@ -103,18 +103,18 @@ public class JoinGameAction
         clientHandler.send(
             JoinGame_Notification.create(
                 clientHandler.getNextMessageNumber(),
-                game.getID(),
+                game.getId(),
                 0,
                 user.getName(),
                 user.getPing(),
-                user.getID(),
+                user.getId(),
                 user.getConnectionType()));
     } catch (MessageFormatException e) {
       logger.atSevere().withCause(e).log("Failed to contruct JoinGame_Notification message");
     }
 
-    if (userJoinedEvent.getGame().getOwner().getID() != userJoinedEvent.getUser().getID()) {
-      lookingForGameReporter.cancelActionsForGame(userJoinedEvent.getGame().getID());
+    if (userJoinedEvent.getGame().getOwner().getId() != userJoinedEvent.getUser().getId()) {
+      lookingForGameReporter.cancelActionsForGame(userJoinedEvent.getGame().getId());
     }
   }
 }

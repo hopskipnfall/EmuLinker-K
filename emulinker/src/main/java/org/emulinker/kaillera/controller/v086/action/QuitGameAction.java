@@ -50,7 +50,7 @@ public class QuitGameAction
 
     try {
       clientHandler.getUser().quitGame();
-      lookingForGameReporter.cancelActionsForUser(clientHandler.getUser().getID());
+      lookingForGameReporter.cancelActionsForUser(clientHandler.getUser().getId());
     } catch (DropGameException | QuitGameException | CloseGameException e) {
       logger.atSevere().withCause(e).log("Action failed");
     }
@@ -73,13 +73,13 @@ public class QuitGameAction
       if (user.getStealth() == false)
         clientHandler.send(
             QuitGame_Notification.create(
-                clientHandler.getNextMessageNumber(), user.getName(), user.getID()));
+                clientHandler.getNextMessageNumber(), user.getName(), user.getId()));
 
       if (thisUser == user) {
         if (user.getStealth() == true)
           clientHandler.send(
               QuitGame_Notification.create(
-                  clientHandler.getNextMessageNumber(), user.getName(), user.getID()));
+                  clientHandler.getNextMessageNumber(), user.getName(), user.getId()));
       }
     } catch (MessageFormatException e) {
       logger.atSevere().withCause(e).log("Failed to contruct QuitGame_Notification message");

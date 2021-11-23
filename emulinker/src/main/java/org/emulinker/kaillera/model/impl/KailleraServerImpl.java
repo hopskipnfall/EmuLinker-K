@@ -422,7 +422,7 @@ public final class KailleraServerImpl implements KailleraServer, Executable {
       throw new LoginException(EmuLang.getString("KailleraServerImpl.LoginDeniedAlreadyLoggedIn"));
     }
 
-    Integer userListKey = user.getID();
+    Integer userListKey = user.getId();
     KailleraUser u = users.get(userListKey);
     if (u == null) {
       logger.atWarning().log(user + " login denied: Connection timed out!");
@@ -633,7 +633,7 @@ public final class KailleraServerImpl implements KailleraServer, Executable {
         for (KailleraUserImpl u3 : getUsers()) {
           if (!u3.getLoggedIn()) continue;
 
-          sb.append(u3.getID());
+          sb.append(u3.getId());
           sb.append((char) 0x02);
           sb.append(u3.getConnectSocketAddress().getAddress().getHostAddress());
           sb.append((char) 0x02);
@@ -711,15 +711,15 @@ public final class KailleraServerImpl implements KailleraServer, Executable {
   @Override
   public synchronized void quit(KailleraUser user, String message)
       throws QuitException, DropGameException, QuitGameException, CloseGameException {
-    lookingForGameReporter.cancelActionsForUser(user.getID());
+    lookingForGameReporter.cancelActionsForUser(user.getId());
 
     if (!user.getLoggedIn()) {
-      users.remove(user.getID());
+      users.remove(user.getId());
       logger.atSevere().log(user + " quit failed: Not logged in");
       throw new QuitException(EmuLang.getString("KailleraServerImpl.NotLoggedIn"));
     }
 
-    if (users.remove(user.getID()) == null)
+    if (users.remove(user.getId()) == null)
       logger.atSevere().log(user + " quit failed: not in user list");
 
     KailleraGameImpl userGame = ((KailleraUserImpl) user).getGame();
@@ -890,7 +890,7 @@ public final class KailleraServerImpl implements KailleraServer, Executable {
     logger.atInfo().log(user + " created: " + game + ": " + game.getRomName());
 
     try {
-      user.joinGame(game.getID());
+      user.joinGame(game.getId());
     } catch (Exception e) {
       // this shouldn't happen
       logger.atSevere().withCause(e).log(
@@ -905,7 +905,7 @@ public final class KailleraServerImpl implements KailleraServer, Executable {
 
     if (lookingForGameReporter.reportAndStartTimer(
         LookingForGameEvent.builder()
-            .setGameId(game.getID())
+            .setGameId(game.getId())
             .setGameTitle(game.getRomName())
             .setUser(user)
             .build())) {
@@ -925,13 +925,13 @@ public final class KailleraServerImpl implements KailleraServer, Executable {
       throw new CloseGameException(EmuLang.getString("KailleraServerImpl.NotLoggedIn"));
     }
 
-    if (!games.containsKey(game.getID())) {
+    if (!games.containsKey(game.getId())) {
       logger.atSevere().log(user + " close " + game + " failed: not in list: " + game);
       return;
     }
 
     ((KailleraGameImpl) game).close(user);
-    games.remove(game.getID());
+    games.remove(game.getId());
 
     logger.atInfo().log(user + " closed: " + game);
     addEvent(new GameClosedEvent(this, game));
@@ -1098,7 +1098,7 @@ public final class KailleraServerImpl implements KailleraServer, Executable {
                 && (System.currentTimeMillis() - user.getConnectTime()) > (flags.maxPing() * 15)) {
               logger.atInfo().log(user + " connection timeout!");
               user.stop();
-              users.remove(user.getID());
+              users.remove(user.getId());
             } else if (user.getLoggedIn()
                 && (System.currentTimeMillis() - user.getLastKeepAlive())
                     > (flags.keepAliveTimeout() * 1000)) {

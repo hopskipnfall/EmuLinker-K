@@ -92,7 +92,7 @@ public final class TwitterBroadcaster {
   }
 
   public boolean cancelActionsForUser(int userId) {
-    return cancelMatchingEvents((event) -> event.user().getID() == userId);
+    return cancelMatchingEvents((event) -> event.user().getId() == userId);
   }
 
   public boolean cancelActionsForGame(int gameId) {

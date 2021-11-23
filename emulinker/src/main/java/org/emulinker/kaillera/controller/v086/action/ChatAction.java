@@ -318,8 +318,8 @@ public class ChatAction implements V086Action<Chat_Request>, V086ServerEventHand
             }
           }
 
-          user1.setLastMsgID(user.getID());
-          user.setLastMsgID(user1.getID());
+          user1.setLastMsgID(user.getId());
+          user.setLastMsgID(user1.getId());
 
           user1
               .getServer()
@@ -327,11 +327,11 @@ public class ChatAction implements V086Action<Chat_Request>, V086ServerEventHand
                   "TO: <"
                       + user.getName()
                       + ">("
-                      + user.getID()
+                      + user.getId()
                       + ") <"
                       + clientHandler.getUser().getName()
                       + "> ("
-                      + clientHandler.getUser().getID()
+                      + clientHandler.getUser().getId()
                       + "): "
                       + m,
                   false,
@@ -341,7 +341,7 @@ public class ChatAction implements V086Action<Chat_Request>, V086ServerEventHand
                   "<"
                       + clientHandler.getUser().getName()
                       + "> ("
-                      + clientHandler.getUser().getID()
+                      + clientHandler.getUser().getId()
                       + "): "
                       + m,
                   false,
@@ -443,11 +443,11 @@ public class ChatAction implements V086Action<Chat_Request>, V086ServerEventHand
                       "TO: <"
                           + user.getName()
                           + ">("
-                          + user.getID()
+                          + user.getId()
                           + ") <"
                           + clientHandler.getUser().getName()
                           + "> ("
-                          + clientHandler.getUser().getID()
+                          + clientHandler.getUser().getId()
                           + "): "
                           + m,
                       false,
@@ -457,7 +457,7 @@ public class ChatAction implements V086Action<Chat_Request>, V086ServerEventHand
                       "<"
                           + clientHandler.getUser().getName()
                           + "> ("
-                          + clientHandler.getUser().getID()
+                          + clientHandler.getUser().getId()
                           + "): "
                           + m,
                       false,
@@ -573,7 +573,7 @@ public class ChatAction implements V086Action<Chat_Request>, V086ServerEventHand
                       + " is now ignoring <"
                       + user.getName()
                       + "> ID: "
-                      + user.getID(),
+                      + user.getId(),
                   false,
                   null);
         } catch (NoSuchElementException e) {
@@ -629,7 +629,7 @@ public class ChatAction implements V086Action<Chat_Request>, V086ServerEventHand
                         + " is now unignoring <"
                         + user.getName()
                         + "> ID: "
-                        + user.getID(),
+                        + user.getId(),
                     false,
                     null);
           else
@@ -773,7 +773,7 @@ public class ChatAction implements V086Action<Chat_Request>, V086ServerEventHand
           if (user.getName().toLowerCase().contains(str.toLowerCase())) {
             StringBuilder sb = new StringBuilder();
             sb.append("UserID: ");
-            sb.append(user.getID());
+            sb.append(user.getId());
             sb.append(", Nick: <");
             sb.append(user.getName());
             sb.append(">");
@@ -786,7 +786,7 @@ public class ChatAction implements V086Action<Chat_Request>, V086ServerEventHand
 
             if (user.getGame() != null) {
               sb.append(", GameID: ");
-              sb.append(user.getGame().getID());
+              sb.append(user.getGame().getId());
               sb.append(", Game: ");
               sb.append(user.getGame().getRomName());
             }

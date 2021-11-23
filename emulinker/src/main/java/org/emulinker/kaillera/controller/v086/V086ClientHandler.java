@@ -208,7 +208,7 @@ public final class V086ClientHandler extends PrivateUDPServer implements Kailler
                 + "/"
                 + v086Controller.threadPool.getPoolSize()
                 + ")");
-    v086Controller.clientHandlers.put(user.getID(), this);
+    v086Controller.clientHandlers.put(user.getId(), this);
   }
 
   @Override
@@ -236,7 +236,7 @@ public final class V086ClientHandler extends PrivateUDPServer implements Kailler
     }
 
     if (user != null) {
-      v086Controller.clientHandlers.remove(user.getID());
+      v086Controller.clientHandlers.remove(user.getId());
       user.stop();
       user = null;
     }

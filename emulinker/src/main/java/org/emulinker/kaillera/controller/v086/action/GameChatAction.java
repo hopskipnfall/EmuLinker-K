@@ -11,6 +11,7 @@ import org.emulinker.kaillera.controller.messaging.MessageFormatException;
 import org.emulinker.kaillera.controller.v086.V086ClientHandler;
 import org.emulinker.kaillera.controller.v086.protocol.*;
 import org.emulinker.kaillera.lookingforgame.TwitterBroadcaster;
+import org.emulinker.kaillera.model.KailleraUser;
 import org.emulinker.kaillera.model.event.*;
 import org.emulinker.kaillera.model.exception.ActionException;
 import org.emulinker.kaillera.model.exception.GameChatException;
@@ -123,7 +124,7 @@ public class GameChatAction
         if (((GameChat) message).message().equals("/p2pon")) {
           if (clientHandler.getUser().getGame().getOwner().equals(clientHandler.getUser())) {
             clientHandler.getUser().getGame().setP2P(true);
-            for (KailleraUserImpl u : clientHandler.getUser().getGame().getPlayers()) {
+            for (KailleraUser u : clientHandler.getUser().getGame().getPlayers()) {
               u.setP2P(true);
               if (u.getLoggedIn()) {
                 u.getGame()
@@ -132,7 +133,7 @@ public class GameChatAction
             }
           } else {
             clientHandler.getUser().setP2P(true);
-            for (KailleraUserImpl u : clientHandler.getUser().getGame().getPlayers()) {
+            for (KailleraUser u : clientHandler.getUser().getGame().getPlayers()) {
               if (u.getLoggedIn()) {
                 u.getGame()
                     .announce(
@@ -145,7 +146,7 @@ public class GameChatAction
         } else if (((GameChat) message).message().equals("/p2poff")) {
           if (clientHandler.getUser().getGame().getOwner().equals(clientHandler.getUser())) {
             clientHandler.getUser().getGame().setP2P(false);
-            for (KailleraUserImpl u : clientHandler.getUser().getGame().getPlayers()) {
+            for (KailleraUser u : clientHandler.getUser().getGame().getPlayers()) {
               u.setP2P(false);
               if (u.getLoggedIn()) {
                 u.getGame()
@@ -154,7 +155,7 @@ public class GameChatAction
             }
           } else {
             clientHandler.getUser().setP2P(false);
-            for (KailleraUserImpl u : clientHandler.getUser().getGame().getPlayers()) {
+            for (KailleraUser u : clientHandler.getUser().getGame().getPlayers()) {
               if (u.getLoggedIn()) {
                 u.getGame()
                     .announce(
@@ -215,14 +216,13 @@ public class GameChatAction
             return;
           }
 
-          if (user.getMsg() == false
+          if (!user.getMsg()
               || user.searchIgnoredUsers(
-                      clientHandler
-                          .getUser()
-                          .getConnectSocketAddress()
-                          .getAddress()
-                          .getHostAddress())
-                  == true) {
+                  clientHandler
+                      .getUser()
+                      .getConnectSocketAddress()
+                      .getAddress()
+                      .getHostAddress())) {
             user1
                 .getGame()
                 .announce("<" + user.getName() + "> Is not accepting private messages!", user1);
@@ -253,8 +253,8 @@ public class GameChatAction
             }
           }
 
-          user1.setLastMsgID(user.getID());
-          user.setLastMsgID(user1.getID());
+          user1.setLastMsgID(user.getId());
+          user.setLastMsgID(user1.getId());
 
           // user1.getServer().announce("TO: <" + user.getName() + ">(" + user.getID() + ") <" +
           // clientHandler.getUser().getName() + "> (" + clientHandler.getUser().getID() + "): " +
@@ -268,11 +268,11 @@ public class GameChatAction
                     "TO: <"
                         + user.getName()
                         + ">("
-                        + user.getID()
+                        + user.getId()
                         + ") <"
                         + clientHandler.getUser().getName()
                         + "> ("
-                        + clientHandler.getUser().getID()
+                        + clientHandler.getUser().getId()
                         + "): "
                         + m,
                     user1);
@@ -284,7 +284,7 @@ public class GameChatAction
                     "<"
                         + clientHandler.getUser().getName()
                         + "> ("
-                        + clientHandler.getUser().getID()
+                        + clientHandler.getUser().getId()
                         + "): "
                         + m,
                     user);
@@ -362,11 +362,11 @@ public class GameChatAction
                         "TO: <"
                             + user.getName()
                             + ">("
-                            + user.getID()
+                            + user.getId()
                             + ") <"
                             + clientHandler.getUser().getName()
                             + "> ("
-                            + clientHandler.getUser().getID()
+                            + clientHandler.getUser().getId()
                             + "): "
                             + m,
                         user1);
@@ -378,7 +378,7 @@ public class GameChatAction
                         "<"
                             + clientHandler.getUser().getName()
                             + "> ("
-                            + clientHandler.getUser().getID()
+                            + clientHandler.getUser().getId()
                             + "): "
                             + m,
                         user);
@@ -451,7 +451,7 @@ public class GameChatAction
                       + " is now ignoring <"
                       + user.getName()
                       + "> ID: "
-                      + user.getID(),
+                      + user.getId(),
                   false,
                   null);
           return;
@@ -487,17 +487,16 @@ public class GameChatAction
           }
 
           if (clientHandler
-                  .getUser()
-                  .removeIgnoredUser(
-                      user.getConnectSocketAddress().getAddress().getHostAddress(), false)
-              == true)
+              .getUser()
+              .removeIgnoredUser(
+                  user.getConnectSocketAddress().getAddress().getHostAddress(), false))
             user.getServer()
                 .announce(
                     clientHandler.getUser().getName()
                         + " is now unignoring <"
                         + user.getName()
                         + "> ID: "
-                        + user.getID(),
+                        + user.getId(),
                     false,
                     null);
           else
@@ -556,7 +555,7 @@ public class GameChatAction
 
           announcement = "*" + clientHandler.getUser().getName() + " " + m;
 
-          for (KailleraUserImpl user : clientHandler.getUser().getGame().getPlayers()) {
+          for (KailleraUser user : clientHandler.getUser().getGame().getPlayers()) {
             user.getGame().announce(announcement, user);
           }
           return;
@@ -593,10 +592,9 @@ public class GameChatAction
           Thread.sleep(20);
         } catch (Exception e) {
         }
-        return;
       } else if (((GameChat) message).message().equals("/stop")) {
         KailleraUserImpl user = (KailleraUserImpl) clientHandler.getUser();
-        if (lookingForGameReporter.cancelActionsForUser(user.getID())) {
+        if (lookingForGameReporter.cancelActionsForUser(user.getId())) {
           user.getGame().announce("Canceled pending tweet.", user);
         } else {
           user.getGame().announce("No pending tweets.", user);
@@ -618,11 +616,11 @@ public class GameChatAction
 
     try {
       if (clientHandler
-              .getUser()
-              .searchIgnoredUsers(
-                  gameChatEvent.getUser().getConnectSocketAddress().getAddress().getHostAddress())
-          == true) return;
-      else if (clientHandler.getUser().getIgnoreAll() == true) {
+          .getUser()
+          .searchIgnoredUsers(
+              gameChatEvent.getUser().getConnectSocketAddress().getAddress().getHostAddress()))
+        return;
+      else if (clientHandler.getUser().getIgnoreAll()) {
         if (gameChatEvent.getUser().getAccess() < AccessManager.ACCESS_ADMIN
             && gameChatEvent.getUser() != clientHandler.getUser()) return;
       }

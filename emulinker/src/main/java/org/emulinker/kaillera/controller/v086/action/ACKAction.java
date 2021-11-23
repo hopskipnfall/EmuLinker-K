@@ -66,7 +66,7 @@ public class ACKAction implements V086Action<ClientACK>, V086UserEventHandler<Us
         try {
           clientHandler.send(
               ConnectionRejected.create(
-                  clientHandler.getNextMessageNumber(), "server", user.getID(), e.getMessage()));
+                  clientHandler.getNextMessageNumber(), "server", user.getId(), e.getMessage()));
         } catch (MessageFormatException e2) {
           logger.atSevere().withCause(e).log("Failed to contruct new ConnectionRejected");
         }
@@ -103,7 +103,7 @@ public class ACKAction implements V086Action<ClientACK>, V086UserEventHandler<Us
                   user.getName(),
                   user.getPing(),
                   (byte) user.getStatus(),
-                  user.getID(),
+                  user.getId(),
                   user.getConnectionType()));
       }
     } catch (MessageFormatException e) {
@@ -120,7 +120,7 @@ public class ACKAction implements V086Action<ClientACK>, V086UserEventHandler<Us
         games.add(
             ServerStatus.Game.create(
                 game.getRomName(),
-                game.getID(),
+                game.getId(),
                 game.getClientType(),
                 game.getOwner().getName(),
                 (num + "/" + game.getMaxUsers()),

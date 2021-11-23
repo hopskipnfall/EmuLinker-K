@@ -61,7 +61,10 @@ public abstract class GameStatus extends V086Message {
     return getInfoString()
         + String.format(
             "[gameID=%d gameStatus=%s numPlayers=%d maxPlayers=%d]",
-            gameId(), KailleraGame.STATUS_NAMES[gameStatus()], numPlayers(), maxPlayers());
+            gameId(),
+            KailleraGame.Companion.getSTATUS_NAMES()[gameStatus()],
+            numPlayers(),
+            maxPlayers());
   }
 
   @Override

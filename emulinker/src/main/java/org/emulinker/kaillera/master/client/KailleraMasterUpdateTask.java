@@ -56,7 +56,7 @@ public class KailleraMasterUpdateTask implements MasterListUpdateTask {
     for (KailleraGame game : kailleraServer.getGames()) {
       if (game.getStatus() != KailleraGame.STATUS_WAITING) continue;
 
-      waitingGames.append(game.getID());
+      waitingGames.append(game.getId());
       waitingGames.append("|");
       waitingGames.append(game.getRomName());
       waitingGames.append("|");

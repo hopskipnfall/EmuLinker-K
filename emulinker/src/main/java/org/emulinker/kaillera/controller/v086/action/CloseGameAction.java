@@ -36,7 +36,7 @@ public class CloseGameAction implements V086ServerEventHandler<GameClosedEvent> 
     try {
       clientHandler.send(
           CloseGame.create(
-              clientHandler.getNextMessageNumber(), gameClosedEvent.getGame().getID(), (short) 0));
+              clientHandler.getNextMessageNumber(), gameClosedEvent.getGame().getId(), (short) 0));
     } catch (MessageFormatException e) {
       logger.atSevere().withCause(e).log("Failed to contruct CloseGame_Notification message");
     }

@@ -16,7 +16,7 @@ interface KailleraUser {
   val connectTime: Long
   val delay: Int
   val game: KailleraGameImpl?
-  val iD: Int
+  val id: Int
   val isEmuLinkerClient: Boolean
   val lastActivity: Long
   val lastKeepAlive: Long

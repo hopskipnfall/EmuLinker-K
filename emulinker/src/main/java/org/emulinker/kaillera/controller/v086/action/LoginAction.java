@@ -69,7 +69,7 @@ public class LoginAction
           UserJoined.create(
               clientHandler.getNextMessageNumber(),
               user.getName(),
-              user.getID(),
+              user.getId(),
               user.getPing(),
               (byte) user.getConnectionType()));
 
@@ -79,7 +79,7 @@ public class LoginAction
           StringBuilder sb = new StringBuilder();
 
           sb.append(":USERINFO=");
-          sb.append(user.getID());
+          sb.append(user.getId());
           sb.append((char) 0x02);
           sb.append(user.getConnectSocketAddress().getAddress().getHostAddress());
           sb.append((char) 0x02);

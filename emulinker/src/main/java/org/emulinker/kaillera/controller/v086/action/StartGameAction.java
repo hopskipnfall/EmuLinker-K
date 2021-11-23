@@ -88,6 +88,6 @@ public class StartGameAction
       logger.atSevere().withCause(e).log("Failed to contruct StartGame_Notification message");
     }
 
-    lookingForGameReporter.cancelActionsForGame(gameStartedEvent.getGame().getID());
+    lookingForGameReporter.cancelActionsForGame(gameStartedEvent.getGame().getId());
   }
 }

@@ -45,7 +45,7 @@ public class GameStatusAction implements V086ServerEventHandler<GameStatusChange
       clientHandler.send(
           GameStatus.create(
               clientHandler.getNextMessageNumber(),
-              game.getID(),
+              game.getId(),
               (short) 0,
               (byte) game.getStatus(),
               (byte) num,

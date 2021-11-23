@@ -61,7 +61,7 @@ public class CreateGameAction
             QuitGame_Notification.create(
                 clientHandler.getNextMessageNumber(),
                 clientHandler.getUser().getName(),
-                clientHandler.getUser().getID()));
+                clientHandler.getUser().getId()));
       } catch (MessageFormatException e2) {
         logger.atSevere().withCause(e2).log("Failed to contruct message");
       }
@@ -79,7 +79,7 @@ public class CreateGameAction
             QuitGame_Notification.create(
                 clientHandler.getNextMessageNumber(),
                 clientHandler.getUser().getName(),
-                clientHandler.getUser().getID()));
+                clientHandler.getUser().getId()));
       } catch (MessageFormatException e2) {
         logger.atSevere().withCause(e2).log("Failed to contruct message");
       }
@@ -99,7 +99,7 @@ public class CreateGameAction
               owner.getName(),
               game.getRomName(),
               owner.getClientType(),
-              game.getID(),
+              game.getId(),
               (short) 0));
     } catch (MessageFormatException e) {
       logger.atSevere().withCause(e).log("Failed to contruct CreateGame_Notification message");
