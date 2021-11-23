@@ -7,7 +7,7 @@ import org.apache.commons.httpclient.methods.GetMethod;
 import org.emulinker.kaillera.controller.connectcontroller.ConnectController;
 import org.emulinker.kaillera.master.*;
 import org.emulinker.kaillera.model.*;
-import org.emulinker.release.ReleaseInfo;
+import org.emulinker.kaillera.release.ReleaseInfo;
 
 public class KailleraMasterUpdateTask implements MasterListUpdateTask {
   private static final FluentLogger logger = FluentLogger.forEnclosingClass();

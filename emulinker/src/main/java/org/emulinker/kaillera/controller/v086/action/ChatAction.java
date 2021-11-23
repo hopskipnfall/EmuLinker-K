@@ -13,7 +13,7 @@ import org.emulinker.kaillera.controller.v086.protocol.*;
 import org.emulinker.kaillera.model.event.*;
 import org.emulinker.kaillera.model.exception.ActionException;
 import org.emulinker.kaillera.model.impl.KailleraUserImpl;
-import org.emulinker.release.ReleaseInfo;
+import org.emulinker.kaillera.release.ReleaseInfo;
 import org.emulinker.util.EmuLang;
 import org.emulinker.util.EmuUtil;
 

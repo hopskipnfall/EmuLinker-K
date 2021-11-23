@@ -9,7 +9,7 @@ import org.emulinker.kaillera.controller.connectcontroller.ConnectController;
 import org.emulinker.kaillera.master.*;
 import org.emulinker.kaillera.master.StatsCollector;
 import org.emulinker.kaillera.model.*;
-import org.emulinker.release.*;
+import org.emulinker.kaillera.release.ReleaseInfo;
 import org.emulinker.util.Executable;
 
 @Singleton

@@ -20,7 +20,7 @@ import org.emulinker.kaillera.master.StatsCollector;
 import org.emulinker.kaillera.model.*;
 import org.emulinker.kaillera.model.event.*;
 import org.emulinker.kaillera.model.exception.*;
-import org.emulinker.release.*;
+import org.emulinker.kaillera.release.ReleaseInfo;
 import org.emulinker.util.*;
 
 @Singleton

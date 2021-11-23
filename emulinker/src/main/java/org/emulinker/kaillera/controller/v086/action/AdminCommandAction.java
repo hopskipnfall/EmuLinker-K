@@ -11,7 +11,7 @@ import org.emulinker.kaillera.controller.v086.V086ClientHandler;
 import org.emulinker.kaillera.controller.v086.protocol.*;
 import org.emulinker.kaillera.model.exception.ActionException;
 import org.emulinker.kaillera.model.impl.*;
-import org.emulinker.release.*;
+import org.emulinker.kaillera.release.ReleaseInfo;
 import org.emulinker.util.*;
 
 @Singleton

@@ -375,7 +375,7 @@
               <endWithNewline />
               <indent>
                 <tabs>true</tabs>
-                <spacesPerTab>4</spacesPerTab>
+                <spacesPerTab>2</spacesPerTab>
               </indent>
             </format>
           </formats>
@@ -393,8 +393,7 @@
         <artifactId>exec-maven-plugin</artifactId>
         <version>1.4.0</version>
         <configuration>
-          <!--<mainClass>org.emulinker.kaillera.pico.PicoStarter</mainClass>-->
-          <mainClass>org.emulinker.kaillera.Starter</mainClass>
+          <mainClass>org.emulinker.kaillera.pico.PicoStarter</mainClass>
         </configuration>
       </plugin>
 
@@ -405,8 +404,7 @@
           <appendAssemblyId>false</appendAssemblyId>
           <archive>
             <manifest>
-              <!--<mainClass>org.emulinker.kaillera.pico.PicoStarter</mainClass>-->
-              <mainClass>org.emulinker.kaillera.Starter</mainClass>
+              <mainClass>org.emulinker.kaillera.pico.PicoStarter</mainClass>
             </manifest>
           </archive>
           <descriptorRefs>

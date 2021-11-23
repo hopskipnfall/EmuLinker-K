@@ -8,7 +8,7 @@ import org.emulinker.kaillera.controller.connectcontroller.ConnectController;
 import org.emulinker.kaillera.master.PublicServerInformation;
 import org.emulinker.kaillera.model.KailleraGame;
 import org.emulinker.kaillera.model.KailleraServer;
-import org.emulinker.release.ReleaseInfo;
+import org.emulinker.kaillera.release.ReleaseInfo;
 
 public class EmuLinkerMasterUpdateTask implements MasterListUpdateTask {
   private static final FluentLogger logger = FluentLogger.forEnclosingClass();

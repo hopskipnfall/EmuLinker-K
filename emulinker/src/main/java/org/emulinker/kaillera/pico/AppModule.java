@@ -26,8 +26,6 @@ import org.emulinker.kaillera.model.KailleraServer;
 import org.emulinker.kaillera.model.impl.AutoFireDetectorFactory;
 import org.emulinker.kaillera.model.impl.AutoFireDetectorFactoryImpl;
 import org.emulinker.kaillera.model.impl.KailleraServerImpl;
-import org.emulinker.kaillera.release.KailleraServerReleaseInfo;
-import org.emulinker.release.ReleaseInfo;
 import org.emulinker.util.EmuLinkerPropertiesConfig;
 import twitter4j.Twitter;
 import twitter4j.TwitterFactory;
@@ -91,10 +89,6 @@ public abstract class AppModule {
   public static MetricRegistry provideMetricRegistry() {
     return new MetricRegistry();
   }
-
-  @Binds
-  public abstract ReleaseInfo bindKailleraServerReleaseInfo(
-      KailleraServerReleaseInfo kailleraServerReleaseInfo);
 
   @Binds
   public abstract AccessManager bindAccessManager(AccessManager2 accessManager2);
