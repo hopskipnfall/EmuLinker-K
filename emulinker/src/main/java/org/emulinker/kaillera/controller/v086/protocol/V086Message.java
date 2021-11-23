@@ -94,7 +94,7 @@ public abstract class V086Message extends ByteBufferMessage {
         message = ServerACK.parse(messageNumber, buffer);
         break;
 
-      case ClientACK.ID: // 06
+      case ClientACKKt.ID: // 06
         message = ClientACK.parse(messageNumber, buffer);
         break;
 
