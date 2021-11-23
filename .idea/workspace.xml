@@ -5,35 +5,58 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="c2c2012d-f7e2-42ad-97b7-1b6d8185e059" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/model/KailleraGame.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/model/impl/KailleraGameImpl.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/emulinker/src/test/java/org/emulinker/kaillera/controller/v086/protocol/V086BundleTest.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/model/event/AllReadyEvent.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/model/event/ChatEvent.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/model/event/ConnectedEvent.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/model/event/GameChatEvent.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/model/event/GameClosedEvent.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/model/event/GameCreatedEvent.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/model/event/GameDataEvent.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/model/event/GameDesynchEvent.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/model/event/GameEvent.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/model/event/GameInfoEvent.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/model/event/GameStartedEvent.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/model/event/GameStatusChangedEvent.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/model/event/GameTimeoutEvent.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/model/event/InfoMessageEvent.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/model/event/KailleraEvent.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/model/event/KailleraEventListener.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/model/event/PlayerDesynchEvent.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/model/event/ServerEvent.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/model/event/UserDroppedGameEvent.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/model/event/UserEvent.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/model/event/UserJoinedEvent.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/model/event/UserJoinedGameEvent.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/model/event/UserQuitEvent.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/model/event/UserQuitGameEvent.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/controller/v086/V086ClientHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/controller/v086/V086ClientHandler.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/controller/v086/action/ACKAction.java" beforeDir="false" afterPath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/controller/v086/action/ACKAction.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/controller/v086/action/AdminCommandAction.java" beforeDir="false" afterPath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/controller/v086/action/AdminCommandAction.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/controller/v086/action/ChatAction.java" beforeDir="false" afterPath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/controller/v086/action/ChatAction.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/controller/v086/action/CloseGameAction.java" beforeDir="false" afterPath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/controller/v086/action/CloseGameAction.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/controller/v086/action/CreateGameAction.java" beforeDir="false" afterPath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/controller/v086/action/CreateGameAction.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/controller/v086/action/GameChatAction.java" beforeDir="false" afterPath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/controller/v086/action/GameChatAction.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/controller/v086/action/GameOwnerCommandAction.java" beforeDir="false" afterPath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/controller/v086/action/GameOwnerCommandAction.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/controller/v086/action/GameStatusAction.java" beforeDir="false" afterPath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/controller/v086/action/GameStatusAction.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/controller/v086/action/JoinGameAction.java" beforeDir="false" afterPath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/controller/v086/action/JoinGameAction.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/controller/v086/action/LoginAction.java" beforeDir="false" afterPath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/controller/v086/action/LoginAction.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/controller/v086/action/QuitAction.java" beforeDir="false" afterPath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/controller/v086/action/QuitAction.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/controller/v086/action/QuitGameAction.java" beforeDir="false" afterPath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/controller/v086/action/QuitGameAction.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/controller/v086/action/StartGameAction.java" beforeDir="false" afterPath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/controller/v086/action/StartGameAction.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/controller/v086/protocol/GameStatus.java" beforeDir="false" afterPath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/controller/v086/protocol/GameStatus.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/controller/v086/protocol/ServerStatus.java" beforeDir="false" afterPath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/controller/v086/protocol/ServerStatus.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/lookingforgame/TwitterBroadcaster.java" beforeDir="false" afterPath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/lookingforgame/TwitterBroadcaster.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/master/client/KailleraMasterUpdateTask.java" beforeDir="false" afterPath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/master/client/KailleraMasterUpdateTask.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/model/KailleraGame.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/model/KailleraUser.kt" beforeDir="false" afterPath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/model/KailleraUser.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/model/impl/AutoFireScanner2.java" beforeDir="false" afterPath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/model/impl/AutoFireScanner2.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/model/impl/KailleraGameImpl.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/model/impl/KailleraServerImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/model/impl/KailleraServerImpl.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/model/KailleraGame.kt" beforeDir="false" afterPath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/model/KailleraGame.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/model/event/AllReadyEvent.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/model/event/ChatEvent.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/model/event/ConnectedEvent.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/model/event/GameChatEvent.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/model/event/GameClosedEvent.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/model/event/GameCreatedEvent.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/model/event/GameDataEvent.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/model/event/GameDesynchEvent.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/model/event/GameEvent.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/model/event/GameInfoEvent.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/model/event/GameStartedEvent.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/model/event/GameStatusChangedEvent.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/model/event/GameTimeoutEvent.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/model/event/InfoMessageEvent.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/model/event/KailleraEvent.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/model/event/KailleraEventListener.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/model/event/PlayerDesynchEvent.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/model/event/ServerEvent.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/model/event/UserDroppedGameEvent.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/model/event/UserEvent.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/model/event/UserJoinedEvent.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/model/event/UserJoinedGameEvent.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/model/event/UserQuitEvent.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/model/event/UserQuitGameEvent.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/model/impl/KailleraGameImpl.kt" beforeDir="false" afterPath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/model/impl/KailleraGameImpl.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/model/impl/KailleraUserImpl.kt" beforeDir="false" afterPath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/model/impl/KailleraUserImpl.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/emulinker/src/test/java/org/emulinker/kaillera/controller/v086/protocol/V086BundleTest.java" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

@@ -379,8 +379,9 @@ class KailleraUserImpl(
       game!!.drop(this, playerNumber)
     }
     game!!.quit(this, playerNumber)
-    if (status != KailleraUser.Companion.STATUS_IDLE.toInt())
-        status = KailleraUser.Companion.STATUS_IDLE.toInt()
+    if (status != KailleraUser.Companion.STATUS_IDLE.toInt()) {
+      status = KailleraUser.Companion.STATUS_IDLE.toInt()
+    }
     mute = false
     game = null
     addEvent(UserQuitGameEvent(game, this))
@@ -435,7 +436,7 @@ class KailleraUserImpl(
           response[i] = 0
         }
         lostInput.add(data)
-        addEvent(GameDataEvent(game, response))
+        addEvent(GameDataEvent(game as KailleraGameImpl, response))
         frameCount++
       } else {
         // lostInput.add(data);

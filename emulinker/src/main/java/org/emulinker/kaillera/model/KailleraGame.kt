@@ -58,10 +58,10 @@ interface KailleraGame {
   fun addData(user: KailleraUser?, playerNumber: Int, data: ByteArray?)
 
   @Throws(DropGameException::class)
-  fun drop(user: KailleraUser?, playerNumber: Int)
+  fun drop(user: KailleraUser, playerNumber: Int)
 
   @Throws(DropGameException::class, QuitGameException::class, CloseGameException::class)
-  fun quit(user: KailleraUser?, playerNumber: Int)
+  fun quit(user: KailleraUser, playerNumber: Int)
 
   companion object {
     const val STATUS_WAITING: Byte = 0

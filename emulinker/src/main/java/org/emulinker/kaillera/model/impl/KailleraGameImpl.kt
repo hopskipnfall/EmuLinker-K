@@ -177,11 +177,11 @@ class KailleraGameImpl(
       }
     }
     logger.atInfo().log("$user, $this gamechat: $message")
-    addEvent(GameChatEvent(this, user, message))
+    addEvent(GameChatEvent(this, user, message!!))
   }
 
   @Synchronized
-  fun announce(announcement: String?, user: KailleraUser?) {
+  fun announce(announcement: String, user: KailleraUser?) {
     addEvent(GameInfoEvent(this, announcement, user))
   }
 
@@ -533,7 +533,7 @@ class KailleraGameImpl(
 
   @Synchronized
   @Throws(DropGameException::class)
-  override fun drop(user: KailleraUser?, playerNumber: Int) {
+  override fun drop(user: KailleraUser, playerNumber: Int) {
     if (!players.contains(user)) {
       logger.atWarning().log(user.toString() + " drop game failed: not in " + this)
       throw DropGameException(EmuLang.getString("KailleraGameImpl.DropGameErrorNotInGame"))
@@ -572,15 +572,15 @@ class KailleraGameImpl(
   }
 
   @Throws(DropGameException::class, QuitGameException::class, CloseGameException::class)
-  override fun quit(user: KailleraUser?, playerNumber: Int) {
+  override fun quit(user: KailleraUser, playerNumber: Int) {
     synchronized(this) {
       if (!players.remove(user)) {
-        logger.atWarning().log(user.toString() + " quit game failed: not in " + this)
+        logger.atWarning().log("$user quit game failed: not in $this")
         throw QuitGameException(EmuLang.getString("KailleraGameImpl.QuitGameErrorNotInGame"))
       }
-      logger.atInfo().log(user.toString() + " quit: " + this)
+      logger.atInfo().log("$user quit: $this")
       addEvent(UserQuitGameEvent(this, user))
-      user!!.p2P = false
+      user.p2P = false
       swap = false
       if (status == KailleraGame.STATUS_WAITING.toInt()) {
         for (i in 0 until numPlayers) {
