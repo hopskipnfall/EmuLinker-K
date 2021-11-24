@@ -4,22 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="c2c2012d-f7e2-42ad-97b7-1b6d8185e059" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/controller/v086/protocol/V086BundleFormatException.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/util/EmuUtil.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/controller/connectcontroller/ConnectController.java" beforeDir="false" afterPath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/controller/connectcontroller/ConnectController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/controller/v086/V086ClientHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/controller/v086/V086ClientHandler.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/controller/v086/protocol/V086Bundle.java" beforeDir="false" afterPath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/controller/v086/protocol/V086Bundle.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/controller/v086/protocol/V086BundleFormatException.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/model/impl/KailleraUserImpl.kt" beforeDir="false" afterPath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/model/impl/KailleraUserImpl.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/relay/V086Relay.java" beforeDir="false" afterPath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/relay/V086Relay.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/net/UDPRelay.java" beforeDir="false" afterPath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/net/UDPRelay.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/net/UDPRelay2.java" beforeDir="false" afterPath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/net/UDPRelay2.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/net/UDPServer.java" beforeDir="false" afterPath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/net/UDPServer.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/util/EmuUtil.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/util/HexConverter.kt" beforeDir="false" afterPath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/util/HexConverter.kt" afterDir="false" />
-    </list>
+    <list default="true" id="c2c2012d-f7e2-42ad-97b7-1b6d8185e059" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
