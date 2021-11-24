@@ -702,7 +702,7 @@ class KailleraGameImpl(
     val playerActionQueue = playerActionQueue!![playerNumber - 1]
     if (!playerActionQueue!!.isSynched || e == playerActionQueue.lastTimeout) return
     playerActionQueue.lastTimeout = e
-    val player: KailleraUser = e.player
+    val player: KailleraUser = e.player!!
     if (timeoutNumber < desynchTimeouts) {
       if (startTimeout) player.timeouts = player.timeouts + 1
       if (timeoutNumber % 12 == 0) {

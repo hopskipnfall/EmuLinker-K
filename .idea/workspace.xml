@@ -4,7 +4,13 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="c2c2012d-f7e2-42ad-97b7-1b6d8185e059" name="Changes" comment="" />
+    <list default="true" id="c2c2012d-f7e2-42ad-97b7-1b6d8185e059" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/model/impl/PlayerTimeoutException.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/model/impl/AutoFireScanner.java" beforeDir="false" afterPath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/model/impl/AutoFireScanner.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/model/impl/KailleraGameImpl.kt" beforeDir="false" afterPath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/model/impl/KailleraGameImpl.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/model/impl/PlayerTimeoutException.java" beforeDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
