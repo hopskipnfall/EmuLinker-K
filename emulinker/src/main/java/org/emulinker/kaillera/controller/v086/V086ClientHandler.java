@@ -76,8 +76,8 @@ public final class V086ClientHandler extends PrivateUDPServer implements Kailler
 
     this.v086Controller = v086Controller;
 
-    inBuffer = ByteBuffer.allocateDirect(flags.v086BufferSize());
-    outBuffer = ByteBuffer.allocateDirect(flags.v086BufferSize());
+    inBuffer = ByteBuffer.allocateDirect(flags.getV086BufferSize());
+    outBuffer = ByteBuffer.allocateDirect(flags.getV086BufferSize());
     inBuffer.order(ByteOrder.LITTLE_ENDIAN);
     outBuffer.order(ByteOrder.LITTLE_ENDIAN);
 

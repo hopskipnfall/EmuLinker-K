@@ -41,17 +41,17 @@ public class MasterListUpdaterImpl implements MasterListUpdater, Executable {
     this.threadPool = threadPool;
     this.statsCollector = statsCollector;
 
-    if (flags.touchKaillera() || flags.touchEmulinker()) {
+    if (flags.getTouchKaillera() || flags.getTouchEmulinker()) {
       publicInfo = new PublicServerInformation(flags);
     }
 
-    if (flags.touchKaillera()) {
+    if (flags.getTouchKaillera()) {
       kailleraMasterTask =
           new KailleraMasterUpdateTask(
               publicInfo, connectController, kailleraServer, statsCollector, releaseInfo);
     }
 
-    if (flags.touchEmulinker()) {
+    if (flags.getTouchEmulinker()) {
       emulinkerMasterTask =
           new EmuLinkerMasterUpdateTask(publicInfo, connectController, kailleraServer, releaseInfo);
     }
@@ -65,9 +65,9 @@ public class MasterListUpdaterImpl implements MasterListUpdater, Executable {
   @Override
   public synchronized String toString() {
     return "MasterListUpdaterImpl[touchKaillera="
-        + flags.touchKaillera()
+        + flags.getTouchKaillera()
         + " touchEmulinker="
-        + flags.touchEmulinker()
+        + flags.getTouchEmulinker()
         + "]";
   }
 

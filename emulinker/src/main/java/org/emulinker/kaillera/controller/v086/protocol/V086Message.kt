@@ -29,8 +29,7 @@ abstract class V086Message : ByteBufferMessage() {
 
   // TODO(nue): Figure out how to stuff this in the AutoValue toString.
   protected val infoString: String
-    protected get() =
-        messageNumber.toString() + ":" + EmuUtil.byteToHex(messageId) + "/" + description
+    get() = messageNumber.toString() + ":" + EmuUtil.byteToHex(messageId) + "/" + description
 
   override fun writeTo(buffer: ByteBuffer?) {
     val len = length
@@ -68,14 +67,13 @@ abstract class V086Message : ByteBufferMessage() {
     @JvmStatic
     @Throws(ParseException::class, MessageFormatException::class)
     fun parse(messageNumber: Int, messageLength: Int, buffer: ByteBuffer): V086Message? {
-      val messageType = buffer.get()
 
       // removed to increase speed
       //		if (messageType < 0 || messageType > 0x17)
       //			throw new MessageFormatException("Invalid message type: " + messageType);
-      var message: V086Message? = null
-      message =
-          when (messageType) {
+      val message: V086Message =
+          when (val messageType = buffer.get()
+          ) {
             Quit.ID -> Quit.parse(messageNumber, buffer)
             UserJoined.ID -> UserJoined.parse(messageNumber, buffer)
             UserInformation.ID -> UserInformation.parse(messageNumber, buffer)
@@ -103,14 +101,13 @@ abstract class V086Message : ByteBufferMessage() {
           }
 
       // removed to improve speed
-      if (message!!.length != messageLength) {
+      if (message.length != messageLength) {
         //			throw new ParseException("Bundle contained length " + messageLength + " !=  parsed
         // lengthy
         // " + message.getLength());
         logger
             .atFine()
-            .log(
-                "Bundle contained length " + messageLength + " !=  parsed length " + message.length)
+            .log("Bundle contained length $messageLength !=  parsed length ${message.length}")
       }
       return message
     }

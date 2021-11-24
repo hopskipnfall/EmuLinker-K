@@ -10,18 +10,18 @@ public class PublicServerInformation {
   }
 
   public String getServerName() {
-    return flags.serverName();
+    return flags.getServerName();
   }
 
   public String getLocation() {
-    return flags.serverLocation();
+    return flags.getServerLocation();
   }
 
   public String getWebsite() {
-    return flags.serverWebsite();
+    return flags.getServerWebsite();
   }
 
   public String getConnectAddress() {
-    return flags.serverAddress();
+    return flags.getServerAddress();
   }
 }

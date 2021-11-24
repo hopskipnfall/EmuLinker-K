@@ -30,7 +30,6 @@ public class KailleraMasterUpdateTask implements MasterListUpdateTask {
     this.kailleraServer = kailleraServer;
     this.releaseInfo = releaseInfo;
     this.statsCollector = statsCollector;
-    this.publicInfo = publicInfo;
 
     httpClient = new HttpClient();
     httpClient.setConnectionTimeout(5000);

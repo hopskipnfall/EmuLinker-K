@@ -49,10 +49,10 @@ public abstract class AppModule {
     return new TwitterFactory(
         new ConfigurationBuilder()
             .setDebugEnabled(true)
-            .setOAuthAccessToken(flags.twitterOAuthAccessToken())
-            .setOAuthAccessTokenSecret(flags.twitterOAuthAccessTokenSecret())
-            .setOAuthConsumerKey(flags.twitterOAuthConsumerKey())
-            .setOAuthConsumerSecret(flags.twitterOAuthConsumerSecret())
+            .setOAuthAccessToken(flags.getTwitterOAuthAccessToken())
+            .setOAuthAccessTokenSecret(flags.getTwitterOAuthAccessTokenSecret())
+            .setOAuthConsumerKey(flags.getTwitterOAuthConsumerKey())
+            .setOAuthConsumerSecret(flags.getTwitterOAuthConsumerSecret())
             .build());
   }
 
@@ -69,15 +69,15 @@ public abstract class AppModule {
   @Provides
   @Singleton
   public static RuntimeFlags provideRuntimeFlags(Configuration configuration) {
-    RuntimeFlags flags = RuntimeFlags.loadFromApacheConfiguration(configuration);
-    AppModule.charsetDoNotUse = flags.charset();
+    RuntimeFlags flags = RuntimeFlags.Companion.loadFromApacheConfiguration(configuration);
+    AppModule.charsetDoNotUse = flags.getCharset();
     return flags;
   }
 
   @Provides
   public static ThreadPoolExecutor provideThreadPoolExecutor(RuntimeFlags flags) {
     return new ThreadPoolExecutor(
-        flags.coreThreadPoolSize(),
+        flags.getCoreThreadPoolSize(),
         Integer.MAX_VALUE,
         60L,
         SECONDS,

@@ -1,9 +1,7 @@
 package org.emulinker.kaillera.controller.v086.protocol
 
-import com.google.auto.value.AutoValue
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 
-@AutoValue
 data class GameChat_Request
     @Throws(MessageFormatException::class)
     constructor(override val messageNumber: Int, override val message: String?) : GameChat() {

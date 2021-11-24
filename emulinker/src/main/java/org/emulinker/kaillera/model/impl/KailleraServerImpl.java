@@ -79,17 +79,17 @@ public final class KailleraServerImpl implements KailleraServer, Executable {
     loginMessages = loginMessagesBuilder.build();
 
     flags
-        .connectionTypes()
+        .getConnectionTypes()
         .forEach(
             type -> {
               int ct = Integer.parseInt(type);
               allowedConnectionTypes[ct] = true;
             });
 
-    users = new ConcurrentHashMap<>(flags.maxUsers());
-    games = new ConcurrentHashMap<>(flags.maxGames());
+    users = new ConcurrentHashMap<>(flags.getMaxUsers());
+    games = new ConcurrentHashMap<>(flags.getMaxGames());
 
-    if (flags.touchKaillera()) {
+    if (flags.getTouchKaillera()) {
       this.statsCollector = statsCollector;
     }
 
@@ -215,17 +215,17 @@ public final class KailleraServerImpl implements KailleraServer, Executable {
 
   @Override
   public int getMaxPing() {
-    return flags.maxPing();
+    return flags.getMaxPing();
   }
 
   @Override
   public int getMaxUsers() {
-    return flags.maxUsers();
+    return flags.getMaxUsers();
   }
 
   @Override
   public int getMaxGames() {
-    return flags.maxGames();
+    return flags.getMaxGames();
   }
 
   @Override
@@ -234,43 +234,43 @@ public final class KailleraServerImpl implements KailleraServer, Executable {
   }
 
   protected int getChatFloodTime() {
-    return flags.chatFloodTime();
+    return flags.getChatFloodTime();
   }
 
   protected int getCreateGameFloodTime() {
-    return flags.createGameFloodTime();
+    return flags.getCreateGameFloodTime();
   }
 
   protected boolean getAllowSinglePlayer() {
-    return flags.allowSinglePlayer();
+    return flags.getAllowSinglePlayer();
   }
 
   protected int getMaxUserNameLength() {
-    return flags.maxUserNameLength();
+    return flags.getMaxUserNameLength();
   }
 
   protected int getMaxChatLength() {
-    return flags.maxChatLength();
+    return flags.getMaxChatLength();
   }
 
   protected int getMaxGameChatLength() {
-    return flags.maxGameChatLength();
+    return flags.getMaxGameChatLength();
   }
 
   protected int getMaxGameNameLength() {
-    return flags.maxGameNameLength();
+    return flags.getMaxGameNameLength();
   }
 
   protected int getQuitMessageLength() {
-    return flags.maxQuitMessageLength();
+    return flags.getMaxQuitMessageLength();
   }
 
   protected int getMaxClientNameLength() {
-    return flags.maxClientNameLength();
+    return flags.getMaxClientNameLength();
   }
 
   protected boolean getAllowMultipleConnections() {
-    return flags.allowMultipleConnections();
+    return flags.getAllowMultipleConnections();
   }
 
   public ThreadPoolExecutor getThreadPool() {
@@ -331,7 +331,7 @@ public final class KailleraServerImpl implements KailleraServer, Executable {
   }
 
   protected AutoFireDetector getAutoFireDetector(KailleraGame game) {
-    return autoFireDetectorFactory.getInstance(game, flags.gameAutoFireSensitivity());
+    return autoFireDetectorFactory.getInstance(game, flags.getGameAutoFireSensitivity());
   }
 
   @Override
@@ -352,7 +352,7 @@ public final class KailleraServerImpl implements KailleraServer, Executable {
     int access = accessManager.getAccess(clientSocketAddress.getAddress());
 
     // admins will be allowed in even if the server is full
-    if (flags.maxUsers() > 0
+    if (flags.getMaxUsers() > 0
         && users.size() >= getMaxUsers()
         && !(access > AccessManager.ACCESS_NORMAL)) {
       logger.atWarning().log(
@@ -492,7 +492,7 @@ public final class KailleraServerImpl implements KailleraServer, Executable {
     }
 
     // access == AccessManager.ACCESS_NORMAL &&
-    if (flags.maxUserNameLength() > 0 && user.getName().length() > getMaxUserNameLength()) {
+    if (flags.getMaxUserNameLength() > 0 && user.getName().length() > getMaxUserNameLength()) {
       logger.atInfo().log(user + " login denied: UserName Length > " + getMaxUserNameLength());
       users.remove(userListKey);
       throw new UserNameException(
@@ -500,7 +500,7 @@ public final class KailleraServerImpl implements KailleraServer, Executable {
     }
 
     if (access == AccessManager.ACCESS_NORMAL
-        && flags.maxClientNameLength() > 0
+        && flags.getMaxClientNameLength() > 0
         && user.getClientType().length() > getMaxClientNameLength()) {
       logger.atInfo().log(user + " login denied: Client Name Length > " + getMaxClientNameLength());
       users.remove(userListKey);
@@ -587,7 +587,7 @@ public final class KailleraServerImpl implements KailleraServer, Executable {
                 .getAddress()
                 .equals(u2.getConnectSocketAddress().getAddress())
             && !u.getName().equals(u2.getName())
-            && !flags.allowMultipleConnections()) {
+            && !flags.getAllowMultipleConnections()) {
           users.remove(userListKey);
           logger.atWarning().log(
               user + " login denied: Address already logged in as " + u2.getName());
@@ -727,7 +727,8 @@ public final class KailleraServerImpl implements KailleraServer, Executable {
 
     String quitMsg = message.trim();
     if (Strings.isNullOrEmpty(quitMsg)
-        || (flags.maxQuitMessageLength() > 0 && quitMsg.length() > flags.maxQuitMessageLength()))
+        || (flags.getMaxQuitMessageLength() > 0
+            && quitMsg.length() > flags.getMaxQuitMessageLength()))
       quitMsg = EmuLang.getString("KailleraServerImpl.StandardQuitMessage");
 
     int access =
@@ -761,9 +762,9 @@ public final class KailleraServerImpl implements KailleraServer, Executable {
     }
 
     if (access == AccessManager.ACCESS_NORMAL
-        && flags.chatFloodTime() > 0
+        && flags.getChatFloodTime() > 0
         && (System.currentTimeMillis() - ((KailleraUserImpl) user).getLastChatTime())
-            < (flags.chatFloodTime() * 1000)) {
+            < (flags.getChatFloodTime() * 1000)) {
       logger.atWarning().log(user + " chat denied: Flood: " + message);
       throw new FloodException(EmuLang.getString("KailleraServerImpl.ChatDeniedFloodControl"));
     }
@@ -786,8 +787,8 @@ public final class KailleraServerImpl implements KailleraServer, Executable {
         }
       }
 
-      if (flags.maxChatLength() > 0 && message.length() > flags.maxChatLength()) {
-        logger.atWarning().log(user + " chat denied: Message Length > " + flags.maxChatLength());
+      if (flags.getMaxChatLength() > 0 && message.length() > flags.getMaxChatLength()) {
+        logger.atWarning().log(user + " chat denied: Message Length > " + flags.getMaxChatLength());
         throw new ChatException(EmuLang.getString("KailleraServerImpl.ChatDeniedMessageTooLong"));
       }
     }
@@ -819,9 +820,10 @@ public final class KailleraServerImpl implements KailleraServer, Executable {
           EmuLang.getString("KailleraServerImpl.CreateGameErrorAlreadyInGame"));
     }
 
-    if (flags.maxGameNameLength() > 0 && romName.trim().length() > flags.maxGameNameLength()) {
+    if (flags.getMaxGameNameLength() > 0
+        && romName.trim().length() > flags.getMaxGameNameLength()) {
       logger.atWarning().log(
-          user + " create game denied: Rom Name Length > " + flags.maxGameNameLength());
+          user + " create game denied: Rom Name Length > " + flags.getMaxGameNameLength());
       throw new CreateGameException(
           EmuLang.getString("KailleraServerImpl.CreateGameDeniedNameTooLong"));
     }
@@ -834,19 +836,22 @@ public final class KailleraServerImpl implements KailleraServer, Executable {
 
     int access = accessManager.getAccess(user.getSocketAddress().getAddress());
     if (access == AccessManager.ACCESS_NORMAL) {
-      if (flags.createGameFloodTime() > 0
+      if (flags.getCreateGameFloodTime() > 0
           && (System.currentTimeMillis() - ((KailleraUserImpl) user).getLastCreateGameTime())
-              < (flags.createGameFloodTime() * 1000)) {
+              < (flags.getCreateGameFloodTime() * 1000)) {
         logger.atWarning().log(user + " create game denied: Flood: " + romName);
         throw new FloodException(
             EmuLang.getString("KailleraServerImpl.CreateGameDeniedFloodControl"));
       }
 
-      if (flags.maxGames() > 0 && getNumGames() >= flags.maxGames()) {
+      if (flags.getMaxGames() > 0 && getNumGames() >= flags.getMaxGames()) {
         logger.atWarning().log(
-            user + " create game denied: Over maximum of " + flags.maxGames() + " current games!");
+            user
+                + " create game denied: Over maximum of "
+                + flags.getMaxGames()
+                + " current games!");
         throw new CreateGameException(
-            EmuLang.getString("KailleraServerImpl.CreateGameDeniedMaxGames", flags.maxGames()));
+            EmuLang.getString("KailleraServerImpl.CreateGameDeniedMaxGames", flags.getMaxGames()));
       }
 
       char[] chars = romName.toCharArray();
@@ -880,9 +885,9 @@ public final class KailleraServerImpl implements KailleraServer, Executable {
             romName,
             (KailleraUserImpl) user,
             this,
-            flags.gameBufferSize(),
-            flags.gameTimeoutMillis(),
-            flags.gameDesynchTimeouts());
+            flags.getGameBufferSize(),
+            flags.getGameTimeoutMillis(),
+            flags.getGameDesynchTimeouts());
     games.put(gameID, game);
 
     addEvent(new GameCreatedEvent(this, game));
@@ -904,16 +909,13 @@ public final class KailleraServerImpl implements KailleraServer, Executable {
         null);
 
     if (lookingForGameReporter.reportAndStartTimer(
-        LookingForGameEvent.builder()
-            .setGameId(game.getId())
-            .setGameTitle(game.getRomName())
-            .setUser(user)
-            .build())) {
+        new LookingForGameEvent(
+            /* gameId= */ game.getId(), /* gameTitle= */ game.getRomName(), /* user= */ user))) {
       user.getGame()
           .announce(
               EmuLang.getString(
                   "KailleraServerImpl.TweetPendingAnnouncement",
-                  flags.twitterBroadcastDelay().getSeconds()),
+                  flags.getTwitterBroadcastDelay().getSeconds()),
               user);
     }
     return game;
@@ -952,9 +954,9 @@ public final class KailleraServerImpl implements KailleraServer, Executable {
       return false;
     }
 
-    // if (access == AccessManager.ACCESS_NORMAL && flags.chatFloodTime() > 0 &&
+    // if (access == AccessManager.ACCESS_NORMAL && flags.getChatFloodTime() > 0 &&
     // (System.currentTimeMillis()
-    // - ((KailleraUserImpl) user).getLastChatTime()) < (flags.chatFloodTime() * 1000))
+    // - ((KailleraUserImpl) user).getLastChatTime()) < (flags.getChatFloodTime() * 1000))
     // {
     //	logger.atWarning().log(user + " /me denied: Flood: " + message);
     //	return false;
@@ -976,8 +978,8 @@ public final class KailleraServerImpl implements KailleraServer, Executable {
         }
       }
 
-      if (flags.maxChatLength() > 0 && message.length() > flags.maxChatLength()) {
-        logger.atWarning().log(user + " /me denied: Message Length > " + flags.maxChatLength());
+      if (flags.getMaxChatLength() > 0 && message.length() > flags.getMaxChatLength()) {
+        logger.atWarning().log(user + " /me denied: Message Length > " + flags.getMaxChatLength());
         return false;
       }
     }
@@ -1067,7 +1069,7 @@ public final class KailleraServerImpl implements KailleraServer, Executable {
     try {
       while (!stopFlag) {
         try {
-          Thread.sleep((long) (flags.maxPing() * 3));
+          Thread.sleep((long) (flags.getMaxPing() * 3));
         } catch (InterruptedException e) {
           logger.atSevere().withCause(e).log("Sleep Interrupted!");
         }
@@ -1095,13 +1097,14 @@ public final class KailleraServerImpl implements KailleraServer, Executable {
             }
 
             if (!user.getLoggedIn()
-                && (System.currentTimeMillis() - user.getConnectTime()) > (flags.maxPing() * 15)) {
+                && (System.currentTimeMillis() - user.getConnectTime())
+                    > (flags.getMaxPing() * 15)) {
               logger.atInfo().log(user + " connection timeout!");
               user.stop();
               users.remove(user.getId());
             } else if (user.getLoggedIn()
                 && (System.currentTimeMillis() - user.getLastKeepAlive())
-                    > (flags.keepAliveTimeout() * 1000)) {
+                    > (flags.getKeepAliveTimeout() * 1000)) {
               logger.atInfo().log(user + " keepalive timeout!");
               try {
                 quit(user, EmuLang.getString("KailleraServerImpl.ForcedQuitPingTimeout"));
@@ -1109,11 +1112,11 @@ public final class KailleraServerImpl implements KailleraServer, Executable {
                 logger.atSevere().withCause(e).log(
                     "Error forcing " + user + " quit for keepalive timeout!");
               }
-            } else if (flags.idleTimeout() > 0
+            } else if (flags.getIdleTimeout() > 0
                 && access == AccessManager.ACCESS_NORMAL
                 && user.getLoggedIn()
                 && (System.currentTimeMillis() - user.getLastActivity())
-                    > (flags.idleTimeout() * 1000)) {
+                    > (flags.getIdleTimeout() * 1000)) {
               logger.atInfo().log(user + " inactivity timeout!");
               try {
                 quit(user, EmuLang.getString("KailleraServerImpl.ForcedQuitInactivityTimeout"));
