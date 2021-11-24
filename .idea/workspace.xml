@@ -5,41 +5,14 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="c2c2012d-f7e2-42ad-97b7-1b6d8185e059" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/ktfmt.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/config/RuntimeFlags.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/access/AccessException.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/admin/AdminServer.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/controller/messaging/MessageFormatException.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/controller/messaging/ParseException.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/lookingforgame/LookingForGameEvent.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/lookingforgame/TwitterBroadcaster.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/master/client/EmuLinkerMasterUpdateTask.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/master/client/MasterListUpdateTask.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/master/client/MasterListUpdater.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/master/MasterListStatsCollector.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/master/PublicServerInformation.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/master/StatsCollector.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/emulinker/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/emulinker/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/config/RuntimeFlags.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/access/AccessException.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/access/AccessManager2.java" beforeDir="false" afterPath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/access/AccessManager2.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/admin/AdminServer.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/controller/messaging/MessageFormatException.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/controller/messaging/ParseException.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/controller/v086/V086ClientHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/controller/v086/V086ClientHandler.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/controller/v086/V086Controller.java" beforeDir="false" afterPath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/controller/v086/V086Controller.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/controller/v086/protocol/GameChat_Notification.kt" beforeDir="false" afterPath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/controller/v086/protocol/GameChat_Notification.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/controller/v086/protocol/GameChat_Request.kt" beforeDir="false" afterPath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/controller/v086/protocol/GameChat_Request.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/controller/v086/protocol/V086Message.kt" beforeDir="false" afterPath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/controller/v086/protocol/V086Message.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/lookingforgame/LookingForGameEvent.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/lookingforgame/TwitterBroadcaster.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/master/PublicServerInformation.java" beforeDir="false" afterPath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/master/PublicServerInformation.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/master/client/EmuLinkerMasterUpdateTask.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/master/client/KailleraMasterUpdateTask.java" beforeDir="false" afterPath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/master/client/KailleraMasterUpdateTask.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/master/client/MasterListUpdateTask.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/master/client/MasterListUpdater.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/master/client/MasterListUpdaterImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/master/client/MasterListUpdaterImpl.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/model/impl/KailleraServerImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/model/impl/KailleraServerImpl.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/pico/AppModule.java" beforeDir="false" afterPath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/pico/AppModule.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/pico/PicoStarter.java" beforeDir="false" afterPath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/pico/PicoStarter.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/master/MasterListStatsCollector.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/master/PublicServerInformation.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/master/StatsCollector.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/model/impl/KailleraGameImpl.kt" beforeDir="false" afterPath="$PROJECT_DIR$/emulinker/src/main/java/org/emulinker/kaillera/model/impl/KailleraGameImpl.kt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

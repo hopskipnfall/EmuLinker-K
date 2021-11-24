@@ -472,7 +472,7 @@ class KailleraGameImpl(
       autoFireDetector?.addPlayer(player, playerNumber)
       i++
     }
-    statsCollector?.gameStarted(server, this)
+    statsCollector?.markGameAsStarted(server, this)
 
     /*if(user.getConnectionType() > KailleraUser.CONNECTION_TYPE_GOOD || user.getConnectionType() < KailleraUser.CONNECTION_TYPE_GOOD){
     	//sameDelay = true;
