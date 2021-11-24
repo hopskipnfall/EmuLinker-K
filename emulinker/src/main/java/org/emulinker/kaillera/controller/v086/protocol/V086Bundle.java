@@ -107,7 +107,7 @@ public class V086Bundle extends ByteBufferMessage {
         || msgNum == 0 && lastMessageID == 0xFFFF) { // exception for 0 and 0xFFFF
       messageCount = 1;
       messages = new V086Message[messageCount];
-      int messageNumber = UnsignedUtil.getUnsignedShort(buffer);
+      int messageNumber = UnsignedUtil.INSTANCE.getUnsignedShort(buffer);
 
       short messageLength = buffer.getShort();
       if (messageLength < 2
@@ -119,7 +119,7 @@ public class V086Bundle extends ByteBufferMessage {
     } else {
       messages = new V086Message[messageCount];
       for (parsedCount = 0; parsedCount < messageCount; parsedCount++) {
-        int messageNumber = UnsignedUtil.getUnsignedShort(buffer);
+        int messageNumber = UnsignedUtil.INSTANCE.getUnsignedShort(buffer);
 
         if (messageNumber <= lastMessageID) {
           if (messageNumber < 0x20 && lastMessageID > 0xFFDF) {
