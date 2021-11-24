@@ -38,24 +38,25 @@ public final class V086Relay extends UDPRelay {
       ByteBuffer receiveBuffer, InetSocketAddress fromAddress, InetSocketAddress toAddress) {
     V086Bundle inBundle = null;
 
-    logger.atFine().log("-> " + EmuUtil.dumpBuffer(receiveBuffer));
+    logger.atFine().log("-> " + EmuUtil.INSTANCE.dumpBuffer(receiveBuffer));
 
     try {
       // inBundle = V086Bundle.parse(receiveBuffer, lastClientMessageNumber);
       inBundle = V086Bundle.parse(receiveBuffer, -1);
     } catch (ParseException e) {
       receiveBuffer.rewind();
-      logger.atWarning().withCause(e).log("Failed to parse: " + EmuUtil.dumpBuffer(receiveBuffer));
+      logger.atWarning().withCause(e).log(
+          "Failed to parse: " + EmuUtil.INSTANCE.dumpBuffer(receiveBuffer));
       return null;
     } catch (V086BundleFormatException e) {
       receiveBuffer.rewind();
       logger.atWarning().withCause(e).log(
-          "Invalid message bundle format: " + EmuUtil.dumpBuffer(receiveBuffer));
+          "Invalid message bundle format: " + EmuUtil.INSTANCE.dumpBuffer(receiveBuffer));
       return null;
     } catch (MessageFormatException e) {
       receiveBuffer.rewind();
       logger.atWarning().withCause(e).log(
-          "Invalid message format: " + EmuUtil.dumpBuffer(receiveBuffer));
+          "Invalid message format: " + EmuUtil.INSTANCE.dumpBuffer(receiveBuffer));
       return null;
     }
 
@@ -81,24 +82,25 @@ public final class V086Relay extends UDPRelay {
       ByteBuffer receiveBuffer, InetSocketAddress fromAddress, InetSocketAddress toAddress) {
     V086Bundle inBundle = null;
 
-    logger.atFine().log("<- " + EmuUtil.dumpBuffer(receiveBuffer));
+    logger.atFine().log("<- " + EmuUtil.INSTANCE.dumpBuffer(receiveBuffer));
 
     try {
       // inBundle = V086Bundle.parse(receiveBuffer, lastServerMessageNumber);
       inBundle = V086Bundle.parse(receiveBuffer, -1);
     } catch (ParseException e) {
       receiveBuffer.rewind();
-      logger.atWarning().withCause(e).log("Failed to parse: " + EmuUtil.dumpBuffer(receiveBuffer));
+      logger.atWarning().withCause(e).log(
+          "Failed to parse: " + EmuUtil.INSTANCE.dumpBuffer(receiveBuffer));
       return null;
     } catch (V086BundleFormatException e) {
       receiveBuffer.rewind();
       logger.atWarning().withCause(e).log(
-          "Invalid message bundle format: " + EmuUtil.dumpBuffer(receiveBuffer));
+          "Invalid message bundle format: " + EmuUtil.INSTANCE.dumpBuffer(receiveBuffer));
       return null;
     } catch (MessageFormatException e) {
       receiveBuffer.rewind();
       logger.atWarning().withCause(e).log(
-          "Invalid message format: " + EmuUtil.dumpBuffer(receiveBuffer));
+          "Invalid message format: " + EmuUtil.INSTANCE.dumpBuffer(receiveBuffer));
       return null;
     }
 

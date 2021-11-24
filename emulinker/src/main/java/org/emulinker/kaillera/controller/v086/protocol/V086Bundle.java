@@ -85,17 +85,20 @@ public class V086Bundle extends ByteBufferMessage {
     buffer.order(ByteOrder.LITTLE_ENDIAN);
 
     if (buffer.limit() < 5)
-      throw new V086BundleFormatException("Invalid buffer length: " + buffer.limit());
+      throw new V086BundleFormatException(
+          "Invalid buffer length: " + buffer.limit(), /* cause= */ null);
 
     // again no real need for unsigned
     // int messageCount = UnsignedUtil.getUnsignedByte(buffer);
     int messageCount = buffer.get();
 
     if (messageCount <= 0 || messageCount > 32) // what should the max be?
-    throw new V086BundleFormatException("Invalid message count: " + messageCount);
+    throw new V086BundleFormatException(
+          "Invalid message count: " + messageCount, /* cause= */ null);
 
     if (buffer.limit() < (1 + (messageCount * 6)))
-      throw new V086BundleFormatException("Invalid bundle length: " + buffer.limit());
+      throw new V086BundleFormatException(
+          "Invalid bundle length: " + buffer.limit(), /* cause= */ null);
 
     int parsedCount = 0;
     V086Message[] messages;

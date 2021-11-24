@@ -134,7 +134,7 @@ public abstract class UDPServer implements Executable {
     }
     */
     try {
-      //			logger.atFine().log("send("+EmuUtil.dumpBuffer(buffer, false)+")");
+      //			logger.atFine().log("send("+EmuUtil.INSTANCE.dumpBuffer(buffer, false)+")");
       channel.send(buffer, toSocketAddress);
     } catch (Exception e) {
       logger.atSevere().withCause(e).log("Failed to send on port " + getBindPort());
@@ -176,7 +176,7 @@ public abstract class UDPServer implements Executable {
           // Cast to avoid issue with java version mismatch:
           // https://stackoverflow.com/a/61267496/2875073
           ((Buffer) buffer).flip();
-          //					logger.atFine().log("receive("+EmuUtil.dumpBuffer(buffer, false)+")");
+          //					logger.atFine().log("receive("+EmuUtil.INSTANCE.dumpBuffer(buffer, false)+")");
           // TODO(nue): time this
           handleReceived(buffer, fromSocketAddress);
           releaseBuffer(buffer);

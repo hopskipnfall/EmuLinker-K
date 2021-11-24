@@ -180,7 +180,7 @@ public abstract class UDPRelay2 {
     public void send(ByteBuffer buffer, InetSocketAddress target) throws IOException {
       // logger.atFine().log("Port " + channel.socket().getLocalPort() + " sending
       // to " + EmuUtil.formatSocketAddress(target) + ": " +
-      // EmuUtil.dumpBuffer(buffer));
+      // EmuUtil.INSTANCE.dumpBuffer(buffer));
       channel.send(buffer, target);
       lastActivity = System.currentTimeMillis();
     }
@@ -223,7 +223,7 @@ public abstract class UDPRelay2 {
             // forward to " +
             // EmuUtil.formatSocketAddress(getForwardAddress()));
             // logger.atFine().log("Buffer Dump: " +
-            // EmuUtil.dumpBuffer(receiveBuffer));
+            // EmuUtil.INSTANCE.dumpBuffer(receiveBuffer));
             sendBuffer = processServerToClient(receiveBuffer, fromAddress, getForwardAddress());
           } else {
             // logger.atFine().log("Client at " +
@@ -233,7 +233,7 @@ public abstract class UDPRelay2 {
             // forward to " +
             // EmuUtil.formatSocketAddress(getForwardAddress()));
             // logger.atFine().log("Buffer Dump: " +
-            // EmuUtil.dumpBuffer(receiveBuffer));
+            // EmuUtil.INSTANCE.dumpBuffer(receiveBuffer));
             sendBuffer = processClientToServer(receiveBuffer, fromAddress, getForwardAddress());
           }
 

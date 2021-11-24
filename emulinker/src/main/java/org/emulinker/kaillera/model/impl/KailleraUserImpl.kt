@@ -187,7 +187,7 @@ class KailleraUserImpl(
   fun toDetailedString(): String {
     return ("KailleraUserImpl[id=$id protocol=$protocol status=${KailleraUser.STATUS_NAMES[status]} name=$name clientType=$clientType ping=$ping connectionType=${KailleraUser.CONNECTION_TYPE_NAMES[connectionType.toInt()]} remoteAddress=" +
         (if (socketAddress == null) EmuUtil.formatSocketAddress(connectSocketAddress)
-        else EmuUtil.formatSocketAddress(socketAddress)) +
+        else EmuUtil.formatSocketAddress(socketAddress!!)) +
         "]")
   }
 

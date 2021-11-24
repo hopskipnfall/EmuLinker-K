@@ -119,7 +119,7 @@ public abstract class UDPRelay implements Runnable {
 
     protected void send(ByteBuffer buffer) throws Exception {
       //			logger.atInfo().log(EmuUtil.formatSocketAddress(clientSocketAddress) + " -> \t" +
-      // EmuUtil.dumpBuffer(buffer));
+      // EmuUtil.INSTANCE.dumpBuffer(buffer));
       ByteBuffer newBuffer =
           processClientToServer(buffer, clientSocketAddress, serverSocketAddress);
       clientChannel.send(newBuffer, serverSocketAddress);
@@ -144,7 +144,7 @@ public abstract class UDPRelay implements Runnable {
           ((Buffer) buffer).flip();
 
           //					logger.atInfo().log(EmuUtil.formatSocketAddress(clientSocketAddress) + " <- \t" +
-          // EmuUtil.dumpBuffer(buffer));
+          // EmuUtil.INSTANCE.dumpBuffer(buffer));
           ByteBuffer newBuffer = processServerToClient(buffer, receiveAddress, clientSocketAddress);
           listenChannel.send(newBuffer, clientSocketAddress);
         }
