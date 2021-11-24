@@ -46,7 +46,7 @@ public abstract class UDPServer implements Executable {
   }
 
   @Override
-  public boolean isRunning() {
+  public boolean getRunning() {
     return isRunning;
   }
 

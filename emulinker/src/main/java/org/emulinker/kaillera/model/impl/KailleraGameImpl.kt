@@ -72,7 +72,7 @@ class KailleraGameImpl(
   private val timeoutMillis: Int
   private val desynchTimeouts: Int
 
-  override val players: MutableList<KailleraUser?> = CopyOnWriteArrayList()
+  override val players: MutableList<KailleraUser> = CopyOnWriteArrayList()
 
   private val statsCollector: StatsCollector?
   private val kickedUsers: MutableList<String> = ArrayList()
@@ -295,7 +295,7 @@ class KailleraGameImpl(
     if (mutedUsers.contains(user.connectSocketAddress.address.hostAddress)) {
       user.mute = true
     }
-    players.add(user as KailleraUserImpl?)
+    players.add(user as KailleraUserImpl)
     user.playerNumber = players.size
     server.addEvent(GameStatusChangedEvent(server, this))
     logger.atInfo().log("$user joined: $this")
@@ -444,8 +444,8 @@ class KailleraGameImpl(
     while (i < playerActionQueue!!.size && i < players.size) {
       val player = players[i]
       val playerNumber = i + 1
-      if (!swap) player!!.playerNumber = playerNumber
-      player!!.timeouts = 0
+      if (!swap) player.playerNumber = playerNumber
+      player.timeouts = 0
       player.frameCount = 0
       playerActionQueue!![i] =
           PlayerActionQueue(
@@ -657,7 +657,7 @@ class KailleraGameImpl(
     if (!isSynched) {
       throw GameDataException(
           EmuLang.getString("KailleraGameImpl.DesynchedWarning"),
-          data,
+          data!!,
           actionsPerMessage,
           playerNumber,
           playerActionQueue!!.size)
@@ -686,7 +686,7 @@ class KailleraGameImpl(
     if (!isSynched)
         throw GameDataException(
             EmuLang.getString("KailleraGameImpl.DesynchedWarning"),
-            data,
+            data!!,
             user.bytesPerAction,
             playerNumber,
             playerActionQueue!!.size)

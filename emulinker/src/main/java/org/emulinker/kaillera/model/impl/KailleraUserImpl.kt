@@ -97,7 +97,10 @@ class KailleraUserImpl(
 
   private val ignoredUsers: MutableList<String> = ArrayList()
   private var gameDataErrorTime: Long = -1
-  private var isRunning = false
+
+  override var running = false
+    private set
+
   private var stopFlag = false
   private val eventQueue: BlockingQueue<KailleraEvent> = LinkedBlockingQueue()
 
@@ -190,7 +193,7 @@ class KailleraUserImpl(
 
   override fun stop() {
     synchronized(this) {
-      if (!isRunning) {
+      if (!running) {
         logger.atFine().log("$this  thread stop request ignored: not running!")
         return
       }
@@ -214,10 +217,6 @@ class KailleraUserImpl(
       game!!.droppedPacket(this)
       // }
     }
-  }
-
-  override fun isRunning(): Boolean {
-    return isRunning
   }
 
   // server actions
@@ -478,7 +477,7 @@ class KailleraUserImpl(
       logger.atSevere().log("$this: ignoring null event!")
       return
     }
-    if (status != KailleraUser.Companion.STATUS_IDLE.toInt()) {
+    if (status != KailleraUser.STATUS_IDLE.toInt()) {
       if (p2P) {
         if (event.toString() === "InfoMessageEvent") return
       }
@@ -487,7 +486,7 @@ class KailleraUserImpl(
   }
 
   override fun run() {
-    isRunning = true
+    running = true
     logger.atFine().log("$this thread running...")
     try {
       while (!stopFlag) {
@@ -505,7 +504,7 @@ class KailleraUserImpl(
     } catch (e: Throwable) {
       logger.atSevere().withCause(e).log("$this thread caught unexpected exception!")
     } finally {
-      isRunning = false
+      running = false
       logger.atFine().log("$this thread exiting...")
     }
   }

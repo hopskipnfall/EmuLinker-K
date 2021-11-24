@@ -229,7 +229,7 @@ public final class KailleraServerImpl implements KailleraServer, Executable {
   }
 
   @Override
-  public boolean isRunning() {
+  public boolean getRunning() {
     return isRunning;
   }
 
@@ -281,7 +281,7 @@ public final class KailleraServerImpl implements KailleraServer, Executable {
   public String toString() {
     return String.format(
         "KailleraServerImpl[numUsers=%d numGames=%d isRunning=%b]",
-        getNumUsers(), getNumGames(), isRunning());
+        getNumUsers(), getNumGames(), getRunning());
   }
 
   @Override
@@ -299,7 +299,7 @@ public final class KailleraServerImpl implements KailleraServer, Executable {
   public synchronized void stop() {
     logger.atFine().log("KailleraServer thread received stop request!");
 
-    if (!isRunning()) {
+    if (!getRunning()) {
       logger.atFine().log("KailleraServer thread stop request ignored: not running!");
       return;
     }
