@@ -20,7 +20,7 @@ private val logger = FluentLogger.forEnclosingClass()
 class V086Relay
     @AssistedInject
     internal constructor(
-        @Assisted listenPort: Int, @Assisted serverSocketAddress: InetSocketAddress?
+        @Assisted listenPort: Int, @Assisted serverSocketAddress: InetSocketAddress
     ) : UDPRelay(listenPort, serverSocketAddress) {
   private var lastServerMessageNumber = -1
   private var lastClientMessageNumber = -1
@@ -31,7 +31,7 @@ class V086Relay
   }
 
   override fun toString() =
-      "Kaillera client datagram relay version 0.86 on port ${super.getListenPort()}"
+      "Kaillera client datagram relay version 0.86 on port ${super.listenPort}"
 
   override fun processClientToServer(
       receiveBuffer: ByteBuffer, fromAddress: InetSocketAddress, toAddress: InetSocketAddress
