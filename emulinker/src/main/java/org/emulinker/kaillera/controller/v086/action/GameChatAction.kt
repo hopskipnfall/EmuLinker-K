@@ -15,6 +15,8 @@ import org.emulinker.kaillera.model.exception.ActionException
 import org.emulinker.kaillera.model.exception.GameChatException
 import org.emulinker.kaillera.model.impl.KailleraUserImpl
 
+private val logger = FluentLogger.forEnclosingClass()
+
 @Singleton
 class GameChatAction
     @Inject
@@ -484,7 +486,6 @@ class GameChatAction
   }
 
   companion object {
-    private val logger = FluentLogger.forEnclosingClass()
     const val ADMIN_COMMAND_ESCAPE_STRING = "/"
     private const val DESC = "GameChatAction"
     const val STATUS_IDLE: Byte = 1
