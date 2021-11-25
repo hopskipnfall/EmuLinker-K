@@ -43,7 +43,7 @@ public final class KailleraServerImpl implements KailleraServer, Executable {
   protected ReleaseInfo releaseInfo;
   protected AutoFireDetectorFactory autoFireDetectorFactory;
 
-  protected Map<Integer, KailleraUserImpl> users;
+  private Map<Integer, KailleraUserImpl> users;
   protected Map<Integer, KailleraGameImpl> games;
 
   private Trivia trivia = null;

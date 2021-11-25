@@ -106,8 +106,8 @@ class KailleraUserImpl(
 
   override var tempDelay = 0
 
-  override val users: Collection<KailleraUserImpl?>?
-    get() = server.getUsers()
+  override val users: Collection<KailleraUserImpl>
+    get() = server.users
 
   override fun addIgnoredUser(address: String) {
     ignoredUsers.add(address)

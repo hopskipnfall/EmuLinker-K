@@ -227,7 +227,7 @@ class KailleraGameImpl(
   @Synchronized
   @Throws(JoinGameException::class)
   override fun join(user: KailleraUser?): Int {
-    val access = server.getAccessManager().getAccess(user!!.socketAddress!!.address)
+    val access = server.accessManager.getAccess(user!!.socketAddress!!.address)
 
     // SF MOD - Join room spam protection
     if (lastAddress == user.connectSocketAddress.address.hostAddress) {
@@ -362,7 +362,7 @@ class KailleraGameImpl(
   @Synchronized
   @Throws(StartGameException::class)
   override fun start(user: KailleraUser?) {
-    val access = server.getAccessManager().getAccess(user!!.socketAddress!!.address)
+    val access = server.accessManager.getAccess(user!!.socketAddress!!.address)
     if (user != owner && access < AccessManager.ACCESS_ADMIN) {
       logger.atWarning().log("$user start game denied: not the owner of $this")
       throw StartGameException(
@@ -437,7 +437,7 @@ class KailleraGameImpl(
     playerActionQueue = arrayOfNulls(players.size)
     startTimeout = false
     delay = 1
-    if (server.getUsers().size > 60) {
+    if (server.users.size > 60) {
       p2P = true
     }
     var i = 0
