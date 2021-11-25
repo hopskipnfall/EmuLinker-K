@@ -10,8 +10,18 @@ import org.emulinker.kaillera.pico.AppModule
 import org.junit.Test
 
 class V086BundleTest {
+
   @Test
-  @Throws(Exception::class)
+  fun hexStringToByteBuffer() {
+    // TODO(nue): We should dagger-ize this and use the RuntimeFlags class.
+    AppModule.charsetDoNotUse = Charset.forName("Shift_JIS")
+    val hexInput =
+      "01 00 00 24 00 03 EA 4B 00 50 72 6F 6A 65 63 74 20 36 34 6B 20 30 2E 31 33 20 28 30 31 20 41 75 67 20 32 30 30 33 29 00 01"
+    val byteBuffer = V086Utils.hexStringToByteBuffer(hexInput)
+    Truth.assertThat(V086Utils.toHex(byteBuffer)).isEqualTo(hexInput.replace(" ", ""))
+  }
+
+  @Test
   fun parseUserInformationJapanese() {
     // TODO(nue): We should dagger-ize this and use the RuntimeFlags class.
     AppModule.charsetDoNotUse = Charset.forName("Shift_JIS")
@@ -28,7 +38,6 @@ class V086BundleTest {
   }
 
   @Test
-  @Throws(Exception::class)
   fun parseClientACK() {
     // TODO(nue): We should dagger-ize this and use the RuntimeFlags class.
     AppModule.charsetDoNotUse = StandardCharsets.UTF_8
@@ -42,7 +51,6 @@ class V086BundleTest {
   }
 
   @Test
-  @Throws(Exception::class)
   fun parseClientCreateGameRequest() {
     // TODO(nue): We should dagger-ize this and use the RuntimeFlags class.
     AppModule.charsetDoNotUse = StandardCharsets.UTF_8
