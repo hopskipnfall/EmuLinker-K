@@ -1,13 +1,14 @@
 package org.emulinker.kaillera.controller.v086
 
 import com.codahale.metrics.MetricRegistry
+import com.google.common.flogger.FluentLogger
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.messaging.ParseException
-import org.emulinker.kaillera.controller.v086.action.FatalActionException
+import org.emulinker.kaillera.controller.v086.action.*
 import org.emulinker.kaillera.controller.v086.protocol.V086Bundle
 import org.emulinker.kaillera.controller.v086.protocol.V086Bundle.Companion.parse
 import org.emulinker.kaillera.controller.v086.protocol.V086BundleFormatException
@@ -23,6 +24,8 @@ import java.net.InetSocketAddress
 import java.nio.Buffer
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
+
+private val logger = FluentLogger.forEnclosingClass()
 
 class V086ClientHandler @AssistedInject constructor(
     metrics: MetricRegistry?,
@@ -112,7 +115,7 @@ class V086ClientHandler @AssistedInject constructor(
 
     fun start(user: KailleraUser) {
         this.user = user
-        V086Controller.logger
+        logger
             .atFine()
             .log(
                 toString()
@@ -144,7 +147,7 @@ class V086ClientHandler @AssistedInject constructor(
     logger.atSevere().log("V086ClientHandler failed to start for client from " + getRemoteInetAddress().getHostAddress());
     return;
     }
-    */V086Controller.logger
+    */logger
             .atFine()
             .log(
                 toString()
@@ -162,10 +165,10 @@ class V086ClientHandler @AssistedInject constructor(
             if (stopFlag) return
             var port = -1
             if (isBound) port = bindPort
-            V086Controller.logger.atFine().log("$this Stopping!")
+            logger.atFine().log("$this Stopping!")
             super.stop()
             if (port > 0) {
-                V086Controller.logger
+                logger
                     .atFine()
                     .log(
                         toString()
@@ -209,14 +212,14 @@ class V086ClientHandler @AssistedInject constructor(
             // inBundle = V086Bundle.parse(buffer, -1);
         } catch (e: ParseException) {
             buffer.rewind()
-            V086Controller.logger
+            logger
                 .atWarning()
                 .withCause(e)
                 .log(toString() + " failed to parse: " + dumpBuffer(buffer))
             return
         } catch (e: V086BundleFormatException) {
             buffer.rewind()
-            V086Controller.logger
+            logger
                 .atWarning()
                 .withCause(e)
                 .log(
@@ -227,7 +230,7 @@ class V086ClientHandler @AssistedInject constructor(
             return
         } catch (e: MessageFormatException) {
             buffer.rewind()
-            V086Controller.logger
+            logger
                 .atWarning()
                 .withCause(e)
                 .log(toString() + " received invalid message: " + dumpBuffer(buffer))
@@ -236,7 +239,7 @@ class V086ClientHandler @AssistedInject constructor(
 
         // logger.atFine().log("-> " + inBundle.getNumMessages());
         clientRetryCount = if (inBundle!!.numMessages == 0) {
-            V086Controller.logger
+            logger
                 .atFine()
                 .log(
                     toString()
@@ -258,11 +261,11 @@ class V086ClientHandler @AssistedInject constructor(
                     lastMessageNumber = messages[0]!!.messageNumber
                     val action = controller.actions[messages[0]!!.messageId.toInt()]
                     if (action == null) {
-                        V086Controller.logger
+                        logger
                             .atSevere()
                             .log("No action defined to handle client message: " + messages[0])
                     }
-                    action!!.performAction(messages[0]!!, this)
+                    (action!! as V086Action<V086Message>).performAction(messages[0]!!, this)
                 } else {
                     // read the bundle from back to front to process the oldest messages first
                     for (i in inBundle.numMessages - 1 downTo 0) {
@@ -278,7 +281,7 @@ class V086ClientHandler @AssistedInject constructor(
                                 if (prevMessageNumber == 0xFFFF && lastMessageNumber == 0) {
                                     // exception; do nothing
                                 } else {
-                                    V086Controller.logger
+                                    logger
                                         .atWarning()
                                         .log(
                                             user
@@ -293,12 +296,12 @@ class V086ClientHandler @AssistedInject constructor(
                             }
                             val action = controller.actions[messages[i]!!.messageId.toInt()]
                             if (action == null) {
-                                V086Controller.logger
+                                logger
                                     .atSevere()
                                     .log("No action defined to handle client message: " + messages[i])
                             } else {
                             // logger.atFine().log(user + " -> " + message);
-                            action.performAction(messages[i]!!, this)
+                            (action as V086Action<V086Message>).performAction(messages[i]!!, this)
                             }
 
                         }
@@ -306,7 +309,7 @@ class V086ClientHandler @AssistedInject constructor(
                 }
             }
         } catch (e: FatalActionException) {
-            V086Controller.logger
+            logger
                 .atWarning()
                 .withCause(e)
                 .log(toString() + " fatal action, closing connection")
@@ -319,7 +322,7 @@ class V086ClientHandler @AssistedInject constructor(
         if (event is GameEvent) {
             val eventHandler = controller.gameEventHandlers[event.javaClass]
             if (eventHandler == null) {
-                V086Controller.logger
+                logger
                     .atSevere()
                     .log(
                         toString()
@@ -328,11 +331,11 @@ class V086ClientHandler @AssistedInject constructor(
                     )
                 return
             }
-            eventHandler.handleEvent(event as GameEvent?, this)
+            (eventHandler as V086GameEventHandler<GameEvent>).handleEvent(event as GameEvent, this)
         } else if (event is ServerEvent) {
             val eventHandler = controller.serverEventHandlers[event.javaClass]
             if (eventHandler == null) {
-                V086Controller.logger
+                logger
                     .atSevere()
                     .log(
                         toString()
@@ -341,11 +344,11 @@ class V086ClientHandler @AssistedInject constructor(
                     )
                 return
             }
-            eventHandler.handleEvent(event, this)
+            (eventHandler as V086ServerEventHandler<ServerEvent>).handleEvent(event, this)
         } else if (event is UserEvent) {
             val eventHandler = controller.userEventHandlers[event.javaClass]
             if (eventHandler == null) {
-                V086Controller.logger
+                logger
                     .atSevere()
                     .log(
                         toString()
@@ -354,7 +357,7 @@ class V086ClientHandler @AssistedInject constructor(
                     )
                 return
             }
-            eventHandler.handleEvent(event as UserEvent?, this)
+            (eventHandler as V086UserEventHandler<UserEvent>).handleEvent(event as UserEvent, this)
         }
     }
 
@@ -365,11 +368,11 @@ class V086ClientHandler @AssistedInject constructor(
                 // int numToSend = (3+timeoutCounter);
                 var numToSend = 3 * timeoutCounter
                 if (numToSend > V086Controller.MAX_BUNDLE_SIZE) numToSend = V086Controller.MAX_BUNDLE_SIZE
-                V086Controller.logger.atFine().log("$this: resending last $numToSend messages")
+                logger.atFine().log("$this: resending last $numToSend messages")
                 send(null, numToSend)
                 lastResend = System.currentTimeMillis()
             } else {
-                V086Controller.logger.atFine().log("Skipping resend...")
+                logger.atFine().log("Skipping resend...")
             }
         }
     }
