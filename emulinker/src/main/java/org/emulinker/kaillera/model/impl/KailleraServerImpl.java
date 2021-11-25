@@ -626,7 +626,10 @@ public final class KailleraServerImpl implements KailleraServer, Executable {
 
     if (access > AccessManager.ACCESS_NORMAL)
       logger.atInfo().log(
-          user + " logged in successfully with " + AccessManager.ACCESS_NAMES[access] + " access!");
+          user
+              + " logged in successfully with "
+              + AccessManager.Companion.getACCESS_NAMES()[access]
+              + " access!");
     else logger.atInfo().log(user + " logged in successfully");
 
     // this is fairly ugly

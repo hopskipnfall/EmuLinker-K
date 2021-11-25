@@ -1,38 +1,25 @@
-package org.emulinker.kaillera.access;
+package org.emulinker.kaillera.access
 
-import java.net.InetAddress;
+import java.net.InetAddress
 
 /**
  * An AccessManager is used retrieve, check, and store user access levels and permissions, and game
  * and emulator filters. This interface defines the static access levels and methods that an
  * AccessManager must implement. How the access permissions are stored, checked, and manipulated is
- * left to the implementation class.<br>
- * <br>
- * Most of the main EmuLinker components are passed a handle to the current AccessManager and make
- * calls to it upon user interactions.
+ * left to the implementation class.<br></br> <br></br> Most of the main EmuLinker components are
+ * passed a handle to the current AccessManager and make calls to it upon user interactions.
  *
  * @author Paul Cowan
  * @see www.emulinker.org
  */
-public interface AccessManager {
-  public static int ACCESS_BANNED = 0;
-  public static int ACCESS_NORMAL = 1;
-  public static int ACCESS_ELEVATED = 2;
-  public static int ACCESS_MODERATOR = 3;
-  public static int ACCESS_ADMIN = 4;
-  public static int ACCESS_SUPERADMIN = 5;
-
-  public static String[] ACCESS_NAMES = {
-    "Banned", "Normal", "Elevated", "Moderator", "Admin", "SuperAdmin"
-  };
-
+interface AccessManager {
   /**
    * Checks if address is allowed to connect.
    *
    * @param address IP Address of client
    * @return true if address is allowed to connect
    */
-  public boolean isAddressAllowed(InetAddress address);
+  fun isAddressAllowed(address: InetAddress?): Boolean
 
   /**
    * Checks if address is silenced
@@ -40,7 +27,7 @@ public interface AccessManager {
    * @param address IP Address of client
    * @return true if address is silenced
    */
-  public boolean isSilenced(InetAddress address);
+  fun isSilenced(address: InetAddress?): Boolean
 
   /**
    * Checks if client's emulator is allowed (not filtered)
@@ -48,7 +35,7 @@ public interface AccessManager {
    * @param emulator Emulator name of client
    * @return true if emulator is allowed
    */
-  public boolean isEmulatorAllowed(String emulator);
+  fun isEmulatorAllowed(emulator: String?): Boolean
 
   /**
    * Checks if client's game (ROM) is allowed (not filtered)
@@ -56,7 +43,7 @@ public interface AccessManager {
    * @param game Game name of client
    * @return true if game is allowed
    */
-  public boolean isGameAllowed(String game);
+  fun isGameAllowed(game: String?): Boolean
 
   /**
    * Returns the client's assigned access level
@@ -64,7 +51,7 @@ public interface AccessManager {
    * @param address IP Address of client
    * @return The access level or the default access level if not found
    */
-  public int getAccess(InetAddress address);
+  fun getAccess(address: InetAddress?): Int
 
   /**
    * Returns a login announcement string
@@ -72,41 +59,47 @@ public interface AccessManager {
    * @param address IP Address of client
    * @return The login announcement, null if not defined
    */
-  public String getAnnouncement(InetAddress address);
+  fun getAnnouncement(address: InetAddress?): String?
 
   /**
    * Temporairly adds a user to the nanned list using a pattern algorythm defined by the
-   * AccessManager implementation. While active, <code>isAddressAllowed</code> should return false,
-   * and <code>getAccess</code> should return <code>ACCESS_BANNED</code>.
+   * AccessManager implementation. While active, `isAddressAllowed` should return false, and
+   * `getAccess` should return `ACCESS_BANNED`.
    *
    * @param pattern A pattern to match to an address
    * @param minutes Number of minutes this ban is valid from the time of addition
    */
-  public void addTempBan(String pattern, int minutes);
+  fun addTempBan(pattern: String?, minutes: Int)
 
   /**
    * Temporairly adds a user to the admin list using a pattern algorythm defined by the
-   * AccessManager implementation. While active, <code>getAccess</code> should return <code>
-   * ACCESS_ADMIN</code>.
+   * AccessManager implementation. While active, `getAccess` should return ` ACCESS_ADMIN`.
    *
    * @param pattern A pattern to match to an address
    * @param minutes Number of minutes this grant is valid from the time of addition
    */
-  public void addTempAdmin(String pattern, int minutes);
-
-  public void addTempModerator(String pattern, int minutes);
-
-  public void addTempElevated(String pattern, int minutes);
+  fun addTempAdmin(pattern: String?, minutes: Int)
+  fun addTempModerator(pattern: String?, minutes: Int)
+  fun addTempElevated(pattern: String?, minutes: Int)
 
   /**
    * Temporairly adds a user to the silenced list using a pattern algorythm defined by the
-   * AccessManager implementation. While active, <code>isSilenced</code> should return <code>true
-   * </code>.
+   * AccessManager implementation. While active, `isSilenced` should return `true ` * .
    *
    * @param pattern A pattern to match to an address
    * @param minutes Number of minutes this grant is valid from the time of addition
    */
-  public void addSilenced(String pattern, int minutes);
+  fun addSilenced(pattern: String?, minutes: Int)
+  fun clearTemp(address: InetAddress?, clearAll: Boolean): Boolean
 
-  public boolean clearTemp(InetAddress address, boolean clearAll);
+  companion object {
+    const val ACCESS_BANNED = 0
+    const val ACCESS_NORMAL = 1
+    const val ACCESS_ELEVATED = 2
+    const val ACCESS_MODERATOR = 3
+    const val ACCESS_ADMIN = 4
+    const val ACCESS_SUPERADMIN = 5
+
+    val ACCESS_NAMES = arrayOf("Banned", "Normal", "Elevated", "Moderator", "Admin", "SuperAdmin")
+  }
 }
