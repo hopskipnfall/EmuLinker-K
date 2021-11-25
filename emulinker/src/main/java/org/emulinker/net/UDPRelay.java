@@ -7,6 +7,7 @@ import java.nio.*;
 import java.nio.channels.*;
 import java.util.*;
 import java.util.concurrent.*;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.emulinker.util.*;
 
 public abstract class UDPRelay implements Runnable {
@@ -53,10 +54,10 @@ public abstract class UDPRelay implements Runnable {
     return serverSocketAddress;
   }
 
-  protected abstract ByteBuffer processClientToServer(
+  protected abstract @Nullable ByteBuffer processClientToServer(
       ByteBuffer receiveBuffer, InetSocketAddress fromAddress, InetSocketAddress toAddress);
 
-  protected abstract ByteBuffer processServerToClient(
+  protected abstract @Nullable ByteBuffer processServerToClient(
       ByteBuffer receiveBuffer, InetSocketAddress fromAddress, InetSocketAddress toAddress);
 
   @Override
