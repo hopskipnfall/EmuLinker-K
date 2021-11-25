@@ -34,7 +34,8 @@ abstract class PrivateUDPServer(
     clientRequestTimer.time().use { context -> handleReceived(buffer) }
   }
 
-  protected abstract fun handleReceived(buffer: ByteBuffer?)
+  protected abstract fun handleReceived(buffer: ByteBuffer)
+
   protected fun send(buffer: ByteBuffer?) {
     super.send(buffer, remoteSocketAddress)
   }
