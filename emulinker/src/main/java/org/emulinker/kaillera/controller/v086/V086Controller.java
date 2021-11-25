@@ -19,6 +19,8 @@ import org.emulinker.kaillera.model.event.*;
 import org.emulinker.kaillera.model.exception.*;
 import org.emulinker.net.*;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 @Singleton
 public final class V086Controller implements KailleraServerController {
   static final FluentLogger logger = FluentLogger.forEnclosingClass();
@@ -97,7 +99,7 @@ public final class V086Controller implements KailleraServerController {
             + maxPort
             + ".  Make sure these ports are open in your firewall!");
 
-    Preconditions.checkArgument(
+    checkArgument(
         flags.getV086BufferSize() > 0, "controllers.v086.bufferSize must be > 0");
 
     // array access should be faster than a hash and we won't have to create
