@@ -28,9 +28,9 @@ class V086BundleTest {
     val lastMessageNumber = -1
     val parsedBundle =
         V086Bundle.parse(V086Utils.hexStringToByteBuffer(hexInput), lastMessageNumber)
-    Truth.assertThat(parsedBundle.getMessages()).hasLength(1)
-    Truth.assertThat(parsedBundle.getMessages()[0]).isInstanceOf(UserInformation::class.java)
-    val userInformation = parsedBundle.getMessages()[0] as UserInformation
+    Truth.assertThat(parsedBundle.messages).hasLength(1)
+    Truth.assertThat(parsedBundle.messages[0]).isInstanceOf(UserInformation::class.java)
+    val userInformation = parsedBundle.messages[0] as UserInformation
     Truth.assertThat(userInformation.clientType).isEqualTo("Project 64k 0.13 (01 Aug 2003)")
     Truth.assertThat(userInformation.username).isEqualTo("鵺")
   }
@@ -44,8 +44,8 @@ class V086BundleTest {
     val lastMessageNumber = 0
     val parsedBundle =
         V086Bundle.parse(V086Utils.hexStringToByteBuffer(hexInput), lastMessageNumber)
-    Truth.assertThat(parsedBundle.getMessages()).hasLength(1)
-    Truth.assertThat(parsedBundle.getMessages()[0]).isEqualTo(ClientACK(messageNumber = 1))
+    Truth.assertThat(parsedBundle.messages).hasLength(1)
+    Truth.assertThat(parsedBundle.messages[0]).isEqualTo(ClientACK(messageNumber = 1))
   }
 
   @Test
@@ -57,9 +57,9 @@ class V086BundleTest {
     val lastMessageNumber = 9
     val parsedBundle =
         V086Bundle.parse(V086Utils.hexStringToByteBuffer(hexInput), lastMessageNumber)
-    Truth.assertThat(parsedBundle.getMessages()).hasLength(1)
-    Truth.assertThat(parsedBundle.getMessages()[0]).isInstanceOf(CreateGame_Request::class.java)
-    val message = parsedBundle.getMessages()[0] as CreateGame_Request
+    Truth.assertThat(parsedBundle.messages).hasLength(1)
+    Truth.assertThat(parsedBundle.messages[0]).isInstanceOf(CreateGame_Request::class.java)
+    val message = parsedBundle.messages[0] as CreateGame_Request
     Truth.assertThat(message).isEqualTo(CreateGame_Request(messageNumber = 10, "SmashRemix0.9.7"))
   }
 }
