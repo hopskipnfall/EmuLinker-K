@@ -742,7 +742,7 @@ class KailleraGameImpl(
             id,
             if (romName.length > 15) romName.substring(0, 15) + "..." else romName)
     startDate = Date()
-    statsCollector = server.getStatsCollector()
+    statsCollector = server.statsCollector
     autoFireDetector = server.getAutoFireDetector(this)
   }
 }
