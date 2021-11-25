@@ -1,6 +1,5 @@
 package org.emulinker.kaillera.controller.v086.protocol
 
-import com.google.common.truth.Truth
 import com.google.common.truth.Truth.assertThat
 import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets

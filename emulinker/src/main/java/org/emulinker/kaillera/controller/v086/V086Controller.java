@@ -1,6 +1,7 @@
 package org.emulinker.kaillera.controller.v086;
 
-import com.google.common.base.Preconditions;
+import static com.google.common.base.Preconditions.checkArgument;
+
 import com.google.common.collect.ImmutableMap;
 import com.google.common.flogger.FluentLogger;
 import java.net.InetSocketAddress;
@@ -18,8 +19,6 @@ import org.emulinker.kaillera.model.*;
 import org.emulinker.kaillera.model.event.*;
 import org.emulinker.kaillera.model.exception.*;
 import org.emulinker.net.*;
-
-import static com.google.common.base.Preconditions.checkArgument;
 
 @Singleton
 public final class V086Controller implements KailleraServerController {
@@ -99,8 +98,7 @@ public final class V086Controller implements KailleraServerController {
             + maxPort
             + ".  Make sure these ports are open in your firewall!");
 
-    checkArgument(
-        flags.getV086BufferSize() > 0, "controllers.v086.bufferSize must be > 0");
+    checkArgument(flags.getV086BufferSize() > 0, "controllers.v086.bufferSize must be > 0");
 
     // array access should be faster than a hash and we won't have to create
     // a new Integer each time
