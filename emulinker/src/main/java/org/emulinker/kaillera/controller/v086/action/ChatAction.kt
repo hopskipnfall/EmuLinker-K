@@ -204,9 +204,9 @@ class ChatAction @Inject internal constructor(private val adminCommandAction: Ad
             } catch (e: Exception) {}
             return
           }
-          if (!user.msg || user.searchIgnoredUsers(
-                  clientHandler.user!!.connectSocketAddress.address.hostAddress)
-          ) {
+          if (!user.msg ||
+              user.searchIgnoredUsers(
+                  clientHandler.user!!.connectSocketAddress.address.hostAddress)) {
             try {
               clientHandler.send(
                   InformationMessage(
@@ -391,7 +391,8 @@ class ChatAction @Inject internal constructor(private val adminCommandAction: Ad
         val user = clientHandler.user as KailleraUserImpl
         try {
           clientHandler.user!!.ignoreAll = true
-          user.server.announce(clientHandler.user!!.name + " is now ignoring everyone!", false, null)
+          user.server.announce(
+              clientHandler.user!!.name + " is now ignoring everyone!", false, null)
         } catch (e: Exception) {}
       } else if (chatMessage.message == "/unignoreall") {
         val user = clientHandler.user as KailleraUserImpl
@@ -471,7 +472,8 @@ class ChatAction @Inject internal constructor(private val adminCommandAction: Ad
             } catch (e: Exception) {}
             return
           }
-          if (!clientHandler.user!!.findIgnoredUser(user.connectSocketAddress.address.hostAddress)) {
+          if (!clientHandler.user!!.findIgnoredUser(
+              user.connectSocketAddress.address.hostAddress)) {
             try {
               clientHandler.send(
                   InformationMessage(
@@ -484,7 +486,11 @@ class ChatAction @Inject internal constructor(private val adminCommandAction: Ad
           if (clientHandler!!.user!!.removeIgnoredUser(
               user.connectSocketAddress.address.hostAddress, false) == true)
               user.server.announce(
-                  clientHandler!!.user!!.name + " is now unignoring <" + user.name + "> ID: " + user.id,
+                  clientHandler!!.user!!.name +
+                      " is now unignoring <" +
+                      user.name +
+                      "> ID: " +
+                      user.id,
                   false,
                   null)
           else
@@ -655,8 +661,7 @@ class ChatAction @Inject internal constructor(private val adminCommandAction: Ad
             return
       }
       val m = chatEvent.message
-      clientHandler.send(
-          Chat_Notification(clientHandler.nextMessageNumber, chatEvent.user.name, m))
+      clientHandler.send(Chat_Notification(clientHandler.nextMessageNumber, chatEvent.user.name, m))
     } catch (e: MessageFormatException) {
       logger.atSevere().withCause(e).log("Failed to contruct Chat_Notification message")
     }

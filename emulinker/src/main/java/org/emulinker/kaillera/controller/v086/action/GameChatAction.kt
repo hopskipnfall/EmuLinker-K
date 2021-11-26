@@ -290,7 +290,8 @@ class GameChatAction
               }
               if (user.game != null) {
                 user.game!!.announce(
-                    "<" + clientHandler.user!!.name + "> (" + clientHandler.user!!.id + "): " + m, user)
+                    "<" + clientHandler.user!!.name + "> (" + clientHandler.user!!.id + "): " + m,
+                    user)
               }
               return
             } catch (e1: Exception) {
@@ -306,7 +307,8 @@ class GameChatAction
         val user = clientHandler.user as KailleraUserImpl
         try {
           clientHandler.user!!.ignoreAll = true
-          user.server.announce(clientHandler.user!!.name + " is now ignoring everyone!", false, null)
+          user.server.announce(
+              clientHandler.user!!.name + " is now ignoring everyone!", false, null)
         } catch (e: Exception) {}
         return
       } else if (message.message == "/unignoreall") {
@@ -370,14 +372,19 @@ class GameChatAction
             user1.game!!.announce("User Not Found!", user1)
             return
           }
-          if (!clientHandler.user!!.findIgnoredUser(user.connectSocketAddress.address.hostAddress)) {
+          if (!clientHandler.user!!.findIgnoredUser(
+              user.connectSocketAddress.address.hostAddress)) {
             user1.game!!.announce("You can't unignore a user that isn't ignored", user1)
             return
           }
           if (clientHandler.user!!.removeIgnoredUser(
               user.connectSocketAddress.address.hostAddress, false))
               user.server.announce(
-                  clientHandler.user!!.name + " is now unignoring <" + user.name + "> ID: " + user.id,
+                  clientHandler.user!!.name +
+                      " is now unignoring <" +
+                      user.name +
+                      "> ID: " +
+                      user.id,
                   false,
                   null)
           else

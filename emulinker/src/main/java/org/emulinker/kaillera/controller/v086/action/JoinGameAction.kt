@@ -41,7 +41,9 @@ class JoinGameAction
                 EmuLang.getString("JoinGameAction.JoinGameDenied", e.message)))
         clientHandler.send(
             QuitGame_Notification(
-                clientHandler.nextMessageNumber, clientHandler.user!!.name, clientHandler.user!!.id))
+                clientHandler.nextMessageNumber,
+                clientHandler.user!!.name,
+                clientHandler.user!!.id))
       } catch (e2: MessageFormatException) {
         logger.atSevere().withCause(e2).log("Failed to contruct new Message")
       }
