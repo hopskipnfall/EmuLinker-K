@@ -17,7 +17,7 @@ abstract class JoinGame : V086Message() {
   abstract val connectionType: Byte
 
   override val bodyLength: Int
-    get() = getNumBytes(username!!) + 13
+    get() = getNumBytes(username) + 13
 
   public override fun writeBodyTo(buffer: ByteBuffer) {
     buffer.put(0x00.toByte())

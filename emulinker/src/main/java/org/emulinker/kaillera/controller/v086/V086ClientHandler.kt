@@ -243,7 +243,7 @@ class V086ClientHandler
               .log(
                   toString() +
                       " received bundle of " +
-                      inBundle!!.numMessages +
+                      inBundle.numMessages +
                       " messages from " +
                       user)
           clientRetryCount++

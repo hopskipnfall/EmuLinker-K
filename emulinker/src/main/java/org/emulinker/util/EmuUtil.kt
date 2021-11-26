@@ -60,8 +60,8 @@ object EmuUtil {
     val len = data.size
     val sb = StringBuilder()
     for (i in 0 until len) {
-      if (Character.isLetterOrDigit(data[i].toChar()) || data[i] in 32..126)
-          sb.append(data[i].toChar())
+      if (Character.isLetterOrDigit(data[i].toInt().toChar()) || data[i] in 32..126)
+          sb.append(data[i].toInt().toChar())
       else sb.append(byteToHex(data[i]))
       if (i < len - 1) sb.append(',')
     }

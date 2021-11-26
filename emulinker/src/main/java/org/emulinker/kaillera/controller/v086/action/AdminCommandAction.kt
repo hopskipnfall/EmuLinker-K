@@ -95,7 +95,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
 
   @Throws(FatalActionException::class)
   override fun performAction(chatMessage: Chat, clientHandler: V086ClientHandler) {
-    val chat: String = chatMessage.message!!
+    val chat: String = chatMessage.message
     val server = clientHandler.controller.server as KailleraServerImpl
     val accessManager = server.accessManager
     val user = clientHandler.user as KailleraUserImpl

@@ -39,7 +39,7 @@ class GameChatAction
       throw FatalActionException("User does not exist: GameChatAction $message")
     }
     if (clientHandler.user!!.game == null) return
-    if (message.message!!.startsWith(ADMIN_COMMAND_ESCAPE_STRING)) {
+    if (message.message.startsWith(ADMIN_COMMAND_ESCAPE_STRING)) {
       // if(clientHandler.getUser().getAccess() >= AccessManager.ACCESS_ADMIN ||
       // clientHandler.getUser().equals(clientHandler.getUser().getGame().getOwner())){
       try {
@@ -87,7 +87,7 @@ class GameChatAction
           user.game!!.announce("Private messages are now off.", user)
         } catch (e: Exception) {}
         return
-      } else if (message.message!!.startsWith("/p2p")) {
+      } else if (message.message.startsWith("/p2p")) {
         val user = clientHandler.user as KailleraUserImpl
         if (message.message == "/p2pon") {
           if (clientHandler.user!!.game!!.owner.equals(clientHandler.user)) {
@@ -134,9 +134,9 @@ class GameChatAction
           user.game!!.announce("Failed P2P: /p2pon or /p2poff", user)
         }
         return
-      } else if (message.message!!.startsWith("/msg")) {
+      } else if (message.message.startsWith("/msg")) {
         val user1 = clientHandler.user as KailleraUserImpl
-        val scanner = Scanner(message.message!!).useDelimiter(" ")
+        val scanner = Scanner(message.message).useDelimiter(" ")
         val access =
             clientHandler.user!!.server.accessManager.getAccess(
                 clientHandler.user!!.socketAddress!!.address)
@@ -306,9 +306,9 @@ class GameChatAction
               clientHandler.user!!.name + " is now unignoring everyone!", false, null)
         } catch (e: Exception) {}
         return
-      } else if (message.message!!.startsWith("/ignore")) {
+      } else if (message.message.startsWith("/ignore")) {
         val user1 = clientHandler.user as KailleraUserImpl
-        val scanner = Scanner(message.message!!).useDelimiter(" ")
+        val scanner = Scanner(message.message).useDelimiter(" ")
         try {
           scanner.next()
           val userID = scanner.nextInt()
@@ -345,7 +345,7 @@ class GameChatAction
                   "IGNORE USER ERROR: ${user.name}: ${clientHandler.remoteSocketAddress!!.hostName}")
           return
         }
-      } else if (message.message!!.startsWith("/unignore")) {
+      } else if (message.message.startsWith("/unignore")) {
         val user1 = clientHandler.user as KailleraUserImpl
         val scanner = Scanner(message.message).useDelimiter(" ")
         try {
@@ -384,13 +384,13 @@ class GameChatAction
                   "UNIGNORE USER ERROR: ${user.name}: ${clientHandler.remoteSocketAddress!!.hostName}")
           return
         }
-      } else if (message.message!!.startsWith("/me")) {
-        val space = message.message!!.indexOf(' ')
+      } else if (message.message.startsWith("/me")) {
+        val space = message.message.indexOf(' ')
         if (space < 0) {
           clientHandler.user!!.game!!.announce("Invalid # of Fields!", clientHandler.user)
           return
         }
-        var announcement = message.message!!.substring(space + 1)
+        var announcement = message.message.substring(space + 1)
         if (announcement.startsWith(":"))
             announcement =
                 announcement.substring(

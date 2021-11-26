@@ -180,8 +180,8 @@ class KailleraUserImpl(
   val accessStr: String
     get() = AccessManager.ACCESS_NAMES[access]
 
-  override fun equals(obj: Any?): Boolean {
-    return obj is KailleraUserImpl && obj.id == id
+  override fun equals(other: Any?): Boolean {
+    return other is KailleraUserImpl && other.id == id
   }
 
   fun toDetailedString(): String {

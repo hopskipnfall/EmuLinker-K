@@ -15,7 +15,7 @@ abstract class Quit : V086Message() {
   abstract val message: String
 
   override val bodyLength: Int
-    get() = getNumBytes(username) + getNumBytes(message!!) + 4
+    get() = getNumBytes(username) + getNumBytes(message) + 4
 
   public override fun writeBodyTo(buffer: ByteBuffer) {
     EmuUtil.writeString(buffer, username, 0x00, AppModule.charsetDoNotUse)

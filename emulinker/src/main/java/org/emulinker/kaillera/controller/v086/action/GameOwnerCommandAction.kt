@@ -52,7 +52,7 @@ class GameOwnerCommandAction @Inject internal constructor() : V086Action<GameCha
     val game =
         user.game ?: throw FatalActionException("GameOwner Command Failed: Not in a game: $chat")
     if (user != game.owner && user.access < AccessManager.ACCESS_SUPERADMIN) {
-      if (!chat!!.startsWith(COMMAND_HELP)) {
+      if (!chat.startsWith(COMMAND_HELP)) {
         logger.atWarning().log("GameOwner Command Denied: Not game owner: $game: $user: $chat")
         game.announce("GameOwner Command Error: You are not an owner!", user)
         return
@@ -60,7 +60,7 @@ class GameOwnerCommandAction @Inject internal constructor() : V086Action<GameCha
     }
     try {
       when {
-        chat!!.startsWith(COMMAND_HELP) -> processHelp(chat, game, user, clientHandler)
+        chat.startsWith(COMMAND_HELP) -> processHelp(chat, game, user, clientHandler)
         chat.startsWith(COMMAND_DETECTAUTOFIRE) ->
             processDetectAutoFire(chat, game, user, clientHandler)
         chat.startsWith(COMMAND_MAXUSERS) -> processMaxUsers(chat, game, user, clientHandler)
@@ -254,7 +254,7 @@ class GameOwnerCommandAction @Inject internal constructor() : V086Action<GameCha
     if (message == "/lagstat") {
       var str = ""
       for (player in game.players) {
-        if (!player!!.stealth) str = str + "P" + player.playerNumber + ": " + player.timeouts + ", "
+        if (!player.stealth) str = str + "P" + player.playerNumber + ": " + player.timeouts + ", "
       }
       if (str.isNotEmpty()) {
         str = str.substring(0, str.length - ", ".length)
