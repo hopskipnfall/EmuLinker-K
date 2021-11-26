@@ -11,7 +11,7 @@ import org.emulinker.util.UnsignedUtil
 abstract class JoinGame : V086Message() {
   abstract val gameId: Int
   abstract val val1: Int
-  abstract val username: String?
+  abstract val username: String
   abstract val ping: Long
   abstract val userId: Int
   abstract val connectionType: Byte

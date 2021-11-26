@@ -50,11 +50,7 @@ class AccessManager2
     logger
         .atFine()
         .log(
-            "AccessManager2 thread starting (ThreadPool:" +
-                threadPool.activeCount +
-                "/" +
-                threadPool.poolSize +
-                ")")
+            "AccessManager2 thread starting (ThreadPool:${threadPool.activeCount}/${threadPool.poolSize})")
     threadPool.execute(this)
     Thread.yield()
   }
