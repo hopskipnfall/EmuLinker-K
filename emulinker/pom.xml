@@ -192,12 +192,6 @@
       <version>4.2.12</version>
     </dependency>
 
-    <dependency>
-      <groupId>nanocontainer</groupId>
-      <artifactId>nanocontainer</artifactId>
-      <version>1.0-beta-3</version>
-    </dependency>
-
     <!-- https://mvnrepository.com/artifact/commons-configuration/commons-configuration -->
     <dependency>
       <groupId>commons-configuration</groupId>
