@@ -650,9 +650,7 @@ class KailleraServerImpl
             romName,
             (user as KailleraUserImpl?)!!,
             this,
-            flags.gameBufferSize,
-            flags.gameTimeoutMillis,
-            flags.gameDesynchTimeouts)
+            flags.gameBufferSize)
     gamesMap[gameID] = game
     addEvent(GameCreatedEvent(this, game))
     logger.atInfo().log(user.toString() + " created: " + game + ": " + game.romName)
@@ -697,10 +695,10 @@ class KailleraServerImpl
     addEvent(GameClosedEvent(this, game))
   }
 
-  override fun checkMe(user: KailleraUser?, message: String?): Boolean {
+  override fun checkMe(user: KailleraUser, message: String): Boolean {
     // >>>>>>>>>>>>>>>>>>>>
     var message = message
-    if (!user!!.loggedIn) {
+    if (!user.loggedIn) {
       logger.atSevere().log("$user chat failed: Not logged in")
       return false
     }
@@ -721,7 +719,7 @@ class KailleraServerImpl
     if (message == ":USER_COMMAND") {
       return false
     }
-    message = message!!.trim { it <= ' ' }
+    message = message.trim { it <= ' ' }
     if (Strings.isNullOrEmpty(message)) return false
     if (access == AccessManager.ACCESS_NORMAL) {
       val chars = message.toCharArray()
