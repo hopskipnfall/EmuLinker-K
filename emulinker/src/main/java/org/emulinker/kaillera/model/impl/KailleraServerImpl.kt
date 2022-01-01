@@ -645,12 +645,7 @@ class KailleraServerImpl
     var game: KailleraGameImpl? = null
     val gameID = getNextGameID()
     game =
-        KailleraGameImpl(
-            gameID,
-            romName,
-            (user as KailleraUserImpl?)!!,
-            this,
-            flags.gameBufferSize)
+        KailleraGameImpl(gameID, romName, (user as KailleraUserImpl?)!!, this, flags.gameBufferSize)
     gamesMap[gameID] = game
     addEvent(GameCreatedEvent(this, game))
     logger.atInfo().log(user.toString() + " created: " + game + ": " + game.romName)
