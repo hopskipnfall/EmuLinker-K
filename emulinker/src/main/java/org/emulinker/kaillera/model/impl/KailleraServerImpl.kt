@@ -40,7 +40,6 @@ class KailleraServerImpl
     internal constructor(
         private val threadPool: ThreadPoolExecutor,
         override val accessManager: AccessManager,
-        config: Configuration?,
         private val flags: RuntimeFlags,
         statsCollector: StatsCollector?,
         override val releaseInfo: ReleaseInfo,

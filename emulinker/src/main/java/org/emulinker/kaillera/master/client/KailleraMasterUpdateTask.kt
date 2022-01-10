@@ -65,10 +65,10 @@ class KailleraMasterUpdateTask(
     } catch (e: Exception) {
       logger.atSevere().withCause(e).log("Failed to touch Kaillera Master")
     } finally {
-      if (kailleraTouch != null) {
-        try {
-          kailleraTouch.releaseConnection()
-        } catch (e: Exception) {}
+      try {
+        kailleraTouch.releaseConnection()
+      } catch (e: Exception) {
+        logger.atSevere().withCause(e).log("Failed to release connection")
       }
     }
   }

@@ -47,12 +47,12 @@ class JoinGameAction @Inject internal constructor() :
     }
   }
 
-  override fun handleEvent(userJoinedEvent: UserJoinedGameEvent, clientHandler: V086ClientHandler) {
+  override fun handleEvent(event: UserJoinedGameEvent, clientHandler: V086ClientHandler) {
     handledEventCount++
     val thisUser = clientHandler.user
     try {
-      val game = userJoinedEvent.game
-      val user = userJoinedEvent.user
+      val game = event.game
+      val user = event.user
       if (user == thisUser) {
         val players: MutableList<Player> = ArrayList()
         for (player in game.players) {
