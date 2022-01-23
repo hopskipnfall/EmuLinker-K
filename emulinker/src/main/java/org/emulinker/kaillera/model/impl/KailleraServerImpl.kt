@@ -12,7 +12,6 @@ import java.util.concurrent.ThreadPoolExecutor
 import java.util.function.Consumer
 import javax.inject.Inject
 import javax.inject.Singleton
-import org.apache.commons.configuration.Configuration
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.access.AccessManager
 import org.emulinker.kaillera.access.AccessManager.Companion.ACCESS_NAMES

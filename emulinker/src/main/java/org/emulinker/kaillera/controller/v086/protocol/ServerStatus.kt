@@ -115,7 +115,10 @@ data class ServerStatus
           val gameId: Int,
           val clientType: String,
           val username: String,
-          /** Formatted like "2/4", showing the number of players present out of the max allowed in the room. */
+          /**
+           * Formatted like "2/4", showing the number of players present out of the max allowed in
+           * the room.
+           */
           val playerCountOutOfMax: String,
           val status: Byte
       ) {
