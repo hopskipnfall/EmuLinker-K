@@ -110,24 +110,14 @@ class KailleraGameImpl(
   override val clientType: String?
     get() = owner.clientType
 
-  override fun toString(): String {
-    return toString
-  }
+  override fun toString() = toString
 
   fun toDetailedString(): String {
     return "KailleraGame[id=$id romName=$romName owner=$owner numPlayers=$numPlayers status=${STATUS_NAMES[status]}]"
   }
 
   private val playingCount: Int
-    get() {
-      var count = 0
-      for (player in players) {
-        if (player.status == KailleraUser.STATUS_PLAYING.toInt()) {
-          count++
-        }
-      }
-      return count
-    }
+    get() = players.asSequence().filter { it.status == KailleraUser.STATUS_PLAYING.toInt() }.count()
 
   // return dataQueues.size();
   //		return readyCount;
