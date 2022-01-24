@@ -11,8 +11,6 @@ import org.emulinker.kaillera.model.impl.Trivia
 import org.emulinker.kaillera.release.ReleaseInfo
 
 interface KailleraServer {
-  val numUsers: Int
-  val numGames: Int
   val maxUsers: Int
   val maxGames: Int
   val maxPing: Int

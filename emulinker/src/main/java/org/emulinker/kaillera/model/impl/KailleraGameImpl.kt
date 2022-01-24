@@ -410,7 +410,7 @@ class KailleraGameImpl(
       p2P = true
     }
     var i = 0
-    while (i < playerActionQueue!!.size && i < players.size) {
+    while (i < actionQueueBuilder.size && i < players.size) {
       val player = players[i]
       val playerNumber = i + 1
       if (!swap) player.playerNumber = playerNumber
