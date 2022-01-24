@@ -6,6 +6,7 @@ import org.emulinker.kaillera.model.event.KailleraEventListener
 import org.emulinker.kaillera.model.exception.*
 import org.emulinker.kaillera.model.impl.KailleraGameImpl
 import org.emulinker.kaillera.model.impl.KailleraUserImpl
+import org.emulinker.kaillera.model.impl.UserStatus
 
 interface KailleraUser {
   // Fields that only support getters.
@@ -24,7 +25,7 @@ interface KailleraUser {
   val loggedIn: Boolean
   val protocol: String
   val server: KailleraServer
-  val status: Int
+  val status: UserStatus
   val users: Collection<KailleraUserImpl?>?
 
   // Fields with public getters and setters.
@@ -116,13 +117,7 @@ interface KailleraUser {
     const val CONNECTION_TYPE_LOW: Byte = 5
     const val CONNECTION_TYPE_BAD: Byte = 6
 
-    const val STATUS_PLAYING: Byte = 0
-    const val STATUS_IDLE: Byte = 1
-    const val STATUS_CONNECTING: Byte = 2
-
     val CONNECTION_TYPE_NAMES =
         arrayOf("DISABLED", "LAN", "Excellent", "Good", "Average", "Low", "Bad")
-
-    val STATUS_NAMES = arrayOf("Playing", "Idle", "Connecting")
   }
 }

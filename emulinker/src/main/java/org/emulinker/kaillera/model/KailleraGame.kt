@@ -10,6 +10,7 @@ import org.emulinker.kaillera.model.exception.JoinGameException
 import org.emulinker.kaillera.model.exception.QuitGameException
 import org.emulinker.kaillera.model.exception.StartGameException
 import org.emulinker.kaillera.model.exception.UserReadyException
+import org.emulinker.kaillera.model.impl.GameStatus
 import org.emulinker.kaillera.model.impl.PlayerActionQueue
 
 interface KailleraGame {
@@ -23,7 +24,7 @@ interface KailleraGame {
   val romName: String
   val server: KailleraServer?
   val startTimeoutTime: Long
-  val status: Int
+  val status: GameStatus
 
   var delay: Int
   var maxPing: Int
@@ -62,12 +63,4 @@ interface KailleraGame {
 
   @Throws(DropGameException::class, QuitGameException::class, CloseGameException::class)
   fun quit(user: KailleraUser, playerNumber: Int)
-
-  companion object {
-    const val STATUS_WAITING: Byte = 0
-    const val STATUS_PLAYING: Byte = 2
-    const val STATUS_SYNCHRONIZING: Byte = 1
-
-    val STATUS_NAMES = arrayOf("Waiting", "Playing", "Synchronizing")
-  }
 }
