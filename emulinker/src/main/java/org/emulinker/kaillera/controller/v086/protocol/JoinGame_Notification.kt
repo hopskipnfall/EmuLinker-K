@@ -1,7 +1,7 @@
 package org.emulinker.kaillera.controller.v086.protocol
 
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
-import org.emulinker.kaillera.model.impl.ConnectionType
+import org.emulinker.kaillera.model.ConnectionType
 
 data class JoinGame_Notification
     @Throws(MessageFormatException::class)

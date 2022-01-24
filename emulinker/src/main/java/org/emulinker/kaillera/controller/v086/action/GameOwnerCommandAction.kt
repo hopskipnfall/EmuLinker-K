@@ -8,8 +8,8 @@ import org.emulinker.kaillera.access.AccessManager
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086ClientHandler
 import org.emulinker.kaillera.controller.v086.protocol.GameChat
+import org.emulinker.kaillera.model.GameStatus
 import org.emulinker.kaillera.model.exception.ActionException
-import org.emulinker.kaillera.model.impl.GameStatus
 import org.emulinker.kaillera.model.impl.KailleraGameImpl
 import org.emulinker.kaillera.model.impl.KailleraUserImpl
 import org.emulinker.util.EmuLang

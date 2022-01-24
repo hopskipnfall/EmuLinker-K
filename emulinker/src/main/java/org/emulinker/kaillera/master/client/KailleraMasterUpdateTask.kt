@@ -9,8 +9,8 @@ import org.apache.commons.httpclient.methods.GetMethod
 import org.emulinker.kaillera.controller.connectcontroller.ConnectController
 import org.emulinker.kaillera.master.PublicServerInformation
 import org.emulinker.kaillera.master.StatsCollector
+import org.emulinker.kaillera.model.GameStatus
 import org.emulinker.kaillera.model.KailleraServer
-import org.emulinker.kaillera.model.impl.GameStatus
 import org.emulinker.kaillera.release.ReleaseInfo
 
 private val logger = FluentLogger.forEnclosingClass()

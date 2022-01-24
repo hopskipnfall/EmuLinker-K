@@ -10,7 +10,6 @@ import org.emulinker.kaillera.model.exception.JoinGameException
 import org.emulinker.kaillera.model.exception.QuitGameException
 import org.emulinker.kaillera.model.exception.StartGameException
 import org.emulinker.kaillera.model.exception.UserReadyException
-import org.emulinker.kaillera.model.impl.GameStatus
 import org.emulinker.kaillera.model.impl.PlayerActionQueue
 
 interface KailleraGame {

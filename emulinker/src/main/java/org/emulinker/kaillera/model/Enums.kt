@@ -1,4 +1,4 @@
-package org.emulinker.kaillera.model.impl
+package org.emulinker.kaillera.model
 
 enum class UserStatus(val byteValue: Byte, private val readableName: String) {
   PLAYING(0, "Playing"),

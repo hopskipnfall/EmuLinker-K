@@ -7,8 +7,10 @@ import java.util.concurrent.CopyOnWriteArrayList
 import kotlin.Throws
 import org.emulinker.kaillera.access.AccessManager
 import org.emulinker.kaillera.master.StatsCollector
+import org.emulinker.kaillera.model.GameStatus
 import org.emulinker.kaillera.model.KailleraGame
 import org.emulinker.kaillera.model.KailleraUser
+import org.emulinker.kaillera.model.UserStatus
 import org.emulinker.kaillera.model.event.AllReadyEvent
 import org.emulinker.kaillera.model.event.GameChatEvent
 import org.emulinker.kaillera.model.event.GameDataEvent

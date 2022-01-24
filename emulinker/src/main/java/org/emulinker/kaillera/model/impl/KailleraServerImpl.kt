@@ -18,9 +18,11 @@ import org.emulinker.kaillera.access.AccessManager.Companion.ACCESS_NAMES
 import org.emulinker.kaillera.lookingforgame.LookingForGameEvent
 import org.emulinker.kaillera.lookingforgame.TwitterBroadcaster
 import org.emulinker.kaillera.master.StatsCollector
+import org.emulinker.kaillera.model.GameStatus
 import org.emulinker.kaillera.model.KailleraGame
 import org.emulinker.kaillera.model.KailleraServer
 import org.emulinker.kaillera.model.KailleraUser
+import org.emulinker.kaillera.model.UserStatus
 import org.emulinker.kaillera.model.event.*
 import org.emulinker.kaillera.model.exception.*
 import org.emulinker.kaillera.release.ReleaseInfo

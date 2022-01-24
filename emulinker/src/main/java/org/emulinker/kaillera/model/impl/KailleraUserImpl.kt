@@ -10,8 +10,10 @@ import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit
 import kotlin.Throws
 import org.emulinker.kaillera.access.AccessManager
+import org.emulinker.kaillera.model.ConnectionType
 import org.emulinker.kaillera.model.KailleraGame
 import org.emulinker.kaillera.model.KailleraUser
+import org.emulinker.kaillera.model.UserStatus
 import org.emulinker.kaillera.model.event.GameDataEvent
 import org.emulinker.kaillera.model.event.GameStartedEvent
 import org.emulinker.kaillera.model.event.KailleraEvent

@@ -10,10 +10,10 @@ import org.emulinker.kaillera.controller.v086.protocol.ConnectionRejected
 import org.emulinker.kaillera.controller.v086.protocol.ServerACK
 import org.emulinker.kaillera.controller.v086.protocol.ServerStatus
 import org.emulinker.kaillera.controller.v086.protocol.ServerStatus.Game
+import org.emulinker.kaillera.model.UserStatus
 import org.emulinker.kaillera.model.event.ConnectedEvent
 import org.emulinker.kaillera.model.event.UserEvent
 import org.emulinker.kaillera.model.exception.*
-import org.emulinker.kaillera.model.impl.UserStatus
 
 private val logger = FluentLogger.forEnclosingClass()
 

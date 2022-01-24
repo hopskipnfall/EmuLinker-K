@@ -4,10 +4,8 @@ import java.net.InetSocketAddress
 import kotlin.Throws
 import org.emulinker.kaillera.model.event.KailleraEventListener
 import org.emulinker.kaillera.model.exception.*
-import org.emulinker.kaillera.model.impl.ConnectionType
 import org.emulinker.kaillera.model.impl.KailleraGameImpl
 import org.emulinker.kaillera.model.impl.KailleraUserImpl
-import org.emulinker.kaillera.model.impl.UserStatus
 
 interface KailleraUser {
   // Fields that only support getters.
