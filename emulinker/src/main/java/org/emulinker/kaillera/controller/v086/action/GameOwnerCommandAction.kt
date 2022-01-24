@@ -8,7 +8,6 @@ import org.emulinker.kaillera.access.AccessManager
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086ClientHandler
 import org.emulinker.kaillera.controller.v086.protocol.GameChat
-import org.emulinker.kaillera.model.KailleraUser.Companion.CONNECTION_TYPE_NAMES
 import org.emulinker.kaillera.model.exception.ActionException
 import org.emulinker.kaillera.model.impl.GameStatus
 import org.emulinker.kaillera.model.impl.KailleraGameImpl
@@ -254,7 +253,7 @@ class GameOwnerCommandAction @Inject internal constructor() : V086Action<GameCha
       admin: KailleraUserImpl,
       clientHandler: V086ClientHandler
   ) {
-    var conn = CONNECTION_TYPE_NAMES[game.owner.connectionType.toInt()]
+    var conn = game.owner.connectionType.readableName
     if (message == "/setconn any") {
       conn = "any"
     }

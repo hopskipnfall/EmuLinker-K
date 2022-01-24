@@ -21,7 +21,6 @@ import org.emulinker.kaillera.master.StatsCollector
 import org.emulinker.kaillera.model.KailleraGame
 import org.emulinker.kaillera.model.KailleraServer
 import org.emulinker.kaillera.model.KailleraUser
-import org.emulinker.kaillera.model.KailleraUser.Companion.CONNECTION_TYPE_NAMES
 import org.emulinker.kaillera.model.event.*
 import org.emulinker.kaillera.model.exception.*
 import org.emulinker.kaillera.release.ReleaseInfo
@@ -229,7 +228,7 @@ class KailleraServerImpl
                 ", client=" +
                 user.clientType +
                 ", connection=" +
-                CONNECTION_TYPE_NAMES[user.connectionType.toInt()])
+                user.connectionType)
     if (user.loggedIn) {
       logger.atWarning().log("$user login denied: Already logged in!")
       throw LoginException(getString("KailleraServerImpl.LoginDeniedAlreadyLoggedIn"))
@@ -254,19 +253,14 @@ class KailleraServerImpl
               "KailleraServerImpl.LoginDeniedPingTooHigh", user.ping.toString() + " > " + maxPing))
     }
     if (access == AccessManager.ACCESS_NORMAL &&
-        !allowedConnectionTypes[user.connectionType.toInt()]) {
+        !allowedConnectionTypes[user.connectionType.byteValue.toInt()]) {
       logger
           .atInfo()
           .log(
-              user.toString() +
-                  " login denied: Connection " +
-                  CONNECTION_TYPE_NAMES[user.connectionType.toInt()] +
-                  " Not Allowed")
+              user.toString() + " login denied: Connection " + user.connectionType + " Not Allowed")
       usersMap.remove(userListKey)
       throw LoginException(
-          getString(
-              "KailleraServerImpl.LoginDeniedConnectionTypeDenied",
-              CONNECTION_TYPE_NAMES[user.connectionType.toInt()]))
+          getString("KailleraServerImpl.LoginDeniedConnectionTypeDenied", user.connectionType))
     }
     if (user.ping < 0) {
       logger.atWarning().log(user.toString() + " login denied: Invalid ping: " + user.ping)
@@ -436,7 +430,7 @@ class KailleraServerImpl
           sb.append(0x02.toChar())
           sb.append(u3.status)
           sb.append(0x02.toChar())
-          sb.append(u3.connectionType.toInt())
+          sb.append(u3.connectionType.byteValue.toInt())
           sb.append(0x03.toChar())
           sbCount++
           if (sb.length > 300) {

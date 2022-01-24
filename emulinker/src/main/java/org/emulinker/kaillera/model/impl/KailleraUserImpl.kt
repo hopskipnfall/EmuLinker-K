@@ -45,7 +45,8 @@ class KailleraUserImpl(
 
   private val initTime = System.currentTimeMillis()
 
-  override var connectionType: Byte = 0
+  override var connectionType: ConnectionType =
+      ConnectionType.DISABLED // TODO(nue): This probably shouldn't have a default.
   override var ping = 0
   override var socketAddress: InetSocketAddress? = null
   override var status =
@@ -183,7 +184,7 @@ class KailleraUserImpl(
   }
 
   fun toDetailedString(): String {
-    return ("KailleraUserImpl[id=$id protocol=$protocol status=$status name=$name clientType=$clientType ping=$ping connectionType=${KailleraUser.CONNECTION_TYPE_NAMES[connectionType.toInt()]} remoteAddress=" +
+    return ("KailleraUserImpl[id=$id protocol=$protocol status=$status name=$name clientType=$clientType ping=$ping connectionType=$connectionType remoteAddress=" +
         (if (socketAddress == null) EmuUtil.formatSocketAddress(connectSocketAddress)
         else EmuUtil.formatSocketAddress(socketAddress!!)) +
         "]")
@@ -419,15 +420,15 @@ class KailleraUserImpl(
           throw GameDataException(
               EmuLang.getString("KailleraUserImpl.GameDataErrorNotInGame"),
               data,
-              connectionType.toInt(),
+              connectionType.byteValue.toInt(),
               1,
               1)
 
       // Initial Delay
       // totalDelay = (game.getDelay() + tempDelay + 5)
       if (frameCount < totalDelay) {
-        bytesPerAction = data.size / connectionType
-        arraySize = game!!.playerActionQueue!!.size * connectionType * bytesPerAction
+        bytesPerAction = data.size / connectionType.byteValue
+        arraySize = game!!.playerActionQueue!!.size * connectionType.byteValue * bytesPerAction
         val response = ByteArray(arraySize)
         for (i in response.indices) {
           response[i] = 0

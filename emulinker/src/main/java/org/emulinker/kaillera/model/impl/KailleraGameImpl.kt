@@ -9,7 +9,6 @@ import org.emulinker.kaillera.access.AccessManager
 import org.emulinker.kaillera.master.StatsCollector
 import org.emulinker.kaillera.model.KailleraGame
 import org.emulinker.kaillera.model.KailleraUser
-import org.emulinker.kaillera.model.KailleraUser.Companion.CONNECTION_TYPE_NAMES
 import org.emulinker.kaillera.model.event.AllReadyEvent
 import org.emulinker.kaillera.model.event.GameChatEvent
 import org.emulinker.kaillera.model.event.GameDataEvent
@@ -256,10 +255,8 @@ class KailleraGameImpl(
             .log(
                 user.toString() +
                     "join game denied: owner doesn't allow that connection type: " +
-                    CONNECTION_TYPE_NAMES[user.connectionType.toInt()])
-        throw JoinGameException(
-            "Owner only allows connection type: " +
-                CONNECTION_TYPE_NAMES[owner.connectionType.toInt()])
+                    user.connectionType)
+        throw JoinGameException("Owner only allows connection type: " + owner.connectionType)
       }
     }
     if (access < AccessManager.ACCESS_ADMIN &&
@@ -372,8 +369,7 @@ class KailleraGameImpl(
               GameInfoEvent(
                   this,
                   EmuLang.getString(
-                      "KailleraGameImpl.StartGameConnectionTypeMismatchInfo",
-                      CONNECTION_TYPE_NAMES[owner.connectionType.toInt()]),
+                      "KailleraGameImpl.StartGameConnectionTypeMismatchInfo", owner.connectionType),
                   null))
           throw StartGameException(
               EmuLang.getString("KailleraGameImpl.StartGameDeniedConnectionTypeMismatch"))
@@ -413,7 +409,7 @@ class KailleraGameImpl(
               playerNumber, player as KailleraUserImpl, numPlayers, bufferSize, timeoutMillis, true)
       // SF MOD - player.setPlayerNumber(playerNumber);
       // SF MOD - Delay Value = [(60/connectionType) * (ping/1000)] + 1
-      val delayVal = 60 / player.connectionType * (player.ping.toDouble() / 1000) + 1
+      val delayVal = 60 / player.connectionType.byteValue * (player.ping.toDouble() / 1000) + 1
       player.delay = delayVal.toInt()
       if (delayVal.toInt() > delay) {
         delay = delayVal.toInt()
@@ -465,7 +461,7 @@ class KailleraGameImpl(
       isSynched = true
       startTimeoutTime = System.currentTimeMillis()
       addEvent(AllReadyEvent(this))
-      var frameDelay = (delay + 1) * owner.connectionType - 1
+      var frameDelay = (delay + 1) * owner.connectionType.byteValue - 1
       if (sameDelay) {
         announce("This game's delay is: $delay ($frameDelay frame delay)", null)
       } else {
@@ -474,7 +470,7 @@ class KailleraGameImpl(
           val player = players[i]
           // do not show delay if stealth mode
           if (player != null && !player.stealth) {
-            frameDelay = (player.delay + 1) * player.connectionType - 1
+            frameDelay = (player.delay + 1) * player.connectionType.byteValue - 1
             announce("P${i + 1} Delay = ${player.delay} ($frameDelay frame delay)", null)
           }
           i++
@@ -676,7 +672,7 @@ class KailleraGameImpl(
   }
 
   init {
-    actionsPerMessage = owner.connectionType.toInt()
+    actionsPerMessage = owner.connectionType.byteValue.toInt()
     this.bufferSize = bufferSize
     this.timeoutMillis = 100 // timeoutMillis;
     this.desynchTimeouts = 120 // desynchTimeouts;

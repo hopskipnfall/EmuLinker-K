@@ -5,7 +5,7 @@ import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.messaging.ParseException
 import org.emulinker.kaillera.controller.v086.V086Utils
-import org.emulinker.kaillera.model.KailleraUser.Companion.CONNECTION_TYPE_NAMES
+import org.emulinker.kaillera.model.impl.ConnectionType
 import org.emulinker.kaillera.model.impl.GameStatus
 import org.emulinker.kaillera.model.impl.UserStatus
 import org.emulinker.kaillera.pico.AppModule
@@ -65,7 +65,7 @@ data class ServerStatus
           val ping: Long,
           val status: UserStatus,
           val userId: Int,
-          val connectionType: Byte
+          val connectionType: ConnectionType
       ) {
 
     init {
@@ -74,23 +74,6 @@ data class ServerStatus
       if (userId < 0 || userId > 65535)
           throw MessageFormatException(
               "Invalid $DESC format: userID out of acceptable range: $userId")
-      if (connectionType < 1 || connectionType > 6)
-          throw MessageFormatException(
-              "Invalid " +
-                  DESC +
-                  " format: connectionType out of acceptable range: " +
-                  connectionType)
-    }
-
-    // TODO(nue): Get rid of this.
-    override fun toString(): String {
-      return String.format(
-          "[userName=%s ping=%d status=%s userID=%d connectionType=%s]",
-          username,
-          ping,
-          status,
-          userId,
-          CONNECTION_TYPE_NAMES[connectionType.toInt()])
     }
 
     val numBytes: Int
@@ -101,7 +84,7 @@ data class ServerStatus
       UnsignedUtil.putUnsignedInt(buffer, ping)
       buffer.put(status.byteValue)
       UnsignedUtil.putUnsignedShort(buffer, userId)
-      buffer.put(connectionType)
+      buffer.put(connectionType.byteValue)
     }
   }
 
@@ -190,7 +173,13 @@ data class ServerStatus
         val status = buffer.get()
         val userID = UnsignedUtil.getUnsignedShort(buffer)
         val connectionType = buffer.get()
-        users.add(User(userName, ping, UserStatus.fromByteValue(status), userID, connectionType))
+        users.add(
+            User(
+                userName,
+                ping,
+                UserStatus.fromByteValue(status),
+                userID,
+                ConnectionType.fromByteValue(connectionType)))
       }
       val games: MutableList<Game> = ArrayList(numGames)
       for (j in 0 until numGames) {

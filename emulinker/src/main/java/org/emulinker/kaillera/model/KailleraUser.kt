@@ -4,6 +4,7 @@ import java.net.InetSocketAddress
 import kotlin.Throws
 import org.emulinker.kaillera.model.event.KailleraEventListener
 import org.emulinker.kaillera.model.exception.*
+import org.emulinker.kaillera.model.impl.ConnectionType
 import org.emulinker.kaillera.model.impl.KailleraGameImpl
 import org.emulinker.kaillera.model.impl.KailleraUserImpl
 import org.emulinker.kaillera.model.impl.UserStatus
@@ -30,7 +31,7 @@ interface KailleraUser {
 
   // Fields with public getters and setters.
   var clientType: String?
-  var connectionType: Byte
+  var connectionType: ConnectionType
   var frameCount: Int
   var ignoreAll: Boolean
   var lastMsgID: Int
@@ -108,16 +109,4 @@ interface KailleraUser {
   fun droppedPacket()
 
   fun stop()
-
-  companion object {
-    const val CONNECTION_TYPE_LAN: Byte = 1
-    const val CONNECTION_TYPE_EXCELLENT: Byte = 2
-    const val CONNECTION_TYPE_GOOD: Byte = 3
-    const val CONNECTION_TYPE_AVERAGE: Byte = 4
-    const val CONNECTION_TYPE_LOW: Byte = 5
-    const val CONNECTION_TYPE_BAD: Byte = 6
-
-    val CONNECTION_TYPE_NAMES =
-        arrayOf("DISABLED", "LAN", "Excellent", "Good", "Average", "Low", "Bad")
-  }
 }
