@@ -23,7 +23,6 @@ object PicoStarter {
    * once started, read their configuration information from emulinker.xml. Each of those files will
    * be located by using the classpath.
    */
-  @JvmStatic
   fun main(args: Array<String>) {
     System.setProperty(
         "flogger.backend_factory",

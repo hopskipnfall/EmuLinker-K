@@ -10,8 +10,6 @@ data class ConnectMessage_HELLO(val protocol: String) : ConnectMessage() {
 
   override val iD = ID
 
-  override val shortName = "Client Connection Request"
-
   override val length = ID.length + protocol.length + 1
 
   var clientSocketAddress: InetSocketAddress? = null

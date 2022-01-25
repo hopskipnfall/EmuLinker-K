@@ -9,8 +9,6 @@ import org.emulinker.kaillera.controller.v086.protocol.V086Message.Companion.par
 import org.emulinker.util.EmuUtil
 import org.emulinker.util.UnsignedUtil.getUnsignedShort
 
-private const val DESC = "Kaillera v.086 Message Bundle"
-
 class V086Bundle constructor(messages: Array<V086Message?>, numToWrite: Int = Int.MAX_VALUE) :
     ByteBufferMessage() {
   var messages: Array<V086Message?>
@@ -31,11 +29,9 @@ class V086Bundle constructor(messages: Array<V086Message?>, numToWrite: Int = In
       return field
     }
 
-  override val shortName = DESC
-
   override fun toString(): String {
     val sb = StringBuilder()
-    sb.append("$shortName ($numMessages messages) ($length bytes)")
+    sb.append("${this.javaClass.simpleName} ($numMessages messages) ($length bytes)")
     sb.append(EmuUtil.LB)
     for (i in 0 until numMessages) {
       if (messages[i] == null) break

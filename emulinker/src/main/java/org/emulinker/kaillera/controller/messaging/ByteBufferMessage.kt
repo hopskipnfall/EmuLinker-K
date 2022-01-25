@@ -3,7 +3,7 @@ package org.emulinker.kaillera.controller.messaging
 import java.nio.Buffer
 import java.nio.ByteBuffer
 
-abstract class ByteBufferMessage : HasShortName {
+abstract class ByteBufferMessage {
   private var buffer: ByteBuffer? = null
 
   abstract val length: Int

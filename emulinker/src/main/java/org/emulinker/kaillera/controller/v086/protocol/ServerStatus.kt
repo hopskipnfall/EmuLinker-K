@@ -1,6 +1,5 @@
 package org.emulinker.kaillera.controller.v086.protocol
 
-import com.google.common.base.Strings
 import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.messaging.ParseException
@@ -17,7 +16,6 @@ data class ServerStatus
     constructor(override val messageNumber: Int, val users: List<User>, val games: List<Game>) :
     V086Message() {
 
-  override val shortName = DESC
   override val messageId = ID
 
   override val bodyLength =
@@ -51,10 +49,11 @@ data class ServerStatus
 
     init {
       if (ping < 0 || ping > 2048)
-          throw MessageFormatException("Invalid $DESC format: ping out of acceptable range: $ping")
+          throw MessageFormatException(
+              "Invalid Server Status format: ping out of acceptable range: $ping")
       if (userId < 0 || userId > 65535)
           throw MessageFormatException(
-              "Invalid $DESC format: userID out of acceptable range: $userId")
+              "Invalid Server Status format: userID out of acceptable range: $userId")
     }
 
     val numBytes =
@@ -92,15 +91,10 @@ data class ServerStatus
       ) {
 
     init {
-      if (Strings.isNullOrEmpty(romName))
-          throw MessageFormatException("Invalid $DESC format: romName.length == 0")
-      if (gameId < 0 || gameId > 0xFFFF)
-          throw MessageFormatException(
-              "Invalid $DESC format: gameID out of acceptable range: $gameId")
-      if (Strings.isNullOrEmpty(clientType))
-          throw MessageFormatException("Invalid $DESC format: clientType.length == 0")
-      if (Strings.isNullOrEmpty(username))
-          throw MessageFormatException("Invalid $DESC format: userName.length == 0")
+      require(romName.isNotBlank()) { "romName cannot be blank" }
+      require(gameId in 0..0xFFFF) { "gameID out of acceptable range: $gameId" }
+      require(clientType.isNotBlank()) { "clientType cannot be blank" }
+      require(username.isNotBlank()) { "username cannot be blank" }
     }
 
     val numBytes: Int
@@ -125,12 +119,11 @@ data class ServerStatus
   }
 
   init {
-    validateMessageNumber(messageNumber, DESC)
+    validateMessageNumber(messageNumber)
   }
 
   companion object {
     const val ID: Byte = 0x04
-    private const val DESC = "Server Status"
 
     @Throws(ParseException::class, MessageFormatException::class)
     fun parse(messageNumber: Int, buffer: ByteBuffer): ServerStatus {
@@ -140,7 +133,7 @@ data class ServerStatus
       val b = buffer.get()
       if (b.toInt() != 0x00) {
         throw MessageFormatException(
-            "Invalid " + DESC + " format: byte 0 = " + EmuUtil.byteToHex(b))
+            "Invalid Server Status format: byte 0 = " + EmuUtil.byteToHex(b))
       }
       val numUsers = buffer.int
       val numGames = buffer.int
