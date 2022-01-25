@@ -6,6 +6,7 @@ import org.emulinker.kaillera.controller.messaging.MessageFormatException
 
 private const val DESC = "Server Full Response"
 
+// TODO(nue): Turn into a data class?
 class ConnectMessage_TOO : ConnectMessage() {
   override val iD = ID
   override val shortName = DESC

@@ -6,14 +6,10 @@ import kotlin.Throws
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.util.EmuUtil
 
-class ConnectMessage_HELLOD00D(val port: Int) : ConnectMessage() {
+data class ConnectMessage_HELLOD00D(val port: Int) : ConnectMessage() {
 
   override val iD = ID
   override val shortName = "Server Connection Response"
-
-  override fun toString(): String {
-    return "$shortName: port: $port"
-  }
 
   override val length = ID.length + port.toString().length + 1
 

@@ -8,10 +8,7 @@ abstract class ByteBufferMessage : HasShortName {
 
   abstract val length: Int
 
-  @Deprecated("Use shortName or something else")
-  abstract override fun toString(): String
-
-  protected fun initBuffer() {
+  private fun initBuffer() {
     initBuffer(length)
   }
 
@@ -31,12 +28,10 @@ abstract class ByteBufferMessage : HasShortName {
   abstract fun writeTo(buffer: ByteBuffer?)
 
   companion object {
-    @JvmStatic
     fun getBuffer(size: Int): ByteBuffer {
       return ByteBuffer.allocateDirect(size)
     }
 
-    @JvmStatic
     fun releaseBuffer(buffer: ByteBuffer?) {
       // nothing to do since we aren't caching buffers anymore
     }

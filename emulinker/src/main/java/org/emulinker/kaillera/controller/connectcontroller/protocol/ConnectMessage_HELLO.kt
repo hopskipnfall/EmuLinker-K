@@ -6,7 +6,7 @@ import kotlin.Throws
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.util.EmuUtil
 
-class ConnectMessage_HELLO(val protocol: String) : ConnectMessage() {
+data class ConnectMessage_HELLO(val protocol: String) : ConnectMessage() {
 
   override val iD = ID
 
@@ -15,9 +15,6 @@ class ConnectMessage_HELLO(val protocol: String) : ConnectMessage() {
   override val length = ID.length + protocol.length + 1
 
   var clientSocketAddress: InetSocketAddress? = null
-  override fun toString(): String {
-    return "$shortName: protocol: $protocol"
-  }
 
   override fun writeTo(buffer: ByteBuffer?) {
     buffer!!.put(charset.encode(iD))

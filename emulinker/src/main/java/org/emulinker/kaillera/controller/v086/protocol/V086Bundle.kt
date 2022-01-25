@@ -11,9 +11,7 @@ import org.emulinker.util.UnsignedUtil.getUnsignedShort
 
 private const val DESC = "Kaillera v.086 Message Bundle"
 
-class V086Bundle
-    @JvmOverloads
-    constructor(messages: Array<V086Message?>, numToWrite: Int = Int.MAX_VALUE) :
+class V086Bundle constructor(messages: Array<V086Message?>, numToWrite: Int = Int.MAX_VALUE) :
     ByteBufferMessage() {
   var messages: Array<V086Message?>
     private set
@@ -59,8 +57,6 @@ class V086Bundle
 
   companion object {
 
-    @JvmStatic
-    @JvmOverloads
     @Throws(ParseException::class, V086BundleFormatException::class, MessageFormatException::class)
     fun parse(buffer: ByteBuffer, lastMessageID: Int = -1): V086Bundle {
       buffer.order(ByteOrder.LITTLE_ENDIAN)

@@ -5,6 +5,7 @@ import java.nio.ByteBuffer
 import kotlin.Throws
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 
+// TODO(nue): Turn into a data class?
 class ConnectMessage_PING : ConnectMessage() {
 
   override val iD = ID
