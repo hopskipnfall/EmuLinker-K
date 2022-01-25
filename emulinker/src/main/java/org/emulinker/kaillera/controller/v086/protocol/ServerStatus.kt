@@ -2,6 +2,7 @@ package org.emulinker.kaillera.controller.v086.protocol
 
 import com.google.common.base.Strings
 import java.nio.ByteBuffer
+import java.nio.charset.Charset
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.messaging.ParseException
 import org.emulinker.kaillera.controller.v086.V086Utils
@@ -20,35 +21,16 @@ data class ServerStatus
   override val shortName = DESC
   override val messageId = ID
 
-  // TODO(nue): Get rid of this.
-  override fun toString(): String {
-    val sb = StringBuilder()
-    sb.append(infoString + "[users=" + users.size + " games=" + games.size + "]")
-    if (users.isNotEmpty()) {
-      sb.append(EmuUtil.LB)
-    }
-    for (u in users) {
-      sb.append("\t" + u)
-      sb.append(EmuUtil.LB)
-    }
-    if (games.isNotEmpty()) {
-      sb.append(EmuUtil.LB)
-    }
-    for (g in games) {
-      sb.append("\t")
-      sb.append(g)
-      sb.append(EmuUtil.LB)
-    }
-    return sb.toString()
-  }
-
-  override val bodyLength: Int
-    get() {
-      var len = 9
-      len += users.stream().mapToInt { u: User -> u.numBytes }.sum()
-      len += games.stream().mapToInt { g: Game -> g.numBytes }.sum()
-      return len
-    }
+  override val bodyLength =
+      (
+      // 0x00.
+      V086Utils.Bytes.SINGLE_BYTE +
+          // Number of users.
+          V086Utils.Bytes.INTEGER +
+          // Number of games.
+          V086Utils.Bytes.INTEGER +
+          users.stream().mapToInt { it.numBytes }.sum() +
+          games.stream().mapToInt { it.numBytes }.sum())
 
   public override fun writeBodyTo(buffer: ByteBuffer) {
     buffer.put(0x00.toByte())
@@ -76,8 +58,16 @@ data class ServerStatus
               "Invalid $DESC format: userID out of acceptable range: $userId")
     }
 
-    val numBytes: Int
-      get() = V086Utils.getNumBytes(username) + 9
+    val numBytes =
+        (V086Utils.getNumBytesPlusStopByte(username) +
+            // Ping.
+            V086Utils.Bytes.INTEGER +
+            // Status.
+            V086Utils.Bytes.SINGLE_BYTE +
+            // User ID.
+            V086Utils.Bytes.SHORT +
+            // Connection type.
+            V086Utils.Bytes.SINGLE_BYTE)
 
     fun writeTo(buffer: ByteBuffer) {
       EmuUtil.writeString(buffer, username, 0x00, AppModule.charsetDoNotUse)
@@ -114,23 +104,16 @@ data class ServerStatus
           throw MessageFormatException("Invalid $DESC format: userName.length == 0")
     }
 
-    // TODO(nue): Get rid of this.
-    override fun toString(): String {
-      return ("[romName=$romName gameID=$gameId clientType=$clientType userName=$username players=$playerCountOutOfMax status=$status]")
-    }
-
     val numBytes: Int
       get() =
-          (V086Utils.getNumBytes(romName) +
-              1 +
-              4 +
-              V086Utils.getNumBytes(clientType) +
-              1 +
-              V086Utils.getNumBytes(username) +
-              1 +
-              playerCountOutOfMax.length +
-              1 +
-              1)
+          (V086Utils.getNumBytesPlusStopByte(romName) +
+              // Game ID.
+              V086Utils.Bytes.INTEGER +
+              V086Utils.getNumBytesPlusStopByte(clientType) +
+              V086Utils.getNumBytesPlusStopByte(username) +
+              V086Utils.getNumBytesPlusStopByte(playerCountOutOfMax) +
+              // Status.
+              V086Utils.Bytes.SINGLE_BYTE)
 
     fun writeTo(buffer: ByteBuffer) {
       EmuUtil.writeString(buffer, romName, 0x00, AppModule.charsetDoNotUse)

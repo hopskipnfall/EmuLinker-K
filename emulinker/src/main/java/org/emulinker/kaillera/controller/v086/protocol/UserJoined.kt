@@ -34,11 +34,6 @@ data class UserJoined
         throw MessageFormatException("Invalid $DESC format: ping out of acceptable range: $ping")
   }
 
-  // TODO(nue): Get rid of this.
-  override fun toString(): String {
-    return "$infoString[userName=$username userID=$userId ping=$ping connectionType=$connectionType]"
-  }
-
   override val bodyLength = getNumBytes(username) + 8
 
   public override fun writeBodyTo(buffer: ByteBuffer) {
