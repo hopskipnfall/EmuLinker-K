@@ -10,9 +10,9 @@ object V086Utils {
   private const val HEX_STRING = "0123456789abcdef"
 
   object Bytes {
-    const val SHORT = 2;
-    const val INTEGER = 4;
-    const val SINGLE_BYTE = 1;
+    const val SHORT = 2
+    const val INTEGER = 4
+    const val SINGLE_BYTE = 1
   }
 
   fun hexStringToByteBuffer(hex: String): ByteBuffer {
