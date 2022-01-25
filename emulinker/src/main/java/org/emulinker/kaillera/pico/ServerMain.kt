@@ -17,9 +17,9 @@ private val logger = FluentLogger.forEnclosingClass()
 
 /**
  * Main entry point for the EmuLinker Kaillera server. This method accepts no arguments. It starts
- * the pico container which reads its configuration from components.xml. The server components,
- * once started, read their configuration information from emulinker.xml. Each of those files will
- * be located by using the classpath.
+ * the pico container which reads its configuration from components.xml. The server components, once
+ * started, read their configuration information from emulinker.xml. Each of those files will be
+ * located by using the classpath.
  */
 fun main(args: Array<String>) {
   System.setProperty(
