@@ -291,13 +291,13 @@ class AccessManager2
     return true
   }
 
-  protected inner class UserAccess(st: StringTokenizer) {
-    protected var hostNames: MutableList<String>
-    protected var resolvedAddresses: MutableList<String>
+  private inner class UserAccess(st: StringTokenizer) {
+    private var hostNames: MutableList<String>
+    private var resolvedAddresses: MutableList<String>
     var access = 0
-      protected set
+      private set
     var message: String? = null
-      protected set
+      private set
 
     @Synchronized
     fun refreshDNS() {
@@ -313,7 +313,7 @@ class AccessManager2
     }
 
     private var patterns: MutableList<WildcardStringPattern>
-    protected fun getPatterns(): List<WildcardStringPattern> {
+    private fun getPatterns(): List<WildcardStringPattern> {
       return patterns
     }
 
@@ -368,11 +368,11 @@ class AccessManager2
     }
   }
 
-  protected inner class AddressAccess(st: StringTokenizer) {
-    protected var hostNames: MutableList<String>
-    protected var resolvedAddresses: MutableList<String>
+  private inner class AddressAccess(st: StringTokenizer) {
+    private var hostNames: MutableList<String>
+    private var resolvedAddresses: MutableList<String>
     var access = false
-      protected set
+      private set
 
     @Synchronized
     fun refreshDNS() {
@@ -388,7 +388,7 @@ class AccessManager2
     }
 
     private var patterns: MutableList<WildcardStringPattern>
-    protected fun getPatterns(): List<WildcardStringPattern> {
+    private fun getPatterns(): List<WildcardStringPattern> {
       return patterns
     }
 
@@ -438,12 +438,12 @@ class AccessManager2
     }
   }
 
-  protected inner class EmulatorAccess(st: StringTokenizer) {
+  private inner class EmulatorAccess(st: StringTokenizer) {
     var access = false
-      protected set
+      private set
 
     private var patterns: MutableList<WildcardStringPattern>
-    protected fun getPatterns(): List<WildcardStringPattern> {
+    private fun getPatterns(): List<WildcardStringPattern> {
       return patterns
     }
 
@@ -470,12 +470,12 @@ class AccessManager2
     }
   }
 
-  protected inner class GameAccess(st: StringTokenizer) {
+  private inner class GameAccess(st: StringTokenizer) {
     var access = false
-      protected set
+      private set
 
     private var patterns: MutableList<WildcardStringPattern>
-    protected fun getPatterns(): List<WildcardStringPattern> {
+    private fun getPatterns(): List<WildcardStringPattern> {
       return patterns
     }
 
@@ -502,12 +502,12 @@ class AccessManager2
     }
   }
 
-  protected inner class TempBan(accessStr: String?, minutes: Int) {
-    protected var startTime: Long
-    protected var minutes: Int
+  private inner class TempBan(accessStr: String?, minutes: Int) {
+    private var startTime: Long
+    private var minutes: Int
 
     private var patterns: MutableList<WildcardStringPattern>
-    protected fun getPatterns(): List<WildcardStringPattern> {
+    private fun getPatterns(): List<WildcardStringPattern> {
       return patterns
     }
 
@@ -533,12 +533,12 @@ class AccessManager2
     }
   }
 
-  protected inner class TempAdmin(accessStr: String?, minutes: Int) {
-    protected var startTime: Long
-    protected var minutes: Int
+  private inner class TempAdmin(accessStr: String?, minutes: Int) {
+    private var startTime: Long
+    private var minutes: Int
 
     private var patterns: MutableList<WildcardStringPattern>
-    protected fun getPatterns(): List<WildcardStringPattern> {
+    private fun getPatterns(): List<WildcardStringPattern> {
       return patterns
     }
 
@@ -564,12 +564,12 @@ class AccessManager2
     }
   }
 
-  protected inner class TempModerator(accessStr: String?, minutes: Int) {
-    protected var startTime: Long
-    protected var minutes: Int
+  private inner class TempModerator(accessStr: String?, minutes: Int) {
+    private var startTime: Long
+    private var minutes: Int
 
     private var patterns: MutableList<WildcardStringPattern>
-    protected fun getPatterns(): List<WildcardStringPattern> {
+    private fun getPatterns(): List<WildcardStringPattern> {
       return patterns
     }
 
@@ -595,12 +595,12 @@ class AccessManager2
     }
   }
 
-  protected inner class TempElevated(accessStr: String?, minutes: Int) {
-    protected var startTime: Long
-    protected var minutes: Int
+  private inner class TempElevated(accessStr: String?, minutes: Int) {
+    private var startTime: Long
+    private var minutes: Int
 
     private var patterns: MutableList<WildcardStringPattern>
-    protected fun getPatterns(): List<WildcardStringPattern> {
+    private fun getPatterns(): List<WildcardStringPattern> {
       return patterns
     }
 
@@ -626,12 +626,12 @@ class AccessManager2
     }
   }
 
-  protected inner class Silence(accessStr: String?, minutes: Int) {
-    protected var startTime: Long
-    protected var minutes: Int
+  private inner class Silence(accessStr: String?, minutes: Int) {
+    private var startTime: Long
+    private var minutes: Int
 
     private var patterns: MutableList<WildcardStringPattern>
-    protected fun getPatterns(): List<WildcardStringPattern> {
+    private fun getPatterns(): List<WildcardStringPattern> {
       return patterns
     }
 
