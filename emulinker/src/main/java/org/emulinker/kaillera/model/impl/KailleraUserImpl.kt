@@ -4,6 +4,8 @@ import com.google.common.flogger.FluentLogger
 import java.lang.Exception
 import java.lang.InterruptedException
 import java.net.InetSocketAddress
+import java.time.Duration
+import java.time.Instant
 import java.util.ArrayList
 import java.util.concurrent.BlockingQueue
 import java.util.concurrent.LinkedBlockingQueue
@@ -57,6 +59,11 @@ class KailleraUserImpl(
   override var timeouts = 0
   override var lastActivity: Long = initTime
     private set
+
+  override var lagSpikes = 0L
+
+  private var lastUpdate = Instant.now()
+  private var lagThreshold = Duration.ZERO
 
   override fun updateLastActivity() {
     lastKeepAlive = System.currentTimeMillis()
@@ -112,22 +119,16 @@ class KailleraUserImpl(
   }
 
   override fun findIgnoredUser(address: String): Boolean {
-    for (i in ignoredUsers.indices) {
-      if (ignoredUsers[i] == address) {
-        return true
-      }
-    }
-    return false
+    return ignoredUsers.any { it == address }
   }
 
   override fun removeIgnoredUser(address: String, removeAll: Boolean): Boolean {
-    var i = 1
     var here = false
     if (removeAll) {
       ignoredUsers.clear()
       return true
     }
-    i = 0
+    var i = 0
     while (i < ignoredUsers.size) {
       if (ignoredUsers[i] == address) {
         ignoredUsers.removeAt(i)
@@ -139,15 +140,7 @@ class KailleraUserImpl(
   }
 
   override fun searchIgnoredUsers(address: String): Boolean {
-    var i = 1
-    i = 0
-    while (i < ignoredUsers.size) {
-      if (ignoredUsers[i] == address) {
-        return true
-      }
-      i++
-    }
-    return false
+    return ignoredUsers.any { it == address }
   }
 
   override var loggedIn = false
@@ -408,11 +401,24 @@ class KailleraUserImpl(
       return
     }
     totalDelay = game!!.highestUserFrameDelay + tempDelay + 5
+
+    lagThreshold =
+        Duration.ofSeconds(1)
+            .dividedBy(60)
+            .multipliedBy(frameDelay.toLong())
+            // Effectively this is the delay that is allowed before calling it a lag spike.
+            .plusMillis(10)
+
     game!!.ready(this, playerNumber)
   }
 
   @Throws(GameDataException::class)
   override fun addGameData(data: ByteArray) {
+    val delaySinceLastResponse = Duration.between(lastUpdate, Instant.now())
+    if (delaySinceLastResponse.nano > lagThreshold.nano) {
+      lagSpikes++
+    }
+
     updateLastActivity()
     try {
       if (game == null)
@@ -468,6 +474,8 @@ class KailleraUserImpl(
         throw e
       }
     }
+
+    lastUpdate = Instant.now()
   }
 
   fun addEvent(event: KailleraEvent?) {

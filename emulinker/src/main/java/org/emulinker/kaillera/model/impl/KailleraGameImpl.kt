@@ -115,6 +115,8 @@ class KailleraGameImpl(
   private val playingCount: Int
     get() = players.asSequence().filter { it.status == UserStatus.PLAYING }.count()
 
+  private val latencyStatsPerUser = mutableListOf<Array<Int>>()
+
   private val synchedCount: Int
     get() {
       if (playerActionQueue == null) return 0

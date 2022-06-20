@@ -280,18 +280,26 @@ class GameOwnerCommandAction @Inject internal constructor() : V086Action<GameCha
     if (game.status != GameStatus.PLAYING)
         game.announce("Lagstat is only available during gameplay!", admin)
     if (message == "/lagstat") {
-      var str = ""
-      for (player in game.players) {
-        if (!player.inStealthMode)
-            str = str + "P" + player.playerNumber + ": " + player.timeouts + ", "
-      }
-      if (str.isNotEmpty()) {
-        str = str.substring(0, str.length - ", ".length)
-        game.announce("$str lag spikes", null)
+      var announcement =
+          game.players
+              .filter { !it.inStealthMode }
+              .map { "P" + it.playerNumber + ": " + it.timeouts }
+              .joinToString(", ")
+      if (announcement.isNotEmpty()) {
+        game.announce("$announcement lag spikes", null)
+
+        val newLagstat =
+            game.players
+                .asSequence()
+                .filter { !it.inStealthMode }
+                .map { "P" + it.playerNumber + ": " + it.lagSpikes }
+                .joinToString(", ")
+        game.announce("New version: $newLagstat", null)
       }
     } else if (message == "/lagreset") {
       for (player in game.players) {
         player.timeouts = 0
+        player.lagSpikes = 0
       }
       game.announce("LagStat has been reset!", null)
     }

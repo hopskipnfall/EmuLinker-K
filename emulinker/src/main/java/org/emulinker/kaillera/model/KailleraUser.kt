@@ -49,6 +49,7 @@ interface KailleraUser {
   var inStealthMode: Boolean
   var tempDelay: Int
   var timeouts: Int
+  var lagSpikes: Long
 
   // Methods.
   @Throws(
