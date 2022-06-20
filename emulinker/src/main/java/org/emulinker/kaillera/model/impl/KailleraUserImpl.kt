@@ -11,6 +11,7 @@ import java.util.concurrent.BlockingQueue
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit
 import kotlin.Throws
+import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.access.AccessManager
 import org.emulinker.kaillera.model.ConnectionType
 import org.emulinker.kaillera.model.KailleraGame
@@ -31,7 +32,8 @@ class KailleraUserImpl(
     override val protocol: String,
     override val connectSocketAddress: InetSocketAddress,
     override val listener: KailleraEventListener,
-    override val server: KailleraServerImpl
+    override val server: KailleraServerImpl,
+    flags: RuntimeFlags,
 ) : KailleraUser, Executable {
 
   override var inStealthMode = false
@@ -61,9 +63,11 @@ class KailleraUserImpl(
     private set
 
   override var lagSpikes = 0L
-
   private var lastUpdate = Instant.now()
   private var lagThreshold = Duration.ZERO
+
+  // Saved to a variable because I think this might give a speed boost.
+  private val improvedLagstat = flags.improvedLagstatEnabled
 
   override fun updateLastActivity() {
     lastKeepAlive = System.currentTimeMillis()
@@ -413,9 +417,11 @@ class KailleraUserImpl(
 
   @Throws(GameDataException::class)
   override fun addGameData(data: ByteArray) {
-    val delaySinceLastResponse = Duration.between(lastUpdate, Instant.now())
-    if (delaySinceLastResponse.nano > lagThreshold.nano) {
-      lagSpikes++
+    if (improvedLagstat) {
+      val delaySinceLastResponse = Duration.between(lastUpdate, Instant.now())
+      if (delaySinceLastResponse.nano > lagThreshold.nano) {
+        lagSpikes++
+      }
     }
 
     updateLastActivity()
@@ -474,7 +480,9 @@ class KailleraUserImpl(
       }
     }
 
-    lastUpdate = Instant.now()
+    if (improvedLagstat) {
+      lastUpdate = Instant.now()
+    }
   }
 
   fun addEvent(event: KailleraEvent?) {

@@ -4,6 +4,7 @@ import com.google.common.flogger.FluentLogger
 import java.util.*
 import javax.inject.Inject
 import javax.inject.Singleton
+import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.access.AccessManager
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086ClientHandler
@@ -48,7 +49,8 @@ private const val COMMAND_NUM = "/num"
 private val logger = FluentLogger.forEnclosingClass()
 
 @Singleton
-class GameOwnerCommandAction @Inject internal constructor() : V086Action<GameChat> {
+class GameOwnerCommandAction @Inject internal constructor(private val flags: RuntimeFlags) :
+    V086Action<GameChat> {
   override val actionPerformedCount = 0
   override fun toString() = "GameOwnerCommandAction"
 
@@ -280,21 +282,23 @@ class GameOwnerCommandAction @Inject internal constructor() : V086Action<GameCha
     if (game.status != GameStatus.PLAYING)
         game.announce("Lagstat is only available during gameplay!", admin)
     if (message == "/lagstat") {
-      var announcement =
-          game.players
-              .filter { !it.inStealthMode }
-              .map { "P" + it.playerNumber + ": " + it.timeouts }
-              .joinToString(", ")
-      if (announcement.isNotEmpty()) {
-        game.announce("$announcement lag spikes", null)
+      game.announce(
+          "${game.players
+          .asSequence()
+          .filter { !it.inStealthMode }
+          .map { "P" + it.playerNumber + ": " + it.timeouts }
+          .joinToString(", ")} lag spikes",
+          null)
 
-        val newLagstat =
-            game.players
-                .asSequence()
-                .filter { !it.inStealthMode }
-                .map { "P" + it.playerNumber + ": " + it.lagSpikes }
-                .joinToString(", ")
-        game.announce("New version: $newLagstat", null)
+      // For now, we print both old and new lagstat results for comparison.
+      if (flags.improvedLagstatEnabled) {
+        game.announce(
+            "Improved /lagstat result: ${game.players
+            .asSequence()
+            .filter { !it.inStealthMode }
+            .map { "P" + it.playerNumber + ": " + it.lagSpikes }
+            .joinToString(", ")}",
+            null)
       }
     } else if (message == "/lagreset") {
       for (player in game.players) {

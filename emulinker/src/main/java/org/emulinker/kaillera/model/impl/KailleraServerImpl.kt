@@ -166,7 +166,7 @@ class KailleraServerImpl
       throw ServerFullException(getString("KailleraServerImpl.LoginDeniedServerFull"))
     }
     val userID = getNextUserID()
-    val user = KailleraUserImpl(userID, protocol!!, clientSocketAddress, listener!!, this)
+    val user = KailleraUserImpl(userID, protocol!!, clientSocketAddress, listener!!, this, flags)
     user.status = UserStatus.CONNECTING
     logger
         .atInfo()
@@ -632,7 +632,8 @@ class KailleraServerImpl
             /* gameId= */ game.id, /* gameTitle= */ game.romName, /* user= */ user))) {
       user.game!!.announce(
           getString(
-              "KailleraServerImpl.TweetPendingAnnouncement", flags.twitterBroadcastDelay.seconds),
+              "KailleraServerImpl.TweetPendingAnnouncement",
+              flags.twitterBroadcastDelay.inWholeSeconds),
           user)
     }
     return game
