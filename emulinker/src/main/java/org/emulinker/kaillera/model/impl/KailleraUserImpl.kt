@@ -408,7 +408,6 @@ class KailleraUserImpl(
             .multipliedBy(frameDelay.toLong())
             // Effectively this is the delay that is allowed before calling it a lag spike.
             .plusMillis(10)
-
     game!!.ready(this, playerNumber)
   }
 
