@@ -708,50 +708,43 @@ class KailleraServerImpl
     user.game!!.announce(announcement!!, user)
   }
 
-  override fun announce(announcement: String, gamesAlso: Boolean) {
-    announce(announcement, gamesAlso, targetUser = null)
+  override fun announce(message: String, gamesAlso: Boolean) {
+    announce(message, gamesAlso, targetUser = null)
   }
 
-  override fun announce(announcement: String, gamesAlso: Boolean, targetUser: KailleraUserImpl?) {
+  override fun announce(message: String, gamesAlso: Boolean, targetUser: KailleraUserImpl?) {
     if (targetUser == null) {
-      for (kailleraUser in users) {
-        if (kailleraUser.loggedIn) {
-          kailleraUser.addEvent(InfoMessageEvent(kailleraUser, announcement))
+      users.asSequence().filter { it.loggedIn }.forEach { kailleraUser ->
+        kailleraUser.addEvent(InfoMessageEvent(kailleraUser, message))
 
-          // SF MOD
-          if (gamesAlso) {
-            if (kailleraUser.game != null) {
-              kailleraUser.game!!.announce(announcement, kailleraUser)
-              Thread.yield()
-            }
-          }
+        if (gamesAlso && kailleraUser.game != null) {
+          kailleraUser.game!!.announce(message, kailleraUser)
+          Thread.yield()
         }
       }
     } else {
       if (gamesAlso) { //   /msg and /me commands
-        for (kailleraUser in users) {
-          if (kailleraUser.loggedIn) {
-            val access = accessManager.getAccess(targetUser.connectSocketAddress.address)
-            if (access < AccessManager.ACCESS_ADMIN) {
-              if (!kailleraUser.searchIgnoredUsers(
-                  targetUser.connectSocketAddress.address.hostAddress))
-                  kailleraUser.addEvent(InfoMessageEvent(kailleraUser, announcement))
-            } else {
-              kailleraUser.addEvent(InfoMessageEvent(kailleraUser, announcement))
-            }
+        users.asSequence().filter { it.loggedIn }.forEach { kailleraUser ->
+          val access = accessManager.getAccess(targetUser.connectSocketAddress.address)
+          if (access < AccessManager.ACCESS_ADMIN) {
+            if (!kailleraUser.searchIgnoredUsers(
+                targetUser.connectSocketAddress.address.hostAddress))
+                kailleraUser.addEvent(InfoMessageEvent(kailleraUser, message))
+          } else {
+            kailleraUser.addEvent(InfoMessageEvent(kailleraUser, message))
+          }
 
-            /*//SF MOD
-            if(gamesAlso){
-            	if(kailleraUser.getGame() != null){
-            		kailleraUser.getGame().announce(announcement, kailleraUser);
-            		Thread.yield();
-            	}
-            }
-            */
+        /*//SF MOD
+        if(gamesAlso){
+          if(kailleraUser.getGame() != null){
+            kailleraUser.getGame().announce(announcement, kailleraUser);
+            Thread.yield();
           }
         }
+        */
+        }
       } else {
-        targetUser.addEvent(InfoMessageEvent(targetUser, announcement))
+        targetUser.addEvent(InfoMessageEvent(targetUser, message))
       }
     }
   }
@@ -760,7 +753,7 @@ class KailleraServerImpl
     for (user in usersMap.values) {
       if (user.loggedIn) {
         if (user.status != UserStatus.IDLE) {
-          if (user.p2P) {
+          if (user.ignoringUnnecessaryServerActivity) {
             // TODO(nue): Get rid of this bad use of toString.
             if (event.toString() == "GameDataEvent") user.addEvent(event)
             else if (event.toString() == "ChatEvent") continue

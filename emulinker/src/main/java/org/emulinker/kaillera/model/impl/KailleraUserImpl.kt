@@ -92,7 +92,7 @@ class KailleraUserImpl(
   override var arraySize = 0
     private set
 
-  override var p2P = false
+  override var ignoringUnnecessaryServerActivity = false
 
   override var playerNumber = -1
   override var ignoreAll = false
@@ -501,7 +501,7 @@ class KailleraUserImpl(
       return
     }
     if (status != UserStatus.IDLE) {
-      if (p2P) {
+      if (ignoringUnnecessaryServerActivity) {
         if (event.toString() == "InfoMessageEvent") return
       }
     }

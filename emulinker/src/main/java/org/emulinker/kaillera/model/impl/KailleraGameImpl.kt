@@ -402,7 +402,7 @@ class KailleraGameImpl(
         highestUserFrameDelay = delayVal.toInt()
       }
       if (p2P) {
-        player.p2P = true
+        player.ignoringUnnecessaryServerActivity = true
         announce("This game is ignoring ALL server activity during gameplay!", player)
       }
       /*else{
@@ -493,7 +493,7 @@ class KailleraGameImpl(
       status = GameStatus.WAITING
     }
     addEvent(UserDroppedGameEvent(this, user, playerNumber))
-    if (user.p2P) {
+    if (user.ignoringUnnecessaryServerActivity) {
       // KailleraUserImpl u = (KailleraUserImpl) user;
       // u.addEvent(ServerACK.create(.getNextMessageNumber());
       // u.addEvent(new ConnectedEvent(server, user));
@@ -512,7 +512,7 @@ class KailleraGameImpl(
       }
       logger.atInfo().log("$user quit: $this")
       addEvent(UserQuitGameEvent(this, user))
-      user.p2P = false
+      user.ignoringUnnecessaryServerActivity = false
       swap = false
       if (status == GameStatus.WAITING) {
         for (i in players.indices) {
@@ -541,7 +541,7 @@ class KailleraGameImpl(
       (it as KailleraUserImpl).apply {
         status = UserStatus.IDLE
         isMuted = false
-        p2P = false
+        ignoringUnnecessaryServerActivity = false
         game = null
       }
     }
