@@ -285,10 +285,10 @@ class GameOwnerCommandAction @Inject internal constructor(private val flags: Run
   ) {
     if (message == "/lagstat") {
       if (flags.improvedLagstatEnabled) {
-        game.announce("Lag spikes per player:")
+        game.announce("Lagged frames per player:")
         game.players.asSequence().filter { !it.inStealthMode }.forEach {
           game.announce(
-              "P${it.playerNumber}: ${it.smallLagSpikesCausedByUser} (small), ${it.bigLagSpikesCausedByUser} (big)")
+              "P${it.playerNumber}: ${it.smallLagSpikesCausedByUser} (tiny), ${it.bigLagSpikesCausedByUser} (big)")
         }
       } else {
         game.announce(
