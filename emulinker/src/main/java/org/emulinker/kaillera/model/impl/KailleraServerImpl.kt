@@ -458,7 +458,11 @@ class KailleraServerImpl
       Thread.sleep(20)
     } catch (e: Exception) {}
     val announcement = accessManager.getAnnouncement(user.socketAddress!!.address)
-    if (announcement != null) announce(announcement, false, null)
+    if (announcement != null)
+        announce(
+            announcement,
+            false,
+        )
   }
 
   @Synchronized
@@ -626,7 +630,7 @@ class KailleraServerImpl
     announce(
         getString("KailleraServerImpl.UserCreatedGameAnnouncement", user.name, game.romName),
         false,
-        null)
+    )
     if (lookingForGameReporter.reportAndStartTimer(
         LookingForGameEvent(
             /* gameId= */ game.id, /* gameTitle= */ game.romName, /* user= */ user))) {
@@ -704,14 +708,33 @@ class KailleraServerImpl
     user.game!!.announce(announcement!!, user)
   }
 
-  override fun announce(announcement: String, gamesAlso: Boolean, user: KailleraUserImpl?) {
-    if (user != null) {
+  override fun announce(announcement: String, gamesAlso: Boolean) {
+    announce(announcement, gamesAlso, targetUser = null)
+  }
+
+  override fun announce(announcement: String, gamesAlso: Boolean, targetUser: KailleraUserImpl?) {
+    if (targetUser == null) {
+      for (kailleraUser in users) {
+        if (kailleraUser.loggedIn) {
+          kailleraUser.addEvent(InfoMessageEvent(kailleraUser, announcement))
+
+          // SF MOD
+          if (gamesAlso) {
+            if (kailleraUser.game != null) {
+              kailleraUser.game!!.announce(announcement, kailleraUser)
+              Thread.yield()
+            }
+          }
+        }
+      }
+    } else {
       if (gamesAlso) { //   /msg and /me commands
         for (kailleraUser in users) {
           if (kailleraUser.loggedIn) {
-            val access = accessManager.getAccess(user.connectSocketAddress.address)
+            val access = accessManager.getAccess(targetUser.connectSocketAddress.address)
             if (access < AccessManager.ACCESS_ADMIN) {
-              if (!kailleraUser.searchIgnoredUsers(user.connectSocketAddress.address.hostAddress))
+              if (!kailleraUser.searchIgnoredUsers(
+                  targetUser.connectSocketAddress.address.hostAddress))
                   kailleraUser.addEvent(InfoMessageEvent(kailleraUser, announcement))
             } else {
               kailleraUser.addEvent(InfoMessageEvent(kailleraUser, announcement))
@@ -728,21 +751,7 @@ class KailleraServerImpl
           }
         }
       } else {
-        user.addEvent(InfoMessageEvent(user, announcement))
-      }
-    } else {
-      for (kailleraUser in users) {
-        if (kailleraUser.loggedIn) {
-          kailleraUser.addEvent(InfoMessageEvent(kailleraUser, announcement))
-
-          // SF MOD
-          if (gamesAlso) {
-            if (kailleraUser.game != null) {
-              kailleraUser.game!!.announce(announcement, kailleraUser)
-              Thread.yield()
-            }
-          }
-        }
+        targetUser.addEvent(InfoMessageEvent(targetUser, announcement))
       }
     }
   }

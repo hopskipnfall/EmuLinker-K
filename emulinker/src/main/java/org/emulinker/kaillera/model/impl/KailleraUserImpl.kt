@@ -62,9 +62,11 @@ class KailleraUserImpl(
   override var lastActivity: Long = initTime
     private set
 
-  override var lagSpikes = 0L
+  override var smallLagSpikesCausedByUser = 0L
+  override var bigLagSpikesCausedByUser = 0L
   private var lastUpdate = Instant.now()
-  private var lagThreshold = Duration.ZERO
+  private var smallLagThreshold = Duration.ZERO
+  private var bigSpikeThreshold = Duration.ZERO
 
   // Saved to a variable because I think this might give a speed boost.
   private val improvedLagstat = flags.improvedLagstatEnabled
@@ -406,12 +408,18 @@ class KailleraUserImpl(
     }
     totalDelay = game!!.highestUserFrameDelay + tempDelay + 5
 
-    lagThreshold =
+    smallLagThreshold =
         Duration.ofSeconds(1)
             .dividedBy(60)
             .multipliedBy(frameDelay.toLong())
             // Effectively this is the delay that is allowed before calling it a lag spike.
             .plusMillis(10)
+    bigSpikeThreshold =
+        Duration.ofSeconds(1)
+            .dividedBy(60)
+            .multipliedBy(frameDelay.toLong())
+            // Effectively this is the delay that is allowed before calling it a lag spike.
+            .plusMillis(70)
     game!!.ready(this, playerNumber)
   }
 
@@ -419,8 +427,10 @@ class KailleraUserImpl(
   override fun addGameData(data: ByteArray) {
     if (improvedLagstat) {
       val delaySinceLastResponse = Duration.between(lastUpdate, Instant.now())
-      if (delaySinceLastResponse.nano > lagThreshold.nano) {
-        lagSpikes++
+      if (delaySinceLastResponse.nano in smallLagThreshold.nano..bigSpikeThreshold.nano) {
+        smallLagSpikesCausedByUser++
+      } else if (delaySinceLastResponse.nano > bigSpikeThreshold.nano) {
+        bigLagSpikesCausedByUser++
       }
     }
 
