@@ -19,19 +19,19 @@ abstract class PrivateUDPServer(
   var remoteSocketAddress: InetSocketAddress? = null
     private set
 
-  override fun handleReceived(buffer: ByteBuffer, inboundSocketAddress: InetSocketAddress) {
-    if (remoteSocketAddress == null) remoteSocketAddress = inboundSocketAddress
-    else if (inboundSocketAddress != remoteSocketAddress) {
+  override fun handleReceived(buffer: ByteBuffer, remoteSocketAddress: InetSocketAddress) {
+    if (this.remoteSocketAddress == null) this.remoteSocketAddress = remoteSocketAddress
+    else if (remoteSocketAddress != this.remoteSocketAddress) {
       logger
           .atWarning()
           .log(
               "Rejecting packet received from wrong address: " +
-                  formatSocketAddress(inboundSocketAddress) +
+                  formatSocketAddress(remoteSocketAddress) +
                   " != " +
-                  formatSocketAddress(remoteSocketAddress!!))
+                  formatSocketAddress(this.remoteSocketAddress!!))
       return
     }
-    clientRequestTimer.time().use { context -> handleReceived(buffer) }
+    clientRequestTimer.time().use { handleReceived(buffer) }
   }
 
   protected abstract fun handleReceived(buffer: ByteBuffer)

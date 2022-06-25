@@ -27,12 +27,14 @@ import org.emulinker.util.GameDataCache
 
 private val logger = FluentLogger.forEnclosingClass()
 
+/** A private UDP server allocated for communication with a single client. */
 class V086ClientHandler
     @AssistedInject
     constructor(
         metrics: MetricRegistry?,
         flags: RuntimeFlags,
         @Assisted remoteSocketAddress: InetSocketAddress,
+        /** The V086Controller that started this client handler. */
         @param:Assisted val controller: V086Controller
     ) : PrivateUDPServer(false, remoteSocketAddress.address, metrics!!), KailleraEventListener {
   var user: KailleraUser? = null
@@ -193,7 +195,7 @@ class V086ClientHandler
   // Cast to avoid issue with java version mismatch:
   // https://stackoverflow.com/a/61267496/2875073
   override val buffer: ByteBuffer
-    protected get() {
+    get() {
       // return ByteBufferMessage.getBuffer(bufferSize);
       // Cast to avoid issue with java version mismatch:
       // https://stackoverflow.com/a/61267496/2875073
@@ -359,7 +361,6 @@ class V086ClientHandler
     }
   }
 
-  @JvmOverloads
   fun send(outMessage: V086Message?, numToSend: Int = 5) {
     var numToSend = numToSend
     synchronized(outSynch) {
