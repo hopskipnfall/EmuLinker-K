@@ -9,6 +9,8 @@ import java.net.InetSocketAddress
 import java.nio.Buffer
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.messaging.ParseException
@@ -40,6 +42,8 @@ class V086ClientHandler
   var user: KailleraUser? = null
     private set
 
+  val mutex = Mutex()
+
   private var messageNumberCounter = 0
 
   /*
@@ -61,8 +65,8 @@ class V086ClientHandler
   private val outMessages = arrayOfNulls<V086Message>(V086Controller.MAX_BUNDLE_SIZE)
   private val inBuffer: ByteBuffer = ByteBuffer.allocateDirect(flags.v086BufferSize)
   private val outBuffer: ByteBuffer = ByteBuffer.allocateDirect(flags.v086BufferSize)
-  private val inSynch = Any()
-  private val outSynch = Any()
+  private val inMutex = Mutex()
+  private val outMutex = Mutex()
   private var testStart: Long = 0
   private var lastMeasurement: Long = 0
   var speedMeasurementCount = 0
@@ -121,16 +125,8 @@ class V086ClientHandler
 
   fun start(user: KailleraUser) {
     this.user = user
-    logger
-        .atFine()
-        .log(
-            toString() +
-                " thread starting (ThreadPool:" +
-                controller.threadPool.activeCount +
-                "/" +
-                controller.threadPool.poolSize +
-                ")")
-    controller.threadPool.execute(this)
+
+    //    controller.threadPool.execute(this) // NUEFIXME
     Thread.yield()
 
     /*
@@ -139,7 +135,7 @@ class V086ClientHandler
     {
     try
     {
-    Thread.sleep(100);
+    delay(100.milliseconds);
     }
     catch (Exception e)
     {
@@ -152,20 +148,13 @@ class V086ClientHandler
     logger.atSevere().log("V086ClientHandler failed to start for client from " + getRemoteInetAddress().getHostAddress());
     return;
     }
-    */ logger
-        .atFine()
-        .log(
-            toString() +
-                " thread started (ThreadPool:" +
-                controller.threadPool.activeCount +
-                "/" +
-                controller.threadPool.poolSize +
-                ")")
+    */
     controller.clientHandlers[user.id] = this
   }
 
-  override fun stop() {
-    synchronized(this) {
+  override suspend fun stop() {
+    //    synchronized(this) {
+    mutex.withLock {
       if (stopFlag) return
       var port = -1
       if (isBound) port = bindPort
@@ -191,24 +180,20 @@ class V086ClientHandler
     }
   }
 
-  // return ByteBufferMessage.getBuffer(bufferSize);
-  // Cast to avoid issue with java version mismatch:
-  // https://stackoverflow.com/a/61267496/2875073
-  override val buffer: ByteBuffer
-    get() {
-      // return ByteBufferMessage.getBuffer(bufferSize);
-      // Cast to avoid issue with java version mismatch:
-      // https://stackoverflow.com/a/61267496/2875073
-      (inBuffer as Buffer).clear()
-      return inBuffer
-    }
+  override fun allocateBuffer(): ByteBuffer {
+    // return ByteBufferMessage.getBuffer(bufferSize);
+    // Cast to avoid issue with java version mismatch:
+    // https://stackoverflow.com/a/61267496/2875073
+    (inBuffer as Buffer).clear()
+    return inBuffer
+  }
 
   override fun releaseBuffer(buffer: ByteBuffer) {
     // ByteBufferMessage.releaseBuffer(buffer);
     // buffer.clear();
   }
 
-  override fun handleReceived(buffer: ByteBuffer) {
+  override suspend fun handleReceived(buffer: ByteBuffer) {
     var inBundle: V086Bundle? = null
     inBundle =
         try {
@@ -255,7 +240,8 @@ class V086ClientHandler
           0
         }
     try {
-      synchronized(inSynch) {
+      //      synchronized(inSynch) {
+      inMutex.withLock {
         val messages = inBundle.messages
         if (inBundle.numMessages == 1) {
           lastMessageNumber = messages[0]!!.messageNumber
@@ -309,7 +295,9 @@ class V086ClientHandler
     }
   }
 
-  override fun actionPerformed(event: KailleraEvent?) {
+  override val bufferSize = flags.v086BufferSize
+
+  override suspend fun actionPerformed(event: KailleraEvent?) {
     if (event is GameEvent) {
       val eventHandler = controller.gameEventHandlers[event.javaClass]
       if (eventHandler == null) {
@@ -319,7 +307,7 @@ class V086ClientHandler
                 toString() + " found no GameEventHandler registered to handle game event: " + event)
         return
       }
-      (eventHandler as V086GameEventHandler<GameEvent>).handleEvent(event as GameEvent, this)
+      (eventHandler as V086GameEventHandler<GameEvent>).handleEvent(event, this)
     } else if (event is ServerEvent) {
       val eventHandler = controller.serverEventHandlers[event.javaClass]
       if (eventHandler == null) {
@@ -341,12 +329,13 @@ class V086ClientHandler
                 toString() + " found no UserEventHandler registered to handle user event: " + event)
         return
       }
-      (eventHandler as V086UserEventHandler<UserEvent>).handleEvent(event as UserEvent, this)
+      (eventHandler as V086UserEventHandler<UserEvent>).handleEvent(event, this)
     }
   }
 
-  fun resend(timeoutCounter: Int) {
-    synchronized(outSynch) {
+  suspend fun resend(timeoutCounter: Int) {
+    //    synchronized(outSynch) {
+    outMutex.withLock {
       // if ((System.currentTimeMillis() - lastResend) > (user.getPing()*3))
       if (System.currentTimeMillis() - lastResend > controller.server.maxPing) {
         // int numToSend = (3+timeoutCounter);
@@ -361,9 +350,10 @@ class V086ClientHandler
     }
   }
 
-  fun send(outMessage: V086Message?, numToSend: Int = 5) {
+  suspend fun send(outMessage: V086Message?, numToSend: Int = 5) {
     var numToSend = numToSend
-    synchronized(outSynch) {
+    //    synchronized(outSynch) {
+    outMutex.withLock {
       if (outMessage != null) {
         lastMessageBuffer.add(outMessage)
       }
@@ -375,6 +365,7 @@ class V086ClientHandler
       // Cast to avoid issue with java version mismatch:
       // https://stackoverflow.com/a/61267496/2875073
       (outBuffer as Buffer).flip()
+      logger.atInfo().log("Sending back message %s", outMessage)
       super.send(outBuffer)
       (outBuffer as Buffer).clear()
     }

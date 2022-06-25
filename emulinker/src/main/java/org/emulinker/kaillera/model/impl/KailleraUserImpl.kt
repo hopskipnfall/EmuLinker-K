@@ -11,6 +11,10 @@ import java.util.concurrent.BlockingQueue
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit
 import kotlin.Throws
+import kotlin.time.Duration.Companion.milliseconds
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.access.AccessManager
 import org.emulinker.kaillera.model.ConnectionType
@@ -37,6 +41,8 @@ class KailleraUserImpl(
 ) : KailleraUser, Executable {
 
   override var inStealthMode = false
+
+  override val mutex = Mutex()
 
   /** Example: "Project 64k 0.13 (01 Aug 2003)" */
   override var clientType: String? = null
@@ -190,8 +196,9 @@ class KailleraUserImpl(
         "]")
   }
 
-  override fun stop() {
-    synchronized(this) {
+  override suspend fun stop() {
+    //    synchronized(this) {
+    mutex.withLock {
       if (!threadIsActive) {
         logger.atFine().log("$this  thread stop request ignored: not running!")
         return
@@ -202,7 +209,7 @@ class KailleraUserImpl(
       }
       stopFlag = true
       try {
-        Thread.sleep(500)
+        delay(500.milliseconds)
       } catch (e: Exception) {}
       addEvent(StopFlagEvent())
     }
@@ -226,7 +233,7 @@ class KailleraUserImpl(
       ConnectionTypeException::class,
       UserNameException::class,
       LoginException::class)
-  override fun login() {
+  override suspend fun login() {
     updateLastActivity()
     server.login(this)
   }
@@ -252,7 +259,7 @@ class KailleraUserImpl(
 
   @Synchronized
   @Throws(CreateGameException::class, FloodException::class)
-  override fun createGame(romName: String?): KailleraGame? {
+  override suspend fun createGame(romName: String?): KailleraGame? {
     updateLastActivity()
     if (server.getUser(id) == null) {
       logger.atSevere().log("$this create game failed: User don't exist!")
@@ -285,7 +292,7 @@ class KailleraUserImpl(
 
   @Synchronized
   @Throws(JoinGameException::class)
-  override fun joinGame(gameID: Int): KailleraGame {
+  override suspend fun joinGame(gameID: Int): KailleraGame {
     updateLastActivity()
     if (game != null) {
       logger.atWarning().log("$this join game failed: Already in: $game")
@@ -510,7 +517,9 @@ class KailleraUserImpl(
     eventQueue.offer(event)
   }
 
-  override fun run() {
+  // TODO(nue): Get rid of this for loop. We should be able to trigger event listeners as soon as
+  // the new data is added.
+  override suspend fun run() {
     threadIsActive = true
     logger.atFine().log("$this thread running...")
     try {

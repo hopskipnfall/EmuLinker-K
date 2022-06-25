@@ -3,6 +3,8 @@ package org.emulinker.kaillera.controller.v086.action
 import com.google.common.flogger.FluentLogger
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.time.Duration.Companion.milliseconds
+import kotlinx.coroutines.delay
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086ClientHandler
 import org.emulinker.kaillera.controller.v086.protocol.ClientACK
@@ -30,7 +32,7 @@ class ACKAction @Inject internal constructor() :
   override fun toString() = "ACKAction"
 
   @Throws(FatalActionException::class)
-  override fun performAction(message: ClientACK, clientHandler: V086ClientHandler) {
+  override suspend fun performAction(message: ClientACK, clientHandler: V086ClientHandler) {
     actionPerformedCount++
     val user = clientHandler.user
     if (user!!.loggedIn) return
@@ -63,7 +65,7 @@ class ACKAction @Inject internal constructor() :
     }
   }
 
-  override fun handleEvent(event: UserEvent, clientHandler: V086ClientHandler) {
+  override suspend fun handleEvent(event: UserEvent, clientHandler: V086ClientHandler) {
     handledEventCount++
     val connectedEvent = event as ConnectedEvent
     val server = connectedEvent.server
@@ -127,7 +129,7 @@ class ACKAction @Inject internal constructor() :
         counter = 0
         sent = true
         try {
-          Thread.sleep(100)
+          delay(100.milliseconds)
         } catch (e: Exception) {} // SF MOD
       }
       counter += user.numBytes
@@ -143,7 +145,7 @@ class ACKAction @Inject internal constructor() :
         counter = 0
         sent = true
         try {
-          Thread.sleep(100)
+          delay(100.milliseconds)
         } catch (e: Exception) {} // SF MOD
       }
       counter += game.numBytes
@@ -153,7 +155,7 @@ class ACKAction @Inject internal constructor() :
         sendServerStatus(clientHandler, usersSubList, gamesSubList, counter)
   }
 
-  private fun sendServerStatus(
+  private suspend fun sendServerStatus(
       clientHandler: V086ClientHandler?,
       users: List<ServerStatus.User>,
       games: List<Game>,

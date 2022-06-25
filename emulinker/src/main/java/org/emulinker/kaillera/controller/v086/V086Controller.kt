@@ -6,9 +6,10 @@ import java.net.InetSocketAddress
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentLinkedQueue
-import java.util.concurrent.ThreadPoolExecutor
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.time.Duration.Companion.milliseconds
+import kotlinx.coroutines.*
 import org.apache.commons.configuration.Configuration
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.controller.KailleraServerController
@@ -28,7 +29,6 @@ class V086Controller
     @Inject
     internal constructor(
         override var server: KailleraServer,
-        var threadPool: ThreadPoolExecutor,
         config: Configuration,
         loginAction: LoginAction,
         ackAction: ACKAction,
@@ -87,8 +87,11 @@ class V086Controller
    * Receives new connections and delegates to a new V086ClientHandler instance for communication
    * over a separate port.
    */
+  @OptIn(DelicateCoroutinesApi::class) // For GlobalScope.
   @Throws(ServerFullException::class, NewConnectionException::class)
-  override fun newConnection(clientSocketAddress: InetSocketAddress?, protocol: String?): Int {
+  override suspend fun newConnection(
+      clientSocketAddress: InetSocketAddress?, protocol: String?
+  ): Int {
     if (!isRunning) throw NewConnectionException("Controller is not running")
 
     val clientHandler = v086ClientHandlerFactory.create(clientSocketAddress, this)
@@ -104,6 +107,7 @@ class V086Controller
         logger.atInfo().log("Private port $port allocated to: $user")
         try {
           clientHandler.bind(port)
+          GlobalScope.launch { clientHandler.run() }
           boundPort = port
           break
         } catch (e: BindException) {
@@ -117,7 +121,7 @@ class V086Controller
       }
       try {
         // pause very briefly to give the OS a chance to free a port
-        Thread.sleep(5)
+        delay(5.milliseconds)
       } catch (e: InterruptedException) {}
     }
     if (boundPort < 0) {
@@ -134,9 +138,9 @@ class V086Controller
   }
 
   @Synchronized
-  override fun stop() {
+  override suspend fun stop() {
     isRunning = false
-    for (clientHandler in clientHandlers.values) clientHandler.stop()
+    clientHandlers.values.forEach { it.stop() }
     clientHandlers.clear()
   }
 
@@ -154,7 +158,6 @@ class V086Controller
         .atWarning()
         .log(
             "Listening on UDP ports: $portRangeStart to $maxPort.  Make sure these ports are open in your firewall!")
-    require(flags.v086BufferSize > 0) { "controllers.v086.bufferSize must be > 0" }
 
     // array access should be faster than a hash and we won't have to create
     // a new Integer each time
