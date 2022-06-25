@@ -22,6 +22,7 @@ import org.emulinker.net.BindException
 
 private val logger = FluentLogger.forEnclosingClass()
 
+/** High level logic for handling messages on a port. Not tied to an individual user. */
 @Singleton
 class V086Controller
     @Inject
@@ -82,9 +83,14 @@ class V086Controller
     return "V086Controller[clients=" + clientHandlers.size + " isRunning=" + isRunning + "]"
   }
 
+  /**
+   * Receives new connections and delegates to a new V086ClientHandler instance for communication
+   * over a separate port.
+   */
   @Throws(ServerFullException::class, NewConnectionException::class)
   override fun newConnection(clientSocketAddress: InetSocketAddress?, protocol: String?): Int {
     if (!isRunning) throw NewConnectionException("Controller is not running")
+
     val clientHandler = v086ClientHandlerFactory.create(clientSocketAddress, this)
     val user = server.newConnection(clientSocketAddress, protocol, clientHandler)
     var boundPort = -1
@@ -118,7 +124,7 @@ class V086Controller
       clientHandler.stop()
       throw NewConnectionException("Failed to bind!")
     }
-    clientHandler.start(user!!)
+    clientHandler.start(user)
     return boundPort
   }
 
