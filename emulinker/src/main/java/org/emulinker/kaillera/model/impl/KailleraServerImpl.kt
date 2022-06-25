@@ -191,9 +191,9 @@ class KailleraServerImpl
       ConnectionTypeException::class,
       UserNameException::class,
       LoginException::class)
-  override fun login(user: KailleraUser?) {
-    val userImpl = user as KailleraUserImpl?
-    val loginDelay = System.currentTimeMillis() - user!!.connectTime
+  override fun login(user: KailleraUser) {
+    val userImpl = user as KailleraUserImpl
+    val loginDelay = System.currentTimeMillis() - user.connectTime
     logger
         .atInfo()
         .log(
@@ -364,7 +364,7 @@ class KailleraServerImpl
     }
 
     // passed all checks
-    userImpl!!.accessLevel = access
+    userImpl.accessLevel = access
     userImpl.status = UserStatus.IDLE
     userImpl.loggedIn = true
     usersMap[userListKey] = userImpl
@@ -471,8 +471,8 @@ class KailleraServerImpl
       DropGameException::class,
       QuitGameException::class,
       CloseGameException::class)
-  override fun quit(user: KailleraUser?, message: String?) {
-    lookingForGameReporter.cancelActionsForUser(user!!.id)
+  override fun quit(user: KailleraUser, message: String?) {
+    lookingForGameReporter.cancelActionsForUser(user.id)
     if (!user.loggedIn) {
       usersMap.remove(user.id)
       logger.atSevere().log("$user quit failed: Not logged in")
@@ -549,8 +549,8 @@ class KailleraServerImpl
 
   @Synchronized
   @Throws(CreateGameException::class, FloodException::class)
-  override fun createGame(user: KailleraUser?, romName: String?): KailleraGame? {
-    if (!user!!.loggedIn) {
+  override fun createGame(user: KailleraUser, romName: String?): KailleraGame {
+    if (!user.loggedIn) {
       logger.atSevere().log("$user create game failed: Not logged in")
       throw CreateGameException(getString("KailleraServerImpl.NotLoggedIn"))
     }
@@ -611,9 +611,8 @@ class KailleraServerImpl
         throw CreateGameException(getString("KailleraServerImpl.CreateGameDeniedGameBanned"))
       }
     }
-    var game: KailleraGameImpl? = null
     val gameID = getNextGameID()
-    game =
+    val game =
         KailleraGameImpl(gameID, romName, (user as KailleraUserImpl?)!!, this, flags.gameBufferSize)
     gamesMap[gameID] = game
     addEvent(GameCreatedEvent(this, game))
