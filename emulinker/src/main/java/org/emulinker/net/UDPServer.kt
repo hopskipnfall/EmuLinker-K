@@ -88,13 +88,7 @@ abstract class UDPServer(shutdownOnExit: Boolean, metrics: MetricRegistry?) : Ex
     serverSocket =
         aSocket(selectorManager)
             .udp()
-            .configure {
-              receiveBufferSize = bufferSize
-              sendBufferSize = bufferSize
-            //              typeOfService = TypeOfService.IPTOS_LOWDELAY
-            }
             .bind(io.ktor.network.sockets.InetSocketAddress("127.0.0.1", port))
-
     logger.atInfo().log("Accepting messages at ${serverSocket!!.localAddress}")
   }
 
