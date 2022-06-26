@@ -240,7 +240,6 @@ class V086ClientHandler
           0
         }
     try {
-      //      synchronized(inSynch) {
       inMutex.withLock {
         val messages = inBundle.messages
         if (inBundle.numMessages == 1) {
@@ -258,32 +257,30 @@ class V086ClientHandler
              * checked and this causes an error if messageNumber is 0 and lastMessageNumber is
              * 0xFFFF if (messages [i].getNumber() > lastMessageNumber)
              */
-            run {
-              prevMessageNumber = lastMessageNumber
-              lastMessageNumber = messages[i]!!.messageNumber
-              if (prevMessageNumber + 1 != lastMessageNumber) {
-                if (prevMessageNumber == 0xFFFF && lastMessageNumber == 0) {
-                  // exception; do nothing
-                } else {
-                  logger
-                      .atWarning()
-                      .log(
-                          user.toString() +
-                              " dropped a packet! (" +
-                              prevMessageNumber +
-                              " to " +
-                              lastMessageNumber +
-                              ")")
-                  user!!.droppedPacket()
-                }
-              }
-              val action = controller.actions[messages[i]!!.messageId.toInt()]
-              if (action == null) {
-                logger.atSevere().log("No action defined to handle client message: " + messages[i])
+            prevMessageNumber = lastMessageNumber
+            lastMessageNumber = messages[i]!!.messageNumber
+            if (prevMessageNumber + 1 != lastMessageNumber) {
+              if (prevMessageNumber == 0xFFFF && lastMessageNumber == 0) {
+                // exception; do nothing
               } else {
-                // logger.atFine().log(user + " -> " + message);
-                (action as V086Action<V086Message>).performAction(messages[i]!!, this)
+                logger
+                    .atWarning()
+                    .log(
+                        user.toString() +
+                            " dropped a packet! (" +
+                            prevMessageNumber +
+                            " to " +
+                            lastMessageNumber +
+                            ")")
+                user!!.droppedPacket()
               }
+            }
+            val action = controller.actions[messages[i]!!.messageId.toInt()]
+            if (action == null) {
+              logger.atSevere().log("No action defined to handle client message: " + messages[i])
+            } else {
+              // logger.atFine().log(user + " -> " + message);
+              (action as V086Action<V086Message>).performAction(messages[i]!!, this)
             }
           }
         }
@@ -334,7 +331,6 @@ class V086ClientHandler
   }
 
   suspend fun resend(timeoutCounter: Int) {
-    //    synchronized(outSynch) {
     outMutex.withLock {
       // if ((System.currentTimeMillis() - lastResend) > (user.getPing()*3))
       if (System.currentTimeMillis() - lastResend > controller.server.maxPing) {
@@ -352,7 +348,6 @@ class V086ClientHandler
 
   suspend fun send(outMessage: V086Message?, numToSend: Int = 5) {
     var numToSend = numToSend
-    //    synchronized(outSynch) {
     outMutex.withLock {
       if (outMessage != null) {
         lastMessageBuffer.add(outMessage)
@@ -365,7 +360,6 @@ class V086ClientHandler
       // Cast to avoid issue with java version mismatch:
       // https://stackoverflow.com/a/61267496/2875073
       (outBuffer as Buffer).flip()
-      logger.atInfo().log("Sending back message %s", outMessage)
       super.send(outBuffer)
       (outBuffer as Buffer).clear()
     }
