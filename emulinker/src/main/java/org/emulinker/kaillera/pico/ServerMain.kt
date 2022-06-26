@@ -12,6 +12,8 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.concurrent.TimeUnit.MILLISECONDS
 import java.util.concurrent.TimeUnit.SECONDS
+import kotlinx.coroutines.runBlocking
+import org.emulinker.eval.client.EvalClient
 
 private val logger = FluentLogger.forEnclosingClass()
 
@@ -54,4 +56,8 @@ fun main(args: Array<String>) {
             .build(graphite)
     reporter.start(30, SECONDS)
   }
+
+  // TODO(nue): Move this to a test class or something.
+  val client1 = EvalClient(io.ktor.network.sockets.InetSocketAddress("127.0.0.1", 27888))
+  runBlocking { client1.joinServer() }
 }

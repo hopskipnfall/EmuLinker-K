@@ -60,7 +60,7 @@ class V086Relay
               .log("Invalid message format: " + dumpBuffer(receiveBuffer))
           return null
         }
-    logger.atFine().log("-> $inBundle")
+    //    logger.atInfo().log("-> $inBundle")
     val inMessages = inBundle.messages
     for (i in 0 until inBundle.numMessages) {
       if (inMessages[i]!!.messageNumber > lastClientMessageNumber)
