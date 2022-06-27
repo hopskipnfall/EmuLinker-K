@@ -247,7 +247,7 @@ class ConnectController
   }
 
   protected fun send(outMessage: ConnectMessage, toSocketAddress: InetSocketAddress?) {
-    logger.atInfo().log("<-OUT $outMessage")
+    //    logger.atInfo().log("<-OUT $outMessage")
     send(outMessage.toBuffer(), toSocketAddress)
     outMessage.releaseBuffer()
   }
