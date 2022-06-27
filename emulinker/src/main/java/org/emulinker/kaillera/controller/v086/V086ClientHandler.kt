@@ -40,6 +40,9 @@ class V086ClientHandler
 
   private var messageNumberCounter = 0
 
+  // TODO(nue): Add this to RuntimeFlags and increase to at least 5.
+  val numAcksForSpeedTest = 3
+
   /*
   public List<V086Message> getLastMessage()
   {

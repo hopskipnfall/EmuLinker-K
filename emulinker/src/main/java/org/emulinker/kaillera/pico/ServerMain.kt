@@ -12,16 +12,14 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.concurrent.TimeUnit.MILLISECONDS
 import java.util.concurrent.TimeUnit.SECONDS
-import kotlinx.coroutines.runBlocking
-import org.emulinker.eval.client.EvalClient
 
 private val logger = FluentLogger.forEnclosingClass()
 
 /**
- * Main entry point for the EmuLinker Kaillera server. This method accepts no arguments. It starts
- * the pico container which reads its configuration from components.xml. The server components, once
- * started, read their configuration information from emulinker.xml. Each of those files will be
- * located by using the classpath.
+ * metrics Main entry point for the EmuLinker Kaillera server. This method accepts no arguments. It
+ * starts the pico container which reads its configuration from components.xml. The server
+ * components, once started, read their configuration information from emulinker.xml. Each of those
+ * files will be located by using the classpath.
  */
 fun main(args: Array<String>) {
   System.setProperty(
@@ -57,7 +55,60 @@ fun main(args: Array<String>) {
     reporter.start(30, SECONDS)
   }
 
-  // TODO(nue): Move this to a test class or something.
-  val client1 = EvalClient(io.ktor.network.sockets.InetSocketAddress("127.0.0.1", 27888))
-  runBlocking { client1.joinServer() }
+  // Hacky code but it works!
+  // TODO(nue): Move this into a test file in a subsequent PR.
+
+  //  runBlocking {
+  //    delay(10.seconds)
+  //
+  //    launch {
+  //      EvalClient("testuser1", io.ktor.network.sockets.InetSocketAddress("127.0.0.1", 27888)).use
+  // {
+  //        it.connectToDedicatedPort()
+  //        it.start()
+  //        delay(1.seconds)
+  //        it.createGame()
+  //
+  //        delay(20.seconds)
+  //        logger.atInfo().log("Shutting down everything else")
+  //        component.accessManager.stop()
+  //        component.kailleraServerController.stop()
+  //        component.kailleraServer.stop()
+  //        component.masterListUpdater.stop()
+  //      }
+  //    }
+  //
+  //    launch {
+  //      EvalClient("testuser2", io.ktor.network.sockets.InetSocketAddress("127.0.0.1", 27888)).use
+  // {
+  //        delay(3.seconds)
+  //        it.connectToDedicatedPort()
+  //        it.start()
+  //        delay(1.seconds)
+  //        it.joinAnyAvailableGame()
+  //      }
+  //    }
+  //
+  //    launch {
+  //      EvalClient("testuser3", io.ktor.network.sockets.InetSocketAddress("127.0.0.1", 27888)).use
+  // {
+  //        delay(3.seconds)
+  //        it.connectToDedicatedPort()
+  //        it.start()
+  //        delay(1.seconds)
+  //        it.joinAnyAvailableGame()
+  //      }
+  //    }
+  //
+  //    launch {
+  //      EvalClient("testuser4", io.ktor.network.sockets.InetSocketAddress("127.0.0.1", 27888)).use
+  // {
+  //        delay(3.seconds)
+  //        it.connectToDedicatedPort()
+  //        it.start()
+  //        delay(1.seconds)
+  //        it.joinAnyAvailableGame()
+  //      }
+  //    }
+  //  }
 }
