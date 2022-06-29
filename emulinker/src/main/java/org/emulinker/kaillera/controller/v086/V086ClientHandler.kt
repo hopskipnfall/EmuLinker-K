@@ -372,7 +372,7 @@ class V086ClientHandler
       numToSend = lastMessageBuffer.fill(outMessages, numToSend)
       // System.out.println("Server -> " + numToSend);
       val outBundle = V086Bundle(outMessages, numToSend)
-      logger.atInfo().log("<-OUT $outBundle")
+      //      logger.atInfo().log("<-OUT $outBundle")
       outBundle.writeTo(outBuffer)
       // Cast to avoid issue with java version mismatch:
       // https://stackoverflow.com/a/61267496/2875073

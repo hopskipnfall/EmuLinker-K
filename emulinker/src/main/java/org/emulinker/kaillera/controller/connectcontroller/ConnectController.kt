@@ -135,7 +135,7 @@ class ConnectController
           }
         }
 
-    logger.atInfo().log("IN-> $inMessage")
+    //    logger.atInfo().log("IN-> $inMessage")
 
     // the message set of the ConnectController isn't really complex enough to warrant a complicated
     // request/action class

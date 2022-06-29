@@ -6,6 +6,8 @@ import io.ktor.network.sockets.*
 import io.ktor.utils.io.core.*
 import java.nio.Buffer
 import java.nio.ByteBuffer
+import kotlin.time.Duration.Companion.nanoseconds
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
@@ -17,15 +19,21 @@ import org.emulinker.kaillera.controller.v086.LastMessageBuffer
 import org.emulinker.kaillera.controller.v086.V086Controller
 import org.emulinker.kaillera.controller.v086.protocol.*
 import org.emulinker.kaillera.model.ConnectionType
+import org.emulinker.util.ClientGameDataCache
+import org.emulinker.util.GameDataCache
 
 private val logger = FluentLogger.forEnclosingClass()
 
 class EvalClient(
-    private val username: String, private val connectControllerAddress: InetSocketAddress
+    private val username: String,
+    private val connectControllerAddress: InetSocketAddress,
+    private val simulateGameLag: Boolean = false
 ) : Closeable {
   private val lastMessageBuffer = LastMessageBuffer(V086Controller.MAX_BUNDLE_SIZE)
 
   var socket: ConnectedDatagramSocket? = null
+
+  var gameDataCache: GameDataCache = ClientGameDataCache(256)
 
   private val outMutex = Mutex()
 
@@ -35,6 +43,8 @@ class EvalClient(
   var lastOutgoingMessageNumber = -1
 
   private var latestServerStatus: ServerStatus? = null
+
+  private var playerNumber: Int? = null
 
   /** Interacts with the ConnectController server and */
   suspend fun connectToDedicatedPort() {
@@ -48,7 +58,7 @@ class EvalClient(
           sendConnectMessage(ConnectMessage_HELLO(protocol = "0.83"))
 
           val response = ConnectMessage.parse(connectedSocket.receive().packet.readByteBuffer())
-          logger.atInfo().log("========== Received message: %s", response)
+          logger.atInfo().log("<<<<<<<< Received message: %s", response)
           require(response is ConnectMessage_HELLOD00D)
 
           response.port
@@ -75,35 +85,113 @@ class EvalClient(
     }
 
     sendWithMessageId {
-      UserInformation(messageNumber = it, username, "Fake Client", ConnectionType.LAN)
+      UserInformation(
+          messageNumber = it, username, "Project 64k 0.13 (01 Aug 2003)", ConnectionType.LAN)
     }
   }
 
   private suspend fun handleIncoming(bundle: V086Bundle) {
-    while (true) {
-      val nextMessage =
-          bundle.messages.firstOrNull { it!!.messageNumber == lastIncomingMessageNumber + 1 }
-              ?: break
-      lastIncomingMessageNumber++
+    val message = bundle.messages.first()
 
-      logger.atInfo().log("========== Received message: %s", nextMessage)
+    logger.atInfo().log("<<<<<<<< Received message: %s", message)
 
-      when (nextMessage) {
-        is ServerACK -> {
-          sendWithMessageId { ClientACK(messageNumber = it) }
+    when (message) {
+      is ServerACK -> {
+        sendWithMessageId { ClientACK(messageNumber = it) }
+      }
+      is ServerStatus -> {
+        latestServerStatus = message
+      }
+      is InformationMessage -> {}
+      is UserJoined -> {}
+      is CreateGame_Notification -> {}
+      is GameStatus -> {}
+      is PlayerInformation -> {}
+      is JoinGame_Notification -> {}
+      is AllReady -> {
+        if (simulateGameLag) {
+          delay(16666666.nanoseconds)
         }
-        is ServerStatus -> {
-          latestServerStatus = nextMessage
+        sendWithMessageId {
+          GameData(
+              messageNumber = it,
+              gameData =
+              when (playerNumber) {
+                1 -> {
+                  byteArrayOf(
+                      16, 36, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 0, 0, 0, 0, 0)
+                }
+                2 -> {
+                  byteArrayOf(
+                      17, 32, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+                }
+                else -> {
+                  logger.atSevere().log("Unexpected message type: %s", message)
+                  throw IllegalStateException()
+                }
+              })
         }
-        is InformationMessage -> {}
-        is UserJoined -> {}
-        is CreateGame_Notification -> {}
-        is GameStatus -> {}
-        is PlayerInformation -> {}
-        is JoinGame_Notification -> {}
-        else -> {
-          logger.atSevere().log("Unexpected message type: %s", nextMessage)
+      }
+      is GameData -> {
+        val index = gameDataCache.indexOf(message.gameData)
+        if (index < 0) {
+          gameDataCache.add(message.gameData)
         }
+        if (simulateGameLag) {
+          delay(16666666.nanoseconds)
+        }
+        sendWithMessageId {
+          GameData(
+              messageNumber = it,
+              gameData =
+                  when (playerNumber) {
+                    1 -> {
+                      byteArrayOf(
+                          16, 36, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 0, 0, 0, 0, 0)
+                    }
+                    2 -> {
+                      byteArrayOf(
+                          17, 32, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+                    }
+                    else -> {
+                      logger.atSevere().log("Unexpected message type: %s", message)
+                      throw IllegalStateException()
+                    }
+                  })
+        }
+      }
+      is CachedGameData -> {
+        require(gameDataCache[message.key] != null)
+        if (simulateGameLag) {
+          delay(16666666.nanoseconds)
+        }
+        sendWithMessageId {
+          GameData(
+              messageNumber = it,
+              gameData =
+                  when (playerNumber) {
+                    1 -> {
+                      byteArrayOf(
+                          16, 36, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 0, 0, 0, 0, 0)
+                    }
+                    2 -> {
+                      byteArrayOf(
+                          17, 32, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+                    }
+                    else -> {
+                      logger.atSevere().log("Unexpected message type: %s", message)
+                      throw IllegalStateException()
+                    }
+                  })
+        }
+      }
+      is StartGame_Notification -> {
+        playerNumber = message.playerNumber.toInt()
+        delay(1.seconds)
+        sendWithMessageId { AllReady(messageNumber = it) }
+      }
+      else -> {
+        logger.atSevere().log("Unexpected message type: %s", message)
       }
     }
   }
@@ -113,6 +201,10 @@ class EvalClient(
       CreateGame_Request(
           messageNumber = it, romName = "Nintendo All-Star! Dairantou Smash Brothers (J)")
     }
+  }
+
+  suspend fun startOwnGame() {
+    sendWithMessageId { StartGame_Request(messageNumber = it) }
   }
 
   suspend fun joinAnyAvailableGame() {
@@ -145,7 +237,20 @@ class EvalClient(
       val outBundle = V086Bundle(messageAsArray, messageAsArray.size)
       outBundle.writeTo(outBuffer)
       (outBuffer as Buffer).flip()
+      logger.atInfo().log(">>>>>>>> SENT message: %s", outBundle.messages.first())
       socket!!.send(Datagram(ByteReadPacket(outBuffer), socket!!.remoteAddress))
     }
+  }
+
+  suspend fun dropGame() {
+    sendWithMessageId { PlayerDrop_Request(messageNumber = it) }
+  }
+
+  suspend fun quitGame() {
+    sendWithMessageId { QuitGame_Request(messageNumber = it) }
+  }
+
+  suspend fun quitServer() {
+    sendWithMessageId { Quit_Request(messageNumber = it, message = "End of test.") }
   }
 }
