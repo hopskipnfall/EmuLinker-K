@@ -1,9 +1,9 @@
 package org.emulinker.util
 
-import java.lang.Runnable
-
-interface Executable : Runnable {
+interface Executable {
   val threadIsActive: Boolean
 
-  fun stop()
+  suspend fun stop()
+
+  suspend fun run()
 }

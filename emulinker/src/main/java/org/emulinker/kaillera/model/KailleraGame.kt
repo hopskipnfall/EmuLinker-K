@@ -39,7 +39,7 @@ interface KailleraGame {
   fun droppedPacket(user: KailleraUser)
 
   @Throws(JoinGameException::class)
-  fun join(user: KailleraUser): Int
+  suspend fun join(user: KailleraUser): Int
 
   @Throws(GameChatException::class)
   fun chat(user: KailleraUser, message: String?)

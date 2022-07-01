@@ -3,6 +3,8 @@ package org.emulinker.kaillera.controller.v086.action
 import com.google.common.flogger.FluentLogger
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.time.Duration.Companion.milliseconds
+import kotlinx.coroutines.delay
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086ClientHandler
 import org.emulinker.kaillera.controller.v086.protocol.QuitGame_Notification
@@ -28,7 +30,7 @@ class QuitGameAction
   override fun toString() = "QuitGameAction"
 
   @Throws(FatalActionException::class)
-  override fun performAction(message: QuitGame_Request, clientHandler: V086ClientHandler) {
+  override suspend fun performAction(message: QuitGame_Request, clientHandler: V086ClientHandler) {
     actionPerformedCount++
     try {
       clientHandler.user!!.quitGame()
@@ -41,13 +43,13 @@ class QuitGameAction
       logger.atSevere().withCause(e).log("Action failed")
     }
     try {
-      Thread.sleep(100)
+      delay(100.milliseconds)
     } catch (e: InterruptedException) {
       logger.atSevere().withCause(e).log("Sleep Interrupted!")
     }
   }
 
-  override fun handleEvent(event: UserQuitGameEvent, clientHandler: V086ClientHandler) {
+  override suspend fun handleEvent(event: UserQuitGameEvent, clientHandler: V086ClientHandler) {
     handledEventCount++
     val thisUser = clientHandler.user
     try {

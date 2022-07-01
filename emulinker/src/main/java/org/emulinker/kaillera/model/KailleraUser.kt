@@ -2,6 +2,7 @@ package org.emulinker.kaillera.model
 
 import java.net.InetSocketAddress
 import kotlin.Throws
+import kotlinx.coroutines.sync.Mutex
 import org.emulinker.kaillera.model.event.KailleraEventListener
 import org.emulinker.kaillera.model.exception.*
 import org.emulinker.kaillera.model.impl.KailleraGameImpl
@@ -64,7 +65,7 @@ interface KailleraUser {
       ConnectionTypeException::class,
       UserNameException::class,
       LoginException::class)
-  fun login()
+  suspend fun login()
 
   fun updateLastActivity()
 
@@ -84,7 +85,7 @@ interface KailleraUser {
   fun chat(message: String?)
 
   @Throws(CreateGameException::class, FloodException::class)
-  fun createGame(romName: String?): KailleraGame?
+  suspend fun createGame(romName: String?): KailleraGame?
 
   @Throws(
       QuitException::class,
@@ -94,7 +95,7 @@ interface KailleraUser {
   fun quit(message: String?)
 
   @Throws(JoinGameException::class)
-  fun joinGame(gameID: Int): KailleraGame
+  suspend fun joinGame(gameID: Int): KailleraGame
 
   @Throws(StartGameException::class)
   fun startGame()
@@ -119,5 +120,6 @@ interface KailleraUser {
 
   fun droppedPacket()
 
-  fun stop()
+  suspend fun stop()
+  val mutex: Mutex
 }

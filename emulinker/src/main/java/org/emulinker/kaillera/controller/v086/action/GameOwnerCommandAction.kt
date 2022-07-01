@@ -4,6 +4,8 @@ import com.google.common.flogger.FluentLogger
 import java.util.*
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.time.Duration.Companion.milliseconds
+import kotlinx.coroutines.delay
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.access.AccessManager
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
@@ -76,7 +78,7 @@ class GameOwnerCommandAction @Inject internal constructor(private val flags: Run
   }
 
   @Throws(FatalActionException::class)
-  override fun performAction(message: GameChat, clientHandler: V086ClientHandler) {
+  override suspend fun performAction(message: GameChat, clientHandler: V086ClientHandler) {
     val chat = message.message
     val user = clientHandler.user as KailleraUserImpl
     val game =
@@ -120,7 +122,7 @@ class GameOwnerCommandAction @Inject internal constructor(private val flags: Run
   }
 
   @Throws(ActionException::class, MessageFormatException::class)
-  private fun processHelp(
+  private suspend fun processHelp(
       message: String,
       game: KailleraGameImpl,
       admin: KailleraUserImpl,
@@ -129,66 +131,66 @@ class GameOwnerCommandAction @Inject internal constructor(private val flags: Run
     if (admin != game.owner && admin.accessLevel < AccessManager.ACCESS_SUPERADMIN) return
     // game.setIndividualGameAnnounce(admin.getPlayerNumber());
     // game.announce(EmuLang.getString("GameOwnerCommandAction.AvailableCommands"));
-    // try { Thread.sleep(20); } catch(Exception e) {}
+    // try { delay(20.milliseconds); } catch(Exception e) {}
     game.announce(EmuLang.getString("GameOwnerCommandAction.SetAutofireDetection"), admin)
     try {
-      Thread.sleep(20)
+      delay(20.milliseconds)
     } catch (e: Exception) {}
     game.announce("/maxusers <#> to set capacity of room", admin)
     try {
-      Thread.sleep(20)
+      delay(20.milliseconds)
     } catch (e: Exception) {}
     game.announce("/maxping <#> to set maximum ping for room", admin)
     try {
-      Thread.sleep(20)
+      delay(20.milliseconds)
     } catch (e: Exception) {}
     game.announce("/start or /startn <#> start game when n players are joined.", admin)
     try {
-      Thread.sleep(20)
+      delay(20.milliseconds)
     } catch (e: Exception) {}
     game.announce("/mute /unmute  <UserID> or /muteall or /unmuteall to mute player(s).", admin)
     try {
-      Thread.sleep(20)
+      delay(20.milliseconds)
     } catch (e: Exception) {}
     game.announce(
         "/swap <order> eg. 123..n {n = total # of players; Each slot = new player#}", admin)
     try {
-      Thread.sleep(20)
+      delay(20.milliseconds)
     } catch (e: Exception) {}
     game.announce("/kick <Player#> or /kickall to kick a player(s).", admin)
     try {
-      Thread.sleep(20)
+      delay(20.milliseconds)
     } catch (e: Exception) {}
     game.announce("/setemu To restrict the gameroom to this emulator!", admin)
     try {
-      Thread.sleep(20)
+      delay(20.milliseconds)
     } catch (e: Exception) {}
     game.announce("/setconn To restrict the gameroom to this connection type!", admin)
     try {
-      Thread.sleep(20)
+      delay(20.milliseconds)
     } catch (e: Exception) {}
     game.announce(
         "/lagstat To check who has the most lag spikes or /lagreset to reset lagstat!", admin)
     try {
-      Thread.sleep(20)
+      delay(20.milliseconds)
     } catch (e: Exception) {}
     game.announce(
         "/samedelay {true | false} to play at the same delay as player with highest ping. Default is false.",
         admin)
     try {
-      Thread.sleep(20)
+      delay(20.milliseconds)
     } catch (e: Exception) {}
   }
 
-  private fun autoFireHelp(game: KailleraGameImpl, admin: KailleraUserImpl) {
+  private suspend fun autoFireHelp(game: KailleraGameImpl, admin: KailleraUserImpl) {
     val cur = game.autoFireDetector!!.sensitivity
     game.announce(EmuLang.getString("GameOwnerCommandAction.HelpSensitivity"), admin)
     try {
-      Thread.sleep(20)
+      delay(20.milliseconds)
     } catch (e: Exception) {}
     game.announce(EmuLang.getString("GameOwnerCommandAction.HelpDisable"), admin)
     try {
-      Thread.sleep(20)
+      delay(20.milliseconds)
     } catch (e: Exception) {}
     game.announce(
         EmuLang.getString("GameOwnerCommandAction.HelpCurrentSensitivity", cur) +
@@ -197,7 +199,7 @@ class GameOwnerCommandAction @Inject internal constructor(private val flags: Run
   }
 
   @Throws(ActionException::class, MessageFormatException::class)
-  private fun processDetectAutoFire(
+  private suspend fun processDetectAutoFire(
       message: String,
       game: KailleraGameImpl,
       admin: KailleraUserImpl,

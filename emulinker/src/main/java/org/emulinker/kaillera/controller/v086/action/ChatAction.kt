@@ -7,6 +7,8 @@ import java.util.*
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.Throws
+import kotlin.time.Duration.Companion.milliseconds
+import kotlinx.coroutines.delay
 import org.emulinker.kaillera.access.AccessManager
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086ClientHandler
@@ -34,7 +36,7 @@ class ChatAction @Inject internal constructor(private val adminCommandAction: Ad
   override fun toString() = "ChatAction"
 
   @Throws(FatalActionException::class)
-  override fun performAction(message: Chat_Request, clientHandler: V086ClientHandler) {
+  override suspend fun performAction(message: Chat_Request, clientHandler: V086ClientHandler) {
     if (message.message.startsWith(ADMIN_COMMAND_ESCAPE_STRING)) {
       if (clientHandler.user!!.accessLevel > AccessManager.ACCESS_ELEVATED) {
         try {
@@ -75,7 +77,7 @@ class ChatAction @Inject internal constructor(private val adminCommandAction: Ad
   }
 
   @Throws(FatalActionException::class)
-  private fun checkCommands(chatMessage: Chat_Request, clientHandler: V086ClientHandler) {
+  private suspend fun checkCommands(chatMessage: Chat_Request, clientHandler: V086ClientHandler) {
     var doCommand = true
     val userN = clientHandler.user as KailleraUserImpl
     if (userN.accessLevel < AccessManager.ACCESS_ELEVATED) {
@@ -506,7 +508,7 @@ class ChatAction @Inject internal constructor(private val adminCommandAction: Ad
                   "/me <message> to make personal message eg. /me is bored ...SupraFast is bored."))
         } catch (e: Exception) {}
         try {
-          Thread.sleep(20)
+          delay(20.milliseconds)
         } catch (e: Exception) {}
         try {
           clientHandler.send(
@@ -516,7 +518,7 @@ class ChatAction @Inject internal constructor(private val adminCommandAction: Ad
                   "/ignore <UserID> or /unignore <UserID> or /ignoreall or /unignoreall to ignore users."))
         } catch (e: Exception) {}
         try {
-          Thread.sleep(20)
+          delay(20.milliseconds)
         } catch (e: Exception) {}
         try {
           clientHandler.send(
@@ -526,7 +528,7 @@ class ChatAction @Inject internal constructor(private val adminCommandAction: Ad
                   "/msg <UserID> <msg> to PM somebody. /msgoff or /msgon to turn pm off | on."))
         } catch (e: Exception) {}
         try {
-          Thread.sleep(20)
+          delay(20.milliseconds)
         } catch (e: Exception) {}
         try {
           clientHandler.send(
@@ -534,7 +536,7 @@ class ChatAction @Inject internal constructor(private val adminCommandAction: Ad
                   clientHandler.nextMessageNumber, "server", "/myip to get your IP Address."))
         } catch (e: Exception) {}
         try {
-          Thread.sleep(20)
+          delay(20.milliseconds)
         } catch (e: Exception) {}
         if (clientHandler.user!!.accessLevel == AccessManager.ACCESS_MODERATOR) {
           try {
@@ -545,7 +547,7 @@ class ChatAction @Inject internal constructor(private val adminCommandAction: Ad
                     "/silence <UserID> <min> to silence a user. 15min max."))
           } catch (e: Exception) {}
           try {
-            Thread.sleep(20)
+            delay(20.milliseconds)
           } catch (e: Exception) {}
           try {
             clientHandler.send(
@@ -553,7 +555,7 @@ class ChatAction @Inject internal constructor(private val adminCommandAction: Ad
                     clientHandler.nextMessageNumber, "server", "/kick <UserID> to kick a user."))
           } catch (e: Exception) {}
           try {
-            Thread.sleep(20)
+            delay(20.milliseconds)
           } catch (e: Exception) {}
         }
         if (clientHandler.user!!.accessLevel < AccessManager.ACCESS_ADMIN) {
@@ -563,7 +565,7 @@ class ChatAction @Inject internal constructor(private val adminCommandAction: Ad
                     clientHandler.nextMessageNumber, "server", "/version to get server version."))
           } catch (e: Exception) {}
           try {
-            Thread.sleep(20)
+            delay(20.milliseconds)
           } catch (e: Exception) {}
           try {
             clientHandler.send(
@@ -573,7 +575,7 @@ class ChatAction @Inject internal constructor(private val adminCommandAction: Ad
                     "/finduser <Nick> to get a user's info. eg. /finduser sup ...will return SupraFast info."))
           } catch (e: Exception) {}
           try {
-            Thread.sleep(20)
+            delay(20.milliseconds)
           } catch (e: Exception) {}
           return
         }
@@ -634,7 +636,7 @@ class ChatAction @Inject internal constructor(private val adminCommandAction: Ad
     }
   }
 
-  override fun handleEvent(event: ChatEvent, clientHandler: V086ClientHandler) {
+  override suspend fun handleEvent(event: ChatEvent, clientHandler: V086ClientHandler) {
     handledEventCount++
     try {
       if (clientHandler.user!!.searchIgnoredUsers(
