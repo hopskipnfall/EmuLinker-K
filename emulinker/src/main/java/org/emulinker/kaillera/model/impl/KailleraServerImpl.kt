@@ -8,10 +8,15 @@ import com.google.common.flogger.FluentLogger
 import java.net.InetSocketAddress
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.ThreadPoolExecutor
 import java.util.function.Consumer
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.time.Duration.Companion.milliseconds
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.withLock
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.access.AccessManager
 import org.emulinker.kaillera.access.AccessManager.Companion.ACCESS_NAMES
@@ -37,7 +42,6 @@ private val logger = FluentLogger.forEnclosingClass()
 class KailleraServerImpl
     @Inject
     internal constructor(
-        private val threadPool: ThreadPoolExecutor,
         override val accessManager: AccessManager,
         private val flags: RuntimeFlags,
         statsCollector: StatsCollector?,
@@ -103,21 +107,11 @@ class KailleraServerImpl
   }
 
   @Synchronized
-  override fun start() {
-    logger.atFine().log("KailleraServer thread received start request!")
-    logger
-        .atFine()
-        .log(
-            "KailleraServer thread starting (ThreadPool:%d/%d)",
-            threadPool.activeCount,
-            threadPool.poolSize)
-    stopFlag = false
-    threadPool.execute(this)
-    Thread.yield()
-  }
+  // TODO(nue): Maybe not used at all..
+  override fun start() {}
 
   @Synchronized
-  override fun stop() {
+  override suspend fun stop() {
     logger.atFine().log("KailleraServer thread received stop request!")
     if (!threadIsActive) {
       logger.atFine().log("KailleraServer thread stop request ignored: not running!")
@@ -145,6 +139,7 @@ class KailleraServerImpl
     return autoFireDetectorFactory.getInstance(game!!, flags.gameAutoFireSensitivity)
   }
 
+  @OptIn(DelicateCoroutinesApi::class) // For GlobalScope.
   @Synchronized
   @Throws(ServerFullException::class, NewConnectionException::class)
   override fun newConnection(
@@ -172,15 +167,11 @@ class KailleraServerImpl
         .atInfo()
         .log(
             "$user attempting new connection using protocol $protocol from ${formatSocketAddress(clientSocketAddress)}")
-    logger
-        .atFine()
-        .log("$user Thread starting (ThreadPool:${threadPool.activeCount}/${threadPool.poolSize})")
-    threadPool.execute(user)
-    Thread.yield()
-    logger
-        .atFine()
-        .log("$user Thread started (ThreadPool:${threadPool.activeCount}/${threadPool.poolSize})")
     usersMap[userID] = user
+
+    //    threadPool.execute(user) // NUEFIXME
+    // look for the infinite loop inside of the user class
+    GlobalScope.launch { user.run() }
     return user
   }
 
@@ -191,7 +182,7 @@ class KailleraServerImpl
       ConnectionTypeException::class,
       UserNameException::class,
       LoginException::class)
-  override fun login(user: KailleraUser) {
+  override suspend fun login(user: KailleraUser) {
     val userImpl = user as KailleraUserImpl
     val loginDelay = System.currentTimeMillis() - user.connectTime
     logger
@@ -370,12 +361,12 @@ class KailleraServerImpl
     usersMap[userListKey] = userImpl
     userImpl.addEvent(ConnectedEvent(this, user))
     try {
-      Thread.sleep(20)
+      delay(20.milliseconds)
     } catch (e: Exception) {}
     for (loginMessage in loginMessages) {
       userImpl.addEvent(InfoMessageEvent(user, loginMessage!!))
       try {
-        Thread.sleep(20)
+        delay(20.milliseconds)
       } catch (e: Exception) {}
     }
     if (access > AccessManager.ACCESS_NORMAL)
@@ -420,25 +411,25 @@ class KailleraServerImpl
             sb.append(":USERINFO=")
             sbCount = 0
             try {
-              Thread.sleep(100)
+              delay(100.milliseconds)
             } catch (e: Exception) {}
           }
         }
         if (sbCount > 0)
             (user as KailleraUserImpl?)!!.addEvent(InfoMessageEvent(user, sb.toString()))
         try {
-          Thread.sleep(100)
+          delay(100.milliseconds)
         } catch (e: Exception) {}
       }
     }
     try {
-      Thread.sleep(20)
+      delay(20.milliseconds)
     } catch (e: Exception) {}
     if (access >= AccessManager.ACCESS_ADMIN)
         userImpl.addEvent(
             InfoMessageEvent(user, getString("KailleraServerImpl.AdminWelcomeMessage")))
     try {
-      Thread.sleep(20)
+      delay(20.milliseconds)
     } catch (e: Exception) {}
     // TODO(nue): Localize this welcome message?
     // userImpl.addEvent(
@@ -451,11 +442,11 @@ class KailleraServerImpl
     //             + getReleaseInfo().getReleaseDate()
     //             + " - Visit: www.EmuLinker.org"));
     try {
-      Thread.sleep(20)
+      delay(20.milliseconds)
     } catch (e: Exception) {}
     addEvent(UserJoinedEvent(this, user))
     try {
-      Thread.sleep(20)
+      delay(20.milliseconds)
     } catch (e: Exception) {}
     val announcement = accessManager.getAnnouncement(user.socketAddress!!.address)
     if (announcement != null)
@@ -549,7 +540,7 @@ class KailleraServerImpl
 
   @Synchronized
   @Throws(CreateGameException::class, FloodException::class)
-  override fun createGame(user: KailleraUser, romName: String?): KailleraGame {
+  override suspend fun createGame(user: KailleraUser, romName: String?): KailleraGame {
     if (!user.loggedIn) {
       logger.atSevere().log("$user create game failed: Not logged in")
       throw CreateGameException(getString("KailleraServerImpl.NotLoggedIn"))
@@ -773,13 +764,13 @@ class KailleraServerImpl
     }
   }
 
-  override fun run() {
+  override suspend fun run() {
     threadIsActive = true
     logger.atFine().log("KailleraServer thread running...")
     try {
       while (!stopFlag) {
         try {
-          Thread.sleep((flags.maxPing * 3).toLong())
+          delay((flags.maxPing * 3).milliseconds)
         } catch (e: InterruptedException) {
           logger.atSevere().withCause(e).log("Sleep Interrupted!")
         }
@@ -788,7 +779,10 @@ class KailleraServerImpl
         if (stopFlag) break
         if (usersMap.isEmpty()) continue
         for (user in users) {
-          synchronized(user) {
+
+          //          TODO(nue): Is this necessary?
+          //          synchronized(user) {
+          user.mutex.withLock {
             val access = accessManager.getAccess(user.connectSocketAddress.address)
             (user as KailleraUserImpl?)!!.accessLevel = access
 

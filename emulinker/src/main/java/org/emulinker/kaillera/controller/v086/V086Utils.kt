@@ -1,6 +1,8 @@
 package org.emulinker.kaillera.controller.v086
 
+import io.ktor.util.network.*
 import java.lang.StringBuilder
+import java.net.InetSocketAddress
 import java.nio.Buffer
 import java.nio.ByteBuffer
 import org.emulinker.kaillera.pico.AppModule
@@ -79,5 +81,13 @@ object V086Utils {
    */
   fun getNumBytesPlusStopByte(s: String): Int {
     return s.toByteArray(AppModule.charsetDoNotUse).size + 1
+  }
+
+  fun toJavaAddress(address: io.ktor.network.sockets.InetSocketAddress): InetSocketAddress {
+    return InetSocketAddress(address.hostname, address.port)
+  }
+
+  fun toKtorAddress(address: InetSocketAddress): io.ktor.network.sockets.InetSocketAddress {
+    return io.ktor.network.sockets.InetSocketAddress(address.hostname, address.port)
   }
 }

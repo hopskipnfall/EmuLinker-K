@@ -4,10 +4,10 @@ import com.codahale.metrics.MetricRegistry
 import com.google.common.flogger.FluentLogger
 import java.net.InetSocketAddress
 import java.nio.ByteBuffer
-import java.util.concurrent.ThreadPoolExecutor
 import javax.inject.Inject
 import javax.inject.Singleton
 import org.apache.commons.configuration.Configuration
+import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.access.AccessManager
 import org.emulinker.kaillera.controller.KailleraServerController
 import org.emulinker.kaillera.controller.connectcontroller.protocol.*
@@ -17,28 +17,34 @@ import org.emulinker.kaillera.controller.messaging.ByteBufferMessage.Companion.g
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.model.exception.NewConnectionException
 import org.emulinker.kaillera.model.exception.ServerFullException
-import org.emulinker.net.BindException
 import org.emulinker.net.UDPServer
 import org.emulinker.util.EmuUtil.dumpBuffer
 import org.emulinker.util.EmuUtil.formatSocketAddress
 
 private val logger = FluentLogger.forEnclosingClass()
 
-/** The UDP Server implementation. */
+/**
+ * The UDP Server implementation.
+ *
+ * This is the main server for new connections (usually on 27888).
+ */
 @Singleton
 class ConnectController
     @Inject
     internal constructor(
-        private val threadPool: ThreadPoolExecutor,
+        // TODO(nue): This makes no sense because KailleraServerController is a singleton...
         kailleraServerControllers: java.util.Set<KailleraServerController>,
         private val accessManager: AccessManager,
-        config: Configuration,
-        metrics: MetricRegistry?
+        private val config: Configuration,
+        metrics: MetricRegistry?,
+        flags: RuntimeFlags,
     ) : UDPServer(/* shutdownOnExit= */ true, metrics) {
 
   private val controllersMap: MutableMap<String?, KailleraServerController>
 
-  var bufferSize = 0
+  override val bufferSize = flags.connectControllerBufferSize
+
+  private var internalBufferSize = 0
   var startTime: Long = 0
     private set
   var requestCount = 0
@@ -55,8 +61,7 @@ class ConnectController
   private var lastAddressCount = 0
   var failedToStartCount = 0
     private set
-  var connectCount = 0
-    private set
+  private var connectCount = 0
   var pingCount = 0
     private set
 
@@ -66,8 +71,10 @@ class ConnectController
 
   val controllers: Collection<KailleraServerController>
     get() = controllersMap.values
-  override val buffer: ByteBuffer
-    protected get() = getBuffer(bufferSize)
+
+  override fun allocateBuffer(): ByteBuffer {
+    return getBuffer(internalBufferSize)
+  }
 
   override fun releaseBuffer(buffer: ByteBuffer) {
     ByteBufferMessage.releaseBuffer(buffer)
@@ -80,38 +87,22 @@ class ConnectController
   }
 
   @Synchronized
-  override fun start() {
+  override suspend fun start() {
+    val port = config.getInt("controllers.connect.port")
     startTime = System.currentTimeMillis()
-    logger
-        .atFine()
-        .log(
-            toString() +
-                " Thread starting (ThreadPool:" +
-                threadPool.activeCount +
-                "/" +
-                threadPool.poolSize +
-                ")")
-    threadPool.execute(this)
-    Thread.yield()
-    logger
-        .atFine()
-        .log(
-            toString() +
-                " Thread started (ThreadPool:" +
-                threadPool.activeCount +
-                "/" +
-                threadPool.poolSize +
-                ")")
+
+    super.bind(port)
+    this.run()
   }
 
   @Synchronized
-  override fun stop() {
+  override suspend fun stop() {
     super.stop()
     for (controller in controllersMap.values) controller.stop()
   }
 
   @Synchronized
-  override fun handleReceived(buffer: ByteBuffer, fromSocketAddress: InetSocketAddress) {
+  override suspend fun handleReceived(buffer: ByteBuffer, remoteSocketAddress: InetSocketAddress) {
     requestCount++
     var inMessage: ConnectMessage? = null
     inMessage =
@@ -126,7 +117,7 @@ class ConnectController
                   .atWarning()
                   .log(
                       "Received invalid message from " +
-                          formatSocketAddress(fromSocketAddress) +
+                          formatSocketAddress(remoteSocketAddress) +
                           ": " +
                           dumpBuffer(buffer))
               return
@@ -142,8 +133,8 @@ class ConnectController
     // structure, so I'm going to handle it  all in this class alone
     if (inMessage is ConnectMessage_PING) {
       pingCount++
-      logger.atFine().log("Ping from: " + formatSocketAddress(fromSocketAddress))
-      send(ConnectMessage_PONG(), fromSocketAddress)
+      logger.atFine().log("Ping from: " + formatSocketAddress(remoteSocketAddress))
+      send(ConnectMessage_PONG(), remoteSocketAddress)
       return
     }
     if (inMessage !is ConnectMessage_HELLO) {
@@ -152,7 +143,7 @@ class ConnectController
           .atWarning()
           .log(
               "Received unexpected message type from " +
-                  formatSocketAddress(fromSocketAddress) +
+                  formatSocketAddress(remoteSocketAddress) +
                   ": " +
                   inMessage)
       return
@@ -168,24 +159,24 @@ class ConnectController
           .atSevere()
           .log(
               "Client requested an unhandled protocol " +
-                  formatSocketAddress(fromSocketAddress) +
+                  formatSocketAddress(remoteSocketAddress) +
                   ": " +
                   connectMessage.protocol)
       return
     }
-    if (!accessManager.isAddressAllowed(fromSocketAddress.address)) {
+    if (!accessManager.isAddressAllowed(remoteSocketAddress.address)) {
       deniedOtherCount++
       logger
           .atWarning()
-          .log("AccessManager denied connection from " + formatSocketAddress(fromSocketAddress))
+          .log("AccessManager denied connection from " + formatSocketAddress(remoteSocketAddress))
       return
     } else {
       var privatePort = -1
-      val access = accessManager.getAccess(fromSocketAddress.address)
+      val access = accessManager.getAccess(remoteSocketAddress.address)
       try {
         // SF MOD - Hammer Protection
         if (access < AccessManager.ACCESS_ADMIN && connectCount > 0) {
-          if (lastAddress == fromSocketAddress.address.hostAddress) {
+          if (lastAddress == remoteSocketAddress.address.hostAddress) {
             lastAddressCount++
             if (lastAddressCount >= 4) {
               lastAddressCount = 0
@@ -194,16 +185,16 @@ class ConnectController
                   .atFine()
                   .log(
                       "SF MOD: HAMMER PROTECTION (2 Min Ban): " +
-                          formatSocketAddress(fromSocketAddress))
-              accessManager.addTempBan(fromSocketAddress.address.hostAddress, 2)
+                          formatSocketAddress(remoteSocketAddress))
+              accessManager.addTempBan(remoteSocketAddress.address.hostAddress, 2)
               return
             }
           } else {
-            lastAddress = fromSocketAddress.address.hostAddress
+            lastAddress = remoteSocketAddress.address.hostAddress
             lastAddressCount = 0
           }
-        } else lastAddress = fromSocketAddress.address.hostAddress
-        privatePort = protocolController.newConnection(fromSocketAddress, connectMessage.protocol)
+        } else lastAddress = remoteSocketAddress.address.hostAddress
+        privatePort = protocolController.newConnection(remoteSocketAddress, connectMessage.protocol)
         if (privatePort <= 0) {
           failedToStartCount++
           logger
@@ -211,7 +202,7 @@ class ConnectController
               .log(
                   protocolController.toString() +
                       " failed to start for " +
-                      formatSocketAddress(fromSocketAddress))
+                      formatSocketAddress(remoteSocketAddress))
           return
         }
         connectCount++
@@ -222,15 +213,15 @@ class ConnectController
                     " allocated port " +
                     privatePort +
                     " to client from " +
-                    fromSocketAddress.address.hostAddress)
-        send(ConnectMessage_HELLOD00D(privatePort), fromSocketAddress)
+                    remoteSocketAddress.address.hostAddress)
+        send(ConnectMessage_HELLOD00D(privatePort), remoteSocketAddress)
       } catch (e: ServerFullException) {
         deniedServerFullCount++
         logger
             .atFine()
             .withCause(e)
-            .log("Sending server full response to " + formatSocketAddress(fromSocketAddress))
-        send(ConnectMessage_TOO(), fromSocketAddress)
+            .log("Sending server full response to " + formatSocketAddress(remoteSocketAddress))
+        send(ConnectMessage_TOO(), remoteSocketAddress)
         return
       } catch (e: NewConnectionException) {
         deniedOtherCount++
@@ -240,22 +231,17 @@ class ConnectController
             .log(
                 protocolController.toString() +
                     " denied connection from " +
-                    formatSocketAddress(fromSocketAddress))
+                    formatSocketAddress(remoteSocketAddress))
         return
       }
     }
   }
-
-  protected fun send(outMessage: ConnectMessage, toSocketAddress: InetSocketAddress?) {
-    //    logger.atInfo().log("<-OUT $outMessage")
-    send(outMessage.toBuffer(), toSocketAddress)
+  protected suspend fun send(outMessage: ConnectMessage, toSocketAddress: InetSocketAddress?) {
+    send(outMessage.toBuffer(), toSocketAddress!!)
     outMessage.releaseBuffer()
   }
 
   init {
-    val port = config.getInt("controllers.connect.port")
-    bufferSize = config.getInt("controllers.connect.bufferSize")
-    require(bufferSize > 0) { "controllers.connect.bufferSize must be > 0" }
     controllersMap = HashMap()
     for (controller in kailleraServerControllers) {
       val clientTypes = controller.clientTypes
@@ -264,11 +250,5 @@ class ConnectController
         controllersMap[clientTypes[j]] = controller
       }
     }
-    try {
-      super.bind(port)
-    } catch (e: BindException) {
-      throw IllegalStateException(e)
-    }
-    logger.atInfo().log("Ready to accept connections on port $port")
   }
 }

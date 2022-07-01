@@ -8,7 +8,6 @@ import java.security.Security
 import java.time.Duration
 import java.util.*
 import java.util.concurrent.CopyOnWriteArrayList
-import java.util.concurrent.ThreadPoolExecutor
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.time.Duration.Companion.minutes
@@ -18,11 +17,8 @@ import org.emulinker.util.WildcardStringPattern
 private val logger = FluentLogger.forEnclosingClass()
 
 @Singleton
-class AccessManager2
-    @Inject
-    internal constructor(
-        private val threadPool: ThreadPoolExecutor, private val flags: RuntimeFlags
-    ) : AccessManager, Runnable {
+class AccessManager2 @Inject internal constructor(private val flags: RuntimeFlags) :
+    AccessManager, Runnable {
   companion object {
     init {
       Security.setProperty("networkaddress.cache.ttl", "60")
@@ -47,11 +43,7 @@ class AccessManager2
   @Synchronized
   fun start() {
     logger.atFine().log("AccessManager2 thread received start request!")
-    logger
-        .atFine()
-        .log(
-            "AccessManager2 thread starting (ThreadPool:${threadPool.activeCount}/${threadPool.poolSize})")
-    threadPool.execute(this)
+    //    threadPool.execute(this) // NUEFIXME
     Thread.yield()
   }
 
@@ -495,6 +487,6 @@ class AccessManager2
       throw IllegalStateException(FileNotFoundException("Can not read: /access.conf"))
     }
     loadAccess()
-    threadPool.execute(this)
+    //    threadPool.execute(this) // NUEFIXME
   }
 }

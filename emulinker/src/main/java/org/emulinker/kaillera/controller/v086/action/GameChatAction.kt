@@ -4,6 +4,8 @@ import com.google.common.flogger.FluentLogger
 import java.util.*
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.time.Duration.Companion.milliseconds
+import kotlinx.coroutines.delay
 import org.emulinker.kaillera.access.AccessManager
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086ClientHandler
@@ -33,7 +35,7 @@ class GameChatAction
   override fun toString() = "GameChatAction"
 
   @Throws(FatalActionException::class)
-  override fun performAction(message: GameChat_Request, clientHandler: V086ClientHandler) {
+  override suspend fun performAction(message: GameChat_Request, clientHandler: V086ClientHandler) {
     if (clientHandler.user == null) {
       throw FatalActionException("User does not exist: GameChatAction $message")
     }
@@ -62,7 +64,7 @@ class GameChatAction
   }
 
   @Throws(FatalActionException::class)
-  private fun checkCommands(message: V086Message, clientHandler: V086ClientHandler?) {
+  private suspend fun checkCommands(message: V086Message, clientHandler: V086ClientHandler?) {
     var doCommand = true
     if (clientHandler!!.user!!.accessLevel < AccessManager.ACCESS_ELEVATED) {
       try {
@@ -403,23 +405,23 @@ class GameChatAction
         user!!.game!!.announce(
             "/me <message> to make personal message eg. /me is bored ...SupraFast is bored.", user)
         try {
-          Thread.sleep(20)
+          delay(20.milliseconds)
         } catch (e: Exception) {}
         user.game!!.announce(
             "/msg <UserID> <msg> to PM somebody. /msgoff or /msgon to turn pm off | on.", user)
         try {
-          Thread.sleep(20)
+          delay(20.milliseconds)
         } catch (e: Exception) {}
         user.game!!.announce(
             "/ignore <UserID> or /unignore <UserID> or /ignoreall or /unignoreall to ignore users.",
             user)
         try {
-          Thread.sleep(20)
+          delay(20.milliseconds)
         } catch (e: Exception) {}
         user.game!!.announce(
             "/p2pon or /p2poff this option ignores all server activity during gameplay.", user)
         try {
-          Thread.sleep(20)
+          delay(20.milliseconds)
         } catch (e: Exception) {}
       } else if (message.message == "/stop") {
         val user = clientHandler.user as KailleraUserImpl
@@ -436,7 +438,7 @@ class GameChatAction
     }
   }
 
-  override fun handleEvent(gameChatEvent: GameChatEvent, clientHandler: V086ClientHandler) {
+  override suspend fun handleEvent(gameChatEvent: GameChatEvent, clientHandler: V086ClientHandler) {
     handledEventCount++
     try {
       if (clientHandler.user!!.searchIgnoredUsers(

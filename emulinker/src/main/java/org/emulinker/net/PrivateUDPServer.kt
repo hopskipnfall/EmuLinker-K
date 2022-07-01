@@ -19,9 +19,10 @@ abstract class PrivateUDPServer(
   var remoteSocketAddress: InetSocketAddress? = null
     private set
 
-  override fun handleReceived(buffer: ByteBuffer, remoteSocketAddress: InetSocketAddress) {
-    if (this.remoteSocketAddress == null) this.remoteSocketAddress = remoteSocketAddress
-    else if (remoteSocketAddress != this.remoteSocketAddress) {
+  override suspend fun handleReceived(buffer: ByteBuffer, remoteSocketAddress: InetSocketAddress) {
+    if (this.remoteSocketAddress == null) {
+      this.remoteSocketAddress = remoteSocketAddress
+    } else if (remoteSocketAddress != this.remoteSocketAddress) {
       logger
           .atWarning()
           .log(
@@ -34,10 +35,10 @@ abstract class PrivateUDPServer(
     clientRequestTimer.time().use { handleReceived(buffer) }
   }
 
-  protected abstract fun handleReceived(buffer: ByteBuffer)
+  protected abstract suspend fun handleReceived(buffer: ByteBuffer)
 
-  protected fun send(buffer: ByteBuffer?) {
-    super.send(buffer, remoteSocketAddress)
+  protected suspend fun send(buffer: ByteBuffer) {
+    super.send(buffer, remoteSocketAddress!!)
   }
 
   init {

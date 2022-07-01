@@ -5,6 +5,8 @@ import java.lang.Exception
 import java.util.*
 import java.util.concurrent.CopyOnWriteArrayList
 import kotlin.Throws
+import kotlin.time.Duration.Companion.seconds
+import kotlinx.coroutines.delay
 import org.emulinker.kaillera.access.AccessManager
 import org.emulinker.kaillera.master.StatsCollector
 import org.emulinker.kaillera.model.GameStatus
@@ -193,7 +195,7 @@ class KailleraGameImpl(
 
   @Synchronized
   @Throws(JoinGameException::class)
-  override fun join(user: KailleraUser): Int {
+  override suspend fun join(user: KailleraUser): Int {
     val access = server.accessManager.getAccess(user.socketAddress!!.address)
 
     // SF MOD - Join room spam protection
@@ -267,7 +269,7 @@ class KailleraGameImpl(
     if (startN != -1) {
       if (players.size >= startN) {
         try {
-          Thread.sleep(1000)
+          delay(1.seconds)
         } catch (e: Exception) {}
         try {
           start(owner)

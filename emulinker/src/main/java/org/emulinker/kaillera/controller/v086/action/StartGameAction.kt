@@ -26,7 +26,7 @@ class StartGameAction
 
   override fun toString() = "StartGameAction"
 
-  override fun performAction(message: StartGame_Request, clientHandler: V086ClientHandler) {
+  override suspend fun performAction(message: StartGame_Request, clientHandler: V086ClientHandler) {
     actionPerformedCount++
     try {
       clientHandler.user!!.startGame()
@@ -41,7 +41,7 @@ class StartGameAction
     }
   }
 
-  override fun handleEvent(event: GameStartedEvent, clientHandler: V086ClientHandler) {
+  override suspend fun handleEvent(event: GameStartedEvent, clientHandler: V086ClientHandler) {
     handledEventCount++
     try {
       val game = event.game
