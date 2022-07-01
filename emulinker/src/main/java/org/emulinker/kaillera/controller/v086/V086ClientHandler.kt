@@ -238,7 +238,7 @@ class V086ClientHandler
           return
         }
 
-    //    logger.atInfo().log("IN-> $inBundle")
+    logger.atFinest().log("<- FROM P%d: %s", user?.playerNumber, inBundle?.messages?.firstOrNull())
     clientRetryCount =
         if (inBundle!!.numMessages == 0) {
           logger
@@ -372,7 +372,7 @@ class V086ClientHandler
       numToSend = lastMessageBuffer.fill(outMessages, numToSend)
       // System.out.println("Server -> " + numToSend);
       val outBundle = V086Bundle(outMessages, numToSend)
-      //      logger.atInfo().log("<-OUT $outBundle")
+      logger.atFinest().log("<- TO P%d: %s", user?.playerNumber, outMessage)
       outBundle.writeTo(outBuffer)
       // Cast to avoid issue with java version mismatch:
       // https://stackoverflow.com/a/61267496/2875073

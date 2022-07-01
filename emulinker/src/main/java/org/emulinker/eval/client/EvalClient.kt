@@ -6,7 +6,6 @@ import io.ktor.network.sockets.*
 import io.ktor.utils.io.core.*
 import java.nio.Buffer
 import java.nio.ByteBuffer
-import kotlin.time.Duration.Companion.nanoseconds
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.*
 import kotlinx.coroutines.Dispatchers
@@ -15,6 +14,7 @@ import kotlinx.coroutines.sync.withLock
 import org.emulinker.kaillera.controller.connectcontroller.protocol.ConnectMessage
 import org.emulinker.kaillera.controller.connectcontroller.protocol.ConnectMessage_HELLO
 import org.emulinker.kaillera.controller.connectcontroller.protocol.ConnectMessage_HELLOD00D
+import org.emulinker.kaillera.controller.messaging.ParseException
 import org.emulinker.kaillera.controller.v086.LastMessageBuffer
 import org.emulinker.kaillera.controller.v086.V086Controller
 import org.emulinker.kaillera.controller.v086.protocol.*
@@ -27,7 +27,9 @@ private val logger = FluentLogger.forEnclosingClass()
 class EvalClient(
     private val username: String,
     private val connectControllerAddress: InetSocketAddress,
-    private val simulateGameLag: Boolean = false
+    private val simulateGameLag: Boolean = false,
+    private val connectionType: ConnectionType = ConnectionType.LAN,
+    private val frameDelay: Int = 1
 ) : Closeable {
   private val lastMessageBuffer = LastMessageBuffer(V086Controller.MAX_BUNDLE_SIZE)
 
@@ -39,14 +41,18 @@ class EvalClient(
 
   private var killSwitch = false
 
-  var lastIncomingMessageNumber = -1
   var lastOutgoingMessageNumber = -1
 
   private var latestServerStatus: ServerStatus? = null
 
   private var playerNumber: Int? = null
 
-  /** Interacts with the ConnectController server and */
+  private val delayBetweenPackets = 1.seconds.div(connectionType.updatesPerSecond).times(frameDelay)
+
+  /**
+   * Registers as a new user with the ConnectController server and joins the dedicated port
+   * allocated for the user.
+   */
   suspend fun connectToDedicatedPort() {
     val selectorManager = SelectorManager(Dispatchers.IO)
     socket = aSocket(selectorManager).udp().connect(connectControllerAddress)
@@ -78,15 +84,27 @@ class EvalClient(
 
     GlobalScope.launch(Dispatchers.IO) {
       while (!killSwitch) {
-        val response = V086Bundle.parse(socket!!.receive().packet.readByteBuffer())
-        handleIncoming(response)
+        try {
+          val response = V086Bundle.parse(socket!!.receive().packet.readByteBuffer())
+          handleIncoming(response)
+        } catch (e: ParseException) {
+
+          if (e.message?.contains("Failed byte count validation") == true &&
+              e.stackTrace.firstOrNull()?.fileName == "PlayerInformation.kt") {
+            // TODO(nue): There's a PlayerInformation parsing failure here and I don't understand..
+            // We need to figure out what's going on, but for now log and continue.
+            logger.atSevere().withCause(e).log("Failed to parse the PlayerInformation message!")
+          } else {
+            throw e
+          }
+        }
       }
       logger.atInfo().log("EvalClient shut down.")
     }
 
     sendWithMessageId {
       UserInformation(
-          messageNumber = it, username, "Project 64k 0.13 (01 Aug 2003)", ConnectionType.LAN)
+          messageNumber = it, username, "Project 64k 0.13 (01 Aug 2003)", connectionType)
     }
   }
 
@@ -110,26 +128,26 @@ class EvalClient(
       is JoinGame_Notification -> {}
       is AllReady -> {
         if (simulateGameLag) {
-          delay(16666666.nanoseconds)
+          delay(delayBetweenPackets)
         }
         sendWithMessageId {
           GameData(
               messageNumber = it,
               gameData =
-              when (playerNumber) {
-                1 -> {
-                  byteArrayOf(
-                      16, 36, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 0, 0, 0, 0, 0)
-                }
-                2 -> {
-                  byteArrayOf(
-                      17, 32, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
-                }
-                else -> {
-                  logger.atSevere().log("Unexpected message type: %s", message)
-                  throw IllegalStateException()
-                }
-              })
+                  when (playerNumber) {
+                    1 -> {
+                      byteArrayOf(
+                          16, 36, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 0, 0, 0, 0, 0)
+                    }
+                    2 -> {
+                      byteArrayOf(
+                          17, 32, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+                    }
+                    else -> {
+                      logger.atSevere().log("Unexpected message type: %s", message)
+                      throw IllegalStateException()
+                    }
+                  })
         }
       }
       is GameData -> {
@@ -138,7 +156,7 @@ class EvalClient(
           gameDataCache.add(message.gameData)
         }
         if (simulateGameLag) {
-          delay(16666666.nanoseconds)
+          delay(delayBetweenPackets)
         }
         sendWithMessageId {
           GameData(
@@ -163,7 +181,7 @@ class EvalClient(
       is CachedGameData -> {
         require(gameDataCache[message.key] != null)
         if (simulateGameLag) {
-          delay(16666666.nanoseconds)
+          delay(delayBetweenPackets)
         }
         sendWithMessageId {
           GameData(
@@ -211,8 +229,7 @@ class EvalClient(
     // TODO(nue): Make it listen to individual game creation updates too.
     val games = requireNotNull(latestServerStatus?.games)
     sendWithMessageId {
-      JoinGame_Request(
-          messageNumber = it, gameId = games.first().gameId, connectionType = ConnectionType.LAN)
+      JoinGame_Request(messageNumber = it, gameId = games.first().gameId, connectionType)
     }
   }
 
