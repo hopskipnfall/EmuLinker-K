@@ -40,9 +40,9 @@ abstract class V086Message : ByteBufferMessage() {
 
   abstract val bodyLength: Int
 
-  override fun writeTo(buffer: ByteBuffer?) {
+  override fun writeTo(buffer: ByteBuffer) {
     val len = length
-    if (len > buffer!!.remaining()) {
+    if (len > buffer.remaining()) {
       logger
           .atWarning()
           .log(
