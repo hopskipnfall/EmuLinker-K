@@ -61,7 +61,7 @@ class V086Controller
   override val clientTypes: Array<String> =
       config.getStringArray("controllers.v086.clientTypes.clientType")
 
-  var clientHandlers: MutableMap<Int, V086ClientHandler> = ConcurrentHashMap()
+  override val clientHandlers: MutableMap<Int, V086ClientHandler> = ConcurrentHashMap()
 
   private val portRangeStart: Int = config.getInt("controllers.v086.portRangeStart")
   private val extraPorts: Int = config.getInt("controllers.v086.extraPorts", 0)
