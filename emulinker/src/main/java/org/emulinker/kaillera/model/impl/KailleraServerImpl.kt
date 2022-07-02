@@ -6,6 +6,8 @@ import com.google.common.base.Strings
 import com.google.common.collect.ImmutableList
 import com.google.common.flogger.FluentLogger
 import java.net.InetSocketAddress
+import java.time.Duration
+import java.time.Instant
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.function.Consumer
@@ -35,8 +37,6 @@ import org.emulinker.util.EmuLang.getString
 import org.emulinker.util.EmuLang.hasString
 import org.emulinker.util.EmuUtil.formatSocketAddress
 import org.emulinker.util.Executable
-import java.time.Duration
-import java.time.Instant
 
 private val logger = FluentLogger.forEnclosingClass()
 
@@ -798,12 +798,14 @@ class KailleraServerImpl
               }
             }
             if (!user.loggedIn &&
-                Instant.now().toEpochMilli() - user.connectTime.toEpochMilli() > flags.maxPing * 15) {
+                Instant.now().toEpochMilli() - user.connectTime.toEpochMilli() >
+                    flags.maxPing * 15) {
               logger.atInfo().log("$user connection timeout!")
               user.stop()
               usersMap.remove(user.id)
             } else if (user.loggedIn &&
-                 Instant.now().toEpochMilli() - user.lastKeepAlive.toEpochMilli() > flags.keepAliveTimeout.inWholeMilliseconds) {
+                Instant.now().toEpochMilli() - user.lastKeepAlive.toEpochMilli() >
+                    flags.keepAliveTimeout.inWholeMilliseconds) {
               logger.atInfo().log("$user keepalive timeout!")
               try {
                 quit(user, getString("KailleraServerImpl.ForcedQuitPingTimeout"))
@@ -816,7 +818,8 @@ class KailleraServerImpl
             } else if (flags.idleTimeout.isPositive() &&
                 access == AccessManager.ACCESS_NORMAL &&
                 user.loggedIn &&
-                (Instant.now().toEpochMilli() - user.lastActivity.toEpochMilli() > flags.idleTimeout.inWholeMilliseconds)) {
+                (Instant.now().toEpochMilli() - user.lastActivity.toEpochMilli() >
+                    flags.idleTimeout.inWholeMilliseconds)) {
               logger.atInfo().log("$user inactivity timeout!")
               try {
                 quit(user, getString("KailleraServerImpl.ForcedQuitInactivityTimeout"))

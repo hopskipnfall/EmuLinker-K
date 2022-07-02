@@ -176,8 +176,8 @@ class V086ClientHandler
         controller.portRangeQueue.add(port)
       }
     }
-      controller.clientHandlers.remove(user.id)
-      user.stop()
+    controller.clientHandlers.remove(user.id)
+    user.stop()
   }
 
   override fun allocateBuffer(): ByteBuffer {

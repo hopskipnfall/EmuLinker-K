@@ -463,8 +463,7 @@ class ChatAction @Inject internal constructor(private val adminCommandAction: Ad
             } catch (e: Exception) {}
             return
           }
-          if (!clientHandler.user.findIgnoredUser(
-              user.connectSocketAddress.address.hostAddress)) {
+          if (!clientHandler.user.findIgnoredUser(user.connectSocketAddress.address.hostAddress)) {
             try {
               clientHandler.send(
                   InformationMessage(
@@ -477,11 +476,7 @@ class ChatAction @Inject internal constructor(private val adminCommandAction: Ad
           if (clientHandler.user.removeIgnoredUser(
               user.connectSocketAddress.address.hostAddress, false))
               user.server.announce(
-                  clientHandler.user.name +
-                      " is now unignoring <" +
-                      user.name +
-                      "> ID: " +
-                      user.id,
+                  clientHandler.user.name + " is now unignoring <" + user.name + "> ID: " + user.id,
                   gamesAlso = false)
           else
               try {
