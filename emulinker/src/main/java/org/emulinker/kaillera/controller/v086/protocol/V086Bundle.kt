@@ -40,8 +40,8 @@ class V086Bundle constructor(messages: Array<V086Message?>, numToWrite: Int = In
     return sb.toString()
   }
 
-  override fun writeTo(buffer: ByteBuffer?) {
-    buffer!!.order(ByteOrder.LITTLE_ENDIAN)
+  override fun writeTo(buffer: ByteBuffer) {
+    buffer.order(ByteOrder.LITTLE_ENDIAN)
     // no real need for unsigned
     // UnsignedUtil.putUnsignedByte(buffer, numToWrite);
     buffer.put(numMessages.toByte())

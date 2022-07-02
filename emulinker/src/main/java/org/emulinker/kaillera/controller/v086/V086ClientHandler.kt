@@ -33,12 +33,12 @@ private val logger = FluentLogger.forEnclosingClass()
 class V086ClientHandler
     @AssistedInject
     constructor(
-        metrics: MetricRegistry?,
+        metrics: MetricRegistry,
         flags: RuntimeFlags,
         @Assisted remoteSocketAddress: InetSocketAddress,
         /** The V086Controller that started this client handler. */
         @param:Assisted val controller: V086Controller
-    ) : PrivateUDPServer(false, remoteSocketAddress.address, metrics!!), KailleraEventListener {
+    ) : PrivateUDPServer(false, remoteSocketAddress.address, metrics), KailleraEventListener {
   lateinit var user: KailleraUser
     private set
 
@@ -194,8 +194,7 @@ class V086ClientHandler
   }
 
   override suspend fun handleReceived(buffer: ByteBuffer) {
-    var inBundle: V086Bundle? = null
-    inBundle =
+    var inBundle: V086Bundle =
         try {
           parse(buffer, lastMessageNumber)
           // inBundle = V086Bundle.parse(buffer, -1);
@@ -224,7 +223,7 @@ class V086ClientHandler
 
     logger.atFinest().log("<- FROM P%d: %s", user.playerNumber, inBundle?.messages?.firstOrNull())
     clientRetryCount =
-        if (inBundle!!.numMessages == 0) {
+        if (inBundle.numMessages == 0) {
           logger
               .atFine()
               .log(
@@ -294,7 +293,7 @@ class V086ClientHandler
 
   override val bufferSize = flags.v086BufferSize
 
-  override suspend fun actionPerformed(event: KailleraEvent?) {
+  override suspend fun actionPerformed(event: KailleraEvent) {
     if (event is GameEvent) {
       val eventHandler = controller.gameEventHandlers[event.javaClass]
       if (eventHandler == null) {
