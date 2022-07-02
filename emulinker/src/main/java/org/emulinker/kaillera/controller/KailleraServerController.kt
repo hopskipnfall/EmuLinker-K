@@ -1,6 +1,7 @@
 package org.emulinker.kaillera.controller
 
 import java.net.InetSocketAddress
+import org.emulinker.kaillera.controller.v086.V086ClientHandler
 import org.emulinker.kaillera.model.KailleraServer
 import org.emulinker.kaillera.model.exception.NewConnectionException
 import org.emulinker.kaillera.model.exception.ServerFullException
@@ -18,4 +19,5 @@ interface KailleraServerController {
   fun start()
 
   suspend fun stop()
+  val clientHandlers: MutableMap<Int, V086ClientHandler>
 }
