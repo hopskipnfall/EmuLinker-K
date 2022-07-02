@@ -5,6 +5,7 @@ import javax.inject.Singleton
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 import org.apache.commons.configuration.Configuration
+import kotlin.time.Duration.Companion.milliseconds
 
 /** Configuration flags that are set at startup and do not change until the job is restarted. */
 @Singleton
@@ -19,10 +20,10 @@ data class RuntimeFlags(
     val gameAutoFireSensitivity: Int,
     val gameBufferSize: Int,
     val gameDesynchTimeouts: Int,
-    val gameTimeoutMillis: Int,
-    val idleTimeout: Int,
+    val gameTimeout: Duration,
+    val idleTimeout: Duration,
     val improvedLagstatEnabled: Boolean,
-    val keepAliveTimeout: Int,
+    val keepAliveTimeout: Duration,
     val maxChatLength: Int,
     val maxClientNameLength: Int,
     val maxGameChatLength: Int,
@@ -60,10 +61,10 @@ data class RuntimeFlags(
     require(maxClientNameLength <= 127) { "server.maxClientNameLength must be <= 127" }
     require(maxPing > 0) { "server.maxPing can not be <= 0" }
     require(maxPing <= 1000) { "server.maxPing can not be > 1000" }
-    require(keepAliveTimeout > 0) { "server.keepAliveTimeout must be > 0 (190 is recommended)" }
+    require(keepAliveTimeout.isPositive()) { "server.keepAliveTimeout must be > 0 (190 is recommended)" }
 
     require(gameBufferSize > 0) { "game.bufferSize can not be <= 0" }
-    require(gameTimeoutMillis > 0) { "game.timeoutMillis can not be <= 0" }
+    require(gameTimeout.isPositive()) { "game.timeoutMillis can not be <= 0" }
     require(gameAutoFireSensitivity in 0..5) { "game.defaultAutoFireSensitivity must be 0-5" }
     for (s in connectionTypes) {
       try {
@@ -90,10 +91,10 @@ data class RuntimeFlags(
           gameAutoFireSensitivity = config.getInt("game.defaultAutoFireSensitivity"),
           gameBufferSize = config.getInt("game.bufferSize"),
           gameDesynchTimeouts = config.getInt("game.desynchTimeouts"),
-          gameTimeoutMillis = config.getInt("game.timeoutMillis"),
-          idleTimeout = config.getInt("server.idleTimeout"),
+          gameTimeout = config.getInt("game.timeoutMillis").milliseconds,
+          idleTimeout = config.getInt("server.idleTimeout").seconds,
           improvedLagstatEnabled = config.getBoolean("server.improvedLagstatEnabled", true),
-          keepAliveTimeout = config.getInt("server.keepAliveTimeout"),
+          keepAliveTimeout = config.getInt("server.keepAliveTimeout").seconds,
           maxChatLength = config.getInt("server.maxChatLength"),
           maxClientNameLength = config.getInt("server.maxClientNameLength"),
           maxGameChatLength = config.getInt("server.maxGameChatLength"),

@@ -28,7 +28,7 @@ class DropGameAction @Inject internal constructor() :
   ) {
     actionPerformedCount++
     try {
-      clientHandler.user!!.dropGame()
+      clientHandler.user.dropGame()
     } catch (e: DropGameException) {
       logger.atFine().withCause(e).log("Failed to drop game")
     }

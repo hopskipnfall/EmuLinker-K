@@ -35,6 +35,8 @@ import org.emulinker.util.EmuLang.getString
 import org.emulinker.util.EmuLang.hasString
 import org.emulinker.util.EmuUtil.formatSocketAddress
 import org.emulinker.util.Executable
+import java.time.Duration
+import java.time.Instant
 
 private val logger = FluentLogger.forEnclosingClass()
 
@@ -184,13 +186,12 @@ class KailleraServerImpl
       LoginException::class)
   override suspend fun login(user: KailleraUser) {
     val userImpl = user as KailleraUserImpl
-    val loginDelay = System.currentTimeMillis() - user.connectTime
     logger
         .atInfo()
         .log(
             user.toString() +
                 ": login request: delay=" +
-                loginDelay +
+                Duration.between(user.connectTime, Instant.now()) +
                 "ms, clientAddress=" +
                 formatSocketAddress(user.socketAddress!!) +
                 ", name=" +
@@ -797,12 +798,12 @@ class KailleraServerImpl
               }
             }
             if (!user.loggedIn &&
-                System.currentTimeMillis() - user.connectTime > flags.maxPing * 15) {
+                Instant.now().toEpochMilli() - user.connectTime.toEpochMilli() > flags.maxPing * 15) {
               logger.atInfo().log("$user connection timeout!")
               user.stop()
               usersMap.remove(user.id)
             } else if (user.loggedIn &&
-                System.currentTimeMillis() - user.lastKeepAlive > flags.keepAliveTimeout * 1000) {
+                 Instant.now().toEpochMilli() - user.lastKeepAlive.toEpochMilli() > flags.keepAliveTimeout.inWholeMilliseconds) {
               logger.atInfo().log("$user keepalive timeout!")
               try {
                 quit(user, getString("KailleraServerImpl.ForcedQuitPingTimeout"))
@@ -812,10 +813,10 @@ class KailleraServerImpl
                     .withCause(e)
                     .log("Error forcing $user quit for keepalive timeout!")
               }
-            } else if (flags.idleTimeout > 0 &&
+            } else if (flags.idleTimeout.isPositive() &&
                 access == AccessManager.ACCESS_NORMAL &&
                 user.loggedIn &&
-                (System.currentTimeMillis() - user.lastActivity > flags.idleTimeout * 1000)) {
+                (Instant.now().toEpochMilli() - user.lastActivity.toEpochMilli() > flags.idleTimeout.inWholeMilliseconds)) {
               logger.atInfo().log("$user inactivity timeout!")
               try {
                 quit(user, getString("KailleraServerImpl.ForcedQuitInactivityTimeout"))

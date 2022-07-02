@@ -38,7 +38,7 @@ class ChatAction @Inject internal constructor(private val adminCommandAction: Ad
   @Throws(FatalActionException::class)
   override suspend fun performAction(message: Chat_Request, clientHandler: V086ClientHandler) {
     if (message.message.startsWith(ADMIN_COMMAND_ESCAPE_STRING)) {
-      if (clientHandler.user!!.accessLevel > AccessManager.ACCESS_ELEVATED) {
+      if (clientHandler.user.accessLevel > AccessManager.ACCESS_ELEVATED) {
         try {
           if (adminCommandAction.isValidCommand(message.message)) {
             adminCommandAction.performAction(message, clientHandler)
@@ -58,7 +58,7 @@ class ChatAction @Inject internal constructor(private val adminCommandAction: Ad
     }
     actionPerformedCount++
     try {
-      clientHandler.user!!.chat(message.message)
+      clientHandler.user.chat(message.message)
     } catch (e: ActionException) {
       logger
           .atInfo()
@@ -82,7 +82,7 @@ class ChatAction @Inject internal constructor(private val adminCommandAction: Ad
     val userN = clientHandler.user as KailleraUserImpl
     if (userN.accessLevel < AccessManager.ACCESS_ELEVATED) {
       try {
-        clientHandler.user!!.chat(":USER_COMMAND")
+        clientHandler.user.chat(":USER_COMMAND")
       } catch (e: ActionException) {
         doCommand = false
       }
@@ -98,8 +98,8 @@ class ChatAction @Inject internal constructor(private val adminCommandAction: Ad
                   ":ALIVECHECK=EmulinkerSF Alive Check: You are still logged in."))
         } catch (e: Exception) {}
       } else if (chatMessage.message == "/version" &&
-          clientHandler.user!!.accessLevel < AccessManager.ACCESS_ADMIN) {
-        val releaseInfo = clientHandler.user!!.server.releaseInfo
+          clientHandler.user.accessLevel < AccessManager.ACCESS_ADMIN) {
+        val releaseInfo = clientHandler.user.server.releaseInfo
         try {
           clientHandler.send(
               InformationMessage(
@@ -119,17 +119,17 @@ class ChatAction @Inject internal constructor(private val adminCommandAction: Ad
                   clientHandler.nextMessageNumber,
                   "server",
                   "Your IP Address is: " +
-                      clientHandler.user!!.connectSocketAddress.address.hostAddress))
+                      clientHandler.user.connectSocketAddress.address.hostAddress))
         } catch (e: Exception) {}
       } else if (chatMessage.message == "/msgon") {
-        clientHandler.user!!.isAcceptingDirectMessages = true
+        clientHandler.user.isAcceptingDirectMessages = true
         try {
           clientHandler.send(
               InformationMessage(
                   clientHandler.nextMessageNumber, "server", "Private messages are now on."))
         } catch (e: Exception) {}
       } else if (chatMessage.message == "/msgoff") {
-        clientHandler.user!!.isAcceptingDirectMessages = false
+        clientHandler.user.isAcceptingDirectMessages = false
         try {
           clientHandler.send(
               InformationMessage(
@@ -151,32 +151,32 @@ class ChatAction @Inject internal constructor(private val adminCommandAction: Ad
                 announcement.substring(
                     1) // this protects against people screwing up the emulinker supraclient
         val access =
-            clientHandler.user!!.server.accessManager.getAccess(
-                clientHandler.user!!.socketAddress!!.address)
+            clientHandler.user.server.accessManager.getAccess(
+                clientHandler.user.socketAddress!!.address)
         if (access < AccessManager.ACCESS_SUPERADMIN &&
-            clientHandler.user!!.server.accessManager.isSilenced(
-                clientHandler.user!!.socketAddress!!.address)) {
+            clientHandler.user.server.accessManager.isSilenced(
+                clientHandler.user.socketAddress!!.address)) {
           try {
             clientHandler.send(
                 InformationMessage(clientHandler.nextMessageNumber, "server", "You are silenced!"))
           } catch (e: Exception) {}
           return
         }
-        if (clientHandler.user!!.server.checkMe(clientHandler.user!!, announcement)) {
+        if (clientHandler.user.server.checkMe(clientHandler.user, announcement)) {
           val m = announcement
-          announcement = "*" + clientHandler.user!!.name + " " + m
+          announcement = "*" + clientHandler.user.name + " " + m
           val user1 = clientHandler.user as KailleraUserImpl
-          clientHandler.user!!.server.announce(announcement, true, user1)
+          clientHandler.user.server.announce(announcement, true, user1)
         }
       } else if (chatMessage.message.startsWith("/msg")) {
         val user1 = clientHandler.user as KailleraUserImpl
         val scanner = Scanner(chatMessage.message).useDelimiter(" ")
         val access =
-            clientHandler.user!!.server.accessManager.getAccess(
-                clientHandler.user!!.socketAddress!!.address)
+            clientHandler.user.server.accessManager.getAccess(
+                clientHandler.user.socketAddress!!.address)
         if (access < AccessManager.ACCESS_SUPERADMIN &&
-            clientHandler.user!!.server.accessManager.isSilenced(
-                clientHandler.user!!.socketAddress!!.address)) {
+            clientHandler.user.server.accessManager.isSilenced(
+                clientHandler.user.socketAddress!!.address)) {
           try {
             clientHandler.send(
                 InformationMessage(clientHandler.nextMessageNumber, "server", "You are silenced!"))
@@ -186,7 +186,7 @@ class ChatAction @Inject internal constructor(private val adminCommandAction: Ad
         try {
           scanner.next()
           val userID = scanner.nextInt()
-          val user = clientHandler.user!!.server.getUser(userID)
+          val user = clientHandler.user.server.getUser(userID)
           val sb = StringBuilder()
           while (scanner.hasNext()) {
             sb.append(scanner.next())
@@ -211,7 +211,7 @@ class ChatAction @Inject internal constructor(private val adminCommandAction: Ad
           }
           if (!user.isAcceptingDirectMessages ||
               user.searchIgnoredUsers(
-                  clientHandler.user!!.connectSocketAddress.address.hostAddress)) {
+                  clientHandler.user.connectSocketAddress.address.hostAddress)) {
             try {
               clientHandler.send(
                   InformationMessage(
@@ -254,11 +254,11 @@ class ChatAction @Inject internal constructor(private val adminCommandAction: Ad
           user1.lastMsgID = user.id
           user.lastMsgID = user1.id
           user1.server.announce(
-              "TO: <${user.name}>(${user.id}) <${clientHandler.user!!.name}> (${clientHandler.user!!.id}): $m",
+              "TO: <${user.name}>(${user.id}) <${clientHandler.user.name}> (${clientHandler.user.id}): $m",
               false,
               user1)
           user.server.announce(
-              "<" + clientHandler.user!!.name + "> (" + clientHandler.user!!.id + "): " + m,
+              "<" + clientHandler.user.name + "> (" + clientHandler.user.id + "): " + m,
               false,
               user as KailleraUserImpl)
 
@@ -272,7 +272,7 @@ class ChatAction @Inject internal constructor(private val adminCommandAction: Ad
         } catch (e: NoSuchElementException) {
           if (user1.lastMsgID != -1) {
             try {
-              val user = clientHandler.user!!.server.getUser(user1.lastMsgID)
+              val user = clientHandler.user.server.getUser(user1.lastMsgID)
               val sb = StringBuilder()
               while (scanner.hasNext()) {
                 sb.append(scanner.next())
@@ -308,7 +308,7 @@ class ChatAction @Inject internal constructor(private val adminCommandAction: Ad
               }
               var m = sb.toString()
               m = m.trim { it <= ' ' }
-              if (m.isNullOrBlank() || m.startsWith("�") || m.startsWith("�")) return
+              if (m.isBlank() || m.startsWith("�") || m.startsWith("�")) return
               if (access == AccessManager.ACCESS_NORMAL) {
                 val chars = m.toCharArray()
                 var i = 0
@@ -339,11 +339,11 @@ class ChatAction @Inject internal constructor(private val adminCommandAction: Ad
                 }
               }
               user1.server.announce(
-                  "TO: <${user.name}>(${user.id}) <${clientHandler.user!!.name}> (${clientHandler.user!!.id}): $m",
+                  "TO: <${user.name}>(${user.id}) <${clientHandler.user.name}> (${clientHandler.user.id}): $m",
                   false,
                   user1)
               user.server.announce(
-                  "<${clientHandler.user!!.name}> (${clientHandler.user!!.id}): $m",
+                  "<${clientHandler.user.name}> (${clientHandler.user.id}): $m",
                   false,
                   user as KailleraUserImpl)
               /*if(user1.getGame() != null){
@@ -377,18 +377,18 @@ class ChatAction @Inject internal constructor(private val adminCommandAction: Ad
       } else if (chatMessage.message == "/ignoreall") {
         val user = clientHandler.user
         try {
-          clientHandler.user!!.ignoreAll = true
+          clientHandler.user.ignoreAll = true
           (user as KailleraUserImpl).server.announce(
-              clientHandler.user!!.name + " is now ignoring everyone!",
+              clientHandler.user.name + " is now ignoring everyone!",
               false,
           )
         } catch (e: Exception) {}
       } else if (chatMessage.message == "/unignoreall") {
         val user = clientHandler.user
         try {
-          clientHandler.user!!.ignoreAll = false
+          clientHandler.user.ignoreAll = false
           (user as KailleraUserImpl).server.announce(
-              clientHandler.user!!.name + " is now unignoring everyone!",
+              clientHandler.user.name + " is now unignoring everyone!",
               false,
           )
         } catch (e: Exception) {}
@@ -397,7 +397,7 @@ class ChatAction @Inject internal constructor(private val adminCommandAction: Ad
         try {
           scanner.next()
           val userID = scanner.nextInt()
-          val user = clientHandler.user!!.server.getUser(userID)
+          val user = clientHandler.user.server.getUser(userID)
           if (user == null) {
             try {
               clientHandler.send(
@@ -413,7 +413,7 @@ class ChatAction @Inject internal constructor(private val adminCommandAction: Ad
             } catch (e: Exception) {}
             return
           }
-          if (clientHandler.user!!.findIgnoredUser(user.connectSocketAddress.address.hostAddress)) {
+          if (clientHandler.user.findIgnoredUser(user.connectSocketAddress.address.hostAddress)) {
             try {
               clientHandler.send(
                   InformationMessage(
@@ -433,9 +433,9 @@ class ChatAction @Inject internal constructor(private val adminCommandAction: Ad
             } catch (e: Exception) {}
             return
           }
-          clientHandler.user!!.addIgnoredUser(user.connectSocketAddress.address.hostAddress)
+          clientHandler.user.addIgnoredUser(user.connectSocketAddress.address.hostAddress)
           user.server.announce(
-              clientHandler.user!!.name + " is now ignoring <" + user.name + "> ID: " + user.id,
+              clientHandler.user.name + " is now ignoring <" + user.name + "> ID: " + user.id,
               false,
           )
         } catch (e: NoSuchElementException) {
@@ -455,7 +455,7 @@ class ChatAction @Inject internal constructor(private val adminCommandAction: Ad
         try {
           scanner.next()
           val userID = scanner.nextInt()
-          val user = clientHandler.user!!.server.getUser(userID)
+          val user = clientHandler.user.server.getUser(userID)
           if (user == null) {
             try {
               clientHandler.send(
@@ -463,7 +463,7 @@ class ChatAction @Inject internal constructor(private val adminCommandAction: Ad
             } catch (e: Exception) {}
             return
           }
-          if (!clientHandler.user!!.findIgnoredUser(
+          if (!clientHandler.user.findIgnoredUser(
               user.connectSocketAddress.address.hostAddress)) {
             try {
               clientHandler.send(
@@ -474,10 +474,10 @@ class ChatAction @Inject internal constructor(private val adminCommandAction: Ad
             } catch (e: Exception) {}
             return
           }
-          if (clientHandler.user!!.removeIgnoredUser(
+          if (clientHandler.user.removeIgnoredUser(
               user.connectSocketAddress.address.hostAddress, false))
               user.server.announce(
-                  clientHandler.user!!.name +
+                  clientHandler.user.name +
                       " is now unignoring <" +
                       user.name +
                       "> ID: " +
@@ -538,7 +538,7 @@ class ChatAction @Inject internal constructor(private val adminCommandAction: Ad
         try {
           delay(20.milliseconds)
         } catch (e: Exception) {}
-        if (clientHandler.user!!.accessLevel == AccessManager.ACCESS_MODERATOR) {
+        if (clientHandler.user.accessLevel == AccessManager.ACCESS_MODERATOR) {
           try {
             clientHandler.send(
                 InformationMessage(
@@ -558,7 +558,7 @@ class ChatAction @Inject internal constructor(private val adminCommandAction: Ad
             delay(20.milliseconds)
           } catch (e: Exception) {}
         }
-        if (clientHandler.user!!.accessLevel < AccessManager.ACCESS_ADMIN) {
+        if (clientHandler.user.accessLevel < AccessManager.ACCESS_ADMIN) {
           try {
             clientHandler.send(
                 InformationMessage(
@@ -580,7 +580,7 @@ class ChatAction @Inject internal constructor(private val adminCommandAction: Ad
           return
         }
       } else if (chatMessage.message.startsWith("/finduser") &&
-          clientHandler.user!!.accessLevel < AccessManager.ACCESS_ADMIN) {
+          clientHandler.user.accessLevel < AccessManager.ACCESS_ADMIN) {
         val space = chatMessage.message.indexOf(' ')
         if (space < 0) {
           try {
@@ -595,7 +595,7 @@ class ChatAction @Inject internal constructor(private val adminCommandAction: Ad
         var foundCount = 0
         val str = chatMessage.message.substring(space + 1)
         // WildcardStringPattern pattern = new WildcardStringPattern
-        for (user in clientHandler.user!!.users!!) {
+        for (user in clientHandler.user.users!!) {
           if (!user!!.loggedIn) continue
           if (user.name!!
               .lowercase(Locale.getDefault())
@@ -639,10 +639,10 @@ class ChatAction @Inject internal constructor(private val adminCommandAction: Ad
   override suspend fun handleEvent(event: ChatEvent, clientHandler: V086ClientHandler) {
     handledEventCount++
     try {
-      if (clientHandler.user!!.searchIgnoredUsers(
+      if (clientHandler.user.searchIgnoredUsers(
           event.user.connectSocketAddress.address.hostAddress))
           return
-      else if (clientHandler.user!!.ignoreAll) {
+      else if (clientHandler.user.ignoreAll) {
         if (event.user.accessLevel < AccessManager.ACCESS_ADMIN &&
             event.user !== clientHandler.user)
             return

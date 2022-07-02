@@ -26,7 +26,7 @@ class QuitAction @Inject internal constructor() :
   override suspend fun performAction(message: Quit_Request, clientHandler: V086ClientHandler) {
     actionPerformedCount++
     try {
-      clientHandler.user!!.quit(message.message)
+      clientHandler.user.quit(message.message)
     } catch (e: ActionException) {
       throw FatalActionException("Failed to quit: " + e.message)
     }

@@ -39,12 +39,15 @@ class V086ClientHandler
         /** The V086Controller that started this client handler. */
         @param:Assisted val controller: V086Controller
     ) : PrivateUDPServer(false, remoteSocketAddress.address, metrics!!), KailleraEventListener {
-  var user: KailleraUser? = null
+  lateinit var user: KailleraUser
     private set
 
-  val mutex = Mutex()
+  private val mutex = Mutex()
 
   private var messageNumberCounter = 0
+
+  // TODO(nue): Add this to RuntimeFlags and increase to at least 5.
+  val numAcksForSpeedTest = 3
 
   /*
   public List<V086Message> getLastMessage()
@@ -173,11 +176,8 @@ class V086ClientHandler
         controller.portRangeQueue.add(port)
       }
     }
-    if (user != null) {
-      controller.clientHandlers.remove(user!!.id)
-      user!!.stop()
-      user = null
-    }
+      controller.clientHandlers.remove(user.id)
+      user.stop()
   }
 
   override fun allocateBuffer(): ByteBuffer {
@@ -222,7 +222,7 @@ class V086ClientHandler
           return
         }
 
-    // logger.atFine().log("-> " + inBundle.getNumMessages());
+    logger.atFinest().log("<- FROM P%d: %s", user.playerNumber, inBundle?.messages?.firstOrNull())
     clientRetryCount =
         if (inBundle!!.numMessages == 0) {
           logger
@@ -272,7 +272,7 @@ class V086ClientHandler
                             " to " +
                             lastMessageNumber +
                             ")")
-                user!!.droppedPacket()
+                user.droppedPacket()
               }
             }
             val action = controller.actions[messages[i]!!.messageId.toInt()]
@@ -355,7 +355,7 @@ class V086ClientHandler
       numToSend = lastMessageBuffer.fill(outMessages, numToSend)
       // System.out.println("Server -> " + numToSend);
       val outBundle = V086Bundle(outMessages, numToSend)
-      //				logger.atFine().log("<- " + outBundle);
+      logger.atFinest().log("<- TO P%d: %s", user.playerNumber, outMessage)
       outBundle.writeTo(outBuffer)
       // Cast to avoid issue with java version mismatch:
       // https://stackoverflow.com/a/61267496/2875073
