@@ -3,9 +3,9 @@ package org.emulinker.config
 import java.nio.charset.Charset
 import javax.inject.Singleton
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 import org.apache.commons.configuration.Configuration
-import kotlin.time.Duration.Companion.milliseconds
 
 /** Configuration flags that are set at startup and do not change until the job is restarted. */
 @Singleton
@@ -61,7 +61,9 @@ data class RuntimeFlags(
     require(maxClientNameLength <= 127) { "server.maxClientNameLength must be <= 127" }
     require(maxPing > 0) { "server.maxPing can not be <= 0" }
     require(maxPing <= 1000) { "server.maxPing can not be > 1000" }
-    require(keepAliveTimeout.isPositive()) { "server.keepAliveTimeout must be > 0 (190 is recommended)" }
+    require(keepAliveTimeout.isPositive()) {
+      "server.keepAliveTimeout must be > 0 (190 is recommended)"
+    }
 
     require(gameBufferSize > 0) { "game.bufferSize can not be <= 0" }
     require(gameTimeout.isPositive()) { "game.timeoutMillis can not be <= 0" }

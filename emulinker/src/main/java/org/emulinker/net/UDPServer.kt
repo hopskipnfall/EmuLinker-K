@@ -91,7 +91,7 @@ abstract class UDPServer(shutdownOnExit: Boolean, metrics: MetricRegistry?) : Ex
             .configure {
               receiveBufferSize = bufferSize
               sendBufferSize = bufferSize
-//              typeOfService = TypeOfService.IPTOS_LOWDELAY
+            //              typeOfService = TypeOfService.IPTOS_LOWDELAY
             }
             .bind(io.ktor.network.sockets.InetSocketAddress("127.0.0.1", port))
 
