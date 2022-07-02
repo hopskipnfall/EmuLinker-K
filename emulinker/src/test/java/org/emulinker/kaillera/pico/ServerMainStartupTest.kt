@@ -43,25 +43,20 @@ class ServerMainStartupTest {
 
       val server = component.server
 
-      val kailleraServerControllerTask =
-          launch { component.kailleraServerController.start() } // Apparently cannot be removed.
-      val serverTask = launch { server.start() }
+      launch { component.kailleraServerController.start() } // Apparently cannot be removed.
+      launch { server.start() }
 
-      delay(1.seconds)
+      delay(20.milliseconds)
 
       val user1 = EvalClient("testuser1", InetSocketAddress("127.0.0.1", 27888))
 
       user1.connectToDedicatedPort()
       user1.start()
 
-      delay(1.seconds)
-
       val controller = server.controllers.first()
-      assertThat(controller.clientHandlers).hasSize(1)
-      val clientHandler = controller.clientHandlers.values.first()
+      val clientHandler = controller.clientHandlers.values.single()
 
       user1.createGame()
-      delay(100.milliseconds)
 
       assertThat(clientHandler.user.game).isNotNull()
       assertThat(clientHandler.user.game!!.status == GameStatus.WAITING)
@@ -69,19 +64,12 @@ class ServerMainStartupTest {
       user1.quitGame()
       user1.quitServer()
 
-      delay(1.seconds)
-
       assertThat(controller.clientHandlers).isEmpty()
 
       // Clean up.
       user1.close()
       component.kailleraServerController.stop()
       component.server.stop()
-      delay(1.seconds)
-
-      // Make sure that the coroutines for those tasks were successful.
-      assertThat(kailleraServerControllerTask.isCompleted).isTrue()
-      assertThat(serverTask.isCompleted).isTrue()
     }
   }
 }
