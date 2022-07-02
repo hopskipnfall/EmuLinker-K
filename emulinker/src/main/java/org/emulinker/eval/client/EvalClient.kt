@@ -24,6 +24,7 @@ import org.emulinker.util.GameDataCache
 
 private val logger = FluentLogger.forEnclosingClass()
 
+/** Fake client for testing. */
 class EvalClient(
     private val username: String,
     private val connectControllerAddress: InetSocketAddress,
@@ -77,6 +78,8 @@ class EvalClient(
             .udp()
             .connect(InetSocketAddress(connectControllerAddress.hostname, allocatedPort))
     logger.atInfo().log("Changing connection to: %s", socket.remoteAddress)
+
+    giveServerTime()
   }
 
   /** Interacts in the server */
@@ -105,6 +108,7 @@ class EvalClient(
       UserInformation(
           messageNumber = it, username, "Project 64k 0.13 (01 Aug 2003)", connectionType)
     }
+    giveServerTime()
   }
 
   private suspend fun handleIncoming(bundle: V086Bundle) {
@@ -218,10 +222,12 @@ class EvalClient(
       CreateGame_Request(
           messageNumber = it, romName = "Nintendo All-Star! Dairantou Smash Brothers (J)")
     }
+    giveServerTime()
   }
 
   suspend fun startOwnGame() {
     sendWithMessageId { StartGame_Request(messageNumber = it) }
+    giveServerTime()
   }
 
   suspend fun joinAnyAvailableGame() {
@@ -230,6 +236,7 @@ class EvalClient(
     sendWithMessageId {
       JoinGame_Request(messageNumber = it, gameId = games.first().gameId, connectionType)
     }
+    giveServerTime()
   }
 
   override fun close() {
@@ -262,13 +269,18 @@ class EvalClient(
 
   suspend fun dropGame() {
     sendWithMessageId { PlayerDrop_Request(messageNumber = it) }
+    giveServerTime()
   }
 
   suspend fun quitGame() {
     sendWithMessageId { QuitGame_Request(messageNumber = it) }
+    giveServerTime()
   }
 
   suspend fun quitServer() {
     sendWithMessageId { Quit_Request(messageNumber = it, message = "End of test.") }
+    giveServerTime()
   }
+
+  private suspend fun giveServerTime() = delay(1.seconds)
 }
