@@ -7,6 +7,7 @@ import org.emulinker.kaillera.model.event.KailleraEventListener
 import org.emulinker.kaillera.model.exception.*
 import org.emulinker.kaillera.model.impl.KailleraGameImpl
 import org.emulinker.kaillera.model.impl.KailleraUserImpl
+import java.time.Instant
 
 interface KailleraUser {
   // Fields that only support getters.
@@ -21,12 +22,12 @@ interface KailleraUser {
   val arraySize: Int
   val bytesPerAction: Int
   val connectSocketAddress: InetSocketAddress
-  val connectTime: Long
+  val connectTime: Instant
   val frameDelay: Int
   val game: KailleraGameImpl?
   val isEmuLinkerClient: Boolean
-  val lastActivity: Long
-  val lastKeepAlive: Long
+  val lastActivity: Instant
+  val lastKeepAlive: Instant
   val listener: KailleraEventListener
   val loggedIn: Boolean
   val protocol: String

@@ -33,7 +33,7 @@ class EvalClient(
 ) : Closeable {
   private val lastMessageBuffer = LastMessageBuffer(V086Controller.MAX_BUNDLE_SIZE)
 
-  var socket: ConnectedDatagramSocket? = null
+  lateinit var socket: ConnectedDatagramSocket
 
   var gameDataCache: GameDataCache = ClientGameDataCache(256)
 
@@ -58,7 +58,7 @@ class EvalClient(
     socket = aSocket(selectorManager).udp().connect(connectControllerAddress)
 
     val allocatedPort =
-        socket?.use { connectedSocket ->
+        socket.use { connectedSocket ->
           logger.atInfo().log("Started new eval client at %s", connectedSocket.localAddress)
 
           sendConnectMessage(ConnectMessage_HELLO(protocol = "0.83"))
@@ -69,13 +69,12 @@ class EvalClient(
 
           response.port
         }
-    requireNotNull(allocatedPort)
 
     socket =
         aSocket(selectorManager)
             .udp()
             .connect(InetSocketAddress(connectControllerAddress.hostname, allocatedPort))
-    logger.atInfo().log("Changing connection to: %s", socket!!.remoteAddress)
+    logger.atInfo().log("Changing connection to: %s", socket.remoteAddress)
   }
 
   /** Interacts in the server */
@@ -85,7 +84,7 @@ class EvalClient(
     GlobalScope.launch(Dispatchers.IO) {
       while (!killSwitch) {
         try {
-          val response = V086Bundle.parse(socket!!.receive().packet.readByteBuffer())
+          val response = V086Bundle.parse(socket.receive().packet.readByteBuffer())
           handleIncoming(response)
         } catch (e: ParseException) {
 
@@ -236,11 +235,13 @@ class EvalClient(
   override fun close() {
     logger.atInfo().log("Shutting down EvalClient.")
     killSwitch = true
-    socket?.close()
+    if (!socket.isClosed) {
+      socket.close()
+    }
   }
 
   private suspend fun sendConnectMessage(message: ConnectMessage) {
-    socket!!.send(Datagram(ByteReadPacket(message.toBuffer()!!), socket!!.remoteAddress))
+    socket.send(Datagram(ByteReadPacket(message.toBuffer()), socket.remoteAddress))
   }
 
   private suspend fun sendWithMessageId(messageIdToMessage: (messageNumber: Int) -> V086Message) {
@@ -255,7 +256,7 @@ class EvalClient(
       outBundle.writeTo(outBuffer)
       (outBuffer as Buffer).flip()
       logger.atInfo().log(">>>>>>>> SENT message: %s", outBundle.messages.first())
-      socket!!.send(Datagram(ByteReadPacket(outBuffer), socket!!.remoteAddress))
+      socket.send(Datagram(ByteReadPacket(outBuffer), socket.remoteAddress))
     }
   }
 

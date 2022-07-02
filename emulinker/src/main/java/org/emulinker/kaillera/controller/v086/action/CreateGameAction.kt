@@ -30,7 +30,7 @@ class CreateGameAction @Inject internal constructor() :
   override suspend fun performAction(message: CreateGame, clientHandler: V086ClientHandler) {
     actionPerformedCount++
     try {
-      clientHandler.user!!.createGame(message.romName)
+      clientHandler.user.createGame(message.romName)
     } catch (e: CreateGameException) {
       logger
           .atInfo()
@@ -45,8 +45,8 @@ class CreateGameAction @Inject internal constructor() :
         clientHandler.send(
             QuitGame_Notification(
                 clientHandler.nextMessageNumber,
-                clientHandler.user!!.name!!,
-                clientHandler.user!!.id))
+                clientHandler.user.name!!,
+                clientHandler.user.id))
       } catch (e2: MessageFormatException) {
         logger.atSevere().withCause(e2).log("Failed to construct message")
       }
@@ -64,8 +64,8 @@ class CreateGameAction @Inject internal constructor() :
         clientHandler.send(
             QuitGame_Notification(
                 clientHandler.nextMessageNumber,
-                clientHandler.user!!.name!!,
-                clientHandler.user!!.id))
+                clientHandler.user.name!!,
+                clientHandler.user.id))
       } catch (e2: MessageFormatException) {
         logger.atSevere().withCause(e2).log("Failed to construct message")
       }

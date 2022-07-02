@@ -29,7 +29,7 @@ class LoginAction @Inject internal constructor() :
   @Throws(FatalActionException::class)
   override suspend fun performAction(message: UserInformation, clientHandler: V086ClientHandler) {
     actionPerformedCount++
-    val user: KailleraUser = clientHandler.user!!
+    val user: KailleraUser = clientHandler.user
     user.name = message.username
     user.clientType = message.clientType
     user.socketAddress = clientHandler.remoteSocketAddress

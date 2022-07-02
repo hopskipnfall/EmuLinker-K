@@ -52,7 +52,7 @@ class KailleraUserImpl(
           isEmuLinkerClient = true
     }
 
-  private val initTime = System.currentTimeMillis()
+  private val initTime: Instant = Instant.now()
 
   override var connectionType: ConnectionType =
       ConnectionType.DISABLED // TODO(nue): This probably shouldn't have a default.
@@ -63,9 +63,9 @@ class KailleraUserImpl(
   override var accessLevel = 0
   override var isEmuLinkerClient = false
     private set
-  override val connectTime: Long = initTime
+  override val connectTime = initTime
   override var timeouts = 0
-  override var lastActivity: Long = initTime
+  override var lastActivity = initTime
     private set
 
   override var smallLagSpikesCausedByUser = 0L
@@ -80,13 +80,13 @@ class KailleraUserImpl(
   private val improvedLagstat = flags.improvedLagstatEnabled
 
   override fun updateLastActivity() {
-    lastKeepAlive = System.currentTimeMillis()
+    lastKeepAlive = Instant.now()
     lastActivity = lastKeepAlive
   }
 
-  override var lastKeepAlive: Long = initTime
+  override var lastKeepAlive = initTime
     private set
-  var lastChatTime: Long = initTime
+  var lastChatTime: Long = initTime.toEpochMilli()
     private set
   var lastCreateGameTime: Long = 0
     private set
@@ -171,7 +171,7 @@ class KailleraUserImpl(
   override var name: String? = null
 
   override fun updateLastKeepAlive() {
-    lastKeepAlive = System.currentTimeMillis()
+    lastKeepAlive = Instant.now()
   }
 
   override var game: KailleraGameImpl? = null
