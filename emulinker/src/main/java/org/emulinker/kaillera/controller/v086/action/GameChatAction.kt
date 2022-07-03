@@ -367,7 +367,7 @@ class GameChatAction
               .atInfo()
               .withCause(e)
               .log(
-                  "UNIGNORE USER ERROR: ${user.name}: ${clientHandler.remoteSocketAddress!!.hostName}")
+                  "UNIGNORE USER ERROR: ${user.name}: ${clientHandler.remoteSocketAddress.hostName}")
           return
         }
       } else if (message.message.startsWith("/me")) {
@@ -383,10 +383,10 @@ class GameChatAction
                     1) // this protects against people screwing up the emulinker supraclient
         val access =
             clientHandler.user.server.accessManager.getAccess(
-                clientHandler.user.socketAddress!!.address)
+                clientHandler.user.socketAddress.address)
         if (access < AccessManager.ACCESS_SUPERADMIN &&
             clientHandler.user.server.accessManager.isSilenced(
-                clientHandler.user.socketAddress!!.address)) {
+                clientHandler.user.socketAddress.address)) {
           clientHandler.user.game!!.announce("You are silenced!", clientHandler.user)
           return
         }

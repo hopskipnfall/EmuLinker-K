@@ -104,8 +104,7 @@ class ConnectController
   @Synchronized
   override suspend fun handleReceived(buffer: ByteBuffer, remoteSocketAddress: InetSocketAddress) {
     requestCount++
-    var inMessage: ConnectMessage? = null
-    inMessage =
+    val inMessage: ConnectMessage? =
         try {
           parse(buffer)
         } catch (e: Exception) {
@@ -148,11 +147,10 @@ class ConnectController
                   inMessage)
       return
     }
-    val connectMessage = inMessage
 
     // now we need to find the specific server this client is request to
     // connect to using the client type
-    val protocolController = getController(connectMessage.protocol)
+    val protocolController = getController(inMessage.protocol)
     if (protocolController == null) {
       protocolErrorCount++
       logger
@@ -161,7 +159,7 @@ class ConnectController
               "Client requested an unhandled protocol " +
                   formatSocketAddress(remoteSocketAddress) +
                   ": " +
-                  connectMessage.protocol)
+                  inMessage.protocol)
       return
     }
     if (!accessManager.isAddressAllowed(remoteSocketAddress.address)) {
@@ -194,7 +192,7 @@ class ConnectController
             lastAddressCount = 0
           }
         } else lastAddress = remoteSocketAddress.address.hostAddress
-        privatePort = protocolController.newConnection(remoteSocketAddress, connectMessage.protocol)
+        privatePort = protocolController.newConnection(remoteSocketAddress, inMessage.protocol)
         if (privatePort <= 0) {
           failedToStartCount++
           logger
