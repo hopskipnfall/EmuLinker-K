@@ -447,7 +447,7 @@ class ChatAction @Inject internal constructor(private val adminCommandAction: Ad
                   "IGNORE USER ERROR: " +
                       user.name +
                       ": " +
-                      clientHandler.remoteSocketAddress!!.hostName)
+                      clientHandler.remoteSocketAddress.hostName)
           return
         }
       } else if (chatMessage.message.startsWith("/unignore")) {
@@ -491,7 +491,7 @@ class ChatAction @Inject internal constructor(private val adminCommandAction: Ad
               .atInfo()
               .withCause(e)
               .log(
-                  "UNIGNORE USER ERROR: ${user.name}: ${clientHandler.remoteSocketAddress!!.hostName}")
+                  "UNIGNORE USER ERROR: ${user.name}: ${clientHandler.remoteSocketAddress.hostName}")
           return
         }
       } else if (chatMessage.message == "/help") {
