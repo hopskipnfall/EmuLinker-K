@@ -242,7 +242,7 @@ class V086ClientHandler
       inMutex.withLock {
         val messages = inBundle.messages
         if (inBundle.numMessages == 1) {
-          lastMessageNumber = messages[0]!!.messageNumber
+          lastMessageNumber = messages.single()!!.messageNumber
           val action = controller.actions[messages[0]!!.messageId.toInt()]
           if (action == null) {
             logger.atSevere().log("No action defined to handle client message: " + messages[0])

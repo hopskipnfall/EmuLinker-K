@@ -57,7 +57,7 @@ class KailleraUserImpl(
   override var connectionType: ConnectionType =
       ConnectionType.DISABLED // TODO(nue): This probably shouldn't have a default.
   override var ping = 0
-  override var socketAddress: InetSocketAddress? = null
+  override lateinit var socketAddress: InetSocketAddress
   override var status =
       UserStatus.PLAYING // TODO(nue): This probably shouldn't have a default value..
   override var accessLevel = 0
@@ -191,8 +191,9 @@ class KailleraUserImpl(
 
   fun toDetailedString(): String {
     return ("KailleraUserImpl[id=$id protocol=$protocol status=$status name=$name clientType=$clientType ping=$ping connectionType=$connectionType remoteAddress=" +
-        (if (socketAddress == null) EmuUtil.formatSocketAddress(connectSocketAddress)
-        else EmuUtil.formatSocketAddress(socketAddress!!)) +
+        (if (!this::socketAddress.isInitialized) {
+          EmuUtil.formatSocketAddress(connectSocketAddress)
+        } else EmuUtil.formatSocketAddress(socketAddress)) +
         "]")
   }
 
@@ -254,7 +255,7 @@ class KailleraUserImpl(
       logger.atWarning().log("$this kick User $userID failed: Not in a game")
       throw GameKickException(EmuLang.getString("KailleraUserImpl.KickErrorNotInGame"))
     }
-    game!!.kick(this, userID)
+    game?.kick(this, userID)
   }
 
   @Synchronized
@@ -340,7 +341,7 @@ class KailleraUserImpl(
       game!!.announce("You are currently muted!", this)
       return
     }
-    if (server.accessManager.isSilenced(socketAddress!!.address)) {
+    if (server.accessManager.isSilenced(socketAddress.address)) {
       logger.atWarning().log("$this gamechat denied: Silenced: $message")
       game!!.announce("You are currently silenced!", this)
       return

@@ -74,8 +74,8 @@ class MasterListUpdater
         } catch (e: Exception) {}
         if (stopFlag) break
         logger.atInfo().log("MasterListUpdater touching masters...")
-        if (emulinkerMasterTask != null) emulinkerMasterTask!!.touchMaster()
-        if (kailleraMasterTask != null) kailleraMasterTask!!.touchMaster()
+        emulinkerMasterTask?.touchMaster()
+        kailleraMasterTask?.touchMaster()
         statsCollector.clearStartedGamesList()
       }
     } finally {

@@ -183,7 +183,7 @@ class GameOwnerCommandAction @Inject internal constructor(private val flags: Run
   }
 
   private suspend fun autoFireHelp(game: KailleraGameImpl, admin: KailleraUserImpl) {
-    val cur = game.autoFireDetector!!.sensitivity
+    val cur = game.autoFireDetector.sensitivity
     game.announce(EmuLang.getString("GameOwnerCommandAction.HelpSensitivity"), admin)
     try {
       delay(20.milliseconds)
@@ -224,7 +224,7 @@ class GameOwnerCommandAction @Inject internal constructor(private val flags: Run
       autoFireHelp(game, admin)
       return
     }
-    game.autoFireDetector!!.sensitivity = sensitivity
+    game.autoFireDetector.sensitivity = sensitivity
     game.announce(
         EmuLang.getString("GameOwnerCommandAction.HelpCurrentSensitivity", sensitivity) +
             if (sensitivity == 0) EmuLang.getString("GameOwnerCommandAction.HelpDisabled") else "",
@@ -396,9 +396,9 @@ class GameOwnerCommandAction @Inject internal constructor(private val flags: Run
     try {
       val str = scanner.next()
       if (str == "/unmuteall") {
-        for (w in 1..game.players.size) {
-          game.getPlayer(w)!!.isMuted = false
-          game.mutedUsers.remove(game.getPlayer(w)!!.connectSocketAddress.address.hostAddress)
+        game.players.forEach { kailleraUser ->
+          kailleraUser.isMuted = false
+          game.mutedUsers.remove(kailleraUser.connectSocketAddress.address.hostAddress)
         }
         admin.game!!.announce(
             "All players have been unmuted!",

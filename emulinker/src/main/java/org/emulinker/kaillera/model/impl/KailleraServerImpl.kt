@@ -212,7 +212,7 @@ class KailleraServerImpl
       logger.atWarning().log("$user login denied: Connection timed out!")
       throw LoginException(getString("KailleraServerImpl.LoginDeniedConnectionTimedOut"))
     }
-    val access = accessManager.getAccess(user.socketAddress!!.address)
+    val access = accessManager.getAccess(user.socketAddress.address)
     if (access < AccessManager.ACCESS_NORMAL) {
       logger.atInfo().log("$user login denied: Access denied")
       usersMap.remove(userListKey)
@@ -298,7 +298,7 @@ class KailleraServerImpl
       logger.atWarning().log(user.toString() + " login denied: Invalid status=" + u.status)
       throw LoginException(getString("KailleraServerImpl.LoginErrorInvalidStatus", u.status))
     }
-    if (u.connectSocketAddress.address != user.socketAddress!!.address) {
+    if (u.connectSocketAddress.address != user.socketAddress.address) {
       usersMap.remove(userListKey)
       logger
           .atWarning()
@@ -307,7 +307,7 @@ class KailleraServerImpl
                   " login denied: Connect address does not match login address: " +
                   u.connectSocketAddress.address.hostAddress +
                   " != " +
-                  user.socketAddress!!.address.hostAddress)
+                  user.socketAddress.address.hostAddress)
       throw ClientAddressException(getString("KailleraServerImpl.LoginDeniedAddressMatchError"))
     }
     if (access == AccessManager.ACCESS_NORMAL &&

@@ -16,11 +16,11 @@ abstract class PrivateUDPServer(
 
   private val clientRequestTimer: Timer
 
-  var remoteSocketAddress: InetSocketAddress? = null
+  lateinit var remoteSocketAddress: InetSocketAddress
     private set
 
   override suspend fun handleReceived(buffer: ByteBuffer, remoteSocketAddress: InetSocketAddress) {
-    if (this.remoteSocketAddress == null) {
+    if (!this::remoteSocketAddress.isInitialized) {
       this.remoteSocketAddress = remoteSocketAddress
     } else if (remoteSocketAddress != this.remoteSocketAddress) {
       logger
@@ -29,7 +29,7 @@ abstract class PrivateUDPServer(
               "Rejecting packet received from wrong address: " +
                   formatSocketAddress(remoteSocketAddress) +
                   " != " +
-                  formatSocketAddress(this.remoteSocketAddress!!))
+                  formatSocketAddress(this.remoteSocketAddress))
       return
     }
     clientRequestTimer.time().use { handleReceived(buffer) }
@@ -38,7 +38,7 @@ abstract class PrivateUDPServer(
   protected abstract suspend fun handleReceived(buffer: ByteBuffer)
 
   protected suspend fun send(buffer: ByteBuffer) {
-    super.send(buffer, remoteSocketAddress!!)
+    super.send(buffer, remoteSocketAddress)
   }
 
   init {
