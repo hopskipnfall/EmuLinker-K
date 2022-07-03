@@ -21,7 +21,7 @@ abstract class ByteBufferMessage {
     initBuffer()
     writeTo(buffer)
     // Cast to avoid issue with java version mismatch: https://stackoverflow.com/a/61267496/2875073
-    (buffer as Buffer?)!!.flip()
+    (buffer as Buffer).flip()
     return buffer
   }
 

@@ -52,7 +52,7 @@ interface KailleraUser {
   var ignoringUnnecessaryServerActivity: Boolean
   var ping: Int
   var playerNumber: Int
-  var socketAddress: InetSocketAddress?
+  var socketAddress: InetSocketAddress
   var inStealthMode: Boolean
   var tempDelay: Int
   var timeouts: Int

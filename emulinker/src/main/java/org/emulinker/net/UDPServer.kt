@@ -43,7 +43,7 @@ abstract class UDPServer(shutdownOnExit: Boolean, metrics: MetricRegistry?) : Ex
   var bindPort = 0
     private set
 
-  private var serverSocket: BoundDatagramSocket? = null
+  private lateinit var serverSocket: BoundDatagramSocket
 
   final override var threadIsActive = false
     private set
@@ -54,10 +54,10 @@ abstract class UDPServer(shutdownOnExit: Boolean, metrics: MetricRegistry?) : Ex
   @get:Synchronized
   val isBound: Boolean
     get() {
-      return serverSocket != null && !serverSocket!!.isClosed
+      return !serverSocket.isClosed
     }
   val isConnected: Boolean
-    get() = serverSocket != null && !serverSocket!!.isClosed
+    get() = !serverSocket.isClosed
 
   @Synchronized
   open suspend fun start() {
@@ -72,7 +72,7 @@ abstract class UDPServer(shutdownOnExit: Boolean, metrics: MetricRegistry?) : Ex
   @Synchronized
   override suspend fun stop() {
     stopFlag = true
-    serverSocket?.close()
+    serverSocket.close()
   }
 
   @Synchronized
@@ -91,11 +91,11 @@ abstract class UDPServer(shutdownOnExit: Boolean, metrics: MetricRegistry?) : Ex
             .configure {
               receiveBufferSize = bufferSize
               sendBufferSize = bufferSize
-            //              typeOfService = TypeOfService.IPTOS_LOWDELAY
+              typeOfService = TypeOfService.IPTOS_LOWDELAY
             }
-            .bind(io.ktor.network.sockets.InetSocketAddress("127.0.0.1", port))
+            .bind(io.ktor.network.sockets.InetSocketAddress("0.0.0.0", port))
 
-    logger.atInfo().log("Accepting messages at ${serverSocket!!.localAddress}")
+    logger.atInfo().log("Accepting messages at ${serverSocket.localAddress}")
   }
 
   protected abstract fun allocateBuffer(): ByteBuffer
@@ -124,8 +124,7 @@ abstract class UDPServer(shutdownOnExit: Boolean, metrics: MetricRegistry?) : Ex
     */ try {
       //			logger.atFine().log("send("+EmuUtil.INSTANCE.dumpBuffer(buffer, false)+")");
       //      channel!!.send(buffer, toSocketAddress)
-      serverSocket!!.send(
-          Datagram(ByteReadPacket(buffer), V086Utils.toKtorAddress(toSocketAddress)))
+      serverSocket.send(Datagram(ByteReadPacket(buffer), V086Utils.toKtorAddress(toSocketAddress)))
     } catch (e: Exception) {
       logger.atSevere().withCause(e).log("Failed to send on port $bindPort")
     }
@@ -135,7 +134,7 @@ abstract class UDPServer(shutdownOnExit: Boolean, metrics: MetricRegistry?) : Ex
     threadIsActive = true
 
     while (!stopFlag) {
-      val datagram = serverSocket!!.incoming.receive()
+      val datagram = serverSocket.incoming.receive()
 
       require(datagram.address is io.ktor.network.sockets.InetSocketAddress) {
         "address was an incompatable type!"

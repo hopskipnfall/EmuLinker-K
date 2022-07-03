@@ -32,7 +32,7 @@ fun main(): Unit =
               "EmuLinker server is running @ ${DateTimeFormatter.ISO_ZONED_DATE_TIME.withZone(ZoneId.systemDefault()).format(Instant.now())}")
 
       component.accessManager.start() // Almost certainly can be removed.
-      launch { component.kailleraServerController.start() } // Apparently cannot be removed.
+      component.kailleraServerController.start() // Apparently cannot be removed.
       launch { component.server.start() }
 
       component.kailleraServer.start() // Almost certainly can be removed.

@@ -152,10 +152,10 @@ class ChatAction @Inject internal constructor(private val adminCommandAction: Ad
                     1) // this protects against people screwing up the emulinker supraclient
         val access =
             clientHandler.user.server.accessManager.getAccess(
-                clientHandler.user.socketAddress!!.address)
+                clientHandler.user.socketAddress.address)
         if (access < AccessManager.ACCESS_SUPERADMIN &&
             clientHandler.user.server.accessManager.isSilenced(
-                clientHandler.user.socketAddress!!.address)) {
+                clientHandler.user.socketAddress.address)) {
           try {
             clientHandler.send(
                 InformationMessage(clientHandler.nextMessageNumber, "server", "You are silenced!"))
@@ -173,10 +173,10 @@ class ChatAction @Inject internal constructor(private val adminCommandAction: Ad
         val scanner = Scanner(chatMessage.message).useDelimiter(" ")
         val access =
             clientHandler.user.server.accessManager.getAccess(
-                clientHandler.user.socketAddress!!.address)
+                clientHandler.user.socketAddress.address)
         if (access < AccessManager.ACCESS_SUPERADMIN &&
             clientHandler.user.server.accessManager.isSilenced(
-                clientHandler.user.socketAddress!!.address)) {
+                clientHandler.user.socketAddress.address)) {
           try {
             clientHandler.send(
                 InformationMessage(clientHandler.nextMessageNumber, "server", "You are silenced!"))

@@ -76,7 +76,7 @@ class CreateGameAction @Inject internal constructor() :
       clientHandler.send(
           CreateGame_Notification(
               clientHandler.nextMessageNumber,
-              owner!!.name!!,
+              owner.name!!,
               game.romName,
               owner.clientType!!,
               game.id,
