@@ -12,6 +12,7 @@ import java.nio.ByteOrder
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import org.emulinker.config.RuntimeFlags
+import org.emulinker.extension.logLazy
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.messaging.ParseException
 import org.emulinker.kaillera.controller.v086.action.*
@@ -194,7 +195,7 @@ class V086ClientHandler
   }
 
   override suspend fun handleReceived(buffer: ByteBuffer) {
-    var inBundle: V086Bundle =
+    val inBundle: V086Bundle =
         try {
           parse(buffer, lastMessageNumber)
           // inBundle = V086Bundle.parse(buffer, -1);
@@ -221,17 +222,12 @@ class V086ClientHandler
           return
         }
 
-    logger.atFinest().log("<- FROM P%d: %s", user.playerNumber, inBundle?.messages?.firstOrNull())
+    logger.atFinest().log("<- FROM P%d: %s", user.playerNumber, inBundle.messages.firstOrNull())
     clientRetryCount =
         if (inBundle.numMessages == 0) {
-          logger
-              .atFine()
-              .log(
-                  toString() +
-                      " received bundle of " +
-                      inBundle.numMessages +
-                      " messages from " +
-                      user)
+          logger.atFine().logLazy {
+            "${toString()} received bundle of ${inBundle.numMessages} messages from $user"
+          }
           clientRetryCount++
           resend(clientRetryCount)
           return
