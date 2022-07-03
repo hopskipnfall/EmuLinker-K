@@ -90,8 +90,8 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
   }
 
   @Throws(FatalActionException::class)
-  override suspend fun performAction(chatMessage: Chat, clientHandler: V086ClientHandler) {
-    val chat: String = chatMessage.message
+  override suspend fun performAction(message: Chat, clientHandler: V086ClientHandler) {
+    val chat: String = message.message
     val server = clientHandler.controller.server as KailleraServerImpl
     val accessManager = server.accessManager
     val user = clientHandler.user as KailleraUserImpl
@@ -425,7 +425,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
       val userID = scanner.nextInt()
       val minutes = scanner.nextInt()
       val user =
-          server.getUser(userID) as KailleraUserImpl
+          server.getUser(userID) as KailleraUserImpl?
               ?: throw ActionException(
                   EmuLang.getString("AdminCommandAction.UserNotFound", +userID))
       if (user.id == admin.id)
@@ -438,7 +438,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
           admin.accessLevel == AccessManager.ACCESS_MODERATOR)
           throw ActionException("You cannot silence a moderator if you're not an admin!")
       if (admin.accessLevel == AccessManager.ACCESS_MODERATOR) {
-        if (server.accessManager.isSilenced(user.socketAddress!!.address))
+        if (server.accessManager.isSilenced(user.socketAddress.address))
             throw ActionException(
                 "This User has already been Silenced.  Please wait until his time expires.")
         if (minutes > 15) throw ActionException("Moderators can only silence up to 15 minutes!")
@@ -463,7 +463,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
       scanner.next()
       val userID = scanner.nextInt()
       val user =
-          server.getUser(userID) as KailleraUserImpl
+          server.getUser(userID) as KailleraUserImpl?
               ?: throw ActionException(EmuLang.getString("AdminCommandAction.UserNotFound", userID))
       if (user.id == admin.id)
           throw ActionException(EmuLang.getString("AdminCommandAction.CanNotKickSelf"))
@@ -492,7 +492,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
       scanner.next()
       val gameID = scanner.nextInt()
       val game =
-          server.getGame(gameID) as KailleraGameImpl
+          server.getGame(gameID) as KailleraGameImpl?
               ?: throw ActionException(EmuLang.getString("AdminCommandAction.GameNotFound", gameID))
       val owner = game.owner
       val access = server.accessManager.getAccess(owner.connectSocketAddress.address)
@@ -519,7 +519,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
       val userID = scanner.nextInt()
       val minutes = scanner.nextInt()
       val user =
-          server.getUser(userID) as KailleraUserImpl
+          server.getUser(userID) as KailleraUserImpl?
               ?: throw ActionException(EmuLang.getString("AdminCommandAction.UserNotFound", userID))
       if (user.id == admin.id)
           throw ActionException(EmuLang.getString("AdminCommandAction.CanNotBanSelf"))
@@ -552,7 +552,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
       val userID = scanner.nextInt()
       val minutes = scanner.nextInt()
       val user =
-          server.getUser(userID) as KailleraUserImpl
+          server.getUser(userID) as KailleraUserImpl?
               ?: throw ActionException(EmuLang.getString("AdminCommandAction.UserNotFound", userID))
       if (user.id == admin.id)
           throw ActionException(EmuLang.getString("AdminCommandAction.AlreadyAdmin"))
@@ -587,7 +587,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
       val userID = scanner.nextInt()
       val minutes = scanner.nextInt()
       val user =
-          server.getUser(userID) as KailleraUserImpl
+          server.getUser(userID) as KailleraUserImpl?
               ?: throw ActionException(EmuLang.getString("AdminCommandAction.UserNotFound", userID))
       if (user.id == admin.id)
           throw ActionException(EmuLang.getString("AdminCommandAction.AlreadyAdmin"))
@@ -621,7 +621,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
       val userID = scanner.nextInt()
       val minutes = scanner.nextInt()
       val user =
-          server.getUser(userID) as KailleraUserImpl
+          server.getUser(userID) as KailleraUserImpl?
               ?: throw ActionException(EmuLang.getString("AdminCommandAction.UserNotFound", userID))
       if (user.id == admin.id)
           throw ActionException(EmuLang.getString("AdminCommandAction.AlreadyAdmin"))
@@ -796,7 +796,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
         sb.append(" ")
       }
       val game =
-          server.getGame(gameID) as KailleraGameImpl
+          server.getGame(gameID) as KailleraGameImpl?
               ?: throw ActionException(EmuLang.getString("AdminCommandAction.GameNotFound", gameID))
       game.announce(sb.toString())
     } catch (e: NoSuchElementException) {

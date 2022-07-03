@@ -17,7 +17,7 @@ sealed class TemporaryAttribute(accessStr: String, duration: Duration) {
   val isExpired
     get() = Instant.now().isAfter(endTime)
 
-  fun matches(address: String?): Boolean {
+  fun matches(address: String): Boolean {
     return patterns.any { it.match(address) }
   }
 }

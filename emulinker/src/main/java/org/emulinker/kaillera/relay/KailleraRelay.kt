@@ -49,8 +49,7 @@ internal class KailleraRelay
   override fun processClientToServer(
       receiveBuffer: ByteBuffer, fromAddress: InetSocketAddress, toAddress: InetSocketAddress
   ): ByteBuffer? {
-    var inMessage: ConnectMessage? = null
-    inMessage =
+    val inMessage: ConnectMessage? =
         try {
           parse(receiveBuffer)
         } catch (e: MessageFormatException) {
@@ -78,8 +77,7 @@ internal class KailleraRelay
   override fun processServerToClient(
       receiveBuffer: ByteBuffer, fromAddress: InetSocketAddress, toAddress: InetSocketAddress
   ): ByteBuffer? {
-    var inMessage: ConnectMessage? = null
-    inMessage =
+    val inMessage: ConnectMessage? =
         try {
           parse(receiveBuffer)
         } catch (e: MessageFormatException) {
