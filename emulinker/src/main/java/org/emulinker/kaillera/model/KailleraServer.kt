@@ -30,7 +30,7 @@ interface KailleraServer {
 
   @Throws(ServerFullException::class, NewConnectionException::class)
   fun newConnection(
-      clientSocketAddress: InetSocketAddress?, protocol: String?, listener: KailleraEventListener?
+      clientSocketAddress: InetSocketAddress, protocol: String, listener: KailleraEventListener
   ): KailleraUser
 
   @Throws(
@@ -42,7 +42,7 @@ interface KailleraServer {
   suspend fun login(user: KailleraUser)
 
   @Throws(ChatException::class, FloodException::class)
-  fun chat(user: KailleraUser?, message: String?)
+  fun chat(user: KailleraUser, message: String)
 
   @Throws(CreateGameException::class, FloodException::class)
   suspend fun createGame(user: KailleraUser, romName: String?): KailleraGame?

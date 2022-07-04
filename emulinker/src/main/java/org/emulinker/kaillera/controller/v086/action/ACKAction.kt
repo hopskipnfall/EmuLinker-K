@@ -127,9 +127,7 @@ class ACKAction @Inject internal constructor() :
         gamesSubList = ArrayList()
         counter = 0
         sent = true
-        try {
-          delay(100.milliseconds)
-        } catch (e: Exception) {} // SF MOD
+        delay(100.milliseconds) // SF MOD
       }
       counter += user.numBytes
       usersSubList.add(user)
@@ -143,9 +141,7 @@ class ACKAction @Inject internal constructor() :
         gamesSubList = ArrayList()
         counter = 0
         sent = true
-        try {
-          delay(100.milliseconds)
-        } catch (e: Exception) {} // SF MOD
+        delay(100.milliseconds) // SF MOD
       }
       counter += game.numBytes
       gamesSubList.add(game)

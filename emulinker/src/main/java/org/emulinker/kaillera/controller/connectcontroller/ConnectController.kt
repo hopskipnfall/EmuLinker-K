@@ -38,7 +38,7 @@ class ConnectController
         private val config: Configuration,
         metrics: MetricRegistry?,
         flags: RuntimeFlags,
-    ) : UDPServer(/* shutdownOnExit= */ true, metrics) {
+    ) : UDPServer(shutdownOnExit = true, metrics) {
 
   private val controllersMap: MutableMap<String?, KailleraServerController>
 
