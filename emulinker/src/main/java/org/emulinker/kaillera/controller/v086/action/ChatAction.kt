@@ -502,9 +502,7 @@ class ChatAction @Inject internal constructor(private val adminCommandAction: Ad
                   "server",
                   "/me <message> to make personal message eg. /me is bored ...SupraFast is bored."))
         } catch (e: Exception) {}
-        try {
-          delay(20.milliseconds)
-        } catch (e: Exception) {}
+        delay(20.milliseconds)
         try {
           clientHandler.send(
               InformationMessage(
@@ -512,9 +510,7 @@ class ChatAction @Inject internal constructor(private val adminCommandAction: Ad
                   "server",
                   "/ignore <UserID> or /unignore <UserID> or /ignoreall or /unignoreall to ignore users."))
         } catch (e: Exception) {}
-        try {
-          delay(20.milliseconds)
-        } catch (e: Exception) {}
+        delay(20.milliseconds)
         try {
           clientHandler.send(
               InformationMessage(
@@ -522,17 +518,13 @@ class ChatAction @Inject internal constructor(private val adminCommandAction: Ad
                   "server",
                   "/msg <UserID> <msg> to PM somebody. /msgoff or /msgon to turn pm off | on."))
         } catch (e: Exception) {}
-        try {
-          delay(20.milliseconds)
-        } catch (e: Exception) {}
+        delay(20.milliseconds)
         try {
           clientHandler.send(
               InformationMessage(
                   clientHandler.nextMessageNumber, "server", "/myip to get your IP Address."))
         } catch (e: Exception) {}
-        try {
-          delay(20.milliseconds)
-        } catch (e: Exception) {}
+        delay(20.milliseconds)
         if (clientHandler.user.accessLevel == AccessManager.ACCESS_MODERATOR) {
           try {
             clientHandler.send(
@@ -541,17 +533,13 @@ class ChatAction @Inject internal constructor(private val adminCommandAction: Ad
                     "server",
                     "/silence <UserID> <min> to silence a user. 15min max."))
           } catch (e: Exception) {}
-          try {
-            delay(20.milliseconds)
-          } catch (e: Exception) {}
+          delay(20.milliseconds)
           try {
             clientHandler.send(
                 InformationMessage(
                     clientHandler.nextMessageNumber, "server", "/kick <UserID> to kick a user."))
           } catch (e: Exception) {}
-          try {
-            delay(20.milliseconds)
-          } catch (e: Exception) {}
+          delay(20.milliseconds)
         }
         if (clientHandler.user.accessLevel < AccessManager.ACCESS_ADMIN) {
           try {
@@ -559,9 +547,7 @@ class ChatAction @Inject internal constructor(private val adminCommandAction: Ad
                 InformationMessage(
                     clientHandler.nextMessageNumber, "server", "/version to get server version."))
           } catch (e: Exception) {}
-          try {
-            delay(20.milliseconds)
-          } catch (e: Exception) {}
+          delay(20.milliseconds)
           try {
             clientHandler.send(
                 InformationMessage(
@@ -569,9 +555,7 @@ class ChatAction @Inject internal constructor(private val adminCommandAction: Ad
                     "server",
                     "/finduser <Nick> to get a user's info. eg. /finduser sup ...will return SupraFast info."))
           } catch (e: Exception) {}
-          try {
-            delay(20.milliseconds)
-          } catch (e: Exception) {}
+          delay(20.milliseconds)
           return
         }
       } else if (chatMessage.message.startsWith("/finduser") &&

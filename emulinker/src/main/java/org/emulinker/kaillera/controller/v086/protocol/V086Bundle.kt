@@ -57,8 +57,7 @@ class V086Bundle constructor(messages: Array<V086Message?>, numToWrite: Int = In
     fun parse(buffer: ByteBuffer, lastMessageID: Int = -1): V086Bundle {
       buffer.order(ByteOrder.LITTLE_ENDIAN)
       if (buffer.limit() < 5)
-          throw V086BundleFormatException(
-              "Invalid buffer length: " + buffer.limit(), /* cause= */ null)
+          throw V086BundleFormatException("Invalid buffer length: " + buffer.limit(), cause = null)
 
       // again no real need for unsigned
       // int messageCount = UnsignedUtil.getUnsignedByte(buffer);

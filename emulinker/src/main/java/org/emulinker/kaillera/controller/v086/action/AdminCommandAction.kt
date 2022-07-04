@@ -201,148 +201,112 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
             clientHandler.nextMessageNumber,
             "server",
             EmuLang.getString("AdminCommandAction.HelpVersion")))
-    try {
-      delay(20.milliseconds)
-    } catch (e: Exception) {}
+    delay(20.milliseconds)
     clientHandler.send(
         InformationMessage(
             clientHandler.nextMessageNumber,
             "server",
             EmuLang.getString("AdminCommandAction.HelpKick")))
-    try {
-      delay(20.milliseconds)
-    } catch (e: Exception) {}
+    delay(20.milliseconds)
     clientHandler.send(
         InformationMessage(
             clientHandler.nextMessageNumber,
             "server",
             EmuLang.getString("AdminCommandAction.HelpSilence")))
-    try {
-      delay(20.milliseconds)
-    } catch (e: Exception) {}
+    delay(20.milliseconds)
     clientHandler.send(
         InformationMessage(
             clientHandler.nextMessageNumber,
             "server",
             EmuLang.getString("AdminCommandAction.HelpBan")))
-    try {
-      delay(20.milliseconds)
-    } catch (e: Exception) {}
+    delay(20.milliseconds)
     if (admin.accessLevel == AccessManager.ACCESS_ADMIN) {
       clientHandler.send(
           InformationMessage(
               clientHandler.nextMessageNumber,
               "server",
               EmuLang.getString("AdminCommandAction.HelpClear")))
-      try {
-        delay(20.milliseconds)
-      } catch (e: Exception) {}
+      delay(20.milliseconds)
     }
     clientHandler.send(
         InformationMessage(
             clientHandler.nextMessageNumber,
             "server",
             EmuLang.getString("AdminCommandAction.HelpCloseGame")))
-    try {
-      delay(20.milliseconds)
-    } catch (e: Exception) {}
+    delay(20.milliseconds)
     clientHandler.send(
         InformationMessage(
             clientHandler.nextMessageNumber,
             "server",
             EmuLang.getString("AdminCommandAction.HelpAnnounce")))
-    try {
-      delay(20.milliseconds)
-    } catch (e: Exception) {}
+    delay(20.milliseconds)
     clientHandler.send(
         InformationMessage(
             clientHandler.nextMessageNumber,
             "server",
             EmuLang.getString("AdminCommandAction.HelpAnnounceAll")))
-    try {
-      delay(20.milliseconds)
-    } catch (e: Exception) {}
+    delay(20.milliseconds)
     clientHandler.send(
         InformationMessage(
             clientHandler.nextMessageNumber,
             "server",
             EmuLang.getString("AdminCommandAction.HelpAnnounceGame")))
-    try {
-      delay(20.milliseconds)
-    } catch (e: Exception) {}
+    delay(20.milliseconds)
     clientHandler.send(
         InformationMessage(
             clientHandler.nextMessageNumber,
             "server",
             EmuLang.getString("AdminCommandAction.HelpFindUser")))
-    try {
-      delay(20.milliseconds)
-    } catch (e: Exception) {}
+    delay(20.milliseconds)
     clientHandler.send(
         InformationMessage(
             clientHandler.nextMessageNumber,
             "server",
             EmuLang.getString("AdminCommandAction.HelpFindGame")))
-    try {
-      delay(20.milliseconds)
-    } catch (e: Exception) {}
+    delay(20.milliseconds)
     clientHandler.send(
         InformationMessage(
             clientHandler.nextMessageNumber,
             "server",
             "/triviaon to start the trivia bot- /triviapause to pause the bot- /triviaresume to resume the bot after pause- /triviasave to save the bot's scores- /triviatime <#> to change the question delay"))
-    try {
-      delay(20.milliseconds)
-    } catch (e: Exception) {}
+    delay(20.milliseconds)
     clientHandler.send(
         InformationMessage(
             clientHandler.nextMessageNumber,
             "server",
             "/triviaoff to stop the bot- /triviascores to show top 3 scores- /triviawin to show a winner- /triviaupdate <IP Address> <New IP Address> to update ip address"))
-    try {
-      delay(20.milliseconds)
-    } catch (e: Exception) {}
+    delay(20.milliseconds)
     clientHandler.send(
         InformationMessage(
             clientHandler.nextMessageNumber,
             "server",
             "/stealthon /stealthoff to join a room invisibly."))
-    try {
-      delay(20.milliseconds)
-    } catch (e: Exception) {}
+    delay(20.milliseconds)
     if (admin.accessLevel == AccessManager.ACCESS_SUPERADMIN) {
       clientHandler.send(
           InformationMessage(
               clientHandler.nextMessageNumber,
               "server",
               "/tempelevated <UserID> <min> to give a user temporary elevated access."))
-      try {
-        delay(20.milliseconds)
-      } catch (e: Exception) {}
+      delay(20.milliseconds)
       clientHandler.send(
           InformationMessage(
               clientHandler.nextMessageNumber,
               "server",
               "/tempmoderator <UserID> <min> to give a user temporary moderator access."))
-      try {
-        delay(20.milliseconds)
-      } catch (e: Exception) {}
+      delay(20.milliseconds)
       clientHandler.send(
           InformationMessage(
               clientHandler.nextMessageNumber,
               "server",
               EmuLang.getString("AdminCommandAction.HelpTempAdmin")))
-      try {
-        delay(20.milliseconds)
-      } catch (e: Exception) {}
+      delay(20.milliseconds)
       clientHandler.send(
           InformationMessage(
               clientHandler.nextMessageNumber,
               "server",
               "/clear <IP Address> to remove any temp ban, silence, elevated, moderator or admin."))
-      try {
-        delay(20.milliseconds)
-      } catch (e: Exception) {}
+      delay(20.milliseconds)
     }
   }
 

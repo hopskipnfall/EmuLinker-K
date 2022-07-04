@@ -69,9 +69,7 @@ class MasterListUpdater
     logger.atFine().log("MasterListUpdater thread running...")
     try {
       while (!stopFlag) {
-        try {
-          delay(60.seconds)
-        } catch (e: Exception) {}
+        delay(60.seconds)
         if (stopFlag) break
         logger.atInfo().log("MasterListUpdater touching masters...")
         emulinkerMasterTask?.touchMaster()

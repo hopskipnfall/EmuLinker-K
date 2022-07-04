@@ -133,65 +133,39 @@ class GameOwnerCommandAction @Inject internal constructor(private val flags: Run
     // game.announce(EmuLang.getString("GameOwnerCommandAction.AvailableCommands"));
     // try { delay(20.milliseconds); } catch(Exception e) {}
     game.announce(EmuLang.getString("GameOwnerCommandAction.SetAutofireDetection"), admin)
-    try {
-      delay(20.milliseconds)
-    } catch (e: Exception) {}
+    delay(20.milliseconds)
     game.announce("/maxusers <#> to set capacity of room", admin)
-    try {
-      delay(20.milliseconds)
-    } catch (e: Exception) {}
+    delay(20.milliseconds)
     game.announce("/maxping <#> to set maximum ping for room", admin)
-    try {
-      delay(20.milliseconds)
-    } catch (e: Exception) {}
+    delay(20.milliseconds)
     game.announce("/start or /startn <#> start game when n players are joined.", admin)
-    try {
-      delay(20.milliseconds)
-    } catch (e: Exception) {}
+    delay(20.milliseconds)
     game.announce("/mute /unmute  <UserID> or /muteall or /unmuteall to mute player(s).", admin)
-    try {
-      delay(20.milliseconds)
-    } catch (e: Exception) {}
+    delay(20.milliseconds)
     game.announce(
         "/swap <order> eg. 123..n {n = total # of players; Each slot = new player#}", admin)
-    try {
-      delay(20.milliseconds)
-    } catch (e: Exception) {}
+    delay(20.milliseconds)
     game.announce("/kick <Player#> or /kickall to kick a player(s).", admin)
-    try {
-      delay(20.milliseconds)
-    } catch (e: Exception) {}
+    delay(20.milliseconds)
     game.announce("/setemu To restrict the gameroom to this emulator!", admin)
-    try {
-      delay(20.milliseconds)
-    } catch (e: Exception) {}
+    delay(20.milliseconds)
     game.announce("/setconn To restrict the gameroom to this connection type!", admin)
-    try {
-      delay(20.milliseconds)
-    } catch (e: Exception) {}
+    delay(20.milliseconds)
     game.announce(
         "/lagstat To check who has the most lag spikes or /lagreset to reset lagstat!", admin)
-    try {
-      delay(20.milliseconds)
-    } catch (e: Exception) {}
+    delay(20.milliseconds)
     game.announce(
         "/samedelay {true | false} to play at the same delay as player with highest ping. Default is false.",
         admin)
-    try {
-      delay(20.milliseconds)
-    } catch (e: Exception) {}
+    delay(20.milliseconds)
   }
 
   private suspend fun autoFireHelp(game: KailleraGameImpl, admin: KailleraUserImpl) {
     val cur = game.autoFireDetector.sensitivity
     game.announce(EmuLang.getString("GameOwnerCommandAction.HelpSensitivity"), admin)
-    try {
-      delay(20.milliseconds)
-    } catch (e: Exception) {}
+    delay(20.milliseconds)
     game.announce(EmuLang.getString("GameOwnerCommandAction.HelpDisable"), admin)
-    try {
-      delay(20.milliseconds)
-    } catch (e: Exception) {}
+    delay(20.milliseconds)
     game.announce(
         EmuLang.getString("GameOwnerCommandAction.HelpCurrentSensitivity", cur) +
             if (cur == 0) EmuLang.getString("GameOwnerCommandAction.HelpDisabled") else "",
@@ -423,7 +397,7 @@ class GameOwnerCommandAction @Inject internal constructor(private val flags: Run
       game.mutedUsers.remove(user.connectSocketAddress.address.hostAddress)
       user.isMuted = false
       val user1 = clientHandler.user
-      (user1 as KailleraUserImpl?)!!.game!!.announce(
+      (user1 as KailleraUserImpl).game!!.announce(
           user.name + " has been unmuted!",
       )
     } catch (e: NoSuchElementException) {

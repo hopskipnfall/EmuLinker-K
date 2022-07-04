@@ -53,13 +53,8 @@ class JoinGameAction @Inject internal constructor() :
       val user = event.user
       if (user == thisUser) {
         val players: MutableList<Player> = ArrayList()
-        for (player in game.players) {
-          if (player != thisUser) {
-            if (!player.inStealthMode)
-                players.add(
-                    PlayerInformation.Player(
-                        player.name!!, player.ping.toLong(), player.id, player.connectionType))
-          }
+        game.players.asSequence().filter { it != thisUser && !it.inStealthMode }.mapTo(players) {
+          PlayerInformation.Player(it.name!!, it.ping.toLong(), it.id, it.connectionType)
         }
         clientHandler.send(PlayerInformation(clientHandler.nextMessageNumber, players))
       }

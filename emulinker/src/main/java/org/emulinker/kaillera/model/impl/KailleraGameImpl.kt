@@ -266,9 +266,7 @@ class KailleraGameImpl(
     // SF MOD - /startn
     if (startN != -1) {
       if (players.size >= startN) {
-        try {
-          delay(1.seconds)
-        } catch (e: Exception) {}
+        delay(1.seconds)
         try {
           start(owner)
         } catch (e: Exception) {}
@@ -620,7 +618,7 @@ class KailleraGameImpl(
             user.bytesPerAction,
             playerNumber,
             playerActionQueueCopy.size)
-    (user as KailleraUserImpl?)!!.addEvent(GameDataEvent(this, response))
+    (user as KailleraUserImpl).addEvent(GameDataEvent(this, response))
   }
 
   // it's very important this method is synchronized

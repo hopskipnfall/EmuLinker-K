@@ -83,10 +83,10 @@ interface KailleraUser {
   fun addIgnoredUser(address: String)
 
   @Throws(ChatException::class, FloodException::class)
-  fun chat(message: String?)
+  fun chat(message: String)
 
   @Throws(CreateGameException::class, FloodException::class)
-  suspend fun createGame(romName: String?): KailleraGame?
+  suspend fun createGame(romName: String): KailleraGame
 
   @Throws(
       QuitException::class,

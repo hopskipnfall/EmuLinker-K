@@ -14,7 +14,7 @@ interface KailleraServerController {
   val clientTypes: Array<String>
 
   @Throws(ServerFullException::class, NewConnectionException::class)
-  suspend fun newConnection(clientSocketAddress: InetSocketAddress?, protocol: String?): Int
+  suspend fun newConnection(clientSocketAddress: InetSocketAddress, protocol: String): Int
 
   fun start()
 

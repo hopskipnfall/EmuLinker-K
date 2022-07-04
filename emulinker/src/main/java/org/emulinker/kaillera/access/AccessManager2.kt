@@ -10,7 +10,6 @@ import java.util.*
 import java.util.concurrent.CopyOnWriteArrayList
 import javax.inject.Inject
 import javax.inject.Singleton
-import kotlin.time.Duration.Companion.minutes
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.util.WildcardStringPattern
 
@@ -184,10 +183,7 @@ class AccessManager2 @Inject internal constructor(private val flags: RuntimeFlag
       if (tempElevated.matches(userAddress) && !tempElevated.isExpired)
           return AccessManager.ACCESS_ELEVATED
     }
-    for (userAccess in userList) {
-      if (userAccess.matches(userAddress)) return userAccess.access
-    }
-    return AccessManager.ACCESS_NORMAL
+    return userList.firstOrNull { it.matches(userAddress) }?.access ?: AccessManager.ACCESS_NORMAL
   }
 
   @Synchronized

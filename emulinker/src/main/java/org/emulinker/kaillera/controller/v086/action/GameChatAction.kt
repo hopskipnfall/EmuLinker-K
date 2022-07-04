@@ -36,7 +36,7 @@ class GameChatAction
 
   @Throws(FatalActionException::class)
   override suspend fun performAction(message: GameChat_Request, clientHandler: V086ClientHandler) {
-    if (clientHandler.user == null) {
+    if (clientHandler::user == null) {
       throw FatalActionException("User does not exist: GameChatAction $message")
     }
     if (clientHandler.user.game == null) return
@@ -140,10 +140,10 @@ class GameChatAction
         val scanner = Scanner(message.message).useDelimiter(" ")
         val access =
             clientHandler.user.server.accessManager.getAccess(
-                clientHandler.user.socketAddress!!.address)
+                clientHandler.user.socketAddress.address)
         if (access < AccessManager.ACCESS_SUPERADMIN &&
             clientHandler.user.server.accessManager.isSilenced(
-                clientHandler.user.socketAddress!!.address)) {
+                clientHandler.user.socketAddress.address)) {
           user1.game!!.announce("You are silenced!", user1)
           return
         }
@@ -328,8 +328,7 @@ class GameChatAction
           logger
               .atInfo()
               .withCause(e)
-              .log(
-                  "IGNORE USER ERROR: ${user.name}: ${clientHandler.remoteSocketAddress!!.hostName}")
+              .log("IGNORE USER ERROR: ${user.name}: ${clientHandler.remoteSocketAddress.hostName}")
           return
         }
       } else if (message.message.startsWith("/unignore")) {
@@ -402,25 +401,17 @@ class GameChatAction
         val user = clientHandler.user as KailleraUserImpl?
         user!!.game!!.announce(
             "/me <message> to make personal message eg. /me is bored ...SupraFast is bored.", user)
-        try {
-          delay(20.milliseconds)
-        } catch (e: Exception) {}
+        delay(20.milliseconds)
         user.game!!.announce(
             "/msg <UserID> <msg> to PM somebody. /msgoff or /msgon to turn pm off | on.", user)
-        try {
-          delay(20.milliseconds)
-        } catch (e: Exception) {}
+        delay(20.milliseconds)
         user.game!!.announce(
             "/ignore <UserID> or /unignore <UserID> or /ignoreall or /unignoreall to ignore users.",
             user)
-        try {
-          delay(20.milliseconds)
-        } catch (e: Exception) {}
+        delay(20.milliseconds)
         user.game!!.announce(
             "/p2pon or /p2poff this option ignores all server activity during gameplay.", user)
-        try {
-          delay(20.milliseconds)
-        } catch (e: Exception) {}
+        delay(20.milliseconds)
       } else if (message.message == "/stop") {
         val user = clientHandler.user as KailleraUserImpl
         if (lookingForGameReporter.cancelActionsForUser(user.id)) {

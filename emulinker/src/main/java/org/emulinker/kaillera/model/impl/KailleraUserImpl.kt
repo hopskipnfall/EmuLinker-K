@@ -1,7 +1,6 @@
 package org.emulinker.kaillera.model.impl
 
 import com.google.common.flogger.FluentLogger
-import java.lang.Exception
 import java.lang.InterruptedException
 import java.net.InetSocketAddress
 import java.time.Duration
@@ -209,9 +208,7 @@ class KailleraUserImpl(
         return
       }
       stopFlag = true
-      try {
-        delay(500.milliseconds)
-      } catch (e: Exception) {}
+      delay(500.milliseconds)
       addEvent(StopFlagEvent())
     }
     listener.stop()
@@ -241,7 +238,7 @@ class KailleraUserImpl(
 
   @Synchronized
   @Throws(ChatException::class, FloodException::class)
-  override fun chat(message: String?) {
+  override fun chat(message: String) {
     updateLastActivity()
     server.chat(this, message)
     lastChatTime = System.currentTimeMillis()
@@ -260,12 +257,9 @@ class KailleraUserImpl(
 
   @Synchronized
   @Throws(CreateGameException::class, FloodException::class)
-  override suspend fun createGame(romName: String?): KailleraGame? {
+  override suspend fun createGame(romName: String): KailleraGame {
     updateLastActivity()
-    if (server.getUser(id) == null) {
-      logger.atSevere().log("$this create game failed: User don't exist!")
-      return null
-    }
+    requireNotNull(server.getUser(id)) { "$this create game failed: User don't exist!" }
     if (status == UserStatus.PLAYING) {
       logger.atWarning().log("$this create game failed: User status is Playing!")
       throw CreateGameException(EmuLang.getString("KailleraUserImpl.CreateGameErrorAlreadyInGame"))

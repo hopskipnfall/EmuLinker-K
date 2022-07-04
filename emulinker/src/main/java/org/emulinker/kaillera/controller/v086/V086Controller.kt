@@ -90,7 +90,7 @@ class V086Controller
   @OptIn(DelicateCoroutinesApi::class) // For GlobalScope.
   @Throws(ServerFullException::class, NewConnectionException::class)
   override suspend fun newConnection(
-      clientSocketAddress: InetSocketAddress?, protocol: String?
+      clientSocketAddress: InetSocketAddress, protocol: String
   ): Int {
     if (!isRunning) throw NewConnectionException("Controller is not running")
 
@@ -119,10 +119,8 @@ class V086Controller
           portRangeQueue.add(port)
         }
       }
-      try {
-        // pause very briefly to give the OS a chance to free a port
-        delay(5.milliseconds)
-      } catch (e: InterruptedException) {}
+      // pause very briefly to give the OS a chance to free a port
+      delay(5.milliseconds)
     }
     if (boundPort < 0) {
       clientHandler.stop()
