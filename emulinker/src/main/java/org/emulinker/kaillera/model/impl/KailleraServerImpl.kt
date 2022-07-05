@@ -185,19 +185,7 @@ class KailleraServerImpl
     logger
         .atInfo()
         .log(
-            user.toString() +
-                ": login request: delay=" +
-                Duration.between(user.connectTime, Instant.now()) +
-                "ms, clientAddress=" +
-                formatSocketAddress(user.socketAddress!!) +
-                ", name=" +
-                user.name +
-                ", ping=" +
-                user.ping +
-                ", client=" +
-                user.clientType +
-                ", connection=" +
-                user.connectionType)
+            "$user: login request: delay=${Duration.between(user.connectTime, Instant.now())}ms, clientAddress=${formatSocketAddress(user.socketAddress)}, name=${user.name}, ping=${user.ping}, client=${user.clientType}, connection=${user.connectionType}")
     if (user.loggedIn) {
       logger.atWarning().log("$user login denied: Already logged in!")
       throw LoginException(getString("KailleraServerImpl.LoginDeniedAlreadyLoggedIn"))
