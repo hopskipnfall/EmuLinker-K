@@ -10,6 +10,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.Throws
 import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.minutes
 import kotlinx.coroutines.delay
 import org.emulinker.kaillera.access.AccessManager
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
@@ -407,7 +408,8 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
                 "This User has already been Silenced.  Please wait until his time expires.")
         if (minutes > 15) throw ActionException("Moderators can only silence up to 15 minutes!")
       }
-      server.accessManager.addSilenced(user.connectSocketAddress.address.hostAddress, minutes)
+      server.accessManager.addSilenced(
+          user.connectSocketAddress.address.hostAddress, minutes.minutes)
       server.announce(
           EmuLang.getString("AdminCommandAction.Silenced", minutes, user.name), false, null)
     } catch (e: NoSuchElementException) {
@@ -494,7 +496,8 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
       server.announce(
           EmuLang.getString("AdminCommandAction.Banned", minutes, user.name), false, null)
       user.quit(EmuLang.getString("AdminCommandAction.QuitBanned"))
-      server.accessManager.addTempBan(user.connectSocketAddress.address.hostAddress, minutes)
+      server.accessManager.addTempBan(
+          user.connectSocketAddress.address.hostAddress, minutes.minutes)
     } catch (e: NoSuchElementException) {
       throw ActionException(EmuLang.getString("AdminCommandAction.BanError"))
     }
@@ -526,7 +529,8 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
           throw ActionException(EmuLang.getString("AdminCommandAction.UserAlreadyAdmin"))
       else if (access == AccessManager.ACCESS_ELEVATED)
           throw ActionException("User is already elevated.")
-      server.accessManager.addTempElevated(user.connectSocketAddress.address.hostAddress, minutes)
+      server.accessManager.addTempElevated(
+          user.connectSocketAddress.address.hostAddress, minutes.minutes)
       server.announce(
           "Temp Elevated Granted: " + user.name + " for " + minutes + "min", false, null)
     } catch (e: NoSuchElementException) {
@@ -561,7 +565,8 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
           throw ActionException(EmuLang.getString("AdminCommandAction.UserAlreadyAdmin"))
       else if (access == AccessManager.ACCESS_MODERATOR)
           throw ActionException("User is already moderator.")
-      server.accessManager.addTempModerator(user.connectSocketAddress.address.hostAddress, minutes)
+      server.accessManager.addTempModerator(
+          user.connectSocketAddress.address.hostAddress, minutes.minutes)
       server.announce(
           "Temp Moderator Granted: " + user.name + " for " + minutes + "min.", false, null)
     } catch (e: NoSuchElementException) {
@@ -593,7 +598,8 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
       if (access >= AccessManager.ACCESS_ADMIN &&
           admin.accessLevel != AccessManager.ACCESS_SUPERADMIN)
           throw ActionException(EmuLang.getString("AdminCommandAction.UserAlreadyAdmin"))
-      server.accessManager.addTempAdmin(user.connectSocketAddress.address.hostAddress, minutes)
+      server.accessManager.addTempAdmin(
+          user.connectSocketAddress.address.hostAddress, minutes.minutes)
       server.announce(
           EmuLang.getString("AdminCommandAction.TempAdminGranted", minutes, user.name), false, null)
     } catch (e: NoSuchElementException) {

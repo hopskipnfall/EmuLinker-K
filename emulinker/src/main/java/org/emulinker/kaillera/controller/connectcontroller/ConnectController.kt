@@ -6,6 +6,7 @@ import java.net.InetSocketAddress
 import java.nio.ByteBuffer
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.time.Duration.Companion.minutes
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import org.apache.commons.configuration.Configuration
@@ -178,7 +179,7 @@ class ConnectController
                     .atFine()
                     .log(
                         "SF MOD: HAMMER PROTECTION (2 Min Ban): ${formatSocketAddress(remoteSocketAddress)}")
-                accessManager.addTempBan(remoteSocketAddress.address.hostAddress, 2)
+                accessManager.addTempBan(remoteSocketAddress.address.hostAddress, 2.minutes)
                 return
               }
             } else {
