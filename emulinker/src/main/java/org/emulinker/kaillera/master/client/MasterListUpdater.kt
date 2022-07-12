@@ -35,20 +35,15 @@ class MasterListUpdater
     private set
 
   @Synchronized
-  override fun toString(): String {
-    return ("MasterListUpdater[touchKaillera=" +
-        flags.touchKaillera +
-        " touchEmulinker=" +
-        flags.touchEmulinker +
-        "]")
-  }
+  override fun toString() =
+      "MasterListUpdater[touchKaillera=${flags.touchKaillera} touchEmulinker=${flags.touchEmulinker}]"
 
   @Synchronized
   fun start() {
     if (publicInfo != null) {
       logger.atFine().log("MasterListUpdater thread received start request!")
       //      threadPool.execute(this) // NUEFIXME
-      Thread.yield()
+      //      Thread.yield() // nue removed
     }
   }
 

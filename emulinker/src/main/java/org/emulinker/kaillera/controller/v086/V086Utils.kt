@@ -24,6 +24,7 @@ object V086Utils {
     val buffer = ByteBuffer.allocate(bytes.size)
     buffer.put(bytes)
     buffer.position(0)
+    //    buffer.limit(hex.length / 2)
     return buffer
   }
 

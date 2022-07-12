@@ -641,7 +641,7 @@ class KailleraServerImpl
 
         if (gamesAlso && kailleraUser.game != null) {
           kailleraUser.game!!.announce(message, kailleraUser)
-          Thread.yield()
+          //          Thread.yield() //nue removed
         }
       }
     } else {

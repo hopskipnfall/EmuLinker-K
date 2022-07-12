@@ -26,10 +26,10 @@ abstract class PrivateUDPServer(
       logger
           .atWarning()
           .log(
-              "Rejecting packet received from wrong address: " +
-                  formatSocketAddress(remoteSocketAddress) +
-                  " != " +
-                  formatSocketAddress(this.remoteSocketAddress))
+              "Rejecting packet received from wrong address. Expected=%s but was %s",
+              formatSocketAddress(this.remoteSocketAddress),
+              formatSocketAddress(remoteSocketAddress))
+
       return
     }
     clientRequestTimer.time().use { handleReceived(buffer) }
