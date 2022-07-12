@@ -26,6 +26,7 @@ import org.emulinker.net.BindException
 import org.emulinker.net.PrivateUDPServer
 import org.emulinker.util.ClientGameDataCache
 import org.emulinker.util.EmuUtil.dumpBuffer
+import org.emulinker.util.EmuUtil.dumpBufferFromBeginning
 import org.emulinker.util.GameDataCache
 
 private val logger = FluentLogger.forEnclosingClass()
@@ -131,7 +132,6 @@ class V086ClientHandler
     this.user = user
 
     //    controller.threadPool.execute(this) // NUEFIXME
-    Thread.yield()
 
     /*
     long s = System.currentTimeMillis();
@@ -165,15 +165,9 @@ class V086ClientHandler
       logger.atFine().log("$this Stopping!")
       super.stop()
       if (port > 0) {
-        logger
-            .atFine()
-            .log(
-                toString() +
-                    " returning port " +
-                    port +
-                    " to available port queue: " +
-                    (controller.portRangeQueue.size + 1) +
-                    " available")
+        logger.atFine().logLazy {
+          "$this returning port $port to available port queue: ${controller.portRangeQueue.size + 1} available"
+        }
         controller.portRangeQueue.add(port)
       }
     }
@@ -195,47 +189,52 @@ class V086ClientHandler
   }
 
   override suspend fun handleReceived(buffer: ByteBuffer) {
-    val inBundle: V086Bundle =
-        try {
-          parse(buffer, lastMessageNumber)
-          // inBundle = V086Bundle.parse(buffer, -1);
-        } catch (e: ParseException) {
-          buffer.rewind()
-          logger
-              .atWarning()
-              .withCause(e)
-              .log(toString() + " failed to parse: " + dumpBuffer(buffer))
-          return
-        } catch (e: V086BundleFormatException) {
-          buffer.rewind()
-          logger
-              .atWarning()
-              .withCause(e)
-              .log(toString() + " received invalid message bundle: " + dumpBuffer(buffer))
-          return
-        } catch (e: MessageFormatException) {
-          buffer.rewind()
-          logger
-              .atWarning()
-              .withCause(e)
-              .log(toString() + " received invalid message: " + dumpBuffer(buffer))
-          return
-        }
+    inMutex.withLock {
+      val lastMessageNumberUsed = lastMessageNumber
+      val inBundle =
+          try {
+            parse(buffer, lastMessageNumber)
+          } catch (e: ParseException) {
+            buffer.rewind()
+            logger.atWarning().withCause(e).log("$this failed to parse: ${dumpBuffer(buffer)}")
+            null
+          } catch (e: V086BundleFormatException) {
+            buffer.rewind()
+            logger
+                .atWarning()
+                .withCause(e)
+                .log("$this received invalid message bundle: ${dumpBuffer(buffer)}")
+            null
+          } catch (e: MessageFormatException) {
+            buffer.rewind()
+            logger
+                .atWarning()
+                .withCause(e)
+                .log("$this received invalid message: ${dumpBuffer(buffer)}")
+            null
+          } ?: return
 
-    logger.atFinest().log("<- FROM P%d: %s", user.playerNumber, inBundle.messages.firstOrNull())
-    clientRetryCount =
-        if (inBundle.numMessages == 0) {
-          logger.atFine().logLazy {
-            "${toString()} received bundle of ${inBundle.numMessages} messages from $user"
-          }
-          clientRetryCount++
-          resend(clientRetryCount)
-          return
-        } else {
-          0
+      if (inBundle.messages.firstOrNull() == null) {
+        logger.atSevere().logLazy {
+          "Received request from P${user.playerNumber} containing no messages. inBundle.messages.size = ${inBundle.messages.size}. numMessages: ${inBundle.numMessages}, buffer dump: ${dumpBufferFromBeginning(buffer)}, lastMessageNumberUsed: $lastMessageNumberUsed"
         }
-    try {
-      inMutex.withLock {
+      }
+
+      logger.atFine().logLazy {
+        "<- FROM P${user.playerNumber}: ${inBundle.messages.firstOrNull()}"
+      }
+      clientRetryCount =
+          if (inBundle.numMessages == 0) {
+            logger.atFine().logLazy {
+              "${toString()} received bundle of ${inBundle.numMessages} messages from $user"
+            }
+            clientRetryCount++
+            resend(clientRetryCount)
+            return
+          } else {
+            0
+          }
+      try {
         val messages = inBundle.messages
         if (inBundle.numMessages == 1) {
           lastMessageNumber = messages.single()!!.messageNumber
@@ -260,13 +259,7 @@ class V086ClientHandler
               } else {
                 logger
                     .atWarning()
-                    .log(
-                        user.toString() +
-                            " dropped a packet! (" +
-                            prevMessageNumber +
-                            " to " +
-                            lastMessageNumber +
-                            ")")
+                    .log("$user dropped a packet! ($prevMessageNumber to $lastMessageNumber)")
                 user.droppedPacket()
               }
             }
@@ -279,11 +272,10 @@ class V086ClientHandler
             }
           }
         }
+      } catch (e: FatalActionException) {
+        logger.atWarning().withCause(e).log(toString() + " fatal action, closing connection")
+        stop()
       }
-    } catch (e: FatalActionException) {
-      logger.atWarning().withCause(e).log(toString() + " fatal action, closing connection")
-      Thread.yield()
-      stop()
     }
   }
 

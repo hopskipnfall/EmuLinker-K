@@ -7,5 +7,7 @@ import com.google.common.flogger.LoggingApi
  * the method is called.
  */
 fun <T : LoggingApi<T>?> LoggingApi<T>.logLazy(lazyMessage: () -> String) {
-  log(lazyMessage())
+  if (this !is LoggingApi.NoOp) {
+    log(lazyMessage())
+  }
 }

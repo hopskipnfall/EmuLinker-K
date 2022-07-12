@@ -437,7 +437,7 @@ class AccessManager2 @Inject internal constructor(private val flags: RuntimeFlag
     scope.launch {
       while (true) {
         delay(1.minutes)
-        logger.atInfo().log("Refreshing DNS for all users and addresses")
+        logger.atFine().log("Refreshing DNS for all users and addresses")
         userList.forEach { it.refreshDNS() }
         addressList.forEach { it.refreshDNS() }
       }
