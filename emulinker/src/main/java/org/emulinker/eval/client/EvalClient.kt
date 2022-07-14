@@ -30,7 +30,8 @@ class EvalClient(
     private val connectControllerAddress: InetSocketAddress,
     private val simulateGameLag: Boolean = false,
     private val connectionType: ConnectionType = ConnectionType.LAN,
-    private val frameDelay: Int = 1
+    private val frameDelay: Int = 1,
+    private val clientType: String = "Project 64k 0.13 (01 Aug 2003)"
 ) : Closeable {
   private val lastMessageBuffer = LastMessageBuffer(V086Controller.MAX_BUNDLE_SIZE)
 
@@ -104,10 +105,7 @@ class EvalClient(
       logger.atInfo().log("EvalClient shut down.")
     }
 
-    sendWithMessageId {
-      UserInformation(
-          messageNumber = it, username, "Project 64k 0.13 (01 Aug 2003)", connectionType)
-    }
+    sendWithMessageId { UserInformation(messageNumber = it, username, clientType, connectionType) }
     giveServerTime()
   }
 

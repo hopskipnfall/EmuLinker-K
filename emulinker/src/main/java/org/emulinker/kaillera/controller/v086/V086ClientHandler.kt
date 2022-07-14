@@ -318,19 +318,20 @@ class V086ClientHandler
   }
 
   suspend fun resend(timeoutCounter: Int) {
-    outMutex.withLock {
-      // if ((System.currentTimeMillis() - lastResend) > (user.getPing()*3))
-      if (System.currentTimeMillis() - lastResend > controller.server.maxPing) {
-        // int numToSend = (3+timeoutCounter);
-        var numToSend = 3 * timeoutCounter
-        if (numToSend > V086Controller.MAX_BUNDLE_SIZE) numToSend = V086Controller.MAX_BUNDLE_SIZE
-        logger.atFine().log("$this: resending last $numToSend messages")
-        send(null, numToSend)
-        lastResend = System.currentTimeMillis()
-      } else {
-        logger.atFine().log("Skipping resend...")
-      }
+    // TODO(nue): Confirm it's safe to remove this.
+    //    outMutex.withLock {
+    // if ((System.currentTimeMillis() - lastResend) > (user.getPing()*3))
+    if (System.currentTimeMillis() - lastResend > controller.server.maxPing) {
+      // int numToSend = (3+timeoutCounter);
+      var numToSend = 3 * timeoutCounter
+      if (numToSend > V086Controller.MAX_BUNDLE_SIZE) numToSend = V086Controller.MAX_BUNDLE_SIZE
+      logger.atFine().log("$this: resending last $numToSend messages")
+      send(null, numToSend)
+      lastResend = System.currentTimeMillis()
+    } else {
+      logger.atFine().log("Skipping resend...")
     }
+    //    }
   }
 
   suspend fun send(outMessage: V086Message?, numToSend: Int = 5) {
