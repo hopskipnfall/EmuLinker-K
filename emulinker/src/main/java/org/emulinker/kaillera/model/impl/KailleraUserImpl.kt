@@ -10,6 +10,7 @@ import java.util.concurrent.BlockingQueue
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit
 import kotlin.Throws
+import kotlin.coroutines.CoroutineContext
 import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.sync.Mutex
@@ -514,7 +515,7 @@ class KailleraUserImpl(
 
   // TODO(nue): Get rid of this for loop. We should be able to trigger event listeners as soon as
   // the new data is added.
-  override suspend fun run() {
+  override suspend fun run(globalContext: CoroutineContext) {
     threadIsActive = true
     logger.atFine().log("$this thread running...")
     try {

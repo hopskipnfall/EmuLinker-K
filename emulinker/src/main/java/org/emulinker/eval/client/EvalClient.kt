@@ -35,8 +35,6 @@ class EvalClient(
 ) : Closeable {
   private val lastMessageBuffer = LastMessageBuffer(V086Controller.MAX_BUNDLE_SIZE)
 
-  private val scope = CoroutineScope(Dispatchers.Default)
-
   lateinit var socket: ConnectedDatagramSocket
 
   var gameDataCache: GameDataCache = ClientGameDataCache(256)
@@ -85,7 +83,7 @@ class EvalClient(
 
   /** Interacts in the server */
   suspend fun start() {
-    scope.launch(Dispatchers.IO) {
+    CoroutineScope(Dispatchers.Default).launch {
       while (!killSwitch) {
         try {
           val response = V086Bundle.parse(socket.receive().packet.readByteBuffer())

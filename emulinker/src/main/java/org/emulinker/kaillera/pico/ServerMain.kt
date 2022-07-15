@@ -10,6 +10,7 @@ import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.concurrent.TimeUnit
+import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 
@@ -38,9 +39,8 @@ fun main(): Unit =
               "EmuLinker server is running @ ${DateTimeFormatter.ISO_ZONED_DATE_TIME.withZone(ZoneId.systemDefault()).format(Instant.now())}")
 
       component.kailleraServerController.start() // Apparently cannot be removed.
-      launch { component.server.start() }
+      launch { component.server.start(coroutineContext + CoroutineName("ConnectServer")) }
 
-      component.kailleraServer.start() // Almost certainly can be removed.
       component.masterListUpdater.start()
       val metrics = component.metricRegistry
       metrics.registerAll(ThreadStatesGaugeSet())

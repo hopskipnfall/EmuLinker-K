@@ -13,6 +13,7 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.function.Consumer
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.coroutines.CoroutineContext
 import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
@@ -105,10 +106,6 @@ class KailleraServerImpl
   }
 
   @Synchronized
-  // TODO(nue): Maybe not used at all..
-  override fun start() {}
-
-  @Synchronized
   override suspend fun stop() {
     logger.atFine().log("KailleraServer thread received stop request!")
     if (!threadIsActive) {
@@ -169,7 +166,7 @@ class KailleraServerImpl
 
     //    threadPool.execute(user) // NUEFIXME
     // look for the infinite loop inside of the user class
-    GlobalScope.launch { user.run() }
+    GlobalScope.launch { user.run(coroutineContext) }
     return user
   }
 
@@ -698,7 +695,7 @@ class KailleraServerImpl
     }
   }
 
-  override suspend fun run() {
+  override suspend fun run(globalContext: CoroutineContext) {
     threadIsActive = true
     logger.atFine().log("KailleraServer thread running...")
     try {

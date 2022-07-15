@@ -183,11 +183,6 @@ class V086ClientHandler
     return inBuffer
   }
 
-  override fun releaseBuffer(buffer: ByteBuffer) {
-    // ByteBufferMessage.releaseBuffer(buffer);
-    // buffer.clear();
-  }
-
   override suspend fun handleReceived(buffer: ByteBuffer) {
     inMutex.withLock {
       val lastMessageNumberUsed = lastMessageNumber

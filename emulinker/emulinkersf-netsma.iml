@@ -107,6 +107,7 @@
     <orderEntry type="library" name="Maven: commons-codec:commons-codec:1.2" level="project" />
     <orderEntry type="library" name="Maven: org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.3" level="project" />
     <orderEntry type="library" name="Maven: org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.6.3" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: org.jetbrains.kotlinx:kotlinx-coroutines-test-jvm:1.6.3" level="project" />
     <orderEntry type="library" name="Maven: commons-pool:commons-pool:1.2" level="project" />
     <orderEntry type="library" name="Maven: io.ktor:ktor-network-jvm:2.0.2" level="project" />
     <orderEntry type="library" name="Maven: org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.6.21" level="project" />

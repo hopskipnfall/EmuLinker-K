@@ -3,6 +3,7 @@ package org.emulinker.kaillera.master.client
 import com.google.common.flogger.FluentLogger
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.coroutines.CoroutineContext
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.delay
 import org.emulinker.config.RuntimeFlags
@@ -59,7 +60,7 @@ class MasterListUpdater
     }
   }
 
-  override suspend fun run() {
+  override suspend fun run(globalContext: CoroutineContext) {
     threadIsActive = true
     logger.atFine().log("MasterListUpdater thread running...")
     try {

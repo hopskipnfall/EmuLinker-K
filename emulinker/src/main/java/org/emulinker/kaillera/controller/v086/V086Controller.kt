@@ -111,7 +111,7 @@ class V086Controller
         logger.atInfo().log("Private port $port allocated to: $user")
         try {
           clientHandler.bind(port)
-          GlobalScope.launch { clientHandler.run() }
+          GlobalScope.launch { clientHandler.run(coroutineContext) }
           boundPort = port
           break
         } catch (e: BindException) {

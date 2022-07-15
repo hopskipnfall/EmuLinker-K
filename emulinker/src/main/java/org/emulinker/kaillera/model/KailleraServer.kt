@@ -53,6 +53,5 @@ interface KailleraServer {
       QuitGameException::class,
       CloseGameException::class)
   fun quit(user: KailleraUser, message: String?)
-  fun start()
   suspend fun stop()
 }

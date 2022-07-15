@@ -9,7 +9,8 @@ import java.lang.Exception
 import java.net.InetSocketAddress
 import java.nio.ByteBuffer
 import kotlin.Throws
-import kotlinx.coroutines.Dispatchers
+import kotlin.coroutines.CoroutineContext
+import kotlinx.coroutines.*
 import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.util.EmuUtil.formatSocketAddress
 import org.emulinker.util.Executable
@@ -45,6 +46,8 @@ abstract class UDPServer(shutdownOnExit: Boolean, metrics: MetricRegistry?) : Ex
 
   private lateinit var serverSocket: BoundDatagramSocket
 
+  protected lateinit var globalContext: CoroutineContext
+
   final override var threadIsActive = false
     private set
 
@@ -60,7 +63,8 @@ abstract class UDPServer(shutdownOnExit: Boolean, metrics: MetricRegistry?) : Ex
     get() = !serverSocket.isClosed
 
   @Synchronized
-  open suspend fun start() {
+  open suspend fun start(globalContext: CoroutineContext) {
+    this.globalContext = globalContext
     logger.atFine().log(toString() + " received start request!")
     if (threadIsActive) {
       logger.atFine().log(toString() + " start request ignored: already running!")
@@ -84,6 +88,7 @@ abstract class UDPServer(shutdownOnExit: Boolean, metrics: MetricRegistry?) : Ex
   @Synchronized
   @Throws(BindException::class)
   protected open fun bind(port: Int) {
+    // TODO(nue): Should this be IO?
     val selectorManager = SelectorManager(Dispatchers.IO)
     serverSocket =
         aSocket(selectorManager)
@@ -100,10 +105,8 @@ abstract class UDPServer(shutdownOnExit: Boolean, metrics: MetricRegistry?) : Ex
 
   protected abstract fun allocateBuffer(): ByteBuffer
 
-  protected abstract fun releaseBuffer(buffer: ByteBuffer)
-
   protected abstract suspend fun handleReceived(
-      buffer: ByteBuffer, remoteSocketAddress: InetSocketAddress
+      buffer: ByteBuffer, remoteSocketAddress: InetSocketAddress, requestScope: CoroutineScope
   )
 
   protected suspend fun send(buffer: ByteBuffer, toSocketAddress: InetSocketAddress) {
@@ -130,7 +133,8 @@ abstract class UDPServer(shutdownOnExit: Boolean, metrics: MetricRegistry?) : Ex
     }
   }
 
-  override suspend fun run() {
+  override suspend fun run(globalContext: CoroutineContext) {
+    this.globalContext = globalContext
     threadIsActive = true
 
     while (!stopFlag) {
@@ -141,10 +145,15 @@ abstract class UDPServer(shutdownOnExit: Boolean, metrics: MetricRegistry?) : Ex
       }
 
       val buffer = datagram.packet.readByteBuffer()
-      handleReceived(
-          buffer,
-          V086Utils.toJavaAddress(datagram.address as io.ktor.network.sockets.InetSocketAddress))
-      releaseBuffer(buffer)
+
+      // Launch the request handler asynchronously in a new CoroutineScope.
+      val requestContext = CoroutineScope(globalContext)
+      requestContext.launch {
+        handleReceived(
+            buffer,
+            V086Utils.toJavaAddress(datagram.address as io.ktor.network.sockets.InetSocketAddress),
+            requestScope = requestContext)
+      }
     }
 
     threadIsActive = false

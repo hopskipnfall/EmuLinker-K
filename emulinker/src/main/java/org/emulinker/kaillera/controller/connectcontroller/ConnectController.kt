@@ -6,7 +6,9 @@ import java.net.InetSocketAddress
 import java.nio.ByteBuffer
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.coroutines.CoroutineContext
 import kotlin.time.Duration.Companion.minutes
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import org.apache.commons.configuration.Configuration
@@ -15,7 +17,6 @@ import org.emulinker.kaillera.access.AccessManager
 import org.emulinker.kaillera.controller.KailleraServerController
 import org.emulinker.kaillera.controller.connectcontroller.protocol.*
 import org.emulinker.kaillera.controller.connectcontroller.protocol.ConnectMessage.Companion.parse
-import org.emulinker.kaillera.controller.messaging.ByteBufferMessage
 import org.emulinker.kaillera.controller.messaging.ByteBufferMessage.Companion.getBuffer
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.model.exception.NewConnectionException
@@ -81,19 +82,16 @@ class ConnectController
     return getBuffer(internalBufferSize)
   }
 
-  override fun releaseBuffer(buffer: ByteBuffer) {
-    ByteBufferMessage.releaseBuffer(buffer)
-  }
-
   override fun toString(): String =
       if (bindPort > 0) "ConnectController($bindPort)" else "ConnectController(unbound)"
 
-  override suspend fun start() {
+  override suspend fun start(globalContext: CoroutineContext) {
+    this.globalContext = globalContext
     val port = config.getInt("controllers.connect.port")
     startTime = System.currentTimeMillis()
 
     super.bind(port)
-    this.run()
+    this.run(globalContext)
   }
 
   override suspend fun stop() {
@@ -103,7 +101,9 @@ class ConnectController
     }
   }
 
-  override suspend fun handleReceived(buffer: ByteBuffer, remoteSocketAddress: InetSocketAddress) {
+  override suspend fun handleReceived(
+      buffer: ByteBuffer, remoteSocketAddress: InetSocketAddress, requestScope: CoroutineScope
+  ) {
     requestCount++
     val inMessage: ConnectMessage? =
         try {

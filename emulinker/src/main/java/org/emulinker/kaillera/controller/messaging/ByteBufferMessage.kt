@@ -31,9 +31,5 @@ abstract class ByteBufferMessage {
     fun getBuffer(size: Int): ByteBuffer {
       return ByteBuffer.allocateDirect(size)
     }
-
-    fun releaseBuffer(buffer: ByteBuffer?) {
-      // nothing to do since we aren't caching buffers anymore
-    }
   }
 }

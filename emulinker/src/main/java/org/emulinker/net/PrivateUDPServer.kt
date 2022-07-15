@@ -6,6 +6,7 @@ import com.google.common.flogger.FluentLogger
 import java.net.InetAddress
 import java.net.InetSocketAddress
 import java.nio.ByteBuffer
+import kotlinx.coroutines.CoroutineScope
 import org.emulinker.util.EmuUtil.formatSocketAddress
 
 private val logger = FluentLogger.forEnclosingClass()
@@ -19,7 +20,9 @@ abstract class PrivateUDPServer(
   lateinit var remoteSocketAddress: InetSocketAddress
     private set
 
-  override suspend fun handleReceived(buffer: ByteBuffer, remoteSocketAddress: InetSocketAddress) {
+  override suspend fun handleReceived(
+      buffer: ByteBuffer, remoteSocketAddress: InetSocketAddress, requestScope: CoroutineScope
+  ) {
     if (!this::remoteSocketAddress.isInitialized) {
       this.remoteSocketAddress = remoteSocketAddress
     } else if (remoteSocketAddress != this.remoteSocketAddress) {
