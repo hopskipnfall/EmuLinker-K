@@ -3,6 +3,7 @@ package org.emulinker.kaillera.pico
 import com.google.common.truth.Truth.assertThat
 import io.ktor.network.sockets.*
 import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -10,12 +11,12 @@ import org.emulinker.eval.client.EvalClient
 import org.emulinker.kaillera.model.GameStatus
 import org.emulinker.kaillera.model.UserStatus
 import org.junit.Test
-import kotlin.time.Duration.Companion.seconds
 
 class ServerMainStartupTest {
 
-    @Test
-    fun startup() = runBlocking {
+  @Test
+  fun startup() =
+      runBlocking {
         val component = DaggerAppComponent.create()
 
         val kailleraServerControllerTask =
@@ -33,7 +34,7 @@ class ServerMainStartupTest {
         // Make sure that the coroutines for those tasks were successful.
         assertThat(kailleraServerControllerTask.isCompleted).isTrue()
         assertThat(serverTask.isCompleted).isTrue()
-    }
+      }
 
   @Test
   fun createGame() =
