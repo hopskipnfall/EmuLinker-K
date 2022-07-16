@@ -39,7 +39,10 @@ fun main(): Unit =
               "EmuLinker server is running @ ${DateTimeFormatter.ISO_ZONED_DATE_TIME.withZone(ZoneId.systemDefault()).format(Instant.now())}")
 
       component.kailleraServerController.start() // Apparently cannot be removed.
-      launch { component.server.start(coroutineContext + CoroutineName("ConnectServer")) }
+      launch {
+        component.server.start(
+            component.udpSocketProvider, coroutineContext + CoroutineName("ConnectServer"))
+      }
 
       component.masterListUpdater.start()
       val metrics = component.metricRegistry

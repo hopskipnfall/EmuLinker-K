@@ -22,6 +22,7 @@ import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.model.exception.NewConnectionException
 import org.emulinker.kaillera.model.exception.ServerFullException
 import org.emulinker.net.UDPServer
+import org.emulinker.net.UdpSocketProvider
 import org.emulinker.util.EmuUtil.dumpBuffer
 import org.emulinker.util.EmuUtil.formatSocketAddress
 
@@ -42,7 +43,7 @@ class ConnectController
         private val config: Configuration,
         metrics: MetricRegistry?,
         flags: RuntimeFlags,
-    ) : UDPServer(shutdownOnExit = true, metrics) {
+    ) : UDPServer() {
 
   private val mutex = Mutex()
 
@@ -71,6 +72,8 @@ class ConnectController
   var pingCount = 0
     private set
 
+  private lateinit var udpSocketProvider: UdpSocketProvider
+
   private fun getController(clientType: String?): KailleraServerController? {
     return controllersMap[clientType]
   }
@@ -85,12 +88,15 @@ class ConnectController
   override fun toString(): String =
       if (bindPort > 0) "ConnectController($bindPort)" else "ConnectController(unbound)"
 
-  override suspend fun start(globalContext: CoroutineContext) {
+  override suspend fun start(
+      udpSocketProvider: UdpSocketProvider, globalContext: CoroutineContext
+  ) {
+    this.udpSocketProvider = udpSocketProvider
     this.globalContext = globalContext
     val port = config.getInt("controllers.connect.port")
     startTime = System.currentTimeMillis()
 
-    super.bind(port)
+    super.bind(udpSocketProvider, port)
     this.run(globalContext)
   }
 
@@ -187,7 +193,9 @@ class ConnectController
               lastAddressCount = 0
             }
           } else lastAddress = remoteSocketAddress.address.hostAddress
-          privatePort = protocolController.newConnection(remoteSocketAddress, inMessage.protocol)
+          privatePort =
+              protocolController.newConnection(
+                  udpSocketProvider, remoteSocketAddress, inMessage.protocol)
           if (privatePort <= 0) {
             failedToStartCount++
             logger

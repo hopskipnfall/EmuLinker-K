@@ -21,6 +21,7 @@ import org.emulinker.kaillera.model.event.*
 import org.emulinker.kaillera.model.exception.NewConnectionException
 import org.emulinker.kaillera.model.exception.ServerFullException
 import org.emulinker.net.BindException
+import org.emulinker.net.UdpSocketProvider
 
 private val logger = FluentLogger.forEnclosingClass()
 
@@ -91,7 +92,7 @@ class V086Controller
   @OptIn(DelicateCoroutinesApi::class) // For GlobalScope.
   @Throws(ServerFullException::class, NewConnectionException::class)
   override suspend fun newConnection(
-      clientSocketAddress: InetSocketAddress, protocol: String
+      udpSocketProvider: UdpSocketProvider, clientSocketAddress: InetSocketAddress, protocol: String
   ): Int {
     if (!isRunning) throw NewConnectionException("Controller is not running")
     logger.atFine().logLazy {
@@ -110,7 +111,7 @@ class V086Controller
         val port = portInteger.toInt()
         logger.atInfo().log("Private port $port allocated to: $user")
         try {
-          clientHandler.bind(port)
+          clientHandler.bind(udpSocketProvider, port)
           GlobalScope.launch { clientHandler.run(coroutineContext) }
           boundPort = port
           break

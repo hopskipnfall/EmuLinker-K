@@ -12,8 +12,9 @@ import org.emulinker.util.EmuUtil.formatSocketAddress
 private val logger = FluentLogger.forEnclosingClass()
 
 abstract class PrivateUDPServer(
-    shutdownOnExit: Boolean, val remoteInetAddress: InetAddress, metrics: MetricRegistry
-) : UDPServer(shutdownOnExit, metrics) {
+    val remoteInetAddress: InetAddress,
+    metrics: MetricRegistry,
+) : UDPServer() {
 
   private val clientRequestTimer: Timer
 

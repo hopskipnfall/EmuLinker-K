@@ -1,6 +1,5 @@
 package org.emulinker.net
 
-import com.codahale.metrics.MetricRegistry
 import com.google.common.flogger.FluentLogger
 import io.ktor.network.selector.*
 import io.ktor.network.sockets.*
@@ -17,7 +16,7 @@ import org.emulinker.util.Executable
 
 private val logger = FluentLogger.forEnclosingClass()
 
-abstract class UDPServer(shutdownOnExit: Boolean, metrics: MetricRegistry?) : Executable {
+abstract class UDPServer() : Executable {
   abstract val bufferSize: Int
 
   /*
@@ -63,7 +62,7 @@ abstract class UDPServer(shutdownOnExit: Boolean, metrics: MetricRegistry?) : Ex
     get() = !serverSocket.isClosed
 
   @Synchronized
-  open suspend fun start(globalContext: CoroutineContext) {
+  open suspend fun start(udpSocketProvider: UdpSocketProvider, globalContext: CoroutineContext) {
     this.globalContext = globalContext
     logger.atFine().log(toString() + " received start request!")
     if (threadIsActive) {
@@ -81,24 +80,16 @@ abstract class UDPServer(shutdownOnExit: Boolean, metrics: MetricRegistry?) : Ex
 
   @Synchronized
   @Throws(BindException::class)
-  protected fun bind() {
-    bind(-1)
+  protected fun bind(udpSocketProvider: UdpSocketProvider) {
+    bind(udpSocketProvider, -1)
   }
 
   @Synchronized
   @Throws(BindException::class)
-  protected open fun bind(port: Int) {
-    // TODO(nue): Should this be IO?
-    val selectorManager = SelectorManager(Dispatchers.IO)
+  protected open fun bind(udpSocketProvider: UdpSocketProvider, port: Int) {
     serverSocket =
-        aSocket(selectorManager)
-            .udp()
-            .configure {
-              receiveBufferSize = bufferSize
-              sendBufferSize = bufferSize
-              typeOfService = TypeOfService.IPTOS_LOWDELAY
-            }
-            .bind(io.ktor.network.sockets.InetSocketAddress("0.0.0.0", port))
+        udpSocketProvider.bindSocket(
+            io.ktor.network.sockets.InetSocketAddress("0.0.0.0", port), bufferSize)
 
     logger.atInfo().log("Accepting messages at ${serverSocket.localAddress}")
   }

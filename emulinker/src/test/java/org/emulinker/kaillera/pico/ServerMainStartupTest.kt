@@ -2,6 +2,8 @@ package org.emulinker.kaillera.pico
 
 import com.google.common.truth.Truth.assertThat
 import io.ktor.network.sockets.*
+import io.ktor.utils.io.*
+import io.ktor.utils.io.core.*
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.delay
@@ -21,7 +23,8 @@ class ServerMainStartupTest {
 
         val kailleraServerControllerTask =
             launch { component.kailleraServerController.start() } // Apparently cannot be removed.
-        val serverTask = launch { component.server.start(coroutineContext) }
+        val serverTask =
+            launch { component.server.start(component.udpSocketProvider, coroutineContext) }
 
         // Make sure it stays alive for 10 seconds.
         delay(3.seconds)
@@ -44,7 +47,7 @@ class ServerMainStartupTest {
         val server = component.server
 
         launch { component.kailleraServerController.start() } // Apparently cannot be removed.
-        launch { server.start(coroutineContext) }
+        launch { server.start(component.udpSocketProvider, coroutineContext) }
 
         delay(20.milliseconds)
 

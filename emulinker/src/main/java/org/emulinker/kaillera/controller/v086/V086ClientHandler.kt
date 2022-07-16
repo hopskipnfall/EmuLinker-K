@@ -24,6 +24,7 @@ import org.emulinker.kaillera.model.KailleraUser
 import org.emulinker.kaillera.model.event.*
 import org.emulinker.net.BindException
 import org.emulinker.net.PrivateUDPServer
+import org.emulinker.net.UdpSocketProvider
 import org.emulinker.util.ClientGameDataCache
 import org.emulinker.util.EmuUtil.dumpBuffer
 import org.emulinker.util.EmuUtil.dumpBufferFromBeginning
@@ -40,7 +41,7 @@ class V086ClientHandler
         @Assisted remoteSocketAddress: InetSocketAddress,
         /** The V086Controller that started this client handler. */
         @param:Assisted val controller: V086Controller
-    ) : PrivateUDPServer(false, remoteSocketAddress.address, metrics), KailleraEventListener {
+    ) : PrivateUDPServer(remoteSocketAddress.address, metrics), KailleraEventListener {
   lateinit var user: KailleraUser
     private set
 
@@ -124,8 +125,8 @@ class V086ClientHandler
     get() = ((lastMeasurement - testStart) / speedMeasurementCount).toInt()
 
   @Throws(BindException::class)
-  public override fun bind(port: Int) {
-    super.bind(port)
+  public override fun bind(udpSocketProvider: UdpSocketProvider, port: Int) {
+    super.bind(udpSocketProvider, port)
   }
 
   fun start(user: KailleraUser) {
