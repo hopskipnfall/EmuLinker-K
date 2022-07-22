@@ -7,13 +7,15 @@ import java.net.InetAddress
 import java.net.InetSocketAddress
 import java.nio.ByteBuffer
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.withTimeout
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.util.EmuUtil.formatSocketAddress
 
 private val logger = FluentLogger.forEnclosingClass()
 
 abstract class PrivateUDPServer(
-    val remoteInetAddress: InetAddress, metrics: MetricRegistry, flags: RuntimeFlags
+    val remoteInetAddress: InetAddress, metrics: MetricRegistry, private val flags: RuntimeFlags
 ) : UDPServer(flags) {
 
   private val clientRequestTimer: Timer
@@ -36,7 +38,13 @@ abstract class PrivateUDPServer(
 
       return
     }
-    clientRequestTimer.time().use { handleReceived(buffer) }
+    clientRequestTimer.time().use {
+      try {
+        withTimeout(flags.requestTimeout) { handleReceived(buffer) }
+      } catch (e: TimeoutCancellationException) {
+        logger.atSevere().withCause(e).log("Request timed out")
+      }
+    }
   }
 
   protected abstract suspend fun handleReceived(buffer: ByteBuffer)

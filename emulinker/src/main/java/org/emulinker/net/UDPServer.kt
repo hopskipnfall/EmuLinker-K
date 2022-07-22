@@ -129,22 +129,25 @@ abstract class UDPServer(private val flags: RuntimeFlags) : Executable {
     this.globalContext = globalContext
     threadIsActive = true
 
-    while (!stopFlag) {
-      val datagram = serverSocket.incoming.receive()
+    supervisorScope {
+      while (!stopFlag) {
+        val datagram = serverSocket.incoming.receive()
 
-      require(datagram.address is io.ktor.network.sockets.InetSocketAddress) {
-        "address was an incompatable type!"
-      }
+        require(datagram.address is io.ktor.network.sockets.InetSocketAddress) {
+          "address was an incompatable type!"
+        }
 
-      val buffer = datagram.packet.readByteBuffer()
+        val buffer = datagram.packet.readByteBuffer()
 
-      // Launch the request handler asynchronously in a new CoroutineScope.
-      val requestContext = CoroutineScope(globalContext)
-      requestContext.launch {
-        handleReceived(
-            buffer,
-            V086Utils.toJavaAddress(datagram.address as io.ktor.network.sockets.InetSocketAddress),
-            requestScope = requestContext)
+        // Launch the request handler asynchronously in a new CoroutineScope.
+        val requestContext = CoroutineScope(globalContext)
+        launch {
+          handleReceived(
+              buffer,
+              V086Utils.toJavaAddress(
+                  datagram.address as io.ktor.network.sockets.InetSocketAddress),
+              requestScope = requestContext)
+        }
       }
     }
 
