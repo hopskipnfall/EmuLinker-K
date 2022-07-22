@@ -143,7 +143,7 @@ class KailleraServerImpl
     // we'll assume at this point that ConnectController has already asked AccessManager if this IP
     // is banned, so no need to do it again here
     logger.atFine().logLazy {
-      "Processing connection request from ${formatSocketAddress(clientSocketAddress!!)}"
+      "Processing connection request from ${formatSocketAddress(clientSocketAddress)}"
     }
     val access = accessManager.getAccess(clientSocketAddress.address)
 

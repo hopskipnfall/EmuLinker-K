@@ -14,6 +14,7 @@ data class RuntimeFlags(
     val allowSinglePlayer: Boolean,
     val charset: Charset,
     val chatFloodTime: Int,
+    val connectControllerBufferSize: Int,
     val connectionTypes: List<String>,
     val coreThreadPoolSize: Int,
     val createGameFloodTime: Int,
@@ -35,6 +36,7 @@ data class RuntimeFlags(
     val maxUsers: Int,
     val metricsEnabled: Boolean,
     val metricsLoggingFrequency: Duration,
+    val requestTimeout: Duration,
     val serverAddress: String,
     val serverLocation: String,
     val serverName: String,
@@ -49,7 +51,6 @@ data class RuntimeFlags(
     val twitterOAuthConsumerSecret: String,
     val twitterPreventBroadcastNameSuffixes: List<String>,
     val v086BufferSize: Int,
-    val connectControllerBufferSize: Int,
 ) {
 
   init {
@@ -108,6 +109,10 @@ data class RuntimeFlags(
           maxUsers = config.getInt("server.maxUsers"),
           metricsEnabled = config.getBoolean("metrics.enabled", false),
           metricsLoggingFrequency = config.getInt("metrics.loggingFrequencySeconds", 30).seconds,
+          requestTimeout =
+              config.getInt(
+                      "server.requestTimeoutMilliseconds", 5.seconds.inWholeMilliseconds.toInt())
+                  .milliseconds,
           serverAddress = config.getString("masterList.serverConnectAddress", ""),
           serverLocation = config.getString("masterList.serverLocation", "Unknown"),
           serverName = config.getString("masterList.serverName", "Emulinker Server"),

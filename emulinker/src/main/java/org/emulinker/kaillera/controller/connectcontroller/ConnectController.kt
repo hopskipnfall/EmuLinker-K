@@ -43,7 +43,7 @@ class ConnectController
         private val config: Configuration,
         metrics: MetricRegistry?,
         flags: RuntimeFlags,
-    ) : UDPServer() {
+    ) : UDPServer(flags) {
 
   private val mutex = Mutex()
 

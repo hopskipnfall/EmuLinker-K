@@ -5,6 +5,7 @@ import io.ktor.network.sockets.*
 import io.ktor.utils.io.*
 import io.ktor.utils.io.core.*
 import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -15,7 +16,6 @@ import org.emulinker.kaillera.model.UserStatus
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.Timeout
-import kotlin.time.Duration.Companion.minutes
 
 class ServerMainStartupTest {
   @get:Rule val timeout = Timeout(1.minutes.inWholeMilliseconds.toInt())

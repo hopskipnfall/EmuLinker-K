@@ -10,13 +10,14 @@ import java.nio.ByteBuffer
 import kotlin.Throws
 import kotlin.coroutines.CoroutineContext
 import kotlinx.coroutines.*
+import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.util.EmuUtil.formatSocketAddress
 import org.emulinker.util.Executable
 
 private val logger = FluentLogger.forEnclosingClass()
 
-abstract class UDPServer() : Executable {
+abstract class UDPServer(private val flags: RuntimeFlags) : Executable {
   abstract val bufferSize: Int
 
   /*

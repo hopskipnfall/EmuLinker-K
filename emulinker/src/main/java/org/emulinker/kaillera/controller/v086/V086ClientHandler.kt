@@ -41,7 +41,7 @@ class V086ClientHandler
         @Assisted remoteSocketAddress: InetSocketAddress,
         /** The V086Controller that started this client handler. */
         @param:Assisted val controller: V086Controller
-    ) : PrivateUDPServer(remoteSocketAddress.address, metrics), KailleraEventListener {
+    ) : PrivateUDPServer(remoteSocketAddress.address, metrics, flags), KailleraEventListener {
   lateinit var user: KailleraUser
     private set
 

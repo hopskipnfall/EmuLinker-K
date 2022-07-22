@@ -7,14 +7,14 @@ import java.net.InetAddress
 import java.net.InetSocketAddress
 import java.nio.ByteBuffer
 import kotlinx.coroutines.CoroutineScope
+import org.emulinker.config.RuntimeFlags
 import org.emulinker.util.EmuUtil.formatSocketAddress
 
 private val logger = FluentLogger.forEnclosingClass()
 
 abstract class PrivateUDPServer(
-    val remoteInetAddress: InetAddress,
-    metrics: MetricRegistry,
-) : UDPServer() {
+    val remoteInetAddress: InetAddress, metrics: MetricRegistry, flags: RuntimeFlags
+) : UDPServer(flags) {
 
   private val clientRequestTimer: Timer
 
