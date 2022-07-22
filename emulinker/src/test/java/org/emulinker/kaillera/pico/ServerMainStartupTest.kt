@@ -12,9 +12,13 @@ import kotlinx.coroutines.runBlocking
 import org.emulinker.eval.client.EvalClient
 import org.emulinker.kaillera.model.GameStatus
 import org.emulinker.kaillera.model.UserStatus
+import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.Timeout
+import kotlin.time.Duration.Companion.minutes
 
 class ServerMainStartupTest {
+  @get:Rule val timeout = Timeout(1.minutes.inWholeMilliseconds.toInt())
 
   @Test
   fun startup() =
