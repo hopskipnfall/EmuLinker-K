@@ -12,6 +12,7 @@ import kotlin.coroutines.CoroutineContext
 import kotlinx.coroutines.*
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.controller.v086.V086Utils
+import org.emulinker.util.EmuUtil.dumpBufferFromBeginning
 import org.emulinker.util.EmuUtil.formatSocketAddress
 import org.emulinker.util.Executable
 
@@ -139,9 +140,17 @@ abstract class UDPServer(private val flags: RuntimeFlags) : Executable {
 
         val buffer = datagram.packet.readByteBuffer()
 
-        // Launch the request handler asynchronously in a new CoroutineScope.
-        val requestContext = CoroutineScope(globalContext)
-        launch {
+        // Launch the request handler asynchronously.
+        val requestContext =
+            CoroutineScope(coroutineContext) // TODO(nue): Can we just pass coroutineContext?
+        val errorHandler =
+            CoroutineExceptionHandler { _, e ->
+              logger
+                  .atSevere()
+                  .withCause(e)
+                  .log("Error while handling request: %s", dumpBufferFromBeginning(buffer))
+            }
+        launch(errorHandler) {
           handleReceived(
               buffer,
               V086Utils.toJavaAddress(

@@ -278,38 +278,47 @@ class V086ClientHandler
   override val bufferSize = flags.v086BufferSize
 
   override suspend fun actionPerformed(event: KailleraEvent) {
-    if (event is GameEvent) {
-      val eventHandler = controller.gameEventHandlers[event.javaClass]
-      if (eventHandler == null) {
-        logger
-            .atSevere()
-            .log(
-                toString() + " found no GameEventHandler registered to handle game event: " + event)
-        return
+    when (event) {
+      is GameEvent -> {
+        val eventHandler = controller.gameEventHandlers[event.javaClass]
+        if (eventHandler == null) {
+          logger
+              .atSevere()
+              .log(
+                  toString() +
+                      " found no GameEventHandler registered to handle game event: " +
+                      event)
+          return
+        }
+        (eventHandler as V086GameEventHandler<GameEvent>).handleEvent(event, this)
       }
-      (eventHandler as V086GameEventHandler<GameEvent>).handleEvent(event, this)
-    } else if (event is ServerEvent) {
-      val eventHandler = controller.serverEventHandlers[event.javaClass]
-      if (eventHandler == null) {
-        logger
-            .atSevere()
-            .log(
-                toString() +
-                    " found no ServerEventHandler registered to handle server event: " +
-                    event)
-        return
+      is ServerEvent -> {
+        val eventHandler = controller.serverEventHandlers[event.javaClass]
+        if (eventHandler == null) {
+          logger
+              .atSevere()
+              .log(
+                  toString() +
+                      " found no ServerEventHandler registered to handle server event: " +
+                      event)
+          return
+        }
+        (eventHandler as V086ServerEventHandler<ServerEvent>).handleEvent(event, this)
       }
-      (eventHandler as V086ServerEventHandler<ServerEvent>).handleEvent(event, this)
-    } else if (event is UserEvent) {
-      val eventHandler = controller.userEventHandlers[event.javaClass]
-      if (eventHandler == null) {
-        logger
-            .atSevere()
-            .log(
-                toString() + " found no UserEventHandler registered to handle user event: " + event)
-        return
+      is UserEvent -> {
+        val eventHandler = controller.userEventHandlers[event.javaClass]
+        if (eventHandler == null) {
+          logger
+              .atSevere()
+              .log(
+                  toString() +
+                      " found no UserEventHandler registered to handle user event: " +
+                      event)
+          return
+        }
+        (eventHandler as V086UserEventHandler<UserEvent>).handleEvent(event, this)
       }
-      (eventHandler as V086UserEventHandler<UserEvent>).handleEvent(event, this)
+      is StopFlagEvent -> {}
     }
   }
 
