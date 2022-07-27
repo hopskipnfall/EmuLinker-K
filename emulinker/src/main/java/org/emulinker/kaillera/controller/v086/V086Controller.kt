@@ -13,7 +13,6 @@ import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.*
 import org.apache.commons.configuration.Configuration
 import org.emulinker.config.RuntimeFlags
-import org.emulinker.extension.logLazy
 import org.emulinker.kaillera.controller.KailleraServerController
 import org.emulinker.kaillera.controller.v086.action.*
 import org.emulinker.kaillera.controller.v086.protocol.*
@@ -95,9 +94,9 @@ class V086Controller
       udpSocketProvider: UdpSocketProvider, clientSocketAddress: InetSocketAddress, protocol: String
   ): Int {
     if (!isRunning) throw NewConnectionException("Controller is not running")
-    logger.atFine().logLazy {
-      "Creating new connection for address $clientSocketAddress, protocol $protocol"
-    }
+    logger
+        .atFine()
+        .log("Creating new connection for address %d, protocol %s", clientSocketAddress, protocol)
 
     val clientHandler = v086ClientHandlerFactory.create(clientSocketAddress, this)
     val user = server.newConnection(clientSocketAddress, protocol, clientHandler)

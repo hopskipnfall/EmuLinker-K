@@ -5,7 +5,6 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.delay
-import org.emulinker.extension.logLazy
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086ClientHandler
 import org.emulinker.kaillera.controller.v086.protocol.ClientACK
@@ -156,14 +155,15 @@ class ACKAction @Inject internal constructor() :
       games: List<Game>,
       counter: Int
   ) {
-    val sb = StringBuilder()
-    for (game in games) {
-      sb.append(game.gameId)
-      sb.append(",")
-    }
-    logger.atFine().logLazy {
-      "Sending ServerStatus to ${clientHandler.user}: ${users.size} users, ${games.size} games in $counter bytes, games: $sb"
-    }
+    logger
+        .atFine()
+        .log(
+            "Sending ServerStatus to %s: %d users, %d games in %d bytes, games: %s",
+            clientHandler.user,
+            users.size,
+            games.size,
+            counter,
+            games.map { it.gameId })
     try {
       clientHandler.send(ServerStatus(clientHandler.nextMessageNumber, users, games))
     } catch (e: MessageFormatException) {

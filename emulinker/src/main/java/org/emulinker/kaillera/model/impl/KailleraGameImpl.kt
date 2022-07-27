@@ -7,7 +7,6 @@ import java.util.concurrent.CopyOnWriteArrayList
 import kotlin.Throws
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.delay
-import org.emulinker.extension.logLazy
 import org.emulinker.kaillera.access.AccessManager
 import org.emulinker.kaillera.master.StatsCollector
 import org.emulinker.kaillera.model.GameStatus
@@ -514,10 +513,9 @@ class KailleraGameImpl(
       swap = false
       if (status == GameStatus.WAITING) {
         for (i in players.indices) {
-          getPlayer(i + 1)!!.playerNumber = i + 1
-          logger.atFine().logLazy {
-            getPlayer(i + 1)!!.name + ":::" + getPlayer(i + 1)!!.playerNumber
-          }
+          val player = getPlayer(i + 1)
+          player!!.playerNumber = i + 1
+          logger.atFine().log("%s:::%d", player.name, player.playerNumber)
         }
       }
     }

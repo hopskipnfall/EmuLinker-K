@@ -8,7 +8,6 @@ import dagger.assisted.AssistedInject
 import java.net.InetSocketAddress
 import java.nio.Buffer
 import java.nio.ByteBuffer
-import org.emulinker.extension.logLazy
 import org.emulinker.kaillera.controller.connectcontroller.protocol.ConnectMessage
 import org.emulinker.kaillera.controller.connectcontroller.protocol.ConnectMessage.Companion.parse
 import org.emulinker.kaillera.controller.connectcontroller.protocol.ConnectMessage_HELLO
@@ -56,9 +55,13 @@ internal class KailleraRelay
           logger.atWarning().withCause(e).log("Unrecognized message format!")
           return null
         }
-    logger.atFine().logLazy {
-      "${formatSocketAddress(fromAddress)} -> ${formatSocketAddress(toAddress)}: $inMessage"
-    }
+    logger
+        .atFine()
+        .log(
+            "%s -> %s: %s",
+            lazy { formatSocketAddress(fromAddress) },
+            lazy { formatSocketAddress(toAddress) },
+            inMessage)
     if (inMessage is ConnectMessage_HELLO) {
       logger.atInfo().log("Client version is " + inMessage.protocol)
     } else {
@@ -84,16 +87,19 @@ internal class KailleraRelay
           logger.atWarning().withCause(e).log("Unrecognized message format!")
           return null
         }
-    logger.atFine().logLazy {
-      "${formatSocketAddress(fromAddress)} -> ${formatSocketAddress(toAddress)}: $inMessage"
-    }
+    logger
+        .atFine()
+        .log(
+            "%s -> %s: %s",
+            formatSocketAddress(fromAddress),
+            lazy { formatSocketAddress(toAddress) },
+            inMessage)
     when (inMessage) {
       is ConnectMessage_HELLOD00D -> {
-        val portMsg = inMessage
-        logger.atInfo().log("Starting client relay on port " + (portMsg.port - 1))
+        logger.atInfo().log("Starting client relay on port " + (inMessage.port - 1))
         try {
           v086RelayFactory.create(
-              portMsg.port, InetSocketAddress(serverSocketAddress.address, portMsg.port))
+              inMessage.port, InetSocketAddress(serverSocketAddress.address, inMessage.port))
         } catch (e: Exception) {
           logger.atSevere().withCause(e).log("Failed to start!")
           return null

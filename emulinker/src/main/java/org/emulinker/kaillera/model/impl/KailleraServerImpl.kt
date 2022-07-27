@@ -18,7 +18,6 @@ import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.withLock
 import org.emulinker.config.RuntimeFlags
-import org.emulinker.extension.logLazy
 import org.emulinker.kaillera.access.AccessManager
 import org.emulinker.kaillera.access.AccessManager.Companion.ACCESS_NAMES
 import org.emulinker.kaillera.lookingforgame.LookingForGameEvent
@@ -139,9 +138,11 @@ class KailleraServerImpl
   ): KailleraUser {
     // we'll assume at this point that ConnectController has already asked AccessManager if this IP
     // is banned, so no need to do it again here
-    logger.atFine().logLazy {
-      "Processing connection request from ${formatSocketAddress(clientSocketAddress)}"
-    }
+    logger
+        .atFine()
+        .log(
+            "Processing connection request from %s",
+            lazy { formatSocketAddress(clientSocketAddress) })
     val access = accessManager.getAccess(clientSocketAddress.address)
 
     // admins will be allowed in even if the server is full

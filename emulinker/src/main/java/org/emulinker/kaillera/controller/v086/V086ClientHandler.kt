@@ -9,10 +9,10 @@ import java.net.InetSocketAddress
 import java.nio.Buffer
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
+import java.util.concurrent.TimeUnit.MINUTES
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import org.emulinker.config.RuntimeFlags
-import org.emulinker.extension.logLazy
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.messaging.ParseException
 import org.emulinker.kaillera.controller.v086.action.*
@@ -164,9 +164,13 @@ class V086ClientHandler
       logger.atFine().log("$this Stopping!")
       super.stop()
       if (port > 0) {
-        logger.atFine().logLazy {
-          "$this returning port $port to available port queue: ${controller.portRangeQueue.size + 1} available"
-        }
+        logger
+            .atFine()
+            .log(
+                "%s returning port %d to available port queue: %d available",
+                this,
+                port,
+                controller.portRangeQueue.size + 1)
         controller.portRangeQueue.add(port)
       }
     }
@@ -209,17 +213,23 @@ class V086ClientHandler
           } ?: return
 
       if (inBundle.messages.firstOrNull() == null) {
-        logger.atSevere().logLazy {
-          "Received request from P${user.playerNumber} containing no messages. inBundle.messages.size = ${inBundle.messages.size}. numMessages: ${inBundle.numMessages}, buffer dump: ${dumpBufferFromBeginning(buffer)}, lastMessageNumberUsed: $lastMessageNumberUsed"
-        }
+        logger
+            .atWarning()
+            .atMostEvery(1, MINUTES)
+            .log(
+                "Received request from User %d containing no messages. inBundle.messages.size = %d. numMessages: %d, buffer dump: %s, lastMessageNumberUsed: $lastMessageNumberUsed",
+                user.id,
+                inBundle.messages.size,
+                inBundle.numMessages,
+                lazy { dumpBufferFromBeginning(buffer) })
       }
 
       logger.atFinest().log("-> FROM user %d: %s", user.id, inBundle.messages.firstOrNull())
       clientRetryCount =
           if (inBundle.numMessages == 0) {
-            logger.atFine().logLazy {
-              "${toString()} received bundle of ${inBundle.numMessages} messages from $user"
-            }
+            logger
+                .atFine()
+                .log("%s received bundle of %d messages from %s", this, inBundle.numMessages, user)
             clientRetryCount++
             resend(clientRetryCount)
             return
