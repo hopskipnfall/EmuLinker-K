@@ -22,7 +22,6 @@ import org.emulinker.kaillera.controller.v086.protocol.V086BundleFormatException
 import org.emulinker.kaillera.controller.v086.protocol.V086Message
 import org.emulinker.kaillera.model.KailleraUser
 import org.emulinker.kaillera.model.event.*
-import org.emulinker.net.BindException
 import org.emulinker.net.PrivateUDPServer
 import org.emulinker.net.UdpSocketProvider
 import org.emulinker.util.ClientGameDataCache
@@ -124,7 +123,6 @@ class V086ClientHandler
   val averageNetworkSpeed: Int
     get() = ((lastMeasurement - testStart) / speedMeasurementCount).toInt()
 
-  @Throws(BindException::class)
   public override fun bind(udpSocketProvider: UdpSocketProvider, port: Int) {
     super.bind(udpSocketProvider, port)
   }
@@ -216,9 +214,7 @@ class V086ClientHandler
         }
       }
 
-      logger.atFine().logLazy {
-        "<- FROM P${user.playerNumber}: ${inBundle.messages.firstOrNull()}"
-      }
+      logger.atFinest().log("-> FROM user %d: %s", user.id, inBundle.messages.firstOrNull())
       clientRetryCount =
           if (inBundle.numMessages == 0) {
             logger.atFine().logLazy {

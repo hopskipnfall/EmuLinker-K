@@ -7,7 +7,6 @@ import io.ktor.utils.io.core.*
 import java.lang.Exception
 import java.net.InetSocketAddress
 import java.nio.ByteBuffer
-import kotlin.Throws
 import kotlin.coroutines.CoroutineContext
 import kotlinx.coroutines.*
 import org.emulinker.config.RuntimeFlags
@@ -81,13 +80,11 @@ abstract class UDPServer(private val flags: RuntimeFlags) : Executable {
   }
 
   @Synchronized
-  @Throws(BindException::class)
   protected fun bind(udpSocketProvider: UdpSocketProvider) {
     bind(udpSocketProvider, -1)
   }
 
   @Synchronized
-  @Throws(BindException::class)
   protected open fun bind(udpSocketProvider: UdpSocketProvider, port: Int) {
     serverSocket =
         udpSocketProvider.bindSocket(

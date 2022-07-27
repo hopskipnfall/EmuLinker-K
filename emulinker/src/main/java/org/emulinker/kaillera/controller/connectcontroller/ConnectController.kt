@@ -1,9 +1,9 @@
 package org.emulinker.kaillera.controller.connectcontroller
 
-import com.codahale.metrics.MetricRegistry
 import com.google.common.flogger.FluentLogger
 import java.net.InetSocketAddress
 import java.nio.ByteBuffer
+import java.util.Set
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.coroutines.CoroutineContext
@@ -38,10 +38,9 @@ class ConnectController
     @Inject
     internal constructor(
         // TODO(nue): This makes no sense because KailleraServerController is a singleton...
-        kailleraServerControllers: java.util.Set<KailleraServerController>,
+        kailleraServerControllers: Set<KailleraServerController>,
         private val accessManager: AccessManager,
         private val config: Configuration,
-        metrics: MetricRegistry?,
         flags: RuntimeFlags,
     ) : UDPServer(flags) {
 
@@ -112,7 +111,8 @@ class ConnectController
   ) {
     requestCount++
     val inMessage: ConnectMessage? =
-        try {
+    // TODO(nue): Remove this catch logic.
+    try {
           parse(buffer)
         } catch (e: MessageFormatException) {
           messageFormatErrorCount++
@@ -132,7 +132,7 @@ class ConnectController
           return
         }
 
-    //    logger.atInfo().log("IN-> $inMessage")
+    logger.atFinest().log("-> FROM %s: %s", formatSocketAddress(remoteSocketAddress), inMessage)
 
     // the message set of the ConnectController isn't really complex enough to warrant a complicated
     // request/action class
@@ -231,8 +231,10 @@ class ConnectController
     }
   }
 
-  private suspend fun send(outMessage: ConnectMessage, toSocketAddress: InetSocketAddress?) {
-    send(outMessage.toBuffer(), toSocketAddress!!)
+  private suspend fun send(outMessage: ConnectMessage, toSocketAddress: InetSocketAddress) {
+    logger.atFinest().log("<- TO %s: %s", formatSocketAddress(toSocketAddress), outMessage)
+
+    send(outMessage.toBuffer(), toSocketAddress)
     outMessage.releaseBuffer()
   }
 

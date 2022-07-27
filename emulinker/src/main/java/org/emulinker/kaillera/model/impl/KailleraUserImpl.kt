@@ -520,6 +520,7 @@ class KailleraUserImpl(
     logger.atFine().log("$this thread running...")
     try {
       while (!stopFlag) {
+        // TODO(nue): Replace this eventQueue with a buffered Channel.
         val event = eventQueue.poll(200, TimeUnit.SECONDS)
         if (event == null) continue else if (event is StopFlagEvent) break
         listener.actionPerformed(event)

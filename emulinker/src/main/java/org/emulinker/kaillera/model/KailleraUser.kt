@@ -51,7 +51,7 @@ interface KailleraUser {
    */
   var ignoringUnnecessaryServerActivity: Boolean
   var ping: Int
-  var playerNumber: Int
+  var playerNumber: Int // TODO(nue): Make this nullable.
   var socketAddress: InetSocketAddress
   var inStealthMode: Boolean
   var tempDelay: Int

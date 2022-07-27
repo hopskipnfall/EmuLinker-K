@@ -3,6 +3,7 @@ package org.emulinker.kaillera.controller.v086
 import com.google.common.collect.ImmutableMap
 import com.google.common.flogger.FluentLogger
 import java.net.InetSocketAddress
+import java.net.SocketException
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentLinkedQueue
@@ -20,7 +21,6 @@ import org.emulinker.kaillera.model.KailleraServer
 import org.emulinker.kaillera.model.event.*
 import org.emulinker.kaillera.model.exception.NewConnectionException
 import org.emulinker.kaillera.model.exception.ServerFullException
-import org.emulinker.net.BindException
 import org.emulinker.net.UdpSocketProvider
 
 private val logger = FluentLogger.forEnclosingClass()
@@ -101,7 +101,7 @@ class V086Controller
 
     val clientHandler = v086ClientHandlerFactory.create(clientSocketAddress, this)
     val user = server.newConnection(clientSocketAddress, protocol, clientHandler)
-    var boundPort = -1
+    var boundPort: Int? = null
     var bindAttempts = 0
     while (bindAttempts++ < 5) {
       val portInteger = portRangeQueue.poll()
@@ -112,10 +112,10 @@ class V086Controller
         logger.atInfo().log("Private port $port allocated to: $user")
         try {
           clientHandler.bind(udpSocketProvider, port)
-          GlobalScope.launch { clientHandler.run(coroutineContext) }
+          GlobalScope.launch(Dispatchers.IO) { clientHandler.run(coroutineContext) }
           boundPort = port
           break
-        } catch (e: BindException) {
+        } catch (e: SocketException) {
           logger.atSevere().withCause(e).log("Failed to bind to port $port for: $user")
           logger
               .atFine()
@@ -127,7 +127,7 @@ class V086Controller
       // pause very briefly to give the OS a chance to free a port
       delay(5.milliseconds)
     }
-    if (boundPort < 0) {
+    if (boundPort == null) {
       clientHandler.stop()
       throw NewConnectionException("Failed to bind!")
     }

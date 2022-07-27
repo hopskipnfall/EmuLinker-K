@@ -15,10 +15,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.coroutines.CoroutineContext
 import kotlin.time.Duration.Companion.milliseconds
-import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.withLock
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.extension.logLazy
@@ -166,7 +163,7 @@ class KailleraServerImpl
 
     //    threadPool.execute(user) // NUEFIXME
     // look for the infinite loop inside of the user class
-    GlobalScope.launch { user.run(coroutineContext) }
+    GlobalScope.launch(Dispatchers.IO) { user.run(coroutineContext) }
     return user
   }
 
@@ -188,7 +185,7 @@ class KailleraServerImpl
       throw LoginException(getString("KailleraServerImpl.LoginDeniedAlreadyLoggedIn"))
     }
     val userListKey = user.id
-    val u: KailleraUser? = usersMap[userListKey]
+    val u = usersMap[userListKey]
     if (u == null) {
       logger.atWarning().log("$user login denied: Connection timed out!")
       throw LoginException(getString("KailleraServerImpl.LoginDeniedConnectionTimedOut"))
