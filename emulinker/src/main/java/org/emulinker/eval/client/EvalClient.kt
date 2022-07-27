@@ -82,8 +82,9 @@ class EvalClient(
   }
 
   /** Interacts in the server */
+  @OptIn(DelicateCoroutinesApi::class)
   suspend fun start() {
-    CoroutineScope(Dispatchers.Default).launch {
+    GlobalScope.launch(Dispatchers.IO) {
       while (!killSwitch) {
         try {
           val response = V086Bundle.parse(socket.receive().packet.readByteBuffer())
