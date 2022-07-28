@@ -11,6 +11,7 @@ import kotlin.coroutines.CoroutineContext
 import kotlinx.coroutines.*
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.controller.v086.V086Utils
+import org.emulinker.kaillera.controller.v086.V086Utils.toKtorAddress
 import org.emulinker.util.EmuUtil.dumpBufferFromBeginning
 import org.emulinker.util.EmuUtil.formatSocketAddress
 import org.emulinker.util.Executable
@@ -41,8 +42,8 @@ abstract class UDPServer(private val flags: RuntimeFlags) : Executable {
   			logger.atWarning().log("Introducing " + artificalDelay + "ms artifical delay!");
   	}
   */
-  var bindPort = 0
-    private set
+  // TODO(nue): This is supposed to be the server's port i guess but is always 0..
+  val bindPort = 0
 
   private lateinit var serverSocket: BoundDatagramSocket
 
@@ -59,8 +60,6 @@ abstract class UDPServer(private val flags: RuntimeFlags) : Executable {
     get() {
       return !serverSocket.isClosed
     }
-  val isConnected: Boolean
-    get() = !serverSocket.isClosed
 
   @Synchronized
   open suspend fun start(udpSocketProvider: UdpSocketProvider, globalContext: CoroutineContext) {
@@ -77,11 +76,6 @@ abstract class UDPServer(private val flags: RuntimeFlags) : Executable {
   override suspend fun stop() {
     stopFlag = true
     serverSocket.close()
-  }
-
-  @Synchronized
-  protected fun bind(udpSocketProvider: UdpSocketProvider) {
-    bind(udpSocketProvider, -1)
   }
 
   @Synchronized
@@ -103,7 +97,8 @@ abstract class UDPServer(private val flags: RuntimeFlags) : Executable {
     if (!isBound) {
       logger
           .atWarning()
-          .log("Failed to send to %s: UDPServer is not bound!", formatSocketAddress(toSocketAddress))
+          .log(
+              "Failed to send to %s: UDPServer is not bound!", formatSocketAddress(toSocketAddress))
       return
     }
     /*
@@ -114,7 +109,7 @@ abstract class UDPServer(private val flags: RuntimeFlags) : Executable {
     */ try {
       //			logger.atFine().log("send("+EmuUtil.INSTANCE.dumpBuffer(buffer, false)+")");
       //      channel!!.send(buffer, toSocketAddress)
-      serverSocket.send(Datagram(ByteReadPacket(buffer), V086Utils.toKtorAddress(toSocketAddress)))
+      serverSocket.send(Datagram(ByteReadPacket(buffer), toSocketAddress.toKtorAddress()))
     } catch (e: Exception) {
       logger.atSevere().withCause(e).log("Failed to send on port $bindPort")
     }
