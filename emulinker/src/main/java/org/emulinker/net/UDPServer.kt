@@ -103,10 +103,7 @@ abstract class UDPServer(private val flags: RuntimeFlags) : Executable {
     if (!isBound) {
       logger
           .atWarning()
-          .log(
-              "Failed to send to " +
-                  formatSocketAddress(toSocketAddress) +
-                  ": UDPServer is not bound!")
+          .log("Failed to send to %s: UDPServer is not bound!", formatSocketAddress(toSocketAddress))
       return
     }
     /*
