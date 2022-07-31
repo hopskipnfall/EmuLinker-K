@@ -197,12 +197,11 @@ class V086ClientHandler
   }
 
   override suspend fun stop() {
-    //    synchronized(this) {
     mutex.withLock {
+      logger.atFine().log("Stopping ClientHandler for %d", user.id)
       if (stopFlag) return
       var port = -1
       if (isBound) port = bindPort
-      logger.atFine().log("$this Stopping!")
       super.stop()
       if (port > 0) {
         logger
