@@ -40,7 +40,7 @@ class TwitterBroadcaster
     if (!flags.twitterEnabled) {
       return false
     }
-    val username: String = lookingForGameEvent.user.name!!
+    val username: String = lookingForGameEvent.user.name
     // TODO(nue): Abstract the @ into a status field instead of keeping it in the name.
     // Note: This isn't the normal @ character..
     if (username.contains("＠")) {

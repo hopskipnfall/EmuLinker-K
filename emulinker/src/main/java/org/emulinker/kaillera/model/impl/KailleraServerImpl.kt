@@ -213,19 +213,19 @@ class KailleraServerImpl
           getString("KailleraServerImpl.LoginDeniedConnectionTypeDenied", user.connectionType))
     }
     if (user.ping < 0) {
-      logger.atWarning().log(user.toString() + " login denied: Invalid ping: " + user.ping)
+      logger.atWarning().log("$user login denied: Invalid ping: ${user.ping}")
       usersMap.remove(userListKey)
       throw PingTimeException(getString("KailleraServerImpl.LoginErrorInvalidPing", user.ping))
     }
     if (access == AccessManager.ACCESS_NORMAL && Strings.isNullOrEmpty(user.name) ||
-        user.name!!.isBlank()) {
+        user.name.isBlank()) {
       logger.atInfo().log("$user login denied: Empty UserName")
       usersMap.remove(userListKey)
       throw UserNameException(getString("KailleraServerImpl.LoginDeniedUserNameEmpty"))
     }
 
     // new SF MOD - Username filter
-    val nameLower = user.name!!.lowercase(Locale.getDefault())
+    val nameLower = user.name.lowercase(Locale.getDefault())
     if (user.name == "Server" ||
         nameLower.contains("|") ||
         (access == AccessManager.ACCESS_NORMAL &&
@@ -239,7 +239,7 @@ class KailleraServerImpl
     }
 
     // access == AccessManager.ACCESS_NORMAL &&
-    if (flags.maxUserNameLength > 0 && user.name!!.length > maxUserNameLength) {
+    if (flags.maxUserNameLength > 0 && user.name.length > maxUserNameLength) {
       logger.atInfo().log("$user login denied: UserName Length > $maxUserNameLength")
       usersMap.remove(userListKey)
       throw UserNameException(getString("KailleraServerImpl.LoginDeniedUserNameTooLong"))
@@ -257,7 +257,7 @@ class KailleraServerImpl
       throw UserNameException("Illegal characters in Emulator Name")
     }
     if (access == AccessManager.ACCESS_NORMAL) {
-      val chars = user.name!!.toCharArray()
+      val chars = user.name.toCharArray()
       for (i in chars.indices) {
         if (chars[i].code < 32) {
           logger.atInfo().log("$user login denied: Illegal characters in UserName")
@@ -300,8 +300,8 @@ class KailleraServerImpl
             logger.atSevere().withCause(e).log("Error forcing $u2 quit for reconnect!")
           }
         } else if (u2.id != u.id &&
-            u2.name!!.lowercase(Locale.getDefault()).trim { it <= ' ' } ==
-                u.name!!.lowercase(Locale.getDefault()).trim { it <= ' ' }) {
+            u2.name.lowercase(Locale.getDefault()).trim { it <= ' ' } ==
+                u.name.lowercase(Locale.getDefault()).trim { it <= ' ' }) {
           usersMap.remove(userListKey)
           logger.atWarning().log("$user login denied: Duplicating Names is not allowed! ${u2.name}")
           throw ClientAddressException("Duplicating names is not allowed: " + u2.name)
@@ -473,14 +473,14 @@ class KailleraServerImpl
     addEvent(ChatEvent(this, user, message))
     if (switchTrivia) {
       if (!trivia!!.isAnswered && trivia!!.isCorrect(message)) {
-        trivia!!.addScore(user.name!!, user.socketAddress.address.hostAddress, message)
+        trivia!!.addScore(user.name, user.socketAddress.address.hostAddress, message)
       }
     }
   }
 
   @Synchronized
   @Throws(CreateGameException::class, FloodException::class)
-  override suspend fun createGame(user: KailleraUser, romName: String?): KailleraGame {
+  override suspend fun createGame(user: KailleraUser, romName: String): KailleraGame {
     if (!user.loggedIn) {
       logger.atSevere().log("$user create game failed: Not logged in")
       throw CreateGameException(getString("KailleraServerImpl.NotLoggedIn"))
@@ -490,13 +490,13 @@ class KailleraServerImpl
       throw CreateGameException(getString("KailleraServerImpl.CreateGameErrorAlreadyInGame"))
     }
     if (flags.maxGameNameLength > 0 &&
-        romName!!.trim { it <= ' ' }.length > flags.maxGameNameLength) {
+        romName.trim { it <= ' ' }.length > flags.maxGameNameLength) {
       logger
           .atWarning()
           .log("$user create game denied: Rom Name Length > ${flags.maxGameNameLength}")
       throw CreateGameException(getString("KailleraServerImpl.CreateGameDeniedNameTooLong"))
     }
-    if (romName!!.lowercase(Locale.getDefault()).contains("|")) {
+    if (romName.lowercase(Locale.getDefault()).contains("|")) {
       logger.atWarning().log("$user create game denied: Illegal characters in ROM name")
       throw CreateGameException(getString("KailleraServerImpl.CreateGameDeniedIllegalCharacters"))
     }

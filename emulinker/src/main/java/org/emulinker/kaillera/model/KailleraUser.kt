@@ -43,7 +43,7 @@ interface KailleraUser {
   var lastMsgID: Int
   var isAcceptingDirectMessages: Boolean
   var isMuted: Boolean
-  var name: String? // TODO(nue): Remove this "?"
+  var name: String // TODO(nue): Remove this "?"
   /**
    * This is called "p2p mode" in the code and commands.
    *

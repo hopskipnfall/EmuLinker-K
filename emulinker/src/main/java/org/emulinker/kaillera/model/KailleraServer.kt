@@ -45,7 +45,7 @@ interface KailleraServer {
   fun chat(user: KailleraUser, message: String)
 
   @Throws(CreateGameException::class, FloodException::class)
-  suspend fun createGame(user: KailleraUser, romName: String?): KailleraGame?
+  suspend fun createGame(user: KailleraUser, romName: String): KailleraGame
 
   @Throws(
       QuitException::class,

@@ -80,8 +80,7 @@ object EmuUtil {
     return sb.toString()
   }
 
-  fun bytesToHex(data: ByteArray?): String {
-    if (data == null) return "null"
+  fun bytesToHex(data: ByteArray): String {
     val len = data.size
     val sb = StringBuilder(len * 3)
     for (i in 0 until len) {
@@ -90,8 +89,7 @@ object EmuUtil {
     return sb.toString()
   }
 
-  fun bytesToHex(data: ByteArray?, pos: Int, len: Int): String {
-    if (data == null) return "null"
+  fun bytesToHex(data: ByteArray, pos: Int, len: Int): String {
     val sb = StringBuilder(len * 2)
     for (i in pos until pos + len) {
       sb.append(byteToHex(data[i]))

@@ -428,7 +428,7 @@ class GameChatAction
       }
       val m = gameChatEvent.message
       clientHandler.send(
-          GameChat_Notification(clientHandler.nextMessageNumber, gameChatEvent.user.name!!, m))
+          GameChat_Notification(clientHandler.nextMessageNumber, gameChatEvent.user.name, m))
     } catch (e: MessageFormatException) {
       logger.atSevere().withCause(e).log("Failed to construct GameChat_Notification message")
     }

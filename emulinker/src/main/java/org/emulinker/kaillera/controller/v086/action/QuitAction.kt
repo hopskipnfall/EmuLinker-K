@@ -37,7 +37,7 @@ class QuitAction @Inject internal constructor() :
     try {
       val user = event.user
       clientHandler.send(
-          Quit_Notification(clientHandler.nextMessageNumber, user.name!!, user.id, event.message))
+          Quit_Notification(clientHandler.nextMessageNumber, user.name, user.id, event.message))
     } catch (e: MessageFormatException) {
       logger.atSevere().withCause(e).log("Failed to construct Quit_Notification message")
     }

@@ -325,7 +325,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
     // WildcardStringPattern pattern = new WildcardStringPattern
     for (user in server.users) {
       if (!user.loggedIn) continue
-      if (user.name!!.lowercase(Locale.getDefault()).contains(str.lowercase(Locale.getDefault()))) {
+      if (user.name.lowercase(Locale.getDefault()).contains(str.lowercase(Locale.getDefault()))) {
         var msg =
             "UserID: ${user.id}, IP: ${user.connectSocketAddress.address.hostAddress}, Nick: <${user.name}>, Access: ${user.accessStr}"
         msg +=

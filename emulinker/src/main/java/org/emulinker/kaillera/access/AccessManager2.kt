@@ -204,7 +204,7 @@ class AccessManager2 @Inject internal constructor(private val flags: RuntimeFlag
   }
 
   @Synchronized
-  override fun isEmulatorAllowed(emulator: String): Boolean {
+  override fun isEmulatorAllowed(emulator: String?): Boolean {
     checkReload()
     return emulatorList.firstOrNull { it.matches(emulator) }?.access ?: true
   }
