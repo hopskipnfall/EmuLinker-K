@@ -12,8 +12,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import org.emulinker.kaillera.controller.connectcontroller.protocol.ConnectMessage
-import org.emulinker.kaillera.controller.connectcontroller.protocol.ConnectMessage_HELLO
-import org.emulinker.kaillera.controller.connectcontroller.protocol.ConnectMessage_HELLOD00D
+import org.emulinker.kaillera.controller.connectcontroller.protocol.RequestPrivateKailleraPortRequest
+import org.emulinker.kaillera.controller.connectcontroller.protocol.RequestPrivateKailleraPortResponse
 import org.emulinker.kaillera.controller.messaging.ParseException
 import org.emulinker.kaillera.controller.v086.LastMessageBuffer
 import org.emulinker.kaillera.controller.v086.V086Controller
@@ -63,11 +63,11 @@ class EvalClient(
         socket.use { connectedSocket ->
           logger.atInfo().log("Started new eval client at %s", connectedSocket.localAddress)
 
-          sendConnectMessage(ConnectMessage_HELLO(protocol = "0.83"))
+          sendConnectMessage(RequestPrivateKailleraPortRequest(protocol = "0.83"))
 
           val response = ConnectMessage.parse(connectedSocket.receive().packet.readByteBuffer())
           logger.atInfo().log("<<<<<<<< Received message: %s", response)
-          require(response is ConnectMessage_HELLOD00D)
+          require(response is RequestPrivateKailleraPortResponse)
 
           response.port
         }

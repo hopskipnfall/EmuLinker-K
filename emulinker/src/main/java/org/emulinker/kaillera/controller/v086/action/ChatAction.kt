@@ -576,7 +576,7 @@ class ChatAction @Inject internal constructor(private val adminCommandAction: Ad
         // WildcardStringPattern pattern = new WildcardStringPattern
         for (user in clientHandler.user.users!!) {
           if (!user!!.loggedIn) continue
-          if (user.name!!
+          if (user.name
               .lowercase(Locale.getDefault())
               .contains(str.lowercase(Locale.getDefault()))) {
             val sb = StringBuilder()
@@ -627,7 +627,7 @@ class ChatAction @Inject internal constructor(private val adminCommandAction: Ad
             return
       }
       val m = event.message
-      clientHandler.send(Chat_Notification(clientHandler.nextMessageNumber, event.user.name!!, m))
+      clientHandler.send(Chat_Notification(clientHandler.nextMessageNumber, event.user.name, m))
     } catch (e: MessageFormatException) {
       logger.atSevere().withCause(e).log("Failed to construct Chat_Notification message")
     }

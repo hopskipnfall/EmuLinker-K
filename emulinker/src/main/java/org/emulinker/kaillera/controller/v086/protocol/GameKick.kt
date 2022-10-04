@@ -4,7 +4,8 @@ import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.messaging.ParseException
 import org.emulinker.kaillera.controller.v086.protocol.V086Message.Companion.validateMessageNumber
-import org.emulinker.util.UnsignedUtil
+import org.emulinker.util.UnsignedUtil.getUnsignedShort
+import org.emulinker.util.UnsignedUtil.putUnsignedShort
 
 data class GameKick
     @Throws(MessageFormatException::class)
@@ -20,7 +21,7 @@ data class GameKick
 
   public override fun writeBodyTo(buffer: ByteBuffer) {
     buffer.put(0x00.toByte())
-    UnsignedUtil.putUnsignedShort(buffer, userId)
+    buffer.putUnsignedShort(userId)
   }
 
   companion object {
@@ -34,7 +35,7 @@ data class GameKick
       if (b != 0x00)
       	throw new MessageFormatException("Invalid " + DESC + " format: byte 0 = " + EmuUtil.byteToHex(b));
       */
-      return GameKick(messageNumber, UnsignedUtil.getUnsignedShort(buffer))
+      return GameKick(messageNumber, buffer.getUnsignedShort())
     }
   }
 }

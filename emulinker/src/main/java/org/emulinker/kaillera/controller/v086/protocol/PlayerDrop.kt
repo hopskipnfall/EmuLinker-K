@@ -3,6 +3,7 @@ package org.emulinker.kaillera.controller.v086.protocol
 import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.messaging.ParseException
+import org.emulinker.kaillera.controller.v086.V086Utils.getNumBytes
 import org.emulinker.kaillera.pico.AppModule
 import org.emulinker.util.EmuUtil
 
@@ -23,7 +24,7 @@ abstract class PlayerDrop : V086Message() {
   //   this.playerNumber = playerNumber;
   // }
   override val bodyLength: Int
-    get() = getNumBytes(username) + 2
+    get() = username.getNumBytes() + 2
 
   public override fun writeBodyTo(buffer: ByteBuffer) {
     EmuUtil.writeString(buffer, username, 0x00, AppModule.charsetDoNotUse)

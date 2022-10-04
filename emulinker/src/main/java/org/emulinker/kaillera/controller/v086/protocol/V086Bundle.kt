@@ -77,7 +77,7 @@ class V086Bundle constructor(messages: Array<V086Message?>, numToWrite: Int = In
           msgNum == 0 && lastMessageID == 0xFFFF) { // exception for 0 and 0xFFFF
         messageCount = 1
         messages = arrayOfNulls(messageCount)
-        val messageNumber = getUnsignedShort(buffer)
+        val messageNumber = buffer.getUnsignedShort()
         val messageLength = buffer.short
         if (messageLength < 2 || messageLength > buffer.remaining())
             throw ParseException("Invalid message length: $messageLength")
@@ -87,7 +87,7 @@ class V086Bundle constructor(messages: Array<V086Message?>, numToWrite: Int = In
         messages = arrayOfNulls(messageCount)
         parsedCount = 0
         while (parsedCount < messageCount) {
-          val messageNumber = getUnsignedShort(buffer)
+          val messageNumber = buffer.getUnsignedShort()
           if (messageNumber <= lastMessageID) {
             if (messageNumber < 0x20 && lastMessageID > 0xFFDF) {
               // exception when messageNumber with lower value is greater do nothing

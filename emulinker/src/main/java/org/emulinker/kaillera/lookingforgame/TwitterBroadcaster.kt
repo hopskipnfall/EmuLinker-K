@@ -40,14 +40,12 @@ class TwitterBroadcaster
     if (!flags.twitterEnabled) {
       return false
     }
-    val username: String = lookingForGameEvent.user.name!!
+    val username: String = lookingForGameEvent.user.name
     // TODO(nue): Abstract the @ into a status field instead of keeping it in the name.
     // Note: This isn't the normal @ character..
     if (username.contains("＠")) {
       val afterAt = username.substring(username.indexOf("＠"))
-      if (flags.twitterPreventBroadcastNameSuffixes.stream().anyMatch { suffix: String? ->
-        afterAt.contains(suffix!!)
-      }) {
+      if (flags.twitterPreventBroadcastNameSuffixes.any { afterAt.contains(it) }) {
         return false
       }
     }
@@ -77,11 +75,11 @@ class TwitterBroadcaster
   }
 
   fun cancelActionsForUser(userId: Int): Boolean {
-    return cancelMatchingEvents { event: LookingForGameEvent -> event.user.id == userId }
+    return cancelMatchingEvents { it.user.id == userId }
   }
 
   fun cancelActionsForGame(gameId: Int): Boolean {
-    return cancelMatchingEvents { event: LookingForGameEvent -> event.gameId == gameId }
+    return cancelMatchingEvents { it.gameId == gameId }
   }
 
   private fun cancelMatchingEvents(predicate: (LookingForGameEvent) -> Boolean): Boolean {

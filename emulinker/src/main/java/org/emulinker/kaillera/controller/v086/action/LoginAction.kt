@@ -49,7 +49,7 @@ class LoginAction @Inject internal constructor() :
       clientHandler.send(
           UserJoined(
               clientHandler.nextMessageNumber,
-              user.name!!,
+              user.name,
               user.id,
               user.ping.toLong(),
               user.connectionType))

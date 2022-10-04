@@ -56,12 +56,7 @@ class V086ClientHandler
   // TODO(nue): Add this to RuntimeFlags and increase to at least 5.
   val numAcksForSpeedTest = 3
 
-  /*
-  public List<V086Message> getLastMessage()
-  {
-  return lastMessages;
-  }
-  */ var prevMessageNumber = -1
+  private var prevMessageNumber = -1
     private set
   var lastMessageNumber = -1
     private set
@@ -70,7 +65,6 @@ class V086ClientHandler
   var serverGameDataCache: GameDataCache = ClientGameDataCache(256)
     private set
 
-  // private LinkedList<V086Message>	lastMessages			= new LinkedList<V086Message>();
   private val lastMessageBuffer = LastMessageBuffer(V086Controller.MAX_BUNDLE_SIZE)
   private val outMessages = arrayOfNulls<V086Message>(V086Controller.MAX_BUNDLE_SIZE)
   private val inBuffer: ByteBuffer = ByteBuffer.allocateDirect(flags.v086BufferSize)
@@ -129,9 +123,8 @@ class V086ClientHandler
     super.send(buffer, remoteSocketAddress)
   }
 
-  override fun toString(): String {
-    return if (bindPort > 0) "V086Controller($bindPort)" else "V086Controller(unbound)"
-  }
+  override fun toString(): String =
+      if (bindPort > 0) "V086Controller($bindPort)" else "V086Controller(unbound)"
 
   @get:Synchronized
   val nextMessageNumber: Int
@@ -261,7 +254,7 @@ class V086ClientHandler
                 user.id,
                 inBundle.messages.size,
                 inBundle.numMessages,
-                lazy { dumpBufferFromBeginning(buffer) })
+                lazy { buffer.dumpBufferFromBeginning() })
       }
 
       logger.atFinest().log("-> FROM user %d: %s", user.id, inBundle.messages.firstOrNull())
@@ -326,40 +319,34 @@ class V086ClientHandler
   override suspend fun actionPerformed(event: KailleraEvent) {
     when (event) {
       is GameEvent -> {
-        val eventHandler = controller.gameEventHandlers[event.javaClass]
+        val eventHandler = controller.gameEventHandlers[event::class]
         if (eventHandler == null) {
           logger
               .atSevere()
-              .log(
-                  toString() +
-                      " found no GameEventHandler registered to handle game event: " +
-                      event)
+              .log("%s found no GameEventHandler registered to handle game event: %s", this, event)
           return
         }
         (eventHandler as V086GameEventHandler<GameEvent>).handleEvent(event, this)
       }
       is ServerEvent -> {
-        val eventHandler = controller.serverEventHandlers[event.javaClass]
+        val eventHandler = controller.serverEventHandlers[event::class]
         if (eventHandler == null) {
           logger
               .atSevere()
               .log(
-                  toString() +
-                      " found no ServerEventHandler registered to handle server event: " +
-                      event)
+                  "%s found no ServerEventHandler registered to handle server event: %s",
+                  this,
+                  event)
           return
         }
         (eventHandler as V086ServerEventHandler<ServerEvent>).handleEvent(event, this)
       }
       is UserEvent -> {
-        val eventHandler = controller.userEventHandlers[event.javaClass]
+        val eventHandler = controller.userEventHandlers[event::class]
         if (eventHandler == null) {
           logger
               .atSevere()
-              .log(
-                  toString() +
-                      " found no UserEventHandler registered to handle user event: " +
-                      event)
+              .log("%s found no UserEventHandler registered to handle user event: ", this, event)
           return
         }
         (eventHandler as V086UserEventHandler<UserEvent>).handleEvent(event, this)

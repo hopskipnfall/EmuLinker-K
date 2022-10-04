@@ -3,11 +3,15 @@ package org.emulinker.kaillera.controller.v086.protocol
 import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.messaging.ParseException
+import org.emulinker.kaillera.controller.v086.V086Utils.getNumBytes
 import org.emulinker.kaillera.controller.v086.protocol.V086Message.Companion.validateMessageNumber
 import org.emulinker.kaillera.model.ConnectionType
 import org.emulinker.kaillera.pico.AppModule
 import org.emulinker.util.EmuUtil
-import org.emulinker.util.UnsignedUtil
+import org.emulinker.util.UnsignedUtil.getUnsignedInt
+import org.emulinker.util.UnsignedUtil.getUnsignedShort
+import org.emulinker.util.UnsignedUtil.putUnsignedInt
+import org.emulinker.util.UnsignedUtil.putUnsignedShort
 
 data class UserJoined
     @Throws(MessageFormatException::class)
@@ -28,12 +32,12 @@ data class UserJoined
     require(ping in 0..2048) { "Ping out of acceptable range: $ping" }
   }
 
-  override val bodyLength = getNumBytes(username) + 8
+  override val bodyLength = username.getNumBytes() + 8
 
   public override fun writeBodyTo(buffer: ByteBuffer) {
     EmuUtil.writeString(buffer, username, 0x00, AppModule.charsetDoNotUse)
-    UnsignedUtil.putUnsignedShort(buffer, userId)
-    UnsignedUtil.putUnsignedInt(buffer, ping)
+    buffer.putUnsignedShort(userId)
+    buffer.putUnsignedInt(ping)
     buffer.put(connectionType.byteValue)
   }
 
@@ -45,8 +49,8 @@ data class UserJoined
       if (buffer.remaining() < 9) throw ParseException("Failed byte count validation!")
       val userName = EmuUtil.readString(buffer, 0x00, AppModule.charsetDoNotUse)
       if (buffer.remaining() < 7) throw ParseException("Failed byte count validation!")
-      val userID = UnsignedUtil.getUnsignedShort(buffer)
-      val ping = UnsignedUtil.getUnsignedInt(buffer)
+      val userID = buffer.getUnsignedShort()
+      val ping = buffer.getUnsignedInt()
       val connectionType = buffer.get()
       return UserJoined(
           messageNumber, userName, userID, ping, ConnectionType.fromByteValue(connectionType))

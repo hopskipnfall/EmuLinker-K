@@ -50,12 +50,12 @@ class QuitGameAction @Inject constructor(private val lookingForGameReporter: Twi
       val user = event.user
       if (!user.inStealthMode) {
         clientHandler.send(
-            QuitGame_Notification(clientHandler.nextMessageNumber, user.name!!, user.id))
+            QuitGame_Notification(clientHandler.nextMessageNumber, user.name, user.id))
       }
       if (thisUser === user) {
         if (user.inStealthMode)
             clientHandler.send(
-                QuitGame_Notification(clientHandler.nextMessageNumber, user.name!!, user.id))
+                QuitGame_Notification(clientHandler.nextMessageNumber, user.name, user.id))
       }
     } catch (e: MessageFormatException) {
       logger.atSevere().withCause(e).log("Failed to construct QuitGame_Notification message")

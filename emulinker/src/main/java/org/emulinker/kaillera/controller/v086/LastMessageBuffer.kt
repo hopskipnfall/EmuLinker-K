@@ -15,13 +15,14 @@ class LastMessageBuffer(max: Int) {
   private var next: Int
   private var size = 0
   private val array: Array<V086Message?>
+
   fun add(o: V086Message?) {
     array[next] = o
     if (--next < 0) next = max - 1
     if (size < max) size++
   }
 
-  fun fill(o: Array<V086Message?>?, num: Int): Int {
+  fun fill(o: Array<V086Message?>, num: Int): Int {
     // int startRead = (next+1);
     // int endRead = ((next+1)+size);
     if (size < num) {

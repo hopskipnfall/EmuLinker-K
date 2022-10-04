@@ -159,15 +159,14 @@ class KailleraUserImpl(
   override var loggedIn = false
 
   override fun toString(): String {
-    val n = name
-    return if (n == null) {
+    return if (!this::name.isInitialized) {
       "User$id(${connectSocketAddress.address.hostAddress})"
     } else {
-      "User$id(${if (n.length > 15) n.take(15) + "..." else n}/${connectSocketAddress.address.hostAddress})"
+      "User$id(${if (name.length > 15) name.take(15) + "..." else name}/${connectSocketAddress.address.hostAddress})"
     }
   }
 
-  override var name: String? = null
+  override lateinit var name: String
 
   override fun updateLastKeepAlive() {
     lastKeepAlive = Instant.now()

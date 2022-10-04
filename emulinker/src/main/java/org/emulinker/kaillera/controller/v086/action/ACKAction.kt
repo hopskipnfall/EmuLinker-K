@@ -75,7 +75,7 @@ class ACKAction @Inject internal constructor() :
         if (user.status != UserStatus.CONNECTING && user != thisUser)
             users.add(
                 ServerStatus.User(
-                    user.name!!, user.ping.toLong(), user.status, user.id, user.connectionType))
+                    user.name, user.ping.toLong(), user.status, user.id, user.connectionType))
       }
     } catch (e: MessageFormatException) {
       logger.atSevere().withCause(e).log("Failed to construct new ServerStatus.User")
@@ -92,7 +92,7 @@ class ACKAction @Inject internal constructor() :
                 game.romName,
                 game.id,
                 game.clientType!!,
-                game.owner.name!!,
+                game.owner.name,
                 "$num/${game.maxUsers}",
                 game.status))
       }

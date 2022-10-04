@@ -4,7 +4,8 @@ import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.messaging.ParseException
 import org.emulinker.util.EmuUtil
-import org.emulinker.util.UnsignedUtil
+import org.emulinker.util.UnsignedUtil.getUnsignedShort
+import org.emulinker.util.UnsignedUtil.putUnsignedShort
 
 data class GameStatus
     @Throws(MessageFormatException::class)
@@ -31,8 +32,8 @@ data class GameStatus
 
   public override fun writeBodyTo(buffer: ByteBuffer) {
     buffer.put(0x00.toByte())
-    UnsignedUtil.putUnsignedShort(buffer, gameId)
-    UnsignedUtil.putUnsignedShort(buffer, val1)
+    buffer.putUnsignedShort(gameId)
+    buffer.putUnsignedShort(val1)
     buffer.put(gameStatus.byteValue)
     buffer.put(numPlayers)
     buffer.put(maxPlayers)
@@ -46,8 +47,8 @@ data class GameStatus
       if (buffer.remaining() < 8) throw ParseException("Failed byte count validation!")
       val b = buffer.get()
       require(b.toInt() == 0x00) { "Invalid Game Status format: byte 0 = " + EmuUtil.byteToHex(b) }
-      val gameID = UnsignedUtil.getUnsignedShort(buffer)
-      val val1 = UnsignedUtil.getUnsignedShort(buffer)
+      val gameID = buffer.getUnsignedShort()
+      val val1 = buffer.getUnsignedShort()
       val gameStatus = buffer.get()
       val numPlayers = buffer.get()
       val maxPlayers = buffer.get()

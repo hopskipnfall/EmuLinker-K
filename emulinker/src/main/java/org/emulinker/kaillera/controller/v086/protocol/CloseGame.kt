@@ -4,7 +4,8 @@ import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.messaging.ParseException
 import org.emulinker.util.EmuUtil
-import org.emulinker.util.UnsignedUtil
+import org.emulinker.util.UnsignedUtil.getUnsignedShort
+import org.emulinker.util.UnsignedUtil.putUnsignedShort
 
 data class CloseGame
     @Throws(MessageFormatException::class)
@@ -16,8 +17,8 @@ data class CloseGame
 
   public override fun writeBodyTo(buffer: ByteBuffer) {
     buffer.put(0x00.toByte())
-    UnsignedUtil.putUnsignedShort(buffer, gameId)
-    UnsignedUtil.putUnsignedShort(buffer, val1)
+    buffer.putUnsignedShort(gameId)
+    buffer.putUnsignedShort(val1)
   }
 
   init {
@@ -36,8 +37,8 @@ data class CloseGame
       if (b.toInt() != 0x00)
           throw MessageFormatException(
               "Invalid Close Game format: byte 0 = " + EmuUtil.byteToHex(b))
-      val gameID = UnsignedUtil.getUnsignedShort(buffer)
-      val val1 = UnsignedUtil.getUnsignedShort(buffer)
+      val gameID = buffer.getUnsignedShort()
+      val val1 = buffer.getUnsignedShort()
       return CloseGame(messageNumber, gameID, val1)
     }
   }

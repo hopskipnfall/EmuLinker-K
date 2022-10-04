@@ -4,7 +4,8 @@ import java.nio.Buffer
 import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.messaging.ParseException
-import org.emulinker.util.UnsignedUtil
+import org.emulinker.util.UnsignedUtil.getUnsignedShort
+import org.emulinker.util.UnsignedUtil.putUnsignedShort
 
 data class GameData
     @Throws(MessageFormatException::class)
@@ -17,7 +18,7 @@ data class GameData
 
   public override fun writeBodyTo(buffer: ByteBuffer) {
     buffer.put(0x00.toByte())
-    UnsignedUtil.putUnsignedShort(buffer, gameData.size)
+    buffer.putUnsignedShort(gameData.size)
     buffer.put(gameData)
   }
 
@@ -60,7 +61,7 @@ data class GameData
       //		if (b != 0x00)
       //			throw new MessageFormatException("Invalid " + DESC + " format: byte 0 = " +
       // EmuUtil.byteToHex(b));
-      val dataSize = UnsignedUtil.getUnsignedShort(buffer)
+      val dataSize = buffer.getUnsignedShort()
       if (dataSize <= 0 || dataSize > buffer.remaining())
           throw MessageFormatException("Invalid Game Data format: dataSize = $dataSize")
       val gameData = ByteArray(dataSize)

@@ -3,10 +3,12 @@ package org.emulinker.kaillera.controller.v086.protocol
 import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.messaging.ParseException
+import org.emulinker.kaillera.controller.v086.V086Utils.getNumBytes
 import org.emulinker.kaillera.controller.v086.protocol.V086Message.Companion.validateMessageNumber
 import org.emulinker.kaillera.pico.AppModule
 import org.emulinker.util.EmuUtil
-import org.emulinker.util.UnsignedUtil
+import org.emulinker.util.UnsignedUtil.getUnsignedShort
+import org.emulinker.util.UnsignedUtil.putUnsignedShort
 
 data class ConnectionRejected
     @Throws(MessageFormatException::class)
@@ -17,11 +19,11 @@ data class ConnectionRejected
   override val messageId = ID
 
   override val bodyLength: Int
-    get() = getNumBytes(username) + getNumBytes(message) + 4
+    get() = username.getNumBytes() + message.getNumBytes() + 4
 
   public override fun writeBodyTo(buffer: ByteBuffer) {
     EmuUtil.writeString(buffer, username, 0x00, AppModule.charsetDoNotUse)
-    UnsignedUtil.putUnsignedShort(buffer, userId)
+    buffer.putUnsignedShort(userId)
     EmuUtil.writeString(buffer, message, 0x00, AppModule.charsetDoNotUse)
   }
 
@@ -40,7 +42,7 @@ data class ConnectionRejected
       if (buffer.remaining() < 6) throw ParseException("Failed byte count validation!")
       val userName = EmuUtil.readString(buffer, 0x00, AppModule.charsetDoNotUse)
       if (buffer.remaining() < 4) throw ParseException("Failed byte count validation!")
-      val userID = UnsignedUtil.getUnsignedShort(buffer)
+      val userID = buffer.getUnsignedShort()
       if (buffer.remaining() < 2) throw ParseException("Failed byte count validation!")
       val message = EmuUtil.readString(buffer, 0x00, AppModule.charsetDoNotUse)
       return ConnectionRejected(messageNumber, userName, userID, message)

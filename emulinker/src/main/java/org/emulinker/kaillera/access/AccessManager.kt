@@ -19,14 +19,14 @@ interface AccessManager {
    * @param address IP Address of client
    * @return true if address is allowed to connect
    */
-  fun isAddressAllowed(address: InetAddress?): Boolean
+  fun isAddressAllowed(address: InetAddress): Boolean
 
   /**
    * Checks if address is silenced
    *
    * @param address IP Address of client
    */
-  fun isSilenced(address: InetAddress?): Boolean
+  fun isSilenced(address: InetAddress): Boolean
 
   /**
    * Checks if client's emulator is allowed (not filtered)
@@ -40,7 +40,7 @@ interface AccessManager {
    *
    * @param game Game name of client
    */
-  fun isGameAllowed(game: String?): Boolean
+  fun isGameAllowed(game: String): Boolean
 
   /**
    * Returns the client's assigned access level
@@ -48,7 +48,7 @@ interface AccessManager {
    * @param address IP Address of client
    * @return The access level or the default access level if not found
    */
-  fun getAccess(address: InetAddress?): Int
+  fun getAccess(address: InetAddress): Int
 
   /**
    * Returns a login announcement string
@@ -56,12 +56,12 @@ interface AccessManager {
    * @param address IP Address of client
    * @return The login announcement, null if not defined
    */
-  fun getAnnouncement(address: InetAddress?): String?
+  fun getAnnouncement(address: InetAddress): String?
 
   /**
    * Temporarily adds a user to the banned list using a pattern algorithm defined by the
-   * AccessManager implementation. While active, `isAddressAllowed` should return false, and
-   * `getAccess` should return `ACCESS_BANNED`.
+   * AccessManager implementation. While active, [isAddressAllowed] should return false, and
+   * [getAccess] should return [ACCESS_BANNED].
    *
    * @param addressPattern A pattern to match to an address
    * @param minutes Number of minutes this ban is valid from the time of addition
@@ -69,8 +69,8 @@ interface AccessManager {
   fun addTempBan(addressPattern: String, duration: Duration)
 
   /**
-   * Temporarily adds a user to the admin list using a pattern algorythm defined by the
-   * AccessManager implementation. While active, `getAccess` should return ` ACCESS_ADMIN`.
+   * Temporarily adds a user to the admin list using a pattern algorithm defined by the
+   * AccessManager implementation. While active, [getAccess] should return [ACCESS_ADMIN].
    *
    * @param addressPattern A pattern to match to an address
    * @param minutes Number of minutes this grant is valid from the time of addition
@@ -80,14 +80,14 @@ interface AccessManager {
   fun addTempElevated(addressPattern: String, duration: Duration)
 
   /**
-   * Temporarily adds a user to the silenced list using a pattern algorythm defined by the
-   * AccessManager implementation. While active, `isSilenced` should return `true ` * .
+   * Temporarily adds a user to the silenced list using a pattern algorithm defined by the
+   * AccessManager implementation. While active, [isSilenced] should return `true ` * .
    *
    * @param addressPattern A pattern to match to an address
    * @param minutes Number of minutes this grant is valid from the time of addition
    */
   fun addSilenced(addressPattern: String, duration: Duration)
-  fun clearTemp(address: InetAddress?, clearAll: Boolean): Boolean
+  fun clearTemp(address: InetAddress, clearAll: Boolean): Boolean
 
   companion object {
     const val ACCESS_BANNED = 0

@@ -3,7 +3,8 @@ package org.emulinker.kaillera.controller.v086.protocol
 import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.messaging.ParseException
-import org.emulinker.util.UnsignedUtil
+import org.emulinker.util.UnsignedUtil.getUnsignedByte
+import org.emulinker.util.UnsignedUtil.putUnsignedByte
 
 data class KeepAlive
     @Throws(MessageFormatException::class)
@@ -18,7 +19,7 @@ data class KeepAlive
   }
 
   public override fun writeBodyTo(buffer: ByteBuffer) {
-    UnsignedUtil.putUnsignedByte(buffer, value.toInt())
+    buffer.putUnsignedByte(value.toInt())
   }
 
   companion object {
@@ -27,7 +28,7 @@ data class KeepAlive
     @Throws(ParseException::class, MessageFormatException::class)
     fun parse(messageNumber: Int, buffer: ByteBuffer): KeepAlive {
       if (buffer.remaining() < 1) throw ParseException("Failed byte count validation!")
-      return KeepAlive(messageNumber, UnsignedUtil.getUnsignedByte(buffer))
+      return KeepAlive(messageNumber, buffer.getUnsignedByte())
     }
   }
 }
