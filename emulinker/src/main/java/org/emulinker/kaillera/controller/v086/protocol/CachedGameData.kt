@@ -3,7 +3,8 @@ package org.emulinker.kaillera.controller.v086.protocol
 import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.messaging.ParseException
-import org.emulinker.util.UnsignedUtil
+import org.emulinker.util.UnsignedUtil.getUnsignedByte
+import org.emulinker.util.UnsignedUtil.putUnsignedByte
 
 data class CachedGameData
     @Throws(MessageFormatException::class)
@@ -11,12 +12,11 @@ data class CachedGameData
 
   override val messageId = ID
 
-  override val bodyLength: Int
-    get() = 2
+  override val bodyLength = 2
 
   public override fun writeBodyTo(buffer: ByteBuffer) {
     buffer.put(0x00.toByte())
-    UnsignedUtil.putUnsignedByte(buffer, key)
+    buffer.putUnsignedByte(key)
   }
 
   companion object {
@@ -30,7 +30,7 @@ data class CachedGameData
       // if (b != 0x00)
       // throw new MessageFormatException("Invalid " + DESC + " format: byte 0 = " +
       // EmuUtil.byteToHex(b));
-      return CachedGameData(messageNumber, UnsignedUtil.getUnsignedByte(buffer).toInt())
+      return CachedGameData(messageNumber, buffer.getUnsignedByte().toInt())
     }
   }
 }

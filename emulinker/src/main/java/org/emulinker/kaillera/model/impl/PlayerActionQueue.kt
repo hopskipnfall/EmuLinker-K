@@ -64,7 +64,6 @@ class PlayerActionQueue(
     throw PlayerTimeoutException(this.playerNumber, timeoutNumber = -1, player)
   }
 
-  private fun getSize(playerNumber: Int): Int {
-    return (tail + gameBufferSize - heads[playerNumber - 1]) % gameBufferSize
-  }
+  private fun getSize(playerNumber: Int): Int =
+      (tail + gameBufferSize - heads[playerNumber - 1]) % gameBufferSize
 }

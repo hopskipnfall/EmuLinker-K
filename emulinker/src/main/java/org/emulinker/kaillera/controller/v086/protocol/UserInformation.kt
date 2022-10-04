@@ -3,6 +3,7 @@ package org.emulinker.kaillera.controller.v086.protocol
 import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.messaging.ParseException
+import org.emulinker.kaillera.controller.v086.V086Utils.getNumBytes
 import org.emulinker.kaillera.controller.v086.protocol.V086Message.Companion.validateMessageNumber
 import org.emulinker.kaillera.model.ConnectionType
 import org.emulinker.kaillera.pico.AppModule
@@ -24,7 +25,7 @@ data class UserInformation
   }
 
   override val bodyLength: Int
-    get() = getNumBytes(username) + getNumBytes(clientType) + 3
+    get() = username.getNumBytes() + clientType.getNumBytes() + 3
 
   public override fun writeBodyTo(buffer: ByteBuffer) {
     EmuUtil.writeString(buffer, username, 0x00, AppModule.charsetDoNotUse)

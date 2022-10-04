@@ -115,18 +115,20 @@ class AccessManager2 @Inject internal constructor(private val flags: RuntimeFlag
   }
 
   @Synchronized
-  override fun getAnnouncement(address: InetAddress?): String? {
+  override fun getAnnouncement(address: InetAddress): String? {
     checkReload()
-    val userAddress = address!!.hostAddress
+    val userAddress = address.hostAddress
     return userList.firstOrNull { it.matches(userAddress) }?.message
   }
 
   @Synchronized
-  override fun getAccess(address: InetAddress?): Int {
+  override fun getAccess(address: InetAddress): Int {
     checkReload()
-    val userAddress = address!!.hostAddress
+    val userAddress = address.hostAddress
     for (tempAdmin in tempAdminList) {
-      if (tempAdmin.matches(userAddress) && !tempAdmin.isExpired) return AccessManager.ACCESS_ADMIN
+      if (tempAdmin.matches(userAddress) && !tempAdmin.isExpired) {
+        return AccessManager.ACCESS_ADMIN
+      }
     }
     for (tempModerator in tempModeratorList) {
       if (tempModerator.matches(userAddress) && !tempModerator.isExpired)
@@ -140,8 +142,8 @@ class AccessManager2 @Inject internal constructor(private val flags: RuntimeFlag
   }
 
   @Synchronized
-  override fun clearTemp(address: InetAddress?, clearAll: Boolean): Boolean {
-    val userAddress = address!!.hostAddress
+  override fun clearTemp(address: InetAddress, clearAll: Boolean): Boolean {
+    val userAddress = address.hostAddress
     var found = false
     for (silence in silenceList) {
       if (silence.matches(userAddress)) {
@@ -179,7 +181,7 @@ class AccessManager2 @Inject internal constructor(private val flags: RuntimeFlag
   }
 
   @Synchronized
-  override fun isSilenced(address: InetAddress?): Boolean {
+  override fun isSilenced(address: InetAddress): Boolean {
     checkReload()
     val userAddress = address!!.hostAddress
     for (silence in silenceList) {
@@ -189,9 +191,9 @@ class AccessManager2 @Inject internal constructor(private val flags: RuntimeFlag
   }
 
   @Synchronized
-  override fun isAddressAllowed(address: InetAddress?): Boolean {
+  override fun isAddressAllowed(address: InetAddress): Boolean {
     checkReload()
-    val userAddress = address!!.hostAddress
+    val userAddress = address.hostAddress
     for (tempBan in tempBanList) {
       if (tempBan.matches(userAddress) && !tempBan.isExpired) return false
     }
@@ -202,16 +204,13 @@ class AccessManager2 @Inject internal constructor(private val flags: RuntimeFlag
   }
 
   @Synchronized
-  override fun isEmulatorAllowed(emulator: String?): Boolean {
+  override fun isEmulatorAllowed(emulator: String): Boolean {
     checkReload()
-    for (emulatorAccess in emulatorList) {
-      if (emulatorAccess.matches(emulator)) return emulatorAccess.access
-    }
-    return true
+    return emulatorList.firstOrNull { it.matches(emulator) }?.access ?: true
   }
 
   @Synchronized
-  override fun isGameAllowed(game: String?): Boolean {
+  override fun isGameAllowed(game: String): Boolean {
     checkReload()
     return gameList.firstOrNull { it.matches(game) }?.access ?: true
   }

@@ -123,9 +123,8 @@ class V086ClientHandler
     super.send(buffer, remoteSocketAddress)
   }
 
-  override fun toString(): String {
-    return if (bindPort > 0) "V086Controller($bindPort)" else "V086Controller(unbound)"
-  }
+  override fun toString(): String =
+      if (bindPort > 0) "V086Controller($bindPort)" else "V086Controller(unbound)"
 
   @get:Synchronized
   val nextMessageNumber: Int
@@ -255,7 +254,7 @@ class V086ClientHandler
                 user.id,
                 inBundle.messages.size,
                 inBundle.numMessages,
-                lazy { dumpBufferFromBeginning(buffer) })
+                lazy { buffer.dumpBufferFromBeginning() })
       }
 
       logger.atFinest().log("-> FROM user %d: %s", user.id, inBundle.messages.firstOrNull())

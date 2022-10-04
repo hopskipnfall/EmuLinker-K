@@ -4,7 +4,7 @@ import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.messaging.ParseException
 import org.emulinker.util.EmuUtil
-import org.emulinker.util.UnsignedUtil
+import org.emulinker.util.UnsignedUtil.getUnsignedInt
 
 data class ServerACK
     @Throws(MessageFormatException::class)
@@ -31,10 +31,10 @@ data class ServerACK
       if (b.toInt() != 0x00) {
         throw MessageFormatException("byte 0 = " + EmuUtil.byteToHex(b))
       }
-      val val1 = UnsignedUtil.getUnsignedInt(buffer)
-      val val2 = UnsignedUtil.getUnsignedInt(buffer)
-      val val3 = UnsignedUtil.getUnsignedInt(buffer)
-      val val4 = UnsignedUtil.getUnsignedInt(buffer)
+      val val1 = buffer.getUnsignedInt()
+      val val2 = buffer.getUnsignedInt()
+      val val3 = buffer.getUnsignedInt()
+      val val4 = buffer.getUnsignedInt()
       if (val1 != 0L || val2 != 1L || val3 != 2L || val4 != 3L)
           throw MessageFormatException(
               "Invalid Server to Client ACK format: bytes do not match acceptable format!")

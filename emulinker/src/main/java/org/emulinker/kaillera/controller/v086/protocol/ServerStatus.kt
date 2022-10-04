@@ -4,12 +4,16 @@ import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.messaging.ParseException
 import org.emulinker.kaillera.controller.v086.V086Utils
+import org.emulinker.kaillera.controller.v086.V086Utils.getNumBytesPlusStopByte
 import org.emulinker.kaillera.model.ConnectionType
 import org.emulinker.kaillera.model.GameStatus
 import org.emulinker.kaillera.model.UserStatus
 import org.emulinker.kaillera.pico.AppModule
 import org.emulinker.util.EmuUtil
-import org.emulinker.util.UnsignedUtil
+import org.emulinker.util.UnsignedUtil.getUnsignedInt
+import org.emulinker.util.UnsignedUtil.getUnsignedShort
+import org.emulinker.util.UnsignedUtil.putUnsignedInt
+import org.emulinker.util.UnsignedUtil.putUnsignedShort
 
 data class ServerStatus
     @Throws(MessageFormatException::class)
@@ -57,7 +61,7 @@ data class ServerStatus
     }
 
     val numBytes =
-        (V086Utils.getNumBytesPlusStopByte(username) +
+        (username.getNumBytesPlusStopByte() +
             // Ping.
             V086Utils.Bytes.INTEGER +
             // Status.
@@ -69,9 +73,9 @@ data class ServerStatus
 
     fun writeTo(buffer: ByteBuffer) {
       EmuUtil.writeString(buffer, username, 0x00, AppModule.charsetDoNotUse)
-      UnsignedUtil.putUnsignedInt(buffer, ping)
+      buffer.putUnsignedInt(ping)
       buffer.put(status.byteValue)
-      UnsignedUtil.putUnsignedShort(buffer, userId)
+      buffer.putUnsignedShort(userId)
       buffer.put(connectionType.byteValue)
     }
   }
@@ -99,12 +103,12 @@ data class ServerStatus
 
     val numBytes: Int
       get() =
-          (V086Utils.getNumBytesPlusStopByte(romName) +
+          (romName.getNumBytesPlusStopByte() +
               // Game ID.
               V086Utils.Bytes.INTEGER +
-              V086Utils.getNumBytesPlusStopByte(clientType) +
-              V086Utils.getNumBytesPlusStopByte(username) +
-              V086Utils.getNumBytesPlusStopByte(playerCountOutOfMax) +
+              clientType.getNumBytesPlusStopByte() +
+              username.getNumBytesPlusStopByte() +
+              playerCountOutOfMax.getNumBytesPlusStopByte() +
               // Status.
               V086Utils.Bytes.SINGLE_BYTE)
 
@@ -144,9 +148,9 @@ data class ServerStatus
         if (buffer.remaining() < 9) throw ParseException("Failed byte count validation!")
         val userName = EmuUtil.readString(buffer, 0x00, AppModule.charsetDoNotUse)
         if (buffer.remaining() < 8) throw ParseException("Failed byte count validation!")
-        val ping = UnsignedUtil.getUnsignedInt(buffer)
+        val ping = buffer.getUnsignedInt()
         val status = buffer.get()
-        val userID = UnsignedUtil.getUnsignedShort(buffer)
+        val userID = buffer.getUnsignedShort()
         val connectionType = buffer.get()
         users.add(
             User(

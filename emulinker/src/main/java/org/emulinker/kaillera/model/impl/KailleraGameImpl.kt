@@ -421,13 +421,13 @@ class KailleraGameImpl(
 
   @Synchronized
   @Throws(UserReadyException::class)
-  override fun ready(user: KailleraUser?, playerNumber: Int) {
+  override fun ready(user: KailleraUser, playerNumber: Int) {
     if (!players.contains(user)) {
-      logger.atWarning().log(user.toString() + " ready game failed: not in " + this)
+      logger.atWarning().log("$user ready game failed: not in $this")
       throw UserReadyException(EmuLang.getString("KailleraGameImpl.ReadyGameErrorNotInGame"))
     }
     if (status != GameStatus.SYNCHRONIZING) {
-      logger.atWarning().log("${user.toString()} ready failed: $this status is $status")
+      logger.atWarning().log("$user ready failed: $this status is $status")
       throw UserReadyException(EmuLang.getString("KailleraGameImpl.ReadyGameErrorIncorrectState"))
     }
     if (playerActionQueue == null) {
@@ -543,7 +543,7 @@ class KailleraGameImpl(
         game = null
       }
     }
-    autoFireDetector?.stop()
+    autoFireDetector.stop()
     players.clear()
   }
 

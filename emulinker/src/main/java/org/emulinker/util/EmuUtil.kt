@@ -25,6 +25,8 @@ object EmuUtil {
       charArrayOf('0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F')
   @JvmField val LB = System.getProperty("line.separator")
   @JvmField var DATE_FORMAT: DateFormat = SimpleDateFormat("MM/dd/yyyy HH:mm:ss")
+
+  // TODO(nue): This looks like a hack. Maybe clean it up.
   fun systemIsWindows(): Boolean {
     return File.separatorChar == '\\'
   }
@@ -182,36 +184,30 @@ object EmuUtil {
     return sb.toString()
   }
 
-  fun dumpBufferFromBeginning(buffer: ByteBuffer, allHex: Boolean = false): String {
+  fun ByteBuffer.dumpBufferFromBeginning(allHex: Boolean = false): String {
     val sb = StringBuilder()
     // Cast to avoid issue with java version mismatch: https://stackoverflow.com/a/61267496/2875073
-    val pos = buffer.position()
-    (buffer as Buffer).position(0)
-    while (buffer.hasRemaining()) {
-      val b = buffer.get()
+    val pos = this.position()
+    (this as Buffer).position(0)
+    while (this.hasRemaining()) {
+      val b = this.get()
       if (!allHex && Character.isLetterOrDigit(Char(b.toUShort()))) sb.append(Char(b.toUShort()))
       else sb.append(byteToHex(b))
-      if (buffer.hasRemaining()) sb.append(",")
+      if (this.hasRemaining()) sb.append(",")
     }
-    buffer.position(pos)
+    this.position(pos)
     return sb.toString()
   }
 
   fun readString(buffer: ByteBuffer, stopByte: Int, charset: Charset): String {
     val tempBuffer = ByteBuffer.allocate(buffer.remaining())
-    //		char[] tempArray = new char[buffer.remaining()];
-    //		byte b;
-    //		int  i;
-    while (buffer.hasRemaining()) // 		for(i=0; i<tempArray.length; i++)
-    {
+    while (buffer.hasRemaining()) {
       var b: Byte
       if (buffer.get().also { b = it }.toInt() == stopByte) break
       tempBuffer.put(b)
-      //			tempArray[i] = (char)b;
     }
     // Cast to avoid issue with java version mismatch: https://stackoverflow.com/a/61267496/2875073
     return charset.decode((tempBuffer as Buffer).flip() as ByteBuffer).toString()
-    //		return new String(tempArray, 0, i);
   }
 
   fun writeString(buffer: ByteBuffer, s: String, stopByte: Int, charset: Charset) {
@@ -235,7 +231,7 @@ object EmuUtil {
     }
   }
 
-  fun toSimpleUtcDatetime(instant: Instant?): String {
+  fun toSimpleUtcDatetime(instant: Instant): String {
     return DateTimeFormatter.RFC_1123_DATE_TIME.withZone(ZoneOffset.UTC).format(instant)
   }
 }

@@ -8,7 +8,7 @@ import org.emulinker.kaillera.controller.messaging.ByteBufferMessage
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.messaging.ParseException
 import org.emulinker.kaillera.pico.AppModule
-import org.emulinker.util.UnsignedUtil
+import org.emulinker.util.UnsignedUtil.putUnsignedShort
 
 private val logger = FluentLogger.forEnclosingClass()
 
@@ -48,12 +48,12 @@ abstract class V086Message : ByteBufferMessage() {
           .log(
               "Ran out of output buffer space, consider increasing the controllers.v086.bufferSize setting!")
     } else {
-      UnsignedUtil.putUnsignedShort(buffer, messageNumber)
+      buffer.putUnsignedShort(messageNumber)
       // there no realistic reason to use unsigned here since a single packet can't be that large
       // Cast to avoid issue with java version mismatch:
       // https://stackoverflow.com/a/61267496/2875073
       (buffer as Buffer).mark()
-      UnsignedUtil.putUnsignedShort(buffer, len)
+      buffer.putUnsignedShort(len)
       //		buffer.putShort((short)getLength());
       buffer.put(messageId)
       writeBodyTo(buffer)

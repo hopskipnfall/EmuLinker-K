@@ -143,7 +143,7 @@ abstract class UDPServer : Executable {
           logger
               .atSevere()
               .withCause(e)
-              .log("Error while handling request: %s", dumpBufferFromBeginning(buffer))
+              .log("Error while handling request: %s", buffer.dumpBufferFromBeginning())
         }
       }
     }

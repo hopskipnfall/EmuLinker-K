@@ -34,7 +34,7 @@ class AutoFireScanner2(private var game: KailleraGame, sensitivity: Int) : AutoF
     scanningJobs = arrayOfNulls(numPlayers)
   }
 
-  override fun addPlayer(player: KailleraUser?, playerNumber: Int) {
+  override fun addPlayer(player: KailleraUser, playerNumber: Int) {
     if (sensitivity <= 0 || scanningJobs == null) return
     scanningJobs!![playerNumber - 1] = ScanningJob(player, playerNumber)
   }

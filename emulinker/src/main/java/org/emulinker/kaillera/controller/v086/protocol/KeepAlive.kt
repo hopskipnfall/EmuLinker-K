@@ -4,6 +4,7 @@ import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.messaging.ParseException
 import org.emulinker.util.UnsignedUtil
+import org.emulinker.util.UnsignedUtil.putUnsignedByte
 
 data class KeepAlive
     @Throws(MessageFormatException::class)
@@ -18,7 +19,7 @@ data class KeepAlive
   }
 
   public override fun writeBodyTo(buffer: ByteBuffer) {
-    UnsignedUtil.putUnsignedByte(buffer, value.toInt())
+    buffer.putUnsignedByte(value.toInt())
   }
 
   companion object {

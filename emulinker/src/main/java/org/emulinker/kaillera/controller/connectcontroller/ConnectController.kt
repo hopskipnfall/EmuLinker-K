@@ -142,7 +142,7 @@ class ConnectController
       send(ConnectMessage_PONG(), remoteSocketAddress)
       return
     }
-    if (inMessage !is ConnectMessage_HELLO) {
+    if (inMessage !is RequestPrivateKailleraPortRequest) {
       messageFormatErrorCount++
       logger
           .atWarning()
@@ -201,7 +201,7 @@ class ConnectController
               .atFine()
               .log(
                   "$protocolController allocated port $privatePort to client from ${remoteSocketAddress.address.hostAddress}")
-          send(ConnectMessage_HELLOD00D(privatePort), remoteSocketAddress)
+          send(RequestPrivateKailleraPortResponse(privatePort), remoteSocketAddress)
         }
       } catch (e: ServerFullException) {
         deniedServerFullCount++

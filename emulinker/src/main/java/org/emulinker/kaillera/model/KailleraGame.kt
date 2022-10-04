@@ -51,7 +51,7 @@ interface KailleraGame {
   fun start(user: KailleraUser)
 
   @Throws(UserReadyException::class)
-  fun ready(user: KailleraUser?, playerNumber: Int)
+  fun ready(user: KailleraUser, playerNumber: Int)
 
   @Throws(GameDataException::class)
   fun addData(user: KailleraUser, playerNumber: Int, data: ByteArray)
