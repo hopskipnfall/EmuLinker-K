@@ -43,20 +43,23 @@ class AccessManager2 @Inject internal constructor(private val flags: RuntimeFlag
 
   @Synchronized
   private fun checkReload() {
-    if (accessFile != null && accessFile!!.lastModified() > lastLoadModifiedTime) loadAccess()
+    val af = accessFile
+    if (af != null && af.lastModified() > lastLoadModifiedTime) {
+      loadAccess()
+    }
   }
 
   @Synchronized
   private fun loadAccess() {
-    if (accessFile == null) return
+    val af = accessFile ?: return
     logger.atInfo().log("Reloading permissions...")
-    lastLoadModifiedTime = accessFile!!.lastModified()
+    lastLoadModifiedTime = af.lastModified()
     userList.clear()
     gameList.clear()
     emulatorList.clear()
     addressList.clear()
     try {
-      val file = FileInputStream(accessFile!!)
+      val file = FileInputStream(af)
       val temp: Reader = InputStreamReader(file, flags.charset)
       val reader = BufferedReader(temp)
       var line: String?
@@ -183,7 +186,7 @@ class AccessManager2 @Inject internal constructor(private val flags: RuntimeFlag
   @Synchronized
   override fun isSilenced(address: InetAddress): Boolean {
     checkReload()
-    val userAddress = address!!.hostAddress
+    val userAddress = address.hostAddress
     for (silence in silenceList) {
       if (silence.matches(userAddress) && !silence.isExpired) return true
     }
@@ -391,9 +394,9 @@ class AccessManager2 @Inject internal constructor(private val flags: RuntimeFlag
 
     private var patterns: MutableList<WildcardStringPattern>
 
-    fun matches(game: String?): Boolean {
+    fun matches(game: String): Boolean {
       for (pattern in patterns) {
-        if (pattern.match(game!!.lowercase(Locale.getDefault()))) return true
+        if (pattern.match(game.lowercase(Locale.getDefault()))) return true
       }
       return false
     }
@@ -419,16 +422,17 @@ class AccessManager2 @Inject internal constructor(private val flags: RuntimeFlag
   init {
     val url = AccessManager2::class.java.getResource("/access.cfg")
     requireNotNull(url) { "Resource not found: /access.conf" }
-    accessFile =
+    val af =
         try {
           File(url.toURI())
         } catch (e: URISyntaxException) {
           throw IllegalStateException("Could not parse URI", e)
         }
-    if (!accessFile!!.exists()) {
+    accessFile = af
+    if (!af.exists()) {
       throw IllegalStateException(FileNotFoundException("Resource not found: /access.conf"))
     }
-    if (!accessFile!!.canRead()) {
+    if (!af.canRead()) {
       throw IllegalStateException(FileNotFoundException("Can not read: /access.conf"))
     }
     loadAccess()

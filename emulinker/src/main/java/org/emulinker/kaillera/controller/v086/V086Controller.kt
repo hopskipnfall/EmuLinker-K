@@ -119,7 +119,9 @@ class V086Controller
   override suspend fun newConnection(
       udpSocketProvider: UdpSocketProvider, clientSocketAddress: InetSocketAddress, protocol: String
   ): Int {
-    if (!isRunning) throw NewConnectionException("Controller is not running")
+    if (!isRunning) {
+      throw NewConnectionException("Controller is not running")
+    }
     logger
         .atFine()
         .log("Creating new connection for address %d, protocol %s", clientSocketAddress, protocol)

@@ -69,8 +69,10 @@ class V086ClientHandler
   private val outMessages = arrayOfNulls<V086Message>(V086Controller.MAX_BUNDLE_SIZE)
   private val inBuffer: ByteBuffer = ByteBuffer.allocateDirect(flags.v086BufferSize)
   private val outBuffer: ByteBuffer = ByteBuffer.allocateDirect(flags.v086BufferSize)
+
   private val inMutex = Mutex()
   private val outMutex = Mutex()
+
   private var testStart: Long = 0
   private var lastMeasurement: Long = 0
   var speedMeasurementCount = 0
@@ -78,7 +80,7 @@ class V086ClientHandler
   var bestNetworkSpeed = Int.MAX_VALUE
     private set
   private var clientRetryCount = 0
-  private var lastResend: Long = 0
+  private var lastResend = 0L
 
   private val clientRequestTimer =
       metrics.timer(MetricRegistry.name(this.javaClass, "clientRequests"))
@@ -91,7 +93,7 @@ class V086ClientHandler
   @AssistedFactory
   interface Factory {
     fun create(
-        remoteSocketAddress: InetSocketAddress?, v086Controller: V086Controller?
+        remoteSocketAddress: InetSocketAddress, v086Controller: V086Controller
     ): V086ClientHandler
   }
 
@@ -123,7 +125,7 @@ class V086ClientHandler
     super.send(buffer, remoteSocketAddress)
   }
 
-  override fun toString(): String =
+  override fun toString() =
       if (bindPort > 0) "V086Controller($bindPort)" else "V086Controller(unbound)"
 
   @get:Synchronized
@@ -149,7 +151,9 @@ class V086ClientHandler
 
   fun addSpeedMeasurement() {
     val et = (System.currentTimeMillis() - lastMeasurement).toInt()
-    if (et < bestNetworkSpeed) bestNetworkSpeed = et
+    if (et < bestNetworkSpeed) {
+      bestNetworkSpeed = et
+    }
     speedMeasurementCount++
     lastMeasurement = System.currentTimeMillis()
   }
@@ -227,21 +231,21 @@ class V086ClientHandler
             parse(buffer, lastMessageNumber)
           } catch (e: ParseException) {
             buffer.rewind()
-            logger.atWarning().withCause(e).log("$this failed to parse: ${dumpBuffer(buffer)}")
+            logger.atWarning().withCause(e).log("%s failed to parse: ${dumpBuffer(buffer)}", this)
             null
           } catch (e: V086BundleFormatException) {
             buffer.rewind()
             logger
                 .atWarning()
                 .withCause(e)
-                .log("$this received invalid message bundle: ${dumpBuffer(buffer)}")
+                .log("%s received invalid message bundle: ${dumpBuffer(buffer)}", this)
             null
           } catch (e: MessageFormatException) {
             buffer.rewind()
             logger
                 .atWarning()
                 .withCause(e)
-                .log("$this received invalid message: ${dumpBuffer(buffer)}")
+                .log("%s received invalid message: ${dumpBuffer(buffer)}", this)
             null
           } ?: return
 
@@ -363,7 +367,7 @@ class V086ClientHandler
       // int numToSend = (3+timeoutCounter);
       var numToSend = 3 * timeoutCounter
       if (numToSend > V086Controller.MAX_BUNDLE_SIZE) numToSend = V086Controller.MAX_BUNDLE_SIZE
-      logger.atFine().log("$this: resending last $numToSend messages")
+      logger.atFine().log("%s: resending last $numToSend messages", this)
       send(null, numToSend)
       lastResend = System.currentTimeMillis()
     } else {
