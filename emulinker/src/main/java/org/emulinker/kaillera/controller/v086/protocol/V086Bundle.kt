@@ -9,11 +9,8 @@ import org.emulinker.kaillera.controller.v086.protocol.V086Message.Companion.par
 import org.emulinker.util.EmuUtil
 import org.emulinker.util.UnsignedUtil.getUnsignedShort
 
-class V086Bundle constructor(messages: Array<V086Message?>, numToWrite: Int = Int.MAX_VALUE) :
+class V086Bundle constructor(val messages: Array<V086Message?>, numToWrite: Int = Int.MAX_VALUE) :
     ByteBufferMessage() {
-  var messages: Array<V086Message?>
-    private set
-
   var numMessages: Int
     private set
 
@@ -46,8 +43,8 @@ class V086Bundle constructor(messages: Array<V086Message?>, numToWrite: Int = In
     // UnsignedUtil.putUnsignedByte(buffer, numToWrite);
     buffer.put(numMessages.toByte())
     for (i in 0 until numMessages) {
-      if (messages[i] == null) break
-      messages[i]!!.writeTo(buffer)
+      val message = messages[i] ?: break
+      message.writeTo(buffer)
     }
   }
 
@@ -112,7 +109,8 @@ class V086Bundle constructor(messages: Array<V086Message?>, numToWrite: Int = In
 
   init {
     numMessages = messages.size
-    if (numToWrite < numMessages) numMessages = numToWrite
-    this.messages = messages
+    if (numToWrite < numMessages) {
+      numMessages = numToWrite
+    }
   }
 }

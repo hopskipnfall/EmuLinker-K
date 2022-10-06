@@ -191,13 +191,13 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
       message: String?,
       server: KailleraServerImpl,
       admin: KailleraUserImpl,
-      clientHandler: V086ClientHandler?
+      clientHandler: V086ClientHandler
   ) {
     if (admin.accessLevel == AccessManager.ACCESS_MODERATOR) return
     // clientHandler.send(InformationMessage(clientHandler.getNextMessageNumber(), "server",
     // EmuLang.getString("AdminCommandAction.AdminCommands")));
     // try { delay(20.milliseconds); } catch(Exception e) {}
-    clientHandler!!.send(
+    clientHandler.send(
         InformationMessage(
             clientHandler.nextMessageNumber,
             "server",
@@ -313,12 +313,12 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
 
   @Throws(ActionException::class, MessageFormatException::class)
   private suspend fun processFindUser(
-      message: String?,
+      message: String,
       server: KailleraServerImpl,
       admin: KailleraUserImpl,
       clientHandler: V086ClientHandler?
   ) {
-    val space = message!!.indexOf(' ')
+    val space = message.indexOf(' ')
     if (space < 0) throw ActionException(EmuLang.getString("AdminCommandAction.FindUserError"))
     var foundCount = 0
     val str = message.substring(space + 1)
@@ -346,12 +346,12 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
 
   @Throws(ActionException::class, MessageFormatException::class)
   private suspend fun processFindGame(
-      message: String?,
+      message: String,
       server: KailleraServerImpl,
       admin: KailleraUserImpl,
-      clientHandler: V086ClientHandler?
+      clientHandler: V086ClientHandler
   ) {
-    val space = message!!.indexOf(' ')
+    val space = message.indexOf(' ')
     if (space < 0) throw ActionException(EmuLang.getString("AdminCommandAction.FindGameError"))
     var foundCount = 0
     val pattern = WildcardStringPattern(message.substring(space + 1))
@@ -364,17 +364,18 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
         sb.append(game.owner.name)
         sb.append(">, Game: ")
         sb.append(game.romName)
-        clientHandler!!.send(
+        clientHandler.send(
             InformationMessage(clientHandler.nextMessageNumber, "server", sb.toString()))
         foundCount++
       }
     }
-    if (foundCount == 0)
-        clientHandler!!.send(
-            InformationMessage(
-                clientHandler.nextMessageNumber,
-                "server",
-                EmuLang.getString("AdminCommandAction.NoGamesFound")))
+    if (foundCount == 0) {
+      clientHandler.send(
+          InformationMessage(
+              clientHandler.nextMessageNumber,
+              "server",
+              EmuLang.getString("AdminCommandAction.NoGamesFound")))
+    }
   }
 
   @Throws(ActionException::class, MessageFormatException::class)

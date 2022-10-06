@@ -48,6 +48,15 @@ class ConnectController
 
   private val controllersMap: MutableMap<String, KailleraServerController> = HashMap()
 
+  init {
+    kailleraServerControllers.forEach { controller ->
+      controller.clientTypes.forEach { type ->
+        logger.atFine().log("Mapping client type $type to $controller")
+        controllersMap[type] = controller
+      }
+    }
+  }
+
   override val bufferSize = flags.connectControllerBufferSize
 
   private var internalBufferSize = 0
@@ -224,14 +233,5 @@ class ConnectController
 
     send(outMessage.toBuffer(), toSocketAddress)
     outMessage.releaseBuffer()
-  }
-
-  init {
-    kailleraServerControllers.forEach { controller ->
-      controller.clientTypes.forEach { type ->
-        logger.atFine().log("Mapping client type $type to $controller")
-        controllersMap[type] = controller
-      }
-    }
   }
 }

@@ -61,9 +61,9 @@ class GameChatAction
   }
 
   @Throws(FatalActionException::class)
-  private suspend fun checkCommands(message: V086Message, clientHandler: V086ClientHandler?) {
+  private suspend fun checkCommands(message: V086Message, clientHandler: V086ClientHandler) {
     var doCommand = true
-    if (clientHandler!!.user.accessLevel < AccessManager.ACCESS_ELEVATED) {
+    if (clientHandler.user.accessLevel < AccessManager.ACCESS_ELEVATED) {
       try {
         clientHandler.user.chat(":USER_COMMAND")
       } catch (e: ActionException) {

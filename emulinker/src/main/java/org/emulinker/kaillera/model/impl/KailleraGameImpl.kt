@@ -102,7 +102,7 @@ class KailleraGameImpl(
 
   override fun getPlayer(playerNumber: Int): KailleraUser? {
     if (playerNumber > players.size) {
-      logger.atSevere().log("$this: getPlayer($playerNumber) failed! (size = ${players.size})")
+      logger.atSevere().log("%s: getPlayer($playerNumber) failed! (size = ${players.size})", this)
       return null
     }
     return players[playerNumber - 1]
@@ -120,8 +120,8 @@ class KailleraGameImpl(
   private val synchedCount: Int
     get() = playerActionQueue?.count { it.synched } ?: 0
 
-  private fun addEvent(event: GameEvent?) {
-    for (player in players) (player as KailleraUserImpl).addEvent(event)
+  private fun addEvent(event: GameEvent) {
+    players.forEach { (it as KailleraUserImpl).addEvent(event) }
   }
 
   @Synchronized
@@ -238,10 +238,8 @@ class KailleraGameImpl(
         logger
             .atWarning()
             .log(
-                user.toString() +
-                    "join game denied: owner doesn't allow that connection type: " +
-                    user.connectionType)
-        throw JoinGameException("Owner only allows connection type: " + owner.connectionType)
+                "${user}join game denied: owner doesn't allow that connection type: ${user.connectionType}")
+        throw JoinGameException("Owner only allows connection type: ${owner.connectionType}")
       }
     }
     if (access < AccessManager.ACCESS_ADMIN &&
@@ -405,7 +403,7 @@ class KailleraGameImpl(
       /*else{
       	player.setP2P(false);
       }*/
-      logger.atInfo().log("$this: $player is player number $playerNumber")
+      logger.atInfo().log("%s: $player is player number $playerNumber", this)
       autoFireDetector.addPlayer(player, playerNumber)
     }
     playerActionQueue = actionQueueBuilder.map { it!! }.toTypedArray()
@@ -437,7 +435,7 @@ class KailleraGameImpl(
     logger.atInfo().log("$user (player $playerNumber) is ready to play: $this")
     playerActionQueue!![playerNumber - 1].synched = true
     if (synchedCount == players.size) {
-      logger.atInfo().log("$this all players are ready: starting...")
+      logger.atInfo().log("%s all players are ready: starting...", this)
       status = GameStatus.PLAYING
       isSynched = true
       startTimeoutTime = System.currentTimeMillis()
@@ -479,7 +477,7 @@ class KailleraGameImpl(
       for (q in playerActionQueue!!) {
         q.synched = false
       }
-      logger.atInfo().log("$this: game desynched: less than 2 players playing!")
+      logger.atInfo().log("%s: game desynched: less than 2 players playing!", this)
     }
     autoFireDetector.stop(playerNumber)
     if (playingCount == 0) {
@@ -533,7 +531,7 @@ class KailleraGameImpl(
     if (isSynched) {
       isSynched = false
       for (q in playerActionQueue!!) q.synched = false
-      logger.atInfo().log("$this: game desynched: game closed!")
+      logger.atInfo().log("%s: game desynched: game closed!", this)
     }
     players.forEach {
       (it as KailleraUserImpl).apply {
@@ -559,7 +557,7 @@ class KailleraGameImpl(
     }
     if (playerActionQueue != null && playerActionQueue!![playerNumber - 1].synched) {
       playerActionQueue!![playerNumber - 1].synched = false
-      logger.atInfo().log("$this: $user: player desynched: dropped a packet!")
+      logger.atInfo().log("%s: $user: player desynched: dropped a packet!", this)
       addEvent(
           PlayerDesynchEvent(
               this,
@@ -568,7 +566,7 @@ class KailleraGameImpl(
       if (synchedCount < 2 && isSynched) {
         isSynched = false
         for (q in playerActionQueue!!) q.synched = false
-        logger.atInfo().log("$this: game desynched: less than 2 players synched!")
+        logger.atInfo().log("%s: game desynched: less than 2 players synched!", this)
       }
     }
   }
@@ -632,13 +630,13 @@ class KailleraGameImpl(
     if (timeoutNumber < desynchTimeouts) {
       if (startTimeout) player.timeouts = player.timeouts + 1
       if (timeoutNumber % 12 == 0) {
-        logger.atInfo().log("$this: $player: Timeout #${timeoutNumber / 12}")
+        logger.atInfo().log("%s: $player: Timeout #${timeoutNumber / 12}", this)
         addEvent(GameTimeoutEvent(this, player, timeoutNumber / 12))
       }
     } else {
-      logger.atInfo().log("$this: $player: Timeout #${timeoutNumber / 12}")
+      logger.atInfo().log("%s: $player: Timeout #${timeoutNumber / 12}", this)
       playerActionQueue.synched = false
-      logger.atInfo().log("$this: $player: player desynched: Lagged!")
+      logger.atInfo().log("%s: $player: player desynched: Lagged!", this)
       addEvent(
           PlayerDesynchEvent(
               this,
@@ -647,7 +645,7 @@ class KailleraGameImpl(
       if (synchedCount < 2) {
         isSynched = false
         for (q in this.playerActionQueue!!) q.synched = false
-        logger.atInfo().log("$this: game desynched: less than 2 players synched!")
+        logger.atInfo().log("%s: game desynched: less than 2 players synched!", this)
       }
     }
   }
