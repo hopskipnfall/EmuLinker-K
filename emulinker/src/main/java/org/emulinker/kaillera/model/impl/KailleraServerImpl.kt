@@ -325,7 +325,7 @@ class KailleraServerImpl
     userImpl.addEvent(ConnectedEvent(this, user))
     delay(20.milliseconds)
     for (loginMessage in loginMessages) {
-      userImpl.addEvent(InfoMessageEvent(user, loginMessage!!))
+      userImpl.addEvent(InfoMessageEvent(user, loginMessage))
       delay(20.milliseconds)
     }
     if (access > AccessManager.ACCESS_NORMAL)

@@ -109,9 +109,7 @@ abstract class V086Message : ByteBufferMessage() {
       }
       return message
     }
-  }
 
-  companion object {
     private val logger = FluentLogger.forEnclosingClass()
   }
 }

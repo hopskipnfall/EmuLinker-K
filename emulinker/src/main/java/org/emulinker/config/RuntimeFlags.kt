@@ -50,6 +50,7 @@ data class RuntimeFlags(
     val twitterOAuthConsumerSecret: String,
     val twitterPreventBroadcastNameSuffixes: List<String>,
     val v086BufferSize: Int,
+    val numIoDispatchers: Int,
 ) {
 
   init {
@@ -129,6 +130,7 @@ data class RuntimeFlags(
           twitterPreventBroadcastNameSuffixes = listOf("待", "街", "町", "再起", "侍ち"),
           v086BufferSize = config.getInt("controllers.v086.bufferSize", 4096),
           connectControllerBufferSize = config.getInt("controllers.connect.bufferSize", 4096),
+          numIoDispatchers = config.getInt("server.numIoDispatchers", 130),
       )
       // ImmutableList.copyOf(config.getString("twitter.preventBroadcastNameSuffixes",
       // "").split(",")))
