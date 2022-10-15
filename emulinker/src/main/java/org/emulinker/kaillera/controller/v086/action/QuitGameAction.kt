@@ -15,8 +15,6 @@ import org.emulinker.kaillera.model.exception.CloseGameException
 import org.emulinker.kaillera.model.exception.DropGameException
 import org.emulinker.kaillera.model.exception.QuitGameException
 
-private val logger = FluentLogger.forEnclosingClass()
-
 @Singleton
 class QuitGameAction @Inject constructor(private val lookingForGameReporter: TwitterBroadcaster) :
     V086Action<QuitGame_Request>, V086GameEventHandler<UserQuitGameEvent> {
@@ -60,5 +58,9 @@ class QuitGameAction @Inject constructor(private val lookingForGameReporter: Twi
     } catch (e: MessageFormatException) {
       logger.atSevere().withCause(e).log("Failed to construct QuitGame_Notification message")
     }
+  }
+
+  companion object {
+    private val logger = FluentLogger.forEnclosingClass()
   }
 }

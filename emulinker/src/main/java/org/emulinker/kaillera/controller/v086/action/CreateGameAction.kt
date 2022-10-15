@@ -14,8 +14,6 @@ import org.emulinker.kaillera.model.exception.CreateGameException
 import org.emulinker.kaillera.model.exception.FloodException
 import org.emulinker.util.EmuLang
 
-private val logger = FluentLogger.forEnclosingClass()
-
 @Singleton
 class CreateGameAction @Inject internal constructor() :
     V086Action<CreateGame>, V086ServerEventHandler<GameCreatedEvent> {
@@ -84,5 +82,9 @@ class CreateGameAction @Inject internal constructor() :
     } catch (e: MessageFormatException) {
       logger.atSevere().withCause(e).log("Failed to construct CreateGame_Notification message")
     }
+  }
+
+  companion object {
+    private val logger = FluentLogger.forEnclosingClass()
   }
 }

@@ -36,8 +36,6 @@ import org.emulinker.kaillera.model.exception.StartGameException
 import org.emulinker.kaillera.model.exception.UserReadyException
 import org.emulinker.util.EmuLang
 
-private val logger = FluentLogger.forEnclosingClass()
-
 class KailleraGameImpl(
     override val id: Int,
     override val romName: String,
@@ -648,5 +646,9 @@ class KailleraGameImpl(
         logger.atInfo().log("%s: game desynched: less than 2 players synched!", this)
       }
     }
+  }
+
+  companion object {
+    private val logger = FluentLogger.forEnclosingClass()
   }
 }

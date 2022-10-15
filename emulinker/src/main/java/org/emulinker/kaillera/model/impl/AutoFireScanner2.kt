@@ -10,8 +10,6 @@ import org.emulinker.kaillera.model.KailleraUser
 import org.emulinker.util.EmuLang.getString
 import org.emulinker.util.EmuUtil
 
-private val logger = FluentLogger.forEnclosingClass()
-
 class AutoFireScanner2(private var game: KailleraGame, sensitivity: Int) : AutoFireDetector {
   override var sensitivity = 0
     set(value) {
@@ -224,6 +222,7 @@ class AutoFireScanner2(private var game: KailleraGame, sensitivity: Int) : AutoF
             intArrayOf(5, 7),
             intArrayOf(6, 5))
     protected var executor: ExecutorService = Executors.newCachedThreadPool()
+    private val logger = FluentLogger.forEnclosingClass()
   }
 
   init {

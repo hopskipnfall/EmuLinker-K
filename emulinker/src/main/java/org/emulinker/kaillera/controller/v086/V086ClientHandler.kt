@@ -34,8 +34,6 @@ import org.emulinker.util.EmuUtil.dumpBufferFromBeginning
 import org.emulinker.util.EmuUtil.formatSocketAddress
 import org.emulinker.util.GameDataCache
 
-private val logger = FluentLogger.forEnclosingClass()
-
 /** A private UDP server allocated for communication with a single client. */
 class V086ClientHandler
     @AssistedInject
@@ -399,5 +397,9 @@ class V086ClientHandler
     inBuffer.order(ByteOrder.LITTLE_ENDIAN)
     outBuffer.order(ByteOrder.LITTLE_ENDIAN)
     resetGameDataCache()
+  }
+
+  companion object {
+    private val logger = FluentLogger.forEnclosingClass()
   }
 }

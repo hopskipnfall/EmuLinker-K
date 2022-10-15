@@ -9,8 +9,6 @@ import org.emulinker.kaillera.controller.v086.protocol.GameChat_Notification
 import org.emulinker.kaillera.controller.v086.protocol.GameKick
 import org.emulinker.kaillera.model.exception.GameKickException
 
-private val logger = FluentLogger.forEnclosingClass()
-
 @Singleton
 class GameKickAction @Inject internal constructor() : V086Action<GameKick> {
   override var actionPerformedCount = 0
@@ -32,5 +30,9 @@ class GameKickAction @Inject internal constructor() : V086Action<GameKick> {
         logger.atSevere().withCause(ex).log("Failed to construct GameChat_Notification message")
       }
     }
+  }
+
+  companion object {
+    private val logger = FluentLogger.forEnclosingClass()
   }
 }

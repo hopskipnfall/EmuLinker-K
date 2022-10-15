@@ -26,8 +26,6 @@ import org.emulinker.util.EmuLang
 import org.emulinker.util.EmuUtil
 import org.emulinker.util.WildcardStringPattern
 
-private val logger = FluentLogger.forEnclosingClass()
-
 private const val COMMAND_ANNOUNCE = "/announce"
 
 private const val COMMAND_ANNOUNCEALL = "/announceall"
@@ -903,5 +901,9 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
     } catch (e: NoSuchElementException) {
       throw ActionException(EmuLang.getString("AdminCommandAction.VersionError"))
     }
+  }
+
+  companion object {
+    private val logger = FluentLogger.forEnclosingClass()
   }
 }

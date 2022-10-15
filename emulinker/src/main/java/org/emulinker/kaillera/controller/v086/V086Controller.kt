@@ -22,8 +22,6 @@ import org.emulinker.kaillera.model.exception.NewConnectionException
 import org.emulinker.kaillera.model.exception.ServerFullException
 import org.emulinker.net.UdpSocketProvider
 
-private val logger = FluentLogger.forEnclosingClass()
-
 /** High level logic for handling messages on a port. Not tied to an individual user. */
 @Singleton
 class V086Controller
@@ -206,5 +204,7 @@ class V086Controller
 
   companion object {
     const val MAX_BUNDLE_SIZE = 9
+
+    private val logger = FluentLogger.forEnclosingClass()
   }
 }

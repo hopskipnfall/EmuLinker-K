@@ -15,8 +15,6 @@ import kotlinx.coroutines.*
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.util.WildcardStringPattern
 
-private val logger = FluentLogger.forEnclosingClass()
-
 @Singleton
 class AccessManager2 @Inject internal constructor(private val flags: RuntimeFlags) : AccessManager {
   companion object {
@@ -24,6 +22,8 @@ class AccessManager2 @Inject internal constructor(private val flags: RuntimeFlag
       Security.setProperty("networkaddress.cache.ttl", "60")
       Security.setProperty("networkaddress.cache.negative.ttl", "60")
     }
+
+    private val logger = FluentLogger.forEnclosingClass()
   }
 
   private val scope = CoroutineScope(Dispatchers.IO)

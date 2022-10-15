@@ -48,8 +48,6 @@ private const val COMMAND_SAMEDELAY = "/samedelay"
 
 private const val COMMAND_NUM = "/num"
 
-private val logger = FluentLogger.forEnclosingClass()
-
 @Singleton
 class GameOwnerCommandAction @Inject internal constructor(private val flags: RuntimeFlags) :
     V086Action<GameChat> {
@@ -599,5 +597,6 @@ class GameOwnerCommandAction @Inject internal constructor(private val flags: Run
 
   companion object {
     private var lastMaxUserChange: Long = 0
+    private val logger = FluentLogger.forEnclosingClass()
   }
 }

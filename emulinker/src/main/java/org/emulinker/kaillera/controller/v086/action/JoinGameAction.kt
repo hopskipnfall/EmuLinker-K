@@ -11,8 +11,6 @@ import org.emulinker.kaillera.model.event.UserJoinedGameEvent
 import org.emulinker.kaillera.model.exception.JoinGameException
 import org.emulinker.util.EmuLang
 
-private val logger = FluentLogger.forEnclosingClass()
-
 @Singleton
 class JoinGameAction @Inject internal constructor() :
     V086Action<JoinGame_Request>, V086GameEventHandler<UserJoinedGameEvent> {
@@ -71,5 +69,9 @@ class JoinGameAction @Inject internal constructor() :
     } catch (e: MessageFormatException) {
       logger.atSevere().withCause(e).log("Failed to construct JoinGame_Notification message")
     }
+  }
+
+  companion object {
+    private val logger = FluentLogger.forEnclosingClass()
   }
 }

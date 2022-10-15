@@ -8,8 +8,6 @@ import org.emulinker.kaillera.controller.v086.V086ClientHandler
 import org.emulinker.kaillera.controller.v086.protocol.GameStatus
 import org.emulinker.kaillera.model.event.GameStatusChangedEvent
 
-private val logger = FluentLogger.forEnclosingClass()
-
 @Singleton
 class GameStatusAction @Inject internal constructor() :
     V086ServerEventHandler<GameStatusChangedEvent> {
@@ -36,5 +34,9 @@ class GameStatusAction @Inject internal constructor() :
     } catch (e: MessageFormatException) {
       logger.atSevere().withCause(e).log("Failed to construct CreateGame_Notification message")
     }
+  }
+
+  companion object {
+    private val logger = FluentLogger.forEnclosingClass()
   }
 }

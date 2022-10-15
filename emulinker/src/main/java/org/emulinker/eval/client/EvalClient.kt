@@ -22,8 +22,6 @@ import org.emulinker.kaillera.model.ConnectionType
 import org.emulinker.util.ClientGameDataCache
 import org.emulinker.util.GameDataCache
 
-private val logger = FluentLogger.forEnclosingClass()
-
 /** Fake client for testing. */
 class EvalClient(
     private val username: String,
@@ -279,5 +277,11 @@ class EvalClient(
     giveServerTime()
   }
 
-  private suspend fun giveServerTime() = delay(1.seconds)
+  private suspend fun giveServerTime() {
+    delay(1.seconds)
+  }
+
+  companion object {
+    private val logger = FluentLogger.forEnclosingClass()
+  }
 }

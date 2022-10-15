@@ -21,8 +21,6 @@ import org.emulinker.kaillera.model.impl.KailleraUserImpl
 import org.emulinker.util.EmuLang
 import org.emulinker.util.EmuUtil
 
-private val logger = FluentLogger.forEnclosingClass()
-
 private const val ADMIN_COMMAND_ESCAPE_STRING = "/"
 
 @Singleton
@@ -631,5 +629,9 @@ class ChatAction @Inject internal constructor(private val adminCommandAction: Ad
     } catch (e: MessageFormatException) {
       logger.atSevere().withCause(e).log("Failed to construct Chat_Notification message")
     }
+  }
+
+  companion object {
+    private val logger = FluentLogger.forEnclosingClass()
   }
 }

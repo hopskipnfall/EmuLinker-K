@@ -18,8 +18,6 @@ import org.emulinker.kaillera.model.impl.KailleraUserImpl
 
 private const val ADMIN_COMMAND_ESCAPE_STRING = "/"
 
-private val logger = FluentLogger.forEnclosingClass()
-
 @Singleton
 class GameChatAction
     @Inject
@@ -432,5 +430,9 @@ class GameChatAction
     } catch (e: MessageFormatException) {
       logger.atSevere().withCause(e).log("Failed to construct GameChat_Notification message")
     }
+  }
+
+  companion object {
+    private val logger = FluentLogger.forEnclosingClass()
   }
 }

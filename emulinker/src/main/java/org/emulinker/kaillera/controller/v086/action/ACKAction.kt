@@ -17,8 +17,6 @@ import org.emulinker.kaillera.model.event.ConnectedEvent
 import org.emulinker.kaillera.model.event.UserEvent
 import org.emulinker.kaillera.model.exception.*
 
-private val logger = FluentLogger.forEnclosingClass()
-
 @Singleton
 class ACKAction @Inject internal constructor() :
     V086Action<ClientACK>, V086UserEventHandler<UserEvent> {
@@ -169,5 +167,9 @@ class ACKAction @Inject internal constructor() :
     } catch (e: MessageFormatException) {
       logger.atSevere().withCause(e).log("Failed to construct new ServerStatus for users")
     }
+  }
+
+  companion object {
+    private val logger = FluentLogger.forEnclosingClass()
   }
 }

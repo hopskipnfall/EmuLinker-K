@@ -10,8 +10,6 @@ import org.emulinker.kaillera.controller.v086.protocol.PlayerDrop_Request
 import org.emulinker.kaillera.model.event.UserDroppedGameEvent
 import org.emulinker.kaillera.model.exception.DropGameException
 
-private val logger = FluentLogger.forEnclosingClass()
-
 @Singleton
 class DropGameAction @Inject internal constructor() :
     V086Action<PlayerDrop_Request>, V086GameEventHandler<UserDroppedGameEvent> {
@@ -48,5 +46,9 @@ class DropGameAction @Inject internal constructor() :
     } catch (e: MessageFormatException) {
       logger.atSevere().withCause(e).log("Failed to construct PlayerDrop_Notification message")
     }
+  }
+
+  companion object {
+    private val logger = FluentLogger.forEnclosingClass()
   }
 }

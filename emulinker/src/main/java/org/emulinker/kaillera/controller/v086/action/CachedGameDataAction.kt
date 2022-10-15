@@ -12,8 +12,6 @@ import org.emulinker.kaillera.controller.v086.protocol.GameChat_Notification
 import org.emulinker.kaillera.controller.v086.protocol.GameData.Companion.create
 import org.emulinker.kaillera.model.exception.GameDataException
 
-private val logger = FluentLogger.forEnclosingClass()
-
 @Singleton
 class CachedGameDataAction @Inject internal constructor() : V086Action<CachedGameData> {
   override val actionPerformedCount = 0
@@ -58,5 +56,9 @@ class CachedGameDataAction @Inject internal constructor() : V086Action<CachedGam
         logger.atSevere().withCause(e2).log("Failed to construct new GameChat_Notification")
       }
     }
+  }
+
+  companion object {
+    private val logger = FluentLogger.forEnclosingClass()
   }
 }

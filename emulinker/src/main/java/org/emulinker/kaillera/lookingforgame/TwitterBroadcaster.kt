@@ -12,8 +12,6 @@ import twitter4j.Status
 import twitter4j.StatusUpdate
 import twitter4j.Twitter
 
-private val logger = FluentLogger.forEnclosingClass()
-
 private fun getUrl(tweet: Status) =
     "https://twitter.com/${tweet.user.screenName}/status/${tweet.id}"
 
@@ -110,5 +108,9 @@ class TwitterBroadcaster
       tweetsClosed = true
     }
     return anyModified || tweetsClosed
+  }
+
+  companion object {
+    private val logger = FluentLogger.forEnclosingClass()
   }
 }

@@ -14,8 +14,6 @@ import org.emulinker.kaillera.model.KailleraUser
 import org.emulinker.kaillera.model.event.UserJoinedEvent
 import org.emulinker.kaillera.model.impl.KailleraUserImpl
 
-private val logger = FluentLogger.forEnclosingClass()
-
 @Singleton
 class LoginAction @Inject internal constructor() :
     V086Action<UserInformation>, V086ServerEventHandler<UserJoinedEvent> {
@@ -80,5 +78,9 @@ class LoginAction @Inject internal constructor() :
     } catch (e: MessageFormatException) {
       logger.atSevere().withCause(e).log("Failed to construct UserJoined_Notification message")
     }
+  }
+
+  companion object {
+    private val logger = FluentLogger.forEnclosingClass()
   }
 }

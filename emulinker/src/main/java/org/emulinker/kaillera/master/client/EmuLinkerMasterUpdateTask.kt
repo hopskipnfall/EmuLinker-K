@@ -12,9 +12,8 @@ import org.emulinker.kaillera.model.GameStatus
 import org.emulinker.kaillera.model.KailleraServer
 import org.emulinker.kaillera.release.ReleaseInfo
 
-private val logger = FluentLogger.forEnclosingClass()
-
-private const val url = "http://master.emulinker.org/touch_list.php"
+// TODO(nue): Update this.
+private const val TOUCH_LIST_URL = "http://master.emulinker.org/touch_list.php"
 
 class EmuLinkerMasterUpdateTask(
     private val publicInfo: PublicServerInformation,
@@ -50,7 +49,7 @@ class EmuLinkerMasterUpdateTask(
             "version" to releaseInfo.shortVersionString,
         )
 
-    val meth = GetMethod(url)
+    val meth = GetMethod(TOUCH_LIST_URL)
     meth.setQueryString(params.map { NameValuePair(it.first, it.second) }.toTypedArray())
     meth.setRequestHeader("Waiting-games", waitingGames.toString())
     meth.followRedirects = true
@@ -87,5 +86,9 @@ class EmuLinkerMasterUpdateTask(
     //   }
     //   logger.atWarning().log(sb.toString());
     // }
+  }
+
+  companion object {
+    private val logger = FluentLogger.forEnclosingClass()
   }
 }

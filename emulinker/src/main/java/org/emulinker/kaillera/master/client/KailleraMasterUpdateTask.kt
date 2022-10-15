@@ -13,8 +13,6 @@ import org.emulinker.kaillera.model.GameStatus
 import org.emulinker.kaillera.model.KailleraServer
 import org.emulinker.kaillera.release.ReleaseInfo
 
-private val logger = FluentLogger.forEnclosingClass()
-
 class KailleraMasterUpdateTask(
     private val publicInfo: PublicServerInformation,
     private val connectController: ConnectController,
@@ -78,5 +76,9 @@ class KailleraMasterUpdateTask(
   init {
     httpClient.setConnectionTimeout(5000)
     httpClient.setTimeout(5000)
+  }
+
+  companion object {
+    private val logger = FluentLogger.forEnclosingClass()
   }
 }

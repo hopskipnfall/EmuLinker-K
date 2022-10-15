@@ -8,8 +8,6 @@ import org.emulinker.kaillera.controller.v086.V086ClientHandler
 import org.emulinker.kaillera.controller.v086.protocol.CloseGame
 import org.emulinker.kaillera.model.event.GameClosedEvent
 
-private val logger = FluentLogger.forEnclosingClass()
-
 @Singleton
 class CloseGameAction @Inject internal constructor() : V086ServerEventHandler<GameClosedEvent> {
   override var handledEventCount = 0
@@ -24,5 +22,9 @@ class CloseGameAction @Inject internal constructor() : V086ServerEventHandler<Ga
     } catch (e: MessageFormatException) {
       logger.atSevere().withCause(e).log("Failed to construct CloseGame_Notification message")
     }
+  }
+
+  companion object {
+    private val logger = FluentLogger.forEnclosingClass()
   }
 }

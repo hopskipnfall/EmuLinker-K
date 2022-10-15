@@ -6,13 +6,13 @@ import java.text.MessageFormat
 import java.util.MissingResourceException
 import java.util.ResourceBundle
 
-private val logger = FluentLogger.forEnclosingClass()
-
-private const val BUNDLE_NAME = "language"
-
-private val RESOURCE_BUNDLE = ResourceBundle.getBundle(BUNDLE_NAME)
-
 object EmuLang {
+
+  private const val BUNDLE_NAME = "language"
+
+  private val RESOURCE_BUNDLE = ResourceBundle.getBundle(BUNDLE_NAME)
+
+  private val logger = FluentLogger.forEnclosingClass()
 
   /*
   	public static void reload()

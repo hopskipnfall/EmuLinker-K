@@ -9,8 +9,6 @@ import org.emulinker.kaillera.controller.v086.protocol.GameChat_Notification
 import org.emulinker.kaillera.model.event.PlayerDesynchEvent
 import org.emulinker.util.EmuLang
 
-private val logger = FluentLogger.forEnclosingClass()
-
 @Singleton
 class PlayerDesynchAction @Inject internal constructor() :
     V086GameEventHandler<PlayerDesynchEvent> {
@@ -36,5 +34,9 @@ class PlayerDesynchAction @Inject internal constructor() :
     // {
     //	logger.atSevere().withCause(e).log("Failed to drop game during desynch");
     // }
+  }
+
+  companion object {
+    private val logger = FluentLogger.forEnclosingClass()
   }
 }

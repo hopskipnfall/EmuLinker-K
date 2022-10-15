@@ -14,8 +14,6 @@ import org.emulinker.kaillera.model.KailleraServer
 import org.emulinker.kaillera.release.ReleaseInfo
 import org.emulinker.util.Executable
 
-private val logger = FluentLogger.forEnclosingClass()
-
 @Singleton
 class MasterListUpdater
     @Inject
@@ -92,5 +90,9 @@ class MasterListUpdater
           EmuLinkerMasterUpdateTask(
               publicInfo!!, connectController!!, kailleraServer!!, releaseInfo!!)
     }
+  }
+
+  companion object {
+    private val logger = FluentLogger.forEnclosingClass()
   }
 }

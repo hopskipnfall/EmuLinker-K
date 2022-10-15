@@ -14,8 +14,6 @@ import org.emulinker.util.EmuUtil.dumpBufferFromBeginning
 import org.emulinker.util.EmuUtil.formatSocketAddress
 import org.emulinker.util.Executable
 
-private val logger = FluentLogger.forEnclosingClass()
-
 abstract class UDPServer : Executable {
   abstract val bufferSize: Int
 
@@ -160,4 +158,8 @@ abstract class UDPServer : Executable {
   //  init {
   //    if (shutdownOnExit) Runtime.getRuntime().addShutdownHook(ShutdownThread())
   //  }
+
+  companion object {
+    private val logger = FluentLogger.forEnclosingClass()
+  }
 }

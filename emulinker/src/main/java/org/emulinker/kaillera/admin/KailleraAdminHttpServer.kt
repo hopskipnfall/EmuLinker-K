@@ -15,8 +15,6 @@ import org.mortbay.jetty.servlet.ServletHandler
 import org.mortbay.jetty.servlet.ServletHttpContext
 import org.mortbay.util.InetAddrPort
 
-private val logger = FluentLogger.forEnclosingClass()
-
 class KailleraAdminHttpServer(
     config: Configuration, connectController: ConnectController?, kailleraServer: KailleraServer?
 ) : AdminServer {
@@ -103,5 +101,9 @@ class KailleraAdminHttpServer(
     context.addHandler(NotFoundHandler())
     context.resourceBase = jspDir
     context.addServlet("JSP", "*.jsp", "org.apache.jasper.servlet.JspServlet")
+  }
+
+  companion object {
+    private val logger = FluentLogger.forEnclosingClass()
   }
 }

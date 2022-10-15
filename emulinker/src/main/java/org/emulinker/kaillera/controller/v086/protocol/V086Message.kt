@@ -10,8 +10,6 @@ import org.emulinker.kaillera.controller.messaging.ParseException
 import org.emulinker.kaillera.pico.AppModule
 import org.emulinker.util.UnsignedUtil.putUnsignedShort
 
-private val logger = FluentLogger.forEnclosingClass()
-
 abstract class V086Message : ByteBufferMessage() {
   /**
    * The 0-based enumeration indicating the order in which this message was sent/received for each
@@ -111,5 +109,9 @@ abstract class V086Message : ByteBufferMessage() {
       }
       return message
     }
+  }
+
+  companion object {
+    private val logger = FluentLogger.forEnclosingClass()
   }
 }
