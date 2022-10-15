@@ -126,21 +126,21 @@ class KailleraGameImpl(
   @Throws(GameChatException::class)
   override fun chat(user: KailleraUser, message: String) {
     if (!players.contains(user)) {
-      logger.atWarning().log("$user game chat denied: not in $this")
+      logger.atWarning().log("%s game chat denied: not in %s", user, this)
       throw GameChatException(EmuLang.getString("KailleraGameImpl.GameChatErrorNotInGame"))
     }
     if (user.accessLevel == AccessManager.ACCESS_NORMAL) {
       if (server.maxGameChatLength > 0 && message.length > server.maxGameChatLength) {
         logger
             .atWarning()
-            .log("$user gamechat denied: Message Length > ${server.maxGameChatLength}")
+            .log("%s gamechat denied: Message Length > %d", user, server.maxGameChatLength)
         addEvent(
             GameInfoEvent(
                 this, EmuLang.getString("KailleraGameImpl.GameChatDeniedMessageTooLong"), user))
         throw GameChatException(EmuLang.getString("KailleraGameImpl.GameChatDeniedMessageTooLong"))
       }
     }
-    logger.atInfo().log("$user, $this gamechat: $message")
+    logger.atInfo().log("%s, $this gamechat: $message", user)
     addEvent(GameChatEvent(this, user, message))
   }
 
@@ -154,12 +154,12 @@ class KailleraGameImpl(
   override fun kick(requester: KailleraUser, userID: Int) {
     if (requester.accessLevel < AccessManager.ACCESS_ADMIN) {
       if (requester != owner) {
-        logger.atWarning().log("$requester kick denied: not the owner of $this")
+        logger.atWarning().log("%s kick denied: not the owner of %s", requester, this)
         throw GameKickException(EmuLang.getString("KailleraGameImpl.GameKickDeniedNotGameOwner"))
       }
     }
     if (requester.id == userID) {
-      logger.atWarning().log("$requester kick denied: attempt to kick self")
+      logger.atWarning().log("%s kick denied: attempt to kick self", requester)
       throw GameKickException(EmuLang.getString("KailleraGameImpl.GameKickDeniedCannotKickSelf"))
     }
     for (player in players) {
@@ -170,7 +170,7 @@ class KailleraGameImpl(
               return
             }
           }
-          logger.atInfo().log("$requester kicked: $userID from $this")
+          logger.atInfo().log("%s kicked: %d from %s", requester, userID, this)
           // SF MOD - Changed to IP rather than ID
           kickedUsers.add(player.connectSocketAddress.address.hostAddress)
           player.quitGame()
@@ -184,7 +184,7 @@ class KailleraGameImpl(
         }
       }
     }
-    logger.atWarning().log("$requester kick failed: user $userID not found in: $this")
+    logger.atWarning().log("%s kick failed: user %d not found in: %s", requester, userID, this)
     throw GameKickException(EmuLang.getString("KailleraGameImpl.GameKickErrorUserNotFound"))
   }
 
@@ -197,7 +197,7 @@ class KailleraGameImpl(
     if (lastAddress == user.connectSocketAddress.address.hostAddress) {
       lastAddressCount++
       if (lastAddressCount >= 4) {
-        logger.atInfo().log("$user join spam protection: ${user.id} from $this")
+        logger.atInfo().log("%s join spam protection: %d from %s", user, user.id, this)
         // SF MOD - Changed to IP rather than ID
         if (access < AccessManager.ACCESS_ADMIN) {
           kickedUsers.add(user.connectSocketAddress.address.hostAddress)
@@ -212,22 +212,22 @@ class KailleraGameImpl(
       lastAddress = user.connectSocketAddress.address.hostAddress
     }
     if (players.contains(user)) {
-      logger.atWarning().log("$user join game denied: already in $this")
+      logger.atWarning().log("%s join game denied: already in %s", user, this)
       throw JoinGameException(EmuLang.getString("KailleraGameImpl.JoinGameErrorAlreadyInGame"))
     }
     if (access < AccessManager.ACCESS_ELEVATED && players.size >= maxUsers) {
-      logger.atWarning().log("$user join game denied: max users reached $this")
+      logger.atWarning().log("%s join game denied: max users reached %s", user, this)
       throw JoinGameException("This room's user capacity has been reached.")
     }
     if (access < AccessManager.ACCESS_ELEVATED && user.ping > maxPing) {
-      logger.atWarning().log("$user join game denied: max ping reached $this")
+      logger.atWarning().log("%s join game denied: max ping reached %s", user, this)
       throw JoinGameException("Your ping is too high for this room.")
     }
     if (access < AccessManager.ACCESS_ELEVATED && aEmulator != "any") {
       if (aEmulator != user.clientType) {
         logger
             .atWarning()
-            .log("$user join game denied: owner doesn't allow that emulator: ${user.clientType}")
+            .log("%s join game denied: owner doesn't allow that emulator: ${user.clientType}", user)
         throw JoinGameException("Owner only allows emulator version: $aEmulator")
       }
     }
@@ -236,17 +236,21 @@ class KailleraGameImpl(
         logger
             .atWarning()
             .log(
-                "${user}join game denied: owner doesn't allow that connection type: ${user.connectionType}")
+                "%s join game denied: owner doesn't allow that connection type: %s",
+                user,
+                user.connectionType)
         throw JoinGameException("Owner only allows connection type: ${owner.connectionType}")
       }
     }
     if (access < AccessManager.ACCESS_ADMIN &&
         kickedUsers.contains(user.connectSocketAddress.address.hostAddress)) {
-      logger.atWarning().log("$user join game denied: previously kicked: $this")
+      logger.atWarning().log("%s join game denied: previously kicked: %s", user, this)
       throw JoinGameException(EmuLang.getString("KailleraGameImpl.JoinGameDeniedPreviouslyKicked"))
     }
     if (access == AccessManager.ACCESS_NORMAL && status != GameStatus.WAITING) {
-      logger.atWarning().log("$user join game denied: attempt to join game in progress: $this")
+      logger
+          .atWarning()
+          .log("%s join game denied: attempt to join game in progress: %s", user, this)
       throw JoinGameException(EmuLang.getString("KailleraGameImpl.JoinGameDeniedGameIsInProgress"))
     }
     if (mutedUsers.contains(user.connectSocketAddress.address.hostAddress)) {
@@ -255,7 +259,7 @@ class KailleraGameImpl(
     players.add(user as KailleraUserImpl)
     user.playerNumber = players.size
     server.addEvent(GameStatusChangedEvent(server, this))
-    logger.atInfo().log("$user joined: $this")
+    logger.atInfo().log("%s joined: %s", user, this)
     addEvent(UserJoinedGameEvent(this, user))
 
     // SF MOD - /startn
@@ -316,19 +320,19 @@ class KailleraGameImpl(
   override fun start(user: KailleraUser) {
     val access = server.accessManager.getAccess(user.socketAddress.address)
     if (user != owner && access < AccessManager.ACCESS_ADMIN) {
-      logger.atWarning().log("$user start game denied: not the owner of $this")
+      logger.atWarning().log("%s start game denied: not the owner of %s", user, this)
       throw StartGameException(
           EmuLang.getString("KailleraGameImpl.StartGameDeniedOnlyOwnerMayStart"))
     }
     if (status == GameStatus.SYNCHRONIZING) {
-      logger.atWarning().log("$user start game failed: $this status is $status")
+      logger.atWarning().log("%s start game failed: $this status is $status", user)
       throw StartGameException(EmuLang.getString("KailleraGameImpl.StartGameErrorSynchronizing"))
     } else if (status == GameStatus.PLAYING) {
-      logger.atWarning().log("$user start game failed: $this status is $status")
+      logger.atWarning().log("%s start game failed: $this status is $status", user)
       throw StartGameException(EmuLang.getString("KailleraGameImpl.StartGameErrorStatusIsPlaying"))
     }
     if (access == AccessManager.ACCESS_NORMAL && players.size < 2 && !server.allowSinglePlayer) {
-      logger.atWarning().log("$user start game denied: $this needs at least 2 players")
+      logger.atWarning().log("%s start game denied: $this needs at least 2 players", user)
       throw StartGameException(
           EmuLang.getString("KailleraGameImpl.StartGameDeniedSinglePlayerNotAllowed"))
     }
@@ -340,7 +344,9 @@ class KailleraGameImpl(
         if (player.connectionType != owner.connectionType) {
           logger
               .atWarning()
-              .log("$user start game denied: $this: All players must use the same connection type")
+              .log(
+                  "%s start game denied: $this: All players must use the same connection type",
+                  user)
           addEvent(
               GameInfoEvent(
                   this,
@@ -353,7 +359,7 @@ class KailleraGameImpl(
         if (player.clientType != clientType) {
           logger
               .atWarning()
-              .log("$user start game denied: $this: All players must use the same emulator!")
+              .log("%s start game denied: $this: All players must use the same emulator!", user)
           addEvent(
               GameInfoEvent(
                   this,
@@ -364,7 +370,7 @@ class KailleraGameImpl(
         }
       }
     }
-    logger.atInfo().log("$user started: $this")
+    logger.atInfo().log("%s started: %s", user, this)
     status = GameStatus.SYNCHRONIZING
     autoFireDetector.start(players.size)
     val actionQueueBuilder: Array<PlayerActionQueue?> = arrayOfNulls(players.size)
@@ -419,18 +425,18 @@ class KailleraGameImpl(
   @Throws(UserReadyException::class)
   override fun ready(user: KailleraUser, playerNumber: Int) {
     if (!players.contains(user)) {
-      logger.atWarning().log("$user ready game failed: not in $this")
+      logger.atWarning().log("%s ready game failed: not in %s", user, this)
       throw UserReadyException(EmuLang.getString("KailleraGameImpl.ReadyGameErrorNotInGame"))
     }
     if (status != GameStatus.SYNCHRONIZING) {
-      logger.atWarning().log("$user ready failed: $this status is $status")
+      logger.atWarning().log("%s ready failed: $this status is $status", user)
       throw UserReadyException(EmuLang.getString("KailleraGameImpl.ReadyGameErrorIncorrectState"))
     }
     if (playerActionQueue == null) {
-      logger.atSevere().log("$user ready failed: $this playerActionQueues == null!")
+      logger.atSevere().log("%s ready failed: $this playerActionQueues == null!", user)
       throw UserReadyException(EmuLang.getString("KailleraGameImpl.ReadyGameErrorInternalError"))
     }
-    logger.atInfo().log("$user (player $playerNumber) is ready to play: $this")
+    logger.atInfo().log("%s (player $playerNumber) is ready to play: %s", user, this)
     playerActionQueue!![playerNumber - 1].synched = true
     if (synchedCount == players.size) {
       logger.atInfo().log("%s all players are ready: starting...", this)
@@ -460,14 +466,14 @@ class KailleraGameImpl(
   @Throws(DropGameException::class)
   override fun drop(user: KailleraUser, playerNumber: Int) {
     if (!players.contains(user)) {
-      logger.atWarning().log("$user drop game failed: not in $this")
+      logger.atWarning().log("%s drop game failed: not in %s", user, this)
       throw DropGameException(EmuLang.getString("KailleraGameImpl.DropGameErrorNotInGame"))
     }
     if (playerActionQueue == null) {
-      logger.atSevere().log("$user drop failed: $this playerActionQueues == null!")
+      logger.atSevere().log("%s drop failed: $this playerActionQueues == null!", user)
       throw DropGameException(EmuLang.getString("KailleraGameImpl.DropGameErrorInternalError"))
     }
-    logger.atInfo().log("$user dropped: $this")
+    logger.atInfo().log("%s dropped: %s", user, this)
     if (playerNumber - 1 < playerActionQueue!!.size)
         playerActionQueue!![playerNumber - 1].synched = false
     if (synchedCount < 2 && isSynched) {
@@ -500,10 +506,10 @@ class KailleraGameImpl(
   override fun quit(user: KailleraUser, playerNumber: Int) {
     synchronized(this) {
       if (!players.remove(user)) {
-        logger.atWarning().log("$user quit game failed: not in $this")
+        logger.atWarning().log("%s quit game failed: not in %s", user, this)
         throw QuitGameException(EmuLang.getString("KailleraGameImpl.QuitGameErrorNotInGame"))
       }
-      logger.atInfo().log("$user quit: $this")
+      logger.atInfo().log("%s quit: %s", user, this)
       addEvent(UserQuitGameEvent(this, user))
       user.ignoringUnnecessaryServerActivity = false
       swap = false
@@ -523,7 +529,7 @@ class KailleraGameImpl(
   @Throws(CloseGameException::class)
   fun close(user: KailleraUser) {
     if (user != owner) {
-      logger.atWarning().log("$user close game denied: not the owner of $this")
+      logger.atWarning().log("%s close game denied: not the owner of %s", user, this)
       throw CloseGameException(EmuLang.getString("KailleraGameImpl.CloseGameErrorNotGameOwner"))
     }
     if (isSynched) {

@@ -176,14 +176,14 @@ class GameChatAction
             val chars = m.toCharArray()
             for (i in chars.indices) {
               if (chars[i].code < 32) {
-                logger.atWarning().log("$user /msg denied: Illegal characters in message")
+                logger.atWarning().log("%s /msg denied: Illegal characters in message", user)
                 user1.game!!.announce(
                     "Private Message Denied: Illegal characters in message", user1)
                 return
               }
             }
             if (m.length > 320) {
-              logger.atWarning().log("$user /msg denied: Message Length > 320")
+              logger.atWarning().log("%s /msg denied: Message Length > 320", user)
               user1.game!!.announce("Private Message Denied: Message Too Long", user1)
               return
             }
@@ -230,7 +230,7 @@ class GameChatAction
                 var i = 0
                 while (i < chars.size) {
                   if (chars[i].code < 32) {
-                    logger.atWarning().log("$user /msg denied: Illegal characters in message")
+                    logger.atWarning().log("%s /msg denied: Illegal characters in message", user)
                     user1.game!!.announce(
                         "Private Message Denied: Illegal characters in message", user1)
                     return
@@ -238,7 +238,7 @@ class GameChatAction
                   i++
                 }
                 if (m.length > 320) {
-                  logger.atWarning().log("$user /msg denied: Message Length > 320")
+                  logger.atWarning().log("%s /msg denied: Message Length > 320", user)
                   user1.game!!.announce("Private Message Denied: Message Too Long", user1)
                   return
                 }

@@ -67,7 +67,7 @@ class AccessManager2 @Inject internal constructor(private val flags: RuntimeFlag
         if (line.isNullOrBlank() || line!!.startsWith("#") || line!!.startsWith("//")) continue
         val st = StringTokenizer(line, ",")
         if (st.countTokens() < 3) {
-          logger.atSevere().log("Failed to load access line, too few tokens: $line")
+          logger.atSevere().log("Failed to load access line, too few tokens: %s", line)
           continue
         }
         val type = st.nextToken()
@@ -78,7 +78,7 @@ class AccessManager2 @Inject internal constructor(private val flags: RuntimeFlag
           else if (type.equals("ipaddress", ignoreCase = true)) addressList.add(AddressAccess(st))
           else throw Exception("Unrecognized access type: $type")
         } catch (e: Exception) {
-          logger.atSevere().withCause(e).log("Failed to load access line: $line")
+          logger.atSevere().withCause(e).log("Failed to load access line: %s", line)
         }
       }
       reader.close()
@@ -234,7 +234,10 @@ class AccessManager2 @Inject internal constructor(private val flags: RuntimeFlag
           val address = InetAddress.getByName(hostName)
           resolvedAddresses.add(address.hostAddress)
         } catch (e: Exception) {
-          logger.atFine().withCause(e).log("Failed to resolve DNS entry to an address: $hostName")
+          logger
+              .atFine()
+              .withCause(e)
+              .log("Failed to resolve DNS entry to an address: %s", hostName)
         }
       }
     }
@@ -276,7 +279,7 @@ class AccessManager2 @Inject internal constructor(private val flags: RuntimeFlag
             logger
                 .atWarning()
                 .withCause(e)
-                .log("Failed to resolve DNS entry to an address: $hostName")
+                .log("Failed to resolve DNS entry to an address: %s", hostName)
           }
           hostNames.add(pat.substring(4))
         } else {
@@ -302,7 +305,10 @@ class AccessManager2 @Inject internal constructor(private val flags: RuntimeFlag
           val address = InetAddress.getByName(hostName)
           resolvedAddresses.add(address.hostAddress)
         } catch (e: Exception) {
-          logger.atFine().withCause(e).log("Failed to resolve DNS entry to an address: $hostName")
+          logger
+              .atFine()
+              .withCause(e)
+              .log("Failed to resolve DNS entry to an address: %s", hostName)
         }
       }
     }
@@ -346,7 +352,7 @@ class AccessManager2 @Inject internal constructor(private val flags: RuntimeFlag
             logger
                 .atWarning()
                 .withCause(e)
-                .log("Failed to resolve DNS entry to an address: $hostName")
+                .log("Failed to resolve DNS entry to an address: %s", hostName)
           }
           hostNames.add(pat.substring(4))
         } else {

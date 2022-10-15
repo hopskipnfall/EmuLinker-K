@@ -108,7 +108,7 @@ abstract class UDPServer : Executable {
       //      channel!!.send(buffer, toSocketAddress)
       serverSocket.send(Datagram(ByteReadPacket(buffer), toSocketAddress.toKtorAddress()))
     } catch (e: Exception) {
-      logger.atSevere().withCause(e).log("Failed to send on port $bindPort")
+      logger.atSevere().withCause(e).log("Failed to send on port %s", bindPort)
     }
   }
 

@@ -115,7 +115,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
         throw FatalActionException("Admin Command Denied: $user does not have Admin access: $chat")
       }
     }
-    logger.atInfo().log("$user: Admin Command: $chat")
+    logger.atInfo().log("%s: Admin Command: $chat", user)
     try {
       when {
         chat.startsWith(COMMAND_HELP) -> {
@@ -169,7 +169,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
         else -> throw ActionException("Invalid Command: $chat")
       }
     } catch (e: ActionException) {
-      logger.atSevere().withCause(e).log("Admin Command Failed: $user: $chat")
+      logger.atSevere().withCause(e).log("Admin Command Failed: $user: %s", chat)
       try {
         clientHandler.send(
             InformationMessage(

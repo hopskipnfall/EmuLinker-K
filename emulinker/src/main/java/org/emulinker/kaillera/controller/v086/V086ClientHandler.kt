@@ -296,7 +296,7 @@ class V086ClientHandler
               } else {
                 logger
                     .atWarning()
-                    .log("$user dropped a packet! ($prevMessageNumber to $lastMessageNumber)")
+                    .log("%s dropped a packet! ($prevMessageNumber to $lastMessageNumber)", user)
                 user.droppedPacket()
               }
             }

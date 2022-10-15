@@ -226,7 +226,7 @@ class ChatAction @Inject internal constructor(private val adminCommandAction: Ad
             val chars = m.toCharArray()
             for (i in chars.indices) {
               if (chars[i].code < 32) {
-                logger.atWarning().log("$user /msg denied: Illegal characters in message")
+                logger.atWarning().log("%s /msg denied: Illegal characters in message", user)
                 try {
                   clientHandler.send(
                       InformationMessage(
@@ -238,7 +238,7 @@ class ChatAction @Inject internal constructor(private val adminCommandAction: Ad
               }
             }
             if (m.length > 320) {
-              logger.atWarning().log("$user /msg denied: Message Length > 320")
+              logger.atWarning().log("%s /msg denied: Message Length > 320", user)
               try {
                 clientHandler.send(
                     InformationMessage(
@@ -312,7 +312,7 @@ class ChatAction @Inject internal constructor(private val adminCommandAction: Ad
                 var i = 0
                 while (i < chars.size) {
                   if (chars[i].code < 32) {
-                    logger.atWarning().log("$user /msg denied: Illegal characters in message")
+                    logger.atWarning().log("%s /msg denied: Illegal characters in message", user)
                     try {
                       clientHandler.send(
                           InformationMessage(
@@ -325,7 +325,7 @@ class ChatAction @Inject internal constructor(private val adminCommandAction: Ad
                   i++
                 }
                 if (m.length > 320) {
-                  logger.atWarning().log("$user /msg denied: Message Length > 320")
+                  logger.atWarning().log("%s /msg denied: Message Length > 320", user)
                   try {
                     clientHandler.send(
                         InformationMessage(

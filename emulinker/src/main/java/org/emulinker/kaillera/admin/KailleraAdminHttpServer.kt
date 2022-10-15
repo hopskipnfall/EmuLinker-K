@@ -40,8 +40,8 @@ class KailleraAdminHttpServer(
       if (userFile.isNullOrBlank() || userFile.isBlank()) {
         userFile = "conf/user.properties"
       }
-      logger.atInfo().log("Establishing realm $realmName")
-      logger.atInfo().log("Loading usernames and passwords from $userFile")
+      logger.atInfo().log("Establishing realm %s", realmName)
+      logger.atInfo().log("Loading usernames and passwords from %s", userFile)
       val sh = SecurityHandler()
       sh.authMethod = "BASIC"
       sh.name = realmName

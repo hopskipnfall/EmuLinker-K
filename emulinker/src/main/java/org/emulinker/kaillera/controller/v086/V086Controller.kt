@@ -131,17 +131,17 @@ class V086Controller
     while (bindAttempts++ < 5) {
       val portInteger = portRangeQueue.poll()
       if (portInteger == null) {
-        logger.atSevere().log("No ports are available to bind for: $user")
+        logger.atSevere().log("No ports are available to bind for: %s", user)
       } else {
         val port = portInteger.toInt()
-        logger.atInfo().log("Private port $port allocated to: $user")
+        logger.atInfo().log("Private port $port allocated to: %s", user)
         try {
           clientHandler.bind(udpSocketProvider, port)
           GlobalScope.launch(Dispatchers.IO) { clientHandler.run(coroutineContext) }
           boundPort = port
           break
         } catch (e: SocketException) {
-          logger.atSevere().withCause(e).log("Failed to bind to port $port for: $user")
+          logger.atSevere().withCause(e).log("Failed to bind to port $port for: %s", user)
           logger
               .atFine()
               .log(

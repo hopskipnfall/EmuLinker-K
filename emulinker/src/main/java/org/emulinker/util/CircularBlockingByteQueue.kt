@@ -110,7 +110,7 @@ class CircularBlockingByteQueue(maxSize: Int) {
     //		logger.atFine().log(this + " grow()");
     val oldCapacity = array.size
     val newCapacity = oldCapacity * 3 / 2 + 1
-    logger.atFine().log("CircularBlockingByteQueue growing from $oldCapacity to $newCapacity")
+    logger.atFine().log("CircularBlockingByteQueue growing from %d to %d", oldCapacity, newCapacity)
     val newData = ByteArray(newCapacity)
     toArray(newData)
     tail = size
