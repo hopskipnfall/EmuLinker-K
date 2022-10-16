@@ -188,12 +188,12 @@ class V086ClientHandler
     return;
     }
     */
-    controller.clientHandlers[user.id] = this
+    controller.clientHandlers[user.userData.id] = this
   }
 
   override suspend fun stop() {
     mutex.withLock {
-      logger.atFine().log("Stopping ClientHandler for %d", user.id)
+      logger.atFine().log("Stopping ClientHandler for %d", user.userData.id)
       if (stopFlag) return
       var port = -1
       if (isBound) port = bindPort
@@ -209,7 +209,7 @@ class V086ClientHandler
         controller.portRangeQueue.add(port)
       }
     }
-    controller.clientHandlers.remove(user.id)
+    controller.clientHandlers.remove(user.userData.id)
     user.stop()
   }
 
@@ -253,14 +253,16 @@ class V086ClientHandler
             .atMostEvery(1, MINUTES)
             .log(
                 "Received request from User %d containing no messages. inBundle.messages.size = %d. numMessages: %d, buffer dump: %s, lastMessageNumberUsed: %d",
-                user.id,
+                user.userData.id,
                 inBundle.messages.size,
                 inBundle.numMessages,
                 lazy { buffer.dumpBufferFromBeginning() },
                 lastMessageNumberUsed)
       }
 
-      logger.atFinest().log("-> FROM user %d: %s", user.id, inBundle.messages.firstOrNull())
+      logger
+          .atFinest()
+          .log("-> FROM user %d: %s", user.userData.id, inBundle.messages.firstOrNull())
       clientRetryCount =
           if (inBundle.numMessages == 0) {
             logger

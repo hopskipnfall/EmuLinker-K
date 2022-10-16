@@ -158,12 +158,12 @@ class KailleraGameImpl(
         throw GameKickException(EmuLang.getString("KailleraGameImpl.GameKickDeniedNotGameOwner"))
       }
     }
-    if (requester.id == userID) {
+    if (requester.userData.id == userID) {
       logger.atWarning().log("%s kick denied: attempt to kick self", requester)
       throw GameKickException(EmuLang.getString("KailleraGameImpl.GameKickDeniedCannotKickSelf"))
     }
     for (player in players) {
-      if (player.id == userID) {
+      if (player.userData.id == userID) {
         try {
           if (requester.accessLevel != AccessManager.ACCESS_SUPERADMIN) {
             if (player.accessLevel >= AccessManager.ACCESS_ADMIN) {
@@ -197,7 +197,7 @@ class KailleraGameImpl(
     if (lastAddress == user.connectSocketAddress.address.hostAddress) {
       lastAddressCount++
       if (lastAddressCount >= 4) {
-        logger.atInfo().log("%s join spam protection: %d from %s", user, user.id, this)
+        logger.atInfo().log("%s join spam protection: %d from %s", user, user.userData.id, this)
         // SF MOD - Changed to IP rather than ID
         if (access < AccessManager.ACCESS_ADMIN) {
           kickedUsers.add(user.connectSocketAddress.address.hostAddress)
@@ -311,7 +311,7 @@ class KailleraGameImpl(
         !owner.game!!.romName.startsWith("*"))
         addEvent(
             GameInfoEvent(
-                this, "${user.name} using different emulator version: ${user.clientType}"))
+                this, "${user.userData.name} using different emulator version: ${user.clientType}"))
     return players.indexOf(user) + 1
   }
 
@@ -511,7 +511,7 @@ class KailleraGameImpl(
         for (i in players.indices) {
           val player = getPlayer(i + 1)
           player!!.playerNumber = i + 1
-          logger.atFine().log("%s:::%d", player.name, player.playerNumber)
+          logger.atFine().log("%s:::%d", player.userData.name, player.playerNumber)
         }
       }
     }
@@ -560,7 +560,8 @@ class KailleraGameImpl(
           PlayerDesynchEvent(
               this,
               user,
-              EmuLang.getString("KailleraGameImpl.DesynchDetectedDroppedPacket", user.name)))
+              EmuLang.getString(
+                  "KailleraGameImpl.DesynchDetectedDroppedPacket", user.userData.name)))
       if (synchedCount < 2 && isSynched) {
         isSynched = false
         for (q in playerActionQueue!!) q.synched = false
@@ -639,7 +640,8 @@ class KailleraGameImpl(
           PlayerDesynchEvent(
               this,
               player,
-              EmuLang.getString("KailleraGameImpl.DesynchDetectedPlayerLagged", player.name)))
+              EmuLang.getString(
+                  "KailleraGameImpl.DesynchDetectedPlayerLagged", player.userData.name)))
       if (synchedCount < 2) {
         isSynched = false
         for (q in this.playerActionQueue!!) q.synched = false

@@ -36,7 +36,9 @@ class JoinGameAction @Inject internal constructor() :
                 EmuLang.getString("JoinGameAction.JoinGameDenied", e.message)))
         clientHandler.send(
             QuitGame_Notification(
-                clientHandler.nextMessageNumber, clientHandler.user.name, clientHandler.user.id))
+                clientHandler.nextMessageNumber,
+                clientHandler.user.userData.name,
+                clientHandler.user.userData.id))
       } catch (e2: MessageFormatException) {
         logger.atSevere().withCause(e2).log("Failed to construct new Message")
       }
@@ -52,7 +54,8 @@ class JoinGameAction @Inject internal constructor() :
       if (user == thisUser) {
         val players: MutableList<Player> = ArrayList()
         game.players.asSequence().filter { it != thisUser && !it.inStealthMode }.mapTo(players) {
-          PlayerInformation.Player(it.name, it.ping.toLong(), it.id, it.connectionType)
+          PlayerInformation.Player(
+              it.userData.name, it.ping.toLong(), it.userData.id, it.connectionType)
         }
         clientHandler.send(PlayerInformation(clientHandler.nextMessageNumber, players))
       }
@@ -62,9 +65,9 @@ class JoinGameAction @Inject internal constructor() :
                   clientHandler.nextMessageNumber,
                   game.id,
                   0,
-                  user.name,
+                  user.userData.name,
                   user.ping.toLong(),
-                  user.id,
+                  user.userData.id,
                   user.connectionType))
     } catch (e: MessageFormatException) {
       logger.atSevere().withCause(e).log("Failed to construct JoinGame_Notification message")

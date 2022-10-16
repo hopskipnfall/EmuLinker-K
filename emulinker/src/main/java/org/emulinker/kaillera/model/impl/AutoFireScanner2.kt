@@ -184,12 +184,12 @@ class AutoFireScanner2(private var game: KailleraGame, sensitivity: Int) : AutoF
             if (aSequenceCount >= minReps && bSequenceCount >= minReps && !stopFlag) {
               val gameImpl = game as KailleraGameImpl
               gameImpl.announce(
-                  getString("AutoFireScanner2.AutoFireDetected", user!!.name),
+                  getString("AutoFireScanner2.AutoFireDetected", user!!.userData.name),
               )
               logger
                   .atInfo()
                   .log(
-                      "AUTOUSERDUMP\t${EmuUtil.DATE_FORMAT.format(gameImpl.startDate)}\t${if (aSequence < bSequence) aSequence else bSequence}\t${game.id}\t${game.romName}\t${user.name}\t${user.socketAddress.address.hostAddress}")
+                      "AUTOUSERDUMP\t${EmuUtil.DATE_FORMAT.format(gameImpl.startDate)}\t${if (aSequence < bSequence) aSequence else bSequence}\t${game.id}\t${game.romName}\t${user.userData.name}\t${user.socketAddress.address.hostAddress}")
               //							logger.atFine().log("thisAction=" + EmuUtil.bytesToHex(thisAction) + "
               // actionA=" +
               // EmuUtil.bytesToHex(actionA) + " aCount=" + aCount + " actionB=" +

@@ -144,11 +144,14 @@ class V086Controller
           boundPort = port
           break
         } catch (e: SocketException) {
-          logger.atSevere().withCause(e).log("Failed to bind to port $port for: %s", user)
+          logger.atSevere().withCause(e).log("Failed to bind to port %d for: %s", port, user)
           logger
               .atFine()
               .log(
-                  "$this returning port $port to available port queue: ${portRangeQueue.size + 1} available")
+                  "%s returning port %d to available port queue: %d available",
+                  this,
+                  port,
+                  portRangeQueue.size + 1)
           portRangeQueue.add(port)
         }
       }

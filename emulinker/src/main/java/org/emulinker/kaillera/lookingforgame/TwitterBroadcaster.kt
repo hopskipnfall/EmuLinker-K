@@ -35,7 +35,7 @@ class TwitterBroadcaster
     if (!flags.twitterEnabled) {
       return false
     }
-    val username: String = lookingForGameEvent.user.name
+    val username: String = lookingForGameEvent.user.userData.name
     // TODO(nue): Abstract the @ into a status field instead of keeping it in the name.
     // Note: This isn't the normal @ character..
     if (username.contains("＠")) {
@@ -58,7 +58,7 @@ class TwitterBroadcaster
           val user: KailleraUser = lookingForGameEvent.user
           val message =
               """
-                  User: ${user.name}
+                  User: ${user.userData.name}
                   Game: ${lookingForGameEvent.gameTitle}
                   Server: ${flags.serverName} (${flags.serverAddress})""".trimIndent()
           val tweet = twitter.updateStatus(message)
@@ -70,7 +70,7 @@ class TwitterBroadcaster
   }
 
   fun cancelActionsForUser(userId: Int): Boolean {
-    return cancelMatchingEvents { it.user.id == userId }
+    return cancelMatchingEvents { it.user.userData.id == userId }
   }
 
   fun cancelActionsForGame(gameId: Int): Boolean {

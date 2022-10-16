@@ -42,7 +42,7 @@ class DropGameAction @Inject internal constructor() :
       if (!user.inStealthMode)
           clientHandler.send(
               PlayerDrop_Notification(
-                  clientHandler.nextMessageNumber, user.name, playerNumber.toByte()))
+                  clientHandler.nextMessageNumber, user.userData.name, playerNumber.toByte()))
     } catch (e: MessageFormatException) {
       logger.atSevere().withCause(e).log("Failed to construct PlayerDrop_Notification message")
     }

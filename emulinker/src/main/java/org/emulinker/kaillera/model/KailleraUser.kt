@@ -11,7 +11,6 @@ import org.emulinker.kaillera.model.impl.KailleraUserImpl
 
 interface KailleraUser {
   // Fields that only support getters.
-  val id: Int
   /**
    * Level of access that the user has.
    *
@@ -33,7 +32,12 @@ interface KailleraUser {
   val protocol: String
   val server: KailleraServer
   val status: UserStatus
-  val users: Collection<KailleraUserImpl?>?
+
+  // TODO(nue): Get rid of this field.
+  @Deprecated("This doesn't belong on [KailleraUser].")
+  val allUsersInServer: Collection<KailleraUserImpl?>?
+
+  var userData: UserData
 
   // Fields with public getters and setters.
   var clientType: String?
@@ -43,7 +47,7 @@ interface KailleraUser {
   var lastMsgID: Int
   var isAcceptingDirectMessages: Boolean
   var isMuted: Boolean
-  var name: String // TODO(nue): Remove this "?"
+
   /**
    * This is called "p2p mode" in the code and commands.
    *

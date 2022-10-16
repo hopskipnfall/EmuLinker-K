@@ -16,10 +16,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.access.AccessManager
-import org.emulinker.kaillera.model.ConnectionType
-import org.emulinker.kaillera.model.KailleraGame
-import org.emulinker.kaillera.model.KailleraUser
-import org.emulinker.kaillera.model.UserStatus
+import org.emulinker.kaillera.model.*
 import org.emulinker.kaillera.model.event.*
 import org.emulinker.kaillera.model.exception.*
 import org.emulinker.util.EmuLang
@@ -29,7 +26,7 @@ import org.emulinker.util.Executable
 private const val EMULINKER_CLIENT_NAME = "EmulinkerSF Admin Client"
 
 class KailleraUserImpl(
-    override val id: Int,
+    override var userData: UserData,
     override val protocol: String,
     override val connectSocketAddress: InetSocketAddress,
     override val listener: KailleraEventListener,
@@ -38,7 +35,7 @@ class KailleraUserImpl(
 ) : KailleraUser, Executable {
   /** [CoroutineScope] for long-running actions attached to the user. */
   private val userCoroutineScope =
-      CoroutineScope(Dispatchers.IO) + CoroutineName("User[${id}]Scope")
+      CoroutineScope(Dispatchers.IO) + CoroutineName("User[${userData.id}]Scope")
 
   override var inStealthMode = false
 
@@ -126,7 +123,7 @@ class KailleraUserImpl(
 
   override var tempDelay = 0
 
-  override val users: Collection<KailleraUserImpl>
+  override val allUsersInServer: Collection<KailleraUserImpl>
     get() = server.users
 
   override fun addIgnoredUser(address: String) {
@@ -160,15 +157,8 @@ class KailleraUserImpl(
 
   override var loggedIn = false
 
-  override fun toString(): String {
-    return if (!this::name.isInitialized) {
-      "User$id(${connectSocketAddress.address.hostAddress})"
-    } else {
-      "User$id(${if (name.length > 15) name.take(15) + "..." else name}/${connectSocketAddress.address.hostAddress})"
-    }
-  }
-
-  override lateinit var name: String
+  override fun toString() =
+      "User${userData.id}(${if (userData.name.length > 15) userData.name.take(15) + "..." else userData.name}/${connectSocketAddress.address.hostAddress})"
 
   override fun updateLastKeepAlive() {
     lastKeepAlive = Instant.now()
@@ -185,12 +175,10 @@ class KailleraUserImpl(
   val accessStr: String
     get() = AccessManager.ACCESS_NAMES[accessLevel]
 
-  override fun equals(other: Any?): Boolean {
-    return other is KailleraUserImpl && other.id == id
-  }
+  override fun equals(other: Any?) = other is KailleraUserImpl && other.userData.id == userData.id
 
   fun toDetailedString(): String {
-    return ("KailleraUserImpl[id=$id protocol=$protocol status=$status name=$name clientType=$clientType ping=$ping connectionType=$connectionType remoteAddress=" +
+    return ("KailleraUserImpl[id=${userData.id} protocol=$protocol status=$status name=${userData.name} clientType=$clientType ping=$ping connectionType=$connectionType remoteAddress=" +
         (if (!this::socketAddress.isInitialized) {
           EmuUtil.formatSocketAddress(connectSocketAddress)
         } else EmuUtil.formatSocketAddress(socketAddress)) +
@@ -199,7 +187,7 @@ class KailleraUserImpl(
 
   override suspend fun stop() {
     mutex.withLock {
-      logger.atFine().log("Stopping KaillerUser for %d", id)
+      logger.atFine().log("Stopping KaillerUser for %d", userData.id)
       if (!threadIsActive) {
         logger.atFine().log("%s thread stop request ignored: not running!", this)
         return
@@ -257,7 +245,7 @@ class KailleraUserImpl(
   @Throws(CreateGameException::class, FloodException::class)
   override suspend fun createGame(romName: String): KailleraGame {
     updateLastActivity()
-    requireNotNull(server.getUser(id)) { "$this create game failed: User don't exist!" }
+    requireNotNull(server.getUser(userData.id)) { "$this create game failed: User don't exist!" }
     if (status == UserStatus.PLAYING) {
       logger.atWarning().log("%s create game failed: User status is Playing!", this)
       throw CreateGameException(EmuLang.getString("KailleraUserImpl.CreateGameErrorAlreadyInGame"))

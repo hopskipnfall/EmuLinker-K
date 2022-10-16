@@ -42,7 +42,9 @@ class CreateGameAction @Inject internal constructor() :
                 EmuLang.getString("CreateGameAction.CreateGameDenied", e.message)))
         clientHandler.send(
             QuitGame_Notification(
-                clientHandler.nextMessageNumber, clientHandler.user.name, clientHandler.user.id))
+                clientHandler.nextMessageNumber,
+                clientHandler.user.userData.name,
+                clientHandler.user.userData.id))
       } catch (e2: MessageFormatException) {
         logger.atSevere().withCause(e2).log("Failed to construct message")
       }
@@ -59,7 +61,9 @@ class CreateGameAction @Inject internal constructor() :
                 EmuLang.getString("CreateGameAction.CreateGameDeniedFloodControl")))
         clientHandler.send(
             QuitGame_Notification(
-                clientHandler.nextMessageNumber, clientHandler.user.name, clientHandler.user.id))
+                clientHandler.nextMessageNumber,
+                clientHandler.user.userData.name,
+                clientHandler.user.userData.id))
       } catch (e2: MessageFormatException) {
         logger.atSevere().withCause(e2).log("Failed to construct message")
       }
@@ -74,7 +78,7 @@ class CreateGameAction @Inject internal constructor() :
       clientHandler.send(
           CreateGame_Notification(
               clientHandler.nextMessageNumber,
-              owner.name,
+              owner.userData.name,
               game.romName,
               owner.clientType!!,
               game.id,

@@ -33,7 +33,7 @@ class EmuLinkerMasterUpdateTask(
     val waitingGames = StringBuilder()
     kailleraServer.games.asSequence().filter { it.status == GameStatus.WAITING }.forEach {
       waitingGames.append(
-          "${it.romName}|${it.owner.name}|${it.owner.clientType}|${it.players.size}/${it.maxUsers}|")
+          "${it.romName}|${it.owner.userData.name}|${it.owner.clientType}|${it.players.size}/${it.maxUsers}|")
     }
 
     val meth = GetMethod(TOUCH_LIST_URL)

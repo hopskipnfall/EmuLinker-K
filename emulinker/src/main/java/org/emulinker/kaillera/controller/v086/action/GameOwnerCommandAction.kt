@@ -349,7 +349,7 @@ class GameOwnerCommandAction @Inject internal constructor(private val flags: Run
       user.isMuted = true
       val user1 = clientHandler.user as KailleraUserImpl
       user1.game!!.announce(
-          user.name + " has been muted!",
+          user.userData.name + " has been muted!",
       )
     } catch (e: NoSuchElementException) {
       val user = clientHandler.user as KailleraUserImpl
@@ -396,7 +396,7 @@ class GameOwnerCommandAction @Inject internal constructor(private val flags: Run
       user.isMuted = false
       val user1 = clientHandler.user
       (user1 as KailleraUserImpl).game!!.announce(
-          user.name + " has been unmuted!",
+          user.userData.name + " has been unmuted!",
       )
     } catch (e: NoSuchElementException) {
       val user = clientHandler.user as KailleraUserImpl
@@ -477,7 +477,7 @@ class GameOwnerCommandAction @Inject internal constructor(private val flags: Run
             else{
             	game.getPlayerActionQueue()[i] = game.getPlayerActionQueue()[num[i]-1];
             }*/ game.announce(
-                player.name + " is now Player#: " + player.playerNumber,
+                player.userData.name + " is now Player#: " + player.playerNumber,
             )
             i++
           }
@@ -518,7 +518,7 @@ class GameOwnerCommandAction @Inject internal constructor(private val flags: Run
         for (w in game.players.size downTo 1) {
           if (game.getPlayer(w)!!.accessLevel < AccessManager.ACCESS_ADMIN &&
               game.getPlayer(w) != game.owner)
-              game.kick(admin, game.getPlayer(w)!!.id)
+              game.kick(admin, game.getPlayer(w)!!.userData.id)
         }
         admin.game!!.announce(
             "All players have been kicked!",
@@ -528,7 +528,7 @@ class GameOwnerCommandAction @Inject internal constructor(private val flags: Run
       val playerNumber = scanner.nextInt()
       if (playerNumber in 1..100) {
         if (game.getPlayer(playerNumber) != null)
-            game.kick(admin, game.getPlayer(playerNumber)!!.id)
+            game.kick(admin, game.getPlayer(playerNumber)!!.userData.id)
         else {
           game.announce("Player doesn't exisit!", admin)
         }
