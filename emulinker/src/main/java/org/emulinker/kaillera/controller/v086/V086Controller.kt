@@ -54,6 +54,10 @@ class V086Controller
         private val v086ClientHandlerFactory: V086ClientHandler.Factory,
         flags: RuntimeFlags
     ) : KailleraServerController {
+  /** [CoroutineScope] for long-running actions attached to the controller. */
+  private val controllerCoroutineScope =
+      CoroutineScope(Dispatchers.IO) + CoroutineName("V086ControllerScope")
+
   var isRunning = false
     private set
 
@@ -112,7 +116,6 @@ class V086Controller
    * Receives new connections and delegates to a new V086ClientHandler instance for communication
    * over a separate port.
    */
-  @OptIn(DelicateCoroutinesApi::class) // For GlobalScope.
   @Throws(ServerFullException::class, NewConnectionException::class)
   override suspend fun newConnection(
       udpSocketProvider: UdpSocketProvider, clientSocketAddress: InetSocketAddress, protocol: String
@@ -137,7 +140,7 @@ class V086Controller
         logger.atInfo().log("Private port $port allocated to: %s", user)
         try {
           clientHandler.bind(udpSocketProvider, port)
-          GlobalScope.launch(Dispatchers.IO) { clientHandler.run(coroutineContext) }
+          controllerCoroutineScope.launch { clientHandler.run(coroutineContext) }
           boundPort = port
           break
         } catch (e: SocketException) {
@@ -169,6 +172,7 @@ class V086Controller
   override suspend fun stop() {
     isRunning = false
     clientHandlers.values.forEach { it.stop() }
+    controllerCoroutineScope.cancel("stop() method called")
     clientHandlers.clear()
   }
 

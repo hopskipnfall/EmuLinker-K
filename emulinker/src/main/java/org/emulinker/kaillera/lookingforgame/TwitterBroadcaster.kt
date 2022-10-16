@@ -12,9 +12,6 @@ import twitter4j.Status
 import twitter4j.StatusUpdate
 import twitter4j.Twitter
 
-private fun getUrl(tweet: Status) =
-    "https://twitter.com/${tweet.user.screenName}/status/${tweet.id}"
-
 /**
  * Observes when a user is looking for a game opponent and publishes a report to one or more
  * external services (e.g. Twitter, Discord).
@@ -65,8 +62,8 @@ class TwitterBroadcaster
                   Game: ${lookingForGameEvent.gameTitle}
                   Server: ${flags.serverName} (${flags.serverAddress})""".trimIndent()
           val tweet = twitter.updateStatus(message)
-          user.game!!.announce(getUrl(tweet), user)
-          logger.atInfo().log("Posted tweet: %s", getUrl(tweet))
+          user.game!!.announce(tweet.getUrl(), user)
+          logger.atInfo().log("Posted tweet: %s", tweet.getUrl())
           postedTweets[lookingForGameEvent] = tweet.id
         }
     return true
@@ -82,12 +79,12 @@ class TwitterBroadcaster
 
   private fun cancelMatchingEvents(predicate: (LookingForGameEvent) -> Boolean): Boolean {
     var anyModified = false
-    pendingReports.keys.asSequence().filter { predicate(it) }.forEach { event ->
+    pendingReports.keys.asSequence().filter(predicate).forEach { event ->
       val job = pendingReports[event]
       if (job != null) {
         job.cancel()
         pendingReports.remove(event)
-        logger.atInfo().log("Prevented pending tweet")
+        logger.atInfo().log("Canceled tweet: %s", event)
       }
       anyModified = true
     }
@@ -102,7 +99,7 @@ class TwitterBroadcaster
           val reply = StatusUpdate("〆")
           reply.inReplyToStatusId = tweetId
           val tweet = twitter.updateStatus(reply)
-          logger.atInfo().log("Posted tweet canceling LFG: %s", getUrl(tweet))
+          logger.atInfo().log("Posted tweet canceling LFG: %s", tweet.getUrl())
         }
       }
       tweetsClosed = true
@@ -111,6 +108,9 @@ class TwitterBroadcaster
   }
 
   companion object {
+    /** Gets the URL of a tweet. */
+    private fun Status.getUrl() = "https://twitter.com/${this.user.screenName}/status/${this.id}"
+
     private val logger = FluentLogger.forEnclosingClass()
   }
 }

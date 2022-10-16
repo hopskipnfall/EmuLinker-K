@@ -59,9 +59,9 @@ class KailleraMasterUpdateTask(
     kailleraTouch.setRequestHeader("Kaillera-wgames", waitingGames.toString())
     try {
       val statusCode = httpClient.executeMethod(kailleraTouch)
-      if (statusCode != HttpStatus.SC_OK)
-          logger.atSevere().log("Failed to touch Kaillera Master: " + kailleraTouch.statusLine)
-      else logger.atInfo().log("Touching Kaillera Master done")
+      if (statusCode != HttpStatus.SC_OK) {
+        logger.atSevere().log("Failed to touch Kaillera Master: " + kailleraTouch.statusLine)
+      } else logger.atInfo().log("Touching Kaillera Master done")
     } catch (e: Exception) {
       logger.atSevere().withCause(e).log("Failed to touch Kaillera Master")
     } finally {

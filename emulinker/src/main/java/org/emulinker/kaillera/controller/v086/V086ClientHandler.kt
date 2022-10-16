@@ -249,14 +249,15 @@ class V086ClientHandler
 
       if (inBundle.messages.firstOrNull() == null) {
         logger
-            .atWarning()
+            .atFine()
             .atMostEvery(1, MINUTES)
             .log(
-                "Received request from User %d containing no messages. inBundle.messages.size = %d. numMessages: %d, buffer dump: %s, lastMessageNumberUsed: $lastMessageNumberUsed",
+                "Received request from User %d containing no messages. inBundle.messages.size = %d. numMessages: %d, buffer dump: %s, lastMessageNumberUsed: %d",
                 user.id,
                 inBundle.messages.size,
                 inBundle.numMessages,
-                lazy { buffer.dumpBufferFromBeginning() })
+                lazy { buffer.dumpBufferFromBeginning() },
+                lastMessageNumberUsed)
       }
 
       logger.atFinest().log("-> FROM user %d: %s", user.id, inBundle.messages.firstOrNull())
@@ -277,7 +278,7 @@ class V086ClientHandler
           lastMessageNumber = messages.single()!!.messageNumber
           val action = controller.actions[messages[0]!!.messageId.toInt()]
           if (action == null) {
-            logger.atSevere().log("No action defined to handle client message: " + messages[0])
+            logger.atSevere().log("No action defined to handle client message: %s", messages[0])
           }
           (action as V086Action<V086Message>).performAction(messages[0]!!, this)
         } else {
@@ -304,7 +305,6 @@ class V086ClientHandler
             if (action == null) {
               logger.atSevere().log("No action defined to handle client message: " + messages[i])
             } else {
-              // logger.atFine().log(user + " -> " + message);
               (action as V086Action<V086Message>).performAction(messages[i]!!, this)
             }
           }
@@ -381,7 +381,6 @@ class V086ClientHandler
         lastMessageBuffer.add(outMessage)
       }
       numToSend = lastMessageBuffer.fill(outMessages, numToSend)
-      // System.out.println("Server -> " + numToSend);
       val outBundle = V086Bundle(outMessages, numToSend)
       logger.atFinest().log("<- TO P%d: %s", user.playerNumber, outMessage)
       outBundle.writeTo(outBuffer)

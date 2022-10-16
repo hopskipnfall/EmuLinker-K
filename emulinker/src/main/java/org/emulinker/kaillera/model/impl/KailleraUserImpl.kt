@@ -10,8 +10,8 @@ import java.util.ArrayList
 import kotlin.Throws
 import kotlin.coroutines.CoroutineContext
 import kotlin.time.Duration.Companion.milliseconds
+import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import org.emulinker.config.RuntimeFlags
@@ -36,6 +36,9 @@ class KailleraUserImpl(
     override val server: KailleraServerImpl,
     flags: RuntimeFlags,
 ) : KailleraUser, Executable {
+  /** [CoroutineScope] for long-running actions attached to the user. */
+  private val userCoroutineScope =
+      CoroutineScope(Dispatchers.IO) + CoroutineName("User[${id}]Scope")
 
   override var inStealthMode = false
 
@@ -285,7 +288,7 @@ class KailleraUserImpl(
   override suspend fun joinGame(gameID: Int): KailleraGame {
     updateLastActivity()
     if (game != null) {
-      logger.atWarning().log("%s join game failed: Already in: $game", this)
+      logger.atWarning().log("%s join game failed: Already in: %s", this, game)
       throw JoinGameException(EmuLang.getString("KailleraUserImpl.JoinGameErrorAlreadyInGame"))
     }
     if (status == UserStatus.PLAYING) {
@@ -326,12 +329,12 @@ class KailleraUserImpl(
       throw GameChatException(EmuLang.getString("KailleraUserImpl.GameChatErrorNotInGame"))
     }
     if (isMuted) {
-      logger.atWarning().log("%s gamechat denied: Muted: $message", this)
+      logger.atWarning().log("%s gamechat denied: Muted: %s", this, message)
       game!!.announce("You are currently muted!", this)
       return
     }
     if (server.accessManager.isSilenced(socketAddress.address)) {
-      logger.atWarning().log("%s gamechat denied: Silenced: $message", this)
+      logger.atWarning().log("%s gamechat denied: Silenced: %s", this, message)
       game!!.announce("You are currently silenced!", this)
       return
     }

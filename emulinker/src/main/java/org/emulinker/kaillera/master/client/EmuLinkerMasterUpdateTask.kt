@@ -35,22 +35,23 @@ class EmuLinkerMasterUpdateTask(
       waitingGames.append(
           "${it.romName}|${it.owner.name}|${it.owner.clientType}|${it.players.size}/${it.maxUsers}|")
     }
-    val params =
-        arrayOf(
-            "serverName" to publicInfo.serverName,
-            "ipAddress" to publicInfo.connectAddress,
-            "location" to publicInfo.location,
-            "website" to publicInfo.website,
-            "port" to connectController.bindPort.toString(),
-            "numUsers" to kailleraServer.users.size.toString(),
-            "maxUsers" to kailleraServer.maxUsers.toString(),
-            "numGames" to kailleraServer.games.size.toString(),
-            "maxGames" to kailleraServer.maxGames.toString(),
-            "version" to releaseInfo.shortVersionString,
-        )
 
     val meth = GetMethod(TOUCH_LIST_URL)
-    meth.setQueryString(params.map { NameValuePair(it.first, it.second) }.toTypedArray())
+    meth.setQueryString(
+        arrayOf(
+                "serverName" to publicInfo.serverName,
+                "ipAddress" to publicInfo.connectAddress,
+                "location" to publicInfo.location,
+                "website" to publicInfo.website,
+                "port" to connectController.bindPort.toString(),
+                "numUsers" to kailleraServer.users.size.toString(),
+                "maxUsers" to kailleraServer.maxUsers.toString(),
+                "numGames" to kailleraServer.games.size.toString(),
+                "maxGames" to kailleraServer.maxGames.toString(),
+                "version" to releaseInfo.shortVersionString,
+            )
+            .map { NameValuePair(it.first, it.second) }
+            .toTypedArray())
     meth.setRequestHeader("Waiting-games", waitingGames.toString())
     meth.followRedirects = true
     val props = Properties()

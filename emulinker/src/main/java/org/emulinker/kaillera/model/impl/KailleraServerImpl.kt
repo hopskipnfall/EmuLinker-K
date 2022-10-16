@@ -46,6 +46,9 @@ class KailleraServerImpl
         private val lookingForGameReporter: TwitterBroadcaster,
         metrics: MetricRegistry
     ) : KailleraServer, Executable {
+  /** [CoroutineScope] for long-running actions. */
+  private val kailleraServerCoroutineScope =
+      CoroutineScope(Dispatchers.IO) + CoroutineName("KailleraServerScope")
 
   private var allowedConnectionTypes = BooleanArray(7)
   private val loginMessages: List<String>
@@ -77,9 +80,6 @@ class KailleraServerImpl
     return gamesMap[gameID]
   }
 
-  fun getNumGamesPlaying(): Int =
-      games.asSequence().filter { it.status != GameStatus.WAITING }.count()
-
   override val maxPing = flags.maxPing
   override val maxUsers = flags.maxUsers
   override val maxGames = flags.maxGames
@@ -105,9 +105,10 @@ class KailleraServerImpl
       return
     }
     stopFlag = true
-    for (user in usersMap.values) user.stop()
+    usersMap.values.forEach { it.stop() }
     usersMap.clear()
     gamesMap.clear()
+    kailleraServerCoroutineScope.cancel()
   }
 
   // not synchronized because I know the caller will be thread safe
@@ -126,7 +127,6 @@ class KailleraServerImpl
     return autoFireDetectorFactory.getInstance(game!!, flags.gameAutoFireSensitivity)
   }
 
-  @OptIn(DelicateCoroutinesApi::class) // For GlobalScope.
   @Synchronized
   @Throws(ServerFullException::class, NewConnectionException::class)
   override fun newConnection(
@@ -146,7 +146,8 @@ class KailleraServerImpl
       logger
           .atWarning()
           .log(
-              "Connection from ${formatSocketAddress(clientSocketAddress)} denied: Server is full!")
+              "Connection from %s denied: Server is full!",
+              formatSocketAddress(clientSocketAddress))
       throw ServerFullException(getString("KailleraServerImpl.LoginDeniedServerFull"))
     }
     val userID = getNextUserID()
@@ -155,12 +156,15 @@ class KailleraServerImpl
     logger
         .atInfo()
         .log(
-            "$user attempting new connection using protocol $protocol from ${formatSocketAddress(clientSocketAddress)}")
+            "%s attempting new connection using protocol %s from %s",
+            user,
+            protocol,
+            formatSocketAddress(clientSocketAddress))
     usersMap[userID] = user
 
     //    threadPool.execute(user) // NUEFIXME
     // look for the infinite loop inside of the user class
-    GlobalScope.launch(Dispatchers.IO) { user.run(coroutineContext) }
+    kailleraServerCoroutineScope.launch { user.run(coroutineContext) }
     return user
   }
 
@@ -238,14 +242,14 @@ class KailleraServerImpl
 
     // access == AccessManager.ACCESS_NORMAL &&
     if (flags.maxUserNameLength > 0 && user.name.length > maxUserNameLength) {
-      logger.atInfo().log("%s login denied: UserName Length > $maxUserNameLength", user)
+      logger.atInfo().log("%s login denied: UserName Length > %s", user, maxUserNameLength)
       usersMap.remove(userListKey)
       throw UserNameException(getString("KailleraServerImpl.LoginDeniedUserNameTooLong"))
     }
     if (access == AccessManager.ACCESS_NORMAL &&
         flags.maxClientNameLength > 0 &&
         user.clientType!!.length > maxClientNameLength) {
-      logger.atInfo().log("%s login denied: Client Name Length > $maxClientNameLength", user)
+      logger.atInfo().log("%s login denied: Client Name Length > %s", user, maxClientNameLength)
       usersMap.remove(userListKey)
       throw UserNameException(getString("KailleraServerImpl.LoginDeniedEmulatorNameTooLong"))
     }
@@ -426,7 +430,7 @@ class KailleraServerImpl
         user.server.accessManager.isSilenced(user.socketAddress.address)) {
       quitMsg = "www.EmuLinker.org"
     }
-    logger.atInfo().log("%s quit: $quitMsg", user)
+    logger.atInfo().log("%s quit: %s", user, quitMsg)
     val quitEvent = UserQuitEvent(this, user, quitMsg)
     addEvent(quitEvent)
     user.addEvent(quitEvent)
@@ -443,14 +447,14 @@ class KailleraServerImpl
     val access = accessManager.getAccess(user.socketAddress.address)
     if (access < AccessManager.ACCESS_SUPERADMIN &&
         accessManager.isSilenced(user.socketAddress.address)) {
-      logger.atWarning().log("%s chat denied: Silenced: $message", user)
+      logger.atWarning().log("%s chat denied: Silenced: %s", user, message)
       throw ChatException(getString("KailleraServerImpl.ChatDeniedSilenced"))
     }
     if (access == AccessManager.ACCESS_NORMAL &&
         flags.chatFloodTime > 0 &&
         (System.currentTimeMillis() - (user as KailleraUserImpl).lastChatTime <
             flags.chatFloodTime * 1000)) {
-      logger.atWarning().log("%s chat denied: Flood: $message", user)
+      logger.atWarning().log("%s chat denied: Flood: %s", user, message)
       throw FloodException(getString("KailleraServerImpl.ChatDeniedFloodControl"))
     }
     if (message == ":USER_COMMAND") {
@@ -471,7 +475,7 @@ class KailleraServerImpl
         throw ChatException(getString("KailleraServerImpl.ChatDeniedMessageTooLong"))
       }
     }
-    logger.atInfo().log("%s chat: $message", user)
+    logger.atInfo().log("%s chat: %s", user, message)
     addEvent(ChatEvent(this, user, message))
     if (switchTrivia) {
       if (!trivia!!.isAnswered && trivia!!.isCorrect(message)) {
@@ -506,7 +510,7 @@ class KailleraServerImpl
     if (access == AccessManager.ACCESS_NORMAL) {
       if (flags.createGameFloodTime > 0 &&
           System.currentTimeMillis() - user.lastCreateGameTime < flags.createGameFloodTime * 1000) {
-        logger.atWarning().log("%s create game denied: Flood: $romName", user)
+        logger.atWarning().log("%s create game denied: Flood: %s", user, romName)
         throw FloodException(getString("KailleraServerImpl.CreateGameDeniedFloodControl"))
       }
       if (flags.maxGames > 0 && games.size >= flags.maxGames) {
@@ -529,7 +533,9 @@ class KailleraServerImpl
         throw CreateGameException(getString("KailleraServerImpl.CreateGameErrorEmptyName"))
       }
       if (!accessManager.isGameAllowed(romName)) {
-        logger.atWarning().log("%s create game denied: AccessManager denied game: $romName", user)
+        logger
+            .atWarning()
+            .log("%s create game denied: AccessManager denied game: %s", user, romName)
         throw CreateGameException(getString("KailleraServerImpl.CreateGameDeniedGameBanned"))
       }
     }
@@ -570,12 +576,12 @@ class KailleraServerImpl
       throw CloseGameException(getString("KailleraServerImpl.NotLoggedIn"))
     }
     if (!gamesMap.containsKey(game.id)) {
-      logger.atSevere().log("%s close $game failed: not in list: $game", user)
+      logger.atSevere().log("%s close $game failed: not in list: %s", user, game)
       return
     }
     (game as KailleraGameImpl).close(user)
     gamesMap.remove(game.id)
-    logger.atInfo().log("%s closed: $game", user)
+    logger.atInfo().log("%s closed: %s", user, game)
     addEvent(GameClosedEvent(this, game))
   }
 
@@ -588,7 +594,7 @@ class KailleraServerImpl
     val access = accessManager.getAccess(user.socketAddress.address)
     if (access < AccessManager.ACCESS_SUPERADMIN &&
         accessManager.isSilenced(user.socketAddress.address)) {
-      logger.atWarning().log("%s /me: Silenced: $message", user)
+      logger.atWarning().log("%s /me: Silenced: %s", user, message)
       return false
     }
 
@@ -675,7 +681,7 @@ class KailleraServerImpl
           user.addEvent(event)
         }
       } else {
-        logger.atFine().log("%s: not adding event, not logged in: $event", user)
+        logger.atFine().log("%s: not adding event, not logged in: %s", user, event)
       }
     }
   }
@@ -791,18 +797,21 @@ class KailleraServerImpl
     if (flags.touchKaillera) {
       this.statsCollector = statsCollector
     }
-    metrics.register(
-        MetricRegistry.name(this.javaClass, "users", "idle"),
-        Gauge { usersMap.values.count { it.status == UserStatus.IDLE } })
-    metrics.register(
-        MetricRegistry.name(this.javaClass, "users", "playing"),
-        Gauge { usersMap.values.count { it.status == UserStatus.PLAYING } })
-    metrics.register(
-        MetricRegistry.name(this.javaClass, "games", "waiting"),
-        Gauge { gamesMap.values.count { it.status == GameStatus.WAITING } })
-    metrics.register(
-        MetricRegistry.name(this.javaClass, "games", "playing"),
-        Gauge { gamesMap.values.count { it.status == GameStatus.PLAYING } })
+
+    if (flags.metricsEnabled) {
+      metrics.register(
+          MetricRegistry.name(this.javaClass, "users", "idle"),
+          Gauge { usersMap.values.count { it.status == UserStatus.IDLE } })
+      metrics.register(
+          MetricRegistry.name(this.javaClass, "users", "playing"),
+          Gauge { usersMap.values.count { it.status == UserStatus.PLAYING } })
+      metrics.register(
+          MetricRegistry.name(this.javaClass, "games", "waiting"),
+          Gauge { gamesMap.values.count { it.status == GameStatus.WAITING } })
+      metrics.register(
+          MetricRegistry.name(this.javaClass, "games", "playing"),
+          Gauge { gamesMap.values.count { it.status == GameStatus.PLAYING } })
+    }
   }
 
   companion object {

@@ -31,6 +31,9 @@ class EvalClient(
     private val frameDelay: Int = 1,
     private val clientType: String = "Project 64k 0.13 (01 Aug 2003)"
 ) : Closeable {
+  private val evalCoroutineScope =
+      CoroutineScope(Dispatchers.IO) + CoroutineName("EvalClient[${username}]Scope")
+
   private val lastMessageBuffer = LastMessageBuffer(V086Controller.MAX_BUNDLE_SIZE)
 
   lateinit var socket: ConnectedDatagramSocket
@@ -80,9 +83,8 @@ class EvalClient(
   }
 
   /** Interacts in the server */
-  @OptIn(DelicateCoroutinesApi::class)
   suspend fun start() {
-    GlobalScope.launch(Dispatchers.IO) {
+    evalCoroutineScope.launch {
       while (!killSwitch) {
         try {
           val response = V086Bundle.parse(socket.receive().packet.readByteBuffer())
@@ -240,6 +242,7 @@ class EvalClient(
     if (!socket.isClosed) {
       socket.close()
     }
+    evalCoroutineScope.cancel()
   }
 
   private suspend fun sendConnectMessage(message: ConnectMessage) {

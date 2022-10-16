@@ -140,7 +140,7 @@ class KailleraGameImpl(
         throw GameChatException(EmuLang.getString("KailleraGameImpl.GameChatDeniedMessageTooLong"))
       }
     }
-    logger.atInfo().log("%s, $this gamechat: $message", user)
+    logger.atInfo().log("%s, $this gamechat: %s", user, message)
     addEvent(GameChatEvent(this, user, message))
   }
 
@@ -311,7 +311,7 @@ class KailleraGameImpl(
         !owner.game!!.romName.startsWith("*"))
         addEvent(
             GameInfoEvent(
-                this, user.name + " using different emulator version: " + user.clientType, null))
+                this, "${user.name} using different emulator version: ${user.clientType}"))
     return players.indexOf(user) + 1
   }
 
@@ -325,10 +325,10 @@ class KailleraGameImpl(
           EmuLang.getString("KailleraGameImpl.StartGameDeniedOnlyOwnerMayStart"))
     }
     if (status == GameStatus.SYNCHRONIZING) {
-      logger.atWarning().log("%s start game failed: $this status is $status", user)
+      logger.atWarning().log("%s start game failed: $this status is %s", user, status)
       throw StartGameException(EmuLang.getString("KailleraGameImpl.StartGameErrorSynchronizing"))
     } else if (status == GameStatus.PLAYING) {
-      logger.atWarning().log("%s start game failed: $this status is $status", user)
+      logger.atWarning().log("%s start game failed: $this status is %s", user, status)
       throw StartGameException(EmuLang.getString("KailleraGameImpl.StartGameErrorStatusIsPlaying"))
     }
     if (access == AccessManager.ACCESS_NORMAL && players.size < 2 && !server.allowSinglePlayer) {
@@ -351,8 +351,8 @@ class KailleraGameImpl(
               GameInfoEvent(
                   this,
                   EmuLang.getString(
-                      "KailleraGameImpl.StartGameConnectionTypeMismatchInfo", owner.connectionType),
-                  null))
+                      "KailleraGameImpl.StartGameConnectionTypeMismatchInfo",
+                      owner.connectionType)))
           throw StartGameException(
               EmuLang.getString("KailleraGameImpl.StartGameDeniedConnectionTypeMismatch"))
         }
@@ -363,8 +363,7 @@ class KailleraGameImpl(
           addEvent(
               GameInfoEvent(
                   this,
-                  EmuLang.getString("KailleraGameImpl.StartGameEmulatorMismatchInfo", clientType),
-                  null))
+                  EmuLang.getString("KailleraGameImpl.StartGameEmulatorMismatchInfo", clientType)))
           throw StartGameException(
               EmuLang.getString("KailleraGameImpl.StartGameDeniedEmulatorMismatch"))
         }
@@ -387,12 +386,7 @@ class KailleraGameImpl(
       player.frameCount = 0
       actionQueueBuilder[i] =
           PlayerActionQueue(
-              playerNumber,
-              player as KailleraUserImpl,
-              players.size,
-              bufferSize,
-              timeoutMillis,
-              true)
+              playerNumber, player as KailleraUserImpl, players.size, bufferSize, timeoutMillis)
       // SF MOD - player.setPlayerNumber(playerNumber);
       // SF MOD - Delay Value = [(60/connectionType) * (ping/1000)] + 1
       val delayVal = 60 / player.connectionType.byteValue * (player.ping.toDouble() / 1000) + 1
@@ -407,7 +401,7 @@ class KailleraGameImpl(
       /*else{
       	player.setP2P(false);
       }*/
-      logger.atInfo().log("%s: $player is player number $playerNumber", this)
+      logger.atInfo().log("%s: $player is player number %s", this, playerNumber)
       autoFireDetector.addPlayer(player, playerNumber)
     }
     playerActionQueue = actionQueueBuilder.map { it!! }.toTypedArray()
@@ -429,7 +423,7 @@ class KailleraGameImpl(
       throw UserReadyException(EmuLang.getString("KailleraGameImpl.ReadyGameErrorNotInGame"))
     }
     if (status != GameStatus.SYNCHRONIZING) {
-      logger.atWarning().log("%s ready failed: $this status is $status", user)
+      logger.atWarning().log("%s ready failed: $this status is %s", user, status)
       throw UserReadyException(EmuLang.getString("KailleraGameImpl.ReadyGameErrorIncorrectState"))
     }
     if (playerActionQueue == null) {

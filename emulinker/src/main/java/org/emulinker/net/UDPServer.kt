@@ -104,8 +104,6 @@ abstract class UDPServer : Executable {
     }
     */
     try {
-      //			logger.atFine().log("send("+EmuUtil.INSTANCE.dumpBuffer(buffer, false)+")");
-      //      channel!!.send(buffer, toSocketAddress)
       serverSocket.send(Datagram(ByteReadPacket(buffer), toSocketAddress.toKtorAddress()))
     } catch (e: Exception) {
       logger.atSevere().withCause(e).log("Failed to send on port %s", bindPort)
@@ -119,10 +117,6 @@ abstract class UDPServer : Executable {
     while (!stopFlag) {
       supervisorScope {
         val datagram = serverSocket.incoming.receive()
-
-        require(datagram.address is io.ktor.network.sockets.InetSocketAddress) {
-          "address was an incompatable type!"
-        }
 
         val buffer = datagram.packet.readByteBuffer()
 
