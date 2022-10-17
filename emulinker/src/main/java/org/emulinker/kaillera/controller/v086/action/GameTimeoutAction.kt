@@ -6,8 +6,6 @@ import javax.inject.Singleton
 import org.emulinker.kaillera.controller.v086.V086ClientHandler
 import org.emulinker.kaillera.model.event.GameTimeoutEvent
 
-private val logger = FluentLogger.forEnclosingClass()
-
 @Singleton
 class GameTimeoutAction @Inject internal constructor() : V086GameEventHandler<GameTimeoutEvent> {
   override var handledEventCount = 0
@@ -38,5 +36,9 @@ class GameTimeoutAction @Inject internal constructor() : V086GameEventHandler<Ga
               player,
               event.game)
     }
+  }
+
+  companion object {
+    private val logger = FluentLogger.forEnclosingClass()
   }
 }

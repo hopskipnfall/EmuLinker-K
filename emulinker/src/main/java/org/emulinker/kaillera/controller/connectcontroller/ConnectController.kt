@@ -26,8 +26,6 @@ import org.emulinker.net.UdpSocketProvider
 import org.emulinker.util.EmuUtil.dumpBuffer
 import org.emulinker.util.EmuUtil.formatSocketAddress
 
-private val logger = FluentLogger.forEnclosingClass()
-
 /**
  * The UDP Server implementation.
  *
@@ -51,7 +49,7 @@ class ConnectController
   init {
     kailleraServerControllers.forEach { controller ->
       controller.clientTypes.forEach { type ->
-        logger.atFine().log("Mapping client type $type to $controller")
+        logger.atFine().log("Mapping client type %s to %s", type, controller)
         controllersMap[type] = controller
       }
     }
@@ -129,14 +127,20 @@ class ConnectController
           buffer.rewind()
           logger
               .atWarning()
-              .log("Received invalid message from $formattedSocketAddress: ${dumpBuffer(buffer)}")
+              .log(
+                  "Received invalid message from %s: %s",
+                  formattedSocketAddress,
+                  dumpBuffer(buffer))
           return
         } catch (e: IllegalArgumentException) {
           messageFormatErrorCount++
           buffer.rewind()
           logger
               .atWarning()
-              .log("Received invalid message from $formattedSocketAddress: ${dumpBuffer(buffer)}")
+              .log(
+                  "Received invalid message from %s: %s",
+                  formattedSocketAddress,
+                  dumpBuffer(buffer))
           return
         }
 
@@ -147,7 +151,7 @@ class ConnectController
     // structure, so I'm going to handle it  all in this class alone
     if (inMessage is ConnectMessage_PING) {
       pingCount++
-      logger.atFine().log("Ping from: $formattedSocketAddress")
+      logger.atFine().log("Ping from: %s", formattedSocketAddress)
       send(ConnectMessage_PONG(), remoteSocketAddress)
       return
     }
@@ -155,7 +159,7 @@ class ConnectController
       messageFormatErrorCount++
       logger
           .atWarning()
-          .log("Received unexpected message type from $formattedSocketAddress: $inMessage")
+          .log("Received unexpected message type from %s: %s", formattedSocketAddress, inMessage)
       return
     }
 
@@ -172,7 +176,7 @@ class ConnectController
     }
     if (!accessManager.isAddressAllowed(remoteSocketAddress.address)) {
       deniedOtherCount++
-      logger.atWarning().log("AccessManager denied connection from $formattedSocketAddress")
+      logger.atWarning().log("AccessManager denied connection from %s", formattedSocketAddress)
       return
     } else {
       val privatePort: Int
@@ -188,7 +192,7 @@ class ConnectController
                 failedToStartCount++
                 logger
                     .atFine()
-                    .log("SF MOD: HAMMER PROTECTION (2 Min Ban): $formattedSocketAddress")
+                    .log("SF MOD: HAMMER PROTECTION (2 Min Ban): %s", formattedSocketAddress)
                 accessManager.addTempBan(remoteSocketAddress.address.hostAddress, 2.minutes)
                 return
               }
@@ -202,7 +206,9 @@ class ConnectController
                   udpSocketProvider, remoteSocketAddress, inMessage.protocol)
           if (privatePort <= 0) {
             failedToStartCount++
-            logger.atSevere().log("$protocolController failed to start for $formattedSocketAddress")
+            logger
+                .atSevere()
+                .log("%s failed to start for %s", protocolController, formattedSocketAddress)
             return
           }
           connectCount++
@@ -214,7 +220,10 @@ class ConnectController
         }
       } catch (e: ServerFullException) {
         deniedServerFullCount++
-        logger.atFine().withCause(e).log("Sending server full response to $formattedSocketAddress")
+        logger
+            .atFine()
+            .withCause(e)
+            .log("Sending server full response to %s", formattedSocketAddress)
         send(ConnectMessage_TOO(), remoteSocketAddress)
         return
       } catch (e: NewConnectionException) {
@@ -222,7 +231,7 @@ class ConnectController
         logger
             .atWarning()
             .withCause(e)
-            .log("$protocolController denied connection from $formattedSocketAddress")
+            .log("%s denied connection from %s", protocolController, formattedSocketAddress)
         return
       }
     }
@@ -233,5 +242,9 @@ class ConnectController
 
     send(outMessage.toBuffer(), toSocketAddress)
     outMessage.releaseBuffer()
+  }
+
+  companion object {
+    private val logger = FluentLogger.forEnclosingClass()
   }
 }

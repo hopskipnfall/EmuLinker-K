@@ -14,8 +14,6 @@ import org.emulinker.kaillera.model.KailleraUser
 import org.emulinker.kaillera.model.event.UserJoinedEvent
 import org.emulinker.kaillera.model.impl.KailleraUserImpl
 
-private val logger = FluentLogger.forEnclosingClass()
-
 @Singleton
 class LoginAction @Inject internal constructor() :
     V086Action<UserInformation>, V086ServerEventHandler<UserJoinedEvent> {
@@ -30,7 +28,7 @@ class LoginAction @Inject internal constructor() :
   override suspend fun performAction(message: UserInformation, clientHandler: V086ClientHandler) {
     actionPerformedCount++
     val user: KailleraUser = clientHandler.user
-    user.name = message.username
+    user.userData = user.userData.copy(name = message.username)
     user.clientType = message.clientType
     user.socketAddress = clientHandler.remoteSocketAddress
     user.connectionType = message.connectionType
@@ -49,8 +47,8 @@ class LoginAction @Inject internal constructor() :
       clientHandler.send(
           UserJoined(
               clientHandler.nextMessageNumber,
-              user.name,
-              user.id,
+              user.userData.name,
+              user.userData.id,
               user.ping.toLong(),
               user.connectionType))
       val thisUser = clientHandler.user as KailleraUserImpl
@@ -58,7 +56,7 @@ class LoginAction @Inject internal constructor() :
         if (user != thisUser) {
           val sb = StringBuilder()
           sb.append(":USERINFO=")
-          sb.append(user.id)
+          sb.append(user.userData.id)
           sb.append(0x02.toChar())
           sb.append(user.connectSocketAddress.address.hostAddress)
           sb.append(0x02.toChar())
@@ -66,7 +64,7 @@ class LoginAction @Inject internal constructor() :
           sb.append(0x02.toChar())
           // str = u3.getName().replace(',','.');
           // str = str.replace(';','.');
-          sb.append(user.name)
+          sb.append(user.userData.name)
           sb.append(0x02.toChar())
           sb.append(user.ping)
           sb.append(0x02.toChar())
@@ -80,5 +78,9 @@ class LoginAction @Inject internal constructor() :
     } catch (e: MessageFormatException) {
       logger.atSevere().withCause(e).log("Failed to construct UserJoined_Notification message")
     }
+  }
+
+  companion object {
+    private val logger = FluentLogger.forEnclosingClass()
   }
 }

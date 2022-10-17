@@ -8,8 +8,6 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import org.emulinker.util.EmuUtil
 
-private val logger = FluentLogger.forEnclosingClass()
-
 private val properties = Properties()
 
 /**
@@ -47,5 +45,9 @@ class ReleaseInfo @Inject constructor() {
       logger.atSevere().withCause(e).log("Failed to read kailleraserver.properties file")
       throw IllegalStateException(e)
     }
+  }
+
+  companion object {
+    private val logger = FluentLogger.forEnclosingClass()
   }
 }

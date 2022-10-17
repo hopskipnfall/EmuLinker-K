@@ -22,8 +22,6 @@ import org.emulinker.kaillera.model.exception.NewConnectionException
 import org.emulinker.kaillera.model.exception.ServerFullException
 import org.emulinker.net.UdpSocketProvider
 
-private val logger = FluentLogger.forEnclosingClass()
-
 /** High level logic for handling messages on a port. Not tied to an individual user. */
 @Singleton
 class V086Controller
@@ -56,6 +54,10 @@ class V086Controller
         private val v086ClientHandlerFactory: V086ClientHandler.Factory,
         flags: RuntimeFlags
     ) : KailleraServerController {
+  /** [CoroutineScope] for long-running actions attached to the controller. */
+  private val controllerCoroutineScope =
+      CoroutineScope(Dispatchers.IO) + CoroutineName("V086ControllerScope")
+
   var isRunning = false
     private set
 
@@ -114,7 +116,6 @@ class V086Controller
    * Receives new connections and delegates to a new V086ClientHandler instance for communication
    * over a separate port.
    */
-  @OptIn(DelicateCoroutinesApi::class) // For GlobalScope.
   @Throws(ServerFullException::class, NewConnectionException::class)
   override suspend fun newConnection(
       udpSocketProvider: UdpSocketProvider, clientSocketAddress: InetSocketAddress, protocol: String
@@ -133,21 +134,24 @@ class V086Controller
     while (bindAttempts++ < 5) {
       val portInteger = portRangeQueue.poll()
       if (portInteger == null) {
-        logger.atSevere().log("No ports are available to bind for: $user")
+        logger.atSevere().log("No ports are available to bind for: %s", user)
       } else {
         val port = portInteger.toInt()
-        logger.atInfo().log("Private port $port allocated to: $user")
+        logger.atInfo().log("Private port %d allocated to: %s", port, user)
         try {
           clientHandler.bind(udpSocketProvider, port)
-          GlobalScope.launch(Dispatchers.IO) { clientHandler.run(coroutineContext) }
+          controllerCoroutineScope.launch { clientHandler.run(coroutineContext) }
           boundPort = port
           break
         } catch (e: SocketException) {
-          logger.atSevere().withCause(e).log("Failed to bind to port $port for: $user")
+          logger.atSevere().withCause(e).log("Failed to bind to port %d for: %s", port, user)
           logger
               .atFine()
               .log(
-                  "$this returning port $port to available port queue: ${portRangeQueue.size + 1} available")
+                  "%s returning port %d to available port queue: %d available",
+                  this,
+                  port,
+                  portRangeQueue.size + 1)
           portRangeQueue.add(port)
         }
       }
@@ -171,6 +175,7 @@ class V086Controller
   override suspend fun stop() {
     isRunning = false
     clientHandlers.values.forEach { it.stop() }
+    controllerCoroutineScope.cancel("stop() method called")
     clientHandlers.clear()
   }
 
@@ -206,5 +211,7 @@ class V086Controller
 
   companion object {
     const val MAX_BUNDLE_SIZE = 9
+
+    private val logger = FluentLogger.forEnclosingClass()
   }
 }

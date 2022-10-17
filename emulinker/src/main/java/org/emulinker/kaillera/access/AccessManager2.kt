@@ -15,8 +15,6 @@ import kotlinx.coroutines.*
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.util.WildcardStringPattern
 
-private val logger = FluentLogger.forEnclosingClass()
-
 @Singleton
 class AccessManager2 @Inject internal constructor(private val flags: RuntimeFlags) : AccessManager {
   companion object {
@@ -24,6 +22,8 @@ class AccessManager2 @Inject internal constructor(private val flags: RuntimeFlag
       Security.setProperty("networkaddress.cache.ttl", "60")
       Security.setProperty("networkaddress.cache.negative.ttl", "60")
     }
+
+    private val logger = FluentLogger.forEnclosingClass()
   }
 
   private val scope = CoroutineScope(Dispatchers.IO)
@@ -67,7 +67,7 @@ class AccessManager2 @Inject internal constructor(private val flags: RuntimeFlag
         if (line.isNullOrBlank() || line!!.startsWith("#") || line!!.startsWith("//")) continue
         val st = StringTokenizer(line, ",")
         if (st.countTokens() < 3) {
-          logger.atSevere().log("Failed to load access line, too few tokens: $line")
+          logger.atSevere().log("Failed to load access line, too few tokens: %s", line)
           continue
         }
         val type = st.nextToken()
@@ -78,7 +78,7 @@ class AccessManager2 @Inject internal constructor(private val flags: RuntimeFlag
           else if (type.equals("ipaddress", ignoreCase = true)) addressList.add(AddressAccess(st))
           else throw Exception("Unrecognized access type: $type")
         } catch (e: Exception) {
-          logger.atSevere().withCause(e).log("Failed to load access line: $line")
+          logger.atSevere().withCause(e).log("Failed to load access line: %s", line)
         }
       }
       reader.close()
@@ -234,7 +234,10 @@ class AccessManager2 @Inject internal constructor(private val flags: RuntimeFlag
           val address = InetAddress.getByName(hostName)
           resolvedAddresses.add(address.hostAddress)
         } catch (e: Exception) {
-          logger.atFine().withCause(e).log("Failed to resolve DNS entry to an address: $hostName")
+          logger
+              .atFine()
+              .withCause(e)
+              .log("Failed to resolve DNS entry to an address: %s", hostName)
         }
       }
     }
@@ -271,12 +274,12 @@ class AccessManager2 @Inject internal constructor(private val flags: RuntimeFlag
           val hostName = pat.substring(4)
           try {
             val a = InetAddress.getByName(hostName)
-            logger.atFine().log("Resolved " + hostName + " to " + a.hostAddress)
+            logger.atFine().log("Resolved %s to %s", hostName, a.hostAddress)
           } catch (e: Exception) {
             logger
                 .atWarning()
                 .withCause(e)
-                .log("Failed to resolve DNS entry to an address: $hostName")
+                .log("Failed to resolve DNS entry to an address: %s", hostName)
           }
           hostNames.add(pat.substring(4))
         } else {
@@ -302,7 +305,10 @@ class AccessManager2 @Inject internal constructor(private val flags: RuntimeFlag
           val address = InetAddress.getByName(hostName)
           resolvedAddresses.add(address.hostAddress)
         } catch (e: Exception) {
-          logger.atFine().withCause(e).log("Failed to resolve DNS entry to an address: $hostName")
+          logger
+              .atFine()
+              .withCause(e)
+              .log("Failed to resolve DNS entry to an address: %s", hostName)
         }
       }
     }
@@ -341,12 +347,12 @@ class AccessManager2 @Inject internal constructor(private val flags: RuntimeFlag
           val hostName = pat.substring(4)
           try {
             val a = InetAddress.getByName(hostName)
-            logger.atFine().log("Resolved " + hostName + " to " + a.hostAddress)
+            logger.atFine().log("Resolved %s to %s", hostName, a.hostAddress)
           } catch (e: Exception) {
             logger
                 .atWarning()
                 .withCause(e)
-                .log("Failed to resolve DNS entry to an address: $hostName")
+                .log("Failed to resolve DNS entry to an address: %s", hostName)
           }
           hostNames.add(pat.substring(4))
         } else {

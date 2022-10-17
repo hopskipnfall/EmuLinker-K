@@ -12,8 +12,6 @@ import org.emulinker.kaillera.lookingforgame.TwitterBroadcaster
 import org.emulinker.kaillera.model.event.GameStartedEvent
 import org.emulinker.kaillera.model.exception.StartGameException
 
-private val logger = FluentLogger.forEnclosingClass()
-
 @Singleton
 class StartGameAction
     @Inject
@@ -63,5 +61,9 @@ class StartGameAction
       logger.atSevere().withCause(e).log("Failed to construct StartGame_Notification message")
     }
     lookingForGameReporter.cancelActionsForGame(event.game.id)
+  }
+
+  companion object {
+    private val logger = FluentLogger.forEnclosingClass()
   }
 }

@@ -13,8 +13,6 @@ import org.emulinker.kaillera.model.GameStatus
 import org.emulinker.kaillera.model.KailleraServer
 import org.emulinker.kaillera.release.ReleaseInfo
 
-private val logger = FluentLogger.forEnclosingClass()
-
 class KailleraMasterUpdateTask(
     private val publicInfo: PublicServerInformation,
     private val connectController: ConnectController,
@@ -41,7 +39,7 @@ class KailleraMasterUpdateTask(
     for (game in kailleraServer.games) {
       if (game.status != GameStatus.WAITING) continue
       waitingGames.append(
-          "${game.id}|${game.romName}|${game.owner.name}|${game.owner.clientType}|${game.players.size}|")
+          "${game.id}|${game.romName}|${game.owner.userData.name}|${game.owner.clientType}|${game.players.size}|")
     }
     val params =
         arrayOf(
@@ -61,9 +59,9 @@ class KailleraMasterUpdateTask(
     kailleraTouch.setRequestHeader("Kaillera-wgames", waitingGames.toString())
     try {
       val statusCode = httpClient.executeMethod(kailleraTouch)
-      if (statusCode != HttpStatus.SC_OK)
-          logger.atSevere().log("Failed to touch Kaillera Master: " + kailleraTouch.statusLine)
-      else logger.atInfo().log("Touching Kaillera Master done")
+      if (statusCode != HttpStatus.SC_OK) {
+        logger.atSevere().log("Failed to touch Kaillera Master: %s", kailleraTouch.statusLine)
+      } else logger.atInfo().log("Touching Kaillera Master done")
     } catch (e: Exception) {
       logger.atSevere().withCause(e).log("Failed to touch Kaillera Master")
     } finally {
@@ -78,5 +76,9 @@ class KailleraMasterUpdateTask(
   init {
     httpClient.setConnectionTimeout(5000)
     httpClient.setTimeout(5000)
+  }
+
+  companion object {
+    private val logger = FluentLogger.forEnclosingClass()
   }
 }

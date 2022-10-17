@@ -26,8 +26,6 @@ import org.emulinker.util.EmuLang
 import org.emulinker.util.EmuUtil
 import org.emulinker.util.WildcardStringPattern
 
-private val logger = FluentLogger.forEnclosingClass()
-
 private const val COMMAND_ANNOUNCE = "/announce"
 
 private const val COMMAND_ANNOUNCEALL = "/announceall"
@@ -117,7 +115,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
         throw FatalActionException("Admin Command Denied: $user does not have Admin access: $chat")
       }
     }
-    logger.atInfo().log("$user: Admin Command: $chat")
+    logger.atInfo().log("%s: Admin Command: %s", user, chat)
     try {
       when {
         chat.startsWith(COMMAND_HELP) -> {
@@ -171,7 +169,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
         else -> throw ActionException("Invalid Command: $chat")
       }
     } catch (e: ActionException) {
-      logger.atSevere().withCause(e).log("Admin Command Failed: $user: $chat")
+      logger.atSevere().withCause(e).log("Admin Command Failed: %s: %s", user, chat)
       try {
         clientHandler.send(
             InformationMessage(
@@ -325,9 +323,12 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
     // WildcardStringPattern pattern = new WildcardStringPattern
     for (user in server.users) {
       if (!user.loggedIn) continue
-      if (user.name.lowercase(Locale.getDefault()).contains(str.lowercase(Locale.getDefault()))) {
+      if (user.userData
+          .name
+          .lowercase(Locale.getDefault())
+          .contains(str.lowercase(Locale.getDefault()))) {
         var msg =
-            "UserID: ${user.id}, IP: ${user.connectSocketAddress.address.hostAddress}, Nick: <${user.name}>, Access: ${user.accessStr}"
+            "UserID: ${user.userData.id}, IP: ${user.connectSocketAddress.address.hostAddress}, Nick: <${user.userData.name}>, Access: ${user.accessStr}"
         msg +=
             if (user.game == null) ""
             else ", GameID: ${user.game!!.id}, Game: ${user.game!!.romName}"
@@ -361,7 +362,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
         sb.append("GameID: ")
         sb.append(game.id)
         sb.append(", Owner: <")
-        sb.append(game.owner.name)
+        sb.append(game.owner.userData.name)
         sb.append(">, Game: ")
         sb.append(game.romName)
         clientHandler.send(
@@ -394,7 +395,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
           server.getUser(userID) as KailleraUserImpl?
               ?: throw ActionException(
                   EmuLang.getString("AdminCommandAction.UserNotFound", +userID))
-      if (user.id == admin.id)
+      if (user.userData.id == admin.userData.id)
           throw ActionException(EmuLang.getString("AdminCommandAction.CanNotSilenceSelf"))
       val access = server.accessManager.getAccess(user.connectSocketAddress.address)
       if (access >= AccessManager.ACCESS_ADMIN &&
@@ -412,7 +413,9 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
       server.accessManager.addSilenced(
           user.connectSocketAddress.address.hostAddress, minutes.minutes)
       server.announce(
-          EmuLang.getString("AdminCommandAction.Silenced", minutes, user.name), false, null)
+          EmuLang.getString("AdminCommandAction.Silenced", minutes, user.userData.name),
+          false,
+          null)
     } catch (e: NoSuchElementException) {
       throw ActionException(EmuLang.getString("AdminCommandAction.SilenceError"))
     }
@@ -432,7 +435,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
       val user =
           server.getUser(userID) as KailleraUserImpl?
               ?: throw ActionException(EmuLang.getString("AdminCommandAction.UserNotFound", userID))
-      if (user.id == admin.id)
+      if (user.userData.id == admin.userData.id)
           throw ActionException(EmuLang.getString("AdminCommandAction.CanNotKickSelf"))
       val access = server.accessManager.getAccess(user.connectSocketAddress.address)
       if (access == AccessManager.ACCESS_MODERATOR &&
@@ -488,14 +491,14 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
       val user =
           server.getUser(userID) as KailleraUserImpl?
               ?: throw ActionException(EmuLang.getString("AdminCommandAction.UserNotFound", userID))
-      if (user.id == admin.id)
+      if (user.userData.id == admin.userData.id)
           throw ActionException(EmuLang.getString("AdminCommandAction.CanNotBanSelf"))
       val access = server.accessManager.getAccess(user.connectSocketAddress.address)
       if (access >= AccessManager.ACCESS_ADMIN &&
           admin.accessLevel != AccessManager.ACCESS_SUPERADMIN)
           throw ActionException(EmuLang.getString("AdminCommandAction.CanNotBanAdmin"))
       server.announce(
-          EmuLang.getString("AdminCommandAction.Banned", minutes, user.name), false, null)
+          EmuLang.getString("AdminCommandAction.Banned", minutes, user.userData.name), false, null)
       user.quit(EmuLang.getString("AdminCommandAction.QuitBanned"))
       server.accessManager.addTempBan(
           user.connectSocketAddress.address.hostAddress, minutes.minutes)
@@ -522,7 +525,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
       val user =
           server.getUser(userID) as KailleraUserImpl?
               ?: throw ActionException(EmuLang.getString("AdminCommandAction.UserNotFound", userID))
-      if (user.id == admin.id)
+      if (user.userData.id == admin.userData.id)
           throw ActionException(EmuLang.getString("AdminCommandAction.AlreadyAdmin"))
       val access = server.accessManager.getAccess(user.connectSocketAddress.address)
       if (access >= AccessManager.ACCESS_ADMIN &&
@@ -533,7 +536,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
       server.accessManager.addTempElevated(
           user.connectSocketAddress.address.hostAddress, minutes.minutes)
       server.announce(
-          "Temp Elevated Granted: " + user.name + " for " + minutes + "min", false, null)
+          "Temp Elevated Granted: " + user.userData.name + " for " + minutes + "min", false, null)
     } catch (e: NoSuchElementException) {
       throw ActionException(EmuLang.getString("Temp Elevated Error."))
     }
@@ -558,7 +561,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
       val user =
           server.getUser(userID) as KailleraUserImpl?
               ?: throw ActionException(EmuLang.getString("AdminCommandAction.UserNotFound", userID))
-      if (user.id == admin.id)
+      if (user.userData.id == admin.userData.id)
           throw ActionException(EmuLang.getString("AdminCommandAction.AlreadyAdmin"))
       val access = server.accessManager.getAccess(user.connectSocketAddress.address)
       if (access >= AccessManager.ACCESS_ADMIN &&
@@ -569,7 +572,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
       server.accessManager.addTempModerator(
           user.connectSocketAddress.address.hostAddress, minutes.minutes)
       server.announce(
-          "Temp Moderator Granted: " + user.name + " for " + minutes + "min.", false, null)
+          "Temp Moderator Granted: " + user.userData.name + " for " + minutes + "min.", false, null)
     } catch (e: NoSuchElementException) {
       throw ActionException(EmuLang.getString("Temp Moderator Error."))
     }
@@ -593,7 +596,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
       val user =
           server.getUser(userID) as KailleraUserImpl?
               ?: throw ActionException(EmuLang.getString("AdminCommandAction.UserNotFound", userID))
-      if (user.id == admin.id)
+      if (user.userData.id == admin.userData.id)
           throw ActionException(EmuLang.getString("AdminCommandAction.AlreadyAdmin"))
       val access = server.accessManager.getAccess(user.connectSocketAddress.address)
       if (access >= AccessManager.ACCESS_ADMIN &&
@@ -602,7 +605,9 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
       server.accessManager.addTempAdmin(
           user.connectSocketAddress.address.hostAddress, minutes.minutes)
       server.announce(
-          EmuLang.getString("AdminCommandAction.TempAdminGranted", minutes, user.name), false, null)
+          EmuLang.getString("AdminCommandAction.TempAdminGranted", minutes, user.userData.name),
+          false,
+          null)
     } catch (e: NoSuchElementException) {
       throw ActionException(EmuLang.getString("AdminCommandAction.TempAdminError"))
     }
@@ -903,5 +908,9 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
     } catch (e: NoSuchElementException) {
       throw ActionException(EmuLang.getString("AdminCommandAction.VersionError"))
     }
+  }
+
+  companion object {
+    private val logger = FluentLogger.forEnclosingClass()
   }
 }

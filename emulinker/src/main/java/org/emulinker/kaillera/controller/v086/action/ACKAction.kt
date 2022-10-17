@@ -17,8 +17,6 @@ import org.emulinker.kaillera.model.event.ConnectedEvent
 import org.emulinker.kaillera.model.event.UserEvent
 import org.emulinker.kaillera.model.exception.*
 
-private val logger = FluentLogger.forEnclosingClass()
-
 @Singleton
 class ACKAction @Inject internal constructor() :
     V086Action<ClientACK>, V086UserEventHandler<UserEvent> {
@@ -47,7 +45,7 @@ class ACKAction @Inject internal constructor() :
         try {
           clientHandler.send(
               ConnectionRejected(
-                  clientHandler.nextMessageNumber, "server", user.id, e.message ?: ""))
+                  clientHandler.nextMessageNumber, "server", user.userData.id, e.message ?: ""))
         } catch (e2: MessageFormatException) {
           logger.atSevere().withCause(e2).log("Failed to construct new ConnectionRejected")
         }
@@ -75,7 +73,11 @@ class ACKAction @Inject internal constructor() :
         if (user.status != UserStatus.CONNECTING && user != thisUser)
             users.add(
                 ServerStatus.User(
-                    user.name, user.ping.toLong(), user.status, user.id, user.connectionType))
+                    user.userData.name,
+                    user.ping.toLong(),
+                    user.status,
+                    user.userData.id,
+                    user.connectionType))
       }
     } catch (e: MessageFormatException) {
       logger.atSevere().withCause(e).log("Failed to construct new ServerStatus.User")
@@ -92,7 +94,7 @@ class ACKAction @Inject internal constructor() :
                 game.romName,
                 game.id,
                 game.clientType!!,
-                game.owner.name,
+                game.owner.userData.name,
                 "$num/${game.maxUsers}",
                 game.status))
       }
@@ -169,5 +171,9 @@ class ACKAction @Inject internal constructor() :
     } catch (e: MessageFormatException) {
       logger.atSevere().withCause(e).log("Failed to construct new ServerStatus for users")
     }
+  }
+
+  companion object {
+    private val logger = FluentLogger.forEnclosingClass()
   }
 }

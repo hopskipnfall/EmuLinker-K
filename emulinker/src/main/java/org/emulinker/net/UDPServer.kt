@@ -14,8 +14,6 @@ import org.emulinker.util.EmuUtil.dumpBufferFromBeginning
 import org.emulinker.util.EmuUtil.formatSocketAddress
 import org.emulinker.util.Executable
 
-private val logger = FluentLogger.forEnclosingClass()
-
 abstract class UDPServer : Executable {
   abstract val bufferSize: Int
 
@@ -62,9 +60,9 @@ abstract class UDPServer : Executable {
   @Synchronized
   open suspend fun start(udpSocketProvider: UdpSocketProvider, globalContext: CoroutineContext) {
     this.globalContext = globalContext
-    logger.atFine().log(toString() + " received start request!")
+    logger.atFine().log("%s received start request!", this)
     if (threadIsActive) {
-      logger.atFine().log(toString() + " start request ignored: already running!")
+      logger.atFine().log("%s start request ignored: already running!", this)
       return
     }
     stopFlag = false
@@ -82,11 +80,18 @@ abstract class UDPServer : Executable {
         udpSocketProvider.bindSocket(
             io.ktor.network.sockets.InetSocketAddress("0.0.0.0", port), bufferSize)
 
-    logger.atInfo().log("Accepting messages at ${serverSocket.localAddress}")
+    logger.atInfo().log("Accepting messages at %s", serverSocket.localAddress)
   }
 
   protected abstract fun allocateBuffer(): ByteBuffer
 
+  /**
+   * Handler for the request.
+   *
+   * Note that as this is communication over a socket and we do not send back a response, the client
+   * isn't waiting on a response message. That being said we do only handle one request per user so
+   * deadlocks are possible.
+   */
   protected abstract suspend fun handleReceived(
       buffer: ByteBuffer, remoteSocketAddress: InetSocketAddress, requestScope: CoroutineScope
   )
@@ -106,11 +111,9 @@ abstract class UDPServer : Executable {
     }
     */
     try {
-      //			logger.atFine().log("send("+EmuUtil.INSTANCE.dumpBuffer(buffer, false)+")");
-      //      channel!!.send(buffer, toSocketAddress)
       serverSocket.send(Datagram(ByteReadPacket(buffer), toSocketAddress.toKtorAddress()))
     } catch (e: Exception) {
-      logger.atSevere().withCause(e).log("Failed to send on port $bindPort")
+      logger.atSevere().withCause(e).log("Failed to send on port %s", bindPort)
     }
   }
 
@@ -121,10 +124,6 @@ abstract class UDPServer : Executable {
     while (!stopFlag) {
       supervisorScope {
         val datagram = serverSocket.incoming.receive()
-
-        require(datagram.address is io.ktor.network.sockets.InetSocketAddress) {
-          "address was an incompatable type!"
-        }
 
         val buffer = datagram.packet.readByteBuffer()
 
@@ -160,4 +159,8 @@ abstract class UDPServer : Executable {
   //  init {
   //    if (shutdownOnExit) Runtime.getRuntime().addShutdownHook(ShutdownThread())
   //  }
+
+  companion object {
+    private val logger = FluentLogger.forEnclosingClass()
+  }
 }

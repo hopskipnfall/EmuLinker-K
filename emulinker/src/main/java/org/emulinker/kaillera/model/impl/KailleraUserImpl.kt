@@ -10,34 +10,32 @@ import java.util.ArrayList
 import kotlin.Throws
 import kotlin.coroutines.CoroutineContext
 import kotlin.time.Duration.Companion.milliseconds
+import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.access.AccessManager
-import org.emulinker.kaillera.model.ConnectionType
-import org.emulinker.kaillera.model.KailleraGame
-import org.emulinker.kaillera.model.KailleraUser
-import org.emulinker.kaillera.model.UserStatus
+import org.emulinker.kaillera.model.*
 import org.emulinker.kaillera.model.event.*
 import org.emulinker.kaillera.model.exception.*
 import org.emulinker.util.EmuLang
 import org.emulinker.util.EmuUtil
 import org.emulinker.util.Executable
 
-private val logger = FluentLogger.forEnclosingClass()
-
 private const val EMULINKER_CLIENT_NAME = "EmulinkerSF Admin Client"
 
 class KailleraUserImpl(
-    override val id: Int,
+    override var userData: UserData,
     override val protocol: String,
     override val connectSocketAddress: InetSocketAddress,
     override val listener: KailleraEventListener,
     override val server: KailleraServerImpl,
     flags: RuntimeFlags,
 ) : KailleraUser, Executable {
+  /** [CoroutineScope] for long-running actions attached to the user. */
+  private val userCoroutineScope =
+      CoroutineScope(Dispatchers.IO) + CoroutineName("User[${userData.id}]Scope")
 
   override var inStealthMode = false
 
@@ -125,7 +123,7 @@ class KailleraUserImpl(
 
   override var tempDelay = 0
 
-  override val users: Collection<KailleraUserImpl>
+  override val allUsersInServer: Collection<KailleraUserImpl>
     get() = server.users
 
   override fun addIgnoredUser(address: String) {
@@ -159,15 +157,8 @@ class KailleraUserImpl(
 
   override var loggedIn = false
 
-  override fun toString(): String {
-    return if (!this::name.isInitialized) {
-      "User$id(${connectSocketAddress.address.hostAddress})"
-    } else {
-      "User$id(${if (name.length > 15) name.take(15) + "..." else name}/${connectSocketAddress.address.hostAddress})"
-    }
-  }
-
-  override lateinit var name: String
+  override fun toString() =
+      "User${userData.id}(${if (userData.name.length > 15) userData.name.take(15) + "..." else userData.name}/${connectSocketAddress.address.hostAddress})"
 
   override fun updateLastKeepAlive() {
     lastKeepAlive = Instant.now()
@@ -184,12 +175,10 @@ class KailleraUserImpl(
   val accessStr: String
     get() = AccessManager.ACCESS_NAMES[accessLevel]
 
-  override fun equals(other: Any?): Boolean {
-    return other is KailleraUserImpl && other.id == id
-  }
+  override fun equals(other: Any?) = other is KailleraUserImpl && other.userData.id == userData.id
 
   fun toDetailedString(): String {
-    return ("KailleraUserImpl[id=$id protocol=$protocol status=$status name=$name clientType=$clientType ping=$ping connectionType=$connectionType remoteAddress=" +
+    return ("KailleraUserImpl[id=${userData.id} protocol=$protocol status=$status name=${userData.name} clientType=$clientType ping=$ping connectionType=$connectionType remoteAddress=" +
         (if (!this::socketAddress.isInitialized) {
           EmuUtil.formatSocketAddress(connectSocketAddress)
         } else EmuUtil.formatSocketAddress(socketAddress)) +
@@ -198,7 +187,7 @@ class KailleraUserImpl(
 
   override suspend fun stop() {
     mutex.withLock {
-      logger.atFine().log("Stopping KaillerUser for %d", id)
+      logger.atFine().log("Stopping KaillerUser for %d", userData.id)
       if (!threadIsActive) {
         logger.atFine().log("%s thread stop request ignored: not running!", this)
         return
@@ -246,7 +235,7 @@ class KailleraUserImpl(
   override fun gameKick(userID: Int) {
     updateLastActivity()
     if (game == null) {
-      logger.atWarning().log("%s kick User $userID failed: Not in a game", this)
+      logger.atWarning().log("%s kick User %d failed: Not in a game", this, userID)
       throw GameKickException(EmuLang.getString("KailleraUserImpl.KickErrorNotInGame"))
     }
     game?.kick(this, userID)
@@ -256,7 +245,7 @@ class KailleraUserImpl(
   @Throws(CreateGameException::class, FloodException::class)
   override suspend fun createGame(romName: String): KailleraGame {
     updateLastActivity()
-    requireNotNull(server.getUser(id)) { "$this create game failed: User don't exist!" }
+    requireNotNull(server.getUser(userData.id)) { "$this create game failed: User don't exist!" }
     if (status == UserStatus.PLAYING) {
       logger.atWarning().log("%s create game failed: User status is Playing!", this)
       throw CreateGameException(EmuLang.getString("KailleraUserImpl.CreateGameErrorAlreadyInGame"))
@@ -287,7 +276,7 @@ class KailleraUserImpl(
   override suspend fun joinGame(gameID: Int): KailleraGame {
     updateLastActivity()
     if (game != null) {
-      logger.atWarning().log("%s join game failed: Already in: $game", this)
+      logger.atWarning().log("%s join game failed: Already in: %s", this, game)
       throw JoinGameException(EmuLang.getString("KailleraUserImpl.JoinGameErrorAlreadyInGame"))
     }
     if (status == UserStatus.PLAYING) {
@@ -299,7 +288,7 @@ class KailleraUserImpl(
     }
     val game = server.getGame(gameID)
     if (game == null) {
-      logger.atWarning().log("%s join game failed: Game $gameID does not exist!", this)
+      logger.atWarning().log("%s join game failed: Game %d does not exist!", this, gameID)
       throw JoinGameException(EmuLang.getString("KailleraUserImpl.JoinGameErrorDoesNotExist"))
     }
 
@@ -328,12 +317,12 @@ class KailleraUserImpl(
       throw GameChatException(EmuLang.getString("KailleraUserImpl.GameChatErrorNotInGame"))
     }
     if (isMuted) {
-      logger.atWarning().log("%s gamechat denied: Muted: $message", this)
+      logger.atWarning().log("%s gamechat denied: Muted: %s", this, message)
       game!!.announce("You are currently muted!", this)
       return
     }
     if (server.accessManager.isSilenced(socketAddress.address)) {
-      logger.atWarning().log("%s gamechat denied: Silenced: $message", this)
+      logger.atWarning().log("%s gamechat denied: Silenced: %s", this, message)
       game!!.announce("You are currently silenced!", this)
       return
     }
@@ -544,5 +533,9 @@ class KailleraUserImpl(
       threadIsActive = false
       logger.atFine().log("%s thread exiting...", this)
     }
+  }
+
+  companion object {
+    private val logger = FluentLogger.forEnclosingClass()
   }
 }

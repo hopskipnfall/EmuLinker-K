@@ -8,8 +8,6 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 import kotlin.Throws
 
-private val logger = FluentLogger.forEnclosingClass()
-
 // This is a very specialized structure designed for queueing ints during gameplay
 // Adapted from http://www.smotricz.com/kabutz/Issue027.html
 class CircularBlockingByteQueue(maxSize: Int) {
@@ -112,7 +110,7 @@ class CircularBlockingByteQueue(maxSize: Int) {
     //		logger.atFine().log(this + " grow()");
     val oldCapacity = array.size
     val newCapacity = oldCapacity * 3 / 2 + 1
-    logger.atFine().log("CircularBlockingByteQueue growing from $oldCapacity to $newCapacity")
+    logger.atFine().log("CircularBlockingByteQueue growing from %d to %d", oldCapacity, newCapacity)
     val newData = ByteArray(newCapacity)
     toArray(newData)
     tail = size
@@ -141,5 +139,9 @@ class CircularBlockingByteQueue(maxSize: Int) {
   // calculates the index within array
   private fun convert(index: Int): Int {
     return (index + head) % array.size
+  }
+
+  companion object {
+    private val logger = FluentLogger.forEnclosingClass()
   }
 }

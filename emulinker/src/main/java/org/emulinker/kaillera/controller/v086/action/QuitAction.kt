@@ -10,8 +10,6 @@ import org.emulinker.kaillera.controller.v086.protocol.Quit_Request
 import org.emulinker.kaillera.model.event.UserQuitEvent
 import org.emulinker.kaillera.model.exception.ActionException
 
-private val logger = FluentLogger.forEnclosingClass()
-
 @Singleton
 class QuitAction @Inject internal constructor() :
     V086Action<Quit_Request>, V086ServerEventHandler<UserQuitEvent> {
@@ -37,9 +35,14 @@ class QuitAction @Inject internal constructor() :
     try {
       val user = event.user
       clientHandler.send(
-          Quit_Notification(clientHandler.nextMessageNumber, user.name, user.id, event.message))
+          Quit_Notification(
+              clientHandler.nextMessageNumber, user.userData.name, user.userData.id, event.message))
     } catch (e: MessageFormatException) {
       logger.atSevere().withCause(e).log("Failed to construct Quit_Notification message")
     }
+  }
+
+  companion object {
+    private val logger = FluentLogger.forEnclosingClass()
   }
 }

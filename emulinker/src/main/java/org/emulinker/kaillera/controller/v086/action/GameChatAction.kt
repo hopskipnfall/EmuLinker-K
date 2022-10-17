@@ -18,8 +18,6 @@ import org.emulinker.kaillera.model.impl.KailleraUserImpl
 
 private const val ADMIN_COMMAND_ESCAPE_STRING = "/"
 
-private val logger = FluentLogger.forEnclosingClass()
-
 @Singleton
 class GameChatAction
     @Inject
@@ -102,7 +100,7 @@ class GameChatAction
             for (u in clientHandler.user.game!!.players) {
               if (u.loggedIn) {
                 u.game!!.announce(
-                    "${clientHandler.user.name} will NOT receive any server activity during gameplay!",
+                    "${clientHandler.user.userData.name} will NOT receive any server activity during gameplay!",
                     u)
               }
             }
@@ -122,7 +120,7 @@ class GameChatAction
             for (u in clientHandler.user.game!!.players) {
               if (u.loggedIn) {
                 u.game!!.announce(
-                    clientHandler.user.name +
+                    clientHandler.user.userData.name +
                         " will NOW receive ALL server activity during gameplay!",
                     u)
               }
@@ -168,7 +166,8 @@ class GameChatAction
           if (!user.isAcceptingDirectMessages ||
               user.searchIgnoredUsers(
                   clientHandler.user.connectSocketAddress.address.hostAddress)) {
-            user1.game!!.announce("<" + user.name + "> Is not accepting private messages!", user1)
+            user1.game!!.announce(
+                "<" + user.userData.name + "> Is not accepting private messages!", user1)
             return
           }
           var m = sb.toString()
@@ -178,20 +177,20 @@ class GameChatAction
             val chars = m.toCharArray()
             for (i in chars.indices) {
               if (chars[i].code < 32) {
-                logger.atWarning().log("$user /msg denied: Illegal characters in message")
+                logger.atWarning().log("%s /msg denied: Illegal characters in message", user)
                 user1.game!!.announce(
                     "Private Message Denied: Illegal characters in message", user1)
                 return
               }
             }
             if (m.length > 320) {
-              logger.atWarning().log("$user /msg denied: Message Length > 320")
+              logger.atWarning().log("%s /msg denied: Message Length > 320", user)
               user1.game!!.announce("Private Message Denied: Message Too Long", user1)
               return
             }
           }
-          user1.lastMsgID = user.id
-          user.lastMsgID = user1.id
+          user1.lastMsgID = user.userData.id
+          user.lastMsgID = user1.userData.id
 
           // user1.getServer().announce("TO: <" + user.getName() + ">(" + user.getID() + ") <" +
           // clientHandler.getUser().getName() + "> (" + clientHandler.getUser().getID() + "): " +
@@ -199,9 +198,10 @@ class GameChatAction
           // user.getServer().announce("<" + clientHandler.getUser().getName() + "> (" +
           // clientHandler.getUser().getID() + "): " + m, false, user);
           user1.game?.announce(
-              "TO: <${user.name}>(${user.id}) <${clientHandler.user.name}> (${clientHandler.user.id}): $m",
+              "TO: <${user.userData.name}>(${user.userData.id}) <${clientHandler.user.userData.name}> (${clientHandler.user.userData.id}): $m",
               user1)
-          user.game?.announce("<${clientHandler.user.name}> (${clientHandler.user.id}): $m", user)
+          user.game?.announce(
+              "<${clientHandler.user.userData.name}> (${clientHandler.user.userData.id}): $m", user)
           return
         } catch (e: NoSuchElementException) {
           if (user1.lastMsgID != -1) {
@@ -232,7 +232,7 @@ class GameChatAction
                 var i = 0
                 while (i < chars.size) {
                   if (chars[i].code < 32) {
-                    logger.atWarning().log("$user /msg denied: Illegal characters in message")
+                    logger.atWarning().log("%s /msg denied: Illegal characters in message", user)
                     user1.game!!.announce(
                         "Private Message Denied: Illegal characters in message", user1)
                     return
@@ -240,7 +240,7 @@ class GameChatAction
                   i++
                 }
                 if (m.length > 320) {
-                  logger.atWarning().log("$user /msg denied: Message Length > 320")
+                  logger.atWarning().log("%s /msg denied: Message Length > 320", user)
                   user1.game!!.announce("Private Message Denied: Message Too Long", user1)
                   return
                 }
@@ -252,10 +252,11 @@ class GameChatAction
               // user.getServer().announce("<" + clientHandler.getUser().getName() + "> (" +
               // clientHandler.getUser().getID() + "): " + m, false, user);
               user1.game?.announce(
-                  "TO: <${user.name}>(${user.id}) <${clientHandler.user.name}> (${clientHandler.user.id}): $m",
+                  "TO: <${user.userData.name}>(${user.userData.id}) <${clientHandler.user.userData.name}> (${clientHandler.user.userData.id}): $m",
                   user1)
               user.game?.announce(
-                  "<${clientHandler.user.name}> (${clientHandler.user.id}): $m", user)
+                  "<${clientHandler.user.userData.name}> (${clientHandler.user.userData.id}): $m",
+                  user)
               return
             } catch (e1: Exception) {
               user1.game!!.announce("Private Message Error: /msg <UserID> <message>", user1)
@@ -270,7 +271,8 @@ class GameChatAction
         val user = clientHandler.user as KailleraUserImpl
         try {
           clientHandler.user.ignoreAll = true
-          user.server.announce(clientHandler.user.name + " is now ignoring everyone!", false, null)
+          user.server.announce(
+              clientHandler.user.userData.name + " is now ignoring everyone!", false, null)
         } catch (e: Exception) {}
         return
       } else if (message.message == "/unignoreall") {
@@ -278,7 +280,7 @@ class GameChatAction
         try {
           clientHandler.user.ignoreAll = false
           user.server.announce(
-              clientHandler.user.name + " is now unignoring everyone!", false, null)
+              clientHandler.user.userData.name + " is now unignoring everyone!", false, null)
         } catch (e: Exception) {}
         return
       } else if (message.message.startsWith("/ignore")) {
@@ -306,7 +308,7 @@ class GameChatAction
           }
           clientHandler.user.addIgnoredUser(user.connectSocketAddress.address.hostAddress)
           user.server.announce(
-              "${clientHandler.user.name} is now ignoring <${user.name}> ID: ${user.id}",
+              "${clientHandler.user.userData.name} is now ignoring <${user.userData.name}> ID: ${user.userData.id}",
               false,
               null)
           return
@@ -316,7 +318,8 @@ class GameChatAction
           logger
               .atInfo()
               .withCause(e)
-              .log("IGNORE USER ERROR: ${user.name}: ${clientHandler.remoteSocketAddress.hostName}")
+              .log(
+                  "IGNORE USER ERROR: ${user.userData.name}: ${clientHandler.remoteSocketAddress.hostName}")
           return
         }
       } else if (message.message.startsWith("/unignore")) {
@@ -337,7 +340,7 @@ class GameChatAction
           if (clientHandler.user.removeIgnoredUser(
               user.connectSocketAddress.address.hostAddress, false))
               user.server.announce(
-                  "${clientHandler.user.name} is now unignoring <${user.name}> ID: ${user.id}",
+                  "${clientHandler.user.userData.name} is now unignoring <${user.userData.name}> ID: ${user.userData.id}",
                   false,
                   null)
           else
@@ -354,7 +357,7 @@ class GameChatAction
               .atInfo()
               .withCause(e)
               .log(
-                  "UNIGNORE USER ERROR: ${user.name}: ${clientHandler.remoteSocketAddress.hostName}")
+                  "UNIGNORE USER ERROR: ${user.userData.name}: ${clientHandler.remoteSocketAddress.hostName}")
           return
         }
       } else if (message.message.startsWith("/me")) {
@@ -379,7 +382,7 @@ class GameChatAction
         }
         if (clientHandler.user.server.checkMe(clientHandler.user, announcement)) {
           val m = announcement
-          announcement = "*" + clientHandler.user.name + " " + m
+          announcement = "*" + clientHandler.user.userData.name + " " + m
           for (user in clientHandler.user.game!!.players) {
             user.game!!.announce(announcement, user)
           }
@@ -402,7 +405,7 @@ class GameChatAction
         delay(20.milliseconds)
       } else if (message.message == "/stop") {
         val user = clientHandler.user as KailleraUserImpl
-        if (lookingForGameReporter.cancelActionsForUser(user.id)) {
+        if (lookingForGameReporter.cancelActionsForUser(user.userData.id)) {
           user.game!!.announce("Canceled pending tweet.", user)
         } else {
           user.game!!.announce("No pending tweets.", user)
@@ -428,9 +431,14 @@ class GameChatAction
       }
       val m = gameChatEvent.message
       clientHandler.send(
-          GameChat_Notification(clientHandler.nextMessageNumber, gameChatEvent.user.name, m))
+          GameChat_Notification(
+              clientHandler.nextMessageNumber, gameChatEvent.user.userData.name, m))
     } catch (e: MessageFormatException) {
       logger.atSevere().withCause(e).log("Failed to construct GameChat_Notification message")
     }
+  }
+
+  companion object {
+    private val logger = FluentLogger.forEnclosingClass()
   }
 }

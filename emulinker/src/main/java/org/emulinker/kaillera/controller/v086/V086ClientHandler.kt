@@ -34,8 +34,6 @@ import org.emulinker.util.EmuUtil.dumpBufferFromBeginning
 import org.emulinker.util.EmuUtil.formatSocketAddress
 import org.emulinker.util.GameDataCache
 
-private val logger = FluentLogger.forEnclosingClass()
-
 /** A private UDP server allocated for communication with a single client. */
 class V086ClientHandler
     @AssistedInject
@@ -190,12 +188,12 @@ class V086ClientHandler
     return;
     }
     */
-    controller.clientHandlers[user.id] = this
+    controller.clientHandlers[user.userData.id] = this
   }
 
   override suspend fun stop() {
     mutex.withLock {
-      logger.atFine().log("Stopping ClientHandler for %d", user.id)
+      logger.atFine().log("Stopping ClientHandler for %d", user.userData.id)
       if (stopFlag) return
       var port = -1
       if (isBound) port = bindPort
@@ -211,7 +209,7 @@ class V086ClientHandler
         controller.portRangeQueue.add(port)
       }
     }
-    controller.clientHandlers.remove(user.id)
+    controller.clientHandlers.remove(user.userData.id)
     user.stop()
   }
 
@@ -231,37 +229,40 @@ class V086ClientHandler
             parse(buffer, lastMessageNumber)
           } catch (e: ParseException) {
             buffer.rewind()
-            logger.atWarning().withCause(e).log("%s failed to parse: ${dumpBuffer(buffer)}", this)
+            logger.atWarning().withCause(e).log("%s failed to parse: %s", this, dumpBuffer(buffer))
             null
           } catch (e: V086BundleFormatException) {
             buffer.rewind()
             logger
                 .atWarning()
                 .withCause(e)
-                .log("%s received invalid message bundle: ${dumpBuffer(buffer)}", this)
+                .log("%s received invalid message bundle: %s", this, dumpBuffer(buffer))
             null
           } catch (e: MessageFormatException) {
             buffer.rewind()
             logger
                 .atWarning()
                 .withCause(e)
-                .log("%s received invalid message: ${dumpBuffer(buffer)}", this)
+                .log("%s received invalid message: %s}", this, dumpBuffer(buffer))
             null
           } ?: return
 
       if (inBundle.messages.firstOrNull() == null) {
         logger
-            .atWarning()
+            .atFine()
             .atMostEvery(1, MINUTES)
             .log(
-                "Received request from User %d containing no messages. inBundle.messages.size = %d. numMessages: %d, buffer dump: %s, lastMessageNumberUsed: $lastMessageNumberUsed",
-                user.id,
+                "Received request from User %d containing no messages. inBundle.messages.size = %d. numMessages: %d, buffer dump: %s, lastMessageNumberUsed: %d",
+                user.userData.id,
                 inBundle.messages.size,
                 inBundle.numMessages,
-                lazy { buffer.dumpBufferFromBeginning() })
+                lazy { buffer.dumpBufferFromBeginning() },
+                lastMessageNumberUsed)
       }
 
-      logger.atFinest().log("-> FROM user %d: %s", user.id, inBundle.messages.firstOrNull())
+      logger
+          .atFinest()
+          .log("-> FROM user %d: %s", user.userData.id, inBundle.messages.firstOrNull())
       clientRetryCount =
           if (inBundle.numMessages == 0) {
             logger
@@ -279,7 +280,7 @@ class V086ClientHandler
           lastMessageNumber = messages.single()!!.messageNumber
           val action = controller.actions[messages[0]!!.messageId.toInt()]
           if (action == null) {
-            logger.atSevere().log("No action defined to handle client message: " + messages[0])
+            logger.atSevere().log("No action defined to handle client message: %s", messages[0])
           }
           (action as V086Action<V086Message>).performAction(messages[0]!!, this)
         } else {
@@ -298,21 +299,24 @@ class V086ClientHandler
               } else {
                 logger
                     .atWarning()
-                    .log("$user dropped a packet! ($prevMessageNumber to $lastMessageNumber)")
+                    .log(
+                        "%s dropped a packet! (%d to %d)",
+                        user,
+                        prevMessageNumber,
+                        lastMessageNumber)
                 user.droppedPacket()
               }
             }
             val action = controller.actions[messages[i]!!.messageId.toInt()]
             if (action == null) {
-              logger.atSevere().log("No action defined to handle client message: " + messages[i])
+              logger.atSevere().log("No action defined to handle client message: %s", messages[i])
             } else {
-              // logger.atFine().log(user + " -> " + message);
               (action as V086Action<V086Message>).performAction(messages[i]!!, this)
             }
           }
         }
       } catch (e: FatalActionException) {
-        logger.atWarning().withCause(e).log(toString() + " fatal action, closing connection")
+        logger.atWarning().withCause(e).log("%s fatal action, closing connection", this)
         stop()
       }
     }
@@ -367,7 +371,7 @@ class V086ClientHandler
       // int numToSend = (3+timeoutCounter);
       var numToSend = 3 * timeoutCounter
       if (numToSend > V086Controller.MAX_BUNDLE_SIZE) numToSend = V086Controller.MAX_BUNDLE_SIZE
-      logger.atFine().log("%s: resending last $numToSend messages", this)
+      logger.atFine().log("%s: resending last %d messages", this, numToSend)
       send(null, numToSend)
       lastResend = System.currentTimeMillis()
     } else {
@@ -383,7 +387,6 @@ class V086ClientHandler
         lastMessageBuffer.add(outMessage)
       }
       numToSend = lastMessageBuffer.fill(outMessages, numToSend)
-      // System.out.println("Server -> " + numToSend);
       val outBundle = V086Bundle(outMessages, numToSend)
       logger.atFinest().log("<- TO P%d: %s", user.playerNumber, outMessage)
       outBundle.writeTo(outBuffer)
@@ -399,5 +402,9 @@ class V086ClientHandler
     inBuffer.order(ByteOrder.LITTLE_ENDIAN)
     outBuffer.order(ByteOrder.LITTLE_ENDIAN)
     resetGameDataCache()
+  }
+
+  companion object {
+    private val logger = FluentLogger.forEnclosingClass()
   }
 }

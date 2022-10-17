@@ -20,12 +20,15 @@ private val logger = FluentLogger.forEnclosingClass()
 /** Main entry point for the Kaillera server. */
 fun main(): Unit =
     runBlocking {
+      val component = DaggerAppComponent.create()
+      val flags = component.runtimeFlags
       // Change number of Dispatchers.IO coroutines.
-      System.setProperty(IO_PARALLELISM_PROPERTY_NAME, 130.toString())
+      System.setProperty(IO_PARALLELISM_PROPERTY_NAME, flags.numIoDispatchers.toString())
+      // Use log4j as the flogger backend.
       System.setProperty(
           "flogger.backend_factory",
           "com.google.common.flogger.backend.log4j2.Log4j2BackendFactory#getInstance")
-      val component = DaggerAppComponent.create()
+
       logger.atInfo().log("EmuLinker server Starting...")
       logger.atInfo().log(component.releaseInfo.welcome)
       logger
@@ -40,7 +43,6 @@ fun main(): Unit =
       }
 
       component.masterListUpdater.start()
-      val flags = component.runtimeFlags
       if (flags.metricsEnabled) {
         val metrics = component.metricRegistry
         metrics.registerAll(ThreadStatesGaugeSet())

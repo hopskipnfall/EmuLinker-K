@@ -10,8 +10,6 @@ import org.emulinker.kaillera.model.KailleraUser
 import org.emulinker.util.EmuLang.getString
 import org.emulinker.util.EmuUtil
 
-private val logger = FluentLogger.forEnclosingClass()
-
 class AutoFireScanner2(private var game: KailleraGame, sensitivity: Int) : AutoFireDetector {
   override var sensitivity = 0
     set(value) {
@@ -71,22 +69,17 @@ class AutoFireScanner2(private var game: KailleraGame, sensitivity: Int) : AutoF
     fun addData(data: ByteArray, bytesPerAction: Int) {
       if (pos + data.size >= sizeLimit) {
         val firstSize = sizeLimit - pos
-        //				logger.atFine().log("firstSize="+firstSize);
         System.arraycopy(data, 0, buffer[tail], pos, firstSize)
-        // tail = ((tail + 1) % bufferSize);
         tail++
         if (tail == bufferSize) tail = 0
-        //				logger.atFine().log("tail="+tail);
         System.arraycopy(data, firstSize, buffer[tail], 0, data.size - firstSize)
         pos = data.size - firstSize
-        //				logger.atFine().log("pos="+pos);
         size++
         if (this.bytesPerAction <= 0) this.bytesPerAction = bytesPerAction
         if (!running) executor.submit(this)
       } else {
         System.arraycopy(data, 0, buffer[tail], pos, data.size)
         pos += data.size
-        //				logger.atFine().log("pos="+pos);
       }
     }
 
@@ -95,7 +88,6 @@ class AutoFireScanner2(private var game: KailleraGame, sensitivity: Int) : AutoF
     }
 
     override fun run() {
-      //			long st = System.currentTimeMillis();
       synchronized(this) { running = true }
       try {
         while (size > 0 && !stopFlag) {
@@ -186,30 +178,27 @@ class AutoFireScanner2(private var game: KailleraGame, sensitivity: Int) : AutoF
             if (aSequenceCount >= minReps && bSequenceCount >= minReps && !stopFlag) {
               val gameImpl = game as KailleraGameImpl
               gameImpl.announce(
-                  getString("AutoFireScanner2.AutoFireDetected", user!!.name),
+                  getString("AutoFireScanner2.AutoFireDetected", user!!.userData.name),
               )
               logger
                   .atInfo()
                   .log(
-                      "AUTOUSERDUMP\t${EmuUtil.DATE_FORMAT.format(gameImpl.startDate)}\t${if (aSequence < bSequence) aSequence else bSequence}\t${game.id}\t${game.romName}\t${user.name}\t${user.socketAddress.address.hostAddress}")
-              //							logger.atFine().log("thisAction=" + EmuUtil.bytesToHex(thisAction) + "
-              // actionA=" +
-              // EmuUtil.bytesToHex(actionA) + " aCount=" + aCount + " actionB=" +
-              // EmuUtil.bytesToHex(actionB) + " bCount=" + bCount + " aSequence=" + aSequence + "
-              // aSequenceCount=" + aSequenceCount + " bSequence=" + bSequence + " bSequenceCount="
-              // + bSequenceCount);
+                      "AUTOUSERDUMP\t%s\t%d\t%d\t%s\t%s\t%s",
+                      EmuUtil.DATE_FORMAT.format(gameImpl.startDate),
+                      if (aSequence < bSequence) aSequence else bSequence,
+                      game.id,
+                      game.romName,
+                      user.userData.name,
+                      user.socketAddress.address.hostAddress)
               break
             }
           }
         }
       } catch (e: Exception) {
-        logger.atSevere().withCause(e).log("AutoFireScanner2 thread for $user caught exception!")
+        logger.atSevere().withCause(e).log("AutoFireScanner2 thread for %s caught exception!", user)
       } finally {
         synchronized(this) { running = false }
       }
-
-      //			long et = (System.currentTimeMillis()-st);
-      //			logger.atFine().log("Scanning completed in " + et + " ms");
     }
   }
 
@@ -224,6 +213,7 @@ class AutoFireScanner2(private var game: KailleraGame, sensitivity: Int) : AutoF
             intArrayOf(5, 7),
             intArrayOf(6, 5))
     protected var executor: ExecutorService = Executors.newCachedThreadPool()
+    private val logger = FluentLogger.forEnclosingClass()
   }
 
   init {

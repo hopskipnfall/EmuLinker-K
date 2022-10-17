@@ -15,8 +15,6 @@ import org.emulinker.kaillera.model.exception.CloseGameException
 import org.emulinker.kaillera.model.exception.DropGameException
 import org.emulinker.kaillera.model.exception.QuitGameException
 
-private val logger = FluentLogger.forEnclosingClass()
-
 @Singleton
 class QuitGameAction @Inject constructor(private val lookingForGameReporter: TwitterBroadcaster) :
     V086Action<QuitGame_Request>, V086GameEventHandler<UserQuitGameEvent> {
@@ -32,7 +30,7 @@ class QuitGameAction @Inject constructor(private val lookingForGameReporter: Twi
     actionPerformedCount++
     try {
       clientHandler.user.quitGame()
-      lookingForGameReporter.cancelActionsForUser(clientHandler.user.id)
+      lookingForGameReporter.cancelActionsForUser(clientHandler.user.userData.id)
     } catch (e: DropGameException) {
       logger.atSevere().withCause(e).log("Action failed")
     } catch (e: QuitGameException) {
@@ -50,15 +48,21 @@ class QuitGameAction @Inject constructor(private val lookingForGameReporter: Twi
       val user = event.user
       if (!user.inStealthMode) {
         clientHandler.send(
-            QuitGame_Notification(clientHandler.nextMessageNumber, user.name, user.id))
+            QuitGame_Notification(
+                clientHandler.nextMessageNumber, user.userData.name, user.userData.id))
       }
       if (thisUser === user) {
         if (user.inStealthMode)
             clientHandler.send(
-                QuitGame_Notification(clientHandler.nextMessageNumber, user.name, user.id))
+                QuitGame_Notification(
+                    clientHandler.nextMessageNumber, user.userData.name, user.userData.id))
       }
     } catch (e: MessageFormatException) {
       logger.atSevere().withCause(e).log("Failed to construct QuitGame_Notification message")
     }
+  }
+
+  companion object {
+    private val logger = FluentLogger.forEnclosingClass()
   }
 }

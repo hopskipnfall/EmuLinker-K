@@ -48,8 +48,6 @@ private const val COMMAND_SAMEDELAY = "/samedelay"
 
 private const val COMMAND_NUM = "/num"
 
-private val logger = FluentLogger.forEnclosingClass()
-
 @Singleton
 class GameOwnerCommandAction @Inject internal constructor(private val flags: RuntimeFlags) :
     V086Action<GameChat> {
@@ -85,7 +83,9 @@ class GameOwnerCommandAction @Inject internal constructor(private val flags: Run
         user.game ?: throw FatalActionException("GameOwner Command Failed: Not in a game: $chat")
     if (user != game.owner && user.accessLevel < AccessManager.ACCESS_SUPERADMIN) {
       if (!chat.startsWith(COMMAND_HELP)) {
-        logger.atWarning().log("GameOwner Command Denied: Not game owner: $game: $user: $chat")
+        logger
+            .atWarning()
+            .log("GameOwner Command Denied: Not game owner: %s: %s: %s", game, user, chat)
         game.announce("GameOwner Command Error: You are not an owner!", user)
         return
       }
@@ -110,11 +110,11 @@ class GameOwnerCommandAction @Inject internal constructor(private val flags: Run
         chat.startsWith(COMMAND_NUM) -> processNum(chat, game, user, clientHandler)
         else -> {
           game.announce("Unknown Command: $chat", user)
-          logger.atInfo().log("Unknown GameOwner Command: $game: $user: $chat")
+          logger.atInfo().log("Unknown GameOwner Command: %s: %s: %s", game, user, chat)
         }
       }
     } catch (e: ActionException) {
-      logger.atInfo().withCause(e).log("GameOwner Command Failed: $game: $user: $chat")
+      logger.atInfo().withCause(e).log("GameOwner Command Failed: %s: %s: %s", game, user, chat)
       game.announce(EmuLang.getString("GameOwnerCommandAction.CommandFailed", e.message), user)
     } catch (e: MessageFormatException) {
       logger.atSevere().withCause(e).log("Failed to construct message")
@@ -351,7 +351,7 @@ class GameOwnerCommandAction @Inject internal constructor(private val flags: Run
       user.isMuted = true
       val user1 = clientHandler.user as KailleraUserImpl
       user1.game!!.announce(
-          user.name + " has been muted!",
+          user.userData.name + " has been muted!",
       )
     } catch (e: NoSuchElementException) {
       val user = clientHandler.user as KailleraUserImpl
@@ -398,7 +398,7 @@ class GameOwnerCommandAction @Inject internal constructor(private val flags: Run
       user.isMuted = false
       val user1 = clientHandler.user
       (user1 as KailleraUserImpl).game!!.announce(
-          user.name + " has been unmuted!",
+          user.userData.name + " has been unmuted!",
       )
     } catch (e: NoSuchElementException) {
       val user = clientHandler.user as KailleraUserImpl
@@ -479,7 +479,7 @@ class GameOwnerCommandAction @Inject internal constructor(private val flags: Run
             else{
             	game.getPlayerActionQueue()[i] = game.getPlayerActionQueue()[num[i]-1];
             }*/ game.announce(
-                player.name + " is now Player#: " + player.playerNumber,
+                player.userData.name + " is now Player#: " + player.playerNumber,
             )
             i++
           }
@@ -520,7 +520,7 @@ class GameOwnerCommandAction @Inject internal constructor(private val flags: Run
         for (w in game.players.size downTo 1) {
           if (game.getPlayer(w)!!.accessLevel < AccessManager.ACCESS_ADMIN &&
               game.getPlayer(w) != game.owner)
-              game.kick(admin, game.getPlayer(w)!!.id)
+              game.kick(admin, game.getPlayer(w)!!.userData.id)
         }
         admin.game!!.announce(
             "All players have been kicked!",
@@ -530,7 +530,7 @@ class GameOwnerCommandAction @Inject internal constructor(private val flags: Run
       val playerNumber = scanner.nextInt()
       if (playerNumber in 1..100) {
         if (game.getPlayer(playerNumber) != null)
-            game.kick(admin, game.getPlayer(playerNumber)!!.id)
+            game.kick(admin, game.getPlayer(playerNumber)!!.userData.id)
         else {
           game.announce("Player doesn't exisit!", admin)
         }
@@ -599,5 +599,6 @@ class GameOwnerCommandAction @Inject internal constructor(private val flags: Run
 
   companion object {
     private var lastMaxUserChange: Long = 0
+    private val logger = FluentLogger.forEnclosingClass()
   }
 }

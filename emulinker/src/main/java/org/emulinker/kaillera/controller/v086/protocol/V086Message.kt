@@ -10,8 +10,6 @@ import org.emulinker.kaillera.controller.messaging.ParseException
 import org.emulinker.kaillera.pico.AppModule
 import org.emulinker.util.UnsignedUtil.putUnsignedShort
 
-private val logger = FluentLogger.forEnclosingClass()
-
 abstract class V086Message : ByteBufferMessage() {
   /**
    * The 0-based enumeration indicating the order in which this message was sent/received for each
@@ -107,9 +105,11 @@ abstract class V086Message : ByteBufferMessage() {
         // " + message.getLength());
         logger
             .atFine()
-            .log("Bundle contained length $messageLength !=  parsed length ${message.length}")
+            .log("Bundle contained length %d != parsed length %d", messageLength, message.length)
       }
       return message
     }
+
+    private val logger = FluentLogger.forEnclosingClass()
   }
 }
