@@ -58,10 +58,7 @@ class ChatAction @Inject internal constructor(private val adminCommandAction: Ad
     try {
       clientHandler.user.chat(message.message)
     } catch (e: ActionException) {
-      logger
-          .atInfo()
-          .withCause(e)
-          .log("Chat Denied: " + clientHandler.user + ": " + message.message)
+      logger.atInfo().withCause(e).log("Chat Denied: %s: %s", clientHandler.user, message.message)
       try {
         clientHandler.send(
             InformationMessage(

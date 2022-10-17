@@ -49,7 +49,7 @@ class ConnectController
   init {
     kailleraServerControllers.forEach { controller ->
       controller.clientTypes.forEach { type ->
-        logger.atFine().log("Mapping client type $type to %s", controller)
+        logger.atFine().log("Mapping client type %s to %s", type, controller)
         controllersMap[type] = controller
       }
     }
@@ -127,14 +127,20 @@ class ConnectController
           buffer.rewind()
           logger
               .atWarning()
-              .log("Received invalid message from $formattedSocketAddress: ${dumpBuffer(buffer)}")
+              .log(
+                  "Received invalid message from %s: %s",
+                  formattedSocketAddress,
+                  dumpBuffer(buffer))
           return
         } catch (e: IllegalArgumentException) {
           messageFormatErrorCount++
           buffer.rewind()
           logger
               .atWarning()
-              .log("Received invalid message from $formattedSocketAddress: ${dumpBuffer(buffer)}")
+              .log(
+                  "Received invalid message from %s: %s",
+                  formattedSocketAddress,
+                  dumpBuffer(buffer))
           return
         }
 
@@ -153,7 +159,7 @@ class ConnectController
       messageFormatErrorCount++
       logger
           .atWarning()
-          .log("Received unexpected message type from $formattedSocketAddress: %s", inMessage)
+          .log("Received unexpected message type from %s: %s", formattedSocketAddress, inMessage)
       return
     }
 

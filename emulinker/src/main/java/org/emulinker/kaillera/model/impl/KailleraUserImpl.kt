@@ -235,7 +235,7 @@ class KailleraUserImpl(
   override fun gameKick(userID: Int) {
     updateLastActivity()
     if (game == null) {
-      logger.atWarning().log("%s kick User $userID failed: Not in a game", this)
+      logger.atWarning().log("%s kick User %d failed: Not in a game", this, userID)
       throw GameKickException(EmuLang.getString("KailleraUserImpl.KickErrorNotInGame"))
     }
     game?.kick(this, userID)
@@ -288,7 +288,7 @@ class KailleraUserImpl(
     }
     val game = server.getGame(gameID)
     if (game == null) {
-      logger.atWarning().log("%s join game failed: Game $gameID does not exist!", this)
+      logger.atWarning().log("%s join game failed: Game %d does not exist!", this, gameID)
       throw JoinGameException(EmuLang.getString("KailleraUserImpl.JoinGameErrorDoesNotExist"))
     }
 

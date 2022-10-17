@@ -83,7 +83,9 @@ class GameOwnerCommandAction @Inject internal constructor(private val flags: Run
         user.game ?: throw FatalActionException("GameOwner Command Failed: Not in a game: $chat")
     if (user != game.owner && user.accessLevel < AccessManager.ACCESS_SUPERADMIN) {
       if (!chat.startsWith(COMMAND_HELP)) {
-        logger.atWarning().log("GameOwner Command Denied: Not game owner: $game: $user: %s", chat)
+        logger
+            .atWarning()
+            .log("GameOwner Command Denied: Not game owner: %s: %s: %s", game, user, chat)
         game.announce("GameOwner Command Error: You are not an owner!", user)
         return
       }
@@ -108,11 +110,11 @@ class GameOwnerCommandAction @Inject internal constructor(private val flags: Run
         chat.startsWith(COMMAND_NUM) -> processNum(chat, game, user, clientHandler)
         else -> {
           game.announce("Unknown Command: $chat", user)
-          logger.atInfo().log("Unknown GameOwner Command: $game: $user: %s", chat)
+          logger.atInfo().log("Unknown GameOwner Command: %s: %s: %s", game, user, chat)
         }
       }
     } catch (e: ActionException) {
-      logger.atInfo().withCause(e).log("GameOwner Command Failed: $game: $user: %s", chat)
+      logger.atInfo().withCause(e).log("GameOwner Command Failed: %s: %s: %s", game, user, chat)
       game.announce(EmuLang.getString("GameOwnerCommandAction.CommandFailed", e.message), user)
     } catch (e: MessageFormatException) {
       logger.atSevere().withCause(e).log("Failed to construct message")

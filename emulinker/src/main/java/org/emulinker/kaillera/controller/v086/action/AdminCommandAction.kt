@@ -169,7 +169,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
         else -> throw ActionException("Invalid Command: $chat")
       }
     } catch (e: ActionException) {
-      logger.atSevere().withCause(e).log("Admin Command Failed: $user: %s", chat)
+      logger.atSevere().withCause(e).log("Admin Command Failed: %s: %s", user, chat)
       try {
         clientHandler.send(
             InformationMessage(

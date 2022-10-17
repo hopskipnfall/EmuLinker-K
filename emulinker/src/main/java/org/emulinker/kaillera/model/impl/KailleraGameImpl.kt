@@ -72,8 +72,7 @@ class KailleraGameImpl(
     }
 
   private val toString =
-      String.format(
-          "Game%d(%s)", id, if (romName.length > 15) romName.substring(0, 15) + "..." else romName)
+      "Game$id(${if (romName.length > 15) romName.substring(0, 15) + "..." else romName})"
   private var lastAddress = "null"
   private var lastAddressCount = 0
   private var isSynched = false
@@ -100,7 +99,9 @@ class KailleraGameImpl(
 
   override fun getPlayer(playerNumber: Int): KailleraUser? {
     if (playerNumber > players.size) {
-      logger.atSevere().log("%s: getPlayer($playerNumber) failed! (size = ${players.size})", this)
+      logger
+          .atSevere()
+          .log("%s: getPlayer(%d) failed! (size = %d)", this, playerNumber, players.size)
       return null
     }
     return players[playerNumber - 1]
@@ -140,7 +141,7 @@ class KailleraGameImpl(
         throw GameChatException(EmuLang.getString("KailleraGameImpl.GameChatDeniedMessageTooLong"))
       }
     }
-    logger.atInfo().log("%s, $this gamechat: %s", user, message)
+    logger.atInfo().log("%s, %s gamechat: %s", user, this, message)
     addEvent(GameChatEvent(this, user, message))
   }
 
@@ -227,7 +228,8 @@ class KailleraGameImpl(
       if (aEmulator != user.clientType) {
         logger
             .atWarning()
-            .log("%s join game denied: owner doesn't allow that emulator: ${user.clientType}", user)
+            .log(
+                "%s join game denied: owner doesn't allow that emulator: %s", user, user.clientType)
         throw JoinGameException("Owner only allows emulator version: $aEmulator")
       }
     }
@@ -325,14 +327,14 @@ class KailleraGameImpl(
           EmuLang.getString("KailleraGameImpl.StartGameDeniedOnlyOwnerMayStart"))
     }
     if (status == GameStatus.SYNCHRONIZING) {
-      logger.atWarning().log("%s start game failed: $this status is %s", user, status)
+      logger.atWarning().log("%s start game failed: %s status is %s", user, this, status)
       throw StartGameException(EmuLang.getString("KailleraGameImpl.StartGameErrorSynchronizing"))
     } else if (status == GameStatus.PLAYING) {
-      logger.atWarning().log("%s start game failed: $this status is %s", user, status)
+      logger.atWarning().log("%s start game failed: %s status is %s", user, this, status)
       throw StartGameException(EmuLang.getString("KailleraGameImpl.StartGameErrorStatusIsPlaying"))
     }
     if (access == AccessManager.ACCESS_NORMAL && players.size < 2 && !server.allowSinglePlayer) {
-      logger.atWarning().log("%s start game denied: $this needs at least 2 players", user)
+      logger.atWarning().log("%s start game denied: %s needs at least 2 players", user, this)
       throw StartGameException(
           EmuLang.getString("KailleraGameImpl.StartGameDeniedSinglePlayerNotAllowed"))
     }
@@ -359,7 +361,7 @@ class KailleraGameImpl(
         if (player.clientType != clientType) {
           logger
               .atWarning()
-              .log("%s start game denied: $this: All players must use the same emulator!", user)
+              .log("%s start game denied: %s: All players must use the same emulator!", user, this)
           addEvent(
               GameInfoEvent(
                   this,
@@ -401,7 +403,7 @@ class KailleraGameImpl(
       /*else{
       	player.setP2P(false);
       }*/
-      logger.atInfo().log("%s: $player is player number %s", this, playerNumber)
+      logger.atInfo().log("%s: %s is player number %d", this, player, playerNumber)
       autoFireDetector.addPlayer(player, playerNumber)
     }
     playerActionQueue = actionQueueBuilder.map { it!! }.toTypedArray()
@@ -423,14 +425,14 @@ class KailleraGameImpl(
       throw UserReadyException(EmuLang.getString("KailleraGameImpl.ReadyGameErrorNotInGame"))
     }
     if (status != GameStatus.SYNCHRONIZING) {
-      logger.atWarning().log("%s ready failed: $this status is %s", user, status)
+      logger.atWarning().log("%s ready failed: %s status is %s", user, this, status)
       throw UserReadyException(EmuLang.getString("KailleraGameImpl.ReadyGameErrorIncorrectState"))
     }
     if (playerActionQueue == null) {
-      logger.atSevere().log("%s ready failed: $this playerActionQueues == null!", user)
+      logger.atSevere().log("%s ready failed: %s playerActionQueues == null!", user, this)
       throw UserReadyException(EmuLang.getString("KailleraGameImpl.ReadyGameErrorInternalError"))
     }
-    logger.atInfo().log("%s (player $playerNumber) is ready to play: %s", user, this)
+    logger.atInfo().log("%s (player %d) is ready to play: %s", user, playerNumber, this)
     playerActionQueue!![playerNumber - 1].synched = true
     if (synchedCount == players.size) {
       logger.atInfo().log("%s all players are ready: starting...", this)
@@ -464,7 +466,7 @@ class KailleraGameImpl(
       throw DropGameException(EmuLang.getString("KailleraGameImpl.DropGameErrorNotInGame"))
     }
     if (playerActionQueue == null) {
-      logger.atSevere().log("%s drop failed: $this playerActionQueues == null!", user)
+      logger.atSevere().log("%s drop failed: %s playerActionQueues == null!", user, this)
       throw DropGameException(EmuLang.getString("KailleraGameImpl.DropGameErrorInternalError"))
     }
     logger.atInfo().log("%s dropped: %s", user, this)
@@ -555,7 +557,7 @@ class KailleraGameImpl(
     }
     if (playerActionQueue != null && playerActionQueue!![playerNumber - 1].synched) {
       playerActionQueue!![playerNumber - 1].synched = false
-      logger.atInfo().log("%s: $user: player desynched: dropped a packet!", this)
+      logger.atInfo().log("%s: %s: player desynched: dropped a packet!", this, user)
       addEvent(
           PlayerDesynchEvent(
               this,
@@ -629,13 +631,13 @@ class KailleraGameImpl(
     if (timeoutNumber < desynchTimeouts) {
       if (startTimeout) player.timeouts = player.timeouts + 1
       if (timeoutNumber % 12 == 0) {
-        logger.atInfo().log("%s: $player: Timeout #${timeoutNumber / 12}", this)
+        logger.atInfo().log("%s: %s: Timeout #%d", this, player, timeoutNumber / 12)
         addEvent(GameTimeoutEvent(this, player, timeoutNumber / 12))
       }
     } else {
-      logger.atInfo().log("%s: $player: Timeout #${timeoutNumber / 12}", this)
+      logger.atInfo().log("%s: %s: Timeout #%d", this, player, timeoutNumber / 12)
       playerActionQueue.synched = false
-      logger.atInfo().log("%s: $player: player desynched: Lagged!", this)
+      logger.atInfo().log("%s: %s: player desynched: Lagged!", this, player)
       addEvent(
           PlayerDesynchEvent(
               this,

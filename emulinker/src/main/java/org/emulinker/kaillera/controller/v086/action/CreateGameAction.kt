@@ -33,7 +33,7 @@ class CreateGameAction @Inject internal constructor() :
       logger
           .atInfo()
           .withCause(e)
-          .log("Create Game Denied: " + clientHandler.user + ": " + message.romName)
+          .log("Create Game Denied: %s: %s", clientHandler.user, message.romName)
       try {
         clientHandler.send(
             InformationMessage(
@@ -52,7 +52,7 @@ class CreateGameAction @Inject internal constructor() :
       logger
           .atInfo()
           .withCause(e)
-          .log("Create Game Denied: " + clientHandler.user + ": " + message.romName)
+          .log("Create Game Denied: %s: %s", clientHandler.user, message.romName)
       try {
         clientHandler.send(
             InformationMessage(

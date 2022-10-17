@@ -274,7 +274,7 @@ class AccessManager2 @Inject internal constructor(private val flags: RuntimeFlag
           val hostName = pat.substring(4)
           try {
             val a = InetAddress.getByName(hostName)
-            logger.atFine().log("Resolved " + hostName + " to " + a.hostAddress)
+            logger.atFine().log("Resolved %s to %s", hostName, a.hostAddress)
           } catch (e: Exception) {
             logger
                 .atWarning()
@@ -347,7 +347,7 @@ class AccessManager2 @Inject internal constructor(private val flags: RuntimeFlag
           val hostName = pat.substring(4)
           try {
             val a = InetAddress.getByName(hostName)
-            logger.atFine().log("Resolved " + hostName + " to " + a.hostAddress)
+            logger.atFine().log("Resolved %s to %s", hostName, a.hostAddress)
           } catch (e: Exception) {
             logger
                 .atWarning()

@@ -229,21 +229,21 @@ class V086ClientHandler
             parse(buffer, lastMessageNumber)
           } catch (e: ParseException) {
             buffer.rewind()
-            logger.atWarning().withCause(e).log("%s failed to parse: ${dumpBuffer(buffer)}", this)
+            logger.atWarning().withCause(e).log("%s failed to parse: %s", this, dumpBuffer(buffer))
             null
           } catch (e: V086BundleFormatException) {
             buffer.rewind()
             logger
                 .atWarning()
                 .withCause(e)
-                .log("%s received invalid message bundle: ${dumpBuffer(buffer)}", this)
+                .log("%s received invalid message bundle: %s", this, dumpBuffer(buffer))
             null
           } catch (e: MessageFormatException) {
             buffer.rewind()
             logger
                 .atWarning()
                 .withCause(e)
-                .log("%s received invalid message: ${dumpBuffer(buffer)}", this)
+                .log("%s received invalid message: %s}", this, dumpBuffer(buffer))
             null
           } ?: return
 
@@ -299,20 +299,24 @@ class V086ClientHandler
               } else {
                 logger
                     .atWarning()
-                    .log("%s dropped a packet! ($prevMessageNumber to $lastMessageNumber)", user)
+                    .log(
+                        "%s dropped a packet! (%d to %d)",
+                        user,
+                        prevMessageNumber,
+                        lastMessageNumber)
                 user.droppedPacket()
               }
             }
             val action = controller.actions[messages[i]!!.messageId.toInt()]
             if (action == null) {
-              logger.atSevere().log("No action defined to handle client message: " + messages[i])
+              logger.atSevere().log("No action defined to handle client message: %s", messages[i])
             } else {
               (action as V086Action<V086Message>).performAction(messages[i]!!, this)
             }
           }
         }
       } catch (e: FatalActionException) {
-        logger.atWarning().withCause(e).log(toString() + " fatal action, closing connection")
+        logger.atWarning().withCause(e).log("%s fatal action, closing connection", this)
         stop()
       }
     }
@@ -367,7 +371,7 @@ class V086ClientHandler
       // int numToSend = (3+timeoutCounter);
       var numToSend = 3 * timeoutCounter
       if (numToSend > V086Controller.MAX_BUNDLE_SIZE) numToSend = V086Controller.MAX_BUNDLE_SIZE
-      logger.atFine().log("%s: resending last $numToSend messages", this)
+      logger.atFine().log("%s: resending last %d messages", this, numToSend)
       send(null, numToSend)
       lastResend = System.currentTimeMillis()
     } else {

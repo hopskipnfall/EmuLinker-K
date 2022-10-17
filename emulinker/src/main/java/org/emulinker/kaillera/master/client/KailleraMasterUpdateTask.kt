@@ -60,7 +60,7 @@ class KailleraMasterUpdateTask(
     try {
       val statusCode = httpClient.executeMethod(kailleraTouch)
       if (statusCode != HttpStatus.SC_OK) {
-        logger.atSevere().log("Failed to touch Kaillera Master: " + kailleraTouch.statusLine)
+        logger.atSevere().log("Failed to touch Kaillera Master: %s", kailleraTouch.statusLine)
       } else logger.atInfo().log("Touching Kaillera Master done")
     } catch (e: Exception) {
       logger.atSevere().withCause(e).log("Failed to touch Kaillera Master")

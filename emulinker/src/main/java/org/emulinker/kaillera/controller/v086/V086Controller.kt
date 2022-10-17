@@ -137,7 +137,7 @@ class V086Controller
         logger.atSevere().log("No ports are available to bind for: %s", user)
       } else {
         val port = portInteger.toInt()
-        logger.atInfo().log("Private port $port allocated to: %s", user)
+        logger.atInfo().log("Private port %d allocated to: %s", port, user)
         try {
           clientHandler.bind(udpSocketProvider, port)
           controllerCoroutineScope.launch { clientHandler.run(coroutineContext) }

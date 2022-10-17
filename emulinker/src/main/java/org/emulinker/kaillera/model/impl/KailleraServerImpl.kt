@@ -209,7 +209,7 @@ class KailleraServerImpl
       throw LoginException(getString("KailleraServerImpl.LoginDeniedAccessDenied"))
     }
     if (access == AccessManager.ACCESS_NORMAL && maxPing > 0 && user.ping > maxPing) {
-      logger.atInfo().log(user.toString() + " login denied: Ping " + user.ping + " > " + maxPing)
+      logger.atInfo().log("%s login denied: Ping %d > %d", user, user.ping, maxPing)
       usersMap.remove(userListKey)
       throw PingTimeException(
           getString(
@@ -217,16 +217,13 @@ class KailleraServerImpl
     }
     if (access == AccessManager.ACCESS_NORMAL &&
         !allowedConnectionTypes[user.connectionType.byteValue.toInt()]) {
-      logger
-          .atInfo()
-          .log(
-              user.toString() + " login denied: Connection " + user.connectionType + " Not Allowed")
+      logger.atInfo().log("%s login denied: Connection %s Not Allowed", user, user.connectionType)
       usersMap.remove(userListKey)
       throw LoginException(
           getString("KailleraServerImpl.LoginDeniedConnectionTypeDenied", user.connectionType))
     }
     if (user.ping < 0) {
-      logger.atWarning().log("%s login denied: Invalid ping: ${user.ping}", user)
+      logger.atWarning().log("%s login denied: Invalid ping: %d", user, user.ping)
       usersMap.remove(userListKey)
       throw PingTimeException(getString("KailleraServerImpl.LoginErrorInvalidPing", user.ping))
     }
@@ -282,7 +279,7 @@ class KailleraServerImpl
     }
     if (u.status != UserStatus.CONNECTING) {
       usersMap.remove(userListKey)
-      logger.atWarning().log("%s login denied: Invalid status=${u.status}", user)
+      logger.atWarning().log("%s login denied: Invalid status=%s", user, u.status)
       throw LoginException(getString("KailleraServerImpl.LoginErrorInvalidStatus", u.status))
     }
     if (u.connectSocketAddress.address != user.socketAddress.address) {
@@ -297,7 +294,7 @@ class KailleraServerImpl
         !accessManager.isEmulatorAllowed(user.clientType)) {
       logger
           .atInfo()
-          .log("%s login denied: AccessManager denied emulator: ${user.clientType}", user)
+          .log("%s login denied: AccessManager denied emulator: %s", user, user.clientType)
       usersMap.remove(userListKey)
       throw LoginException(
           getString("KailleraServerImpl.LoginDeniedEmulatorRestricted", user.clientType))
@@ -312,7 +309,7 @@ class KailleraServerImpl
           try {
             quit(u2, getString("KailleraServerImpl.ForcedQuitReconnected"))
           } catch (e: Exception) {
-            logger.atSevere().withCause(e).log("Error forcing $u2 quit for reconnect!")
+            logger.atSevere().withCause(e).log("Error forcing %s quit for reconnect!", u2)
           }
         } else if (u2.userData.id != u.userData.id &&
             u2.userData.name.lowercase(Locale.getDefault()).trim { it <= ' ' } ==
@@ -320,7 +317,7 @@ class KailleraServerImpl
           usersMap.remove(userListKey)
           logger
               .atWarning()
-              .log("%s login denied: Duplicating Names is not allowed! ${u2.userData.name}", user)
+              .log("%s login denied: Duplicating Names is not allowed! %s", user, u2.userData.name)
           throw ClientAddressException("Duplicating names is not allowed: " + u2.userData.name)
         }
         if (access == AccessManager.ACCESS_NORMAL &&
@@ -331,7 +328,7 @@ class KailleraServerImpl
           usersMap.remove(userListKey)
           logger
               .atWarning()
-              .log("%s login denied: Address already logged in as ${u2.userData.name}", user)
+              .log("%s login denied: Address already logged in as %s", user, u2.userData.name)
           throw ClientAddressException(
               getString("KailleraServerImpl.LoginDeniedAlreadyLoggedInAs", u2.userData.name))
         }
@@ -350,7 +347,7 @@ class KailleraServerImpl
       delay(20.milliseconds)
     }
     if (access > AccessManager.ACCESS_NORMAL)
-        logger.atInfo().log("%s logged in successfully with ${ACCESS_NAMES[access]} access!", user)
+        logger.atInfo().log("%s logged in successfully with %s access!", user, ACCESS_NAMES[access])
     else logger.atInfo().log("%s logged in successfully", user)
 
     // this is fairly ugly
@@ -486,7 +483,7 @@ class KailleraServerImpl
         }
       }
       if (flags.maxChatLength > 0 && message.length > flags.maxChatLength) {
-        logger.atWarning().log("%s chat denied: Message Length > ${flags.maxChatLength}", user)
+        logger.atWarning().log("%s chat denied: Message Length > %d", user, flags.maxChatLength)
         throw ChatException(getString("KailleraServerImpl.ChatDeniedMessageTooLong"))
       }
     }
@@ -507,14 +504,14 @@ class KailleraServerImpl
       throw CreateGameException(getString("KailleraServerImpl.NotLoggedIn"))
     }
     if ((user as KailleraUserImpl).game != null) {
-      logger.atSevere().log("%s create game failed: already in game: ${user.game}", user)
+      logger.atSevere().log("%s create game failed: already in game: %s", user, user.game)
       throw CreateGameException(getString("KailleraServerImpl.CreateGameErrorAlreadyInGame"))
     }
     if (flags.maxGameNameLength > 0 &&
         romName.trim { it <= ' ' }.length > flags.maxGameNameLength) {
       logger
           .atWarning()
-          .log("%s create game denied: Rom Name Length > ${flags.maxGameNameLength}", user)
+          .log("%s create game denied: Rom Name Length > %d", user, flags.maxGameNameLength)
       throw CreateGameException(getString("KailleraServerImpl.CreateGameDeniedNameTooLong"))
     }
     if (romName.lowercase(Locale.getDefault()).contains("|")) {
@@ -531,7 +528,7 @@ class KailleraServerImpl
       if (flags.maxGames > 0 && games.size >= flags.maxGames) {
         logger
             .atWarning()
-            .log("%s create game denied: Over maximum of ${flags.maxGames} current games!", user)
+            .log("%s create game denied: Over maximum of %d current games!", user, flags.maxGames)
         throw CreateGameException(
             getString("KailleraServerImpl.CreateGameDeniedMaxGames", flags.maxGames))
       }
@@ -558,7 +555,7 @@ class KailleraServerImpl
     val game = KailleraGameImpl(gameID, romName, user, this, flags.gameBufferSize)
     gamesMap[gameID] = game
     addEvent(GameCreatedEvent(this, game))
-    logger.atInfo().log("%s created: $game: ${game.romName}", user)
+    logger.atInfo().log("%s created: %s: %s", user, game, game.romName)
     try {
       user.joinGame(game.id)
     } catch (e: Exception) {
@@ -588,11 +585,11 @@ class KailleraServerImpl
   @Throws(CloseGameException::class)
   fun closeGame(game: KailleraGame, user: KailleraUser) {
     if (!user.loggedIn) {
-      logger.atSevere().log("%s close $game failed: Not logged in", user)
+      logger.atSevere().log("%s close %s failed: Not logged in", user, game)
       throw CloseGameException(getString("KailleraServerImpl.NotLoggedIn"))
     }
     if (!gamesMap.containsKey(game.id)) {
-      logger.atSevere().log("%s close $game failed: not in list: %s", user, game)
+      logger.atSevere().log("%s close %s failed: not in list: %s", user, game, game)
       return
     }
     (game as KailleraGameImpl).close(user)
@@ -628,7 +625,7 @@ class KailleraServerImpl
         }
       }
       if (flags.maxChatLength > 0 && message.length > flags.maxChatLength) {
-        logger.atWarning().log("%s /me denied: Message Length > ${flags.maxChatLength}", user)
+        logger.atWarning().log("%s /me denied: Message Length > %d", user, flags.maxChatLength)
         return false
       }
     }
@@ -749,7 +746,7 @@ class KailleraServerImpl
                 logger
                     .atSevere()
                     .withCause(e)
-                    .log("Error forcing $user quit for keepalive timeout!")
+                    .log("Error forcing %s quit for keepalive timeout!", user)
               }
             } else if (flags.idleTimeout.isPositive() &&
                 access == AccessManager.ACCESS_NORMAL &&
@@ -763,14 +760,14 @@ class KailleraServerImpl
                 logger
                     .atSevere()
                     .withCause(e)
-                    .log("Error forcing $user quit for inactivity timeout!")
+                    .log("Error forcing %s quit for inactivity timeout!", user)
               }
             } else if (user.loggedIn && access < AccessManager.ACCESS_NORMAL) {
               logger.atInfo().log("%s banned!", user)
               try {
                 quit(user, getString("KailleraServerImpl.ForcedQuitBanned"))
               } catch (e: Exception) {
-                logger.atSevere().withCause(e).log("Error forcing $user quit because banned!")
+                logger.atSevere().withCause(e).log("Error forcing %s quit because banned!", user)
               }
             } else if (user.loggedIn &&
                 access == AccessManager.ACCESS_NORMAL &&
@@ -782,7 +779,7 @@ class KailleraServerImpl
                 logger
                     .atSevere()
                     .withCause(e)
-                    .log("Error forcing $user quit because emulator restricted!")
+                    .log("Error forcing %s quit because emulator restricted!", user)
               }
             } else {}
           }

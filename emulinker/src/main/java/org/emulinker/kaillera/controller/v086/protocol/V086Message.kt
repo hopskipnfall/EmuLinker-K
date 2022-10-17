@@ -105,7 +105,7 @@ abstract class V086Message : ByteBufferMessage() {
         // " + message.getLength());
         logger
             .atFine()
-            .log("Bundle contained length $messageLength !=  parsed length ${message.length}")
+            .log("Bundle contained length %d != parsed length %d", messageLength, message.length)
       }
       return message
     }

@@ -58,7 +58,7 @@ class EmuLinkerMasterUpdateTask(
     try {
       val statusCode = httpClient.executeMethod(meth)
       if (statusCode != HttpStatus.SC_OK)
-          logger.atSevere().log("Failed to touch EmuLinker Master: " + meth.statusLine)
+          logger.atSevere().log("Failed to touch EmuLinker Master: %s", meth.statusLine)
       else {
         props.load(meth.responseBodyAsStream)
         logger.atInfo().log("Touching EmuLinker Master done")
