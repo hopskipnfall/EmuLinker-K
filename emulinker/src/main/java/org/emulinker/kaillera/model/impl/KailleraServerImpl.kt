@@ -214,9 +214,7 @@ class KailleraServerImpl
       logger.atInfo().log("%s login denied: Ping %d > %d", user, user.ping, maxPing)
       usersMap.remove(userListKey)
       throw PingTimeException(
-          getString(
-              "KailleraServerImpl.LoginDeniedPingTooHigh", "${user.ping} > $maxPing"
-          ))
+          getString("KailleraServerImpl.LoginDeniedPingTooHigh", "${user.ping} > $maxPing"))
     }
     if (access == AccessManager.ACCESS_NORMAL &&
         !allowedConnectionTypes[user.connectionType.byteValue.toInt()]) {
