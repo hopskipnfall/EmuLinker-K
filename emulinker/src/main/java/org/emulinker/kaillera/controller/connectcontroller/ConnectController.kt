@@ -171,7 +171,9 @@ class ConnectController
       logger
           .atSevere()
           .log(
-              "Client requested an unhandled protocol $formattedSocketAddress: ${inMessage.protocol}")
+              "Client requested an unhandled protocol %s: %s",
+              formattedSocketAddress,
+              inMessage.protocol)
       return
     }
     if (!accessManager.isAddressAllowed(remoteSocketAddress.address)) {
@@ -215,7 +217,10 @@ class ConnectController
           logger
               .atFine()
               .log(
-                  "$protocolController allocated port $privatePort to client from ${remoteSocketAddress.address.hostAddress}")
+                  "%s allocated port %d to client from %s",
+                  protocolController,
+                  privatePort,
+                  remoteSocketAddress.address.hostAddress)
           send(RequestPrivateKailleraPortResponse(privatePort), remoteSocketAddress)
         }
       } catch (e: ServerFullException) {

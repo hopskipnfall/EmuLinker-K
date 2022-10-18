@@ -34,7 +34,10 @@ fun main(): Unit =
       logger
           .atInfo()
           .log(
-              "EmuLinker server is running @ ${DateTimeFormatter.ISO_ZONED_DATE_TIME.withZone(ZoneId.systemDefault()).format(Instant.now())}")
+              "EmuLinker server is running @ %s",
+              DateTimeFormatter.ISO_ZONED_DATE_TIME
+                  .withZone(ZoneId.systemDefault())
+                  .format(Instant.now()))
 
       component.kailleraServerController.start() // Apparently cannot be removed.
       launch(Dispatchers.IO) {

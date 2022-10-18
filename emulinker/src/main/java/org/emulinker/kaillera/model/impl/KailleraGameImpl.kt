@@ -347,8 +347,9 @@ class KailleraGameImpl(
           logger
               .atWarning()
               .log(
-                  "%s start game denied: $this: All players must use the same connection type",
-                  user)
+                  "%s start game denied: %s: All players must use the same connection type",
+                  user,
+                  this)
           addEvent(
               GameInfoEvent(
                   this,
@@ -553,7 +554,9 @@ class KailleraGameImpl(
       logger
           .atInfo()
           .log(
-              "$this: $user: player desynched: dropped a packet! Also left the game already: KailleraGameImpl -> DroppedPacket")
+              "%s: %s: player desynched: dropped a packet! Also left the game already: KailleraGameImpl -> DroppedPacket",
+              this,
+              user)
     }
     if (playerActionQueue != null && playerActionQueue!![playerNumber - 1].synched) {
       playerActionQueue!![playerNumber - 1].synched = false
