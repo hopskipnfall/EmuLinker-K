@@ -369,9 +369,7 @@
               <include>emulinker/src/test/java/**/*.kt</include>
             </includes>
 
-            <ktlint>
-              <version>0.47.1</version>
-            </ktlint>
+            <ktfmt />
 
           </kotlin>
         </configuration>
