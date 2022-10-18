@@ -186,12 +186,14 @@ class KailleraServerImpl
     logger
         .atInfo()
         .log(
-            "$user: login request: delay=${
-          Duration.between(
-            user.connectTime,
-            Instant.now()
-          )
-        }ms, clientAddress=${formatSocketAddress(user.socketAddress)}, name=${user.userData.name}, ping=${user.ping}, client=${user.clientType}, connection=${user.connectionType}")
+            "%s: login request: delay=%s ms, clientAddress=%s, name=%s, ping=%d, client=%s, connection=%s",
+            user,
+            Duration.between(user.connectTime, Instant.now()),
+            formatSocketAddress(user.socketAddress),
+            user.userData.name,
+            user.ping,
+            user.clientType,
+            user.connectionType)
     if (user.loggedIn) {
       logger.atWarning().log("%s login denied: Already logged in!", user)
       throw LoginException(getString("KailleraServerImpl.LoginDeniedAlreadyLoggedIn"))
@@ -212,8 +214,7 @@ class KailleraServerImpl
       logger.atInfo().log("%s login denied: Ping %d > %d", user, user.ping, maxPing)
       usersMap.remove(userListKey)
       throw PingTimeException(
-          getString(
-              "KailleraServerImpl.LoginDeniedPingTooHigh", user.ping.toString() + " > " + maxPing))
+          getString("KailleraServerImpl.LoginDeniedPingTooHigh", "${user.ping} > $maxPing"))
     }
     if (access == AccessManager.ACCESS_NORMAL &&
         !allowedConnectionTypes[user.connectionType.byteValue.toInt()]) {
@@ -287,7 +288,10 @@ class KailleraServerImpl
       logger
           .atWarning()
           .log(
-              "$user login denied: Connect address does not match login address: ${u.connectSocketAddress.address.hostAddress} != ${user.socketAddress.address.hostAddress}")
+              "%s login denied: Connect address does not match login address: %s != %s",
+              user,
+              u.connectSocketAddress.address.hostAddress,
+              user.socketAddress.address.hostAddress)
       throw ClientAddressException(getString("KailleraServerImpl.LoginDeniedAddressMatchError"))
     }
     if (access == AccessManager.ACCESS_NORMAL &&

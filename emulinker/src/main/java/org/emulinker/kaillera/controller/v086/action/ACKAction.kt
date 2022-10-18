@@ -38,7 +38,10 @@ class ACKAction @Inject internal constructor() :
       logger
           .atFine()
           .log(
-              "Calculated $user ping time: average=${clientHandler.averageNetworkSpeed}, best=${clientHandler.bestNetworkSpeed}")
+              "Calculated %s ping time: average=%d, best=%d",
+              user,
+              clientHandler.averageNetworkSpeed,
+              clientHandler.bestNetworkSpeed)
       try {
         user.login()
       } catch (e: LoginException) {

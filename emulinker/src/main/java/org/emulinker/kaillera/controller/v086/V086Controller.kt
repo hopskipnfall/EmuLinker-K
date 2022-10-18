@@ -188,7 +188,9 @@ class V086Controller
     logger
         .atWarning()
         .log(
-            "Listening on UDP ports: $portRangeStart to $maxPort.  Make sure these ports are open in your firewall!")
+            "Listening on UDP ports: %d to %d.  Make sure these ports are open in your firewall!",
+            portRangeStart,
+            maxPort)
 
     // array access should be faster than a hash and we won't have to create
     // a new Integer each time

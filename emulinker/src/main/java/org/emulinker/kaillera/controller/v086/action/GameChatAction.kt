@@ -319,7 +319,9 @@ class GameChatAction
               .atInfo()
               .withCause(e)
               .log(
-                  "IGNORE USER ERROR: ${user.userData.name}: ${clientHandler.remoteSocketAddress.hostName}")
+                  "IGNORE USER ERROR: %s: %s",
+                  user.userData.name,
+                  clientHandler.remoteSocketAddress.hostName)
           return
         }
       } else if (message.message.startsWith("/unignore")) {
@@ -357,7 +359,9 @@ class GameChatAction
               .atInfo()
               .withCause(e)
               .log(
-                  "UNIGNORE USER ERROR: ${user.userData.name}: ${clientHandler.remoteSocketAddress.hostName}")
+                  "UNIGNORE USER ERROR: %s: %s",
+                  user.userData.name,
+                  clientHandler.remoteSocketAddress.hostName)
           return
         }
       } else if (message.message.startsWith("/me")) {

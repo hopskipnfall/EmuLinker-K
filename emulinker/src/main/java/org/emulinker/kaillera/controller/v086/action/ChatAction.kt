@@ -494,7 +494,9 @@ class ChatAction @Inject internal constructor(private val adminCommandAction: Ad
               .atInfo()
               .withCause(e)
               .log(
-                  "UNIGNORE USER ERROR: ${user.userData.name}: ${clientHandler.remoteSocketAddress.hostName}")
+                  "UNIGNORE USER ERROR: %s: %s",
+                  user.userData.name,
+                  clientHandler.remoteSocketAddress.hostName)
           return
         }
       } else if (chatMessage.message == "/help") {
