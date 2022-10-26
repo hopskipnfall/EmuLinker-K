@@ -36,14 +36,14 @@ import org.emulinker.util.GameDataCache
 
 /** A private UDP server allocated for communication with a single client. */
 class V086ClientHandler
-    @AssistedInject
-    constructor(
-        metrics: MetricRegistry,
-        private val flags: RuntimeFlags,
-        @Assisted remoteSocketAddress: InetSocketAddress,
-        /** The V086Controller that started this client handler. */
-        @param:Assisted val controller: V086Controller
-    ) : UDPServer(), KailleraEventListener {
+@AssistedInject
+constructor(
+  metrics: MetricRegistry,
+  private val flags: RuntimeFlags,
+  @Assisted remoteSocketAddress: InetSocketAddress,
+  /** The V086Controller that started this client handler. */
+  @param:Assisted val controller: V086Controller
+) : UDPServer(), KailleraEventListener {
   lateinit var user: KailleraUser
     private set
 
@@ -81,7 +81,7 @@ class V086ClientHandler
   private var lastResend = 0L
 
   private val clientRequestTimer =
-      metrics.timer(MetricRegistry.name(this.javaClass, "clientRequests"))
+    metrics.timer(MetricRegistry.name(this.javaClass, "clientRequests"))
 
   lateinit var remoteSocketAddress: InetSocketAddress
     private set
@@ -91,22 +91,26 @@ class V086ClientHandler
   @AssistedFactory
   interface Factory {
     fun create(
-        remoteSocketAddress: InetSocketAddress, v086Controller: V086Controller
+      remoteSocketAddress: InetSocketAddress,
+      v086Controller: V086Controller
     ): V086ClientHandler
   }
 
   override suspend fun handleReceived(
-      buffer: ByteBuffer, remoteSocketAddress: InetSocketAddress, requestScope: CoroutineScope
+    buffer: ByteBuffer,
+    remoteSocketAddress: InetSocketAddress,
+    requestScope: CoroutineScope
   ) {
     if (!this::remoteSocketAddress.isInitialized) {
       this.remoteSocketAddress = remoteSocketAddress
     } else if (remoteSocketAddress != this.remoteSocketAddress) {
       logger
-          .atWarning()
-          .log(
-              "Rejecting packet received from wrong address. Expected=%s but was %s",
-              formatSocketAddress(this.remoteSocketAddress),
-              formatSocketAddress(remoteSocketAddress))
+        .atWarning()
+        .log(
+          "Rejecting packet received from wrong address. Expected=%s but was %s",
+          formatSocketAddress(this.remoteSocketAddress),
+          formatSocketAddress(remoteSocketAddress)
+        )
 
       return
     }
@@ -124,7 +128,7 @@ class V086ClientHandler
   }
 
   override fun toString() =
-      if (bindPort > 0) "V086Controller($bindPort)" else "V086Controller(unbound)"
+    if (bindPort > 0) "V086Controller($bindPort)" else "V086Controller(unbound)"
 
   @get:Synchronized
   val nextMessageNumber: Int
@@ -200,12 +204,13 @@ class V086ClientHandler
       super.stop()
       if (port > 0) {
         logger
-            .atFine()
-            .log(
-                "%s returning port %d to available port queue: %d available",
-                this,
-                port,
-                controller.portRangeQueue.size + 1)
+          .atFine()
+          .log(
+            "%s returning port %d to available port queue: %d available",
+            this,
+            port,
+            controller.portRangeQueue.size + 1
+          )
         controller.portRangeQueue.add(port)
       }
     }
@@ -225,55 +230,56 @@ class V086ClientHandler
     inMutex.withLock {
       val lastMessageNumberUsed = lastMessageNumber
       val inBundle =
-          try {
-            parse(buffer, lastMessageNumber)
-          } catch (e: ParseException) {
-            buffer.rewind()
-            logger.atWarning().withCause(e).log("%s failed to parse: %s", this, dumpBuffer(buffer))
-            null
-          } catch (e: V086BundleFormatException) {
-            buffer.rewind()
-            logger
-                .atWarning()
-                .withCause(e)
-                .log("%s received invalid message bundle: %s", this, dumpBuffer(buffer))
-            null
-          } catch (e: MessageFormatException) {
-            buffer.rewind()
-            logger
-                .atWarning()
-                .withCause(e)
-                .log("%s received invalid message: %s}", this, dumpBuffer(buffer))
-            null
-          } ?: return
+        try {
+          parse(buffer, lastMessageNumber)
+        } catch (e: ParseException) {
+          buffer.rewind()
+          logger.atWarning().withCause(e).log("%s failed to parse: %s", this, dumpBuffer(buffer))
+          null
+        } catch (e: V086BundleFormatException) {
+          buffer.rewind()
+          logger
+            .atWarning()
+            .withCause(e)
+            .log("%s received invalid message bundle: %s", this, dumpBuffer(buffer))
+          null
+        } catch (e: MessageFormatException) {
+          buffer.rewind()
+          logger
+            .atWarning()
+            .withCause(e)
+            .log("%s received invalid message: %s}", this, dumpBuffer(buffer))
+          null
+        } ?: return
 
       if (inBundle.messages.firstOrNull() == null) {
         logger
-            .atFine()
-            .atMostEvery(1, MINUTES)
-            .log(
-                "Received request from User %d containing no messages. inBundle.messages.size = %d. numMessages: %d, buffer dump: %s, lastMessageNumberUsed: %d",
-                user.userData.id,
-                inBundle.messages.size,
-                inBundle.numMessages,
-                lazy { buffer.dumpBufferFromBeginning() },
-                lastMessageNumberUsed)
+          .atFine()
+          .atMostEvery(1, MINUTES)
+          .log(
+            "Received request from User %d containing no messages. inBundle.messages.size = %d. numMessages: %d, buffer dump: %s, lastMessageNumberUsed: %d",
+            user.userData.id,
+            inBundle.messages.size,
+            inBundle.numMessages,
+            lazy { buffer.dumpBufferFromBeginning() },
+            lastMessageNumberUsed
+          )
       }
 
       logger
-          .atFinest()
-          .log("-> FROM user %d: %s", user.userData.id, inBundle.messages.firstOrNull())
+        .atFinest()
+        .log("-> FROM user %d: %s", user.userData.id, inBundle.messages.firstOrNull())
       clientRetryCount =
-          if (inBundle.numMessages == 0) {
-            logger
-                .atFine()
-                .log("%s received bundle of %d messages from %s", this, inBundle.numMessages, user)
-            clientRetryCount++
-            resend(clientRetryCount)
-            return
-          } else {
-            0
-          }
+        if (inBundle.numMessages == 0) {
+          logger
+            .atFine()
+            .log("%s received bundle of %d messages from %s", this, inBundle.numMessages, user)
+          clientRetryCount++
+          resend(clientRetryCount)
+          return
+        } else {
+          0
+        }
       try {
         val messages = inBundle.messages
         if (inBundle.numMessages == 1) {
@@ -298,12 +304,13 @@ class V086ClientHandler
                 // exception; do nothing
               } else {
                 logger
-                    .atWarning()
-                    .log(
-                        "%s dropped a packet! (%d to %d)",
-                        user,
-                        prevMessageNumber,
-                        lastMessageNumber)
+                  .atWarning()
+                  .log(
+                    "%s dropped a packet! (%d to %d)",
+                    user,
+                    prevMessageNumber,
+                    lastMessageNumber
+                  )
                 user.droppedPacket()
               }
             }
@@ -330,8 +337,8 @@ class V086ClientHandler
         val eventHandler = controller.gameEventHandlers[event::class]
         if (eventHandler == null) {
           logger
-              .atSevere()
-              .log("%s found no GameEventHandler registered to handle game event: %s", this, event)
+            .atSevere()
+            .log("%s found no GameEventHandler registered to handle game event: %s", this, event)
           return
         }
         (eventHandler as V086GameEventHandler<GameEvent>).handleEvent(event, this)
@@ -340,11 +347,12 @@ class V086ClientHandler
         val eventHandler = controller.serverEventHandlers[event::class]
         if (eventHandler == null) {
           logger
-              .atSevere()
-              .log(
-                  "%s found no ServerEventHandler registered to handle server event: %s",
-                  this,
-                  event)
+            .atSevere()
+            .log(
+              "%s found no ServerEventHandler registered to handle server event: %s",
+              this,
+              event
+            )
           return
         }
         (eventHandler as V086ServerEventHandler<ServerEvent>).handleEvent(event, this)
@@ -353,8 +361,8 @@ class V086ClientHandler
         val eventHandler = controller.userEventHandlers[event::class]
         if (eventHandler == null) {
           logger
-              .atSevere()
-              .log("%s found no UserEventHandler registered to handle user event: ", this, event)
+            .atSevere()
+            .log("%s found no UserEventHandler registered to handle user event: ", this, event)
           return
         }
         (eventHandler as V086UserEventHandler<UserEvent>).handleEvent(event, this)

@@ -108,7 +108,8 @@ class AccessManager2 @Inject internal constructor(private val flags: RuntimeFlag
   }
 
   private fun <T : TemporaryAttribute> addTemporaryAttributeToList(
-      list: MutableList<T>, attribute: T
+    list: MutableList<T>,
+    attribute: T
   ) {
     list.add(attribute)
     scope.launch {
@@ -135,11 +136,11 @@ class AccessManager2 @Inject internal constructor(private val flags: RuntimeFlag
     }
     for (tempModerator in tempModeratorList) {
       if (tempModerator.matches(userAddress) && !tempModerator.isExpired)
-          return AccessManager.ACCESS_MODERATOR
+        return AccessManager.ACCESS_MODERATOR
     }
     for (tempElevated in tempElevatedList) {
       if (tempElevated.matches(userAddress) && !tempElevated.isExpired)
-          return AccessManager.ACCESS_ELEVATED
+        return AccessManager.ACCESS_ELEVATED
     }
     return userList.firstOrNull { it.matches(userAddress) }?.access ?: AccessManager.ACCESS_NORMAL
   }
@@ -235,9 +236,9 @@ class AccessManager2 @Inject internal constructor(private val flags: RuntimeFlag
           resolvedAddresses.add(address.hostAddress)
         } catch (e: Exception) {
           logger
-              .atFine()
-              .withCause(e)
-              .log("Failed to resolve DNS entry to an address: %s", hostName)
+            .atFine()
+            .withCause(e)
+            .log("Failed to resolve DNS entry to an address: %s", hostName)
         }
       }
     }
@@ -251,17 +252,17 @@ class AccessManager2 @Inject internal constructor(private val flags: RuntimeFlag
 
     init {
       if (st.countTokens() < 2 || st.countTokens() > 3)
-          throw Exception("Wrong number of tokens: " + st.countTokens())
+        throw Exception("Wrong number of tokens: " + st.countTokens())
       val accessStr = st.nextToken().lowercase(Locale.getDefault())
       access =
-          when (accessStr) {
-            "normal" -> AccessManager.ACCESS_NORMAL
-            "elevated" -> AccessManager.ACCESS_ELEVATED
-            "moderator" -> AccessManager.ACCESS_MODERATOR
-            "admin" -> AccessManager.ACCESS_ADMIN
-            "superadmin" -> AccessManager.ACCESS_SUPERADMIN
-            else -> throw AccessException("Unrecognized access token: $accessStr")
-          }
+        when (accessStr) {
+          "normal" -> AccessManager.ACCESS_NORMAL
+          "elevated" -> AccessManager.ACCESS_ELEVATED
+          "moderator" -> AccessManager.ACCESS_MODERATOR
+          "admin" -> AccessManager.ACCESS_ADMIN
+          "superadmin" -> AccessManager.ACCESS_SUPERADMIN
+          else -> throw AccessException("Unrecognized access token: $accessStr")
+        }
       hostNames = ArrayList()
       resolvedAddresses = ArrayList()
       patterns = ArrayList()
@@ -277,9 +278,9 @@ class AccessManager2 @Inject internal constructor(private val flags: RuntimeFlag
             logger.atFine().log("Resolved %s to %s", hostName, a.hostAddress)
           } catch (e: Exception) {
             logger
-                .atWarning()
-                .withCause(e)
-                .log("Failed to resolve DNS entry to an address: %s", hostName)
+              .atWarning()
+              .withCause(e)
+              .log("Failed to resolve DNS entry to an address: %s", hostName)
           }
           hostNames.add(pat.substring(4))
         } else {
@@ -306,9 +307,9 @@ class AccessManager2 @Inject internal constructor(private val flags: RuntimeFlag
           resolvedAddresses.add(address.hostAddress)
         } catch (e: Exception) {
           logger
-              .atFine()
-              .withCause(e)
-              .log("Failed to resolve DNS entry to an address: %s", hostName)
+            .atFine()
+            .withCause(e)
+            .log("Failed to resolve DNS entry to an address: %s", hostName)
         }
       }
     }
@@ -330,11 +331,11 @@ class AccessManager2 @Inject internal constructor(private val flags: RuntimeFlag
       if (st.countTokens() != 2) throw Exception("Wrong number of tokens: " + st.countTokens())
       val accessStr = st.nextToken().lowercase(Locale.getDefault())
       access =
-          when (accessStr) {
-            "allow" -> true
-            "deny" -> false
-            else -> throw AccessException("Unrecognized access token: $accessStr")
-          }
+        when (accessStr) {
+          "allow" -> true
+          "deny" -> false
+          else -> throw AccessException("Unrecognized access token: $accessStr")
+        }
       hostNames = ArrayList()
       resolvedAddresses = ArrayList()
       patterns = ArrayList()
@@ -350,9 +351,9 @@ class AccessManager2 @Inject internal constructor(private val flags: RuntimeFlag
             logger.atFine().log("Resolved %s to %s", hostName, a.hostAddress)
           } catch (e: Exception) {
             logger
-                .atWarning()
-                .withCause(e)
-                .log("Failed to resolve DNS entry to an address: %s", hostName)
+              .atWarning()
+              .withCause(e)
+              .log("Failed to resolve DNS entry to an address: %s", hostName)
           }
           hostNames.add(pat.substring(4))
         } else {
@@ -380,11 +381,11 @@ class AccessManager2 @Inject internal constructor(private val flags: RuntimeFlag
       if (st.countTokens() != 2) throw Exception("Wrong number of tokens: " + st.countTokens())
       val accessStr = st.nextToken().lowercase(Locale.getDefault())
       access =
-          when (accessStr) {
-            "allow" -> true
-            "deny" -> false
-            else -> throw AccessException("Unrecognized access token: $accessStr")
-          }
+        when (accessStr) {
+          "allow" -> true
+          "deny" -> false
+          else -> throw AccessException("Unrecognized access token: $accessStr")
+        }
       patterns = ArrayList()
       val s = st.nextToken().lowercase(Locale.getDefault())
       val pt = StringTokenizer(s, "|")
@@ -411,11 +412,11 @@ class AccessManager2 @Inject internal constructor(private val flags: RuntimeFlag
       if (st.countTokens() != 2) throw Exception("Wrong number of tokens: " + st.countTokens())
       val accessStr = st.nextToken().lowercase(Locale.getDefault())
       access =
-          when (accessStr) {
-            "allow" -> true
-            "deny" -> false
-            else -> throw AccessException("Unrecognized access token: $accessStr")
-          }
+        when (accessStr) {
+          "allow" -> true
+          "deny" -> false
+          else -> throw AccessException("Unrecognized access token: $accessStr")
+        }
       patterns = ArrayList()
       val s = st.nextToken().lowercase(Locale.getDefault())
       val pt = StringTokenizer(s, "|")
@@ -429,11 +430,11 @@ class AccessManager2 @Inject internal constructor(private val flags: RuntimeFlag
     val url = AccessManager2::class.java.getResource("/access.cfg")
     requireNotNull(url) { "Resource not found: /access.conf" }
     val af =
-        try {
-          File(url.toURI())
-        } catch (e: URISyntaxException) {
-          throw IllegalStateException("Could not parse URI", e)
-        }
+      try {
+        File(url.toURI())
+      } catch (e: URISyntaxException) {
+        throw IllegalStateException("Could not parse URI", e)
+      }
     accessFile = af
     if (!af.exists()) {
       throw IllegalStateException(FileNotFoundException("Resource not found: /access.conf"))

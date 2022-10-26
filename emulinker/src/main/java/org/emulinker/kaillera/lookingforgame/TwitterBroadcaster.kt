@@ -18,8 +18,8 @@ import twitter4j.Twitter
  */
 @Singleton
 class TwitterBroadcaster
-    @Inject
-    internal constructor(private val flags: RuntimeFlags, private val twitter: Twitter) {
+@Inject
+internal constructor(private val flags: RuntimeFlags, private val twitter: Twitter) {
 
   private val scope = CoroutineScope(Dispatchers.IO)
 
@@ -51,21 +51,22 @@ class TwitterBroadcaster
     }
 
     pendingReports[lookingForGameEvent] =
-        scope.launch {
-          delay(flags.twitterBroadcastDelay)
+      scope.launch {
+        delay(flags.twitterBroadcastDelay)
 
-          pendingReports.remove(lookingForGameEvent)
-          val user: KailleraUser = lookingForGameEvent.user
-          val message =
-              """
+        pendingReports.remove(lookingForGameEvent)
+        val user: KailleraUser = lookingForGameEvent.user
+        val message =
+          """
                   User: ${user.userData.name}
                   Game: ${lookingForGameEvent.gameTitle}
-                  Server: ${flags.serverName} (${flags.serverAddress})""".trimIndent()
-          val tweet = twitter.updateStatus(message)
-          user.game!!.announce(tweet.getUrl(), user)
-          logger.atInfo().log("Posted tweet: %s", tweet.getUrl())
-          postedTweets[lookingForGameEvent] = tweet.id
-        }
+                  Server: ${flags.serverName} (${flags.serverAddress})""".trimIndent(
+          )
+        val tweet = twitter.updateStatus(message)
+        user.game!!.announce(tweet.getUrl(), user)
+        logger.atInfo().log("Posted tweet: %s", tweet.getUrl())
+        postedTweets[lookingForGameEvent] = tweet.id
+      }
     return true
   }
 

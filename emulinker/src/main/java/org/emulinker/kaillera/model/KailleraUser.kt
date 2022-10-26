@@ -65,11 +65,12 @@ interface KailleraUser {
 
   // Methods.
   @Throws(
-      PingTimeException::class,
-      ClientAddressException::class,
-      ConnectionTypeException::class,
-      UserNameException::class,
-      LoginException::class)
+    PingTimeException::class,
+    ClientAddressException::class,
+    ConnectionTypeException::class,
+    UserNameException::class,
+    LoginException::class
+  )
   suspend fun login()
 
   fun updateLastActivity()
@@ -86,39 +87,32 @@ interface KailleraUser {
 
   fun addIgnoredUser(address: String)
 
-  @Throws(ChatException::class, FloodException::class)
-  fun chat(message: String)
+  @Throws(ChatException::class, FloodException::class) fun chat(message: String)
 
   @Throws(CreateGameException::class, FloodException::class)
   suspend fun createGame(romName: String): KailleraGame
 
   @Throws(
-      QuitException::class,
-      DropGameException::class,
-      QuitGameException::class,
-      CloseGameException::class)
+    QuitException::class,
+    DropGameException::class,
+    QuitGameException::class,
+    CloseGameException::class
+  )
   fun quit(message: String?)
 
-  @Throws(JoinGameException::class)
-  suspend fun joinGame(gameID: Int): KailleraGame
+  @Throws(JoinGameException::class) suspend fun joinGame(gameID: Int): KailleraGame
 
-  @Throws(StartGameException::class)
-  fun startGame()
+  @Throws(StartGameException::class) fun startGame()
 
-  @Throws(GameChatException::class)
-  fun gameChat(message: String, messageID: Int)
+  @Throws(GameChatException::class) fun gameChat(message: String, messageID: Int)
 
-  @Throws(GameKickException::class)
-  fun gameKick(userID: Int)
+  @Throws(GameKickException::class) fun gameKick(userID: Int)
 
-  @Throws(UserReadyException::class)
-  fun playerReady()
+  @Throws(UserReadyException::class) fun playerReady()
 
-  @Throws(GameDataException::class)
-  fun addGameData(data: ByteArray)
+  @Throws(GameDataException::class) fun addGameData(data: ByteArray)
 
-  @Throws(DropGameException::class)
-  fun dropGame()
+  @Throws(DropGameException::class) fun dropGame()
 
   @Throws(DropGameException::class, QuitGameException::class, CloseGameException::class)
   fun quitGame()

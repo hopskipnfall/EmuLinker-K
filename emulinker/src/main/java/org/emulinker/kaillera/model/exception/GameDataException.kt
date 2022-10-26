@@ -38,18 +38,23 @@ class GameDataException : ActionException {
   constructor(message: String?) : super(message)
 
   constructor(
-      message: String?, data: ByteArray, actionsPerMessage: Int, playerNumber: Int, numPlayers: Int
+    message: String?,
+    data: ByteArray,
+    actionsPerMessage: Int,
+    playerNumber: Int,
+    numPlayers: Int
   ) : super(message) {
     val bytesPerAction = data.size / actionsPerMessage
     val arraySize = numPlayers * actionsPerMessage * bytesPerAction
     response = ByteArray(arraySize)
     for (actionCounter in 0 until actionsPerMessage) {
       System.arraycopy(
-          data,
-          0,
-          response,
-          actionCounter * (numPlayers * bytesPerAction) + (playerNumber - 1) * bytesPerAction,
-          bytesPerAction)
+        data,
+        0,
+        response,
+        actionCounter * (numPlayers * bytesPerAction) + (playerNumber - 1) * bytesPerAction,
+        bytesPerAction
+      )
     }
   }
 

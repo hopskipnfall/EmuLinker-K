@@ -4,10 +4,13 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 
 class GameDataQueue(
-    val gameID: Int, val numPlayers: Int, val timeoutMillis: Int, val retries: Int
+  val gameID: Int,
+  val numPlayers: Int,
+  val timeoutMillis: Int,
+  val retries: Int
 ) {
   private val playerQueues: Array<PlayerDataQueue> =
-      (1..numPlayers).map { PlayerDataQueue(it) }.toTypedArray()
+    (1..numPlayers).map { PlayerDataQueue(it) }.toTypedArray()
   private var gameDesynched = false
 
   fun setGameDesynched() {
@@ -54,14 +57,17 @@ class GameDataQueue(
         for (j in lastJ until bytesPerAction) {
           try {
             data!![i * bytesPerAction + j] =
-                queues[i % numPlayers]!![timeoutMillis.toLong(), TimeUnit.MILLISECONDS]
+              queues[i % numPlayers]!![timeoutMillis.toLong(), TimeUnit.MILLISECONDS]
           } catch (e: TimeoutException) {
             lastI = i
             lastJ = j
             lastData = data
             if (++timeoutCounter > retries)
-                throw DesynchException(
-                    "Player " + (i % numPlayers + 1) + " is lagged!", i % numPlayers + 1, e)
+              throw DesynchException(
+                "Player " + (i % numPlayers + 1) + " is lagged!",
+                i % numPlayers + 1,
+                e
+              )
             else throw PlayerTimeoutException(i % numPlayers + 1, timeoutCounter, e)
           }
         }
@@ -79,7 +85,7 @@ class GameDataQueue(
   }
 
   class PlayerTimeoutException(val playerNumber: Int, val timeoutNumber: Int, e: TimeoutException) :
-      Exception(e)
+    Exception(e)
   class DesynchException(msg: String, val playerNumber: Int, e: TimeoutException) :
-      Exception(msg, e)
+    Exception(msg, e)
 }

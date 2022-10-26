@@ -13,8 +13,8 @@ import org.emulinker.util.UnsignedUtil.putUnsignedInt
 import org.emulinker.util.UnsignedUtil.putUnsignedShort
 
 data class PlayerInformation
-    @Throws(MessageFormatException::class)
-    constructor(override val messageNumber: Int, val players: List<Player>) : V086Message() {
+@Throws(MessageFormatException::class)
+constructor(override val messageNumber: Int, val players: List<Player>) : V086Message() {
   override val messageId = ID
 
   init {
@@ -34,9 +34,12 @@ data class PlayerInformation
   }
 
   data class Player
-      constructor(
-          val username: String, val ping: Long, val userId: Int, val connectionType: ConnectionType
-      ) {
+  constructor(
+    val username: String,
+    val ping: Long,
+    val userId: Int,
+    val connectionType: ConnectionType
+  ) {
 
     val numBytes: Int = username.getNumBytes() + 8
 
@@ -50,11 +53,13 @@ data class PlayerInformation
     init {
       if (ping !in 0..2048) { // what should max ping be?
         throw MessageFormatException(
-            "Invalid Player Information format: ping out of acceptable range: $ping")
+          "Invalid Player Information format: ping out of acceptable range: $ping"
+        )
       }
       if (userId !in 0..65535) {
         throw MessageFormatException(
-            "Invalid Player Information format: userID out of acceptable range: $userId")
+          "Invalid Player Information format: userID out of acceptable range: $userId"
+        )
       }
     }
   }
@@ -68,7 +73,8 @@ data class PlayerInformation
       val b = buffer.get()
       if (b.toInt() != 0x00) {
         throw MessageFormatException(
-            "Invalid Player Information format: byte 0 = ${EmuUtil.byteToHex(b)}")
+          "Invalid Player Information format: byte 0 = ${EmuUtil.byteToHex(b)}"
+        )
       }
       val numPlayers = buffer.int
       val minLen = numPlayers * 9

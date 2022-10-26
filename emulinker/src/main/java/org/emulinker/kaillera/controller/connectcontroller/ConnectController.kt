@@ -33,14 +33,14 @@ import org.emulinker.util.EmuUtil.formatSocketAddress
  */
 @Singleton
 class ConnectController
-    @Inject
-    internal constructor(
-        // TODO(nue): This makes no sense because KailleraServerController is a singleton...
-        kailleraServerControllers: JavaSet<KailleraServerController>,
-        private val accessManager: AccessManager,
-        private val config: Configuration,
-        flags: RuntimeFlags,
-    ) : UDPServer() {
+@Inject
+internal constructor(
+  // TODO(nue): This makes no sense because KailleraServerController is a singleton...
+  kailleraServerControllers: JavaSet<KailleraServerController>,
+  private val accessManager: AccessManager,
+  private val config: Configuration,
+  flags: RuntimeFlags,
+) : UDPServer() {
 
   private val mutex = Mutex()
 
@@ -92,10 +92,11 @@ class ConnectController
   }
 
   override fun toString(): String =
-      if (bindPort > 0) "ConnectController($bindPort)" else "ConnectController(unbound)"
+    if (bindPort > 0) "ConnectController($bindPort)" else "ConnectController(unbound)"
 
   override suspend fun start(
-      udpSocketProvider: UdpSocketProvider, globalContext: CoroutineContext
+    udpSocketProvider: UdpSocketProvider,
+    globalContext: CoroutineContext
   ) {
     this.udpSocketProvider = udpSocketProvider
     this.globalContext = globalContext
@@ -114,35 +115,31 @@ class ConnectController
   }
 
   override suspend fun handleReceived(
-      buffer: ByteBuffer, remoteSocketAddress: InetSocketAddress, requestScope: CoroutineScope
+    buffer: ByteBuffer,
+    remoteSocketAddress: InetSocketAddress,
+    requestScope: CoroutineScope
   ) {
     requestCount++
     val formattedSocketAddress = formatSocketAddress(remoteSocketAddress)
     // TODO(nue): Remove this catch logic.
     val inMessage: ConnectMessage =
-        try {
-          parse(buffer)
-        } catch (e: MessageFormatException) {
-          messageFormatErrorCount++
-          buffer.rewind()
-          logger
-              .atWarning()
-              .log(
-                  "Received invalid message from %s: %s",
-                  formattedSocketAddress,
-                  dumpBuffer(buffer))
-          return
-        } catch (e: IllegalArgumentException) {
-          messageFormatErrorCount++
-          buffer.rewind()
-          logger
-              .atWarning()
-              .log(
-                  "Received invalid message from %s: %s",
-                  formattedSocketAddress,
-                  dumpBuffer(buffer))
-          return
-        }
+      try {
+        parse(buffer)
+      } catch (e: MessageFormatException) {
+        messageFormatErrorCount++
+        buffer.rewind()
+        logger
+          .atWarning()
+          .log("Received invalid message from %s: %s", formattedSocketAddress, dumpBuffer(buffer))
+        return
+      } catch (e: IllegalArgumentException) {
+        messageFormatErrorCount++
+        buffer.rewind()
+        logger
+          .atWarning()
+          .log("Received invalid message from %s: %s", formattedSocketAddress, dumpBuffer(buffer))
+        return
+      }
 
     logger.atFinest().log("-> FROM %s: %s", formattedSocketAddress, inMessage)
 
@@ -158,8 +155,8 @@ class ConnectController
     if (inMessage !is RequestPrivateKailleraPortRequest) {
       messageFormatErrorCount++
       logger
-          .atWarning()
-          .log("Received unexpected message type from %s: %s", formattedSocketAddress, inMessage)
+        .atWarning()
+        .log("Received unexpected message type from %s: %s", formattedSocketAddress, inMessage)
       return
     }
 
@@ -169,11 +166,12 @@ class ConnectController
     if (protocolController == null) {
       protocolErrorCount++
       logger
-          .atSevere()
-          .log(
-              "Client requested an unhandled protocol %s: %s",
-              formattedSocketAddress,
-              inMessage.protocol)
+        .atSevere()
+        .log(
+          "Client requested an unhandled protocol %s: %s",
+          formattedSocketAddress,
+          inMessage.protocol
+        )
       return
     }
     if (!accessManager.isAddressAllowed(remoteSocketAddress.address)) {
@@ -193,8 +191,8 @@ class ConnectController
                 lastAddressCount = 0
                 failedToStartCount++
                 logger
-                    .atFine()
-                    .log("SF MOD: HAMMER PROTECTION (2 Min Ban): %s", formattedSocketAddress)
+                  .atFine()
+                  .log("SF MOD: HAMMER PROTECTION (2 Min Ban): %s", formattedSocketAddress)
                 accessManager.addTempBan(remoteSocketAddress.address.hostAddress, 2.minutes)
                 return
               }
@@ -204,39 +202,43 @@ class ConnectController
             }
           } else lastAddress = remoteSocketAddress.address.hostAddress
           privatePort =
-              protocolController.newConnection(
-                  udpSocketProvider, remoteSocketAddress, inMessage.protocol)
+            protocolController.newConnection(
+              udpSocketProvider,
+              remoteSocketAddress,
+              inMessage.protocol
+            )
           if (privatePort <= 0) {
             failedToStartCount++
             logger
-                .atSevere()
-                .log("%s failed to start for %s", protocolController, formattedSocketAddress)
+              .atSevere()
+              .log("%s failed to start for %s", protocolController, formattedSocketAddress)
             return
           }
           connectCount++
           logger
-              .atFine()
-              .log(
-                  "%s allocated port %d to client from %s",
-                  protocolController,
-                  privatePort,
-                  remoteSocketAddress.address.hostAddress)
+            .atFine()
+            .log(
+              "%s allocated port %d to client from %s",
+              protocolController,
+              privatePort,
+              remoteSocketAddress.address.hostAddress
+            )
           send(RequestPrivateKailleraPortResponse(privatePort), remoteSocketAddress)
         }
       } catch (e: ServerFullException) {
         deniedServerFullCount++
         logger
-            .atFine()
-            .withCause(e)
-            .log("Sending server full response to %s", formattedSocketAddress)
+          .atFine()
+          .withCause(e)
+          .log("Sending server full response to %s", formattedSocketAddress)
         send(ConnectMessage_TOO(), remoteSocketAddress)
         return
       } catch (e: NewConnectionException) {
         deniedOtherCount++
         logger
-            .atWarning()
-            .withCause(e)
-            .log("%s denied connection from %s", protocolController, formattedSocketAddress)
+          .atWarning()
+          .withCause(e)
+          .log("%s denied connection from %s", protocolController, formattedSocketAddress)
         return
       }
     }

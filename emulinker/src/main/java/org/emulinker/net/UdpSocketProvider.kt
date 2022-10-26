@@ -10,12 +10,12 @@ class UdpSocketProvider @Inject constructor() {
     // TODO(nue): Should this be IO?
     val selectorManager = SelectorManager(Dispatchers.IO)
     return aSocket(selectorManager)
-        .udp()
-        .configure {
-          receiveBufferSize = bufferSize
-          sendBufferSize = bufferSize
-          typeOfService = TypeOfService.IPTOS_LOWDELAY
-        }
-        .bind(inetSocketAddress)
+      .udp()
+      .configure {
+        receiveBufferSize = bufferSize
+        sendBufferSize = bufferSize
+        typeOfService = TypeOfService.IPTOS_LOWDELAY
+      }
+      .bind(inetSocketAddress)
   }
 }

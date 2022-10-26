@@ -27,7 +27,7 @@ class ConnectMessage_TOO : ConnectMessage() {
       if (msg.length != ID.length + 1) throw MessageFormatException("Invalid message length!")
       if (!msg.startsWith(ID)) throw MessageFormatException("Invalid message identifier!")
       if (msg[msg.length - 1].code != 0x00)
-          throw MessageFormatException("Invalid message stop byte!")
+        throw MessageFormatException("Invalid message stop byte!")
       return ConnectMessage_TOO()
     }
   }

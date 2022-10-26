@@ -4,13 +4,13 @@ import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.protocol.V086Message.Companion.validateMessageNumber
 
 data class StartGame_Notification
-    @Throws(MessageFormatException::class)
-    constructor(
-        override val messageNumber: Int,
-        override val val1: Int,
-        override val playerNumber: Short,
-        override val numPlayers: Short
-    ) : StartGame() {
+@Throws(MessageFormatException::class)
+constructor(
+  override val messageNumber: Int,
+  override val val1: Int,
+  override val playerNumber: Short,
+  override val numPlayers: Short
+) : StartGame() {
 
   override val messageId = ID
 

@@ -7,11 +7,11 @@ import kotlin.Throws
 import kotlin.concurrent.withLock
 
 class PlayerActionQueue(
-    val playerNumber: Int,
-    val player: KailleraUserImpl,
-    numPlayers: Int,
-    private val gameBufferSize: Int,
-    private val gameTimeoutMillis: Int
+  val playerNumber: Int,
+  val player: KailleraUserImpl,
+  numPlayers: Int,
+  private val gameBufferSize: Int,
+  private val gameTimeoutMillis: Int
 ) {
   var lastTimeout: PlayerTimeoutException? = null
   private val array = ByteArray(gameBufferSize)
@@ -64,5 +64,5 @@ class PlayerActionQueue(
   }
 
   private fun getSize(playerNumber: Int): Int =
-      (tail + gameBufferSize - heads[playerNumber - 1]) % gameBufferSize
+    (tail + gameBufferSize - heads[playerNumber - 1]) % gameBufferSize
 }

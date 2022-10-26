@@ -25,44 +25,44 @@ import org.emulinker.net.UdpSocketProvider
 /** High level logic for handling messages on a port. Not tied to an individual user. */
 @Singleton
 class V086Controller
-    @Inject
-    internal constructor(
-        override var server: KailleraServer,
-        config: Configuration,
-        loginAction: LoginAction,
-        ackAction: ACKAction,
-        chatAction: ChatAction,
-        createGameAction: CreateGameAction,
-        joinGameAction: JoinGameAction,
-        keepAliveAction: KeepAliveAction,
-        quitGameAction: QuitGameAction,
-        quitAction: QuitAction,
-        startGameAction: StartGameAction,
-        gameChatAction: GameChatAction,
-        gameKickAction: GameKickAction,
-        userReadyAction: UserReadyAction,
-        cachedGameDataAction: CachedGameDataAction,
-        gameDataAction: GameDataAction,
-        dropGameAction: DropGameAction,
-        closeGameAction: CloseGameAction,
-        gameStatusAction: GameStatusAction,
-        gameDesynchAction: GameDesynchAction,
-        playerDesynchAction: PlayerDesynchAction,
-        gameInfoAction: GameInfoAction,
-        gameTimeoutAction: GameTimeoutAction,
-        infoMessageAction: InfoMessageAction,
-        private val v086ClientHandlerFactory: V086ClientHandler.Factory,
-        flags: RuntimeFlags
-    ) : KailleraServerController {
+@Inject
+internal constructor(
+  override var server: KailleraServer,
+  config: Configuration,
+  loginAction: LoginAction,
+  ackAction: ACKAction,
+  chatAction: ChatAction,
+  createGameAction: CreateGameAction,
+  joinGameAction: JoinGameAction,
+  keepAliveAction: KeepAliveAction,
+  quitGameAction: QuitGameAction,
+  quitAction: QuitAction,
+  startGameAction: StartGameAction,
+  gameChatAction: GameChatAction,
+  gameKickAction: GameKickAction,
+  userReadyAction: UserReadyAction,
+  cachedGameDataAction: CachedGameDataAction,
+  gameDataAction: GameDataAction,
+  dropGameAction: DropGameAction,
+  closeGameAction: CloseGameAction,
+  gameStatusAction: GameStatusAction,
+  gameDesynchAction: GameDesynchAction,
+  playerDesynchAction: PlayerDesynchAction,
+  gameInfoAction: GameInfoAction,
+  gameTimeoutAction: GameTimeoutAction,
+  infoMessageAction: InfoMessageAction,
+  private val v086ClientHandlerFactory: V086ClientHandler.Factory,
+  flags: RuntimeFlags
+) : KailleraServerController {
   /** [CoroutineScope] for long-running actions attached to the controller. */
   private val controllerCoroutineScope =
-      CoroutineScope(Dispatchers.IO) + CoroutineName("V086ControllerScope")
+    CoroutineScope(Dispatchers.IO) + CoroutineName("V086ControllerScope")
 
   var isRunning = false
     private set
 
   override val clientTypes: Array<String> =
-      config.getStringArray("controllers.v086.clientTypes.clientType")
+    config.getStringArray("controllers.v086.clientTypes.clientType")
 
   override val clientHandlers: MutableMap<Int, V086ClientHandler> = ConcurrentHashMap()
 
@@ -72,33 +72,33 @@ class V086Controller
   var portRangeQueue: Queue<Int> = ConcurrentLinkedQueue()
 
   val serverEventHandlers: Map<KClass<out ServerEvent>, V086ServerEventHandler<Nothing>> =
-      mapOf(
-          ChatEvent::class to chatAction,
-          GameCreatedEvent::class to createGameAction,
-          UserJoinedEvent::class to loginAction,
-          GameClosedEvent::class to closeGameAction,
-          UserQuitEvent::class to quitAction,
-          GameStatusChangedEvent::class to gameStatusAction,
-      )
+    mapOf(
+      ChatEvent::class to chatAction,
+      GameCreatedEvent::class to createGameAction,
+      UserJoinedEvent::class to loginAction,
+      GameClosedEvent::class to closeGameAction,
+      UserQuitEvent::class to quitAction,
+      GameStatusChangedEvent::class to gameStatusAction,
+    )
   val gameEventHandlers: Map<KClass<out GameEvent>, V086GameEventHandler<Nothing>> =
-      mapOf(
-          UserJoinedGameEvent::class to joinGameAction,
-          UserQuitGameEvent::class to quitGameAction,
-          GameStartedEvent::class to startGameAction,
-          GameChatEvent::class to gameChatAction,
-          AllReadyEvent::class to userReadyAction,
-          GameDataEvent::class to gameDataAction,
-          UserDroppedGameEvent::class to dropGameAction,
-          GameDesynchEvent::class to gameDesynchAction,
-          PlayerDesynchEvent::class to playerDesynchAction,
-          GameInfoEvent::class to gameInfoAction,
-          GameTimeoutEvent::class to gameTimeoutAction,
-      )
+    mapOf(
+      UserJoinedGameEvent::class to joinGameAction,
+      UserQuitGameEvent::class to quitGameAction,
+      GameStartedEvent::class to startGameAction,
+      GameChatEvent::class to gameChatAction,
+      AllReadyEvent::class to userReadyAction,
+      GameDataEvent::class to gameDataAction,
+      UserDroppedGameEvent::class to dropGameAction,
+      GameDesynchEvent::class to gameDesynchAction,
+      PlayerDesynchEvent::class to playerDesynchAction,
+      GameInfoEvent::class to gameInfoAction,
+      GameTimeoutEvent::class to gameTimeoutAction,
+    )
   val userEventHandlers: Map<KClass<out UserEvent>, V086UserEventHandler<Nothing>> =
-      mapOf(
-          ConnectedEvent::class to ackAction,
-          InfoMessageEvent::class to infoMessageAction,
-      )
+    mapOf(
+      ConnectedEvent::class to ackAction,
+      InfoMessageEvent::class to infoMessageAction,
+    )
 
   var actions: Array<V086Action<*>?> = arrayOfNulls(25)
 
@@ -118,14 +118,16 @@ class V086Controller
    */
   @Throws(ServerFullException::class, NewConnectionException::class)
   override suspend fun newConnection(
-      udpSocketProvider: UdpSocketProvider, clientSocketAddress: InetSocketAddress, protocol: String
+    udpSocketProvider: UdpSocketProvider,
+    clientSocketAddress: InetSocketAddress,
+    protocol: String
   ): Int {
     if (!isRunning) {
       throw NewConnectionException("Controller is not running")
     }
     logger
-        .atFine()
-        .log("Creating new connection for address %d, protocol %s", clientSocketAddress, protocol)
+      .atFine()
+      .log("Creating new connection for address %d, protocol %s", clientSocketAddress, protocol)
 
     val clientHandler = v086ClientHandlerFactory.create(clientSocketAddress, this)
     val user = server.newConnection(clientSocketAddress, protocol, clientHandler)
@@ -146,12 +148,13 @@ class V086Controller
         } catch (e: SocketException) {
           logger.atSevere().withCause(e).log("Failed to bind to port %d for: %s", port, user)
           logger
-              .atFine()
-              .log(
-                  "%s returning port %d to available port queue: %d available",
-                  this,
-                  port,
-                  portRangeQueue.size + 1)
+            .atFine()
+            .log(
+              "%s returning port %d to available port queue: %d available",
+              this,
+              port,
+              portRangeQueue.size + 1
+            )
           portRangeQueue.add(port)
         }
       }
@@ -186,11 +189,12 @@ class V086Controller
       maxPort = i
     }
     logger
-        .atWarning()
-        .log(
-            "Listening on UDP ports: %d to %d.  Make sure these ports are open in your firewall!",
-            portRangeStart,
-            maxPort)
+      .atWarning()
+      .log(
+        "Listening on UDP ports: %d to %d.  Make sure these ports are open in your firewall!",
+        portRangeStart,
+        maxPort
+      )
 
     // array access should be faster than a hash and we won't have to create
     // a new Integer each time

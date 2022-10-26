@@ -14,9 +14,9 @@ import org.emulinker.kaillera.model.exception.StartGameException
 
 @Singleton
 class StartGameAction
-    @Inject
-    internal constructor(private val lookingForGameReporter: TwitterBroadcaster) :
-    V086Action<StartGame_Request>, V086GameEventHandler<GameStartedEvent> {
+@Inject
+internal constructor(private val lookingForGameReporter: TwitterBroadcaster) :
+  V086Action<StartGame_Request>, V086GameEventHandler<GameStartedEvent> {
   override var actionPerformedCount = 0
     private set
   override var handledEventCount = 0
@@ -32,7 +32,8 @@ class StartGameAction
       logger.atFine().withCause(e).log("Failed to start game")
       try {
         clientHandler.send(
-            GameChat_Notification(clientHandler.nextMessageNumber, "Error", e.message!!))
+          GameChat_Notification(clientHandler.nextMessageNumber, "Error", e.message!!)
+        )
       } catch (ex: MessageFormatException) {
         logger.atSevere().withCause(ex).log("Failed to construct GameChat_Notification message")
       }
@@ -45,18 +46,20 @@ class StartGameAction
       val game = event.game
       clientHandler.user.tempDelay = game.highestUserFrameDelay - clientHandler.user.frameDelay
       val delay: Int =
-          if (game.sameDelay) {
-            game.highestUserFrameDelay
-          } else {
-            clientHandler.user.frameDelay
-          }
+        if (game.sameDelay) {
+          game.highestUserFrameDelay
+        } else {
+          clientHandler.user.frameDelay
+        }
       val playerNumber = game.getPlayerNumber(clientHandler.user)
       clientHandler.send(
-          StartGame_Notification(
-              clientHandler.nextMessageNumber,
-              delay.toShort().toInt(),
-              playerNumber.toByte().toShort(),
-              game.players.size.toByte().toShort()))
+        StartGame_Notification(
+          clientHandler.nextMessageNumber,
+          delay.toShort().toInt(),
+          playerNumber.toByte().toShort(),
+          game.players.size.toByte().toShort()
+        )
+      )
     } catch (e: MessageFormatException) {
       logger.atSevere().withCause(e).log("Failed to construct StartGame_Notification message")
     }

@@ -12,7 +12,7 @@ import org.emulinker.kaillera.model.exception.GameDataException
 
 @Singleton
 class GameDataAction @Inject internal constructor() :
-    V086Action<GameData>, V086GameEventHandler<GameDataEvent> {
+  V086Action<GameData>, V086GameEventHandler<GameDataEvent> {
   override val actionPerformedCount = 0
   override val handledEventCount = 0
 

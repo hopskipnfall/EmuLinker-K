@@ -53,7 +53,7 @@ class AutoFireScanner2(private var game: KailleraGame, sensitivity: Int) : AutoF
   }
 
   inner class ScanningJob(private val user: KailleraUser?, private val playerNumber: Int) :
-      Runnable {
+    Runnable {
     private var bytesPerAction = -1
     private val sizeLimit: Int = (maxDelay + 1) * minReps * 5
     private val bufferSize = 5
@@ -178,18 +178,19 @@ class AutoFireScanner2(private var game: KailleraGame, sensitivity: Int) : AutoF
             if (aSequenceCount >= minReps && bSequenceCount >= minReps && !stopFlag) {
               val gameImpl = game as KailleraGameImpl
               gameImpl.announce(
-                  getString("AutoFireScanner2.AutoFireDetected", user!!.userData.name),
+                getString("AutoFireScanner2.AutoFireDetected", user!!.userData.name),
               )
               logger
-                  .atInfo()
-                  .log(
-                      "AUTOUSERDUMP\t%s\t%d\t%d\t%s\t%s\t%s",
-                      EmuUtil.DATE_FORMAT.format(gameImpl.startDate),
-                      if (aSequence < bSequence) aSequence else bSequence,
-                      game.id,
-                      game.romName,
-                      user.userData.name,
-                      user.socketAddress.address.hostAddress)
+                .atInfo()
+                .log(
+                  "AUTOUSERDUMP\t%s\t%d\t%d\t%s\t%s\t%s",
+                  EmuUtil.DATE_FORMAT.format(gameImpl.startDate),
+                  if (aSequence < bSequence) aSequence else bSequence,
+                  game.id,
+                  game.romName,
+                  user.userData.name,
+                  user.socketAddress.address.hostAddress
+                )
               break
             }
           }
@@ -205,13 +206,14 @@ class AutoFireScanner2(private var game: KailleraGame, sensitivity: Int) : AutoF
   companion object {
     // MAX DELAY, MIN REPEITIONS
     private val SENSITIVITY_TABLE =
-        arrayOf(
-            intArrayOf(0, 0),
-            intArrayOf(2, 13),
-            intArrayOf(3, 11),
-            intArrayOf(4, 9),
-            intArrayOf(5, 7),
-            intArrayOf(6, 5))
+      arrayOf(
+        intArrayOf(0, 0),
+        intArrayOf(2, 13),
+        intArrayOf(3, 11),
+        intArrayOf(4, 9),
+        intArrayOf(5, 7),
+        intArrayOf(6, 5)
+      )
     protected var executor: ExecutorService = Executors.newCachedThreadPool()
     private val logger = FluentLogger.forEnclosingClass()
   }

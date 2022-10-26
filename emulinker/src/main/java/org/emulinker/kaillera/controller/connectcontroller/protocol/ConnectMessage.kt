@@ -30,12 +30,12 @@ sealed class ConnectMessage : ByteBufferMessage() {
     @Throws(MessageFormatException::class)
     fun parse(buffer: ByteBuffer): ConnectMessage {
       val messageStr =
-          try {
-            val stringDecoder = charset.newDecoder()
-            stringDecoder.decode(buffer).toString()
-          } catch (e: CharacterCodingException) {
-            throw MessageFormatException("Invalid bytes received: failed to decode to a string!", e)
-          }
+        try {
+          val stringDecoder = charset.newDecoder()
+          stringDecoder.decode(buffer).toString()
+        } catch (e: CharacterCodingException) {
+          throw MessageFormatException("Invalid bytes received: failed to decode to a string!", e)
+        }
 
       when {
         messageStr.startsWith(ConnectMessage_TOO.ID) -> {
@@ -56,7 +56,8 @@ sealed class ConnectMessage : ByteBufferMessage() {
         else -> {
           buffer.rewind()
           throw MessageFormatException(
-              "Unrecognized connect message: " + EmuUtil.dumpBuffer(buffer))
+            "Unrecognized connect message: " + EmuUtil.dumpBuffer(buffer)
+          )
         }
       }
     }
@@ -64,13 +65,13 @@ sealed class ConnectMessage : ByteBufferMessage() {
     @Throws(MessageFormatException::class)
     fun parse(byteReadPacket: ByteReadPacket): ConnectMessage {
       val messageStr =
-          try {
-            //            val stringDecoder = charset.newDecoder()
-            byteReadPacket.readText(charset)
-            //            stringDecoder.decode(byteReadPacket).toString()
-          } catch (e: CharacterCodingException) {
-            throw MessageFormatException("Invalid bytes received: failed to decode to a string!", e)
-          }
+        try {
+          //            val stringDecoder = charset.newDecoder()
+          byteReadPacket.readText(charset)
+          //            stringDecoder.decode(byteReadPacket).toString()
+        } catch (e: CharacterCodingException) {
+          throw MessageFormatException("Invalid bytes received: failed to decode to a string!", e)
+        }
 
       when {
         messageStr.startsWith(ConnectMessage_TOO.ID) -> {
@@ -90,9 +91,9 @@ sealed class ConnectMessage : ByteBufferMessage() {
         }
         //      byteReadPacket.rewind()
         else ->
-            throw MessageFormatException(
-                "Unrecognized connect message: " +
-                    EmuUtil.dumpBuffer(byteReadPacket.readByteBuffer()))
+          throw MessageFormatException(
+            "Unrecognized connect message: " + EmuUtil.dumpBuffer(byteReadPacket.readByteBuffer())
+          )
       }
     }
   }

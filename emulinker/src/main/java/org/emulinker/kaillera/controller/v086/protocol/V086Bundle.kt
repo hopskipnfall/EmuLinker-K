@@ -10,7 +10,7 @@ import org.emulinker.util.EmuUtil
 import org.emulinker.util.UnsignedUtil.getUnsignedShort
 
 class V086Bundle constructor(val messages: Array<V086Message?>, numToWrite: Int = Int.MAX_VALUE) :
-    ByteBufferMessage() {
+  ByteBufferMessage() {
   var numMessages: Int
     private set
 
@@ -61,23 +61,24 @@ class V086Bundle constructor(val messages: Array<V086Message?>, numToWrite: Int 
       // int messageCount = UnsignedUtil.getUnsignedByte(buffer);
       var messageCount = buffer.get().toInt()
       if (messageCount <= 0 || messageCount > 32)
-          throw V086BundleFormatException("Invalid message count: $messageCount", cause = null)
+        throw V086BundleFormatException("Invalid message count: $messageCount", cause = null)
       if (buffer.limit() < 1 + messageCount * 6)
-          throw V086BundleFormatException("Invalid bundle length: " + buffer.limit(), cause = null)
+        throw V086BundleFormatException("Invalid bundle length: " + buffer.limit(), cause = null)
       var parsedCount = 0
       val messages: Array<V086Message?>
       // buffer.getShort(1); - mistake. max value of short is 0x7FFF but we need 0xFFFF
       val msgNum = buffer.getChar(1).code
       //      if (1 + 1 == 2) throw ParseException("The answer is $msgNum, message length =
       // $messageCount")
-      if (msgNum - 1 == lastMessageID ||
-          msgNum == 0 && lastMessageID == 0xFFFF) { // exception for 0 and 0xFFFF
+      if (
+        msgNum - 1 == lastMessageID || msgNum == 0 && lastMessageID == 0xFFFF
+      ) { // exception for 0 and 0xFFFF
         messageCount = 1
         messages = arrayOfNulls(messageCount)
         val messageNumber = buffer.getUnsignedShort()
         val messageLength = buffer.short
         if (messageLength < 2 || messageLength > buffer.remaining())
-            throw ParseException("Invalid message length: $messageLength")
+          throw ParseException("Invalid message length: $messageLength")
         messages[parsedCount] = parse(messageNumber, messageLength.toInt(), buffer)
         parsedCount++
       } else {

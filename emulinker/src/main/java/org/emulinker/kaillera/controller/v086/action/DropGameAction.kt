@@ -12,7 +12,7 @@ import org.emulinker.kaillera.model.exception.DropGameException
 
 @Singleton
 class DropGameAction @Inject internal constructor() :
-    V086Action<PlayerDrop_Request>, V086GameEventHandler<UserDroppedGameEvent> {
+  V086Action<PlayerDrop_Request>, V086GameEventHandler<UserDroppedGameEvent> {
   override var actionPerformedCount = 0
     private set
   override var handledEventCount = 0
@@ -22,7 +22,8 @@ class DropGameAction @Inject internal constructor() :
 
   @Throws(FatalActionException::class)
   override suspend fun performAction(
-      message: PlayerDrop_Request, clientHandler: V086ClientHandler
+    message: PlayerDrop_Request,
+    clientHandler: V086ClientHandler
   ) {
     actionPerformedCount++
     try {
@@ -40,9 +41,13 @@ class DropGameAction @Inject internal constructor() :
       //			clientHandler.send(PlayerDrop_Notification.create(clientHandler.getNextMessageNumber(),
       // user.getName(), (byte) game.getPlayerNumber(user)));
       if (!user.inStealthMode)
-          clientHandler.send(
-              PlayerDrop_Notification(
-                  clientHandler.nextMessageNumber, user.userData.name, playerNumber.toByte()))
+        clientHandler.send(
+          PlayerDrop_Notification(
+            clientHandler.nextMessageNumber,
+            user.userData.name,
+            playerNumber.toByte()
+          )
+        )
     } catch (e: MessageFormatException) {
       logger.atSevere().withCause(e).log("Failed to construct PlayerDrop_Notification message")
     }

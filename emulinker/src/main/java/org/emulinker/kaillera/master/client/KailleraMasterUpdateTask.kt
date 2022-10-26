@@ -14,11 +14,11 @@ import org.emulinker.kaillera.model.KailleraServer
 import org.emulinker.kaillera.release.ReleaseInfo
 
 class KailleraMasterUpdateTask(
-    private val publicInfo: PublicServerInformation,
-    private val connectController: ConnectController,
-    private val kailleraServer: KailleraServer,
-    private val statsCollector: StatsCollector,
-    private val releaseInfo: ReleaseInfo
+  private val publicInfo: PublicServerInformation,
+  private val connectController: ConnectController,
+  private val kailleraServer: KailleraServer,
+  private val statsCollector: StatsCollector,
+  private val releaseInfo: ReleaseInfo
 ) : MasterListUpdateTask {
 
   private val httpClient: HttpClient = HttpClient()
@@ -39,20 +39,21 @@ class KailleraMasterUpdateTask(
     for (game in kailleraServer.games) {
       if (game.status != GameStatus.WAITING) continue
       waitingGames.append(
-          "${game.id}|${game.romName}|${game.owner.userData.name}|${game.owner.clientType}|${game.players.size}|")
+        "${game.id}|${game.romName}|${game.owner.userData.name}|${game.owner.clientType}|${game.players.size}|"
+      )
     }
     val params =
-        arrayOf(
-            NameValuePair("servername", publicInfo.serverName),
-            NameValuePair("port", connectController.bindPort.toString()),
-            NameValuePair("nbusers", kailleraServer.users.size.toString()),
-            NameValuePair("maxconn", kailleraServer.maxUsers.toString()),
-            NameValuePair("version", "ESF" + releaseInfo.versionString),
-            NameValuePair("nbgames", kailleraServer.games.size.toString()),
-            NameValuePair("location", publicInfo.location),
-            NameValuePair("ip", publicInfo.connectAddress),
-            NameValuePair("url", publicInfo.website),
-        )
+      arrayOf(
+        NameValuePair("servername", publicInfo.serverName),
+        NameValuePair("port", connectController.bindPort.toString()),
+        NameValuePair("nbusers", kailleraServer.users.size.toString()),
+        NameValuePair("maxconn", kailleraServer.maxUsers.toString()),
+        NameValuePair("version", "ESF" + releaseInfo.versionString),
+        NameValuePair("nbgames", kailleraServer.games.size.toString()),
+        NameValuePair("location", publicInfo.location),
+        NameValuePair("ip", publicInfo.connectAddress),
+        NameValuePair("url", publicInfo.website),
+      )
     val kailleraTouch: HttpMethod = GetMethod("http://www.kaillera.com/touch_server.php")
     kailleraTouch.setQueryString(params)
     kailleraTouch.setRequestHeader("Kaillera-games", createdGames.toString())

@@ -11,7 +11,7 @@ import org.emulinker.util.EmuLang
 
 @Singleton
 class PlayerDesynchAction @Inject internal constructor() :
-    V086GameEventHandler<PlayerDesynchEvent> {
+  V086GameEventHandler<PlayerDesynchEvent> {
   override var handledEventCount = 0
     private set
 
@@ -21,10 +21,12 @@ class PlayerDesynchAction @Inject internal constructor() :
     handledEventCount++
     try {
       clientHandler.send(
-          GameChat_Notification(
-              clientHandler.nextMessageNumber,
-              EmuLang.getString("PlayerDesynchAction.DesynchDetected"),
-              event.message))
+        GameChat_Notification(
+          clientHandler.nextMessageNumber,
+          EmuLang.getString("PlayerDesynchAction.DesynchDetected"),
+          event.message
+        )
+      )
       // if (clientHandler.getUser().getStatus() == KailleraUser.STATUS_PLAYING)
       //	clientHandler.getUser().dropGame();
     } catch (e: MessageFormatException) {

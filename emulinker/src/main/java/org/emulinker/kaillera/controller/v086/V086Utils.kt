@@ -81,8 +81,8 @@ object V086Utils {
   fun String.getNumBytesPlusStopByte(): Int = this.toByteArray(AppModule.charsetDoNotUse).size + 1
 
   fun toJavaAddress(address: io.ktor.network.sockets.InetSocketAddress) =
-      InetSocketAddress(address.hostname, address.port)
+    InetSocketAddress(address.hostname, address.port)
 
   fun InetSocketAddress.toKtorAddress() =
-      io.ktor.network.sockets.InetSocketAddress(this.hostname, this.port)
+    io.ktor.network.sockets.InetSocketAddress(this.hostname, this.port)
 }

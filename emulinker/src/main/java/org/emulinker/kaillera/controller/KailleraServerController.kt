@@ -16,7 +16,9 @@ interface KailleraServerController {
 
   @Throws(ServerFullException::class, NewConnectionException::class)
   suspend fun newConnection(
-      udpSocketProvider: UdpSocketProvider, clientSocketAddress: InetSocketAddress, protocol: String
+    udpSocketProvider: UdpSocketProvider,
+    clientSocketAddress: InetSocketAddress,
+    protocol: String
   ): Int
 
   fun start()

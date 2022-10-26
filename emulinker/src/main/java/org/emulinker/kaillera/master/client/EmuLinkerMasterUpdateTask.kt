@@ -16,10 +16,10 @@ import org.emulinker.kaillera.release.ReleaseInfo
 private const val TOUCH_LIST_URL = "http://master.emulinker.org/touch_list.php"
 
 class EmuLinkerMasterUpdateTask(
-    private val publicInfo: PublicServerInformation,
-    private val connectController: ConnectController,
-    private val kailleraServer: KailleraServer,
-    private val releaseInfo: ReleaseInfo
+  private val publicInfo: PublicServerInformation,
+  private val connectController: ConnectController,
+  private val kailleraServer: KailleraServer,
+  private val releaseInfo: ReleaseInfo
 ) : MasterListUpdateTask {
 
   private val httpClient: HttpClient = HttpClient()
@@ -31,34 +31,39 @@ class EmuLinkerMasterUpdateTask(
 
   override fun touchMaster() {
     val waitingGames = StringBuilder()
-    kailleraServer.games.asSequence().filter { it.status == GameStatus.WAITING }.forEach {
-      waitingGames.append(
-          "${it.romName}|${it.owner.userData.name}|${it.owner.clientType}|${it.players.size}/${it.maxUsers}|")
-    }
+    kailleraServer.games
+      .asSequence()
+      .filter { it.status == GameStatus.WAITING }
+      .forEach {
+        waitingGames.append(
+          "${it.romName}|${it.owner.userData.name}|${it.owner.clientType}|${it.players.size}/${it.maxUsers}|"
+        )
+      }
 
     val meth = GetMethod(TOUCH_LIST_URL)
     meth.setQueryString(
-        arrayOf(
-                "serverName" to publicInfo.serverName,
-                "ipAddress" to publicInfo.connectAddress,
-                "location" to publicInfo.location,
-                "website" to publicInfo.website,
-                "port" to connectController.bindPort.toString(),
-                "numUsers" to kailleraServer.users.size.toString(),
-                "maxUsers" to kailleraServer.maxUsers.toString(),
-                "numGames" to kailleraServer.games.size.toString(),
-                "maxGames" to kailleraServer.maxGames.toString(),
-                "version" to releaseInfo.shortVersionString,
-            )
-            .map { NameValuePair(it.first, it.second) }
-            .toTypedArray())
+      arrayOf(
+          "serverName" to publicInfo.serverName,
+          "ipAddress" to publicInfo.connectAddress,
+          "location" to publicInfo.location,
+          "website" to publicInfo.website,
+          "port" to connectController.bindPort.toString(),
+          "numUsers" to kailleraServer.users.size.toString(),
+          "maxUsers" to kailleraServer.maxUsers.toString(),
+          "numGames" to kailleraServer.games.size.toString(),
+          "maxGames" to kailleraServer.maxGames.toString(),
+          "version" to releaseInfo.shortVersionString,
+        )
+        .map { NameValuePair(it.first, it.second) }
+        .toTypedArray()
+    )
     meth.setRequestHeader("Waiting-games", waitingGames.toString())
     meth.followRedirects = true
     val props = Properties()
     try {
       val statusCode = httpClient.executeMethod(meth)
       if (statusCode != HttpStatus.SC_OK)
-          logger.atSevere().log("Failed to touch EmuLinker Master: %s", meth.statusLine)
+        logger.atSevere().log("Failed to touch EmuLinker Master: %s", meth.statusLine)
       else {
         props.load(meth.responseBodyAsStream)
         logger.atInfo().log("Touching EmuLinker Master done")

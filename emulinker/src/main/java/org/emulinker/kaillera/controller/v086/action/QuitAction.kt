@@ -12,7 +12,7 @@ import org.emulinker.kaillera.model.exception.ActionException
 
 @Singleton
 class QuitAction @Inject internal constructor() :
-    V086Action<Quit_Request>, V086ServerEventHandler<UserQuitEvent> {
+  V086Action<Quit_Request>, V086ServerEventHandler<UserQuitEvent> {
   override var actionPerformedCount = 0
     private set
   override var handledEventCount = 0
@@ -35,8 +35,13 @@ class QuitAction @Inject internal constructor() :
     try {
       val user = event.user
       clientHandler.send(
-          Quit_Notification(
-              clientHandler.nextMessageNumber, user.userData.name, user.userData.id, event.message))
+        Quit_Notification(
+          clientHandler.nextMessageNumber,
+          user.userData.name,
+          user.userData.id,
+          event.message
+        )
+      )
     } catch (e: MessageFormatException) {
       logger.atSevere().withCause(e).log("Failed to construct Quit_Notification message")
     }

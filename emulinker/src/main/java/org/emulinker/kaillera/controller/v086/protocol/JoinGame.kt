@@ -41,7 +41,7 @@ abstract class JoinGame : V086Message() {
       if (buffer.remaining() < 13) throw ParseException("Failed byte count validation!")
       val b = buffer.get()
       if (b.toInt() != 0x00)
-          throw MessageFormatException("Invalid format: byte 0 = " + EmuUtil.byteToHex(b))
+        throw MessageFormatException("Invalid format: byte 0 = " + EmuUtil.byteToHex(b))
       val gameID = buffer.getUnsignedShort()
       val val1 = buffer.getUnsignedShort()
       val userName = EmuUtil.readString(buffer, 0x00, AppModule.charsetDoNotUse)
@@ -50,16 +50,17 @@ abstract class JoinGame : V086Message() {
       val userID = buffer.getUnsignedShort()
       val connectionType = buffer.get()
       return if (userName.isBlank() && ping == 0L && userID == 0xFFFF)
-          JoinGame_Request(messageNumber, gameID, ConnectionType.fromByteValue(connectionType))
+        JoinGame_Request(messageNumber, gameID, ConnectionType.fromByteValue(connectionType))
       else
-          JoinGame_Notification(
-              messageNumber,
-              gameID,
-              val1,
-              userName,
-              ping,
-              userID,
-              ConnectionType.fromByteValue(connectionType))
+        JoinGame_Notification(
+          messageNumber,
+          gameID,
+          val1,
+          userName,
+          ping,
+          userID,
+          ConnectionType.fromByteValue(connectionType)
+        )
     }
   }
 }

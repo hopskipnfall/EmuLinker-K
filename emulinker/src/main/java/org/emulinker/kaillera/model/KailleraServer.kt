@@ -30,28 +30,31 @@ interface KailleraServer {
 
   @Throws(ServerFullException::class, NewConnectionException::class)
   fun newConnection(
-      clientSocketAddress: InetSocketAddress, protocol: String, listener: KailleraEventListener
+    clientSocketAddress: InetSocketAddress,
+    protocol: String,
+    listener: KailleraEventListener
   ): KailleraUser
 
   @Throws(
-      PingTimeException::class,
-      ClientAddressException::class,
-      ConnectionTypeException::class,
-      UserNameException::class,
-      LoginException::class)
+    PingTimeException::class,
+    ClientAddressException::class,
+    ConnectionTypeException::class,
+    UserNameException::class,
+    LoginException::class
+  )
   suspend fun login(user: KailleraUser)
 
-  @Throws(ChatException::class, FloodException::class)
-  fun chat(user: KailleraUser, message: String)
+  @Throws(ChatException::class, FloodException::class) fun chat(user: KailleraUser, message: String)
 
   @Throws(CreateGameException::class, FloodException::class)
   suspend fun createGame(user: KailleraUser, romName: String): KailleraGame
 
   @Throws(
-      QuitException::class,
-      DropGameException::class,
-      QuitGameException::class,
-      CloseGameException::class)
+    QuitException::class,
+    DropGameException::class,
+    QuitGameException::class,
+    CloseGameException::class
+  )
   fun quit(user: KailleraUser, message: String?)
   suspend fun stop()
 }

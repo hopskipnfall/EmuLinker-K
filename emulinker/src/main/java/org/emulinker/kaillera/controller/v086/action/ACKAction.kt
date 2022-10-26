@@ -19,7 +19,7 @@ import org.emulinker.kaillera.model.exception.*
 
 @Singleton
 class ACKAction @Inject internal constructor() :
-    V086Action<ClientACK>, V086UserEventHandler<UserEvent> {
+  V086Action<ClientACK>, V086UserEventHandler<UserEvent> {
   override var actionPerformedCount = 0
     private set
   override var handledEventCount = 0
@@ -36,19 +36,25 @@ class ACKAction @Inject internal constructor() :
     if (clientHandler.speedMeasurementCount > clientHandler.numAcksForSpeedTest) {
       user.ping = clientHandler.averageNetworkSpeed
       logger
-          .atFine()
-          .log(
-              "Calculated %s ping time: average=%d, best=%d",
-              user,
-              clientHandler.averageNetworkSpeed,
-              clientHandler.bestNetworkSpeed)
+        .atFine()
+        .log(
+          "Calculated %s ping time: average=%d, best=%d",
+          user,
+          clientHandler.averageNetworkSpeed,
+          clientHandler.bestNetworkSpeed
+        )
       try {
         user.login()
       } catch (e: LoginException) {
         try {
           clientHandler.send(
-              ConnectionRejected(
-                  clientHandler.nextMessageNumber, "server", user.userData.id, e.message ?: ""))
+            ConnectionRejected(
+              clientHandler.nextMessageNumber,
+              "server",
+              user.userData.id,
+              e.message ?: ""
+            )
+          )
         } catch (e2: MessageFormatException) {
           logger.atSevere().withCause(e2).log("Failed to construct new ConnectionRejected")
         }
@@ -74,13 +80,15 @@ class ACKAction @Inject internal constructor() :
     try {
       for (user in server.users) {
         if (user.status != UserStatus.CONNECTING && user != thisUser)
-            users.add(
-                ServerStatus.User(
-                    user.userData.name,
-                    user.ping.toLong(),
-                    user.status,
-                    user.userData.id,
-                    user.connectionType))
+          users.add(
+            ServerStatus.User(
+              user.userData.name,
+              user.ping.toLong(),
+              user.status,
+              user.userData.id,
+              user.connectionType
+            )
+          )
       }
     } catch (e: MessageFormatException) {
       logger.atSevere().withCause(e).log("Failed to construct new ServerStatus.User")
@@ -93,13 +101,15 @@ class ACKAction @Inject internal constructor() :
           if (!user.inStealthMode) num++
         }
         games.add(
-            ServerStatus.Game(
-                game.romName,
-                game.id,
-                game.clientType!!,
-                game.owner.userData.name,
-                "$num/${game.maxUsers}",
-                game.status))
+          ServerStatus.Game(
+            game.romName,
+            game.id,
+            game.clientType!!,
+            game.owner.userData.name,
+            "$num/${game.maxUsers}",
+            game.status
+          )
+        )
       }
     } catch (e: MessageFormatException) {
       logger.atSevere().withCause(e).log("Failed to construct new ServerStatus.User")
@@ -151,24 +161,25 @@ class ACKAction @Inject internal constructor() :
       gamesSubList.add(game)
     }
     if (usersSubList.size > 0 || gamesSubList.size > 0 || !sent)
-        sendServerStatus(clientHandler, usersSubList, gamesSubList, counter)
+      sendServerStatus(clientHandler, usersSubList, gamesSubList, counter)
   }
 
   private suspend fun sendServerStatus(
-      clientHandler: V086ClientHandler,
-      users: List<ServerStatus.User>,
-      games: List<Game>,
-      counter: Int
+    clientHandler: V086ClientHandler,
+    users: List<ServerStatus.User>,
+    games: List<Game>,
+    counter: Int
   ) {
     logger
-        .atFine()
-        .log(
-            "Sending ServerStatus to %s: %d users, %d games in %d bytes, games: %s",
-            clientHandler.user,
-            users.size,
-            games.size,
-            counter,
-            games.map { it.gameId })
+      .atFine()
+      .log(
+        "Sending ServerStatus to %s: %d users, %d games in %d bytes, games: %s",
+        clientHandler.user,
+        users.size,
+        games.size,
+        counter,
+        games.map { it.gameId }
+      )
     try {
       clientHandler.send(ServerStatus(clientHandler.nextMessageNumber, users, games))
     } catch (e: MessageFormatException) {
