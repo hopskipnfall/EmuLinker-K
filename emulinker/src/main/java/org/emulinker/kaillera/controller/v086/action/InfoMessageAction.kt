@@ -19,7 +19,8 @@ class InfoMessageAction @Inject internal constructor() : V086UserEventHandler<In
     handledEventCount++
     try {
       clientHandler.send(
-          InformationMessage(clientHandler.nextMessageNumber, "server", event.message))
+        InformationMessage(clientHandler.nextMessageNumber, "server", event.message)
+      )
     } catch (e: MessageFormatException) {
       logger.atSevere().withCause(e).log("Failed to construct InformationMessage message")
     }

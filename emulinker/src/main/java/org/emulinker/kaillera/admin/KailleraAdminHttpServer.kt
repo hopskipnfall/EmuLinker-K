@@ -16,7 +16,9 @@ import org.mortbay.jetty.servlet.ServletHttpContext
 import org.mortbay.util.InetAddrPort
 
 class KailleraAdminHttpServer(
-    config: Configuration, connectController: ConnectController?, kailleraServer: KailleraServer?
+  config: Configuration,
+  connectController: ConnectController?,
+  kailleraServer: KailleraServer?
 ) : AdminServer {
   private var appServer = Server()
 

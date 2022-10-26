@@ -77,8 +77,10 @@ abstract class UDPServer : Executable {
   @Synchronized
   protected open fun bind(udpSocketProvider: UdpSocketProvider, port: Int) {
     serverSocket =
-        udpSocketProvider.bindSocket(
-            io.ktor.network.sockets.InetSocketAddress("0.0.0.0", port), bufferSize)
+      udpSocketProvider.bindSocket(
+        io.ktor.network.sockets.InetSocketAddress("0.0.0.0", port),
+        bufferSize
+      )
 
     logger.atInfo().log("Accepting messages at %s", serverSocket.localAddress)
   }
@@ -93,15 +95,16 @@ abstract class UDPServer : Executable {
    * deadlocks are possible.
    */
   protected abstract suspend fun handleReceived(
-      buffer: ByteBuffer, remoteSocketAddress: InetSocketAddress, requestScope: CoroutineScope
+    buffer: ByteBuffer,
+    remoteSocketAddress: InetSocketAddress,
+    requestScope: CoroutineScope
   )
 
   protected suspend fun send(buffer: ByteBuffer, toSocketAddress: InetSocketAddress) {
     if (!isBound) {
       logger
-          .atWarning()
-          .log(
-              "Failed to send to %s: UDPServer is not bound!", formatSocketAddress(toSocketAddress))
+        .atWarning()
+        .log("Failed to send to %s: UDPServer is not bound!", formatSocketAddress(toSocketAddress))
       return
     }
     /*
@@ -131,18 +134,18 @@ abstract class UDPServer : Executable {
         val requestContext = CoroutineScope(coroutineContext)
         try {
           handleReceived(
-              buffer,
-              V086Utils.toJavaAddress(
-                  datagram.address as io.ktor.network.sockets.InetSocketAddress),
-              requestScope = requestContext)
+            buffer,
+            V086Utils.toJavaAddress(datagram.address as io.ktor.network.sockets.InetSocketAddress),
+            requestScope = requestContext
+          )
         } catch (e: Exception) {
           if (e is CancellationException) {
             throw e
           }
           logger
-              .atSevere()
-              .withCause(e)
-              .log("Error while handling request: %s", buffer.dumpBufferFromBeginning())
+            .atSevere()
+            .withCause(e)
+            .log("Error while handling request: %s", buffer.dumpBufferFromBeginning())
         }
       }
     }

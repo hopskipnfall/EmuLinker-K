@@ -25,7 +25,8 @@ class GameKickAction @Inject internal constructor() : V086Action<GameKick> {
       logger.atSevere().withCause(e).log("Failed to kick")
       try {
         clientHandler.send(
-            GameChat_Notification(clientHandler.nextMessageNumber, "Error", e.message ?: ""))
+          GameChat_Notification(clientHandler.nextMessageNumber, "Error", e.message ?: "")
+        )
       } catch (ex: MessageFormatException) {
         logger.atSevere().withCause(ex).log("Failed to construct GameChat_Notification message")
       }

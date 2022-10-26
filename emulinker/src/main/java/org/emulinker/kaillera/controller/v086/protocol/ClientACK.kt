@@ -7,8 +7,8 @@ import org.emulinker.kaillera.controller.messaging.ParseException
 import org.emulinker.util.EmuUtil
 
 data class ClientACK
-    @Throws(MessageFormatException::class)
-    constructor(override val messageNumber: Int) : ACK() {
+@Throws(MessageFormatException::class)
+constructor(override val messageNumber: Int) : ACK() {
 
   override val val1: Long = 0
   override val val2: Long = 1
@@ -30,7 +30,8 @@ data class ClientACK
       val b = buffer.get()
       if (b.toInt() != 0x00) {
         throw MessageFormatException(
-            "Invalid " + "Client to Server ACK" + " format: byte 0 = " + EmuUtil.byteToHex(b))
+          "Invalid " + "Client to Server ACK" + " format: byte 0 = " + EmuUtil.byteToHex(b)
+        )
       }
 
       // long val1 = UnsignedUtil.getUnsignedInt(buffer);

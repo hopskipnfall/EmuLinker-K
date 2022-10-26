@@ -24,15 +24,15 @@ import org.emulinker.util.GameDataCache
 
 /** Fake client for testing. */
 class EvalClient(
-    private val username: String,
-    private val connectControllerAddress: InetSocketAddress,
-    private val simulateGameLag: Boolean = false,
-    private val connectionType: ConnectionType = ConnectionType.LAN,
-    private val frameDelay: Int = 1,
-    private val clientType: String = "Project 64k 0.13 (01 Aug 2003)"
+  private val username: String,
+  private val connectControllerAddress: InetSocketAddress,
+  private val simulateGameLag: Boolean = false,
+  private val connectionType: ConnectionType = ConnectionType.LAN,
+  private val frameDelay: Int = 1,
+  private val clientType: String = "Project 64k 0.13 (01 Aug 2003)"
 ) : Closeable {
   private val evalCoroutineScope =
-      CoroutineScope(Dispatchers.IO) + CoroutineName("EvalClient[${username}]Scope")
+    CoroutineScope(Dispatchers.IO) + CoroutineName("EvalClient[${username}]Scope")
 
   private val lastMessageBuffer = LastMessageBuffer(V086Controller.MAX_BUNDLE_SIZE)
 
@@ -61,22 +61,22 @@ class EvalClient(
     socket = aSocket(selectorManager).udp().connect(connectControllerAddress)
 
     val allocatedPort =
-        socket.use { connectedSocket ->
-          logger.atInfo().log("Started new eval client at %s", connectedSocket.localAddress)
+      socket.use { connectedSocket ->
+        logger.atInfo().log("Started new eval client at %s", connectedSocket.localAddress)
 
-          sendConnectMessage(RequestPrivateKailleraPortRequest(protocol = "0.83"))
+        sendConnectMessage(RequestPrivateKailleraPortRequest(protocol = "0.83"))
 
-          val response = ConnectMessage.parse(connectedSocket.receive().packet.readByteBuffer())
-          logger.atInfo().log("<<<<<<<< Received message: %s", response)
-          require(response is RequestPrivateKailleraPortResponse)
+        val response = ConnectMessage.parse(connectedSocket.receive().packet.readByteBuffer())
+        logger.atInfo().log("<<<<<<<< Received message: %s", response)
+        require(response is RequestPrivateKailleraPortResponse)
 
-          response.port
-        }
+        response.port
+      }
 
     socket =
-        aSocket(selectorManager)
-            .udp()
-            .connect(InetSocketAddress(connectControllerAddress.hostname, allocatedPort))
+      aSocket(selectorManager)
+        .udp()
+        .connect(InetSocketAddress(connectControllerAddress.hostname, allocatedPort))
     logger.atInfo().log("Changing connection to: %s", socket.remoteAddress)
 
     giveServerTime()
@@ -91,8 +91,10 @@ class EvalClient(
           handleIncoming(response)
         } catch (e: ParseException) {
 
-          if (e.message?.contains("Failed byte count validation") == true &&
-              e.stackTrace.firstOrNull()?.fileName == "PlayerInformation.kt") {
+          if (
+            e.message?.contains("Failed byte count validation") == true &&
+              e.stackTrace.firstOrNull()?.fileName == "PlayerInformation.kt"
+          ) {
             // TODO(nue): There's a PlayerInformation parsing failure here and I don't understand..
             // We need to figure out what's going on, but for now log and continue.
             logger.atSevere().withCause(e).log("Failed to parse the PlayerInformation message!")
@@ -132,22 +134,71 @@ class EvalClient(
         }
         sendWithMessageId {
           GameData(
-              messageNumber = it,
-              gameData =
-                  when (playerNumber) {
-                    1 -> {
-                      byteArrayOf(
-                          16, 36, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 0, 0, 0, 0, 0)
-                    }
-                    2 -> {
-                      byteArrayOf(
-                          17, 32, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
-                    }
-                    else -> {
-                      logger.atSevere().log("Unexpected message type: %s", message)
-                      throw IllegalStateException()
-                    }
-                  })
+            messageNumber = it,
+            gameData =
+              when (playerNumber) {
+                1 -> {
+                  byteArrayOf(
+                    16,
+                    36,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    -1,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0
+                  )
+                }
+                2 -> {
+                  byteArrayOf(
+                    17,
+                    32,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    1,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0
+                  )
+                }
+                else -> {
+                  logger.atSevere().log("Unexpected message type: %s", message)
+                  throw IllegalStateException()
+                }
+              }
+          )
         }
       }
       is GameData -> {
@@ -160,22 +211,71 @@ class EvalClient(
         }
         sendWithMessageId {
           GameData(
-              messageNumber = it,
-              gameData =
-                  when (playerNumber) {
-                    1 -> {
-                      byteArrayOf(
-                          16, 36, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 0, 0, 0, 0, 0)
-                    }
-                    2 -> {
-                      byteArrayOf(
-                          17, 32, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
-                    }
-                    else -> {
-                      logger.atSevere().log("Unexpected message type: %s", message)
-                      throw IllegalStateException()
-                    }
-                  })
+            messageNumber = it,
+            gameData =
+              when (playerNumber) {
+                1 -> {
+                  byteArrayOf(
+                    16,
+                    36,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    -1,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0
+                  )
+                }
+                2 -> {
+                  byteArrayOf(
+                    17,
+                    32,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    1,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0
+                  )
+                }
+                else -> {
+                  logger.atSevere().log("Unexpected message type: %s", message)
+                  throw IllegalStateException()
+                }
+              }
+          )
         }
       }
       is CachedGameData -> {
@@ -185,22 +285,71 @@ class EvalClient(
         }
         sendWithMessageId {
           GameData(
-              messageNumber = it,
-              gameData =
-                  when (playerNumber) {
-                    1 -> {
-                      byteArrayOf(
-                          16, 36, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 0, 0, 0, 0, 0)
-                    }
-                    2 -> {
-                      byteArrayOf(
-                          17, 32, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
-                    }
-                    else -> {
-                      logger.atSevere().log("Unexpected message type: %s", message)
-                      throw IllegalStateException()
-                    }
-                  })
+            messageNumber = it,
+            gameData =
+              when (playerNumber) {
+                1 -> {
+                  byteArrayOf(
+                    16,
+                    36,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    -1,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0
+                  )
+                }
+                2 -> {
+                  byteArrayOf(
+                    17,
+                    32,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    1,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0
+                  )
+                }
+                else -> {
+                  logger.atSevere().log("Unexpected message type: %s", message)
+                  throw IllegalStateException()
+                }
+              }
+          )
         }
       }
       is StartGame_Notification -> {
@@ -217,7 +366,9 @@ class EvalClient(
   suspend fun createGame() {
     sendWithMessageId {
       CreateGame_Request(
-          messageNumber = it, romName = "Nintendo All-Star! Dairantou Smash Brothers (J)")
+        messageNumber = it,
+        romName = "Nintendo All-Star! Dairantou Smash Brothers (J)"
+      )
     }
     giveServerTime()
   }
@@ -253,7 +404,7 @@ class EvalClient(
     outMutex.withLock {
       lastOutgoingMessageNumber++
       val messageAsArray: Array<V086Message?> =
-          arrayOf(messageIdToMessage(lastOutgoingMessageNumber))
+        arrayOf(messageIdToMessage(lastOutgoingMessageNumber))
 
       val outBuffer = ByteBuffer.allocateDirect(4096)
       lastMessageBuffer.fill(messageAsArray, messageAsArray.size)

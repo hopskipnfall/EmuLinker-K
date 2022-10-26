@@ -16,14 +16,14 @@ import org.emulinker.util.Executable
 
 @Singleton
 class MasterListUpdater
-    @Inject
-    internal constructor(
-        private val flags: RuntimeFlags,
-        connectController: ConnectController?,
-        kailleraServer: KailleraServer?,
-        private val statsCollector: StatsCollector,
-        releaseInfo: ReleaseInfo?
-    ) : Executable {
+@Inject
+internal constructor(
+  private val flags: RuntimeFlags,
+  connectController: ConnectController?,
+  kailleraServer: KailleraServer?,
+  private val statsCollector: StatsCollector,
+  releaseInfo: ReleaseInfo?
+) : Executable {
   private var publicInfo: PublicServerInformation? = null
   private var emulinkerMasterTask: EmuLinkerMasterUpdateTask? = null
   private var kailleraMasterTask: KailleraMasterUpdateTask? = null
@@ -35,7 +35,7 @@ class MasterListUpdater
 
   @Synchronized
   override fun toString() =
-      "MasterListUpdater[touchKaillera=${flags.touchKaillera} touchEmulinker=${flags.touchEmulinker}]"
+    "MasterListUpdater[touchKaillera=${flags.touchKaillera} touchEmulinker=${flags.touchEmulinker}]"
 
   @Synchronized
   fun start() {
@@ -82,13 +82,22 @@ class MasterListUpdater
     }
     if (flags.touchKaillera) {
       kailleraMasterTask =
-          KailleraMasterUpdateTask(
-              publicInfo!!, connectController!!, kailleraServer!!, statsCollector, releaseInfo!!)
+        KailleraMasterUpdateTask(
+          publicInfo!!,
+          connectController!!,
+          kailleraServer!!,
+          statsCollector,
+          releaseInfo!!
+        )
     }
     if (flags.touchEmulinker) {
       emulinkerMasterTask =
-          EmuLinkerMasterUpdateTask(
-              publicInfo!!, connectController!!, kailleraServer!!, releaseInfo!!)
+        EmuLinkerMasterUpdateTask(
+          publicInfo!!,
+          connectController!!,
+          kailleraServer!!,
+          releaseInfo!!
+        )
     }
   }
 

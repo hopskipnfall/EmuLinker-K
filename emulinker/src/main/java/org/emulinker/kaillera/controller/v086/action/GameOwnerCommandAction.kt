@@ -50,27 +50,27 @@ private const val COMMAND_NUM = "/num"
 
 @Singleton
 class GameOwnerCommandAction @Inject internal constructor(private val flags: RuntimeFlags) :
-    V086Action<GameChat> {
+  V086Action<GameChat> {
   override val actionPerformedCount = 0
   override fun toString() = "GameOwnerCommandAction"
 
   fun isValidCommand(chat: String): Boolean {
     return when {
       chat.startsWith(COMMAND_HELP) ||
-          chat.startsWith(COMMAND_DETECTAUTOFIRE) ||
-          chat.startsWith(COMMAND_MAXUSERS) ||
-          chat.startsWith(COMMAND_MAXPING) ||
-          chat == COMMAND_START ||
-          chat.startsWith(COMMAND_STARTN) ||
-          chat.startsWith(COMMAND_MUTE) ||
-          chat.startsWith(COMMAND_EMU) ||
-          chat.startsWith(COMMAND_CONN) ||
-          chat.startsWith(COMMAND_UNMUTE) ||
-          chat.startsWith(COMMAND_SWAP) ||
-          chat.startsWith(COMMAND_KICK) ||
-          chat.startsWith(COMMAND_SAMEDELAY) ||
-          chat.startsWith(COMMAND_LAGSTAT) ||
-          chat.startsWith(COMMAND_NUM) -> true
+        chat.startsWith(COMMAND_DETECTAUTOFIRE) ||
+        chat.startsWith(COMMAND_MAXUSERS) ||
+        chat.startsWith(COMMAND_MAXPING) ||
+        chat == COMMAND_START ||
+        chat.startsWith(COMMAND_STARTN) ||
+        chat.startsWith(COMMAND_MUTE) ||
+        chat.startsWith(COMMAND_EMU) ||
+        chat.startsWith(COMMAND_CONN) ||
+        chat.startsWith(COMMAND_UNMUTE) ||
+        chat.startsWith(COMMAND_SWAP) ||
+        chat.startsWith(COMMAND_KICK) ||
+        chat.startsWith(COMMAND_SAMEDELAY) ||
+        chat.startsWith(COMMAND_LAGSTAT) ||
+        chat.startsWith(COMMAND_NUM) -> true
       else -> false
     }
   }
@@ -80,12 +80,12 @@ class GameOwnerCommandAction @Inject internal constructor(private val flags: Run
     val chat = message.message
     val user = clientHandler.user as KailleraUserImpl
     val game =
-        user.game ?: throw FatalActionException("GameOwner Command Failed: Not in a game: $chat")
+      user.game ?: throw FatalActionException("GameOwner Command Failed: Not in a game: $chat")
     if (user != game.owner && user.accessLevel < AccessManager.ACCESS_SUPERADMIN) {
       if (!chat.startsWith(COMMAND_HELP)) {
         logger
-            .atWarning()
-            .log("GameOwner Command Denied: Not game owner: %s: %s: %s", game, user, chat)
+          .atWarning()
+          .log("GameOwner Command Denied: Not game owner: %s: %s: %s", game, user, chat)
         game.announce("GameOwner Command Error: You are not an owner!", user)
         return
       }
@@ -94,7 +94,7 @@ class GameOwnerCommandAction @Inject internal constructor(private val flags: Run
       when {
         chat.startsWith(COMMAND_HELP) -> processHelp(chat, game, user, clientHandler)
         chat.startsWith(COMMAND_DETECTAUTOFIRE) ->
-            processDetectAutoFire(chat, game, user, clientHandler)
+          processDetectAutoFire(chat, game, user, clientHandler)
         chat.startsWith(COMMAND_MAXUSERS) -> processMaxUsers(chat, game, user, clientHandler)
         chat.startsWith(COMMAND_MAXPING) -> processMaxPing(chat, game, user, clientHandler)
         chat == COMMAND_START -> processStart(chat, game, user, clientHandler)
@@ -123,10 +123,10 @@ class GameOwnerCommandAction @Inject internal constructor(private val flags: Run
 
   @Throws(ActionException::class, MessageFormatException::class)
   private suspend fun processHelp(
-      message: String,
-      game: KailleraGameImpl,
-      admin: KailleraUserImpl,
-      clientHandler: V086ClientHandler
+    message: String,
+    game: KailleraGameImpl,
+    admin: KailleraUserImpl,
+    clientHandler: V086ClientHandler
   ) {
     if (admin != game.owner && admin.accessLevel < AccessManager.ACCESS_SUPERADMIN) return
     // game.setIndividualGameAnnounce(admin.getPlayerNumber());
@@ -143,7 +143,9 @@ class GameOwnerCommandAction @Inject internal constructor(private val flags: Run
     game.announce("/mute /unmute  <UserID> or /muteall or /unmuteall to mute player(s).", admin)
     delay(20.milliseconds)
     game.announce(
-        "/swap <order> eg. 123..n {n = total # of players; Each slot = new player#}", admin)
+      "/swap <order> eg. 123..n {n = total # of players; Each slot = new player#}",
+      admin
+    )
     delay(20.milliseconds)
     game.announce("/kick <Player#> or /kickall to kick a player(s).", admin)
     delay(20.milliseconds)
@@ -152,11 +154,14 @@ class GameOwnerCommandAction @Inject internal constructor(private val flags: Run
     game.announce("/setconn To restrict the gameroom to this connection type!", admin)
     delay(20.milliseconds)
     game.announce(
-        "/lagstat To check who has the most lag spikes or /lagreset to reset lagstat!", admin)
+      "/lagstat To check who has the most lag spikes or /lagreset to reset lagstat!",
+      admin
+    )
     delay(20.milliseconds)
     game.announce(
-        "/samedelay {true | false} to play at the same delay as player with highest ping. Default is false.",
-        admin)
+      "/samedelay {true | false} to play at the same delay as player with highest ping. Default is false.",
+      admin
+    )
     delay(20.milliseconds)
   }
 
@@ -167,17 +172,18 @@ class GameOwnerCommandAction @Inject internal constructor(private val flags: Run
     game.announce(EmuLang.getString("GameOwnerCommandAction.HelpDisable"), admin)
     delay(20.milliseconds)
     game.announce(
-        EmuLang.getString("GameOwnerCommandAction.HelpCurrentSensitivity", cur) +
-            if (cur == 0) EmuLang.getString("GameOwnerCommandAction.HelpDisabled") else "",
-        admin)
+      EmuLang.getString("GameOwnerCommandAction.HelpCurrentSensitivity", cur) +
+        if (cur == 0) EmuLang.getString("GameOwnerCommandAction.HelpDisabled") else "",
+      admin
+    )
   }
 
   @Throws(ActionException::class, MessageFormatException::class)
   private suspend fun processDetectAutoFire(
-      message: String,
-      game: KailleraGameImpl,
-      admin: KailleraUserImpl,
-      clientHandler: V086ClientHandler
+    message: String,
+    game: KailleraGameImpl,
+    admin: KailleraUserImpl,
+    clientHandler: V086ClientHandler
   ) {
     if (game.status != GameStatus.WAITING) {
       game.announce(EmuLang.getString("GameOwnerCommandAction.AutoFireChangeDeniedInGame"), admin)
@@ -200,17 +206,17 @@ class GameOwnerCommandAction @Inject internal constructor(private val flags: Run
     }
     game.autoFireDetector.sensitivity = sensitivity
     game.announce(
-        EmuLang.getString("GameOwnerCommandAction.HelpCurrentSensitivity", sensitivity) +
-            if (sensitivity == 0) EmuLang.getString("GameOwnerCommandAction.HelpDisabled") else "",
+      EmuLang.getString("GameOwnerCommandAction.HelpCurrentSensitivity", sensitivity) +
+        if (sensitivity == 0) EmuLang.getString("GameOwnerCommandAction.HelpDisabled") else "",
     )
   }
 
   @Throws(ActionException::class, MessageFormatException::class)
   private fun processEmu(
-      message: String,
-      game: KailleraGameImpl,
-      admin: KailleraUserImpl,
-      clientHandler: V086ClientHandler
+    message: String,
+    game: KailleraGameImpl,
+    admin: KailleraUserImpl,
+    clientHandler: V086ClientHandler
   ) {
     var emu = game.owner.clientType
     if (message == "/setemu any") {
@@ -218,7 +224,7 @@ class GameOwnerCommandAction @Inject internal constructor(private val flags: Run
     }
     admin.game!!.aEmulator = emu!!
     admin.game!!.announce(
-        "Owner has restricted the emulator to: $emu",
+      "Owner has restricted the emulator to: $emu",
     )
     return
   }
@@ -226,10 +232,10 @@ class GameOwnerCommandAction @Inject internal constructor(private val flags: Run
   // new gameowner command /setconn
   @Throws(ActionException::class, MessageFormatException::class)
   private fun processConn(
-      message: String,
-      game: KailleraGameImpl,
-      admin: KailleraUserImpl,
-      clientHandler: V086ClientHandler
+    message: String,
+    game: KailleraGameImpl,
+    admin: KailleraUserImpl,
+    clientHandler: V086ClientHandler
   ) {
     var conn = game.owner.connectionType.readableName
     if (message == "/setconn any") {
@@ -237,42 +243,47 @@ class GameOwnerCommandAction @Inject internal constructor(private val flags: Run
     }
     admin.game!!.aConnection = conn
     admin.game!!.announce(
-        "Owner has restricted the connection type to: $conn",
+      "Owner has restricted the connection type to: $conn",
     )
     return
   }
 
   @Throws(ActionException::class, MessageFormatException::class)
   private fun processNum(
-      message: String,
-      game: KailleraGameImpl,
-      admin: KailleraUserImpl,
-      clientHandler: V086ClientHandler
+    message: String,
+    game: KailleraGameImpl,
+    admin: KailleraUserImpl,
+    clientHandler: V086ClientHandler
   ) {
     admin.game!!.announce("${game.players.size} in the room!", admin)
   }
 
   @Throws(ActionException::class, MessageFormatException::class)
   private fun processLagstat(
-      message: String,
-      game: KailleraGameImpl,
-      admin: KailleraUserImpl,
-      clientHandler: V086ClientHandler
+    message: String,
+    game: KailleraGameImpl,
+    admin: KailleraUserImpl,
+    clientHandler: V086ClientHandler
   ) {
     if (message == "/lagstat") {
       if (flags.improvedLagstatEnabled) {
         game.announce("Lagged frames per player:")
-        game.players.asSequence().filter { !it.inStealthMode }.forEach {
-          game.announce(
-              "P${it.playerNumber}: ${it.smallLagSpikesCausedByUser} (tiny), ${it.bigLagSpikesCausedByUser} (big)")
-        }
+        game.players
+          .asSequence()
+          .filter { !it.inStealthMode }
+          .forEach {
+            game.announce(
+              "P${it.playerNumber}: ${it.smallLagSpikesCausedByUser} (tiny), ${it.bigLagSpikesCausedByUser} (big)"
+            )
+          }
       } else {
         game.announce(
-            "${game.players
+          "${game.players
           .asSequence()
           .filter { !it.inStealthMode }
           .map { "P" + it.playerNumber + ": " + it.timeouts }
-          .joinToString(", ")} lag spikes")
+          .joinToString(", ")} lag spikes"
+        )
       }
     } else if (message == "/lagreset") {
       for (player in game.players) {
@@ -281,37 +292,37 @@ class GameOwnerCommandAction @Inject internal constructor(private val flags: Run
         player.bigLagSpikesCausedByUser = 0
       }
       game.announce(
-          "LagStat has been reset!",
+        "LagStat has been reset!",
       )
     }
   }
 
   @Throws(ActionException::class, MessageFormatException::class)
   private fun processSameDelay(
-      message: String,
-      game: KailleraGameImpl,
-      admin: KailleraUserImpl,
-      clientHandler: V086ClientHandler
+    message: String,
+    game: KailleraGameImpl,
+    admin: KailleraUserImpl,
+    clientHandler: V086ClientHandler
   ) {
     if (message == "/samedelay true") {
       game.sameDelay = true
       admin.game!!.announce(
-          "Players will have the same delay when game starts (restarts)!",
+        "Players will have the same delay when game starts (restarts)!",
       )
     } else {
       game.sameDelay = false
       admin.game!!.announce(
-          "Players will have independent delays when game starts (restarts)!",
+        "Players will have independent delays when game starts (restarts)!",
       )
     }
   }
 
   @Throws(ActionException::class, MessageFormatException::class)
   private fun processMute(
-      message: String,
-      game: KailleraGameImpl,
-      admin: KailleraUserImpl,
-      clientHandler: V086ClientHandler
+    message: String,
+    game: KailleraGameImpl,
+    admin: KailleraUserImpl,
+    clientHandler: V086ClientHandler
   ) {
     val scanner = Scanner(message).useDelimiter(" ")
     try {
@@ -319,14 +330,16 @@ class GameOwnerCommandAction @Inject internal constructor(private val flags: Run
       if (str == "/muteall") {
         for (w in 1..game.players.size) {
           // do not mute owner or admin
-          if (game.getPlayer(w)!!.accessLevel < AccessManager.ACCESS_ADMIN &&
-              game.getPlayer(w) != game.owner) {
+          if (
+            game.getPlayer(w)!!.accessLevel < AccessManager.ACCESS_ADMIN &&
+              game.getPlayer(w) != game.owner
+          ) {
             game.getPlayer(w)!!.isMuted = true
             game.mutedUsers.add(game.getPlayer(w)!!.connectSocketAddress.address.hostAddress)
           }
         }
         admin.game!!.announce(
-            "All players have been muted!",
+          "All players have been muted!",
         )
         return
       }
@@ -340,8 +353,10 @@ class GameOwnerCommandAction @Inject internal constructor(private val flags: Run
         user.game!!.announce("You can't mute yourself!", admin)
         return
       }
-      if (user.accessLevel >= AccessManager.ACCESS_ADMIN &&
-          admin.accessLevel != AccessManager.ACCESS_SUPERADMIN) {
+      if (
+        user.accessLevel >= AccessManager.ACCESS_ADMIN &&
+          admin.accessLevel != AccessManager.ACCESS_SUPERADMIN
+      ) {
         user.game!!.announce("You can't mute an Admin", admin)
         return
       }
@@ -351,7 +366,7 @@ class GameOwnerCommandAction @Inject internal constructor(private val flags: Run
       user.isMuted = true
       val user1 = clientHandler.user as KailleraUserImpl
       user1.game!!.announce(
-          user.userData.name + " has been muted!",
+        user.userData.name + " has been muted!",
       )
     } catch (e: NoSuchElementException) {
       val user = clientHandler.user as KailleraUserImpl
@@ -361,10 +376,10 @@ class GameOwnerCommandAction @Inject internal constructor(private val flags: Run
 
   @Throws(ActionException::class, MessageFormatException::class)
   private fun processUnmute(
-      message: String,
-      game: KailleraGameImpl,
-      admin: KailleraUserImpl,
-      clientHandler: V086ClientHandler
+    message: String,
+    game: KailleraGameImpl,
+    admin: KailleraUserImpl,
+    clientHandler: V086ClientHandler
   ) {
     val scanner = Scanner(message).useDelimiter(" ")
     try {
@@ -375,7 +390,7 @@ class GameOwnerCommandAction @Inject internal constructor(private val flags: Run
           game.mutedUsers.remove(kailleraUser.connectSocketAddress.address.hostAddress)
         }
         admin.game!!.announce(
-            "All players have been unmuted!",
+          "All players have been unmuted!",
         )
         return
       }
@@ -389,17 +404,21 @@ class GameOwnerCommandAction @Inject internal constructor(private val flags: Run
         user.game!!.announce("You can't unmute yourself!", admin)
         return
       }
-      if (user.accessLevel >= AccessManager.ACCESS_ADMIN &&
-          admin.accessLevel != AccessManager.ACCESS_SUPERADMIN) {
+      if (
+        user.accessLevel >= AccessManager.ACCESS_ADMIN &&
+          admin.accessLevel != AccessManager.ACCESS_SUPERADMIN
+      ) {
         user.game!!.announce("You can't unmute an Admin", admin)
         return
       }
       game.mutedUsers.remove(user.connectSocketAddress.address.hostAddress)
       user.isMuted = false
       val user1 = clientHandler.user
-      (user1 as KailleraUserImpl).game!!.announce(
+      (user1 as KailleraUserImpl)
+        .game!!
+        .announce(
           user.userData.name + " has been unmuted!",
-      )
+        )
     } catch (e: NoSuchElementException) {
       val user = clientHandler.user as KailleraUserImpl
       user.game!!.announce("Unmute Player Error: /unmute <UserID>", admin)
@@ -408,10 +427,10 @@ class GameOwnerCommandAction @Inject internal constructor(private val flags: Run
 
   @Throws(ActionException::class, MessageFormatException::class)
   private fun processStartN(
-      message: String,
-      game: KailleraGameImpl,
-      admin: KailleraUserImpl,
-      clientHandler: V086ClientHandler
+    message: String,
+    game: KailleraGameImpl,
+    admin: KailleraUserImpl,
+    clientHandler: V086ClientHandler
   ) {
     val scanner = Scanner(message).useDelimiter(" ")
     try {
@@ -420,7 +439,7 @@ class GameOwnerCommandAction @Inject internal constructor(private val flags: Run
       if (num in 1..100) {
         game.startN = num.toByte().toInt()
         game.announce(
-            "This game will start when $num players have joined.",
+          "This game will start when $num players have joined.",
         )
       } else {
         game.announce("StartN Error: Enter value between 1 and 100.", admin)
@@ -432,10 +451,10 @@ class GameOwnerCommandAction @Inject internal constructor(private val flags: Run
 
   @Throws(ActionException::class, MessageFormatException::class)
   private fun processSwap(
-      message: String,
-      game: KailleraGameImpl,
-      admin: KailleraUserImpl,
-      clientHandler: V086ClientHandler
+    message: String,
+    game: KailleraGameImpl,
+    admin: KailleraUserImpl,
+    clientHandler: V086ClientHandler
   ) {
     /*if(game.getStatus() != KailleraGame.STATUS_PLAYING){
     	game.announce("Failed: wap Players can only be used during gameplay!", admin);
@@ -479,38 +498,40 @@ class GameOwnerCommandAction @Inject internal constructor(private val flags: Run
             else{
             	game.getPlayerActionQueue()[i] = game.getPlayerActionQueue()[num[i]-1];
             }*/ game.announce(
-                player.userData.name + " is now Player#: " + player.playerNumber,
+              player.userData.name + " is now Player#: " + player.playerNumber,
             )
             i++
           }
         } else
-            game.announce(
-                "Swap Player Error: /swap <order> eg. 123..n {n = total # of players; Each slot = new player#}",
-                admin)
+          game.announce(
+            "Swap Player Error: /swap <order> eg. 123..n {n = total # of players; Each slot = new player#}",
+            admin
+          )
       }
     } catch (e: NoSuchElementException) {
       game.announce(
-          "Swap Player Error: /swap <order> eg. 123..n {n = total # of players; Each slot = new player#}",
-          admin)
+        "Swap Player Error: /swap <order> eg. 123..n {n = total # of players; Each slot = new player#}",
+        admin
+      )
     }
   }
 
   @Throws(ActionException::class, MessageFormatException::class)
   private fun processStart(
-      message: String,
-      game: KailleraGameImpl,
-      admin: KailleraUserImpl,
-      clientHandler: V086ClientHandler
+    message: String,
+    game: KailleraGameImpl,
+    admin: KailleraUserImpl,
+    clientHandler: V086ClientHandler
   ) {
     game.start(admin)
   }
 
   @Throws(ActionException::class, MessageFormatException::class)
   private fun processKick(
-      message: String,
-      game: KailleraGameImpl,
-      admin: KailleraUserImpl,
-      clientHandler: V086ClientHandler
+    message: String,
+    game: KailleraGameImpl,
+    admin: KailleraUserImpl,
+    clientHandler: V086ClientHandler
   ) {
     val scanner = Scanner(message).useDelimiter(" ")
     try {
@@ -518,19 +539,21 @@ class GameOwnerCommandAction @Inject internal constructor(private val flags: Run
       if (str == "/kickall") {
         // start kick players from last to first and don't kick owner or admin
         for (w in game.players.size downTo 1) {
-          if (game.getPlayer(w)!!.accessLevel < AccessManager.ACCESS_ADMIN &&
-              game.getPlayer(w) != game.owner)
-              game.kick(admin, game.getPlayer(w)!!.userData.id)
+          if (
+            game.getPlayer(w)!!.accessLevel < AccessManager.ACCESS_ADMIN &&
+              game.getPlayer(w) != game.owner
+          )
+            game.kick(admin, game.getPlayer(w)!!.userData.id)
         }
         admin.game!!.announce(
-            "All players have been kicked!",
+          "All players have been kicked!",
         )
         return
       }
       val playerNumber = scanner.nextInt()
       if (playerNumber in 1..100) {
         if (game.getPlayer(playerNumber) != null)
-            game.kick(admin, game.getPlayer(playerNumber)!!.userData.id)
+          game.kick(admin, game.getPlayer(playerNumber)!!.userData.id)
         else {
           game.announce("Player doesn't exisit!", admin)
         }
@@ -544,10 +567,10 @@ class GameOwnerCommandAction @Inject internal constructor(private val flags: Run
 
   @Throws(ActionException::class, MessageFormatException::class)
   private fun processMaxUsers(
-      message: String,
-      game: KailleraGameImpl,
-      admin: KailleraUserImpl,
-      clientHandler: V086ClientHandler
+    message: String,
+    game: KailleraGameImpl,
+    admin: KailleraUserImpl,
+    clientHandler: V086ClientHandler
   ) {
     if (System.currentTimeMillis() - lastMaxUserChange <= 3000) {
       game.announce("Max User Command Spam Detection...Please Wait!", admin)
@@ -563,7 +586,7 @@ class GameOwnerCommandAction @Inject internal constructor(private val flags: Run
       if (num in 1..100) {
         game.maxUsers = num
         game.announce(
-            "Max Users has been set to $num",
+          "Max Users has been set to $num",
         )
       } else {
         game.announce("Max Users Error: Enter value between 1 and 100", admin)
@@ -575,10 +598,10 @@ class GameOwnerCommandAction @Inject internal constructor(private val flags: Run
 
   @Throws(ActionException::class, MessageFormatException::class)
   private fun processMaxPing(
-      message: String,
-      game: KailleraGameImpl,
-      admin: KailleraUserImpl,
-      clientHandler: V086ClientHandler
+    message: String,
+    game: KailleraGameImpl,
+    admin: KailleraUserImpl,
+    clientHandler: V086ClientHandler
   ) {
     val scanner = Scanner(message).useDelimiter(" ")
     try {
@@ -587,7 +610,7 @@ class GameOwnerCommandAction @Inject internal constructor(private val flags: Run
       if (num in 1..1000) {
         game.maxPing = num
         game.announce(
-            "Max Ping has been set to $num",
+          "Max Ping has been set to $num",
         )
       } else {
         game.announce("Max Ping Error: Enter value between 1 and 1000", admin)

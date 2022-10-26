@@ -4,12 +4,12 @@ import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.model.ConnectionType
 
 data class JoinGame_Request
-    @Throws(MessageFormatException::class)
-    constructor(
-        override val messageNumber: Int,
-        override val gameId: Int,
-        override val connectionType: ConnectionType
-    ) : JoinGame() {
+@Throws(MessageFormatException::class)
+constructor(
+  override val messageNumber: Int,
+  override val gameId: Int,
+  override val connectionType: ConnectionType
+) : JoinGame() {
 
   override val messageId = ID
 

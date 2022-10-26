@@ -4,10 +4,12 @@ import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.protocol.V086Message.Companion.validateMessageNumber
 
 data class QuitGame_Notification
-    @Throws(MessageFormatException::class)
-    constructor(
-        override val messageNumber: Int, override val username: String, override val userId: Int
-    ) : QuitGame() {
+@Throws(MessageFormatException::class)
+constructor(
+  override val messageNumber: Int,
+  override val username: String,
+  override val userId: Int
+) : QuitGame() {
 
   init {
     validateMessageNumber(messageNumber)

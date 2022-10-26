@@ -5,16 +5,16 @@ import org.emulinker.kaillera.controller.v086.protocol.V086Message.Companion.val
 import org.emulinker.kaillera.model.ConnectionType
 
 data class JoinGame_Notification
-    @Throws(MessageFormatException::class)
-    constructor(
-        override val messageNumber: Int,
-        override val gameId: Int,
-        override val val1: Int,
-        override val username: String,
-        override val ping: Long,
-        override val userId: Int,
-        override val connectionType: ConnectionType
-    ) : JoinGame() {
+@Throws(MessageFormatException::class)
+constructor(
+  override val messageNumber: Int,
+  override val gameId: Int,
+  override val val1: Int,
+  override val username: String,
+  override val ping: Long,
+  override val userId: Int,
+  override val connectionType: ConnectionType
+) : JoinGame() {
 
   override val messageId = ID
 

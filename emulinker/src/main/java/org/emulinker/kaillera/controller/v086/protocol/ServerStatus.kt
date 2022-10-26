@@ -16,22 +16,22 @@ import org.emulinker.util.UnsignedUtil.putUnsignedInt
 import org.emulinker.util.UnsignedUtil.putUnsignedShort
 
 data class ServerStatus
-    @Throws(MessageFormatException::class)
-    constructor(override val messageNumber: Int, val users: List<User>, val games: List<Game>) :
-    V086Message() {
+@Throws(MessageFormatException::class)
+constructor(override val messageNumber: Int, val users: List<User>, val games: List<Game>) :
+  V086Message() {
 
   override val messageId = ID
 
   override val bodyLength =
-      (
-      // 0x00.
-      V086Utils.Bytes.SINGLE_BYTE +
-          // Number of users.
-          V086Utils.Bytes.INTEGER +
-          // Number of games.
-          V086Utils.Bytes.INTEGER +
-          users.sumOf { it.numBytes } +
-          games.sumOf { it.numBytes })
+    (
+    // 0x00.
+    V086Utils.Bytes.SINGLE_BYTE +
+      // Number of users.
+      V086Utils.Bytes.INTEGER +
+      // Number of games.
+      V086Utils.Bytes.INTEGER +
+      users.sumOf { it.numBytes } +
+      games.sumOf { it.numBytes })
 
   public override fun writeBodyTo(buffer: ByteBuffer) {
     buffer.put(0x00.toByte())
@@ -43,33 +43,35 @@ data class ServerStatus
 
   // TODO(nue): this User and Game class should not be here.
   data class User
-      constructor(
-          val username: String,
-          val ping: Long,
-          val status: UserStatus,
-          val userId: Int,
-          val connectionType: ConnectionType
-      ) {
+  constructor(
+    val username: String,
+    val ping: Long,
+    val status: UserStatus,
+    val userId: Int,
+    val connectionType: ConnectionType
+  ) {
 
     init {
       if (ping < 0 || ping > 2048)
-          throw MessageFormatException(
-              "Invalid Server Status format: ping out of acceptable range: $ping")
+        throw MessageFormatException(
+          "Invalid Server Status format: ping out of acceptable range: $ping"
+        )
       if (userId < 0 || userId > 65535)
-          throw MessageFormatException(
-              "Invalid Server Status format: userID out of acceptable range: $userId")
+        throw MessageFormatException(
+          "Invalid Server Status format: userID out of acceptable range: $userId"
+        )
     }
 
     val numBytes =
-        (username.getNumBytesPlusStopByte() +
-            // Ping.
-            V086Utils.Bytes.INTEGER +
-            // Status.
-            V086Utils.Bytes.SINGLE_BYTE +
-            // User ID.
-            V086Utils.Bytes.SHORT +
-            // Connection type.
-            V086Utils.Bytes.SINGLE_BYTE)
+      (username.getNumBytesPlusStopByte() +
+        // Ping.
+        V086Utils.Bytes.INTEGER +
+        // Status.
+        V086Utils.Bytes.SINGLE_BYTE +
+        // User ID.
+        V086Utils.Bytes.SHORT +
+        // Connection type.
+        V086Utils.Bytes.SINGLE_BYTE)
 
     fun writeTo(buffer: ByteBuffer) {
       EmuUtil.writeString(buffer, username, 0x00, AppModule.charsetDoNotUse)
@@ -81,18 +83,18 @@ data class ServerStatus
   }
 
   data class Game
-      constructor(
-          val romName: String,
-          val gameId: Int,
-          val clientType: String,
-          val username: String,
-          /**
-           * Formatted like "2/4", showing the number of players present out of the max allowed in
-           * the room.
-           */
-          val playerCountOutOfMax: String,
-          val status: GameStatus
-      ) {
+  constructor(
+    val romName: String,
+    val gameId: Int,
+    val clientType: String,
+    val username: String,
+    /**
+     * Formatted like "2/4", showing the number of players present out of the max allowed in the
+     * room.
+     */
+    val playerCountOutOfMax: String,
+    val status: GameStatus
+  ) {
 
     init {
       require(romName.isNotBlank()) { "romName cannot be blank" }
@@ -103,14 +105,14 @@ data class ServerStatus
 
     val numBytes: Int
       get() =
-          (romName.getNumBytesPlusStopByte() +
-              // Game ID.
-              V086Utils.Bytes.INTEGER +
-              clientType.getNumBytesPlusStopByte() +
-              username.getNumBytesPlusStopByte() +
-              playerCountOutOfMax.getNumBytesPlusStopByte() +
-              // Status.
-              V086Utils.Bytes.SINGLE_BYTE)
+        (romName.getNumBytesPlusStopByte() +
+          // Game ID.
+          V086Utils.Bytes.INTEGER +
+          clientType.getNumBytesPlusStopByte() +
+          username.getNumBytesPlusStopByte() +
+          playerCountOutOfMax.getNumBytesPlusStopByte() +
+          // Status.
+          V086Utils.Bytes.SINGLE_BYTE)
 
     fun writeTo(buffer: ByteBuffer) {
       EmuUtil.writeString(buffer, romName, 0x00, AppModule.charsetDoNotUse)
@@ -137,7 +139,8 @@ data class ServerStatus
       val b = buffer.get()
       if (b.toInt() != 0x00) {
         throw MessageFormatException(
-            "Invalid Server Status format: byte 0 = " + EmuUtil.byteToHex(b))
+          "Invalid Server Status format: byte 0 = " + EmuUtil.byteToHex(b)
+        )
       }
       val numUsers = buffer.int
       val numGames = buffer.int
@@ -153,12 +156,14 @@ data class ServerStatus
         val userID = buffer.getUnsignedShort()
         val connectionType = buffer.get()
         users.add(
-            User(
-                userName,
-                ping,
-                UserStatus.fromByteValue(status),
-                userID,
-                ConnectionType.fromByteValue(connectionType)))
+          User(
+            userName,
+            ping,
+            UserStatus.fromByteValue(status),
+            userID,
+            ConnectionType.fromByteValue(connectionType)
+          )
+        )
       }
       val games: MutableList<Game> = ArrayList(numGames)
       for (j in 0 until numGames) {
@@ -174,7 +179,8 @@ data class ServerStatus
         if (buffer.remaining() < 1) throw ParseException("Failed byte count validation!")
         val status = buffer.get()
         games.add(
-            Game(romName, gameID, clientType, userName, players, GameStatus.fromByteValue(status)))
+          Game(romName, gameID, clientType, userName, players, GameStatus.fromByteValue(status))
+        )
       }
       return ServerStatus(messageNumber, users, games)
     }

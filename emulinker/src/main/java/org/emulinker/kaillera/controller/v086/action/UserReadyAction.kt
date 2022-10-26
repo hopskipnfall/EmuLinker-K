@@ -11,7 +11,7 @@ import org.emulinker.kaillera.model.exception.UserReadyException
 
 @Singleton
 class UserReadyAction @Inject internal constructor() :
-    V086Action<AllReady>, V086GameEventHandler<GameEvent> {
+  V086Action<AllReady>, V086GameEventHandler<GameEvent> {
   override var actionPerformedCount = 0
     private set
   override var handledEventCount = 0

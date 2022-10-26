@@ -36,7 +36,7 @@ object UnsignedUtil {
   }
 
   fun ByteBuffer.getUnsignedInt(position: Int): Long =
-      this.getInt(position).toLong() and 0xffffffffL
+    this.getInt(position).toLong() and 0xffffffffL
 
   fun ByteBuffer.putUnsignedInt(position: Int, value: Long) {
     this.putInt(position, (value and 0xffffffffL).toInt())
@@ -50,8 +50,8 @@ object UnsignedUtil {
   }
 
   fun ByteArray.readUnsignedShort(offset: Int, littleEndian: Boolean = false): Int =
-      if (littleEndian) (this[offset + 1].toInt() and 0xFF shl 8) + (this[offset].toInt() and 0xFF)
-      else (this[offset].toInt() and 0xFF shl 8) + (this[offset + 1].toInt() and 0xFF)
+    if (littleEndian) (this[offset + 1].toInt() and 0xFF shl 8) + (this[offset].toInt() and 0xFF)
+    else (this[offset].toInt() and 0xFF shl 8) + (this[offset + 1].toInt() and 0xFF)
 
   fun writeUnsignedShort(s: Int, bytes: ByteArray?, offset: Int) {
     writeUnsignedShort(s, bytes, offset)

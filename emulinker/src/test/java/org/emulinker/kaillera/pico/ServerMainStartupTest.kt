@@ -27,104 +27,106 @@ class ServerMainStartupTest {
 
   @Test
   fun startup() =
-      runBlocking(Dispatchers.IO) {
-        val component = DaggerAppComponent.create()
+    runBlocking(Dispatchers.IO) {
+      val component = DaggerAppComponent.create()
 
-        val kailleraServerControllerTask =
-            launch { component.kailleraServerController.start() } // Apparently cannot be removed.
-        val serverTask =
-            launch { component.server.start(component.udpSocketProvider, coroutineContext) }
-
-        // Make sure it stays alive for 3 seconds.
-        delay(3.seconds)
-
-        // Stop the server.
-        component.kailleraServerController.stop()
-        component.server.stop()
-        delay(1.seconds)
-
-        // Make sure that the coroutines for those tasks were successful.
-        assertThat(kailleraServerControllerTask.isCompleted).isTrue()
-        assertThat(serverTask.isCompleted).isTrue()
+      val kailleraServerControllerTask = launch {
+        component.kailleraServerController.start()
+      } // Apparently cannot be removed.
+      val serverTask = launch {
+        component.server.start(component.udpSocketProvider, coroutineContext)
       }
+
+      // Make sure it stays alive for 3 seconds.
+      delay(3.seconds)
+
+      // Stop the server.
+      component.kailleraServerController.stop()
+      component.server.stop()
+      delay(1.seconds)
+
+      // Make sure that the coroutines for those tasks were successful.
+      assertThat(kailleraServerControllerTask.isCompleted).isTrue()
+      assertThat(serverTask.isCompleted).isTrue()
+    }
 
   @Test
   fun `create game`() =
-      runBlocking(Dispatchers.IO) {
-        val component = DaggerAppComponent.create()
+    runBlocking(Dispatchers.IO) {
+      val component = DaggerAppComponent.create()
 
-        val server = component.server
+      val server = component.server
 
-        launch { component.kailleraServerController.start() } // Apparently cannot be removed.
-        launch { server.start(component.udpSocketProvider, coroutineContext) }
+      launch { component.kailleraServerController.start() } // Apparently cannot be removed.
+      launch { server.start(component.udpSocketProvider, coroutineContext) }
 
-        delay(20.milliseconds)
+      delay(20.milliseconds)
 
-        val user1 = EvalClient("testuser1", InetSocketAddress("127.0.0.1", 27888))
+      val user1 = EvalClient("testuser1", InetSocketAddress("127.0.0.1", 27888))
 
-        user1.connectToDedicatedPort()
-        user1.start()
+      user1.connectToDedicatedPort()
+      user1.start()
 
-        val controller = server.controllers.first()
-        val clientHandler = controller.clientHandlers.values.single()
+      val controller = server.controllers.first()
+      val clientHandler = controller.clientHandlers.values.single()
 
-        user1.createGame()
+      user1.createGame()
 
-        assertThat(clientHandler.user.status).isEqualTo(UserStatus.IDLE)
-        assertThat(clientHandler.user.game).isNotNull()
-        assertThat(clientHandler.user.game!!.status == GameStatus.WAITING)
+      assertThat(clientHandler.user.status).isEqualTo(UserStatus.IDLE)
+      assertThat(clientHandler.user.game).isNotNull()
+      assertThat(clientHandler.user.game!!.status == GameStatus.WAITING)
 
-        user1.quitGame()
-        user1.quitServer()
+      user1.quitGame()
+      user1.quitServer()
 
-        assertThat(controller.clientHandlers).isEmpty()
+      assertThat(controller.clientHandlers).isEmpty()
 
-        // Clean up.
-        user1.close()
-        component.kailleraServerController.stop()
-        component.server.stop()
-      }
+      // Clean up.
+      user1.close()
+      component.kailleraServerController.stop()
+      component.server.stop()
+    }
 
   @Test
   fun `create 50 games`() =
-      runBlocking(Dispatchers.IO) {
-        val component = DaggerAppComponent.create()
+    runBlocking(Dispatchers.IO) {
+      val component = DaggerAppComponent.create()
 
-        val server = component.server
+      val server = component.server
 
-        launch { component.kailleraServerController.start() } // Apparently cannot be removed.
-        launch { server.start(component.udpSocketProvider, coroutineContext) }
+      launch { component.kailleraServerController.start() } // Apparently cannot be removed.
+      launch { server.start(component.udpSocketProvider, coroutineContext) }
 
-        delay(50.milliseconds)
+      delay(50.milliseconds)
 
-        val connectAddress = InetSocketAddress("127.0.0.1", 27888)
+      val connectAddress = InetSocketAddress("127.0.0.1", 27888)
 
-        val numUsers = 30
-        val users = (1..numUsers).map { EvalClient("testuser$it", connectAddress) }
+      val numUsers = 30
+      val users = (1..numUsers).map { EvalClient("testuser$it", connectAddress) }
 
-        // Wrap this in a coroutineScope so that we wait for all of it to finish before proceeding.
-        coroutineScope {
-          users.forEach { user ->
-            launch {
-              user.connectToDedicatedPort()
-              user.start()
-            }
+      // Wrap this in a coroutineScope so that we wait for all of it to finish before proceeding.
+      coroutineScope {
+        users.forEach { user ->
+          launch {
+            user.connectToDedicatedPort()
+            user.start()
           }
         }
-
-        delay(3.seconds)
-
-        coroutineScope { users.forEach { launch { it.createGame() } } }
-
-        delay(3.seconds)
-
-        val clientHandlers = server.controllers.first().clientHandlers
-        assertThat(clientHandlers.size).isEqualTo(numUsers)
-        clientHandlers.values.forEach { assertThat(it.user.game).isNotNull() }
-
-        // Clean up.
-        users.forEach { it.close() }
-        component.kailleraServerController.stop()
-        component.server.stop()
       }
+
+      delay(3.seconds)
+
+      coroutineScope { users.forEach { launch { it.createGame() } } }
+
+      delay(3.seconds)
+
+      val clientHandlers = server.controllers.first().clientHandlers
+      assertThat(clientHandlers.size).isEqualTo(numUsers)
+      clientHandlers.values.forEach { assertThat(it.user.game).isNotNull() }
+
+      // Clean up.
+      users.forEach { it.close() }
+      component.kailleraServerController.stop()
+      component.server.stop()
+    }
 }

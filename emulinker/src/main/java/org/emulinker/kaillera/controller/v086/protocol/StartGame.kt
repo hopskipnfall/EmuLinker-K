@@ -37,7 +37,7 @@ abstract class StartGame : V086Message() {
       val playerNumber = buffer.getUnsignedByte()
       val numPlayers = buffer.getUnsignedByte()
       return if (val1 == 0xFFFF && playerNumber.toInt() == 0xFF && numPlayers.toInt() == 0xFF)
-          StartGame_Request(messageNumber)
+        StartGame_Request(messageNumber)
       else StartGame_Notification(messageNumber, val1, playerNumber, numPlayers)
     }
   }

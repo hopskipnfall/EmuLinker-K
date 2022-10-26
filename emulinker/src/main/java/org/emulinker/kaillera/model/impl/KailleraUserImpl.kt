@@ -26,16 +26,16 @@ import org.emulinker.util.Executable
 private const val EMULINKER_CLIENT_NAME = "EmulinkerSF Admin Client"
 
 class KailleraUserImpl(
-    override var userData: UserData,
-    override val protocol: String,
-    override val connectSocketAddress: InetSocketAddress,
-    override val listener: KailleraEventListener,
-    override val server: KailleraServerImpl,
-    flags: RuntimeFlags,
+  override var userData: UserData,
+  override val protocol: String,
+  override val connectSocketAddress: InetSocketAddress,
+  override val listener: KailleraEventListener,
+  override val server: KailleraServerImpl,
+  flags: RuntimeFlags,
 ) : KailleraUser, Executable {
   /** [CoroutineScope] for long-running actions attached to the user. */
   private val userCoroutineScope =
-      CoroutineScope(Dispatchers.IO) + CoroutineName("User[${userData.id}]Scope")
+    CoroutineScope(Dispatchers.IO) + CoroutineName("User[${userData.id}]Scope")
 
   override var inStealthMode = false
 
@@ -53,11 +53,11 @@ class KailleraUserImpl(
   private val initTime: Instant = Instant.now()
 
   override var connectionType: ConnectionType =
-      ConnectionType.DISABLED // TODO(nue): This probably shouldn't have a default.
+    ConnectionType.DISABLED // TODO(nue): This probably shouldn't have a default.
   override var ping = 0
   override lateinit var socketAddress: InetSocketAddress
   override var status =
-      UserStatus.PLAYING // TODO(nue): This probably shouldn't have a default value..
+    UserStatus.PLAYING // TODO(nue): This probably shouldn't have a default value..
   override var accessLevel = 0
   override var isEmuLinkerClient = false
     private set
@@ -158,7 +158,7 @@ class KailleraUserImpl(
   override var loggedIn = false
 
   override fun toString() =
-      "User${userData.id}(${if (userData.name.length > 15) userData.name.take(15) + "..." else userData.name}/${connectSocketAddress.address.hostAddress})"
+    "User${userData.id}(${if (userData.name.length > 15) userData.name.take(15) + "..." else userData.name}/${connectSocketAddress.address.hostAddress})"
 
   override fun updateLastKeepAlive() {
     lastKeepAlive = Instant.now()
@@ -179,10 +179,10 @@ class KailleraUserImpl(
 
   fun toDetailedString(): String {
     return ("KailleraUserImpl[id=${userData.id} protocol=$protocol status=$status name=${userData.name} clientType=$clientType ping=$ping connectionType=$connectionType remoteAddress=" +
-        (if (!this::socketAddress.isInitialized) {
-          EmuUtil.formatSocketAddress(connectSocketAddress)
-        } else EmuUtil.formatSocketAddress(socketAddress)) +
-        "]")
+      (if (!this::socketAddress.isInitialized) {
+        EmuUtil.formatSocketAddress(connectSocketAddress)
+      } else EmuUtil.formatSocketAddress(socketAddress)) +
+      "]")
   }
 
   override suspend fun stop() {
@@ -212,11 +212,12 @@ class KailleraUserImpl(
   // server actions
   @Synchronized
   @Throws(
-      PingTimeException::class,
-      ClientAddressException::class,
-      ConnectionTypeException::class,
-      UserNameException::class,
-      LoginException::class)
+    PingTimeException::class,
+    ClientAddressException::class,
+    ConnectionTypeException::class,
+    UserNameException::class,
+    LoginException::class
+  )
   override suspend fun login() {
     updateLastActivity()
     server.login(this)
@@ -252,7 +253,8 @@ class KailleraUserImpl(
     } else if (status == UserStatus.CONNECTING) {
       logger.atWarning().log("%s create game failed: User status is Connecting!", this)
       throw CreateGameException(
-          EmuLang.getString("KailleraUserImpl.CreateGameErrorNotFullyConnected"))
+        EmuLang.getString("KailleraUserImpl.CreateGameErrorNotFullyConnected")
+      )
     }
     val game = server.createGame(this, romName)
     lastCreateGameTime = System.currentTimeMillis()
@@ -261,10 +263,11 @@ class KailleraUserImpl(
 
   @Synchronized
   @Throws(
-      QuitException::class,
-      DropGameException::class,
-      QuitGameException::class,
-      CloseGameException::class)
+    QuitException::class,
+    DropGameException::class,
+    QuitGameException::class,
+    CloseGameException::class
+  )
   override fun quit(message: String?) {
     updateLastActivity()
     server.quit(this, message)
@@ -392,24 +395,26 @@ class KailleraUserImpl(
       logger.atWarning().log("%s player ready failed: Not in a game", this)
       throw UserReadyException(EmuLang.getString("KailleraUserImpl.PlayerReadyErrorNotInGame"))
     }
-    if (playerNumber > game!!.playerActionQueue!!.size ||
-        game!!.playerActionQueue!![playerNumber - 1].synched) {
+    if (
+      playerNumber > game!!.playerActionQueue!!.size ||
+        game!!.playerActionQueue!![playerNumber - 1].synched
+    ) {
       return
     }
     totalDelay = game!!.highestUserFrameDelay + tempDelay + 5
 
     smallLagThreshold =
-        Duration.ofSeconds(1)
-            .dividedBy(connectionType.updatesPerSecond.toLong())
-            .multipliedBy(frameDelay.toLong())
-            // Effectively this is the delay that is allowed before calling it a lag spike.
-            .plusMillis(10)
+      Duration.ofSeconds(1)
+        .dividedBy(connectionType.updatesPerSecond.toLong())
+        .multipliedBy(frameDelay.toLong())
+        // Effectively this is the delay that is allowed before calling it a lag spike.
+        .plusMillis(10)
     bigSpikeThreshold =
-        Duration.ofSeconds(1)
-            .dividedBy(connectionType.updatesPerSecond.toLong())
-            .multipliedBy(frameDelay.toLong())
-            // Effectively this is the delay that is allowed before calling it a lag spike.
-            .plusMillis(70)
+      Duration.ofSeconds(1)
+        .dividedBy(connectionType.updatesPerSecond.toLong())
+        .multipliedBy(frameDelay.toLong())
+        // Effectively this is the delay that is allowed before calling it a lag spike.
+        .plusMillis(70)
     game!!.ready(this, playerNumber)
   }
 
@@ -432,11 +437,12 @@ class KailleraUserImpl(
     try {
       if (game == null) {
         throw GameDataException(
-            EmuLang.getString("KailleraUserImpl.GameDataErrorNotInGame"),
-            data,
-            connectionType.byteValue.toInt(),
-            playerNumber = 1,
-            numPlayers = 1)
+          EmuLang.getString("KailleraUserImpl.GameDataErrorNotInGame"),
+          data,
+          connectionType.byteValue.toInt(),
+          playerNumber = 1,
+          numPlayers = 1
+        )
       }
 
       // Initial Delay
@@ -498,9 +504,9 @@ class KailleraUserImpl(
     val trySend = eventChannel.trySend(event)
     if (!trySend.isSuccess) {
       logger
-          .atSevere()
-          .withStackTrace(StackSize.FULL)
-          .log("Failed to add event to queue: %s", trySend)
+        .atSevere()
+        .withStackTrace(StackSize.FULL)
+        .log("Failed to add event to queue: %s", trySend)
     }
   }
 

@@ -17,7 +17,7 @@ import org.emulinker.kaillera.model.exception.QuitGameException
 
 @Singleton
 class QuitGameAction @Inject constructor(private val lookingForGameReporter: TwitterBroadcaster) :
-    V086Action<QuitGame_Request>, V086GameEventHandler<UserQuitGameEvent> {
+  V086Action<QuitGame_Request>, V086GameEventHandler<UserQuitGameEvent> {
   override var actionPerformedCount = 0
     private set
   override var handledEventCount = 0
@@ -48,14 +48,22 @@ class QuitGameAction @Inject constructor(private val lookingForGameReporter: Twi
       val user = event.user
       if (!user.inStealthMode) {
         clientHandler.send(
-            QuitGame_Notification(
-                clientHandler.nextMessageNumber, user.userData.name, user.userData.id))
+          QuitGame_Notification(
+            clientHandler.nextMessageNumber,
+            user.userData.name,
+            user.userData.id
+          )
+        )
       }
       if (thisUser === user) {
         if (user.inStealthMode)
-            clientHandler.send(
-                QuitGame_Notification(
-                    clientHandler.nextMessageNumber, user.userData.name, user.userData.id))
+          clientHandler.send(
+            QuitGame_Notification(
+              clientHandler.nextMessageNumber,
+              user.userData.name,
+              user.userData.id
+            )
+          )
       }
     } catch (e: MessageFormatException) {
       logger.atSevere().withCause(e).log("Failed to construct QuitGame_Notification message")
