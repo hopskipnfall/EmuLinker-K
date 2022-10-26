@@ -116,18 +116,18 @@ class EvalClient(
     logger.atInfo().log("<<<<<<<< Received message: %s", message)
 
     when (message) {
-      is ServerACK -> {
-        sendWithMessageId { ClientACK(messageNumber = it) }
+      is Ack.ServerAck -> {
+        sendWithMessageId { Ack.ClientAck(messageNumber = it) }
       }
       is ServerStatus -> {
         latestServerStatus = message
       }
       is InformationMessage -> {}
       is UserJoined -> {}
-      is CreateGame_Notification -> {}
+      is CreateGame.Notification -> {}
       is GameStatus -> {}
       is PlayerInformation -> {}
-      is JoinGame_Notification -> {}
+      is JoinGame.Notification -> {}
       is AllReady -> {
         if (simulateGameLag) {
           delay(delayBetweenPackets)
@@ -352,7 +352,7 @@ class EvalClient(
           )
         }
       }
-      is StartGame_Notification -> {
+      is StartGame.Notification -> {
         playerNumber = message.playerNumber.toInt()
         delay(1.seconds)
         sendWithMessageId { AllReady(messageNumber = it) }
@@ -365,7 +365,7 @@ class EvalClient(
 
   suspend fun createGame() {
     sendWithMessageId {
-      CreateGame_Request(
+      CreateGame.Request(
         messageNumber = it,
         romName = "Nintendo All-Star! Dairantou Smash Brothers (J)"
       )
@@ -374,7 +374,7 @@ class EvalClient(
   }
 
   suspend fun startOwnGame() {
-    sendWithMessageId { StartGame_Request(messageNumber = it) }
+    sendWithMessageId { StartGame.Request(messageNumber = it) }
     giveServerTime()
   }
 
@@ -382,7 +382,7 @@ class EvalClient(
     // TODO(nue): Make it listen to individual game creation updates too.
     val games = requireNotNull(latestServerStatus?.games)
     sendWithMessageId {
-      JoinGame_Request(messageNumber = it, gameId = games.first().gameId, connectionType)
+      JoinGame.Request(messageNumber = it, gameId = games.first().gameId, connectionType)
     }
     giveServerTime()
   }
@@ -417,17 +417,17 @@ class EvalClient(
   }
 
   suspend fun dropGame() {
-    sendWithMessageId { PlayerDrop_Request(messageNumber = it) }
+    sendWithMessageId { PlayerDrop.Request(messageNumber = it) }
     giveServerTime()
   }
 
   suspend fun quitGame() {
-    sendWithMessageId { QuitGame_Request(messageNumber = it) }
+    sendWithMessageId { QuitGame.Request(messageNumber = it) }
     giveServerTime()
   }
 
   suspend fun quitServer() {
-    sendWithMessageId { Quit_Request(messageNumber = it, message = "End of test.") }
+    sendWithMessageId { Quit.Request(messageNumber = it, message = "End of test.") }
     giveServerTime()
   }
 

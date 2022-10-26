@@ -17,10 +17,6 @@ data class PlayerInformation
 constructor(override val messageNumber: Int, val players: List<Player>) : V086Message() {
   override val messageId = ID
 
-  init {
-    validateMessageNumber(messageNumber)
-  }
-
   val numPlayers: Int
     get() = players.size
 
@@ -68,8 +64,10 @@ constructor(override val messageNumber: Int, val players: List<Player>) : V086Me
     const val ID: Byte = 0x0D
 
     @Throws(ParseException::class, MessageFormatException::class)
-    fun parse(messageNumber: Int, buffer: ByteBuffer): PlayerInformation {
-      if (buffer.remaining() < 14) throw ParseException("Failed byte count validation!")
+    fun parse(messageNumber: Int, buffer: ByteBuffer): MessageParseResult<PlayerInformation> {
+      if (buffer.remaining() < 14) {
+        return MessageParseResult.Failure("Failed byte count validation!")
+      }
       val b = buffer.get()
       if (b.toInt() != 0x00) {
         throw MessageFormatException(
@@ -78,22 +76,24 @@ constructor(override val messageNumber: Int, val players: List<Player>) : V086Me
       }
       val numPlayers = buffer.int
       val minLen = numPlayers * 9
-      if (buffer.remaining() < minLen) throw ParseException("Failed byte count validation!")
+      if (buffer.remaining() < minLen) {
+        return MessageParseResult.Failure("Failed byte count validation!")
+      }
       val players: MutableList<Player> = ArrayList(numPlayers)
       for (j in 0 until numPlayers) {
         if (buffer.remaining() < 9) {
-          throw ParseException("Failed byte count validation!")
+          return MessageParseResult.Failure("Failed byte count validation!")
         }
         val userName = EmuUtil.readString(buffer, 0x00, AppModule.charsetDoNotUse)
         if (buffer.remaining() < 7) {
-          throw ParseException("Failed byte count validation!")
+          return MessageParseResult.Failure("Failed byte count validation!")
         }
         val ping = buffer.getUnsignedInt()
         val userID = buffer.getUnsignedShort()
         val connectionType = buffer.get()
         players.add(Player(userName, ping, userID, ConnectionType.fromByteValue(connectionType)))
       }
-      return PlayerInformation(messageNumber, players)
+      return MessageParseResult.Success(PlayerInformation(messageNumber, players))
     }
   }
 }

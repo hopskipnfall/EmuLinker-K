@@ -22,7 +22,6 @@ constructor(override val messageNumber: Int, val gameId: Int, val val1: Int) : V
   }
 
   init {
-    validateMessageNumber(messageNumber)
     require(gameId in 0..0xFFFF) { "gameID out of acceptable range: $gameId" }
     require(val1 in 0..0xFFFF) { "val1 out of acceptable range: $val1" }
   }
@@ -31,14 +30,16 @@ constructor(override val messageNumber: Int, val gameId: Int, val val1: Int) : V
     const val ID: Byte = 0x10
 
     @Throws(ParseException::class, MessageFormatException::class)
-    fun parse(messageNumber: Int, buffer: ByteBuffer): CloseGame {
-      if (buffer.remaining() < 5) throw ParseException("Failed byte count validation!")
+    fun parse(messageNumber: Int, buffer: ByteBuffer): MessageParseResult<CloseGame> {
+      if (buffer.remaining() < 5) {
+        return MessageParseResult.Failure("Failed byte count validation!")
+      }
       val b = buffer.get()
       if (b.toInt() != 0x00)
         throw MessageFormatException("Invalid Close Game format: byte 0 = " + EmuUtil.byteToHex(b))
       val gameID = buffer.getUnsignedShort()
       val val1 = buffer.getUnsignedShort()
-      return CloseGame(messageNumber, gameID, val1)
+      return MessageParseResult.Success(CloseGame(messageNumber, gameID, val1))
     }
   }
 }

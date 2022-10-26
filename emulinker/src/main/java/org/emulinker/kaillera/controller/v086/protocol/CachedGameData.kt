@@ -23,14 +23,18 @@ constructor(override val messageNumber: Int, val key: Int) : V086Message() {
     const val ID: Byte = 0x13
 
     @Throws(ParseException::class, MessageFormatException::class)
-    fun parse(messageNumber: Int, buffer: ByteBuffer): CachedGameData {
-      if (buffer.remaining() < 2) throw ParseException("Failed byte count validation!")
+    fun parse(messageNumber: Int, buffer: ByteBuffer): MessageParseResult<CachedGameData> {
+      if (buffer.remaining() < 2) {
+        return MessageParseResult.Failure("Failed byte count validation!")
+      }
       val b = buffer.get()
       // removed to increase speed
       // if (b != 0x00)
       // throw new MessageFormatException("Invalid " + DESC + " format: byte 0 = " +
       // EmuUtil.byteToHex(b));
-      return CachedGameData(messageNumber, buffer.getUnsignedByte().toInt())
+      return MessageParseResult.Success(
+        CachedGameData(messageNumber, buffer.getUnsignedByte().toInt())
+      )
     }
   }
 }

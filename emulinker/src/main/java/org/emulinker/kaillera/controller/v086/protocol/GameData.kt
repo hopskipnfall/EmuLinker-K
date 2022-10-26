@@ -23,7 +23,6 @@ constructor(override val messageNumber: Int, val gameData: ByteArray) : V086Mess
   }
 
   init {
-    validateMessageNumber(messageNumber)
     require(gameData.isNotEmpty()) { "gameData is empty" }
     require(gameData.size in 0..0xFFFF) { "gameData size out of range: ${gameData.size}" }
   }
@@ -54,8 +53,10 @@ constructor(override val messageNumber: Int, val gameData: ByteArray) : V086Mess
     }
 
     @Throws(ParseException::class, MessageFormatException::class)
-    fun parse(messageNumber: Int, buffer: ByteBuffer): GameData {
-      if (buffer.remaining() < 4) throw ParseException("Failed byte count validation!")
+    fun parse(messageNumber: Int, buffer: ByteBuffer): MessageParseResult<GameData> {
+      if (buffer.remaining() < 4) {
+        return MessageParseResult.Failure("Failed byte count validation!")
+      }
       val b = buffer.get()
       // removed to increase speed
       //		if (b != 0x00)
@@ -66,7 +67,7 @@ constructor(override val messageNumber: Int, val gameData: ByteArray) : V086Mess
         throw MessageFormatException("Invalid Game Data format: dataSize = $dataSize")
       val gameData = ByteArray(dataSize)
       buffer[gameData]
-      return create(messageNumber, gameData)
+      return MessageParseResult.Success(create(messageNumber, gameData))
     }
   }
 }

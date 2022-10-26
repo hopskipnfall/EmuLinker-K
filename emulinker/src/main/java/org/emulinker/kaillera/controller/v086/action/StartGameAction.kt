@@ -5,9 +5,8 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086ClientHandler
-import org.emulinker.kaillera.controller.v086.protocol.GameChat_Notification
-import org.emulinker.kaillera.controller.v086.protocol.StartGame_Notification
-import org.emulinker.kaillera.controller.v086.protocol.StartGame_Request
+import org.emulinker.kaillera.controller.v086.protocol.GameChat
+import org.emulinker.kaillera.controller.v086.protocol.StartGame
 import org.emulinker.kaillera.lookingforgame.TwitterBroadcaster
 import org.emulinker.kaillera.model.event.GameStartedEvent
 import org.emulinker.kaillera.model.exception.StartGameException
@@ -16,7 +15,7 @@ import org.emulinker.kaillera.model.exception.StartGameException
 class StartGameAction
 @Inject
 internal constructor(private val lookingForGameReporter: TwitterBroadcaster) :
-  V086Action<StartGame_Request>, V086GameEventHandler<GameStartedEvent> {
+  V086Action<StartGame.Request>, V086GameEventHandler<GameStartedEvent> {
   override var actionPerformedCount = 0
     private set
   override var handledEventCount = 0
@@ -24,7 +23,7 @@ internal constructor(private val lookingForGameReporter: TwitterBroadcaster) :
 
   override fun toString() = "StartGameAction"
 
-  override suspend fun performAction(message: StartGame_Request, clientHandler: V086ClientHandler) {
+  override suspend fun performAction(message: StartGame.Request, clientHandler: V086ClientHandler) {
     actionPerformedCount++
     try {
       clientHandler.user.startGame()
@@ -32,10 +31,10 @@ internal constructor(private val lookingForGameReporter: TwitterBroadcaster) :
       logger.atFine().withCause(e).log("Failed to start game")
       try {
         clientHandler.send(
-          GameChat_Notification(clientHandler.nextMessageNumber, "Error", e.message!!)
+          GameChat.Notification(clientHandler.nextMessageNumber, "Error", e.message!!)
         )
       } catch (ex: MessageFormatException) {
-        logger.atSevere().withCause(ex).log("Failed to construct GameChat_Notification message")
+        logger.atSevere().withCause(ex).log("Failed to construct GameChat.Notification message")
       }
     }
   }
@@ -53,7 +52,7 @@ internal constructor(private val lookingForGameReporter: TwitterBroadcaster) :
         }
       val playerNumber = game.getPlayerNumber(clientHandler.user)
       clientHandler.send(
-        StartGame_Notification(
+        StartGame.Notification(
           clientHandler.nextMessageNumber,
           delay.toShort().toInt(),
           playerNumber.toByte().toShort(),
@@ -61,7 +60,7 @@ internal constructor(private val lookingForGameReporter: TwitterBroadcaster) :
         )
       )
     } catch (e: MessageFormatException) {
-      logger.atSevere().withCause(e).log("Failed to construct StartGame_Notification message")
+      logger.atSevere().withCause(e).log("Failed to construct StartGame.Notification message")
     }
     lookingForGameReporter.cancelActionsForGame(event.game.id)
   }

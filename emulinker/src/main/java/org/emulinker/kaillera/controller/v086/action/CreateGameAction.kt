@@ -6,9 +6,8 @@ import javax.inject.Singleton
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086ClientHandler
 import org.emulinker.kaillera.controller.v086.protocol.CreateGame
-import org.emulinker.kaillera.controller.v086.protocol.CreateGame_Notification
 import org.emulinker.kaillera.controller.v086.protocol.InformationMessage
-import org.emulinker.kaillera.controller.v086.protocol.QuitGame_Notification
+import org.emulinker.kaillera.controller.v086.protocol.QuitGame
 import org.emulinker.kaillera.model.event.GameCreatedEvent
 import org.emulinker.kaillera.model.exception.CreateGameException
 import org.emulinker.kaillera.model.exception.FloodException
@@ -43,7 +42,7 @@ class CreateGameAction @Inject internal constructor() :
           )
         )
         clientHandler.send(
-          QuitGame_Notification(
+          QuitGame.Notification(
             clientHandler.nextMessageNumber,
             clientHandler.user.userData.name,
             clientHandler.user.userData.id
@@ -66,7 +65,7 @@ class CreateGameAction @Inject internal constructor() :
           )
         )
         clientHandler.send(
-          QuitGame_Notification(
+          QuitGame.Notification(
             clientHandler.nextMessageNumber,
             clientHandler.user.userData.name,
             clientHandler.user.userData.id
@@ -84,7 +83,7 @@ class CreateGameAction @Inject internal constructor() :
       val game = event.game
       val owner = game.owner
       clientHandler.send(
-        CreateGame_Notification(
+        CreateGame.Notification(
           clientHandler.nextMessageNumber,
           owner.userData.name,
           game.romName,
@@ -94,7 +93,7 @@ class CreateGameAction @Inject internal constructor() :
         )
       )
     } catch (e: MessageFormatException) {
-      logger.atSevere().withCause(e).log("Failed to construct CreateGame_Notification message")
+      logger.atSevere().withCause(e).log("Failed to construct CreateGame.Notification message")
     }
   }
 

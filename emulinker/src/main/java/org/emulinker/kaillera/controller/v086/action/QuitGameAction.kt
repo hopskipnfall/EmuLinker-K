@@ -7,8 +7,7 @@ import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.delay
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086ClientHandler
-import org.emulinker.kaillera.controller.v086.protocol.QuitGame_Notification
-import org.emulinker.kaillera.controller.v086.protocol.QuitGame_Request
+import org.emulinker.kaillera.controller.v086.protocol.QuitGame
 import org.emulinker.kaillera.lookingforgame.TwitterBroadcaster
 import org.emulinker.kaillera.model.event.UserQuitGameEvent
 import org.emulinker.kaillera.model.exception.CloseGameException
@@ -17,7 +16,7 @@ import org.emulinker.kaillera.model.exception.QuitGameException
 
 @Singleton
 class QuitGameAction @Inject constructor(private val lookingForGameReporter: TwitterBroadcaster) :
-  V086Action<QuitGame_Request>, V086GameEventHandler<UserQuitGameEvent> {
+  V086Action<QuitGame.Request>, V086GameEventHandler<UserQuitGameEvent> {
   override var actionPerformedCount = 0
     private set
   override var handledEventCount = 0
@@ -26,7 +25,7 @@ class QuitGameAction @Inject constructor(private val lookingForGameReporter: Twi
   override fun toString() = "QuitGameAction"
 
   @Throws(FatalActionException::class)
-  override suspend fun performAction(message: QuitGame_Request, clientHandler: V086ClientHandler) {
+  override suspend fun performAction(message: QuitGame.Request, clientHandler: V086ClientHandler) {
     actionPerformedCount++
     try {
       clientHandler.user.quitGame()
@@ -48,7 +47,7 @@ class QuitGameAction @Inject constructor(private val lookingForGameReporter: Twi
       val user = event.user
       if (!user.inStealthMode) {
         clientHandler.send(
-          QuitGame_Notification(
+          QuitGame.Notification(
             clientHandler.nextMessageNumber,
             user.userData.name,
             user.userData.id
@@ -58,7 +57,7 @@ class QuitGameAction @Inject constructor(private val lookingForGameReporter: Twi
       if (thisUser === user) {
         if (user.inStealthMode)
           clientHandler.send(
-            QuitGame_Notification(
+            QuitGame.Notification(
               clientHandler.nextMessageNumber,
               user.userData.name,
               user.userData.id
@@ -66,7 +65,7 @@ class QuitGameAction @Inject constructor(private val lookingForGameReporter: Twi
           )
       }
     } catch (e: MessageFormatException) {
-      logger.atSevere().withCause(e).log("Failed to construct QuitGame_Notification message")
+      logger.atSevere().withCause(e).log("Failed to construct QuitGame.Notification message")
     }
   }
 

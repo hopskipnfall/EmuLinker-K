@@ -6,8 +6,8 @@ import javax.inject.Singleton
 import org.emulinker.kaillera.access.AccessManager
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086ClientHandler
+import org.emulinker.kaillera.controller.v086.protocol.Ack
 import org.emulinker.kaillera.controller.v086.protocol.InformationMessage
-import org.emulinker.kaillera.controller.v086.protocol.ServerACK
 import org.emulinker.kaillera.controller.v086.protocol.UserInformation
 import org.emulinker.kaillera.controller.v086.protocol.UserJoined
 import org.emulinker.kaillera.model.KailleraUser
@@ -34,9 +34,9 @@ class LoginAction @Inject internal constructor() :
     user.connectionType = message.connectionType
     clientHandler.startSpeedTest()
     try {
-      clientHandler.send(ServerACK(clientHandler.nextMessageNumber))
+      clientHandler.send(Ack.ServerAck(clientHandler.nextMessageNumber))
     } catch (e: MessageFormatException) {
-      logger.atSevere().withCause(e).log("Failed to construct ServerACK message")
+      logger.atSevere().withCause(e).log("Failed to construct ACK.ServerACK message")
     }
   }
 

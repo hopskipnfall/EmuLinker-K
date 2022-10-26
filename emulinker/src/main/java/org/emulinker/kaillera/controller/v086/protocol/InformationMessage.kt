@@ -4,7 +4,6 @@ import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.messaging.ParseException
 import org.emulinker.kaillera.controller.v086.V086Utils.getNumBytes
-import org.emulinker.kaillera.controller.v086.protocol.V086Message.Companion.validateMessageNumber
 import org.emulinker.kaillera.pico.AppModule
 import org.emulinker.util.EmuUtil
 
@@ -16,7 +15,6 @@ constructor(override val messageNumber: Int, val source: String, val message: St
   override val messageId = ID
 
   init {
-    validateMessageNumber(messageNumber)
     require(source.isNotBlank()) { "source cannot be blank" }
     require(message.isNotBlank()) { "message cannot be blank" }
   }
@@ -33,12 +31,16 @@ constructor(override val messageNumber: Int, val source: String, val message: St
     const val ID: Byte = 0x17
 
     @Throws(ParseException::class, MessageFormatException::class)
-    fun parse(messageNumber: Int, buffer: ByteBuffer): InformationMessage {
-      if (buffer.remaining() < 4) throw ParseException("Failed byte count validation!")
+    fun parse(messageNumber: Int, buffer: ByteBuffer): MessageParseResult<InformationMessage> {
+      if (buffer.remaining() < 4) {
+        return MessageParseResult.Failure("Failed byte count validation!")
+      }
       val source = EmuUtil.readString(buffer, 0x00, AppModule.charsetDoNotUse)
-      if (buffer.remaining() < 2) throw ParseException("Failed byte count validation!")
+      if (buffer.remaining() < 2) {
+        return MessageParseResult.Failure("Failed byte count validation!")
+      }
       val message = EmuUtil.readString(buffer, 0x00, AppModule.charsetDoNotUse)
-      return InformationMessage(messageNumber, source, message)
+      return MessageParseResult.Success(InformationMessage(messageNumber, source, message))
     }
   }
 }

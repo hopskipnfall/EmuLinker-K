@@ -7,7 +7,7 @@ import org.emulinker.kaillera.controller.v086.V086Utils.getNumBytes
 import org.emulinker.kaillera.pico.AppModule
 import org.emulinker.util.EmuUtil
 
-abstract class PlayerDrop : V086Message() {
+sealed class PlayerDrop : V086Message() {
   abstract val username: String
   abstract val playerNumber: Byte
 
@@ -31,16 +31,46 @@ abstract class PlayerDrop : V086Message() {
     buffer.put(playerNumber)
   }
 
+  data class Notification
+  @Throws(MessageFormatException::class)
+  constructor(
+    override val messageNumber: Int,
+    override val username: String,
+    override val playerNumber: Byte
+  ) : PlayerDrop() {
+
+    override val messageId = ID
+
+    init {
+      require(playerNumber in 0..255) { "playerNumber out of acceptable range: $playerNumber" }
+      require(username.isNotBlank()) { "Username cannot be blank" }
+    }
+  }
+
+  data class Request
+  @Throws(MessageFormatException::class)
+  constructor(override val messageNumber: Int) : PlayerDrop() {
+
+    override val messageId = ID
+
+    override val username = ""
+    override val playerNumber = 0.toByte()
+  }
+
   companion object {
     const val ID: Byte = 0x14
     @Throws(ParseException::class, MessageFormatException::class)
-    fun parse(messageNumber: Int, buffer: ByteBuffer): PlayerDrop {
-      if (buffer.remaining() < 2) throw ParseException("Failed byte count validation!")
+    fun parse(messageNumber: Int, buffer: ByteBuffer): MessageParseResult<PlayerDrop> {
+      if (buffer.remaining() < 2) {
+        return MessageParseResult.Failure("Failed byte count validation!")
+      }
       val userName = EmuUtil.readString(buffer, 0x00, AppModule.charsetDoNotUse)
       val playerNumber = buffer.get()
-      return if (userName.isBlank() && playerNumber.toInt() == 0) {
-        PlayerDrop_Request(messageNumber)
-      } else PlayerDrop_Notification(messageNumber, userName, playerNumber)
+      return MessageParseResult.Success(
+        if (userName.isBlank() && playerNumber.toInt() == 0) {
+          Request(messageNumber)
+        } else Notification(messageNumber, userName, playerNumber)
+      )
     }
   }
 }

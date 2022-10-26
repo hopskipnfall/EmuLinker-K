@@ -4,7 +4,6 @@ import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.messaging.ParseException
 import org.emulinker.kaillera.controller.v086.V086Utils.getNumBytes
-import org.emulinker.kaillera.controller.v086.protocol.V086Message.Companion.validateMessageNumber
 import org.emulinker.kaillera.model.ConnectionType
 import org.emulinker.kaillera.pico.AppModule
 import org.emulinker.util.EmuUtil
@@ -26,7 +25,6 @@ constructor(
   override val messageId = ID
 
   init {
-    validateMessageNumber(messageNumber)
     if (username.isBlank()) throw MessageFormatException("Empty username: $username")
     require(userId in 0..65535) { "UserID out of acceptable range: $userId" }
     require(ping in 0..2048) { "Ping out of acceptable range: $ping" }
@@ -45,19 +43,25 @@ constructor(
     const val ID: Byte = 0x02
 
     @Throws(ParseException::class, MessageFormatException::class)
-    fun parse(messageNumber: Int, buffer: ByteBuffer): UserJoined {
-      if (buffer.remaining() < 9) throw ParseException("Failed byte count validation!")
+    fun parse(messageNumber: Int, buffer: ByteBuffer): MessageParseResult<UserJoined> {
+      if (buffer.remaining() < 9) {
+        return MessageParseResult.Failure("Failed byte count validation!")
+      }
       val userName = EmuUtil.readString(buffer, 0x00, AppModule.charsetDoNotUse)
-      if (buffer.remaining() < 7) throw ParseException("Failed byte count validation!")
+      if (buffer.remaining() < 7) {
+        return MessageParseResult.Failure("Failed byte count validation!")
+      }
       val userID = buffer.getUnsignedShort()
       val ping = buffer.getUnsignedInt()
       val connectionType = buffer.get()
-      return UserJoined(
-        messageNumber,
-        userName,
-        userID,
-        ping,
-        ConnectionType.fromByteValue(connectionType)
+      return MessageParseResult.Success(
+        UserJoined(
+          messageNumber,
+          userName,
+          userID,
+          ping,
+          ConnectionType.fromByteValue(connectionType)
+        )
       )
     }
   }

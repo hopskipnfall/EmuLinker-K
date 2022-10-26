@@ -4,7 +4,6 @@ import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.messaging.ParseException
 import org.emulinker.kaillera.controller.v086.V086Utils.getNumBytes
-import org.emulinker.kaillera.controller.v086.protocol.V086Message.Companion.validateMessageNumber
 import org.emulinker.kaillera.pico.AppModule
 import org.emulinker.util.EmuUtil
 import org.emulinker.util.UnsignedUtil.getUnsignedShort
@@ -31,7 +30,6 @@ constructor(
   }
 
   init {
-    validateMessageNumber(messageNumber)
     require(username.isNotBlank()) { "Username cannot be empty" }
     require(userId in 0..0xFFFF) { "UserID out of acceptable range: $userId" }
     require(message.isNotBlank()) { "Message cannot be empty" }
@@ -41,14 +39,23 @@ constructor(
     const val ID: Byte = 0x16
 
     @Throws(ParseException::class, MessageFormatException::class)
-    fun parse(messageNumber: Int, buffer: ByteBuffer): ConnectionRejected {
-      if (buffer.remaining() < 6) throw ParseException("Failed byte count validation!")
+    fun parse(messageNumber: Int, buffer: ByteBuffer): MessageParseResult<ConnectionRejected> {
+      if (buffer.remaining() < 6) {
+        return MessageParseResult.Failure("Failed byte count validation!")
+      }
       val userName = EmuUtil.readString(buffer, 0x00, AppModule.charsetDoNotUse)
-      if (buffer.remaining() < 4) throw ParseException("Failed byte count validation!")
+      if (buffer.remaining() < 4) {
+        return MessageParseResult.Failure("Failed byte count validation!")
+      }
       val userID = buffer.getUnsignedShort()
-      if (buffer.remaining() < 2) throw ParseException("Failed byte count validation!")
+      if (buffer.remaining() < 2) {
+        return MessageParseResult.Failure("Failed byte count validation!")
+      }
+
       val message = EmuUtil.readString(buffer, 0x00, AppModule.charsetDoNotUse)
-      return ConnectionRejected(messageNumber, userName, userID, message)
+      return MessageParseResult.Success(
+        ConnectionRejected(messageNumber, userName, userID, message)
+      )
     }
   }
 }

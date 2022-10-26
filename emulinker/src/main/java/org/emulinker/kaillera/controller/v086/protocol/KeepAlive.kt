@@ -14,7 +14,6 @@ constructor(override val messageNumber: Int, val value: Short) : V086Message() {
   override val bodyLength = 1
 
   init {
-    validateMessageNumber(messageNumber)
     require(value in 0..0xFF) { "val out of acceptable range: $value" }
   }
 
@@ -26,9 +25,11 @@ constructor(override val messageNumber: Int, val value: Short) : V086Message() {
     const val ID: Byte = 0x09
 
     @Throws(ParseException::class, MessageFormatException::class)
-    fun parse(messageNumber: Int, buffer: ByteBuffer): KeepAlive {
-      if (buffer.remaining() < 1) throw ParseException("Failed byte count validation!")
-      return KeepAlive(messageNumber, buffer.getUnsignedByte())
+    fun parse(messageNumber: Int, buffer: ByteBuffer): MessageParseResult<KeepAlive> {
+      if (buffer.remaining() < 1) {
+        return MessageParseResult.Failure("Failed byte count validation!")
+      }
+      return MessageParseResult.Success(KeepAlive(messageNumber, buffer.getUnsignedByte()))
     }
   }
 }

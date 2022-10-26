@@ -26,11 +26,9 @@ abstract class V086Message : ByteBufferMessage() {
   @Deprecated("We should try to use a sealed class instead of relying on this messageId field")
   abstract val messageId: Byte
 
-  // return (getBodyLength() + 5);
   override val length: Int
     get() = bodyLength + 1
 
-  // return (getBodyLength() + 5);
   /** Gets the number of bytes to represent the string in the charset defined in emulinker.config */
   protected fun getNumBytes(s: String): Int {
     return s.toByteArray(AppModule.charsetDoNotUse).size
@@ -62,22 +60,25 @@ abstract class V086Message : ByteBufferMessage() {
   protected abstract fun writeBodyTo(buffer: ByteBuffer)
 
   companion object {
-    @JvmStatic
-    protected fun validateMessageNumber(messageNumber: Int) {
-      require(messageNumber in 0..0xFFFF) { "Invalid message number: $messageNumber" }
+    protected fun <T : V086Message> T.validateMessageNumber(): MessageParseResult<T> {
+      return if (this.messageNumber !in 0..0xFFFF) {
+        return MessageParseResult.Failure("Invalid message number: ${this.messageNumber}")
+      } else {
+        MessageParseResult.Success(this)
+      }
     }
 
     @Throws(ParseException::class, MessageFormatException::class)
     fun parse(messageNumber: Int, messageLength: Int, buffer: ByteBuffer): V086Message {
 
-      val message: V086Message =
+      var parseResult: MessageParseResult<out V086Message> =
         when (val messageType = buffer.get()) {
           Quit.ID -> Quit.parse(messageNumber, buffer)
           UserJoined.ID -> UserJoined.parse(messageNumber, buffer)
           UserInformation.ID -> UserInformation.parse(messageNumber, buffer)
           ServerStatus.ID -> ServerStatus.parse(messageNumber, buffer)
-          ServerACK.ID -> ServerACK.parse(messageNumber, buffer)
-          ClientACK.ID -> ClientACK.parse(messageNumber, buffer)
+          Ack.ServerAck.ID -> Ack.ServerAck.parse(messageNumber, buffer)
+          Ack.ClientAck.ID -> Ack.ClientAck.parse(messageNumber, buffer)
           Chat.ID -> Chat.parse(messageNumber, buffer)
           GameChat.ID -> GameChat.parse(messageNumber, buffer)
           KeepAlive.ID -> KeepAlive.parse(messageNumber, buffer)
@@ -95,7 +96,18 @@ abstract class V086Message : ByteBufferMessage() {
           AllReady.ID -> AllReady.parse(messageNumber, buffer)
           ConnectionRejected.ID -> ConnectionRejected.parse(messageNumber, buffer)
           InformationMessage.ID -> InformationMessage.parse(messageNumber, buffer)
+          // TODO(nue): Replace with a sealed class.
           else -> throw MessageFormatException("Invalid message type: $messageType")
+        }
+      if (parseResult is MessageParseResult.Success) {
+        parseResult = parseResult.message.validateMessageNumber()
+      }
+
+      val message =
+        when (parseResult) {
+          // TODO(nue): Return this up the stack instead of throwing an exception.
+          is MessageParseResult.Failure -> throw MessageFormatException(parseResult.toString())
+          is MessageParseResult.Success -> parseResult.message
         }
 
       // removed to improve speed

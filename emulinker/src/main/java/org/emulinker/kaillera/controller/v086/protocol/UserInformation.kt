@@ -4,7 +4,6 @@ import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.messaging.ParseException
 import org.emulinker.kaillera.controller.v086.V086Utils.getNumBytes
-import org.emulinker.kaillera.controller.v086.protocol.V086Message.Companion.validateMessageNumber
 import org.emulinker.kaillera.model.ConnectionType
 import org.emulinker.kaillera.pico.AppModule
 import org.emulinker.util.EmuUtil
@@ -20,10 +19,6 @@ constructor(
 
   override val messageId = ID
 
-  init {
-    validateMessageNumber(messageNumber)
-  }
-
   override val bodyLength: Int
     get() = username.getNumBytes() + clientType.getNumBytes() + 3
 
@@ -37,18 +32,26 @@ constructor(
     const val ID: Byte = 0x03
 
     @Throws(ParseException::class, MessageFormatException::class)
-    fun parse(messageNumber: Int, buffer: ByteBuffer): UserInformation {
-      if (buffer.remaining() < 5) throw ParseException("Failed byte count validation!")
+    fun parse(messageNumber: Int, buffer: ByteBuffer): MessageParseResult<UserInformation> {
+      if (buffer.remaining() < 5) {
+        return MessageParseResult.Failure("Failed byte count validation!")
+      }
       val userName = EmuUtil.readString(buffer, 0x00, AppModule.charsetDoNotUse)
-      if (buffer.remaining() < 3) throw ParseException("Failed byte count validation!")
+      if (buffer.remaining() < 3) {
+        return MessageParseResult.Failure("Failed byte count validation!")
+      }
       val clientType = EmuUtil.readString(buffer, 0x00, AppModule.charsetDoNotUse)
-      if (buffer.remaining() < 1) throw ParseException("Failed byte count validation!")
+      if (buffer.remaining() < 1) {
+        return MessageParseResult.Failure("Failed byte count validation!")
+      }
       val connectionType = buffer.get()
-      return UserInformation(
-        messageNumber,
-        userName,
-        clientType,
-        ConnectionType.fromByteValue(connectionType)
+      return MessageParseResult.Success(
+        UserInformation(
+          messageNumber,
+          userName,
+          clientType,
+          ConnectionType.fromByteValue(connectionType)
+        )
       )
     }
   }

@@ -5,7 +5,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086ClientHandler
-import org.emulinker.kaillera.controller.v086.protocol.GameChat_Notification
+import org.emulinker.kaillera.controller.v086.protocol.GameChat
 import org.emulinker.kaillera.model.event.PlayerDesynchEvent
 import org.emulinker.util.EmuLang
 
@@ -21,7 +21,7 @@ class PlayerDesynchAction @Inject internal constructor() :
     handledEventCount++
     try {
       clientHandler.send(
-        GameChat_Notification(
+        GameChat.Notification(
           clientHandler.nextMessageNumber,
           EmuLang.getString("PlayerDesynchAction.DesynchDetected"),
           event.message
@@ -30,7 +30,7 @@ class PlayerDesynchAction @Inject internal constructor() :
       // if (clientHandler.getUser().getStatus() == KailleraUser.STATUS_PLAYING)
       //	clientHandler.getUser().dropGame();
     } catch (e: MessageFormatException) {
-      logger.atSevere().withCause(e).log("Failed to construct GameChat_Notification message")
+      logger.atSevere().withCause(e).log("Failed to construct GameChat.Notification message")
     }
     // catch (DropGameException e)
     // {

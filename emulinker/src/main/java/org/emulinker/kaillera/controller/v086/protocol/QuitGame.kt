@@ -9,7 +9,7 @@ import org.emulinker.util.EmuUtil
 import org.emulinker.util.UnsignedUtil.getUnsignedShort
 import org.emulinker.util.UnsignedUtil.putUnsignedShort
 
-abstract class QuitGame : V086Message() {
+sealed class QuitGame : V086Message() {
   abstract val username: String
   abstract val userId: Int
 
@@ -23,20 +23,47 @@ abstract class QuitGame : V086Message() {
     buffer.putUnsignedShort(userId)
   }
 
+  data class Notification
+  @Throws(MessageFormatException::class)
+  constructor(
+    override val messageNumber: Int,
+    override val username: String,
+    override val userId: Int
+  ) : QuitGame() {
+
+    init {
+      require(userId in 0..0xFFFF) { "UserID out of acceptable range: $userId" }
+    }
+  }
+
+  data class Request
+  @Throws(MessageFormatException::class)
+  constructor(override val messageNumber: Int) : QuitGame() {
+
+    override val username = ""
+    override val userId = 0xFFFF
+  }
+
   companion object {
     const val ID: Byte = 0x0B
 
     @Throws(ParseException::class, MessageFormatException::class)
-    fun parse(messageNumber: Int, buffer: ByteBuffer): QuitGame {
-      if (buffer.remaining() < 3) throw ParseException("Failed byte count validation!")
-      val userName = EmuUtil.readString(buffer, 0x00, AppModule.charsetDoNotUse)
-      if (buffer.remaining() < 2) throw ParseException("Failed byte count validation!")
-      val userID = buffer.getUnsignedShort()
-      return if (userName.isBlank() && userID == 0xFFFF) {
-        QuitGame_Request(messageNumber)
-      } else {
-        QuitGame_Notification(messageNumber, userName, userID)
+    fun parse(messageNumber: Int, buffer: ByteBuffer): MessageParseResult<QuitGame> {
+      if (buffer.remaining() < 3) {
+        return MessageParseResult.Failure("Failed byte count validation!")
       }
+      val userName = EmuUtil.readString(buffer, 0x00, AppModule.charsetDoNotUse)
+      if (buffer.remaining() < 2) {
+        return MessageParseResult.Failure("Failed byte count validation!")
+      }
+      val userID = buffer.getUnsignedShort()
+      return MessageParseResult.Success(
+        if (userName.isBlank() && userID == 0xFFFF) {
+          Request(messageNumber)
+        } else {
+          Notification(messageNumber, userName, userID)
+        }
+      )
     }
   }
 }
