@@ -3,6 +3,7 @@ package org.emulinker.kaillera.controller.v086.protocol
 import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.messaging.ParseException
+import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.util.EmuUtil
 import org.emulinker.util.UnsignedUtil.getUnsignedInt
 import org.emulinker.util.UnsignedUtil.putUnsignedInt
@@ -13,7 +14,12 @@ sealed class Ack : V086Message() {
   abstract val val3: Long
   abstract val val4: Long
 
-  override val bodyLength = 17
+  override val bodyLength =
+    V086Utils.Bytes.SINGLE_BYTE +
+      V086Utils.Bytes.INTEGER +
+      V086Utils.Bytes.INTEGER +
+      V086Utils.Bytes.INTEGER +
+      V086Utils.Bytes.INTEGER
 
   public override fun writeBodyTo(buffer: ByteBuffer) {
     buffer.put(0x00.toByte())
@@ -26,7 +32,6 @@ sealed class Ack : V086Message() {
   data class ClientAck
   @Throws(MessageFormatException::class)
   constructor(override val messageNumber: Int) : Ack() {
-
     override val val1: Long = 0
     override val val2: Long = 1
     override val val3: Long = 2
@@ -58,7 +63,7 @@ sealed class Ack : V086Message() {
         // throw new MessageFormatException("Invalid " + DESC + " format: bytes do not match
         // acceptable
         // format!");
-        return MessageParseResult.Success(Ack.ClientAck(messageNumber))
+        return MessageParseResult.Success(ClientAck(messageNumber))
       }
     }
   }
@@ -66,7 +71,6 @@ sealed class Ack : V086Message() {
   data class ServerAck
   @Throws(MessageFormatException::class)
   constructor(override val messageNumber: Int) : Ack() {
-
     override val val1 = 0L
     override val val2 = 1L
     override val val3 = 2L

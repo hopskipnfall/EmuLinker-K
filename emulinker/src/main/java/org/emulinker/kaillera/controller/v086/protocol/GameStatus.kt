@@ -3,6 +3,7 @@ package org.emulinker.kaillera.controller.v086.protocol
 import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.messaging.ParseException
+import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.util.EmuUtil
 import org.emulinker.util.UnsignedUtil.getUnsignedShort
 import org.emulinker.util.UnsignedUtil.putUnsignedShort
@@ -17,10 +18,15 @@ constructor(
   val numPlayers: Byte,
   val maxPlayers: Byte
 ) : V086Message() {
-
   override val messageId = ID
 
-  override val bodyLength = 8
+  override val bodyLength =
+    V086Utils.Bytes.SINGLE_BYTE +
+      V086Utils.Bytes.SHORT +
+      V086Utils.Bytes.SHORT +
+      V086Utils.Bytes.SINGLE_BYTE +
+      V086Utils.Bytes.SINGLE_BYTE +
+      V086Utils.Bytes.SINGLE_BYTE
 
   init {
     require(gameId in 0..0xFFFF) { "gameID out of acceptable range: $gameId" }

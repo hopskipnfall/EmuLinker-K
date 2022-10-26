@@ -23,15 +23,14 @@ constructor(override val messageNumber: Int, val users: List<User>, val games: L
   override val messageId = ID
 
   override val bodyLength =
-    (
-    // 0x00.
-    V086Utils.Bytes.SINGLE_BYTE +
+  // 0x00.
+  V086Utils.Bytes.SINGLE_BYTE +
       // Number of users.
       V086Utils.Bytes.INTEGER +
       // Number of games.
       V086Utils.Bytes.INTEGER +
       users.sumOf { it.numBytes } +
-      games.sumOf { it.numBytes })
+      games.sumOf { it.numBytes }
 
   public override fun writeBodyTo(buffer: ByteBuffer) {
     buffer.put(0x00.toByte())

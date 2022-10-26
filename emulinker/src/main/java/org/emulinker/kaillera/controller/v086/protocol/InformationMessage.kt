@@ -3,7 +3,7 @@ package org.emulinker.kaillera.controller.v086.protocol
 import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.messaging.ParseException
-import org.emulinker.kaillera.controller.v086.V086Utils.getNumBytes
+import org.emulinker.kaillera.controller.v086.V086Utils.getNumBytesPlusStopByte
 import org.emulinker.kaillera.pico.AppModule
 import org.emulinker.util.EmuUtil
 
@@ -19,8 +19,7 @@ constructor(override val messageNumber: Int, val source: String, val message: St
     require(message.isNotBlank()) { "message cannot be blank" }
   }
 
-  override val bodyLength: Int
-    get() = source.getNumBytes() + message.getNumBytes() + 2
+  override val bodyLength = source.getNumBytesPlusStopByte() + message.getNumBytesPlusStopByte()
 
   public override fun writeBodyTo(buffer: ByteBuffer) {
     EmuUtil.writeString(buffer, source, 0x00, AppModule.charsetDoNotUse)

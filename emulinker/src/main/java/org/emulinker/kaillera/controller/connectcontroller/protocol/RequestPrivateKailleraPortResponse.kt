@@ -15,7 +15,7 @@ import org.emulinker.util.EmuUtil
 data class RequestPrivateKailleraPortResponse(val port: Int) : ConnectMessage() {
   override val iD = ID
 
-  override val length = ID.length + port.toString().length + 1
+  override val totalBytes = ID.length + port.toString().length + 1
 
   override fun writeTo(buffer: ByteBuffer) {
     buffer.put(charset.encode(ID))

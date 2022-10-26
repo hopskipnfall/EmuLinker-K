@@ -14,13 +14,13 @@ class V086Bundle constructor(val messages: Array<V086Message?>, numToWrite: Int 
   var numMessages: Int
     private set
 
-  override var length = -1
+  override var totalBytes = -1
     private set
     get() {
       if (field == -1) {
         for (i in 0 until numMessages) {
           if (messages[i] == null) break
-          field += messages[i]!!.length
+          field += messages[i]!!.totalBytes
         }
       }
       return field
@@ -28,7 +28,7 @@ class V086Bundle constructor(val messages: Array<V086Message?>, numToWrite: Int 
 
   override fun toString(): String {
     val sb = StringBuilder()
-    sb.append("${this.javaClass.simpleName} ($numMessages messages) ($length bytes)")
+    sb.append("${this.javaClass.simpleName} ($numMessages messages) ($totalBytes bytes)")
     sb.append(EmuUtil.LB)
     for (i in 0 until numMessages) {
       if (messages[i] == null) break

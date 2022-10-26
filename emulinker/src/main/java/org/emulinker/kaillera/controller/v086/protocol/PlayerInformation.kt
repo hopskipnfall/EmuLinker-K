@@ -3,7 +3,8 @@ package org.emulinker.kaillera.controller.v086.protocol
 import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.messaging.ParseException
-import org.emulinker.kaillera.controller.v086.V086Utils.getNumBytes
+import org.emulinker.kaillera.controller.v086.V086Utils
+import org.emulinker.kaillera.controller.v086.V086Utils.getNumBytesPlusStopByte
 import org.emulinker.kaillera.model.ConnectionType
 import org.emulinker.kaillera.pico.AppModule
 import org.emulinker.util.EmuUtil
@@ -20,8 +21,8 @@ constructor(override val messageNumber: Int, val players: List<Player>) : V086Me
   val numPlayers: Int
     get() = players.size
 
-  override val bodyLength: Int
-    get() = 5 + players.sumOf { it.numBytes }
+  override val bodyLength =
+    V086Utils.Bytes.SINGLE_BYTE + V086Utils.Bytes.INTEGER + players.sumOf { it.numBytes }
 
   override fun writeBodyTo(buffer: ByteBuffer) {
     buffer.put(0x00.toByte())
@@ -36,8 +37,11 @@ constructor(override val messageNumber: Int, val players: List<Player>) : V086Me
     val userId: Int,
     val connectionType: ConnectionType
   ) {
-
-    val numBytes: Int = username.getNumBytes() + 8
+    val numBytes: Int =
+      username.getNumBytesPlusStopByte() +
+        V086Utils.Bytes.INTEGER +
+        V086Utils.Bytes.SHORT +
+        V086Utils.Bytes.SINGLE_BYTE
 
     fun writeTo(buffer: ByteBuffer) {
       EmuUtil.writeString(buffer, username, 0x00, AppModule.charsetDoNotUse)

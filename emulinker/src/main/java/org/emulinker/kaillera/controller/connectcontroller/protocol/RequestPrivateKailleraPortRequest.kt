@@ -15,7 +15,7 @@ import org.emulinker.util.EmuUtil
 data class RequestPrivateKailleraPortRequest(val protocol: String) : ConnectMessage() {
   override val iD = ID
 
-  override val length = ID.length + protocol.length + 1
+  override val totalBytes = ID.length + protocol.length + 1
 
   var clientSocketAddress: InetSocketAddress? = null
 

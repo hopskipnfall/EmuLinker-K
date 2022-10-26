@@ -3,7 +3,8 @@ package org.emulinker.kaillera.controller.v086.protocol
 import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.messaging.ParseException
-import org.emulinker.kaillera.controller.v086.V086Utils.getNumBytes
+import org.emulinker.kaillera.controller.v086.V086Utils
+import org.emulinker.kaillera.controller.v086.V086Utils.getNumBytesPlusStopByte
 import org.emulinker.kaillera.model.ConnectionType
 import org.emulinker.kaillera.pico.AppModule
 import org.emulinker.util.EmuUtil
@@ -21,7 +22,6 @@ constructor(
   val ping: Long,
   val connectionType: ConnectionType
 ) : V086Message() {
-
   override val messageId = ID
 
   init {
@@ -30,7 +30,11 @@ constructor(
     require(ping in 0..2048) { "Ping out of acceptable range: $ping" }
   }
 
-  override val bodyLength = username.getNumBytes() + 8
+  override val bodyLength =
+    username.getNumBytesPlusStopByte() +
+      V086Utils.Bytes.SHORT +
+      V086Utils.Bytes.INTEGER +
+      V086Utils.Bytes.SINGLE_BYTE
 
   public override fun writeBodyTo(buffer: ByteBuffer) {
     EmuUtil.writeString(buffer, username, 0x00, AppModule.charsetDoNotUse)

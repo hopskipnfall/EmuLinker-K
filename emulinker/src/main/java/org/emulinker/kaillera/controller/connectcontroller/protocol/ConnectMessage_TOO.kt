@@ -11,7 +11,7 @@ class ConnectMessage_TOO : ConnectMessage() {
 
   override fun toString() = "Server Full Response"
 
-  override val length: Int
+  override val totalBytes: Int
     get() = ID.length + 1
 
   override fun writeTo(buffer: ByteBuffer) {

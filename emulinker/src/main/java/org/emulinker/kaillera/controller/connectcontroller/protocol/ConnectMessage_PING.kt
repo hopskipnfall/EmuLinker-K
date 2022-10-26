@@ -12,7 +12,7 @@ class ConnectMessage_PING : ConnectMessage() {
   var clientSocketAddress: InetSocketAddress? = null
   override fun toString() = "Client Ping"
 
-  override val length = ID.length + 1
+  override val totalBytes = ID.length + 1
 
   override fun writeTo(buffer: ByteBuffer) {
     buffer.put(charset.encode(ID))

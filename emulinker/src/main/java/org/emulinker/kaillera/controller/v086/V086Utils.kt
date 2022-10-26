@@ -11,6 +11,7 @@ import org.emulinker.kaillera.pico.AppModule
 object V086Utils {
   private const val HEX_STRING = "0123456789abcdef"
 
+  /** Number of bytes made up by each type. */
   object Bytes {
     const val SHORT = 2
     const val INTEGER = 4
@@ -71,7 +72,10 @@ object V086Utils {
   }
 
   /** Gets the number of bytes to represent the string in the charset defined in emulinker.config */
-  @Deprecated("You probably want getNumBytesPlusStopByte instead")
+  @Deprecated(
+    "You probably want getNumBytesPlusStopByte instead",
+    replaceWith = ReplaceWith("this.getNumBytesPlusStopByte() - 1")
+  )
   fun String.getNumBytes(): Int = this.toByteArray(AppModule.charsetDoNotUse).size
 
   /**

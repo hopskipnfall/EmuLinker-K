@@ -4,17 +4,16 @@ import java.nio.Buffer
 import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.messaging.ParseException
+import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.util.UnsignedUtil.getUnsignedShort
 import org.emulinker.util.UnsignedUtil.putUnsignedShort
 
 data class GameData
 @Throws(MessageFormatException::class)
 constructor(override val messageNumber: Int, val gameData: ByteArray) : V086Message() {
-
   override val messageId = ID
 
-  override val bodyLength: Int
-    get() = gameData.size + 3
+  override val bodyLength = V086Utils.Bytes.SINGLE_BYTE + V086Utils.Bytes.SHORT + gameData.size
 
   public override fun writeBodyTo(buffer: ByteBuffer) {
     buffer.put(0x00.toByte())

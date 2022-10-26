@@ -2,14 +2,15 @@ package org.emulinker.kaillera.controller.v086.protocol
 
 import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
+import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.util.EmuUtil
 
 data class AllReady
 @Throws(MessageFormatException::class)
 constructor(override val messageNumber: Int) : V086Message() {
-  override val bodyLength = 1
-
   override val messageId = ID
+
+  override val bodyLength = V086Utils.Bytes.SINGLE_BYTE
 
   public override fun writeBodyTo(buffer: ByteBuffer) {
     buffer.put(0x00.toByte())

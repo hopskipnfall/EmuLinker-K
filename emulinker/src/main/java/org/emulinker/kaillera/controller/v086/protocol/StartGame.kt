@@ -3,6 +3,7 @@ package org.emulinker.kaillera.controller.v086.protocol
 import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.messaging.ParseException
+import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.util.UnsignedUtil.getUnsignedByte
 import org.emulinker.util.UnsignedUtil.getUnsignedShort
 import org.emulinker.util.UnsignedUtil.putUnsignedByte
@@ -16,7 +17,11 @@ sealed class StartGame : V086Message() {
   abstract val numPlayers: Short
 
   override val bodyLength: Int
-    get() = 5
+    get() =
+      V086Utils.Bytes.SINGLE_BYTE +
+        V086Utils.Bytes.SHORT +
+        V086Utils.Bytes.SINGLE_BYTE +
+        V086Utils.Bytes.SINGLE_BYTE
 
   public override fun writeBodyTo(buffer: ByteBuffer) {
     buffer.put(0x00.toByte())
@@ -46,7 +51,6 @@ sealed class StartGame : V086Message() {
   data class Request
   @Throws(MessageFormatException::class)
   constructor(override val messageNumber: Int) : StartGame() {
-
     override val val1 = 0xFFFF
     override val playerNumber = 0xFF.toShort()
     override val numPlayers = 0xFF.toShort()

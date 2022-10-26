@@ -26,7 +26,8 @@ abstract class V086Message : ByteBufferMessage() {
   @Deprecated("We should try to use a sealed class instead of relying on this messageId field")
   abstract val messageId: Byte
 
-  override val length: Int
+  /** The total number of bytes the message takes up, including the message ID byte. */
+  override val totalBytes: Int
     get() = bodyLength + 1
 
   /** Gets the number of bytes to represent the string in the charset defined in emulinker.config */
@@ -34,10 +35,11 @@ abstract class V086Message : ByteBufferMessage() {
     return s.toByteArray(AppModule.charsetDoNotUse).size
   }
 
+  /** Number of bytes the body of the message takes up (excluding the message ID byte). */
   abstract val bodyLength: Int
 
   override fun writeTo(buffer: ByteBuffer) {
-    val len = length
+    val len = totalBytes
     if (len > buffer.remaining()) {
       logger
         .atWarning()
@@ -111,13 +113,13 @@ abstract class V086Message : ByteBufferMessage() {
         }
 
       // removed to improve speed
-      if (message.length != messageLength) {
+      if (message.totalBytes != messageLength) {
         //			throw new ParseException("Bundle contained length " + messageLength + " !=  parsed
         // lengthy
         // " + message.getLength());
         logger
           .atFine()
-          .log("Bundle contained length %d != parsed length %d", messageLength, message.length)
+          .log("Bundle contained length %d != parsed length %d", messageLength, message.totalBytes)
       }
       return message
     }

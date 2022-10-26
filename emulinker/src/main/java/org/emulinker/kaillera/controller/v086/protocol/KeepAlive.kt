@@ -3,15 +3,16 @@ package org.emulinker.kaillera.controller.v086.protocol
 import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.messaging.ParseException
+import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.util.UnsignedUtil.getUnsignedByte
 import org.emulinker.util.UnsignedUtil.putUnsignedByte
 
 data class KeepAlive
 @Throws(MessageFormatException::class)
 constructor(override val messageNumber: Int, val value: Short) : V086Message() {
-
   override val messageId = ID
-  override val bodyLength = 1
+
+  override val bodyLength = V086Utils.Bytes.SINGLE_BYTE
 
   init {
     require(value in 0..0xFF) { "val out of acceptable range: $value" }
