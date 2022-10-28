@@ -5,15 +5,13 @@ import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.kaillera.controller.v086.protocol.MessageTestUtils.assertBufferContainsExactly
 import org.emulinker.kaillera.model.ConnectionType
-import org.junit.Ignore
 import org.junit.Test
 
-@Ignore
-class UserInformationTest {
+class UserInformationTest : ProtocolBaseTest() {
 
   @Test
   fun bodyLength() {
-    assertThat(USER_INFORMATION.bodyBytes).isEqualTo(2)
+    assertThat(USER_INFORMATION.bodyBytes).isEqualTo(17)
   }
 
   @Test
@@ -33,7 +31,8 @@ class UserInformationTest {
 
   companion object {
     private const val MESSAGE_NUMBER = 42
-    private const val BODY_BYTES = "00,16"
+    private const val BODY_BYTES =
+      "6E, 75, 65, 00, 4D, 79, 20, 45, 6D, 75, 6C, 61, 74, 6F, 72, 00, 01"
 
     private val USER_INFORMATION =
       UserInformation(

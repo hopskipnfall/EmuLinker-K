@@ -4,7 +4,7 @@ import com.google.common.truth.Truth.assertThat
 import java.nio.ByteBuffer
 import org.emulinker.util.EmuUtil.dumpBufferFromBeginning
 
-object MessageTestUtils {
+object MessageTestUtils : ProtocolBaseTest() {
 
   fun assertBufferContainsExactly(buffer: ByteBuffer, byteString: String) {
     val numberWritten = buffer.position()

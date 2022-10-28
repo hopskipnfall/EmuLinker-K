@@ -2,7 +2,6 @@ package org.emulinker.kaillera.controller.v086.protocol
 
 import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
-import org.emulinker.kaillera.controller.messaging.ParseException
 import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.kaillera.controller.v086.V086Utils.getNumBytesPlusStopByte
 import org.emulinker.util.EmuUtil
@@ -38,7 +37,6 @@ constructor(
   companion object {
     const val ID: Byte = 0x16
 
-    @Throws(ParseException::class, MessageFormatException::class)
     fun parse(messageNumber: Int, buffer: ByteBuffer): MessageParseResult<ConnectionRejected> {
       if (buffer.remaining() < 6) {
         return MessageParseResult.Failure("Failed byte count validation!")

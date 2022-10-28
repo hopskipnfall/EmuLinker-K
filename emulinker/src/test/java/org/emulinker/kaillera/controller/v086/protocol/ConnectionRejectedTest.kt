@@ -4,15 +4,13 @@ import com.google.common.truth.Truth.assertThat
 import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.kaillera.controller.v086.protocol.MessageTestUtils.assertBufferContainsExactly
-import org.junit.Ignore
 import org.junit.Test
 
-@Ignore
-class ConnectionRejectedTest {
+class ConnectionRejectedTest : ProtocolBaseTest() {
 
   @Test
   fun bodyLength() {
-    assertThat(CONNECTION_REJECTED.bodyBytes).isEqualTo(2)
+    assertThat(CONNECTION_REJECTED.bodyBytes).isEqualTo(25)
   }
 
   @Test
@@ -34,7 +32,8 @@ class ConnectionRejectedTest {
 
   companion object {
     private const val MESSAGE_NUMBER = 42
-    private const val BODY_BYTES = "00,16"
+    private const val BODY_BYTES =
+      "6E, 75, 65, 00, 00, 64, 54, 68, 69, 73, 20, 69, 73, 20, 61, 20, 6D, 65, 73, 73, 61, 67, 65, 21, 00"
 
     private val CONNECTION_REJECTED =
       ConnectionRejected(

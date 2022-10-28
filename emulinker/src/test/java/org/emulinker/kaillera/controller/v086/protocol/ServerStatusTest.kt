@@ -7,15 +7,13 @@ import org.emulinker.kaillera.controller.v086.protocol.MessageTestUtils.assertBu
 import org.emulinker.kaillera.model.ConnectionType
 import org.emulinker.kaillera.model.GameStatus
 import org.emulinker.kaillera.model.UserStatus
-import org.junit.Ignore
 import org.junit.Test
 
-@Ignore
-class ServerStatusTest {
+class ServerStatusTest : ProtocolBaseTest() {
 
   @Test
   fun bodyLength() {
-    assertThat(SERVER_STATUS.bodyBytes).isEqualTo(2)
+    assertThat(SERVER_STATUS.bodyBytes).isEqualTo(246)
   }
 
   @Test
@@ -35,7 +33,8 @@ class ServerStatusTest {
 
   companion object {
     private const val MESSAGE_NUMBER = 42
-    private const val BODY_BYTES = "00,16"
+    private const val BODY_BYTES =
+      "00, 00, 00, 00, 07, 00, 00, 00, 04, 6E, 75, 65, 00, 00, 00, 00, 64, 02, 00, 0D, 01, 6E, 75, 65, 31, 00, 00, 00, 00, 64, 01, 00, 0E, 01, 6E, 75, 65, 32, 00, 00, 00, 00, 64, 00, 00, 12, 04, 6E, 75, 65, 33, 00, 00, 00, 00, 64, 02, 00, C8, 01, 6E, 75, 65, 34, 00, 00, 00, 00, 64, 00, 00, 0C, 01, 6E, 75, 65, 35, 00, 00, 00, 00, 64, 02, 00, 08, 06, 6E, 75, 65, 36, 00, 00, 00, 00, 64, 01, 00, 03, 06, 4D, 79, 20, 52, 4F, 4D, 00, 00, 00, 00, 64, 4D, 79, 20, 4E, 36, 34, 20, 45, 6D, 75, 6C, 61, 74, 6F, 72, 00, 6E, 75, 65, 00, 32, 2F, 34, 00, 02, 4D, 79, 20, 52, 4F, 4D, 00, 00, 00, 00, 7B, 4D, 79, 20, 4E, 36, 34, 20, 45, 6D, 75, 6C, 61, 74, 6F, 72, 00, 6E, 75, 65, 32, 00, 32, 2F, 34, 00, 02, 4D, 79, 20, 52, 4F, 4D, 00, 00, 00, 00, 16, 4D, 79, 20, 4E, 36, 34, 20, 45, 6D, 75, 6C, 61, 74, 6F, 72, 00, 6E, 75, 65, 33, 00, 32, 2F, 34, 00, 01, 4D, 79, 20, 52, 4F, 4D, 00, 00, 00, 00, 05, 4D, 79, 20, 4E, 36, 34, 20, 45, 6D, 75, 6C, 61, 74, 6F, 72, 00, 6E, 75, 65, 34, 00, 32, 2F, 34, 00, 00"
 
     private val SERVER_STATUS =
       ServerStatus(

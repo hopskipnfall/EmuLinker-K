@@ -4,20 +4,18 @@ import com.google.common.truth.Truth.assertThat
 import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.kaillera.controller.v086.protocol.MessageTestUtils.assertBufferContainsExactly
-import org.junit.Ignore
 import org.junit.Test
 
-@Ignore
-class QuitTest {
+class QuitTest : ProtocolBaseTest() {
 
   @Test
   fun quitNotification_bodyLength() {
-    assertThat(QUIT_NOTIFICATION.bodyBytes).isEqualTo(2)
+    assertThat(QUIT_NOTIFICATION.bodyBytes).isEqualTo(20)
   }
 
   @Test
   fun quitNotification_deserializeBody() {
-    assertThat(Quit.parse(MESSAGE_NUMBER, V086Utils.hexStringToByteBuffer(BODY_BYTES)))
+    assertThat(Quit.parse(MESSAGE_NUMBER, V086Utils.hexStringToByteBuffer(NOTIFICATION_BODY_BYTES)))
       .isEqualTo(MessageParseResult.Success(QUIT_NOTIFICATION))
   }
 
@@ -27,17 +25,17 @@ class QuitTest {
     QUIT_NOTIFICATION.writeBodyTo(buffer)
 
     assertThat(buffer.position()).isEqualTo(QUIT_NOTIFICATION.bodyBytes)
-    assertBufferContainsExactly(buffer, BODY_BYTES)
+    assertBufferContainsExactly(buffer, NOTIFICATION_BODY_BYTES)
   }
 
   @Test
   fun quitRequest_bodyLength() {
-    assertThat(QUIT_REQUEST.bodyBytes).isEqualTo(2)
+    assertThat(QUIT_REQUEST.bodyBytes).isEqualTo(17)
   }
 
   @Test
   fun quitRequest_deserializeBody() {
-    assertThat(Quit.parse(MESSAGE_NUMBER, V086Utils.hexStringToByteBuffer(BODY_BYTES)))
+    assertThat(Quit.parse(MESSAGE_NUMBER, V086Utils.hexStringToByteBuffer(REQUEST_BODY_BYTES)))
       .isEqualTo(MessageParseResult.Success(QUIT_REQUEST))
   }
 
@@ -47,12 +45,15 @@ class QuitTest {
     QUIT_REQUEST.writeBodyTo(buffer)
 
     assertThat(buffer.position()).isEqualTo(QUIT_REQUEST.bodyBytes)
-    assertBufferContainsExactly(buffer, BODY_BYTES)
+    assertBufferContainsExactly(buffer, REQUEST_BODY_BYTES)
   }
 
   companion object {
     private const val MESSAGE_NUMBER = 42
-    private const val BODY_BYTES = "00,16"
+    private const val NOTIFICATION_BODY_BYTES =
+      "6E, 75, 65, 00, 00, 0D, 48, 65, 6C, 6C, 6F, 2C, 20, 77, 6F, 72, 6C, 64, 21, 00"
+    private const val REQUEST_BODY_BYTES =
+      "00, FF, FF, 48, 65, 6C, 6C, 6F, 2C, 20, 77, 6F, 72, 6C, 64, 21, 00"
 
     private val QUIT_NOTIFICATION =
       Quit.Notification(

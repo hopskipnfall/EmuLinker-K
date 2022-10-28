@@ -6,7 +6,7 @@ import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.kaillera.controller.v086.protocol.MessageTestUtils.assertBufferContainsExactly
 import org.junit.Test
 
-class CreateGameTest {
+class CreateGameTest : ProtocolBaseTest() {
 
   @Test
   fun createGameNotification_bodyLength() {

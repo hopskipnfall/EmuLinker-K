@@ -6,7 +6,7 @@ import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.kaillera.controller.v086.protocol.MessageTestUtils.assertBufferContainsExactly
 import org.junit.Test
 
-class AllReadyTest {
+class AllReadyTest : ProtocolBaseTest() {
 
   @Test
   fun allReady_bodyLength() {

@@ -7,7 +7,7 @@ import org.emulinker.kaillera.controller.v086.protocol.MessageTestUtils.assertBu
 import org.emulinker.kaillera.model.GameStatus.SYNCHRONIZING
 import org.junit.Test
 
-class GameStatusTest {
+class GameStatusTest : ProtocolBaseTest() {
 
   @Test
   fun bodyLength() {

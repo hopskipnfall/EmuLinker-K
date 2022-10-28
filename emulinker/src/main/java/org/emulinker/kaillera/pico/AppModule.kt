@@ -56,16 +56,7 @@ abstract class AppModule {
     // TODO(nue): Burn this with fire!!!
     // NOTE: This is NOT marked final and there are race conditions involved. Inject @RuntimeFlags
     // instead!
-    private var charsetLoaded = false
-    var charsetDoNotUse: Charset = Charsets.UTF_8
-      set(value) {
-        charsetLoaded = true
-        field = value
-      }
-      get() {
-        assert(charsetLoaded)
-        return field
-      }
+    lateinit var charsetDoNotUse: Charset
 
     @Provides
     fun provideTwitter(twitterFactory: TwitterFactory): Twitter {

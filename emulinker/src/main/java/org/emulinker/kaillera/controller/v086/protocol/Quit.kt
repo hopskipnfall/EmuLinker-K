@@ -26,7 +26,6 @@ sealed class Quit : V086Message() {
   }
 
   data class Notification
-  @Throws(MessageFormatException::class)
   constructor(
     override val messageNumber: Int,
     override val username: String,
@@ -42,9 +41,8 @@ sealed class Quit : V086Message() {
     }
   }
 
-  data class Request
-  @Throws(MessageFormatException::class)
-  constructor(override val messageNumber: Int, override val message: String) : Quit() {
+  data class Request constructor(override val messageNumber: Int, override val message: String) :
+    Quit() {
     override val username = ""
     override val userId = 0xFFFF
 
