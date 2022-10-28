@@ -1,23 +1,24 @@
 package org.emulinker.kaillera.pico
 
 import com.google.common.truth.Truth.assertThat
-import io.ktor.network.sockets.*
-import io.ktor.utils.io.*
-import io.ktor.utils.io.core.*
-import kotlin.time.Duration.Companion.milliseconds
-import kotlin.time.Duration.Companion.minutes
-import kotlin.time.Duration.Companion.seconds
-import kotlinx.coroutines.*
+import io.ktor.network.sockets.InetSocketAddress
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO_PARALLELISM_PROPERTY_NAME
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import org.emulinker.eval.client.EvalClient
 import org.emulinker.kaillera.model.GameStatus
 import org.emulinker.kaillera.model.UserStatus
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.Timeout
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
 
-@Ignore
 class ServerMainStartupTest {
   @get:Rule val timeout = Timeout(1.minutes.inWholeMilliseconds.toInt())
 
