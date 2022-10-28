@@ -2,6 +2,9 @@ package org.emulinker.kaillera.pico
 
 import com.google.common.truth.Truth.assertThat
 import io.ktor.network.sockets.InetSocketAddress
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO_PARALLELISM_PROPERTY_NAME
 import kotlinx.coroutines.coroutineScope
@@ -15,9 +18,6 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.Timeout
-import kotlin.time.Duration.Companion.milliseconds
-import kotlin.time.Duration.Companion.minutes
-import kotlin.time.Duration.Companion.seconds
 
 class ServerMainStartupTest {
   @get:Rule val timeout = Timeout(1.minutes.inWholeMilliseconds.toInt())

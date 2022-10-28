@@ -3,7 +3,6 @@ package org.emulinker.kaillera.controller.v086.protocol
 import com.google.common.flogger.FluentLogger
 import java.nio.Buffer
 import java.nio.ByteBuffer
-import kotlin.Throws
 import org.emulinker.kaillera.controller.messaging.ByteBufferMessage
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.messaging.ParseException
