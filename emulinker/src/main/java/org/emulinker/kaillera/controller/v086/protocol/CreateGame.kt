@@ -5,7 +5,6 @@ import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.messaging.ParseException
 import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.kaillera.controller.v086.V086Utils.getNumBytesPlusStopByte
-import org.emulinker.kaillera.pico.AppModule
 import org.emulinker.util.EmuUtil
 import org.emulinker.util.UnsignedUtil.getUnsignedShort
 import org.emulinker.util.UnsignedUtil.putUnsignedShort
@@ -16,7 +15,7 @@ sealed class CreateGame : V086Message() {
   abstract val clientType: String
   abstract val gameId: Int
   abstract val val1: Int
-  override val bodyLength: Int
+  override val bodyBytes: Int
     get() =
       username.getNumBytesPlusStopByte() +
         romName.getNumBytesPlusStopByte() +
@@ -25,9 +24,9 @@ sealed class CreateGame : V086Message() {
         V086Utils.Bytes.SHORT
 
   public override fun writeBodyTo(buffer: ByteBuffer) {
-    EmuUtil.writeString(buffer, username, 0x00, AppModule.charsetDoNotUse)
-    EmuUtil.writeString(buffer, romName, 0x00, AppModule.charsetDoNotUse)
-    EmuUtil.writeString(buffer, clientType, 0x00, AppModule.charsetDoNotUse)
+    EmuUtil.writeString(buffer, username)
+    EmuUtil.writeString(buffer, romName)
+    EmuUtil.writeString(buffer, clientType)
     buffer.putUnsignedShort(gameId)
     buffer.putUnsignedShort(val1)
   }
@@ -43,7 +42,7 @@ sealed class CreateGame : V086Message() {
     override val val1: Int
   ) : CreateGame() {
 
-    override val messageId = ID
+    override val messageTypeId = ID
 
     init {
       require(romName.isNotBlank()) { "romName cannot be blank" }
@@ -56,7 +55,7 @@ sealed class CreateGame : V086Message() {
   @Throws(MessageFormatException::class)
   constructor(override val messageNumber: Int, override val romName: String) : CreateGame() {
 
-    override val messageId = ID
+    override val messageTypeId = ID
 
     override val username = ""
     override val clientType = ""
@@ -72,15 +71,15 @@ sealed class CreateGame : V086Message() {
       if (buffer.remaining() < 8) {
         return MessageParseResult.Failure("Failed byte count validation!")
       }
-      val userName = EmuUtil.readString(buffer, 0x00, AppModule.charsetDoNotUse)
+      val userName = EmuUtil.readString(buffer)
       if (buffer.remaining() < 6) {
         return MessageParseResult.Failure("Failed byte count validation!")
       }
-      val romName = EmuUtil.readString(buffer, 0x00, AppModule.charsetDoNotUse)
+      val romName = EmuUtil.readString(buffer)
       if (buffer.remaining() < 5) {
         return MessageParseResult.Failure("Failed byte count validation!")
       }
-      val clientType = EmuUtil.readString(buffer, 0x00, AppModule.charsetDoNotUse)
+      val clientType = EmuUtil.readString(buffer)
       if (buffer.remaining() < 4) {
         return MessageParseResult.Failure("Failed byte count validation!")
       }

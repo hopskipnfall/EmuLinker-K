@@ -10,7 +10,7 @@ class ConnectMessage_PONG : ConnectMessage() {
 
   override fun toString() = "Server Pong"
 
-  override val totalBytes = ID.length + 1
+  override val bodyBytesPlusMessageIdType = ID.length + 1
 
   override fun writeTo(buffer: ByteBuffer) {
     buffer.put(charset.encode(ID))

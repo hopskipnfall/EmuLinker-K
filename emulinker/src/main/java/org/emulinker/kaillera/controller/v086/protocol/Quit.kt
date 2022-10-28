@@ -5,7 +5,6 @@ import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.messaging.ParseException
 import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.kaillera.controller.v086.V086Utils.getNumBytesPlusStopByte
-import org.emulinker.kaillera.pico.AppModule
 import org.emulinker.util.EmuUtil
 import org.emulinker.util.UnsignedUtil.getUnsignedShort
 import org.emulinker.util.UnsignedUtil.putUnsignedShort
@@ -16,14 +15,14 @@ sealed class Quit : V086Message() {
   abstract val userId: Int
   abstract val message: String
 
-  override val bodyLength: Int
+  override val bodyBytes: Int
     get() =
       username.getNumBytesPlusStopByte() + V086Utils.Bytes.SHORT + message.getNumBytesPlusStopByte()
 
   public override fun writeBodyTo(buffer: ByteBuffer) {
-    EmuUtil.writeString(buffer, username, 0x00, AppModule.charsetDoNotUse)
+    EmuUtil.writeString(buffer, username)
     buffer.putUnsignedShort(userId)
-    EmuUtil.writeString(buffer, message, 0x00, AppModule.charsetDoNotUse)
+    EmuUtil.writeString(buffer, message)
   }
 
   data class Notification
@@ -35,7 +34,7 @@ sealed class Quit : V086Message() {
     override val message: String
   ) : Quit() {
 
-    override val messageId = ID
+    override val messageTypeId = ID
 
     init {
       require(userId in 0..0xFFFF) { "UserID out of acceptable range: $userId" }
@@ -49,7 +48,7 @@ sealed class Quit : V086Message() {
     override val username = ""
     override val userId = 0xFFFF
 
-    override val messageId = ID
+    override val messageTypeId = ID
   }
 
   companion object {
@@ -60,12 +59,12 @@ sealed class Quit : V086Message() {
       if (buffer.remaining() < 5) {
         return MessageParseResult.Failure("Failed byte count validation!")
       }
-      val userName = EmuUtil.readString(buffer, 0x00, AppModule.charsetDoNotUse)
+      val userName = EmuUtil.readString(buffer)
       if (buffer.remaining() < 3) {
         return MessageParseResult.Failure("Failed byte count validation!")
       }
       val userID = buffer.getUnsignedShort()
-      val message = EmuUtil.readString(buffer, 0x00, AppModule.charsetDoNotUse)
+      val message = EmuUtil.readString(buffer)
       return MessageParseResult.Success(
         if (userName.isBlank() && userID == 0xFFFF) {
           Request(messageNumber, message)

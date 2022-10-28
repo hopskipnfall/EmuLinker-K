@@ -10,9 +10,9 @@ import org.emulinker.util.UnsignedUtil.putUnsignedByte
 data class CachedGameData
 @Throws(MessageFormatException::class)
 constructor(override val messageNumber: Int, val key: Int) : V086Message() {
-  override val messageId = ID
+  override val messageTypeId = ID
 
-  override val bodyLength = V086Utils.Bytes.SINGLE_BYTE + V086Utils.Bytes.SINGLE_BYTE
+  override val bodyBytes = V086Utils.Bytes.SINGLE_BYTE + V086Utils.Bytes.SINGLE_BYTE
 
   public override fun writeBodyTo(buffer: ByteBuffer) {
     buffer.put(0x00.toByte())

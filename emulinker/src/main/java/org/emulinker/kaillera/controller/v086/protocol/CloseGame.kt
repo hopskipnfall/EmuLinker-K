@@ -12,9 +12,9 @@ data class CloseGame
 @Throws(MessageFormatException::class)
 constructor(override val messageNumber: Int, val gameId: Int, val val1: Int) : V086Message() {
 
-  override val messageId = ID
+  override val messageTypeId = ID
 
-  override val bodyLength =
+  override val bodyBytes =
     V086Utils.Bytes.SINGLE_BYTE + V086Utils.Bytes.SHORT + V086Utils.Bytes.SHORT
 
   public override fun writeBodyTo(buffer: ByteBuffer) {

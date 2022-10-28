@@ -6,10 +6,10 @@ import java.nio.ByteBuffer
 abstract class ByteBufferMessage {
   private lateinit var buffer: ByteBuffer
 
-  abstract val totalBytes: Int
+  abstract val bodyBytesPlusMessageIdType: Int
 
   private fun initBuffer() {
-    initBuffer(totalBytes)
+    initBuffer(bodyBytesPlusMessageIdType)
   }
 
   private fun initBuffer(size: Int) {

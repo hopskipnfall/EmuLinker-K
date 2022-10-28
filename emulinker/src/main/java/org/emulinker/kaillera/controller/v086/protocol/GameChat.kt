@@ -4,19 +4,18 @@ import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.messaging.ParseException
 import org.emulinker.kaillera.controller.v086.V086Utils.getNumBytesPlusStopByte
-import org.emulinker.kaillera.pico.AppModule
 import org.emulinker.util.EmuUtil
 
 sealed class GameChat : V086Message() {
   abstract val username: String
   abstract val message: String
 
-  override val bodyLength: Int
+  override val bodyBytes: Int
     get() = username.getNumBytesPlusStopByte() + message.getNumBytesPlusStopByte()
 
   public override fun writeBodyTo(buffer: ByteBuffer) {
-    EmuUtil.writeString(buffer, username, 0x00, AppModule.charsetDoNotUse)
-    EmuUtil.writeString(buffer, message, 0x00, AppModule.charsetDoNotUse)
+    EmuUtil.writeString(buffer, username)
+    EmuUtil.writeString(buffer, message)
   }
 
   data class Notification
@@ -26,13 +25,13 @@ sealed class GameChat : V086Message() {
     override val username: String,
     override val message: String
   ) : GameChat() {
-    override val messageId = ID
+    override val messageTypeId = ID
   }
 
   data class Request
   @Throws(MessageFormatException::class)
   constructor(override val messageNumber: Int, override val message: String) : GameChat() {
-    override val messageId = ID
+    override val messageTypeId = ID
     override val username = ""
   }
 
@@ -44,11 +43,11 @@ sealed class GameChat : V086Message() {
       if (buffer.remaining() < 3) {
         return MessageParseResult.Failure("Failed byte count validation!")
       }
-      val userName = EmuUtil.readString(buffer, 0x00, AppModule.charsetDoNotUse)
+      val userName = EmuUtil.readString(buffer)
       if (buffer.remaining() < 2) {
         return MessageParseResult.Failure("Failed byte count validation!")
       }
-      val message = EmuUtil.readString(buffer, 0x00, AppModule.charsetDoNotUse)
+      val message = EmuUtil.readString(buffer)
       return MessageParseResult.Success(
         if (userName.isBlank()) {
           Request(messageNumber, message)

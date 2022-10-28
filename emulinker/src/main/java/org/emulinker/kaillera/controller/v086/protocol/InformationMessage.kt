@@ -4,7 +4,6 @@ import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.messaging.ParseException
 import org.emulinker.kaillera.controller.v086.V086Utils.getNumBytesPlusStopByte
-import org.emulinker.kaillera.pico.AppModule
 import org.emulinker.util.EmuUtil
 
 data class InformationMessage
@@ -12,18 +11,18 @@ data class InformationMessage
 constructor(override val messageNumber: Int, val source: String, val message: String) :
   V086Message() {
 
-  override val messageId = ID
+  override val messageTypeId = ID
 
   init {
     require(source.isNotBlank()) { "source cannot be blank" }
     require(message.isNotBlank()) { "message cannot be blank" }
   }
 
-  override val bodyLength = source.getNumBytesPlusStopByte() + message.getNumBytesPlusStopByte()
+  override val bodyBytes = source.getNumBytesPlusStopByte() + message.getNumBytesPlusStopByte()
 
   public override fun writeBodyTo(buffer: ByteBuffer) {
-    EmuUtil.writeString(buffer, source, 0x00, AppModule.charsetDoNotUse)
-    EmuUtil.writeString(buffer, message, 0x00, AppModule.charsetDoNotUse)
+    EmuUtil.writeString(buffer, source)
+    EmuUtil.writeString(buffer, message)
   }
 
   companion object {
@@ -34,11 +33,11 @@ constructor(override val messageNumber: Int, val source: String, val message: St
       if (buffer.remaining() < 4) {
         return MessageParseResult.Failure("Failed byte count validation!")
       }
-      val source = EmuUtil.readString(buffer, 0x00, AppModule.charsetDoNotUse)
+      val source = EmuUtil.readString(buffer)
       if (buffer.remaining() < 2) {
         return MessageParseResult.Failure("Failed byte count validation!")
       }
-      val message = EmuUtil.readString(buffer, 0x00, AppModule.charsetDoNotUse)
+      val message = EmuUtil.readString(buffer)
       return MessageParseResult.Success(InformationMessage(messageNumber, source, message))
     }
   }

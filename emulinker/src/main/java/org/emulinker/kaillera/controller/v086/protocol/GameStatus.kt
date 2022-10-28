@@ -18,9 +18,9 @@ constructor(
   val numPlayers: Byte,
   val maxPlayers: Byte
 ) : V086Message() {
-  override val messageId = ID
+  override val messageTypeId = ID
 
-  override val bodyLength =
+  override val bodyBytes =
     V086Utils.Bytes.SINGLE_BYTE +
       V086Utils.Bytes.SHORT +
       V086Utils.Bytes.SHORT +

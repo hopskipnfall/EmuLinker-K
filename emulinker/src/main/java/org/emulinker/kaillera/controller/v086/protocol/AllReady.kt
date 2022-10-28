@@ -8,9 +8,9 @@ import org.emulinker.util.EmuUtil
 data class AllReady
 @Throws(MessageFormatException::class)
 constructor(override val messageNumber: Int) : V086Message() {
-  override val messageId = ID
+  override val messageTypeId = ID
 
-  override val bodyLength = V086Utils.Bytes.SINGLE_BYTE
+  override val bodyBytes = V086Utils.Bytes.SINGLE_BYTE
 
   public override fun writeBodyTo(buffer: ByteBuffer) {
     buffer.put(0x00.toByte())

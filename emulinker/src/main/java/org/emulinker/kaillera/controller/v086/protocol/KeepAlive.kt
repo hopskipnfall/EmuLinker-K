@@ -10,9 +10,9 @@ import org.emulinker.util.UnsignedUtil.putUnsignedByte
 data class KeepAlive
 @Throws(MessageFormatException::class)
 constructor(override val messageNumber: Int, val value: Short) : V086Message() {
-  override val messageId = ID
+  override val messageTypeId = ID
 
-  override val bodyLength = V086Utils.Bytes.SINGLE_BYTE
+  override val bodyBytes = V086Utils.Bytes.SINGLE_BYTE
 
   init {
     require(value in 0..0xFF) { "val out of acceptable range: $value" }

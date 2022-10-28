@@ -10,13 +10,13 @@ import org.emulinker.util.UnsignedUtil.putUnsignedByte
 import org.emulinker.util.UnsignedUtil.putUnsignedShort
 
 sealed class StartGame : V086Message() {
-  override val messageId = ID
+  override val messageTypeId = ID
 
   abstract val val1: Int
   abstract val playerNumber: Short
   abstract val numPlayers: Short
 
-  override val bodyLength: Int
+  override val bodyBytes: Int
     get() =
       V086Utils.Bytes.SINGLE_BYTE +
         V086Utils.Bytes.SHORT +
@@ -39,7 +39,7 @@ sealed class StartGame : V086Message() {
     override val numPlayers: Short
   ) : StartGame() {
 
-    override val messageId = ID
+    override val messageTypeId = ID
 
     init {
       require(val1 in 0..0xFFFF) { "val1 out of acceptable range: $val1" }

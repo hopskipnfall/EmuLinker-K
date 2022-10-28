@@ -6,7 +6,6 @@ import org.emulinker.kaillera.controller.messaging.ParseException
 import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.kaillera.controller.v086.V086Utils.getNumBytesPlusStopByte
 import org.emulinker.kaillera.model.ConnectionType
-import org.emulinker.kaillera.pico.AppModule
 import org.emulinker.util.EmuUtil
 import org.emulinker.util.UnsignedUtil.getUnsignedInt
 import org.emulinker.util.UnsignedUtil.getUnsignedShort
@@ -22,7 +21,7 @@ constructor(
   val ping: Long,
   val connectionType: ConnectionType
 ) : V086Message() {
-  override val messageId = ID
+  override val messageTypeId = ID
 
   init {
     if (username.isBlank()) throw MessageFormatException("Empty username: $username")
@@ -30,14 +29,14 @@ constructor(
     require(ping in 0..2048) { "Ping out of acceptable range: $ping" }
   }
 
-  override val bodyLength =
+  override val bodyBytes =
     username.getNumBytesPlusStopByte() +
       V086Utils.Bytes.SHORT +
       V086Utils.Bytes.INTEGER +
       V086Utils.Bytes.SINGLE_BYTE
 
   public override fun writeBodyTo(buffer: ByteBuffer) {
-    EmuUtil.writeString(buffer, username, 0x00, AppModule.charsetDoNotUse)
+    EmuUtil.writeString(buffer, username)
     buffer.putUnsignedShort(userId)
     buffer.putUnsignedInt(ping)
     buffer.put(connectionType.byteValue)
@@ -51,7 +50,7 @@ constructor(
       if (buffer.remaining() < 9) {
         return MessageParseResult.Failure("Failed byte count validation!")
       }
-      val userName = EmuUtil.readString(buffer, 0x00, AppModule.charsetDoNotUse)
+      val userName = EmuUtil.readString(buffer)
       if (buffer.remaining() < 7) {
         return MessageParseResult.Failure("Failed byte count validation!")
       }

@@ -10,6 +10,15 @@ import org.emulinker.kaillera.controller.messaging.ParseException
 import org.emulinker.kaillera.pico.AppModule
 import org.emulinker.util.UnsignedUtil.putUnsignedShort
 
+/**
+ * A message in the v086 Kaillera protocol.
+ *
+ * A message structure over the wire is as follows:
+ * 1. The message number (2 bytes)
+ * 2. The length of the message (2 bytes)
+ * 3. The ID of the message type (1 byte)
+ * 4. All body bytes written by [writeBodyTo] ([bodyBytes] bytes)
+ */
 abstract class V086Message : ByteBufferMessage() {
   /**
    * The 0-based enumeration indicating the order in which this message was sent/received for each
@@ -24,11 +33,11 @@ abstract class V086Message : ByteBufferMessage() {
   abstract val messageNumber: Int
 
   @Deprecated("We should try to use a sealed class instead of relying on this messageId field")
-  abstract val messageId: Byte
+  abstract val messageTypeId: Byte
 
   /** The total number of bytes the message takes up, including the message ID byte. */
-  override val totalBytes: Int
-    get() = bodyLength + 1
+  override val bodyBytesPlusMessageIdType: Int
+    get() = bodyBytes + 1
 
   /** Gets the number of bytes to represent the string in the charset defined in emulinker.config */
   protected fun getNumBytes(s: String): Int {
@@ -36,10 +45,10 @@ abstract class V086Message : ByteBufferMessage() {
   }
 
   /** Number of bytes the body of the message takes up (excluding the message ID byte). */
-  abstract val bodyLength: Int
+  abstract val bodyBytes: Int
 
   override fun writeTo(buffer: ByteBuffer) {
-    val len = totalBytes
+    val len = bodyBytesPlusMessageIdType
     if (len > buffer.remaining()) {
       logger
         .atWarning()
@@ -54,7 +63,7 @@ abstract class V086Message : ByteBufferMessage() {
       (buffer as Buffer).mark()
       buffer.putUnsignedShort(len)
       //		buffer.putShort((short)getLength());
-      buffer.put(messageId)
+      buffer.put(messageTypeId)
       writeBodyTo(buffer)
     }
   }
@@ -113,13 +122,17 @@ abstract class V086Message : ByteBufferMessage() {
         }
 
       // removed to improve speed
-      if (message.totalBytes != messageLength) {
+      if (message.bodyBytesPlusMessageIdType != messageLength) {
         //			throw new ParseException("Bundle contained length " + messageLength + " !=  parsed
         // lengthy
         // " + message.getLength());
         logger
           .atFine()
-          .log("Bundle contained length %d != parsed length %d", messageLength, message.totalBytes)
+          .log(
+            "Bundle contained length %d != parsed length %d",
+            messageLength,
+            message.bodyBytesPlusMessageIdType
+          )
       }
       return message
     }

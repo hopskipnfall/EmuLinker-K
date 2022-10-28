@@ -191,7 +191,7 @@ class V086BundleTest {
                 )
               )
           )
-          .bodyLength
+          .bodyBytes
       )
       .isEqualTo(115)
   }

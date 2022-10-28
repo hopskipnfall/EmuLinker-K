@@ -2,10 +2,6 @@ package org.emulinker.util
 
 import java.io.File
 import java.io.FileInputStream
-import java.lang.Exception
-import java.lang.InstantiationException
-import java.lang.NumberFormatException
-import java.lang.StringBuilder
 import java.net.InetSocketAddress
 import java.net.SocketAddress
 import java.nio.Buffer
@@ -17,8 +13,7 @@ import java.time.Instant
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import java.util.Properties
-import kotlin.Throws
-import kotlin.jvm.JvmOverloads
+import org.emulinker.kaillera.pico.AppModule
 
 object EmuUtil {
   private val HEX_CHARS =
@@ -96,6 +91,14 @@ object EmuUtil {
     }
     return sb.toString()
   }
+
+  @OptIn(ExperimentalUnsignedTypes::class)
+  fun ByteArray.toHexString() =
+    this.asUByteArray()
+      .joinToString("") { it.toString(16).padStart(2, '0') }
+      .uppercase()
+      .chunked(size = 2)
+      .joinToString(separator = ",")
 
   fun byteToHex(b: Byte): String {
     return (HEX_CHARS[b.toInt() and 0xf0 shr 4].toString() +
@@ -188,17 +191,24 @@ object EmuUtil {
     // Cast to avoid issue with java version mismatch: https://stackoverflow.com/a/61267496/2875073
     val pos = this.position()
     (this as Buffer).position(0)
+    val byteList = mutableListOf<Byte>()
     while (this.hasRemaining()) {
       val b = this.get()
+      byteList.add(b)
       if (!allHex && Character.isLetterOrDigit(Char(b.toUShort()))) sb.append(Char(b.toUShort()))
       else sb.append(byteToHex(b))
       if (this.hasRemaining()) sb.append(",")
     }
     this.position(pos)
-    return sb.toString()
+    //    return sb.toString()
+    return byteList.toByteArray().toHexString()
   }
 
-  fun readString(buffer: ByteBuffer, stopByte: Int, charset: Charset): String {
+  fun readString(
+    buffer: ByteBuffer,
+    stopByte: Int = 0x00,
+    charset: Charset = AppModule.charsetDoNotUse
+  ): String {
     val tempBuffer = ByteBuffer.allocate(buffer.remaining())
     while (buffer.hasRemaining()) {
       var b: Byte
@@ -209,7 +219,12 @@ object EmuUtil {
     return charset.decode((tempBuffer as Buffer).flip() as ByteBuffer).toString()
   }
 
-  fun writeString(buffer: ByteBuffer, s: String, stopByte: Int, charset: Charset) {
+  fun writeString(
+    buffer: ByteBuffer,
+    s: String,
+    stopByte: Int = 0x00,
+    charset: Charset = AppModule.charsetDoNotUse
+  ) {
     buffer.put(charset.encode(s))
     //		char[] tempArray = s.toCharArray();
     //		for(int i=0; i<tempArray.length; i++)

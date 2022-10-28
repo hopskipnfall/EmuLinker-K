@@ -5,7 +5,6 @@ import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.messaging.ParseException
 import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.kaillera.controller.v086.V086Utils.getNumBytesPlusStopByte
-import org.emulinker.kaillera.pico.AppModule
 import org.emulinker.util.EmuUtil
 import org.emulinker.util.UnsignedUtil.getUnsignedShort
 import org.emulinker.util.UnsignedUtil.putUnsignedShort
@@ -14,13 +13,13 @@ sealed class QuitGame : V086Message() {
   abstract val username: String
   abstract val userId: Int
 
-  override val messageId = ID
+  override val messageTypeId = ID
 
-  override val bodyLength: Int
+  override val bodyBytes: Int
     get() = username.getNumBytesPlusStopByte() + V086Utils.Bytes.SHORT
 
   public override fun writeBodyTo(buffer: ByteBuffer) {
-    EmuUtil.writeString(buffer, username, 0x00, AppModule.charsetDoNotUse)
+    EmuUtil.writeString(buffer, username)
     buffer.putUnsignedShort(userId)
   }
 
@@ -53,7 +52,7 @@ sealed class QuitGame : V086Message() {
       if (buffer.remaining() < 3) {
         return MessageParseResult.Failure("Failed byte count validation!")
       }
-      val userName = EmuUtil.readString(buffer, 0x00, AppModule.charsetDoNotUse)
+      val userName = EmuUtil.readString(buffer)
       if (buffer.remaining() < 2) {
         return MessageParseResult.Failure("Failed byte count validation!")
       }

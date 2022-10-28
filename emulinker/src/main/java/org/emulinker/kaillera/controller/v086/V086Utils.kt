@@ -20,7 +20,7 @@ object V086Utils {
 
   fun hexStringToByteBuffer(hex: String): ByteBuffer {
     var hex = hex
-    hex = hex.replace(" ", "")
+    hex = hex.replace(", ", "").replace(",", "").replace(" ", "").lowercase()
     val bytes = hexStringToByteArray2(hex)
     val buffer = ByteBuffer.allocate(bytes.size)
     buffer.put(bytes)
@@ -70,13 +70,6 @@ object V086Utils {
     original.position(position)
     return clone
   }
-
-  /** Gets the number of bytes to represent the string in the charset defined in emulinker.config */
-  @Deprecated(
-    "You probably want getNumBytesPlusStopByte instead",
-    replaceWith = ReplaceWith("this.getNumBytesPlusStopByte() - 1")
-  )
-  fun String.getNumBytes(): Int = this.toByteArray(AppModule.charsetDoNotUse).size
 
   /**
    * Gets the number of bytes to represent the string in the charset defined in emulinker.config,

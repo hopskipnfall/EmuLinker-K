@@ -5,7 +5,6 @@ import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.messaging.ParseException
 import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.kaillera.controller.v086.V086Utils.getNumBytesPlusStopByte
-import org.emulinker.kaillera.pico.AppModule
 import org.emulinker.util.EmuUtil
 
 sealed class PlayerDrop : V086Message() {
@@ -24,11 +23,11 @@ sealed class PlayerDrop : V086Message() {
   //   this.userName = userName;
   //   this.playerNumber = playerNumber;
   // }
-  override val bodyLength: Int
+  override val bodyBytes: Int
     get() = username.getNumBytesPlusStopByte() + V086Utils.Bytes.SINGLE_BYTE
 
   public override fun writeBodyTo(buffer: ByteBuffer) {
-    EmuUtil.writeString(buffer, username, 0x00, AppModule.charsetDoNotUse)
+    EmuUtil.writeString(buffer, username)
     buffer.put(playerNumber)
   }
 
@@ -40,7 +39,7 @@ sealed class PlayerDrop : V086Message() {
     override val playerNumber: Byte
   ) : PlayerDrop() {
 
-    override val messageId = ID
+    override val messageTypeId = ID
 
     init {
       require(playerNumber in 0..255) { "playerNumber out of acceptable range: $playerNumber" }
@@ -52,7 +51,7 @@ sealed class PlayerDrop : V086Message() {
   @Throws(MessageFormatException::class)
   constructor(override val messageNumber: Int) : PlayerDrop() {
 
-    override val messageId = ID
+    override val messageTypeId = ID
 
     override val username = ""
     override val playerNumber = 0.toByte()
@@ -65,7 +64,7 @@ sealed class PlayerDrop : V086Message() {
       if (buffer.remaining() < 2) {
         return MessageParseResult.Failure("Failed byte count validation!")
       }
-      val userName = EmuUtil.readString(buffer, 0x00, AppModule.charsetDoNotUse)
+      val userName = EmuUtil.readString(buffer)
       val playerNumber = buffer.get()
       return MessageParseResult.Success(
         if (userName.isBlank() && playerNumber.toInt() == 0) {

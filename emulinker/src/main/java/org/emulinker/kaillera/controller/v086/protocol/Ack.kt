@@ -14,20 +14,12 @@ sealed class Ack : V086Message() {
   abstract val val3: Long
   abstract val val4: Long
 
-  override val bodyLength =
+  override val bodyBytes =
     V086Utils.Bytes.SINGLE_BYTE +
       V086Utils.Bytes.INTEGER +
       V086Utils.Bytes.INTEGER +
       V086Utils.Bytes.INTEGER +
       V086Utils.Bytes.INTEGER
-
-  public override fun writeBodyTo(buffer: ByteBuffer) {
-    buffer.put(0x00.toByte())
-    buffer.putUnsignedInt(val1)
-    buffer.putUnsignedInt(val2)
-    buffer.putUnsignedInt(val3)
-    buffer.putUnsignedInt(val4)
-  }
 
   data class ClientAck
   @Throws(MessageFormatException::class)
@@ -37,7 +29,11 @@ sealed class Ack : V086Message() {
     override val val3: Long = 2
     override val val4: Long = 3
 
-    override val messageId = ID
+    override val messageTypeId = ID
+
+    public override fun writeBodyTo(buffer: ByteBuffer) {
+      ClientAckSerializer.write(buffer, this)
+    }
 
     companion object {
       const val ID: Byte = 0x06
@@ -50,20 +46,37 @@ sealed class Ack : V086Message() {
         val b = buffer.get()
         if (b.toInt() != 0x00) {
           throw MessageFormatException(
-            "Invalid " + "Client to Server ACK" + " format: byte 0 = " + EmuUtil.byteToHex(b)
+            "Invalid Client to Server ACK format: byte 0 = ${EmuUtil.byteToHex(b)}"
           )
         }
-
-        // long val1 = UnsignedUtil.getUnsignedInt(buffer);
-        // long val2 = UnsignedUtil.getUnsignedInt(buffer);
-        // long val3 = UnsignedUtil.getUnsignedInt(buffer);
-        // long val4 = UnsignedUtil.getUnsignedInt(buffer);
-
-        // if (val1 != 0 || val2 != 1 || val3 != 2 || val4 != 3)
-        // throw new MessageFormatException("Invalid " + DESC + " format: bytes do not match
-        // acceptable
-        // format!");
         return MessageParseResult.Success(ClientAck(messageNumber))
+      }
+
+      object ClientAckSerializer : MessageSerializer<Ack.ClientAck> {
+        override fun read(
+          buffer: ByteBuffer,
+          messageNumber: Int
+        ): MessageParseResult<Ack.ClientAck> {
+          if (buffer.remaining() < 17) {
+            return MessageParseResult.Failure("Failed byte count validation!")
+          }
+          val b = buffer.get()
+          if (b.toInt() != 0x00) {
+            throw MessageFormatException(
+              "Invalid " + "Client to Server ACK" + " format: byte 0 = " + EmuUtil.byteToHex(b)
+            )
+          }
+
+          return MessageParseResult.Success(Ack.ClientAck(messageNumber))
+        }
+
+        override fun write(buffer: ByteBuffer, message: Ack.ClientAck) {
+          buffer.put(0x00.toByte())
+          buffer.putUnsignedInt(message.val1)
+          buffer.putUnsignedInt(message.val2)
+          buffer.putUnsignedInt(message.val3)
+          buffer.putUnsignedInt(message.val4)
+        }
       }
     }
   }
@@ -76,7 +89,11 @@ sealed class Ack : V086Message() {
     override val val3 = 2L
     override val val4 = 3L
 
-    override val messageId = ID
+    override val messageTypeId = ID
+
+    public override fun writeBodyTo(buffer: ByteBuffer) {
+      ServerAckSerializer.write(buffer, this)
+    }
 
     companion object {
       const val ID: Byte = 0x05
@@ -99,6 +116,30 @@ sealed class Ack : V086Message() {
             "Invalid Server to Client ACK format: bytes do not match acceptable format!"
           )
         return MessageParseResult.Success(ServerAck(messageNumber))
+      }
+    }
+
+    object ServerAckSerializer : MessageSerializer<Ack.ServerAck> {
+      override fun read(buffer: ByteBuffer, messageNumber: Int): MessageParseResult<Ack.ServerAck> {
+        if (buffer.remaining() < 17) {
+          return MessageParseResult.Failure("Failed byte count validation!")
+        }
+        val b = buffer.get()
+        if (b.toInt() != 0x00) {
+          throw MessageFormatException(
+            "Invalid " + "Client to Server ACK" + " format: byte 0 = " + EmuUtil.byteToHex(b)
+          )
+        }
+
+        return MessageParseResult.Success(Ack.ServerAck(messageNumber))
+      }
+
+      override fun write(buffer: ByteBuffer, message: Ack.ServerAck) {
+        buffer.put(0x00.toByte())
+        buffer.putUnsignedInt(message.val1)
+        buffer.putUnsignedInt(message.val2)
+        buffer.putUnsignedInt(message.val3)
+        buffer.putUnsignedInt(message.val4)
       }
     }
   }

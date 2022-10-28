@@ -6,7 +6,6 @@ import org.emulinker.kaillera.controller.messaging.ParseException
 import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.kaillera.controller.v086.V086Utils.getNumBytesPlusStopByte
 import org.emulinker.kaillera.model.ConnectionType
-import org.emulinker.kaillera.pico.AppModule
 import org.emulinker.util.EmuUtil
 import org.emulinker.util.UnsignedUtil.getUnsignedInt
 import org.emulinker.util.UnsignedUtil.getUnsignedShort
@@ -21,7 +20,7 @@ sealed class JoinGame : V086Message() {
   abstract val userId: Int
   abstract val connectionType: ConnectionType
 
-  override val bodyLength: Int
+  override val bodyBytes: Int
     get() =
       V086Utils.Bytes.SINGLE_BYTE +
         V086Utils.Bytes.SHORT +
@@ -35,7 +34,7 @@ sealed class JoinGame : V086Message() {
     buffer.put(0x00.toByte())
     buffer.putUnsignedShort(gameId)
     buffer.putUnsignedShort(val1)
-    EmuUtil.writeString(buffer, username, 0x00, AppModule.charsetDoNotUse)
+    EmuUtil.writeString(buffer, username)
     buffer.putUnsignedInt(ping)
     buffer.putUnsignedShort(userId)
     buffer.put(connectionType.byteValue)
@@ -53,7 +52,7 @@ sealed class JoinGame : V086Message() {
     override val connectionType: ConnectionType
   ) : JoinGame() {
 
-    override val messageId = ID
+    override val messageTypeId = ID
 
     init {
       require(gameId in 0..0xFFFF) { "gameID out of acceptable range: $gameId" }
@@ -71,7 +70,7 @@ sealed class JoinGame : V086Message() {
     override val connectionType: ConnectionType
   ) : JoinGame() {
 
-    override val messageId = ID
+    override val messageTypeId = ID
 
     override val val1 = 0
     override val username = ""
@@ -96,7 +95,7 @@ sealed class JoinGame : V086Message() {
         throw MessageFormatException("Invalid format: byte 0 = " + EmuUtil.byteToHex(b))
       val gameID = buffer.getUnsignedShort()
       val val1 = buffer.getUnsignedShort()
-      val userName = EmuUtil.readString(buffer, 0x00, AppModule.charsetDoNotUse)
+      val userName = EmuUtil.readString(buffer)
       if (buffer.remaining() < 7) {
         return MessageParseResult.Failure("Failed byte count validation!")
       }

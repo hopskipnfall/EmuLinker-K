@@ -6,7 +6,6 @@ import org.emulinker.kaillera.controller.messaging.ParseException
 import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.kaillera.controller.v086.V086Utils.getNumBytesPlusStopByte
 import org.emulinker.kaillera.model.ConnectionType
-import org.emulinker.kaillera.pico.AppModule
 import org.emulinker.util.EmuUtil
 import org.emulinker.util.UnsignedUtil.getUnsignedInt
 import org.emulinker.util.UnsignedUtil.getUnsignedShort
@@ -16,12 +15,12 @@ import org.emulinker.util.UnsignedUtil.putUnsignedShort
 data class PlayerInformation
 @Throws(MessageFormatException::class)
 constructor(override val messageNumber: Int, val players: List<Player>) : V086Message() {
-  override val messageId = ID
+  override val messageTypeId = ID
 
   val numPlayers: Int
     get() = players.size
 
-  override val bodyLength =
+  override val bodyBytes =
     V086Utils.Bytes.SINGLE_BYTE + V086Utils.Bytes.INTEGER + players.sumOf { it.numBytes }
 
   override fun writeBodyTo(buffer: ByteBuffer) {
@@ -44,7 +43,7 @@ constructor(override val messageNumber: Int, val players: List<Player>) : V086Me
         V086Utils.Bytes.SINGLE_BYTE
 
     fun writeTo(buffer: ByteBuffer) {
-      EmuUtil.writeString(buffer, username, 0x00, AppModule.charsetDoNotUse)
+      EmuUtil.writeString(buffer, username)
       buffer.putUnsignedInt(ping)
       buffer.putUnsignedShort(userId)
       buffer.put(connectionType.byteValue)
@@ -88,7 +87,7 @@ constructor(override val messageNumber: Int, val players: List<Player>) : V086Me
         if (buffer.remaining() < 9) {
           return MessageParseResult.Failure("Failed byte count validation!")
         }
-        val userName = EmuUtil.readString(buffer, 0x00, AppModule.charsetDoNotUse)
+        val userName = EmuUtil.readString(buffer)
         if (buffer.remaining() < 7) {
           return MessageParseResult.Failure("Failed byte count validation!")
         }

@@ -284,7 +284,7 @@ constructor(
         val messages = inBundle.messages
         if (inBundle.numMessages == 1) {
           lastMessageNumber = messages.single()!!.messageNumber
-          val action = controller.actions[messages[0]!!.messageId.toInt()]
+          val action = controller.actions[messages[0]!!.messageTypeId.toInt()]
           if (action == null) {
             logger.atSevere().log("No action defined to handle client message: %s", messages[0])
           }
@@ -314,7 +314,7 @@ constructor(
                 user.droppedPacket()
               }
             }
-            val action = controller.actions[messages[i]!!.messageId.toInt()]
+            val action = controller.actions[messages[i]!!.messageTypeId.toInt()]
             if (action == null) {
               logger.atSevere().log("No action defined to handle client message: %s", messages[i])
             } else {
