@@ -23,7 +23,7 @@ constructor(override val messageNumber: Int, val players: List<Player>) : V086Me
   override val bodyBytes =
     V086Utils.Bytes.SINGLE_BYTE + V086Utils.Bytes.INTEGER + players.sumOf { it.numBytes }
 
-  override fun writeBodyTo(buffer: ByteBuffer) {
+  public override fun writeBodyTo(buffer: ByteBuffer) {
     buffer.put(0x00.toByte())
     buffer.putInt(players.size)
     players.forEach { it.writeTo(buffer) }

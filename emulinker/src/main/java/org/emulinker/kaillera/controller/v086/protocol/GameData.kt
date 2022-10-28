@@ -21,6 +21,28 @@ constructor(override val messageNumber: Int, val gameData: ByteArray) : V086Mess
     buffer.put(gameData)
   }
 
+  override fun equals(other: Any?): Boolean {
+    if (this === other) return true
+    if (javaClass != other?.javaClass) return false
+
+    other as GameData
+
+    if (messageNumber != other.messageNumber) return false
+    if (!gameData.contentEquals(other.gameData)) return false
+    if (messageTypeId != other.messageTypeId) return false
+    if (bodyBytes != other.bodyBytes) return false
+
+    return true
+  }
+
+  override fun hashCode(): Int {
+    var result = messageNumber
+    result = 31 * result + gameData.contentHashCode()
+    result = 31 * result + messageTypeId
+    result = 31 * result + bodyBytes
+    return result
+  }
+
   init {
     require(gameData.isNotEmpty()) { "gameData is empty" }
     require(gameData.size in 0..0xFFFF) { "gameData size out of range: ${gameData.size}" }

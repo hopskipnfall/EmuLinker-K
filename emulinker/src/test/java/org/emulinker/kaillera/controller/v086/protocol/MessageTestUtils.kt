@@ -10,7 +10,8 @@ object MessageTestUtils {
     val numberWritten = buffer.position()
     val stringForm = buffer.dumpBufferFromBeginning()
 
-    assertThat(stringForm.split(",").take(numberWritten)).isEqualTo(byteString.split(","))
+    assertThat(stringForm.split(",").take(numberWritten))
+      .isEqualTo(byteString.replace(" ", "").split(","))
 
     stringForm.split(",").drop(numberWritten).forEach { assertThat(it).isEqualTo("00") }
   }

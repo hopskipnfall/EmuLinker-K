@@ -31,18 +31,18 @@ class ChatTest {
   }
 
   @Test
-  fun chatRequest_bodyLength() {
+  fun bodyLength() {
     assertThat(CHAT_REQUEST.bodyBytes).isEqualTo(15)
   }
 
   @Test
-  fun chatRequest_deserializeBody() {
+  fun deserializeBody() {
     assertThat(Chat.parse(MESSAGE_NUMBER, V086Utils.hexStringToByteBuffer(CHAT_REQUEST_BODY_BYTES)))
       .isEqualTo(MessageParseResult.Success(CHAT_REQUEST))
   }
 
   @Test
-  fun chatRequest_serializeBody() {
+  fun serializeBody() {
     val buffer = ByteBuffer.allocateDirect(4096)
     CHAT_REQUEST.writeBodyTo(buffer)
 

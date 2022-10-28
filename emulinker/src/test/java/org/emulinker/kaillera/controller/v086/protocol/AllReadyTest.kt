@@ -30,7 +30,6 @@ class AllReadyTest {
 
   companion object {
     private const val MESSAGE_NUMBER = 42
-
     private const val BODY_BYTES = "00"
 
     private val ALL_READY = AllReady(MESSAGE_NUMBER)

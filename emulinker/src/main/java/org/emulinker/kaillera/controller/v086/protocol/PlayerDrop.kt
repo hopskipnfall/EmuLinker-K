@@ -36,6 +36,7 @@ sealed class PlayerDrop : V086Message() {
   constructor(
     override val messageNumber: Int,
     override val username: String,
+    // TODO(nue): Should we really be using a byte for this??
     override val playerNumber: Byte
   ) : PlayerDrop() {
 

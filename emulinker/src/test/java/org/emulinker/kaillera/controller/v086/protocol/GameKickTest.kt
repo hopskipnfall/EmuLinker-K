@@ -6,32 +6,32 @@ import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.kaillera.controller.v086.protocol.MessageTestUtils.assertBufferContainsExactly
 import org.junit.Test
 
-class CachedGameDataTest {
+class GameKickTest {
 
   @Test
   fun bodyLength() {
-    assertThat(CACHED_GAME_DATA.bodyBytes).isEqualTo(2)
+    assertThat(GAME_KICK.bodyBytes).isEqualTo(3)
   }
 
   @Test
   fun deserializeBody() {
-    assertThat(CachedGameData.parse(MESSAGE_NUMBER, V086Utils.hexStringToByteBuffer(BODY_BYTES)))
-      .isEqualTo(MessageParseResult.Success(CACHED_GAME_DATA))
+    assertThat(GameKick.parse(MESSAGE_NUMBER, V086Utils.hexStringToByteBuffer(BODY_BYTES)))
+      .isEqualTo(MessageParseResult.Success(GAME_KICK))
   }
 
   @Test
   fun serializeBody() {
     val buffer = ByteBuffer.allocateDirect(4096)
-    CACHED_GAME_DATA.writeBodyTo(buffer)
+    GAME_KICK.writeBodyTo(buffer)
 
-    assertThat(buffer.position()).isEqualTo(CACHED_GAME_DATA.bodyBytes)
+    assertThat(buffer.position()).isEqualTo(GAME_KICK.bodyBytes)
     assertBufferContainsExactly(buffer, BODY_BYTES)
   }
 
   companion object {
     private const val MESSAGE_NUMBER = 42
-    private const val BODY_BYTES = "00, 0C"
+    private const val BODY_BYTES = "00, 00, 0D"
 
-    private val CACHED_GAME_DATA = CachedGameData(MESSAGE_NUMBER, key = 12)
+    private val GAME_KICK = GameKick(MESSAGE_NUMBER, userId = 13)
   }
 }
