@@ -51,33 +51,6 @@ sealed class Ack : V086Message() {
         }
         return MessageParseResult.Success(ClientAck(messageNumber))
       }
-
-      object ClientAckSerializer : MessageSerializer<Ack.ClientAck> {
-        override fun read(
-          buffer: ByteBuffer,
-          messageNumber: Int
-        ): MessageParseResult<Ack.ClientAck> {
-          if (buffer.remaining() < 17) {
-            return MessageParseResult.Failure("Failed byte count validation!")
-          }
-          val b = buffer.get()
-          if (b.toInt() != 0x00) {
-            throw MessageFormatException(
-              "Invalid " + "Client to Server ACK" + " format: byte 0 = " + EmuUtil.byteToHex(b)
-            )
-          }
-
-          return MessageParseResult.Success(Ack.ClientAck(messageNumber))
-        }
-
-        override fun write(buffer: ByteBuffer, message: Ack.ClientAck) {
-          buffer.put(0x00.toByte())
-          buffer.putUnsignedInt(message.val1)
-          buffer.putUnsignedInt(message.val2)
-          buffer.putUnsignedInt(message.val3)
-          buffer.putUnsignedInt(message.val4)
-        }
-      }
     }
   }
 
@@ -118,9 +91,13 @@ sealed class Ack : V086Message() {
         return MessageParseResult.Success(ServerAck(messageNumber))
       }
     }
+  }
 
-    object ServerAckSerializer : MessageSerializer<Ack.ServerAck> {
-      override fun read(buffer: ByteBuffer, messageNumber: Int): MessageParseResult<Ack.ServerAck> {
+  companion object {
+    object ClientAckSerializer : MessageSerializer<Ack.ClientAck> {
+      override val messageTypeId: Byte = ClientAck.ID
+
+      override fun read(buffer: ByteBuffer, messageNumber: Int): MessageParseResult<Ack.ClientAck> {
         if (buffer.remaining() < 17) {
           return MessageParseResult.Failure("Failed byte count validation!")
         }
@@ -131,16 +108,42 @@ sealed class Ack : V086Message() {
           )
         }
 
-        return MessageParseResult.Success(Ack.ServerAck(messageNumber))
+        return MessageParseResult.Success(Ack.ClientAck(messageNumber))
       }
 
-      override fun write(buffer: ByteBuffer, message: Ack.ServerAck) {
+      override fun write(buffer: ByteBuffer, message: Ack.ClientAck) {
         buffer.put(0x00.toByte())
         buffer.putUnsignedInt(message.val1)
         buffer.putUnsignedInt(message.val2)
         buffer.putUnsignedInt(message.val3)
         buffer.putUnsignedInt(message.val4)
       }
+    }
+  }
+
+  object ServerAckSerializer : MessageSerializer<Ack.ServerAck> {
+    override val messageTypeId: Byte = ServerAck.ID
+
+    override fun read(buffer: ByteBuffer, messageNumber: Int): MessageParseResult<Ack.ServerAck> {
+      if (buffer.remaining() < 17) {
+        return MessageParseResult.Failure("Failed byte count validation!")
+      }
+      val b = buffer.get()
+      if (b.toInt() != 0x00) {
+        throw MessageFormatException(
+          "Invalid " + "Client to Server ACK" + " format: byte 0 = " + EmuUtil.byteToHex(b)
+        )
+      }
+
+      return MessageParseResult.Success(Ack.ServerAck(messageNumber))
+    }
+
+    override fun write(buffer: ByteBuffer, message: Ack.ServerAck) {
+      buffer.put(0x00.toByte())
+      buffer.putUnsignedInt(message.val1)
+      buffer.putUnsignedInt(message.val2)
+      buffer.putUnsignedInt(message.val3)
+      buffer.putUnsignedInt(message.val4)
     }
   }
 }

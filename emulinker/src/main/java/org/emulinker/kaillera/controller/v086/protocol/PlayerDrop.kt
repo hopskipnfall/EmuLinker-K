@@ -73,5 +73,35 @@ sealed class PlayerDrop : V086Message() {
         } else Notification(messageNumber, userName, playerNumber)
       )
     }
+
+    object PlayerDropRequestSerializer : MessageSerializer<PlayerDrop.Request> {
+      override val messageTypeId: Byte = TODO("Not yet implemented")
+
+      override fun read(
+        buffer: ByteBuffer,
+        messageNumber: Int
+      ): MessageParseResult<PlayerDrop.Request> {
+        TODO("Not yet implemented")
+      }
+
+      override fun write(buffer: ByteBuffer, message: PlayerDrop.Request) {
+        TODO("Not yet implemented")
+      }
+    }
+
+    object PlayerDropNotificationSerializer : MessageSerializer<PlayerDrop.Notification> {
+      override val messageTypeId: Byte = TODO("Not yet implemented")
+
+      override fun read(
+        buffer: ByteBuffer,
+        messageNumber: Int
+      ): MessageParseResult<PlayerDrop.Notification> {
+        TODO("Not yet implemented")
+      }
+
+      override fun write(buffer: ByteBuffer, message: PlayerDrop.Notification) {
+        TODO("Not yet implemented")
+      }
+    }
   }
 }

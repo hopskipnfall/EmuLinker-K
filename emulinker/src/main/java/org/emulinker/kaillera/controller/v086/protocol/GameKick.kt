@@ -38,5 +38,17 @@ constructor(override val messageNumber: Int, val userId: Int) : V086Message() {
       */
       return MessageParseResult.Success(GameKick(messageNumber, buffer.getUnsignedShort()))
     }
+
+    object GameKickSerializer : MessageSerializer<GameKick> {
+      override val messageTypeId: Byte = TODO("Not yet implemented")
+
+      override fun read(buffer: ByteBuffer, messageNumber: Int): MessageParseResult<GameKick> {
+        TODO("Not yet implemented")
+      }
+
+      override fun write(buffer: ByteBuffer, message: GameKick) {
+        TODO("Not yet implemented")
+      }
+    }
   }
 }

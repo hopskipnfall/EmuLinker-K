@@ -32,5 +32,17 @@ constructor(override val messageNumber: Int, val value: Short) : V086Message() {
       }
       return MessageParseResult.Success(KeepAlive(messageNumber, buffer.getUnsignedByte()))
     }
+
+    object KeepAliveSerializer : MessageSerializer<KeepAlive> {
+      override val messageTypeId: Byte = TODO("Not yet implemented")
+
+      override fun read(buffer: ByteBuffer, messageNumber: Int): MessageParseResult<KeepAlive> {
+        TODO("Not yet implemented")
+      }
+
+      override fun write(buffer: ByteBuffer, message: KeepAlive) {
+        TODO("Not yet implemented")
+      }
+    }
   }
 }

@@ -40,5 +40,20 @@ constructor(override val messageNumber: Int, val source: String, val message: St
       val message = EmuUtil.readString(buffer)
       return MessageParseResult.Success(InformationMessage(messageNumber, source, message))
     }
+
+    object InformationMessageSerializer : MessageSerializer<InformationMessage> {
+      override val messageTypeId: Byte = TODO("Not yet implemented")
+
+      override fun read(
+        buffer: ByteBuffer,
+        messageNumber: Int
+      ): MessageParseResult<InformationMessage> {
+        TODO("Not yet implemented")
+      }
+
+      override fun write(buffer: ByteBuffer, message: InformationMessage) {
+        TODO("Not yet implemented")
+      }
+    }
   }
 }

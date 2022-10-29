@@ -25,6 +25,23 @@ abstract class Chat : V086Message() {
     override val message: String
   ) : Chat() {
     override val messageTypeId = ID
+
+    companion object {
+      object ChatNotificationSerializer : MessageSerializer<Chat.Notification> {
+        override val messageTypeId: Byte = TODO("Not yet implemented")
+
+        override fun read(
+          buffer: ByteBuffer,
+          messageNumber: Int
+        ): MessageParseResult<Chat.Notification> {
+          TODO("Not yet implemented")
+        }
+
+        override fun write(buffer: ByteBuffer, message: Chat.Notification) {
+          TODO("Not yet implemented")
+        }
+      }
+    }
   }
 
   data class Request constructor(override val messageNumber: Int, override val message: String) :
@@ -55,6 +72,18 @@ abstract class Chat : V086Message() {
           Notification(messageNumber = messageNumber, username = username, message = message)
         }
       )
+    }
+
+    object ChatRequestSerializer : MessageSerializer<Chat.Request> {
+      override val messageTypeId: Byte = TODO("Not yet implemented")
+
+      override fun read(buffer: ByteBuffer, messageNumber: Int): MessageParseResult<Chat.Request> {
+        TODO("Not yet implemented")
+      }
+
+      override fun write(buffer: ByteBuffer, message: Chat.Request) {
+        TODO("Not yet implemented")
+      }
     }
   }
 }

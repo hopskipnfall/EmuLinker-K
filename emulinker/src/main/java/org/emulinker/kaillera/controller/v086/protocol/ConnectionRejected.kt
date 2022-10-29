@@ -55,5 +55,20 @@ constructor(
         ConnectionRejected(messageNumber, userName, userID, message)
       )
     }
+
+    object ConnectionRejectedSerializer : MessageSerializer<ConnectionRejected> {
+      override val messageTypeId: Byte = TODO("Not yet implemented")
+
+      override fun read(
+        buffer: ByteBuffer,
+        messageNumber: Int
+      ): MessageParseResult<ConnectionRejected> {
+        TODO("Not yet implemented")
+      }
+
+      override fun write(buffer: ByteBuffer, message: ConnectionRejected) {
+        TODO("Not yet implemented")
+      }
+    }
   }
 }

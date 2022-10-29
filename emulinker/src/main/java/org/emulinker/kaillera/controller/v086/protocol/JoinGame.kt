@@ -117,5 +117,35 @@ sealed class JoinGame : V086Message() {
           )
       )
     }
+
+    object JoinGameRequestSerializer : MessageSerializer<JoinGame.Request> {
+      override val messageTypeId: Byte = TODO("Not yet implemented")
+
+      override fun read(
+        buffer: ByteBuffer,
+        messageNumber: Int
+      ): MessageParseResult<JoinGame.Request> {
+        TODO("Not yet implemented")
+      }
+
+      override fun write(buffer: ByteBuffer, message: JoinGame.Request) {
+        TODO("Not yet implemented")
+      }
+    }
+
+    object JoinGameNotificationSerializer : MessageSerializer<JoinGame.Notification> {
+      override val messageTypeId: Byte = TODO("Not yet implemented")
+
+      override fun read(
+        buffer: ByteBuffer,
+        messageNumber: Int
+      ): MessageParseResult<JoinGame.Notification> {
+        TODO("Not yet implemented")
+      }
+
+      override fun write(buffer: ByteBuffer, message: JoinGame.Notification) {
+        TODO("Not yet implemented")
+      }
+    }
   }
 }

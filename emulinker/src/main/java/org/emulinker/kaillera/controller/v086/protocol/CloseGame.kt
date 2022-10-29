@@ -43,5 +43,17 @@ constructor(override val messageNumber: Int, val gameId: Int, val val1: Int) : V
       val val1 = buffer.getUnsignedShort()
       return MessageParseResult.Success(CloseGame(messageNumber, gameID, val1))
     }
+
+    object CloseGameSerializer : MessageSerializer<CloseGame> {
+      override val messageTypeId: Byte = TODO("Not yet implemented")
+
+      override fun read(buffer: ByteBuffer, messageNumber: Int): MessageParseResult<CloseGame> {
+        TODO("Not yet implemented")
+      }
+
+      override fun write(buffer: ByteBuffer, message: CloseGame) {
+        TODO("Not yet implemented")
+      }
+    }
   }
 }

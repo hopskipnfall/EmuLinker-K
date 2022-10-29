@@ -91,5 +91,35 @@ sealed class CreateGame : V086Message() {
         else Notification(messageNumber, userName, romName, clientType, gameID, val1)
       )
     }
+
+    object CreateGameNotificationSerializer : MessageSerializer<CreateGame.Notification> {
+      override val messageTypeId: Byte = TODO("Not yet implemented")
+
+      override fun read(
+        buffer: ByteBuffer,
+        messageNumber: Int
+      ): MessageParseResult<CreateGame.Notification> {
+        TODO("Not yet implemented")
+      }
+
+      override fun write(buffer: ByteBuffer, message: CreateGame.Notification) {
+        TODO("Not yet implemented")
+      }
+    }
+
+    object CreateGameRequestSerializer : MessageSerializer<CreateGame.Request> {
+      override val messageTypeId: Byte = TODO("Not yet implemented")
+
+      override fun read(
+        buffer: ByteBuffer,
+        messageNumber: Int
+      ): MessageParseResult<CreateGame.Request> {
+        TODO("Not yet implemented")
+      }
+
+      override fun write(buffer: ByteBuffer, message: CreateGame.Request) {
+        TODO("Not yet implemented")
+      }
+    }
   }
 }

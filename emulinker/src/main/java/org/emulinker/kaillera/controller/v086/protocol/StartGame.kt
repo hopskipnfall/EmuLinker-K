@@ -77,5 +77,35 @@ sealed class StartGame : V086Message() {
         else Notification(messageNumber, val1, playerNumber, numPlayers)
       )
     }
+
+    object StartGameRequestSerializer : MessageSerializer<StartGame.Request> {
+      override val messageTypeId: Byte = TODO("Not yet implemented")
+
+      override fun read(
+        buffer: ByteBuffer,
+        messageNumber: Int
+      ): MessageParseResult<StartGame.Request> {
+        TODO("Not yet implemented")
+      }
+
+      override fun write(buffer: ByteBuffer, message: StartGame.Request) {
+        TODO("Not yet implemented")
+      }
+    }
+
+    object StartGameNotificationSerializer : MessageSerializer<StartGame.Notification> {
+      override val messageTypeId: Byte = TODO("Not yet implemented")
+
+      override fun read(
+        buffer: ByteBuffer,
+        messageNumber: Int
+      ): MessageParseResult<StartGame.Notification> {
+        TODO("Not yet implemented")
+      }
+
+      override fun write(buffer: ByteBuffer, message: StartGame.Notification) {
+        TODO("Not yet implemented")
+      }
+    }
   }
 }

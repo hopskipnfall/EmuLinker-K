@@ -71,5 +71,32 @@ sealed class Quit : V086Message() {
         }
       )
     }
+
+    object QuitRequestSerializer : MessageSerializer<Quit.Request> {
+      override val messageTypeId: Byte = TODO("Not yet implemented")
+
+      override fun read(buffer: ByteBuffer, messageNumber: Int): MessageParseResult<Quit.Request> {
+        TODO("Not yet implemented")
+      }
+
+      override fun write(buffer: ByteBuffer, message: Quit.Request) {
+        TODO("Not yet implemented")
+      }
+    }
+
+    object QuitNotificationSerializer : MessageSerializer<Quit.Notification> {
+      override val messageTypeId: Byte = TODO("Not yet implemented")
+
+      override fun read(
+        buffer: ByteBuffer,
+        messageNumber: Int
+      ): MessageParseResult<Quit.Notification> {
+        TODO("Not yet implemented")
+      }
+
+      override fun write(buffer: ByteBuffer, message: Quit.Notification) {
+        TODO("Not yet implemented")
+      }
+    }
   }
 }

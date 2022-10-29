@@ -36,5 +36,20 @@ constructor(override val messageNumber: Int, val key: Int) : V086Message() {
         CachedGameData(messageNumber, buffer.getUnsignedByte().toInt())
       )
     }
+
+    object CachedGameDataSerializer : MessageSerializer<CachedGameData> {
+      override val messageTypeId: Byte = TODO("Not yet implemented")
+
+      override fun read(
+        buffer: ByteBuffer,
+        messageNumber: Int
+      ): MessageParseResult<CachedGameData> {
+        TODO("Not yet implemented")
+      }
+
+      override fun write(buffer: ByteBuffer, message: CachedGameData) {
+        TODO("Not yet implemented")
+      }
+    }
   }
 }

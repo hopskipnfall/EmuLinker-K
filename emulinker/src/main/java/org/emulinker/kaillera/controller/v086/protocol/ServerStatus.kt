@@ -194,5 +194,17 @@ constructor(override val messageNumber: Int, val users: List<User>, val games: L
       }
       return MessageParseResult.Success(ServerStatus(messageNumber, users, games))
     }
+
+    object ServerStatusSerializer : MessageSerializer<ServerStatus> {
+      override val messageTypeId: Byte = TODO("Not yet implemented")
+
+      override fun read(buffer: ByteBuffer, messageNumber: Int): MessageParseResult<ServerStatus> {
+        TODO("Not yet implemented")
+      }
+
+      override fun write(buffer: ByteBuffer, message: ServerStatus) {
+        TODO("Not yet implemented")
+      }
+    }
   }
 }

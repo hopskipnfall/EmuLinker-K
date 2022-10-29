@@ -90,5 +90,17 @@ constructor(override val messageNumber: Int, val gameData: ByteArray) : V086Mess
       buffer[gameData]
       return MessageParseResult.Success(create(messageNumber, gameData))
     }
+
+    object GameDataSerializer : MessageSerializer<GameData> {
+      override val messageTypeId: Byte = TODO("Not yet implemented")
+
+      override fun read(buffer: ByteBuffer, messageNumber: Int): MessageParseResult<GameData> {
+        TODO("Not yet implemented")
+      }
+
+      override fun write(buffer: ByteBuffer, message: GameData) {
+        TODO("Not yet implemented")
+      }
+    }
   }
 }

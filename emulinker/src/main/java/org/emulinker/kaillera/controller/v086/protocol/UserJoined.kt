@@ -67,5 +67,17 @@ constructor(
         )
       )
     }
+
+    object UserJoinedSerializer : MessageSerializer<UserJoined> {
+      override val messageTypeId: Byte = TODO("Not yet implemented")
+
+      override fun read(buffer: ByteBuffer, messageNumber: Int): MessageParseResult<UserJoined> {
+        TODO("Not yet implemented")
+      }
+
+      override fun write(buffer: ByteBuffer, message: UserJoined) {
+        TODO("Not yet implemented")
+      }
+    }
   }
 }

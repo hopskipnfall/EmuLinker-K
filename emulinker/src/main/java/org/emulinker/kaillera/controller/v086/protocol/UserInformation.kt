@@ -93,8 +93,6 @@ constructor(
   companion object {
     const val ID: Byte = 0x03
 
-    //    val INSTRUCTIONS = arrayOf(StringInstruction, StringInstruction, SingleByteInstruction)
-
     @Throws(ParseException::class, MessageFormatException::class)
     fun parse(messageNumber: Int, buffer: ByteBuffer): MessageParseResult<UserInformation> {
       if (buffer.remaining() < 5) {
@@ -117,6 +115,21 @@ constructor(
           ConnectionType.fromByteValue(connectionType)
         )
       )
+    }
+
+    object UserInformationSerializer : MessageSerializer<UserInformation> {
+      override val messageTypeId: Byte = TODO("Not yet implemented")
+
+      override fun read(
+        buffer: ByteBuffer,
+        messageNumber: Int
+      ): MessageParseResult<UserInformation> {
+        TODO("Not yet implemented")
+      }
+
+      override fun write(buffer: ByteBuffer, message: UserInformation) {
+        TODO("Not yet implemented")
+      }
     }
   }
 }
