@@ -172,9 +172,7 @@ internal constructor(
       )
     usersMap[userId] = user
 
-    //    threadPool.execute(user) // NUEFIXME
     // look for the infinite loop inside of the user class
-    kailleraServerCoroutineScope.launch { user.run(coroutineContext) }
     return user
   }
 
@@ -467,8 +465,9 @@ internal constructor(
     if (
       quitMsg.isBlank() ||
         (flags.maxQuitMessageLength > 0 && quitMsg.length > flags.maxQuitMessageLength)
-    )
+    ) {
       quitMsg = getString("KailleraServerImpl.StandardQuitMessage")
+    }
     val access = user.server.accessManager.getAccess(user.socketAddress.address)
     if (
       access < AccessManager.ACCESS_SUPERADMIN &&

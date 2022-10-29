@@ -1,8 +1,6 @@
 package org.emulinker.kaillera.model.impl
 
 import com.google.common.flogger.FluentLogger
-import com.google.common.flogger.StackSize
-import java.lang.InterruptedException
 import java.net.InetSocketAddress
 import java.time.Duration
 import java.time.Instant
@@ -11,7 +9,6 @@ import kotlin.Throws
 import kotlin.coroutines.CoroutineContext
 import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.*
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import org.emulinker.config.RuntimeFlags
@@ -115,11 +112,10 @@ class KailleraUserImpl(
   private val ignoredUsers: MutableList<String> = ArrayList()
   private var gameDataErrorTime: Long = -1
 
+  // TODO(nue): Get rid of this.
+  @Deprecated(message = "Isn't needed", level = DeprecationLevel.ERROR)
   override var threadIsActive = false
     private set
-
-  private var stopFlag = false
-  private val eventChannel = Channel<KailleraEvent>(5)
 
   override var tempDelay = 0
 
@@ -186,22 +182,11 @@ class KailleraUserImpl(
   }
 
   override suspend fun stop() {
-    mutex.withLock {
-      logger.atFine().log("Stopping KaillerUser for %d", userData.id)
-      if (!threadIsActive) {
-        logger.atFine().log("%s thread stop request ignored: not running!", this)
-        return
-      }
-      if (stopFlag) {
-        logger.atFine().log("%s thread stop request ignored: already stopping!", this)
-        return
-      }
-      stopFlag = true
-      delay(500.milliseconds)
-      addEvent(StopFlagEvent())
-    }
+    logger.atFine().log("Stopping KaillerUser for %d", userData.id)
+    delay(500.milliseconds)
+    addEvent(StopFlagEvent())
     listener.stop()
-    eventChannel.close()
+    userCoroutineScope.cancel("Stopping KailleraUser $userData")
   }
 
   @Synchronized
@@ -329,10 +314,7 @@ class KailleraUserImpl(
       game!!.announce("You are currently silenced!", this)
       return
     }
-
-    /*if(this == null){
-    	throw new GameChatException("You don't exist!");
-    }*/ game!!.chat(this, message)
+    game!!.chat(this, message)
   }
 
   @Synchronized
@@ -501,44 +483,35 @@ class KailleraUserImpl(
         if (event.toString() == "InfoMessageEvent") return
       }
     }
-    val trySend = eventChannel.trySend(event)
-    if (!trySend.isSuccess) {
-      logger
-        .atSevere()
-        .withStackTrace(StackSize.FULL)
-        .log("Failed to add event to queue: %s", trySend)
+    // TODO(nue): Can we make [addEvent] a suspend method instead?
+    userCoroutineScope.launch(Dispatchers.IO) { handleEvent(event) }
+  }
+
+  suspend fun handleEvent(event: KailleraEvent) {
+    mutex.withLock {
+      if (event is StopFlagEvent) {
+        return
+      }
+      listener.actionPerformed(event)
+      when {
+        event is GameStartedEvent -> {
+          status = UserStatus.PLAYING
+          if (improvedLagstat) {
+            lastUpdate = Instant.now()
+          }
+        }
+        event is UserQuitEvent && event.user == this -> {
+          stop()
+        }
+      }
     }
   }
 
   // TODO(nue): Get rid of this for loop. We should be able to trigger event listeners as soon as
   // the new data is added.
+  @Deprecated("Call handleEvent() instead")
   override suspend fun run(globalContext: CoroutineContext) {
-    threadIsActive = true
-    logger.atFine().log("%s thread running...", this)
-    try {
-      while (!stopFlag) {
-        val event = eventChannel.receive()
-        if (event is StopFlagEvent) {
-          break
-        }
-        listener.actionPerformed(event)
-        if (event is GameStartedEvent) {
-          status = UserStatus.PLAYING
-          if (improvedLagstat) {
-            lastUpdate = Instant.now()
-          }
-        } else if (event is UserQuitEvent && event.user == this) {
-          stop()
-        }
-      }
-    } catch (e: InterruptedException) {
-      logger.atSevere().withCause(e).log("%s thread interrupted!", this)
-    } catch (e: Throwable) {
-      logger.atSevere().withCause(e).log("%s thread caught unexpected exception!", this)
-    } finally {
-      threadIsActive = false
-      logger.atFine().log("%s thread exiting...", this)
-    }
+    TODO("DON'T CALL RUN")
   }
 
   companion object {
