@@ -70,7 +70,7 @@ class Trivia(private val server: KailleraServerImpl) : Runnable {
               Thread.sleep(10000)
             } catch (e: Exception) {}
           if (!isAnswered) {
-            server.announce("<Trivia> " + "35 seconds left...", false, null)
+            server.announce("<Trivia> 35 seconds left...", false, null)
             try {
               Thread.sleep(5000)
             } catch (e: Exception) {}
@@ -96,7 +96,7 @@ class Trivia(private val server: KailleraServerImpl) : Runnable {
               Thread.sleep(10000)
             } catch (e: Exception) {}
           if (!isAnswered) {
-            server.announce("<Trivia> " + "20 seconds left...", false, null)
+            server.announce("<Trivia> 20 seconds left...", false, null)
             try {
               Thread.sleep(5000)
             } catch (e: Exception) {}
@@ -122,7 +122,7 @@ class Trivia(private val server: KailleraServerImpl) : Runnable {
               Thread.sleep(10000)
             } catch (e: Exception) {}
           if (!isAnswered) {
-            server.announce("<Trivia> " + "5 seconds left...", false, null)
+            server.announce("<Trivia> 5 seconds left...", false, null)
             try {
               Thread.sleep(5000)
             } catch (e: Exception) {}
@@ -130,7 +130,7 @@ class Trivia(private val server: KailleraServerImpl) : Runnable {
         }
         if (!isAnswered) {
           server.announce(
-            "<Trivia> " + "Time's up! The answer is: " + questions[questionsCount].answer,
+            "<Trivia> Time's up! The answer is: " + questions[questionsCount].answer,
             false,
             null
           )
@@ -138,7 +138,7 @@ class Trivia(private val server: KailleraServerImpl) : Runnable {
         if (count == questions.size) {
           count = 0
           server.announce(
-            "<Trivia> " + "***All questions have been exhaused! Restarting list...***",
+            "<Trivia> ***All questions have been exhaused! Restarting list...***",
             false,
             null
           )
@@ -356,7 +356,7 @@ class Trivia(private val server: KailleraServerImpl) : Runnable {
       str = "$firstNick = $firstScore, "
       str = "$str$secondNick = $secondScore, "
       str = "$str$thirdNick = $thirdScore"
-      server.announce("<Trivia> " + "(Top 3 Scores of " + scores.size + ") " + str, false, null)
+      server.announce("<Trivia> (Top 3 Scores of " + scores.size + ") " + str, false, null)
     } else {
       server.announce("<Trivia> The Winner is: $firstNick with $firstScore points!", false, null)
     }
@@ -376,15 +376,15 @@ class Trivia(private val server: KailleraServerImpl) : Runnable {
       }
       out.close()
       if (display)
-        server.announce("<Trivia> " + "SupraTrivia Scores were Saved Successfully!", false, null)
+        server.announce("<Trivia> SupraTrivia Scores were Saved Successfully!", false, null)
     } catch (e: Exception) {
-      server.announce("<Trivia> " + "Error Saving SupraTrivia Scores!", false, null)
+      server.announce("<Trivia> Error Saving SupraTrivia Scores!", false, null)
     }
   }
 
   init {
     try {
-      server.announce("<Trivia> " + "Loading SupraTrivia Questions...", false, null)
+      server.announce("<Trivia> Loading SupraTrivia Questions...", false, null)
       var ist: InputStream = FileInputStream("questions.txt")
       var istream = BufferedReader(InputStreamReader(ist, StandardCharsets.UTF_8))
       var count = 0
@@ -406,7 +406,7 @@ class Trivia(private val server: KailleraServerImpl) : Runnable {
       // ##################
       // ######SCORES######
       // ##################
-      server.announce("<Trivia> " + "Loading Previous Scores...", false, null)
+      server.announce("<Trivia> Loading Previous Scores...", false, null)
       ist = FileInputStream("scores.txt")
       istream = BufferedReader(InputStreamReader(ist, StandardCharsets.UTF_8))
       str = istream.readLine() // First Score
@@ -432,11 +432,11 @@ class Trivia(private val server: KailleraServerImpl) : Runnable {
         exitThread = true
       } else {
         server.switchTrivia = true
-        server.announce("<Trivia> " + "SupraTrivia will begin in 10s!", false, null)
+        server.announce("<Trivia> SupraTrivia will begin in 10s!", false, null)
       }
     } catch (e: Exception) {
       exitThread = true
-      server.announce("<Trivia> " + "Error loading SupraTrivia Questions/Scores!", false, null)
+      server.announce("<Trivia> Error loading SupraTrivia Questions/Scores!", false, null)
       // throw new RuntimeException("Error loading SupraTriva Questions! ", e);
     }
   }

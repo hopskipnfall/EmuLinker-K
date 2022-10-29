@@ -82,7 +82,7 @@ sealed class Ack : V086Message() {
         val b = buffer.get()
         if (b.toInt() != 0x00) {
           throw MessageFormatException(
-            "Invalid " + "Client to Server ACK" + " format: byte 0 = " + EmuUtil.byteToHex(b)
+            "Invalid Client to Server ACK format: byte 0 = " + EmuUtil.byteToHex(b)
           )
         }
 
