@@ -10,30 +10,29 @@ import org.emulinker.util.UnsignedUtil.getUnsignedShort
 import org.emulinker.util.UnsignedUtil.putUnsignedShort
 
 sealed class Quit : V086Message() {
-  /** NOTE: May be the empty string. */
-  abstract val username: String
-  abstract val userId: Int
   abstract val message: String
-
-  override val bodyBytes: Int
-    get() =
-      username.getNumBytesPlusStopByte() + V086Utils.Bytes.SHORT + message.getNumBytesPlusStopByte()
-
-  public override fun writeBodyTo(buffer: ByteBuffer) {
-    EmuUtil.writeString(buffer, username)
-    buffer.putUnsignedShort(userId)
-    EmuUtil.writeString(buffer, message)
-  }
 
   data class Notification
   constructor(
     override val messageNumber: Int,
-    override val username: String,
-    override val userId: Int,
+    val username: String,
+    val userId: Int,
     override val message: String
   ) : Quit() {
 
     override val messageTypeId = ID
+
+    override val bodyBytes: Int
+      get() =
+        username.getNumBytesPlusStopByte() +
+          V086Utils.Bytes.SHORT +
+          message.getNumBytesPlusStopByte()
+
+    public override fun writeBodyTo(buffer: ByteBuffer) {
+      EmuUtil.writeString(buffer, username)
+      buffer.putUnsignedShort(userId)
+      EmuUtil.writeString(buffer, message)
+    }
 
     init {
       require(userId in 0..0xFFFF) { "UserID out of acceptable range: $userId" }
@@ -43,10 +42,22 @@ sealed class Quit : V086Message() {
 
   data class Request constructor(override val messageNumber: Int, override val message: String) :
     Quit() {
-    override val username = ""
-    override val userId = 0xFFFF
+    private val username = ""
+    private val userId = 0xFFFF
 
     override val messageTypeId = ID
+
+    override val bodyBytes: Int
+      get() =
+        username.getNumBytesPlusStopByte() +
+          V086Utils.Bytes.SHORT +
+          message.getNumBytesPlusStopByte()
+
+    public override fun writeBodyTo(buffer: ByteBuffer) {
+      EmuUtil.writeString(buffer, username)
+      buffer.putUnsignedShort(userId)
+      EmuUtil.writeString(buffer, message)
+    }
   }
 
   companion object {
@@ -73,7 +84,7 @@ sealed class Quit : V086Message() {
     }
 
     object QuitRequestSerializer : MessageSerializer<Quit.Request> {
-      override val messageTypeId: Byte = TODO("Not yet implemented")
+      override val messageTypeId: Byte = ID
 
       override fun read(buffer: ByteBuffer, messageNumber: Int): MessageParseResult<Quit.Request> {
         TODO("Not yet implemented")
@@ -85,7 +96,7 @@ sealed class Quit : V086Message() {
     }
 
     object QuitNotificationSerializer : MessageSerializer<Quit.Notification> {
-      override val messageTypeId: Byte = TODO("Not yet implemented")
+      override val messageTypeId: Byte = ID
 
       override fun read(
         buffer: ByteBuffer,

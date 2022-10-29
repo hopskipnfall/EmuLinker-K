@@ -9,8 +9,12 @@ import org.emulinker.util.UnsignedUtil.getUnsignedShort
 import org.emulinker.util.UnsignedUtil.putUnsignedShort
 
 data class CloseGame
-@Throws(MessageFormatException::class)
-constructor(override val messageNumber: Int, val gameId: Int, val val1: Int) : V086Message() {
+constructor(
+  override val messageNumber: Int,
+  val gameId: Int,
+  // TODO(nue): Figure out what [val1] represents..
+  val val1: Int
+) : V086Message() {
 
   override val messageTypeId = ID
 
@@ -33,22 +37,24 @@ constructor(override val messageNumber: Int, val gameId: Int, val val1: Int) : V
 
     @Throws(ParseException::class, MessageFormatException::class)
     fun parse(messageNumber: Int, buffer: ByteBuffer): MessageParseResult<CloseGame> {
-      if (buffer.remaining() < 5) {
-        return MessageParseResult.Failure("Failed byte count validation!")
-      }
-      val b = buffer.get()
-      if (b.toInt() != 0x00)
-        throw MessageFormatException("Invalid Close Game format: byte 0 = " + EmuUtil.byteToHex(b))
-      val gameID = buffer.getUnsignedShort()
-      val val1 = buffer.getUnsignedShort()
-      return MessageParseResult.Success(CloseGame(messageNumber, gameID, val1))
+      return CloseGameSerializer.read(buffer, messageNumber)
     }
 
     object CloseGameSerializer : MessageSerializer<CloseGame> {
-      override val messageTypeId: Byte = TODO("Not yet implemented")
+      override val messageTypeId: Byte = ID
 
       override fun read(buffer: ByteBuffer, messageNumber: Int): MessageParseResult<CloseGame> {
-        TODO("Not yet implemented")
+        if (buffer.remaining() < 5) {
+          return MessageParseResult.Failure("Failed byte count validation!")
+        }
+        val b = buffer.get()
+        if (b.toInt() != 0x00)
+          throw MessageFormatException(
+            "Invalid Close Game format: byte 0 = " + EmuUtil.byteToHex(b)
+          )
+        val gameID = buffer.getUnsignedShort()
+        val val1 = buffer.getUnsignedShort()
+        return MessageParseResult.Success(CloseGame(messageNumber, gameID, val1))
       }
 
       override fun write(buffer: ByteBuffer, message: CloseGame) {

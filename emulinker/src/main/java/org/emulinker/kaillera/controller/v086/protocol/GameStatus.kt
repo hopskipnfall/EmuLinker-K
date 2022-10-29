@@ -72,7 +72,7 @@ constructor(
     }
 
     object GameStatusSerializer : MessageSerializer<GameStatus> {
-      override val messageTypeId: Byte = TODO("Not yet implemented")
+      override val messageTypeId: Byte = ID
 
       override fun read(buffer: ByteBuffer, messageNumber: Int): MessageParseResult<GameStatus> {
         TODO("Not yet implemented")

@@ -27,17 +27,17 @@ constructor(override val messageNumber: Int, val value: Short) : V086Message() {
 
     @Throws(ParseException::class, MessageFormatException::class)
     fun parse(messageNumber: Int, buffer: ByteBuffer): MessageParseResult<KeepAlive> {
-      if (buffer.remaining() < 1) {
-        return MessageParseResult.Failure("Failed byte count validation!")
-      }
-      return MessageParseResult.Success(KeepAlive(messageNumber, buffer.getUnsignedByte()))
+      return KeepAliveSerializer.read(buffer, messageNumber)
     }
 
     object KeepAliveSerializer : MessageSerializer<KeepAlive> {
-      override val messageTypeId: Byte = TODO("Not yet implemented")
+      override val messageTypeId: Byte = ID
 
       override fun read(buffer: ByteBuffer, messageNumber: Int): MessageParseResult<KeepAlive> {
-        TODO("Not yet implemented")
+        if (buffer.remaining() < 1) {
+          return MessageParseResult.Failure("Failed byte count validation!")
+        }
+        return MessageParseResult.Success(KeepAlive(messageNumber, buffer.getUnsignedByte()))
       }
 
       override fun write(buffer: ByteBuffer, message: KeepAlive) {

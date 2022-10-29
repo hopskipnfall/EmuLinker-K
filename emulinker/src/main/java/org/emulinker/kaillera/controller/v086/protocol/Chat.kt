@@ -28,7 +28,7 @@ abstract class Chat : V086Message() {
 
     companion object {
       object ChatNotificationSerializer : MessageSerializer<Chat.Notification> {
-        override val messageTypeId: Byte = TODO("Not yet implemented")
+        override val messageTypeId: Byte = ID
 
         override fun read(
           buffer: ByteBuffer,
@@ -75,7 +75,7 @@ abstract class Chat : V086Message() {
     }
 
     object ChatRequestSerializer : MessageSerializer<Chat.Request> {
-      override val messageTypeId: Byte = TODO("Not yet implemented")
+      override val messageTypeId: Byte = ID
 
       override fun read(buffer: ByteBuffer, messageNumber: Int): MessageParseResult<Chat.Request> {
         TODO("Not yet implemented")

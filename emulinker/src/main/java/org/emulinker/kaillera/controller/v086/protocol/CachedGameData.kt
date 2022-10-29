@@ -24,31 +24,32 @@ constructor(override val messageNumber: Int, val key: Int) : V086Message() {
 
     @Throws(ParseException::class, MessageFormatException::class)
     fun parse(messageNumber: Int, buffer: ByteBuffer): MessageParseResult<CachedGameData> {
-      if (buffer.remaining() < 2) {
-        return MessageParseResult.Failure("Failed byte count validation!")
-      }
-      val b = buffer.get()
-      // removed to increase speed
-      // if (b != 0x00)
-      // throw new MessageFormatException("Invalid " + DESC + " format: byte 0 = " +
-      // EmuUtil.byteToHex(b));
-      return MessageParseResult.Success(
-        CachedGameData(messageNumber, buffer.getUnsignedByte().toInt())
-      )
+      return CachedGameDataSerializer.read(buffer, messageNumber)
     }
 
     object CachedGameDataSerializer : MessageSerializer<CachedGameData> {
-      override val messageTypeId: Byte = TODO("Not yet implemented")
+      override val messageTypeId: Byte = ID
 
       override fun read(
         buffer: ByteBuffer,
         messageNumber: Int
       ): MessageParseResult<CachedGameData> {
-        TODO("Not yet implemented")
+        if (buffer.remaining() < 2) {
+          return MessageParseResult.Failure("Failed byte count validation!")
+        }
+        val b = buffer.get()
+        // removed to increase speed
+        // if (b != 0x00)
+        // throw new MessageFormatException("Invalid " + DESC + " format: byte 0 = " +
+        // EmuUtil.byteToHex(b));
+        return MessageParseResult.Success(
+          CachedGameData(messageNumber, buffer.getUnsignedByte().toInt())
+        )
       }
 
       override fun write(buffer: ByteBuffer, message: CachedGameData) {
-        TODO("Not yet implemented")
+        buffer.put(0x00.toByte())
+        buffer.putUnsignedByte(message.key)
       }
     }
   }

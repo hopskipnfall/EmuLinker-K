@@ -13,7 +13,6 @@ import org.emulinker.util.UnsignedUtil.putUnsignedInt
 import org.emulinker.util.UnsignedUtil.putUnsignedShort
 
 data class UserJoined
-@Throws(MessageFormatException::class)
 constructor(
   override val messageNumber: Int,
   val username: String,
@@ -47,32 +46,32 @@ constructor(
 
     @Throws(ParseException::class, MessageFormatException::class)
     fun parse(messageNumber: Int, buffer: ByteBuffer): MessageParseResult<UserJoined> {
-      if (buffer.remaining() < 9) {
-        return MessageParseResult.Failure("Failed byte count validation!")
-      }
-      val userName = EmuUtil.readString(buffer)
-      if (buffer.remaining() < 7) {
-        return MessageParseResult.Failure("Failed byte count validation!")
-      }
-      val userID = buffer.getUnsignedShort()
-      val ping = buffer.getUnsignedInt()
-      val connectionType = buffer.get()
-      return MessageParseResult.Success(
-        UserJoined(
-          messageNumber,
-          userName,
-          userID,
-          ping,
-          ConnectionType.fromByteValue(connectionType)
-        )
-      )
+      return UserJoinedSerializer.read(buffer, messageNumber)
     }
 
     object UserJoinedSerializer : MessageSerializer<UserJoined> {
-      override val messageTypeId: Byte = TODO("Not yet implemented")
+      override val messageTypeId: Byte = ID
 
       override fun read(buffer: ByteBuffer, messageNumber: Int): MessageParseResult<UserJoined> {
-        TODO("Not yet implemented")
+        if (buffer.remaining() < 9) {
+          return MessageParseResult.Failure("Failed byte count validation!")
+        }
+        val userName = EmuUtil.readString(buffer)
+        if (buffer.remaining() < 7) {
+          return MessageParseResult.Failure("Failed byte count validation!")
+        }
+        val userID = buffer.getUnsignedShort()
+        val ping = buffer.getUnsignedInt()
+        val connectionType = buffer.get()
+        return MessageParseResult.Success(
+          UserJoined(
+            messageNumber,
+            userName,
+            userID,
+            ping,
+            ConnectionType.fromByteValue(connectionType)
+          )
+        )
       }
 
       override fun write(buffer: ByteBuffer, message: UserJoined) {

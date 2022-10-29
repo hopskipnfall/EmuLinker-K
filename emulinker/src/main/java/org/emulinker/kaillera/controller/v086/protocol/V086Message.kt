@@ -23,6 +23,9 @@ abstract class V086Message : ByteBufferMessage() {
    * The 0-based enumeration indicating the order in which this message was sent/received for each
    * server.
    *
+   * Any two messages from the same client with the same [messageNumber] can be assumed to be
+   * identical.
+   *
    * The first client->server message would be 0 and the first server->client message would be 0.
    * These are two separate counters.
    *

@@ -30,25 +30,25 @@ constructor(override val messageNumber: Int, val source: String, val message: St
 
     @Throws(ParseException::class, MessageFormatException::class)
     fun parse(messageNumber: Int, buffer: ByteBuffer): MessageParseResult<InformationMessage> {
-      if (buffer.remaining() < 4) {
-        return MessageParseResult.Failure("Failed byte count validation!")
-      }
-      val source = EmuUtil.readString(buffer)
-      if (buffer.remaining() < 2) {
-        return MessageParseResult.Failure("Failed byte count validation!")
-      }
-      val message = EmuUtil.readString(buffer)
-      return MessageParseResult.Success(InformationMessage(messageNumber, source, message))
+      return InformationMessageSerializer.read(buffer, messageNumber)
     }
 
     object InformationMessageSerializer : MessageSerializer<InformationMessage> {
-      override val messageTypeId: Byte = TODO("Not yet implemented")
+      override val messageTypeId: Byte = ID
 
       override fun read(
         buffer: ByteBuffer,
         messageNumber: Int
       ): MessageParseResult<InformationMessage> {
-        TODO("Not yet implemented")
+        if (buffer.remaining() < 4) {
+          return MessageParseResult.Failure("Failed byte count validation!")
+        }
+        val source = EmuUtil.readString(buffer)
+        if (buffer.remaining() < 2) {
+          return MessageParseResult.Failure("Failed byte count validation!")
+        }
+        val message = EmuUtil.readString(buffer)
+        return MessageParseResult.Success(InformationMessage(messageNumber, source, message))
       }
 
       override fun write(buffer: ByteBuffer, message: InformationMessage) {

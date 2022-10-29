@@ -38,32 +38,32 @@ constructor(
     const val ID: Byte = 0x16
 
     fun parse(messageNumber: Int, buffer: ByteBuffer): MessageParseResult<ConnectionRejected> {
-      if (buffer.remaining() < 6) {
-        return MessageParseResult.Failure("Failed byte count validation!")
-      }
-      val userName = EmuUtil.readString(buffer)
-      if (buffer.remaining() < 4) {
-        return MessageParseResult.Failure("Failed byte count validation!")
-      }
-      val userID = buffer.getUnsignedShort()
-      if (buffer.remaining() < 2) {
-        return MessageParseResult.Failure("Failed byte count validation!")
-      }
-
-      val message = EmuUtil.readString(buffer)
-      return MessageParseResult.Success(
-        ConnectionRejected(messageNumber, userName, userID, message)
-      )
+      return ConnectionRejectedSerializer.read(buffer, messageNumber)
     }
 
     object ConnectionRejectedSerializer : MessageSerializer<ConnectionRejected> {
-      override val messageTypeId: Byte = TODO("Not yet implemented")
+      override val messageTypeId: Byte = ID
 
       override fun read(
         buffer: ByteBuffer,
         messageNumber: Int
       ): MessageParseResult<ConnectionRejected> {
-        TODO("Not yet implemented")
+        if (buffer.remaining() < 6) {
+          return MessageParseResult.Failure("Failed byte count validation!")
+        }
+        val userName = EmuUtil.readString(buffer)
+        if (buffer.remaining() < 4) {
+          return MessageParseResult.Failure("Failed byte count validation!")
+        }
+        val userID = buffer.getUnsignedShort()
+        if (buffer.remaining() < 2) {
+          return MessageParseResult.Failure("Failed byte count validation!")
+        }
+
+        val message = EmuUtil.readString(buffer)
+        return MessageParseResult.Success(
+          ConnectionRejected(messageNumber, userName, userID, message)
+        )
       }
 
       override fun write(buffer: ByteBuffer, message: ConnectionRejected) {

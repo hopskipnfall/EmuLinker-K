@@ -58,7 +58,7 @@ sealed class GameChat : V086Message() {
     }
 
     object GameChatNotificationSerializer : MessageSerializer<GameChat.Notification> {
-      override val messageTypeId: Byte = TODO("Not yet implemented")
+      override val messageTypeId: Byte = ID
 
       override fun read(
         buffer: ByteBuffer,
@@ -73,7 +73,7 @@ sealed class GameChat : V086Message() {
     }
 
     object GameChatRequestSerializer : MessageSerializer<GameChat.Request> {
-      override val messageTypeId: Byte = TODO("Not yet implemented")
+      override val messageTypeId: Byte = ID
 
       override fun read(
         buffer: ByteBuffer,

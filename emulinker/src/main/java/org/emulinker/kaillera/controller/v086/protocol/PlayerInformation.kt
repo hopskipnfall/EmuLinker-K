@@ -100,7 +100,7 @@ constructor(override val messageNumber: Int, val players: List<Player>) : V086Me
     }
 
     object PlayerInformationSerializer : MessageSerializer<PlayerInformation> {
-      override val messageTypeId: Byte = TODO("Not yet implemented")
+      override val messageTypeId: Byte = ID
 
       override fun read(
         buffer: ByteBuffer,

@@ -11,18 +11,6 @@ sealed class PlayerDrop : V086Message() {
   abstract val username: String
   abstract val playerNumber: Byte
 
-  // public PlayerDrop(int messageNumber, String userName, byte playerNumber)
-  //     throws MessageFormatException {
-  //   super(messageNumber);
-  //   if (playerNumber < 0 || playerNumber > 255)
-  //     throw new MessageFormatException(
-  //         "Invalid "
-  //             + getDescription()
-  //             + " format: playerNumber out of acceptable range: "
-  //             + playerNumber);
-  //   this.userName = userName;
-  //   this.playerNumber = playerNumber;
-  // }
   override val bodyBytes: Int
     get() = username.getNumBytesPlusStopByte() + V086Utils.Bytes.SINGLE_BYTE
 
@@ -75,7 +63,7 @@ sealed class PlayerDrop : V086Message() {
     }
 
     object PlayerDropRequestSerializer : MessageSerializer<PlayerDrop.Request> {
-      override val messageTypeId: Byte = TODO("Not yet implemented")
+      override val messageTypeId: Byte = ID
 
       override fun read(
         buffer: ByteBuffer,
@@ -90,7 +78,7 @@ sealed class PlayerDrop : V086Message() {
     }
 
     object PlayerDropNotificationSerializer : MessageSerializer<PlayerDrop.Notification> {
-      override val messageTypeId: Byte = TODO("Not yet implemented")
+      override val messageTypeId: Byte = ID
 
       override fun read(
         buffer: ByteBuffer,

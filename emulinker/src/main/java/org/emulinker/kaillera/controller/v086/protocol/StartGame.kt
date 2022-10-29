@@ -12,10 +12,6 @@ import org.emulinker.util.UnsignedUtil.putUnsignedShort
 sealed class StartGame : V086Message() {
   override val messageTypeId = ID
 
-  abstract val val1: Int
-  abstract val playerNumber: Short
-  abstract val numPlayers: Short
-
   override val bodyBytes: Int
     get() =
       V086Utils.Bytes.SINGLE_BYTE +
@@ -23,20 +19,13 @@ sealed class StartGame : V086Message() {
         V086Utils.Bytes.SINGLE_BYTE +
         V086Utils.Bytes.SINGLE_BYTE
 
-  public override fun writeBodyTo(buffer: ByteBuffer) {
-    buffer.put(0x00.toByte())
-    buffer.putUnsignedShort(val1)
-    buffer.putUnsignedByte(playerNumber.toInt())
-    buffer.putUnsignedByte(numPlayers.toInt())
-  }
-
   data class Notification
   @Throws(MessageFormatException::class)
   constructor(
     override val messageNumber: Int,
-    override val val1: Int,
-    override val playerNumber: Short,
-    override val numPlayers: Short
+    val val1: Int,
+    val playerNumber: Short,
+    val numPlayers: Short
   ) : StartGame() {
 
     override val messageTypeId = ID
@@ -46,14 +35,28 @@ sealed class StartGame : V086Message() {
       require(playerNumber in 0..0xFF) { "playerNumber out of acceptable range: $playerNumber" }
       require(numPlayers in 0..0xFF) { "numPlayers out of acceptable range: $numPlayers" }
     }
+
+    public override fun writeBodyTo(buffer: ByteBuffer) {
+      buffer.put(0x00.toByte())
+      buffer.putUnsignedShort(val1)
+      buffer.putUnsignedByte(playerNumber.toInt())
+      buffer.putUnsignedByte(numPlayers.toInt())
+    }
   }
 
   data class Request
   @Throws(MessageFormatException::class)
   constructor(override val messageNumber: Int) : StartGame() {
-    override val val1 = 0xFFFF
-    override val playerNumber = 0xFF.toShort()
-    override val numPlayers = 0xFF.toShort()
+    private val val1 = 0xFFFF
+    private val playerNumber = 0xFF.toShort()
+    private val numPlayers = 0xFF.toShort()
+
+    public override fun writeBodyTo(buffer: ByteBuffer) {
+      buffer.put(0x00.toByte())
+      buffer.putUnsignedShort(val1)
+      buffer.putUnsignedByte(playerNumber.toInt())
+      buffer.putUnsignedByte(numPlayers.toInt())
+    }
   }
 
   companion object {
@@ -79,7 +82,7 @@ sealed class StartGame : V086Message() {
     }
 
     object StartGameRequestSerializer : MessageSerializer<StartGame.Request> {
-      override val messageTypeId: Byte = TODO("Not yet implemented")
+      override val messageTypeId: Byte = ID
 
       override fun read(
         buffer: ByteBuffer,
@@ -94,7 +97,7 @@ sealed class StartGame : V086Message() {
     }
 
     object StartGameNotificationSerializer : MessageSerializer<StartGame.Notification> {
-      override val messageTypeId: Byte = TODO("Not yet implemented")
+      override val messageTypeId: Byte = ID
 
       override fun read(
         buffer: ByteBuffer,

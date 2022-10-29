@@ -127,79 +127,79 @@ constructor(override val messageNumber: Int, val users: List<User>, val games: L
 
     @Throws(ParseException::class, MessageFormatException::class)
     fun parse(messageNumber: Int, buffer: ByteBuffer): MessageParseResult<ServerStatus> {
-      if (buffer.remaining() < 9) {
-        return MessageParseResult.Failure("Failed byte count validation!")
-      }
-      val b = buffer.get()
-      if (b.toInt() != 0x00) {
-        throw MessageFormatException(
-          "Invalid Server Status format: byte 0 = " + EmuUtil.byteToHex(b)
-        )
-      }
-      val numUsers = buffer.int
-      val numGames = buffer.int
-      val minLen = numUsers * 10 + numGames * 13
-      if (buffer.remaining() < minLen) {
-        return MessageParseResult.Failure("Failed byte count validation!")
-      }
-      val users: MutableList<User> = ArrayList(numUsers)
-      for (j in 0 until numUsers) {
-        if (buffer.remaining() < 9) {
-          return MessageParseResult.Failure("Failed byte count validation!")
-        }
-        val userName = EmuUtil.readString(buffer)
-        if (buffer.remaining() < 8) {
-          return MessageParseResult.Failure("Failed byte count validation!")
-        }
-        val ping = buffer.getUnsignedInt()
-        val status = buffer.get()
-        val userID = buffer.getUnsignedShort()
-        val connectionType = buffer.get()
-        users.add(
-          User(
-            userName,
-            ping,
-            UserStatus.fromByteValue(status),
-            userID,
-            ConnectionType.fromByteValue(connectionType)
-          )
-        )
-      }
-      val games: MutableList<Game> = ArrayList(numGames)
-      for (j in 0 until numGames) {
-        if (buffer.remaining() < 13) {
-          return MessageParseResult.Failure("Failed byte count validation!")
-        }
-        val romName = EmuUtil.readString(buffer)
-        if (buffer.remaining() < 10) {
-          return MessageParseResult.Failure("Failed byte count validation!")
-        }
-        val gameID = buffer.int
-        val clientType = EmuUtil.readString(buffer)
-        if (buffer.remaining() < 5) {
-          return MessageParseResult.Failure("Failed byte count validation!")
-        }
-        val userName = EmuUtil.readString(buffer)
-        if (buffer.remaining() < 3) {
-          return MessageParseResult.Failure("Failed byte count validation!")
-        }
-        val players = EmuUtil.readString(buffer)
-        if (buffer.remaining() < 1) {
-          return MessageParseResult.Failure("Failed byte count validation!")
-        }
-        val status = buffer.get()
-        games.add(
-          Game(romName, gameID, clientType, userName, players, GameStatus.fromByteValue(status))
-        )
-      }
-      return MessageParseResult.Success(ServerStatus(messageNumber, users, games))
+      return ServerStatusSerializer.read(buffer, messageNumber)
     }
 
     object ServerStatusSerializer : MessageSerializer<ServerStatus> {
-      override val messageTypeId: Byte = TODO("Not yet implemented")
+      override val messageTypeId: Byte = ID
 
       override fun read(buffer: ByteBuffer, messageNumber: Int): MessageParseResult<ServerStatus> {
-        TODO("Not yet implemented")
+        if (buffer.remaining() < 9) {
+          return MessageParseResult.Failure("Failed byte count validation!")
+        }
+        val b = buffer.get()
+        if (b.toInt() != 0x00) {
+          throw MessageFormatException(
+            "Invalid Server Status format: byte 0 = " + EmuUtil.byteToHex(b)
+          )
+        }
+        val numUsers = buffer.int
+        val numGames = buffer.int
+        val minLen = numUsers * 10 + numGames * 13
+        if (buffer.remaining() < minLen) {
+          return MessageParseResult.Failure("Failed byte count validation!")
+        }
+        val users: MutableList<User> = ArrayList(numUsers)
+        for (j in 0 until numUsers) {
+          if (buffer.remaining() < 9) {
+            return MessageParseResult.Failure("Failed byte count validation!")
+          }
+          val userName = EmuUtil.readString(buffer)
+          if (buffer.remaining() < 8) {
+            return MessageParseResult.Failure("Failed byte count validation!")
+          }
+          val ping = buffer.getUnsignedInt()
+          val status = buffer.get()
+          val userID = buffer.getUnsignedShort()
+          val connectionType = buffer.get()
+          users.add(
+            User(
+              userName,
+              ping,
+              UserStatus.fromByteValue(status),
+              userID,
+              ConnectionType.fromByteValue(connectionType)
+            )
+          )
+        }
+        val games: MutableList<Game> = ArrayList(numGames)
+        for (j in 0 until numGames) {
+          if (buffer.remaining() < 13) {
+            return MessageParseResult.Failure("Failed byte count validation!")
+          }
+          val romName = EmuUtil.readString(buffer)
+          if (buffer.remaining() < 10) {
+            return MessageParseResult.Failure("Failed byte count validation!")
+          }
+          val gameID = buffer.int
+          val clientType = EmuUtil.readString(buffer)
+          if (buffer.remaining() < 5) {
+            return MessageParseResult.Failure("Failed byte count validation!")
+          }
+          val userName = EmuUtil.readString(buffer)
+          if (buffer.remaining() < 3) {
+            return MessageParseResult.Failure("Failed byte count validation!")
+          }
+          val players = EmuUtil.readString(buffer)
+          if (buffer.remaining() < 1) {
+            return MessageParseResult.Failure("Failed byte count validation!")
+          }
+          val status = buffer.get()
+          games.add(
+            Game(romName, gameID, clientType, userName, players, GameStatus.fromByteValue(status))
+          )
+        }
+        return MessageParseResult.Success(ServerStatus(messageNumber, users, games))
       }
 
       override fun write(buffer: ByteBuffer, message: ServerStatus) {
