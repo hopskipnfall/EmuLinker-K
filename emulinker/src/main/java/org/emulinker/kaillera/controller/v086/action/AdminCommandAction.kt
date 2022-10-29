@@ -726,7 +726,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
         server.trivia!!.saveScores(true)
         server.triviaThread!!.stop()
       }
-      server.announce("<Trivia> " + "SupraTrivia has been reset!", false, null)
+      server.announce("<Trivia> SupraTrivia has been reset!", false, null)
       val trivia = Trivia(server)
       val triviaThread = Thread(trivia)
       triviaThread.start()
@@ -754,13 +754,13 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
         throw ActionException("Trivia needs to be started first!")
       }
       server.trivia!!.setTriviaPaused(true)
-      server.announce("<Trivia> " + "SupraTrivia will be paused after this question!", false, null)
+      server.announce("<Trivia> SupraTrivia will be paused after this question!", false, null)
     } else if (message == "/triviaresume") {
       if (server.trivia == null) {
         throw ActionException("Trivia needs to be started first!")
       }
       server.trivia!!.setTriviaPaused(false)
-      server.announce("<Trivia> " + "SupraTrivia has been resumed!", false, null)
+      server.announce("<Trivia> SupraTrivia has been resumed!", false, null)
     } else if (message == "/triviasave") {
       if (server.trivia == null) {
         throw ActionException("Trivia needs to be started first!")
@@ -811,7 +811,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
         val questionTime = scanner.nextInt()
         server.trivia!!.setQuestionTime(questionTime * 1000)
         server.announce(
-          "<Trivia> " + "SupraTrivia's question delay has been changed to " + questionTime + "s!",
+          "<Trivia> SupraTrivia's question delay has been changed to " + questionTime + "s!",
           false,
           admin
         )

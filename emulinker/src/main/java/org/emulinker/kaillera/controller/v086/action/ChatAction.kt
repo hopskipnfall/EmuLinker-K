@@ -12,8 +12,7 @@ import kotlinx.coroutines.delay
 import org.emulinker.kaillera.access.AccessManager
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086ClientHandler
-import org.emulinker.kaillera.controller.v086.protocol.Chat_Notification
-import org.emulinker.kaillera.controller.v086.protocol.Chat_Request
+import org.emulinker.kaillera.controller.v086.protocol.Chat
 import org.emulinker.kaillera.controller.v086.protocol.InformationMessage
 import org.emulinker.kaillera.model.event.ChatEvent
 import org.emulinker.kaillera.model.exception.ActionException
@@ -25,7 +24,7 @@ private const val ADMIN_COMMAND_ESCAPE_STRING = "/"
 
 @Singleton
 class ChatAction @Inject internal constructor(private val adminCommandAction: AdminCommandAction) :
-  V086Action<Chat_Request>, V086ServerEventHandler<ChatEvent> {
+  V086Action<Chat.Request>, V086ServerEventHandler<ChatEvent> {
   override var actionPerformedCount = 0
     private set
   override var handledEventCount = 0
@@ -34,7 +33,7 @@ class ChatAction @Inject internal constructor(private val adminCommandAction: Ad
   override fun toString() = "ChatAction"
 
   @Throws(FatalActionException::class)
-  override suspend fun performAction(message: Chat_Request, clientHandler: V086ClientHandler) {
+  override suspend fun performAction(message: Chat.Request, clientHandler: V086ClientHandler) {
     if (message.message.startsWith(ADMIN_COMMAND_ESCAPE_STRING)) {
       if (clientHandler.user.accessLevel > AccessManager.ACCESS_ELEVATED) {
         try {
@@ -74,7 +73,7 @@ class ChatAction @Inject internal constructor(private val adminCommandAction: Ad
   }
 
   @Throws(FatalActionException::class)
-  private suspend fun checkCommands(chatMessage: Chat_Request, clientHandler: V086ClientHandler) {
+  private suspend fun checkCommands(chatMessage: Chat.Request, clientHandler: V086ClientHandler) {
     var doCommand = true
     val userN = clientHandler.user as KailleraUserImpl
     if (userN.accessLevel < AccessManager.ACCESS_ELEVATED) {
@@ -742,10 +741,10 @@ class ChatAction @Inject internal constructor(private val adminCommandAction: Ad
       }
       val m = event.message
       clientHandler.send(
-        Chat_Notification(clientHandler.nextMessageNumber, event.user.userData.name, m)
+        Chat.Notification(clientHandler.nextMessageNumber, event.user.userData.name, m)
       )
     } catch (e: MessageFormatException) {
-      logger.atSevere().withCause(e).log("Failed to construct Chat_Notification message")
+      logger.atSevere().withCause(e).log("Failed to construct Chat.Notification message")
     }
   }
 

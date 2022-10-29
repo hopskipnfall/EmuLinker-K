@@ -14,13 +14,13 @@ class V086Bundle constructor(val messages: Array<V086Message?>, numToWrite: Int 
   var numMessages: Int
     private set
 
-  override var length = -1
+  override var bodyBytesPlusMessageIdType = -1
     private set
     get() {
       if (field == -1) {
         for (i in 0 until numMessages) {
           if (messages[i] == null) break
-          field += messages[i]!!.length
+          field += messages[i]!!.bodyBytesPlusMessageIdType
         }
       }
       return field
@@ -28,7 +28,9 @@ class V086Bundle constructor(val messages: Array<V086Message?>, numToWrite: Int 
 
   override fun toString(): String {
     val sb = StringBuilder()
-    sb.append("${this.javaClass.simpleName} ($numMessages messages) ($length bytes)")
+    sb.append(
+      "${this.javaClass.simpleName} ($numMessages messages) ($bodyBytesPlusMessageIdType bytes)"
+    )
     sb.append(EmuUtil.LB)
     for (i in 0 until numMessages) {
       if (messages[i] == null) break
@@ -76,9 +78,10 @@ class V086Bundle constructor(val messages: Array<V086Message?>, numToWrite: Int 
         messageCount = 1
         messages = arrayOfNulls(messageCount)
         val messageNumber = buffer.getUnsignedShort()
-        val messageLength = buffer.short
-        if (messageLength < 2 || messageLength > buffer.remaining())
+        val messageLength = buffer.getShort()
+        if (messageLength !in 2..buffer.remaining()) {
           throw ParseException("Invalid message length: $messageLength")
+        }
         messages[parsedCount] = parse(messageNumber, messageLength.toInt(), buffer)
         parsedCount++
       } else {

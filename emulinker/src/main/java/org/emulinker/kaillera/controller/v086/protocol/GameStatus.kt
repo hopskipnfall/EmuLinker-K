@@ -2,7 +2,7 @@ package org.emulinker.kaillera.controller.v086.protocol
 
 import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
-import org.emulinker.kaillera.controller.messaging.ParseException
+import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.util.EmuUtil
 import org.emulinker.util.UnsignedUtil.getUnsignedShort
 import org.emulinker.util.UnsignedUtil.putUnsignedShort
@@ -17,13 +17,17 @@ constructor(
   val numPlayers: Byte,
   val maxPlayers: Byte
 ) : V086Message() {
+  override val messageTypeId = ID
 
-  override val messageId = ID
-
-  override val bodyLength = 8
+  override val bodyBytes =
+    V086Utils.Bytes.SINGLE_BYTE +
+      V086Utils.Bytes.SHORT +
+      V086Utils.Bytes.SHORT +
+      V086Utils.Bytes.SINGLE_BYTE +
+      V086Utils.Bytes.SINGLE_BYTE +
+      V086Utils.Bytes.SINGLE_BYTE
 
   init {
-    validateMessageNumber(messageNumber)
     require(gameId in 0..0xFFFF) { "gameID out of acceptable range: $gameId" }
     require(val1 in 0..0xFFFF) { "val1 out of acceptable range: $val1" }
     require(numPlayers in 0..0xFF) { "numPlayers out of acceptable range: $numPlayers" }
@@ -31,20 +35,20 @@ constructor(
   }
 
   public override fun writeBodyTo(buffer: ByteBuffer) {
-    buffer.put(0x00.toByte())
-    buffer.putUnsignedShort(gameId)
-    buffer.putUnsignedShort(val1)
-    buffer.put(gameStatus.byteValue)
-    buffer.put(numPlayers)
-    buffer.put(maxPlayers)
+    GameStatusSerializer.write(buffer, this)
   }
 
   companion object {
     const val ID: Byte = 0x0E
+  }
 
-    @Throws(ParseException::class, MessageFormatException::class)
-    fun parse(messageNumber: Int, buffer: ByteBuffer): GameStatus {
-      if (buffer.remaining() < 8) throw ParseException("Failed byte count validation!")
+  object GameStatusSerializer : MessageSerializer<GameStatus> {
+    override val messageTypeId: Byte = ID
+
+    override fun read(buffer: ByteBuffer, messageNumber: Int): MessageParseResult<GameStatus> {
+      if (buffer.remaining() < 8) {
+        return MessageParseResult.Failure("Failed byte count validation!")
+      }
       val b = buffer.get()
       require(b.toInt() == 0x00) { "Invalid Game Status format: byte 0 = " + EmuUtil.byteToHex(b) }
       val gameID = buffer.getUnsignedShort()
@@ -52,14 +56,25 @@ constructor(
       val gameStatus = buffer.get()
       val numPlayers = buffer.get()
       val maxPlayers = buffer.get()
-      return GameStatus(
-        messageNumber,
-        gameID,
-        val1,
-        org.emulinker.kaillera.model.GameStatus.fromByteValue(gameStatus),
-        numPlayers,
-        maxPlayers
+      return MessageParseResult.Success(
+        GameStatus(
+          messageNumber,
+          gameID,
+          val1,
+          org.emulinker.kaillera.model.GameStatus.fromByteValue(gameStatus),
+          numPlayers,
+          maxPlayers
+        )
       )
+    }
+
+    override fun write(buffer: ByteBuffer, message: GameStatus) {
+      buffer.put(0x00.toByte())
+      buffer.putUnsignedShort(message.gameId)
+      buffer.putUnsignedShort(message.val1)
+      buffer.put(message.gameStatus.byteValue)
+      buffer.put(message.numPlayers)
+      buffer.put(message.maxPlayers)
     }
   }
 }

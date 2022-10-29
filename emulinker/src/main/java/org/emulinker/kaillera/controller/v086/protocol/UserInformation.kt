@@ -2,11 +2,9 @@ package org.emulinker.kaillera.controller.v086.protocol
 
 import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
-import org.emulinker.kaillera.controller.messaging.ParseException
-import org.emulinker.kaillera.controller.v086.V086Utils.getNumBytes
-import org.emulinker.kaillera.controller.v086.protocol.V086Message.Companion.validateMessageNumber
+import org.emulinker.kaillera.controller.v086.V086Utils
+import org.emulinker.kaillera.controller.v086.V086Utils.getNumBytesPlusStopByte
 import org.emulinker.kaillera.model.ConnectionType
-import org.emulinker.kaillera.pico.AppModule
 import org.emulinker.util.EmuUtil
 
 data class UserInformation
@@ -17,39 +15,51 @@ constructor(
   val clientType: String,
   val connectionType: ConnectionType
 ) : V086Message() {
+  override val messageTypeId = ID
 
-  override val messageId = ID
-
-  init {
-    validateMessageNumber(messageNumber)
-  }
-
-  override val bodyLength: Int
-    get() = username.getNumBytes() + clientType.getNumBytes() + 3
+  override val bodyBytes: Int =
+    username.getNumBytesPlusStopByte() +
+      clientType.getNumBytesPlusStopByte() +
+      V086Utils.Bytes.SINGLE_BYTE
 
   public override fun writeBodyTo(buffer: ByteBuffer) {
-    EmuUtil.writeString(buffer, username, 0x00, AppModule.charsetDoNotUse)
-    EmuUtil.writeString(buffer, clientType, 0x00, AppModule.charsetDoNotUse)
-    buffer.put(connectionType.byteValue)
+    UserInformationSerializer.write(buffer, this)
   }
 
   companion object {
     const val ID: Byte = 0x03
+  }
 
-    @Throws(ParseException::class, MessageFormatException::class)
-    fun parse(messageNumber: Int, buffer: ByteBuffer): UserInformation {
-      if (buffer.remaining() < 5) throw ParseException("Failed byte count validation!")
-      val userName = EmuUtil.readString(buffer, 0x00, AppModule.charsetDoNotUse)
-      if (buffer.remaining() < 3) throw ParseException("Failed byte count validation!")
-      val clientType = EmuUtil.readString(buffer, 0x00, AppModule.charsetDoNotUse)
-      if (buffer.remaining() < 1) throw ParseException("Failed byte count validation!")
+  object UserInformationSerializer : MessageSerializer<UserInformation> {
+    override val messageTypeId: Byte = ID
+
+    override fun read(buffer: ByteBuffer, messageNumber: Int): MessageParseResult<UserInformation> {
+      if (buffer.remaining() < 5) {
+        return MessageParseResult.Failure("Failed byte count validation!")
+      }
+      val userName = EmuUtil.readString(buffer)
+      if (buffer.remaining() < 3) {
+        return MessageParseResult.Failure("Failed byte count validation!")
+      }
+      val clientType = EmuUtil.readString(buffer)
+      if (buffer.remaining() < 1) {
+        return MessageParseResult.Failure("Failed byte count validation!")
+      }
       val connectionType = buffer.get()
-      return UserInformation(
-        messageNumber,
-        userName,
-        clientType,
-        ConnectionType.fromByteValue(connectionType)
+      return MessageParseResult.Success(
+        UserInformation(
+          messageNumber,
+          userName,
+          clientType,
+          ConnectionType.fromByteValue(connectionType)
+        )
       )
+    }
+
+    override fun write(buffer: ByteBuffer, message: UserInformation) {
+      EmuUtil.writeString(buffer, message.username)
+      EmuUtil.writeString(buffer, message.clientType)
+      buffer.put(message.connectionType.byteValue)
     }
   }
 }

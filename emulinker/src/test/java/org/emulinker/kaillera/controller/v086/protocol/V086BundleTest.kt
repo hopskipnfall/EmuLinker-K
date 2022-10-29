@@ -8,6 +8,7 @@ import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets
 import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.kaillera.controller.v086.V086Utils.toKtorAddress
+import org.emulinker.kaillera.controller.v086.protocol.V086Message.Companion.SERIALIZERS
 import org.emulinker.kaillera.model.ConnectionType
 import org.emulinker.kaillera.model.GameStatus
 import org.emulinker.kaillera.model.UserStatus
@@ -50,7 +51,7 @@ class V086BundleTest {
     val parsedBundle =
       V086Bundle.parse(V086Utils.hexStringToByteBuffer(hexInput), lastMessageNumber)
     assertThat(parsedBundle.messages).hasLength(1)
-    assertThat(parsedBundle.messages[0]).isEqualTo(ClientACK(messageNumber = 1))
+    assertThat(parsedBundle.messages[0]).isEqualTo(Ack.ClientAck(messageNumber = 1))
   }
 
   @Test
@@ -63,9 +64,9 @@ class V086BundleTest {
     val parsedBundle =
       V086Bundle.parse(V086Utils.hexStringToByteBuffer(hexInput), lastMessageNumber)
     assertThat(parsedBundle.messages).hasLength(1)
-    assertThat(parsedBundle.messages[0]).isInstanceOf(CreateGame_Request::class.java)
-    val message = parsedBundle.messages[0] as CreateGame_Request
-    assertThat(message).isEqualTo(CreateGame_Request(messageNumber = 10, "SmashRemix0.9.7"))
+    assertThat(parsedBundle.messages[0]).isInstanceOf(CreateGame.Request::class.java)
+    val message = parsedBundle.messages[0] as CreateGame.Request
+    assertThat(message).isEqualTo(CreateGame.Request(messageNumber = 10, "SmashRemix0.9.7"))
   }
 
   @Test
@@ -191,7 +192,7 @@ class V086BundleTest {
                 )
               )
           )
-          .bodyLength
+          .bodyBytes
       )
       .isEqualTo(115)
   }
@@ -216,5 +217,11 @@ class V086BundleTest {
     assertThat(converted).isEqualTo(converted)
     assertThat(converted.hostname).isEqualTo("127.2.0.1")
     assertThat(converted.port).isEqualTo(42)
+  }
+
+  @Test
+  fun serializerMapShouldBeExhaustive() {
+    assertThat(SERIALIZERS.map { it.value::class })
+      .containsExactlyElementsIn(MessageSerializer::class.sealedSubclasses)
   }
 }

@@ -199,7 +199,7 @@ internal constructor(
     // array access should be faster than a hash and we won't have to create
     // a new Integer each time
     actions[UserInformation.ID.toInt()] = loginAction
-    actions[ClientACK.ID.toInt()] = ackAction
+    actions[Ack.ClientAck.ID.toInt()] = ackAction
     actions[Chat.ID.toInt()] = chatAction
     actions[CreateGame.ID.toInt()] = createGameAction
     actions[JoinGame.ID.toInt()] = joinGameAction

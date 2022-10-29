@@ -1,46 +1,77 @@
 package org.emulinker.kaillera.controller.v086.protocol
 
 import java.nio.ByteBuffer
-import org.emulinker.kaillera.controller.messaging.MessageFormatException
-import org.emulinker.kaillera.controller.messaging.ParseException
-import org.emulinker.kaillera.controller.v086.V086Utils.getNumBytes
-import org.emulinker.kaillera.pico.AppModule
+import org.emulinker.kaillera.controller.v086.V086Utils
+import org.emulinker.kaillera.controller.v086.V086Utils.getNumBytesPlusStopByte
 import org.emulinker.util.EmuUtil
 
-abstract class PlayerDrop : V086Message() {
-  abstract val username: String
-  abstract val playerNumber: Byte
+sealed class PlayerDrop : V086Message() {
+  override val messageTypeId = ID
 
-  // public PlayerDrop(int messageNumber, String userName, byte playerNumber)
-  //     throws MessageFormatException {
-  //   super(messageNumber);
-  //   if (playerNumber < 0 || playerNumber > 255)
-  //     throw new MessageFormatException(
-  //         "Invalid "
-  //             + getDescription()
-  //             + " format: playerNumber out of acceptable range: "
-  //             + playerNumber);
-  //   this.userName = userName;
-  //   this.playerNumber = playerNumber;
-  // }
-  override val bodyLength: Int
-    get() = username.getNumBytes() + 2
+  override val bodyBytes: Int
+    get() =
+      when (this) {
+        is Request -> REQUEST_USERNAME
+        is Notification -> username
+      }.getNumBytesPlusStopByte() + V086Utils.Bytes.SINGLE_BYTE
 
   public override fun writeBodyTo(buffer: ByteBuffer) {
-    EmuUtil.writeString(buffer, username, 0x00, AppModule.charsetDoNotUse)
-    buffer.put(playerNumber)
+    PlayerDropSerializer.write(buffer, this)
   }
+
+  data class Notification
+  constructor(
+    override val messageNumber: Int,
+    val username: String,
+    /** The port number, not the player ID. */
+    val playerNumber: Byte
+  ) : PlayerDrop() {
+
+    init {
+      require(playerNumber in 0..255) { "playerNumber out of acceptable range: $playerNumber" }
+      require(username.isNotBlank()) { "Username cannot be blank" }
+    }
+  }
+
+  data class Request constructor(override val messageNumber: Int) : PlayerDrop()
 
   companion object {
     const val ID: Byte = 0x14
-    @Throws(ParseException::class, MessageFormatException::class)
-    fun parse(messageNumber: Int, buffer: ByteBuffer): PlayerDrop {
-      if (buffer.remaining() < 2) throw ParseException("Failed byte count validation!")
-      val userName = EmuUtil.readString(buffer, 0x00, AppModule.charsetDoNotUse)
+
+    private const val REQUEST_USERNAME = ""
+    private const val REQUEST_PLAYER_NUMBER = 0.toByte()
+  }
+
+  object PlayerDropSerializer : MessageSerializer<PlayerDrop> {
+    override val messageTypeId: Byte = ID
+
+    override fun read(buffer: ByteBuffer, messageNumber: Int): MessageParseResult<PlayerDrop> {
+      if (buffer.remaining() < 2) {
+        return MessageParseResult.Failure("Failed byte count validation!")
+      }
+      val userName = EmuUtil.readString(buffer)
       val playerNumber = buffer.get()
-      return if (userName.isBlank() && playerNumber.toInt() == 0) {
-        PlayerDrop_Request(messageNumber)
-      } else PlayerDrop_Notification(messageNumber, userName, playerNumber)
+      return MessageParseResult.Success(
+        if (userName == REQUEST_USERNAME && playerNumber == REQUEST_PLAYER_NUMBER) {
+          Request(messageNumber)
+        } else Notification(messageNumber, userName, playerNumber)
+      )
+    }
+
+    override fun write(buffer: ByteBuffer, message: PlayerDrop) {
+      EmuUtil.writeString(
+        buffer,
+        when (message) {
+          is Request -> REQUEST_USERNAME
+          is Notification -> message.username
+        }
+      )
+      buffer.put(
+        when (message) {
+          is Request -> REQUEST_PLAYER_NUMBER
+          is Notification -> message.playerNumber
+        }
+      )
     }
   }
 }

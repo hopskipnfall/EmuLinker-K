@@ -35,7 +35,7 @@ class GameStatusAction @Inject internal constructor() :
         )
       )
     } catch (e: MessageFormatException) {
-      logger.atSevere().withCause(e).log("Failed to construct CreateGame_Notification message")
+      logger.atSevere().withCause(e).log("Failed to construct CreateGame.Notification message")
     }
   }
 

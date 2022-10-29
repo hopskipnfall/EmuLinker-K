@@ -1,37 +1,66 @@
 package org.emulinker.kaillera.controller.v086.protocol
 
 import java.nio.ByteBuffer
-import org.emulinker.kaillera.controller.messaging.MessageFormatException
-import org.emulinker.kaillera.controller.messaging.ParseException
-import org.emulinker.kaillera.controller.v086.V086Utils.getNumBytes
-import org.emulinker.kaillera.pico.AppModule
+import org.emulinker.kaillera.controller.v086.V086Utils.getNumBytesPlusStopByte
 import org.emulinker.util.EmuUtil
 
-abstract class Chat : V086Message() {
-  abstract val username: String
+/** Message ID `0x07`. */
+sealed class Chat : V086Message() {
   abstract val message: String
+  override val messageTypeId = ID
 
-  override val bodyLength: Int
-    get() = username.getNumBytes() + message.getNumBytes() + 2
+  override val bodyBytes: Int
+    get() =
+      when (this) {
+        is Request -> ""
+        is Notification -> username
+      }.getNumBytesPlusStopByte() + message.getNumBytesPlusStopByte()
 
   public override fun writeBodyTo(buffer: ByteBuffer) {
-    EmuUtil.writeString(buffer, username, 0x00, AppModule.charsetDoNotUse)
-    EmuUtil.writeString(buffer, message, 0x00, AppModule.charsetDoNotUse)
+    ChatSerializer.write(buffer, this)
   }
+
+  data class Notification
+  constructor(override val messageNumber: Int, val username: String, override val message: String) :
+    Chat()
+
+  data class Request constructor(override val messageNumber: Int, override val message: String) :
+    Chat()
 
   companion object {
     const val ID: Byte = 0x07
-    @Throws(ParseException::class, MessageFormatException::class)
-    fun parse(messageNumber: Int, buffer: ByteBuffer): Chat {
-      if (buffer.remaining() < 3) throw ParseException("Failed byte count validation!")
-      val userName = EmuUtil.readString(buffer, 0x00, AppModule.charsetDoNotUse)
-      if (buffer.remaining() < 2) throw ParseException("Failed byte count validation!")
-      val message = EmuUtil.readString(buffer, 0x00, AppModule.charsetDoNotUse)
-      return if (userName.isBlank()) {
-        Chat_Request(messageNumber, message, username = "")
-      } else {
-        Chat_Notification(messageNumber, userName, message)
+  }
+
+  object ChatSerializer : MessageSerializer<Chat> {
+    override val messageTypeId: Byte = ID
+
+    override fun read(buffer: ByteBuffer, messageNumber: Int): MessageParseResult<Chat> {
+      if (buffer.remaining() < 3) {
+        return MessageParseResult.Failure("Failed byte count validation!")
       }
+      val username = EmuUtil.readString(buffer)
+      if (buffer.remaining() < 2) {
+        return MessageParseResult.Failure("Failed byte count validation!")
+      }
+      val message = EmuUtil.readString(buffer)
+      return MessageParseResult.Success(
+        if (username.isBlank()) {
+          Request(messageNumber = messageNumber, message = message)
+        } else {
+          Notification(messageNumber = messageNumber, username = username, message = message)
+        }
+      )
+    }
+
+    override fun write(buffer: ByteBuffer, message: Chat) {
+      EmuUtil.writeString(
+        buffer,
+        when (message) {
+          is Request -> ""
+          is Notification -> message.username
+        }
+      )
+      EmuUtil.writeString(buffer, message.message)
     }
   }
 }

@@ -7,9 +7,8 @@ import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.delay
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086ClientHandler
-import org.emulinker.kaillera.controller.v086.protocol.ClientACK
+import org.emulinker.kaillera.controller.v086.protocol.Ack
 import org.emulinker.kaillera.controller.v086.protocol.ConnectionRejected
-import org.emulinker.kaillera.controller.v086.protocol.ServerACK
 import org.emulinker.kaillera.controller.v086.protocol.ServerStatus
 import org.emulinker.kaillera.controller.v086.protocol.ServerStatus.Game
 import org.emulinker.kaillera.model.UserStatus
@@ -19,7 +18,7 @@ import org.emulinker.kaillera.model.exception.*
 
 @Singleton
 class ACKAction @Inject internal constructor() :
-  V086Action<ClientACK>, V086UserEventHandler<UserEvent> {
+  V086Action<Ack.ClientAck>, V086UserEventHandler<UserEvent> {
   override var actionPerformedCount = 0
     private set
   override var handledEventCount = 0
@@ -27,11 +26,12 @@ class ACKAction @Inject internal constructor() :
 
   override fun toString() = "ACKAction"
 
-  @Throws(FatalActionException::class)
-  override suspend fun performAction(message: ClientACK, clientHandler: V086ClientHandler) {
+  override suspend fun performAction(message: Ack.ClientAck, clientHandler: V086ClientHandler) {
     actionPerformedCount++
     val user = clientHandler.user
-    if (user.loggedIn) return
+    if (user.loggedIn) {
+      return
+    }
     clientHandler.addSpeedMeasurement()
     if (clientHandler.speedMeasurementCount > clientHandler.numAcksForSpeedTest) {
       user.ping = clientHandler.averageNetworkSpeed
@@ -50,7 +50,8 @@ class ACKAction @Inject internal constructor() :
           clientHandler.send(
             ConnectionRejected(
               clientHandler.nextMessageNumber,
-              "server",
+              // TODO(nue): Localize this?
+              username = "server",
               user.userData.id,
               e.message ?: ""
             )
@@ -62,9 +63,9 @@ class ACKAction @Inject internal constructor() :
       }
     } else {
       try {
-        clientHandler.send(ServerACK(clientHandler.nextMessageNumber))
+        clientHandler.send(Ack.ServerAck(clientHandler.nextMessageNumber))
       } catch (e: MessageFormatException) {
-        logger.atSevere().withCause(e).log("Failed to construct new ServerACK")
+        logger.atSevere().withCause(e).log("Failed to construct new ACK.ServerACK")
         return
       }
     }

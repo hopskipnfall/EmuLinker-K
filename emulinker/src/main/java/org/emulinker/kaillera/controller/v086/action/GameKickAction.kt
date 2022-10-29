@@ -5,7 +5,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086ClientHandler
-import org.emulinker.kaillera.controller.v086.protocol.GameChat_Notification
+import org.emulinker.kaillera.controller.v086.protocol.GameChat
 import org.emulinker.kaillera.controller.v086.protocol.GameKick
 import org.emulinker.kaillera.model.exception.GameKickException
 
@@ -25,10 +25,10 @@ class GameKickAction @Inject internal constructor() : V086Action<GameKick> {
       logger.atSevere().withCause(e).log("Failed to kick")
       try {
         clientHandler.send(
-          GameChat_Notification(clientHandler.nextMessageNumber, "Error", e.message ?: "")
+          GameChat.Notification(clientHandler.nextMessageNumber, "Error", e.message ?: "")
         )
       } catch (ex: MessageFormatException) {
-        logger.atSevere().withCause(ex).log("Failed to construct GameChat_Notification message")
+        logger.atSevere().withCause(ex).log("Failed to construct GameChat.Notification message")
       }
     }
   }

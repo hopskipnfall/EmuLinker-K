@@ -1,37 +1,41 @@
 package org.emulinker.kaillera.controller.v086.protocol
 
 import java.nio.ByteBuffer
-import org.emulinker.kaillera.controller.messaging.MessageFormatException
-import org.emulinker.kaillera.controller.messaging.ParseException
+import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.util.EmuUtil
 
-data class AllReady
-@Throws(MessageFormatException::class)
-constructor(override val messageNumber: Int) : V086Message() {
-  override val bodyLength = 1
+data class AllReady constructor(override val messageNumber: Int) : V086Message() {
+  override val messageTypeId = ID
 
-  override val messageId = ID
-
-  init {
-    validateMessageNumber(messageNumber)
-  }
+  override val bodyBytes = V086Utils.Bytes.SINGLE_BYTE
 
   public override fun writeBodyTo(buffer: ByteBuffer) {
-    buffer.put(0x00.toByte())
+    AllReadySerializer.write(buffer, this)
   }
 
   companion object {
     const val ID: Byte = 0x15
+  }
 
-    @Throws(ParseException::class, MessageFormatException::class)
-    fun parse(messageNumber: Int, buffer: ByteBuffer): AllReady {
-      if (buffer.remaining() < 1) throw ParseException("Failed byte count validation!")
+  object AllReadySerializer : MessageSerializer<AllReady> {
+    override val messageTypeId: Byte = ID
+
+    override fun read(buffer: ByteBuffer, messageNumber: Int): MessageParseResult<AllReady> {
+      if (buffer.remaining() < 1) {
+        return MessageParseResult.Failure("Failed byte count validation!")
+      }
+
       val b = buffer.get()
-      if (b.toInt() != 0x00)
-        throw MessageFormatException(
+      if (b.toInt() != 0x00) {
+        return MessageParseResult.Failure(
           "Invalid All Ready Signal format: byte 0 = " + EmuUtil.byteToHex(b)
         )
-      return AllReady(messageNumber)
+      }
+      return MessageParseResult.Success(AllReady(messageNumber))
+    }
+
+    override fun write(buffer: ByteBuffer, message: AllReady) {
+      buffer.put(0x00.toByte())
     }
   }
 }

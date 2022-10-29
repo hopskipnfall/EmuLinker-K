@@ -5,7 +5,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086ClientHandler
-import org.emulinker.kaillera.controller.v086.protocol.GameChat_Notification
+import org.emulinker.kaillera.controller.v086.protocol.GameChat
 import org.emulinker.kaillera.model.event.GameInfoEvent
 
 @Singleton
@@ -22,10 +22,10 @@ class GameInfoAction @Inject internal constructor() : V086GameEventHandler<GameI
     }
     try {
       clientHandler.send(
-        GameChat_Notification(clientHandler.nextMessageNumber, "Server", event.message)
+        GameChat.Notification(clientHandler.nextMessageNumber, "Server", event.message)
       )
     } catch (e: MessageFormatException) {
-      logger.atSevere().withCause(e).log("Failed to construct GameChat_Notification message")
+      logger.atSevere().withCause(e).log("Failed to construct GameChat.Notification message")
     }
   }
 

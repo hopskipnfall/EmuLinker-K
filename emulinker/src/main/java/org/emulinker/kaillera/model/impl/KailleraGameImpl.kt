@@ -517,7 +517,7 @@ class KailleraGameImpl(
     addEvent(UserDroppedGameEvent(this, user, playerNumber))
     if (user.ignoringUnnecessaryServerActivity) {
       // KailleraUserImpl u = (KailleraUserImpl) user;
-      // u.addEvent(ServerACK.create(.getNextMessageNumber());
+      // u.addEvent(ACK.ServerACK.create(.getNextMessageNumber());
       // u.addEvent(new ConnectedEvent(server, user));
       // u.addEvent(new UserQuitEvent(server, user, "Rejoining..."));
       // try{user.quit("Rejoining...");}catch(Exception e){}
