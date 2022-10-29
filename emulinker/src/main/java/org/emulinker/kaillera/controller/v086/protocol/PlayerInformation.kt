@@ -60,10 +60,6 @@ constructor(override val messageNumber: Int, val players: List<Player>) : V086Me
 
   companion object {
     const val ID: Byte = 0x0D
-
-    fun parse(messageNumber: Int, buffer: ByteBuffer): MessageParseResult<PlayerInformation> {
-      return PlayerInformationSerializer.read(buffer, messageNumber)
-    }
   }
 
   object PlayerInformationSerializer : MessageSerializer<PlayerInformation> {

@@ -18,7 +18,12 @@ class ServerStatusTest : ProtocolBaseTest() {
 
   @Test
   fun deserializeBody() {
-    assertThat(ServerStatus.parse(MESSAGE_NUMBER, V086Utils.hexStringToByteBuffer(BODY_BYTES)))
+    assertThat(
+        ServerStatus.ServerStatusSerializer.read(
+          V086Utils.hexStringToByteBuffer(BODY_BYTES),
+          MESSAGE_NUMBER
+        )
+      )
       .isEqualTo(MessageParseResult.Success(SERVER_STATUS))
   }
 

@@ -34,10 +34,6 @@ constructor(
 
   companion object {
     const val ID: Byte = 0x16
-
-    fun parse(messageNumber: Int, buffer: ByteBuffer): MessageParseResult<ConnectionRejected> {
-      return ConnectionRejectedSerializer.read(buffer, messageNumber)
-    }
   }
 
   object ConnectionRejectedSerializer : MessageSerializer<ConnectionRejected> {

@@ -15,7 +15,12 @@ class CloseGameTest : ProtocolBaseTest() {
 
   @Test
   fun deserializeBody() {
-    assertThat(CloseGame.parse(MESSAGE_NUMBER, V086Utils.hexStringToByteBuffer(BODY_BYTES)))
+    assertThat(
+        CloseGame.CloseGameSerializer.read(
+          V086Utils.hexStringToByteBuffer(BODY_BYTES),
+          MESSAGE_NUMBER
+        )
+      )
       .isEqualTo(MessageParseResult.Success(CLOSE_GAME))
   }
 

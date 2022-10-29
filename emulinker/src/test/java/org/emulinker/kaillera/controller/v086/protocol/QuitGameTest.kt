@@ -16,9 +16,9 @@ class QuitGameTest : ProtocolBaseTest() {
   @Test
   fun quitGameNotification_deserializeBody() {
     assertThat(
-        QuitGame.parse(
-          MESSAGE_NUMBER,
-          V086Utils.hexStringToByteBuffer(QUIT_GAME_NOTIFICATION_BODY_BYTES)
+        QuitGame.QuitGameSerializer.read(
+          V086Utils.hexStringToByteBuffer(QUIT_GAME_NOTIFICATION_BODY_BYTES),
+          MESSAGE_NUMBER
         )
       )
       .isEqualTo(MessageParseResult.Success(QUIT_GAME_NOTIFICATION))
@@ -41,9 +41,9 @@ class QuitGameTest : ProtocolBaseTest() {
   @Test
   fun quitGameRequest_deserializeBody() {
     assertThat(
-        QuitGame.parse(
-          MESSAGE_NUMBER,
-          V086Utils.hexStringToByteBuffer(QUIT_GAME_REQUEST_BODY_BYTES)
+        QuitGame.QuitGameSerializer.read(
+          V086Utils.hexStringToByteBuffer(QUIT_GAME_REQUEST_BODY_BYTES),
+          MESSAGE_NUMBER
         )
       )
       .isEqualTo(MessageParseResult.Success(QUIT_GAME_REQUEST))

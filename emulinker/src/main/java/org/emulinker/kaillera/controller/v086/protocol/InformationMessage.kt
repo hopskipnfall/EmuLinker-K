@@ -2,7 +2,6 @@ package org.emulinker.kaillera.controller.v086.protocol
 
 import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
-import org.emulinker.kaillera.controller.messaging.ParseException
 import org.emulinker.kaillera.controller.v086.V086Utils.getNumBytesPlusStopByte
 import org.emulinker.util.EmuUtil
 
@@ -26,11 +25,6 @@ constructor(override val messageNumber: Int, val source: String, val message: St
 
   companion object {
     const val ID: Byte = 0x17
-
-    @Throws(ParseException::class, MessageFormatException::class)
-    fun parse(messageNumber: Int, buffer: ByteBuffer): MessageParseResult<InformationMessage> {
-      return InformationMessageSerializer.read(buffer, messageNumber)
-    }
   }
 
   object InformationMessageSerializer : MessageSerializer<InformationMessage> {

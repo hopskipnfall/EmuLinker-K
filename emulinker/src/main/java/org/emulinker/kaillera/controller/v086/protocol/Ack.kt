@@ -24,10 +24,6 @@ sealed class Ack : V086Message() {
 
     companion object {
       const val ID: Byte = 0x06
-
-      fun parse(messageNumber: Int, buffer: ByteBuffer): MessageParseResult<Ack.ClientAck> {
-        return ClientAckSerializer.read(buffer, messageNumber)
-      }
     }
   }
 
@@ -40,10 +36,6 @@ sealed class Ack : V086Message() {
 
     companion object {
       const val ID: Byte = 0x05
-
-      fun parse(messageNumber: Int, buffer: ByteBuffer): MessageParseResult<ServerAck> {
-        return ServerAckSerializer.read(buffer, messageNumber)
-      }
     }
   }
 

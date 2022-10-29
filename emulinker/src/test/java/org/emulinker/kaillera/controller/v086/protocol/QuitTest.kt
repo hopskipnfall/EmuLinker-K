@@ -15,7 +15,12 @@ class QuitTest : ProtocolBaseTest() {
 
   @Test
   fun quitNotification_deserializeBody() {
-    assertThat(Quit.parse(MESSAGE_NUMBER, V086Utils.hexStringToByteBuffer(NOTIFICATION_BODY_BYTES)))
+    assertThat(
+        Quit.QuitSerializer.read(
+          V086Utils.hexStringToByteBuffer(NOTIFICATION_BODY_BYTES),
+          MESSAGE_NUMBER
+        )
+      )
       .isEqualTo(MessageParseResult.Success(QUIT_NOTIFICATION))
   }
 
@@ -35,7 +40,12 @@ class QuitTest : ProtocolBaseTest() {
 
   @Test
   fun quitRequest_deserializeBody() {
-    assertThat(Quit.parse(MESSAGE_NUMBER, V086Utils.hexStringToByteBuffer(REQUEST_BODY_BYTES)))
+    assertThat(
+        Quit.QuitSerializer.read(
+          V086Utils.hexStringToByteBuffer(REQUEST_BODY_BYTES),
+          MESSAGE_NUMBER
+        )
+      )
       .isEqualTo(MessageParseResult.Success(QUIT_REQUEST))
   }
 

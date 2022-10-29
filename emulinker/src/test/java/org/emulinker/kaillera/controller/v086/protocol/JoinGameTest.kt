@@ -16,7 +16,12 @@ class JoinGameTest : ProtocolBaseTest() {
 
   @Test
   fun joinGameNotification_deserializeBody() {
-    assertThat(JoinGame.parse(MESSAGE_NUMBER, V086Utils.hexStringToByteBuffer(NOTIFICATION_BYTES)))
+    assertThat(
+        JoinGame.JoinGameSerializer.read(
+          V086Utils.hexStringToByteBuffer(NOTIFICATION_BYTES),
+          MESSAGE_NUMBER
+        )
+      )
       .isEqualTo(MessageParseResult.Success(JOIN_GAME_NOTIFICATION))
   }
 
@@ -36,7 +41,12 @@ class JoinGameTest : ProtocolBaseTest() {
 
   @Test
   fun joinGameRequest_deserializeBody() {
-    assertThat(JoinGame.parse(MESSAGE_NUMBER, V086Utils.hexStringToByteBuffer(REQUEST_BYTES)))
+    assertThat(
+        JoinGame.JoinGameSerializer.read(
+          V086Utils.hexStringToByteBuffer(REQUEST_BYTES),
+          MESSAGE_NUMBER
+        )
+      )
       .isEqualTo(MessageParseResult.Success(JOIN_GAME_REQUEST))
   }
 

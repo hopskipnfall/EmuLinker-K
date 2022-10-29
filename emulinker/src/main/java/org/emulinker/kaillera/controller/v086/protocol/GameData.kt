@@ -3,7 +3,6 @@ package org.emulinker.kaillera.controller.v086.protocol
 import java.nio.Buffer
 import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
-import org.emulinker.kaillera.controller.messaging.ParseException
 import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.util.UnsignedUtil.getUnsignedShort
 import org.emulinker.util.UnsignedUtil.putUnsignedShort
@@ -72,34 +71,29 @@ constructor(override val messageNumber: Int, val gameData: ByteArray) : V086Mess
     fun create(messageNumber: Int, gameData: ByteArray): GameData {
       return GameData(messageNumber, gameData.copyOf(gameData.size))
     }
+  }
 
-    @Throws(ParseException::class, MessageFormatException::class)
-    fun parse(messageNumber: Int, buffer: ByteBuffer): MessageParseResult<GameData> {
-      return GameDataSerializer.read(buffer, messageNumber)
+  object GameDataSerializer : MessageSerializer<GameData> {
+    override val messageTypeId: Byte = ID
+
+    override fun read(buffer: ByteBuffer, messageNumber: Int): MessageParseResult<GameData> {
+      if (buffer.remaining() < 4) {
+        return MessageParseResult.Failure("Failed byte count validation!")
+      }
+      buffer.get() // This is always 0x00.
+      val dataSize = buffer.getUnsignedShort()
+      if (dataSize <= 0 || dataSize > buffer.remaining()) {
+        return MessageParseResult.Failure("Invalid Game Data format: dataSize = $dataSize")
+      }
+      val gameData = ByteArray(dataSize)
+      buffer[gameData]
+      return MessageParseResult.Success(create(messageNumber, gameData))
     }
 
-    object GameDataSerializer : MessageSerializer<GameData> {
-      override val messageTypeId: Byte = ID
-
-      override fun read(buffer: ByteBuffer, messageNumber: Int): MessageParseResult<GameData> {
-        if (buffer.remaining() < 4) {
-          return MessageParseResult.Failure("Failed byte count validation!")
-        }
-        buffer.get() // This is always 0x00.
-        val dataSize = buffer.getUnsignedShort()
-        if (dataSize <= 0 || dataSize > buffer.remaining()) {
-          return MessageParseResult.Failure("Invalid Game Data format: dataSize = $dataSize")
-        }
-        val gameData = ByteArray(dataSize)
-        buffer[gameData]
-        return MessageParseResult.Success(create(messageNumber, gameData))
-      }
-
-      override fun write(buffer: ByteBuffer, message: GameData) {
-        buffer.put(0x00.toByte())
-        buffer.putUnsignedShort(message.gameData.size)
-        buffer.put(message.gameData)
-      }
+    override fun write(buffer: ByteBuffer, message: GameData) {
+      buffer.put(0x00.toByte())
+      buffer.putUnsignedShort(message.gameData.size)
+      buffer.put(message.gameData)
     }
   }
 }

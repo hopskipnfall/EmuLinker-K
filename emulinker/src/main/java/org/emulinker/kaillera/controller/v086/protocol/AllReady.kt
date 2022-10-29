@@ -15,9 +15,6 @@ data class AllReady constructor(override val messageNumber: Int) : V086Message()
 
   companion object {
     const val ID: Byte = 0x15
-
-    fun parse(messageNumber: Int, buffer: ByteBuffer): MessageParseResult<AllReady> =
-      AllReadySerializer.read(buffer, messageNumber = messageNumber)
   }
 
   object AllReadySerializer : MessageSerializer<AllReady> {

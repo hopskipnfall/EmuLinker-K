@@ -16,7 +16,10 @@ class GameChatTest : ProtocolBaseTest() {
   @Test
   fun gameChatNotification_deserializeBody() {
     assertThat(
-        GameChat.parse(MESSAGE_NUMBER, V086Utils.hexStringToByteBuffer(NOTIFICATION_BODY_BYTES))
+        GameChat.GameChatSerializer.read(
+          V086Utils.hexStringToByteBuffer(NOTIFICATION_BODY_BYTES),
+          MESSAGE_NUMBER
+        )
       )
       .isEqualTo(MessageParseResult.Success(GAME_CHAT_NOTIFICATION))
   }
@@ -37,7 +40,12 @@ class GameChatTest : ProtocolBaseTest() {
 
   @Test
   fun gameChatRequest_deserializeBody() {
-    assertThat(GameChat.parse(MESSAGE_NUMBER, V086Utils.hexStringToByteBuffer(REQUEST_BODY_BYTES)))
+    assertThat(
+        GameChat.GameChatSerializer.read(
+          V086Utils.hexStringToByteBuffer(REQUEST_BODY_BYTES),
+          MESSAGE_NUMBER
+        )
+      )
       .isEqualTo(MessageParseResult.Success(GAME_CHAT_REQUEST))
   }
 

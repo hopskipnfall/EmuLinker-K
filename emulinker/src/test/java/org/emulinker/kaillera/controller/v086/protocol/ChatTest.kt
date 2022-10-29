@@ -16,7 +16,10 @@ class ChatTest : ProtocolBaseTest() {
   @Test
   fun chatNotification_deserializeBody() {
     assertThat(
-        Chat.parse(MESSAGE_NUMBER, V086Utils.hexStringToByteBuffer(CHAT_NOTIFICATION_BODY_BYTES))
+        Chat.ChatSerializer.read(
+          V086Utils.hexStringToByteBuffer(CHAT_NOTIFICATION_BODY_BYTES),
+          MESSAGE_NUMBER
+        )
       )
       .isEqualTo(MessageParseResult.Success(CHAT_NOTIFICATION))
   }
@@ -37,7 +40,12 @@ class ChatTest : ProtocolBaseTest() {
 
   @Test
   fun deserializeBody() {
-    assertThat(Chat.parse(MESSAGE_NUMBER, V086Utils.hexStringToByteBuffer(CHAT_REQUEST_BODY_BYTES)))
+    assertThat(
+        Chat.ChatSerializer.read(
+          V086Utils.hexStringToByteBuffer(CHAT_REQUEST_BODY_BYTES),
+          MESSAGE_NUMBER
+        )
+      )
       .isEqualTo(MessageParseResult.Success(CHAT_REQUEST))
   }
 

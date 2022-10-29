@@ -2,7 +2,6 @@ package org.emulinker.kaillera.controller.v086.protocol
 
 import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
-import org.emulinker.kaillera.controller.messaging.ParseException
 import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.util.UnsignedUtil.getUnsignedByte
 import org.emulinker.util.UnsignedUtil.putUnsignedByte
@@ -20,11 +19,6 @@ constructor(override val messageNumber: Int, val key: Int) : V086Message() {
 
   companion object {
     const val ID: Byte = 0x13
-
-    @Throws(ParseException::class, MessageFormatException::class)
-    fun parse(messageNumber: Int, buffer: ByteBuffer): MessageParseResult<CachedGameData> {
-      return CachedGameDataSerializer.read(buffer, messageNumber)
-    }
   }
 
   object CachedGameDataSerializer : MessageSerializer<CachedGameData> {

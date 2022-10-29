@@ -15,7 +15,12 @@ class CachedGameDataTest : ProtocolBaseTest() {
 
   @Test
   fun deserializeBody() {
-    assertThat(CachedGameData.parse(MESSAGE_NUMBER, V086Utils.hexStringToByteBuffer(BODY_BYTES)))
+    assertThat(
+        CachedGameData.CachedGameDataSerializer.read(
+          V086Utils.hexStringToByteBuffer(BODY_BYTES),
+          MESSAGE_NUMBER
+        )
+      )
       .isEqualTo(MessageParseResult.Success(CACHED_GAME_DATA))
   }
 

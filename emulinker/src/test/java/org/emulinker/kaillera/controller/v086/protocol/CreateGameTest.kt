@@ -16,7 +16,10 @@ class CreateGameTest : ProtocolBaseTest() {
   @Test
   fun createGameNotification_deserializeBody() {
     assertThat(
-        CreateGame.parse(MESSAGE_NUMBER, V086Utils.hexStringToByteBuffer(NOTIFICATION_BODY_BYTES))
+        CreateGame.CreateGameSerializer.read(
+          V086Utils.hexStringToByteBuffer(NOTIFICATION_BODY_BYTES),
+          MESSAGE_NUMBER
+        )
       )
       .isEqualTo(MessageParseResult.Success(CREATE_GAME_NOTIFICATION))
   }
@@ -38,7 +41,10 @@ class CreateGameTest : ProtocolBaseTest() {
   @Test
   fun createGameRequest_deserializeBody() {
     assertThat(
-        CreateGame.parse(MESSAGE_NUMBER, V086Utils.hexStringToByteBuffer(REQUEST_BODY_BYTES))
+        CreateGame.CreateGameSerializer.read(
+          V086Utils.hexStringToByteBuffer(REQUEST_BODY_BYTES),
+          MESSAGE_NUMBER
+        )
       )
       .isEqualTo(MessageParseResult.Success(CREATE_GAME_REQUEST))
   }

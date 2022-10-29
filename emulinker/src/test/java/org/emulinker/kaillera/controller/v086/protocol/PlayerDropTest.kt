@@ -16,7 +16,10 @@ class PlayerDropTest {
   @Test
   fun playerDropNotification_deserializeBody() {
     assertThat(
-        PlayerDrop.parse(MESSAGE_NUMBER, V086Utils.hexStringToByteBuffer(NOTIFICATION_BODY_BYTES))
+        PlayerDrop.PlayerDropSerializer.read(
+          V086Utils.hexStringToByteBuffer(NOTIFICATION_BODY_BYTES),
+          MESSAGE_NUMBER
+        )
       )
       .isEqualTo(MessageParseResult.Success(PLAYER_DROP_NOTIFICATION))
   }
@@ -38,7 +41,10 @@ class PlayerDropTest {
   @Test
   fun playerDropRequest_deserializeBody() {
     assertThat(
-        PlayerDrop.parse(MESSAGE_NUMBER, V086Utils.hexStringToByteBuffer(REQUEST_BODY_BYTES))
+        PlayerDrop.PlayerDropSerializer.read(
+          V086Utils.hexStringToByteBuffer(REQUEST_BODY_BYTES),
+          MESSAGE_NUMBER
+        )
       )
       .isEqualTo(MessageParseResult.Success(PLAYER_DROP_REQUEST))
   }

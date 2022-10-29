@@ -16,7 +16,12 @@ class UserInformationTest : ProtocolBaseTest() {
 
   @Test
   fun deserializeBody() {
-    assertThat(UserInformation.parse(MESSAGE_NUMBER, V086Utils.hexStringToByteBuffer(BODY_BYTES)))
+    assertThat(
+        UserInformation.UserInformationSerializer.read(
+          V086Utils.hexStringToByteBuffer(BODY_BYTES),
+          MESSAGE_NUMBER
+        )
+      )
       .isEqualTo(MessageParseResult.Success(USER_INFORMATION))
   }
 

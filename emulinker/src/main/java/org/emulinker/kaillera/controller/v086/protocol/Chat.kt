@@ -29,10 +29,6 @@ sealed class Chat : V086Message() {
 
   companion object {
     const val ID: Byte = 0x07
-
-    fun parse(messageNumber: Int, buffer: ByteBuffer): MessageParseResult<Chat> {
-      return ChatSerializer.read(buffer, messageNumber)
-    }
   }
 
   object ChatSerializer : MessageSerializer<Chat> {

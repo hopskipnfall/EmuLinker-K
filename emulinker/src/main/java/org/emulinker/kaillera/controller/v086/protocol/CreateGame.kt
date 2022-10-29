@@ -68,10 +68,6 @@ sealed class CreateGame : V086Message() {
     const val REQUEST_VAL1 = 0xFFFF
     const val REQUEST_USERNAME = ""
     const val REQUEST_CLIENT_TYPE = ""
-
-    fun parse(messageNumber: Int, buffer: ByteBuffer): MessageParseResult<CreateGame> {
-      return CreateGameSerializer.read(buffer, messageNumber)
-    }
   }
 
   object CreateGameSerializer : MessageSerializer<CreateGame> {

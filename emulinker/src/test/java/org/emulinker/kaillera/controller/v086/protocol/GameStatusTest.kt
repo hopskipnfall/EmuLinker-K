@@ -16,7 +16,12 @@ class GameStatusTest : ProtocolBaseTest() {
 
   @Test
   fun deserializeBody() {
-    assertThat(GameStatus.parse(MESSAGE_NUMBER, V086Utils.hexStringToByteBuffer(BODY_BYTES)))
+    assertThat(
+        GameStatus.GameStatusSerializer.read(
+          V086Utils.hexStringToByteBuffer(BODY_BYTES),
+          MESSAGE_NUMBER
+        )
+      )
       .isEqualTo(MessageParseResult.Success(GAME_STATUS))
   }
 

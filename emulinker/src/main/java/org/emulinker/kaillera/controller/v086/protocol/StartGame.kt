@@ -44,10 +44,6 @@ sealed class StartGame : V086Message() {
     private const val REQUEST_VAL1 = 0xFFFF
     private const val REQUEST_PLAYER_NUMBER = 0xFF.toShort()
     private const val REQUEST_NUM_PLAYERS = 0xFF.toShort()
-
-    fun parse(messageNumber: Int, buffer: ByteBuffer): MessageParseResult<StartGame> {
-      return StartGameSerializer.read(buffer, messageNumber)
-    }
   }
 
   object StartGameSerializer : MessageSerializer<StartGame> {

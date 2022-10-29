@@ -15,7 +15,12 @@ class GameKickTest : ProtocolBaseTest() {
 
   @Test
   fun deserializeBody() {
-    assertThat(GameKick.parse(MESSAGE_NUMBER, V086Utils.hexStringToByteBuffer(BODY_BYTES)))
+    assertThat(
+        GameKick.GameKickSerializer.read(
+          V086Utils.hexStringToByteBuffer(BODY_BYTES),
+          MESSAGE_NUMBER
+        )
+      )
       .isEqualTo(MessageParseResult.Success(GAME_KICK))
   }
 

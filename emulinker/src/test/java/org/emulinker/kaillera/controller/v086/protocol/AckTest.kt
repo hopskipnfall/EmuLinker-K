@@ -15,7 +15,12 @@ class AckTest : ProtocolBaseTest() {
 
   @Test
   fun clientAck_deserializeBody() {
-    assertThat(Ack.ClientAck.parse(MESSAGE_NUMBER, V086Utils.hexStringToByteBuffer(ACK_BODY_BYTES)))
+    assertThat(
+        Ack.ClientAckSerializer.read(
+          V086Utils.hexStringToByteBuffer(ACK_BODY_BYTES),
+          MESSAGE_NUMBER
+        )
+      )
       .isEqualTo(MessageParseResult.Success(CLIENT_ACK))
   }
 
@@ -35,7 +40,12 @@ class AckTest : ProtocolBaseTest() {
 
   @Test
   fun serverAck_deserializeBody() {
-    assertThat(Ack.ServerAck.parse(MESSAGE_NUMBER, V086Utils.hexStringToByteBuffer(ACK_BODY_BYTES)))
+    assertThat(
+        Ack.ServerAckSerializer.read(
+          V086Utils.hexStringToByteBuffer(ACK_BODY_BYTES),
+          MESSAGE_NUMBER
+        )
+      )
       .isEqualTo(MessageParseResult.Success(SERVER_ACK))
   }
 

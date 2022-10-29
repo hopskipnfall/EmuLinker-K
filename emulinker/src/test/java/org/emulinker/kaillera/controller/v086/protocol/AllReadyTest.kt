@@ -15,7 +15,12 @@ class AllReadyTest : ProtocolBaseTest() {
 
   @Test
   fun allReady_deserializeBody() {
-    assertThat(AllReady.parse(MESSAGE_NUMBER, V086Utils.hexStringToByteBuffer(BODY_BYTES)))
+    assertThat(
+        AllReady.AllReadySerializer.read(
+          V086Utils.hexStringToByteBuffer(BODY_BYTES),
+          MESSAGE_NUMBER
+        )
+      )
       .isEqualTo(MessageParseResult.Success(ALL_READY))
   }
 

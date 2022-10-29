@@ -16,7 +16,10 @@ class ConnectionRejectedTest : ProtocolBaseTest() {
   @Test
   fun deserializeBody() {
     assertThat(
-        ConnectionRejected.parse(MESSAGE_NUMBER, V086Utils.hexStringToByteBuffer(BODY_BYTES))
+        ConnectionRejected.ConnectionRejectedSerializer.read(
+          V086Utils.hexStringToByteBuffer(BODY_BYTES),
+          MESSAGE_NUMBER
+        )
       )
       .isEqualTo(MessageParseResult.Success(CONNECTION_REJECTED))
   }

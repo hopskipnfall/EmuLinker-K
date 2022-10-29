@@ -16,7 +16,10 @@ class StartGameTest : ProtocolBaseTest() {
   @Test
   fun startGameNotification_deserializeBody() {
     assertThat(
-        StartGame.parse(MESSAGE_NUMBER, V086Utils.hexStringToByteBuffer(NOTIFICATION_BODY_BYTES))
+        StartGame.StartGameSerializer.read(
+          V086Utils.hexStringToByteBuffer(NOTIFICATION_BODY_BYTES),
+          MESSAGE_NUMBER
+        )
       )
       .isEqualTo(MessageParseResult.Success(START_GAME_NOTIFICATION))
   }
@@ -37,7 +40,12 @@ class StartGameTest : ProtocolBaseTest() {
 
   @Test
   fun startGameRequest_deserializeBody() {
-    assertThat(StartGame.parse(MESSAGE_NUMBER, V086Utils.hexStringToByteBuffer(REQUEST_BODY_BYTES)))
+    assertThat(
+        StartGame.StartGameSerializer.read(
+          V086Utils.hexStringToByteBuffer(REQUEST_BODY_BYTES),
+          MESSAGE_NUMBER
+        )
+      )
       .isEqualTo(MessageParseResult.Success(START_GAME_REQUEST))
   }
 

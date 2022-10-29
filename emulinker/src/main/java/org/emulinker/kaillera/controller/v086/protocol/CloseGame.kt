@@ -2,7 +2,6 @@ package org.emulinker.kaillera.controller.v086.protocol
 
 import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
-import org.emulinker.kaillera.controller.messaging.ParseException
 import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.util.EmuUtil
 import org.emulinker.util.UnsignedUtil.getUnsignedShort
@@ -32,11 +31,6 @@ constructor(
 
   companion object {
     const val ID: Byte = 0x10
-
-    @Throws(ParseException::class, MessageFormatException::class)
-    fun parse(messageNumber: Int, buffer: ByteBuffer): MessageParseResult<CloseGame> {
-      return CloseGameSerializer.read(buffer, messageNumber)
-    }
   }
 
   object CloseGameSerializer : MessageSerializer<CloseGame> {

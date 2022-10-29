@@ -15,7 +15,12 @@ class KeepAliveTest : ProtocolBaseTest() {
 
   @Test
   fun deserializeBody() {
-    assertThat(KeepAlive.parse(MESSAGE_NUMBER, V086Utils.hexStringToByteBuffer(BODY_BYTES)))
+    assertThat(
+        KeepAlive.KeepAliveSerializer.read(
+          V086Utils.hexStringToByteBuffer(BODY_BYTES),
+          MESSAGE_NUMBER
+        )
+      )
       .isEqualTo(MessageParseResult.Success(KEEP_ALIVE))
   }
 

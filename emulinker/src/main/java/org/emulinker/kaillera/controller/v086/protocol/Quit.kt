@@ -45,10 +45,6 @@ sealed class Quit : V086Message() {
 
     private const val REQUEST_USERNAME = ""
     private const val REQUEST_USER_ID = 0xFFFF
-
-    fun parse(messageNumber: Int, buffer: ByteBuffer): MessageParseResult<Quit> {
-      return QuitSerializer.read(buffer, messageNumber)
-    }
   }
 
   object QuitSerializer : MessageSerializer<Quit> {

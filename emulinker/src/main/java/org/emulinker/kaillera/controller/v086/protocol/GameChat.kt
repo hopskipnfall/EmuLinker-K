@@ -2,7 +2,6 @@ package org.emulinker.kaillera.controller.v086.protocol
 
 import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
-import org.emulinker.kaillera.controller.messaging.ParseException
 import org.emulinker.kaillera.controller.v086.V086Utils.getNumBytesPlusStopByte
 import org.emulinker.util.EmuUtil
 
@@ -34,11 +33,6 @@ sealed class GameChat : V086Message() {
     const val ID: Byte = 0x08
 
     const val REQUEST_USERNAME = ""
-
-    @Throws(ParseException::class, MessageFormatException::class)
-    fun parse(messageNumber: Int, buffer: ByteBuffer): MessageParseResult<GameChat> {
-      return GameChatSerializer.read(buffer, messageNumber)
-    }
   }
 
   object GameChatSerializer : MessageSerializer<GameChat> {

@@ -2,7 +2,6 @@ package org.emulinker.kaillera.controller.v086.protocol
 
 import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
-import org.emulinker.kaillera.controller.messaging.ParseException
 import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.kaillera.controller.v086.V086Utils.getNumBytesPlusStopByte
 import org.emulinker.kaillera.model.ConnectionType
@@ -73,11 +72,6 @@ sealed class JoinGame : V086Message() {
     private const val REQUEST_USERNAME = ""
     private const val REQUEST_PING = 0L
     private const val REQUEST_USER_ID = 0xFFFF
-
-    @Throws(ParseException::class, MessageFormatException::class)
-    fun parse(messageNumber: Int, buffer: ByteBuffer): MessageParseResult<JoinGame> {
-      return JoinGameSerializer.read(buffer, messageNumber)
-    }
   }
 
   object JoinGameSerializer : MessageSerializer<JoinGame> {

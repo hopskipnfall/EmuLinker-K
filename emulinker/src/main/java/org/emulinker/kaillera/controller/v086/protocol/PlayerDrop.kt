@@ -40,10 +40,6 @@ sealed class PlayerDrop : V086Message() {
 
     private const val REQUEST_USERNAME = ""
     private const val REQUEST_PLAYER_NUMBER = 0.toByte()
-
-    fun parse(messageNumber: Int, buffer: ByteBuffer): MessageParseResult<PlayerDrop> {
-      return PlayerDropSerializer.read(buffer, messageNumber)
-    }
   }
 
   object PlayerDropSerializer : MessageSerializer<PlayerDrop> {
