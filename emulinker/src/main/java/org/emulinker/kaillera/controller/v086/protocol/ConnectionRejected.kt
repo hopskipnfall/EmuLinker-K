@@ -23,9 +23,7 @@ constructor(
     username.getNumBytesPlusStopByte() + V086Utils.Bytes.SHORT + message.getNumBytesPlusStopByte()
 
   public override fun writeBodyTo(buffer: ByteBuffer) {
-    EmuUtil.writeString(buffer, username)
-    buffer.putUnsignedShort(userId)
-    EmuUtil.writeString(buffer, message)
+    ConnectionRejectedSerializer.write(buffer, this)
   }
 
   init {
@@ -40,35 +38,37 @@ constructor(
     fun parse(messageNumber: Int, buffer: ByteBuffer): MessageParseResult<ConnectionRejected> {
       return ConnectionRejectedSerializer.read(buffer, messageNumber)
     }
+  }
 
-    object ConnectionRejectedSerializer : MessageSerializer<ConnectionRejected> {
-      override val messageTypeId: Byte = ID
+  object ConnectionRejectedSerializer : MessageSerializer<ConnectionRejected> {
+    override val messageTypeId: Byte = ID
 
-      override fun read(
-        buffer: ByteBuffer,
-        messageNumber: Int
-      ): MessageParseResult<ConnectionRejected> {
-        if (buffer.remaining() < 6) {
-          return MessageParseResult.Failure("Failed byte count validation!")
-        }
-        val userName = EmuUtil.readString(buffer)
-        if (buffer.remaining() < 4) {
-          return MessageParseResult.Failure("Failed byte count validation!")
-        }
-        val userID = buffer.getUnsignedShort()
-        if (buffer.remaining() < 2) {
-          return MessageParseResult.Failure("Failed byte count validation!")
-        }
-
-        val message = EmuUtil.readString(buffer)
-        return MessageParseResult.Success(
-          ConnectionRejected(messageNumber, userName, userID, message)
-        )
+    override fun read(
+      buffer: ByteBuffer,
+      messageNumber: Int
+    ): MessageParseResult<ConnectionRejected> {
+      if (buffer.remaining() < 6) {
+        return MessageParseResult.Failure("Failed byte count validation!")
+      }
+      val userName = EmuUtil.readString(buffer)
+      if (buffer.remaining() < 4) {
+        return MessageParseResult.Failure("Failed byte count validation!")
+      }
+      val userID = buffer.getUnsignedShort()
+      if (buffer.remaining() < 2) {
+        return MessageParseResult.Failure("Failed byte count validation!")
       }
 
-      override fun write(buffer: ByteBuffer, message: ConnectionRejected) {
-        TODO("Not yet implemented")
-      }
+      val message = EmuUtil.readString(buffer)
+      return MessageParseResult.Success(
+        ConnectionRejected(messageNumber, userName, userID, message)
+      )
+    }
+
+    override fun write(buffer: ByteBuffer, message: ConnectionRejected) {
+      EmuUtil.writeString(buffer, message.username)
+      buffer.putUnsignedShort(message.userId)
+      EmuUtil.writeString(buffer, message.message)
     }
   }
 }

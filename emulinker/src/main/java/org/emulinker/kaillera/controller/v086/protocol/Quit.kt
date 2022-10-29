@@ -1,8 +1,6 @@
 package org.emulinker.kaillera.controller.v086.protocol
 
 import java.nio.ByteBuffer
-import org.emulinker.kaillera.controller.messaging.MessageFormatException
-import org.emulinker.kaillera.controller.messaging.ParseException
 import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.kaillera.controller.v086.V086Utils.getNumBytesPlusStopByte
 import org.emulinker.util.EmuUtil
@@ -10,7 +8,20 @@ import org.emulinker.util.UnsignedUtil.getUnsignedShort
 import org.emulinker.util.UnsignedUtil.putUnsignedShort
 
 sealed class Quit : V086Message() {
+  override val messageTypeId = ID
+
   abstract val message: String
+
+  override val bodyBytes: Int
+    get() =
+      when (this) {
+        is Request -> REQUEST_USERNAME
+        is Notification -> username
+      }.getNumBytesPlusStopByte() + V086Utils.Bytes.SHORT + message.getNumBytesPlusStopByte()
+
+  public override fun writeBodyTo(buffer: ByteBuffer) {
+    QuitSerializer.write(buffer, this)
+  }
 
   data class Notification
   constructor(
@@ -20,20 +31,6 @@ sealed class Quit : V086Message() {
     override val message: String
   ) : Quit() {
 
-    override val messageTypeId = ID
-
-    override val bodyBytes: Int
-      get() =
-        username.getNumBytesPlusStopByte() +
-          V086Utils.Bytes.SHORT +
-          message.getNumBytesPlusStopByte()
-
-    public override fun writeBodyTo(buffer: ByteBuffer) {
-      EmuUtil.writeString(buffer, username)
-      buffer.putUnsignedShort(userId)
-      EmuUtil.writeString(buffer, message)
-    }
-
     init {
       require(userId in 0..0xFFFF) { "UserID out of acceptable range: $userId" }
       require(username.isNotBlank()) { "Username cannot be empty" }
@@ -41,30 +38,23 @@ sealed class Quit : V086Message() {
   }
 
   data class Request constructor(override val messageNumber: Int, override val message: String) :
-    Quit() {
-    private val username = ""
-    private val userId = 0xFFFF
-
-    override val messageTypeId = ID
-
-    override val bodyBytes: Int
-      get() =
-        username.getNumBytesPlusStopByte() +
-          V086Utils.Bytes.SHORT +
-          message.getNumBytesPlusStopByte()
-
-    public override fun writeBodyTo(buffer: ByteBuffer) {
-      EmuUtil.writeString(buffer, username)
-      buffer.putUnsignedShort(userId)
-      EmuUtil.writeString(buffer, message)
-    }
-  }
+    Quit()
 
   companion object {
     const val ID: Byte = 0x01
 
-    @Throws(ParseException::class, MessageFormatException::class)
+    private const val REQUEST_USERNAME = ""
+    private const val REQUEST_USER_ID = 0xFFFF
+
     fun parse(messageNumber: Int, buffer: ByteBuffer): MessageParseResult<Quit> {
+      return QuitSerializer.read(buffer, messageNumber)
+    }
+  }
+
+  object QuitSerializer : MessageSerializer<Quit> {
+    override val messageTypeId: Byte = ID
+
+    override fun read(buffer: ByteBuffer, messageNumber: Int): MessageParseResult<Quit> {
       if (buffer.remaining() < 5) {
         return MessageParseResult.Failure("Failed byte count validation!")
       }
@@ -75,7 +65,7 @@ sealed class Quit : V086Message() {
       val userID = buffer.getUnsignedShort()
       val message = EmuUtil.readString(buffer)
       return MessageParseResult.Success(
-        if (userName.isBlank() && userID == 0xFFFF) {
+        if (userName.isBlank() && userID == REQUEST_USER_ID) {
           Request(messageNumber, message)
         } else {
           Notification(messageNumber, userName, userID, message)
@@ -83,31 +73,21 @@ sealed class Quit : V086Message() {
       )
     }
 
-    object QuitRequestSerializer : MessageSerializer<Quit.Request> {
-      override val messageTypeId: Byte = ID
-
-      override fun read(buffer: ByteBuffer, messageNumber: Int): MessageParseResult<Quit.Request> {
-        TODO("Not yet implemented")
-      }
-
-      override fun write(buffer: ByteBuffer, message: Quit.Request) {
-        TODO("Not yet implemented")
-      }
-    }
-
-    object QuitNotificationSerializer : MessageSerializer<Quit.Notification> {
-      override val messageTypeId: Byte = ID
-
-      override fun read(
-        buffer: ByteBuffer,
-        messageNumber: Int
-      ): MessageParseResult<Quit.Notification> {
-        TODO("Not yet implemented")
-      }
-
-      override fun write(buffer: ByteBuffer, message: Quit.Notification) {
-        TODO("Not yet implemented")
-      }
+    override fun write(buffer: ByteBuffer, message: Quit) {
+      EmuUtil.writeString(
+        buffer,
+        when (message) {
+          is Request -> REQUEST_USERNAME
+          is Notification -> message.username
+        }
+      )
+      buffer.putUnsignedShort(
+        when (message) {
+          is Request -> REQUEST_USER_ID
+          is Notification -> message.userId
+        }
+      )
+      EmuUtil.writeString(buffer, message.message)
     }
   }
 }

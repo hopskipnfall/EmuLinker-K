@@ -19,7 +19,7 @@ constructor(override val messageNumber: Int, val value: Short) : V086Message() {
   }
 
   public override fun writeBodyTo(buffer: ByteBuffer) {
-    buffer.putUnsignedByte(value.toInt())
+    KeepAliveSerializer.write(buffer, this)
   }
 
   companion object {
@@ -41,7 +41,7 @@ constructor(override val messageNumber: Int, val value: Short) : V086Message() {
       }
 
       override fun write(buffer: ByteBuffer, message: KeepAlive) {
-        TODO("Not yet implemented")
+        buffer.putUnsignedByte(message.value.toInt())
       }
     }
   }

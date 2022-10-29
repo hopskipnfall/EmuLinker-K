@@ -7,39 +7,44 @@ import org.emulinker.kaillera.controller.v086.V086Utils.getNumBytesPlusStopByte
 import org.emulinker.util.EmuUtil
 
 sealed class GameChat : V086Message() {
-  abstract val username: String
   abstract val message: String
+  override val messageTypeId = ID
 
   override val bodyBytes: Int
-    get() = username.getNumBytesPlusStopByte() + message.getNumBytesPlusStopByte()
+    get() =
+      when (this) {
+        is Request -> REQUEST_USERNAME
+        is Notification -> this.username
+      }.getNumBytesPlusStopByte() + message.getNumBytesPlusStopByte()
 
   public override fun writeBodyTo(buffer: ByteBuffer) {
-    EmuUtil.writeString(buffer, username)
-    EmuUtil.writeString(buffer, message)
+    GameChatSerializer.write(buffer, this)
   }
 
   data class Notification
   @Throws(MessageFormatException::class)
-  constructor(
-    override val messageNumber: Int,
-    override val username: String,
-    override val message: String
-  ) : GameChat() {
-    override val messageTypeId = ID
-  }
+  constructor(override val messageNumber: Int, val username: String, override val message: String) :
+    GameChat()
 
   data class Request
   @Throws(MessageFormatException::class)
-  constructor(override val messageNumber: Int, override val message: String) : GameChat() {
-    override val messageTypeId = ID
-    override val username = ""
-  }
+  constructor(override val messageNumber: Int, override val message: String) : GameChat()
 
   companion object {
     const val ID: Byte = 0x08
 
+    const val REQUEST_USERNAME = ""
+
     @Throws(ParseException::class, MessageFormatException::class)
     fun parse(messageNumber: Int, buffer: ByteBuffer): MessageParseResult<GameChat> {
+      return GameChatSerializer.read(buffer, messageNumber)
+    }
+  }
+
+  object GameChatSerializer : MessageSerializer<GameChat> {
+    override val messageTypeId: Byte = ID
+
+    override fun read(buffer: ByteBuffer, messageNumber: Int): MessageParseResult<GameChat> {
       if (buffer.remaining() < 3) {
         return MessageParseResult.Failure("Failed byte count validation!")
       }
@@ -49,7 +54,7 @@ sealed class GameChat : V086Message() {
       }
       val message = EmuUtil.readString(buffer)
       return MessageParseResult.Success(
-        if (userName.isBlank()) {
+        if (userName == REQUEST_USERNAME) {
           Request(messageNumber, message)
         } else {
           Notification(messageNumber, userName, message)
@@ -57,34 +62,15 @@ sealed class GameChat : V086Message() {
       )
     }
 
-    object GameChatNotificationSerializer : MessageSerializer<GameChat.Notification> {
-      override val messageTypeId: Byte = ID
-
-      override fun read(
-        buffer: ByteBuffer,
-        messageNumber: Int
-      ): MessageParseResult<GameChat.Notification> {
-        TODO("Not yet implemented")
-      }
-
-      override fun write(buffer: ByteBuffer, message: GameChat.Notification) {
-        TODO("Not yet implemented")
-      }
-    }
-
-    object GameChatRequestSerializer : MessageSerializer<GameChat.Request> {
-      override val messageTypeId: Byte = ID
-
-      override fun read(
-        buffer: ByteBuffer,
-        messageNumber: Int
-      ): MessageParseResult<GameChat.Request> {
-        TODO("Not yet implemented")
-      }
-
-      override fun write(buffer: ByteBuffer, message: GameChat.Request) {
-        TODO("Not yet implemented")
-      }
+    override fun write(buffer: ByteBuffer, message: GameChat) {
+      EmuUtil.writeString(
+        buffer,
+        when (message) {
+          is Request -> REQUEST_USERNAME
+          is Notification -> message.username
+        }
+      )
+      EmuUtil.writeString(buffer, message.message)
     }
   }
 }

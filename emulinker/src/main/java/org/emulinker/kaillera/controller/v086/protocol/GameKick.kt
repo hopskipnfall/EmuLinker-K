@@ -19,8 +19,7 @@ constructor(override val messageNumber: Int, val userId: Int) : V086Message() {
   }
 
   public override fun writeBodyTo(buffer: ByteBuffer) {
-    buffer.put(0x00.toByte())
-    buffer.putUnsignedShort(userId)
+    GameKickSerializer.write(buffer, this)
   }
 
   companion object {
@@ -28,26 +27,23 @@ constructor(override val messageNumber: Int, val userId: Int) : V086Message() {
 
     @Throws(ParseException::class, MessageFormatException::class)
     fun parse(messageNumber: Int, buffer: ByteBuffer): MessageParseResult<GameKick> {
-      if (buffer.remaining() < 3) {
-        return MessageParseResult.Failure("Failed byte count validation!")
-      }
-      val b = buffer.get()
-      /*SF MOD
-      if (b != 0x00)
-      	throw new MessageFormatException("Invalid " + DESC + " format: byte 0 = " + EmuUtil.byteToHex(b));
-      */
-      return MessageParseResult.Success(GameKick(messageNumber, buffer.getUnsignedShort()))
+      return GameKickSerializer.read(buffer, messageNumber)
     }
 
     object GameKickSerializer : MessageSerializer<GameKick> {
       override val messageTypeId: Byte = ID
 
       override fun read(buffer: ByteBuffer, messageNumber: Int): MessageParseResult<GameKick> {
-        TODO("Not yet implemented")
+        if (buffer.remaining() < 3) {
+          return MessageParseResult.Failure("Failed byte count validation!")
+        }
+        buffer.get() // This is always 0x00.
+        return MessageParseResult.Success(GameKick(messageNumber, buffer.getUnsignedShort()))
       }
 
       override fun write(buffer: ByteBuffer, message: GameKick) {
-        TODO("Not yet implemented")
+        buffer.put(0x00.toByte())
+        buffer.putUnsignedShort(message.userId)
       }
     }
   }

@@ -2,7 +2,6 @@ package org.emulinker.kaillera.controller.v086.protocol
 
 import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
-import org.emulinker.kaillera.controller.messaging.ParseException
 import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.kaillera.controller.v086.V086Utils.getNumBytesPlusStopByte
 import org.emulinker.kaillera.model.ConnectionType
@@ -13,20 +12,16 @@ import org.emulinker.util.UnsignedUtil.putUnsignedInt
 import org.emulinker.util.UnsignedUtil.putUnsignedShort
 
 data class PlayerInformation
-@Throws(MessageFormatException::class)
 constructor(override val messageNumber: Int, val players: List<Player>) : V086Message() {
   override val messageTypeId = ID
 
-  val numPlayers: Int
-    get() = players.size
+  val numPlayers: Int = players.size
 
   override val bodyBytes =
     V086Utils.Bytes.SINGLE_BYTE + V086Utils.Bytes.INTEGER + players.sumOf { it.numBytes }
 
   public override fun writeBodyTo(buffer: ByteBuffer) {
-    buffer.put(0x00.toByte())
-    buffer.putInt(players.size)
-    players.forEach { it.writeTo(buffer) }
+    PlayerInformationSerializer.write(buffer, this)
   }
 
   data class Player
@@ -66,8 +61,18 @@ constructor(override val messageNumber: Int, val players: List<Player>) : V086Me
   companion object {
     const val ID: Byte = 0x0D
 
-    @Throws(ParseException::class, MessageFormatException::class)
     fun parse(messageNumber: Int, buffer: ByteBuffer): MessageParseResult<PlayerInformation> {
+      return PlayerInformationSerializer.read(buffer, messageNumber)
+    }
+  }
+
+  object PlayerInformationSerializer : MessageSerializer<PlayerInformation> {
+    override val messageTypeId: Byte = ID
+
+    override fun read(
+      buffer: ByteBuffer,
+      messageNumber: Int
+    ): MessageParseResult<PlayerInformation> {
       if (buffer.remaining() < 14) {
         return MessageParseResult.Failure("Failed byte count validation!")
       }
@@ -82,36 +87,27 @@ constructor(override val messageNumber: Int, val players: List<Player>) : V086Me
       if (buffer.remaining() < minLen) {
         return MessageParseResult.Failure("Failed byte count validation!")
       }
-      val players: MutableList<Player> = ArrayList(numPlayers)
-      for (j in 0 until numPlayers) {
-        if (buffer.remaining() < 9) {
-          return MessageParseResult.Failure("Failed byte count validation!")
+      val players: List<Player> =
+        (0 until numPlayers).map {
+          if (buffer.remaining() < 9) {
+            return MessageParseResult.Failure("Failed byte count validation!")
+          }
+          val userName = EmuUtil.readString(buffer)
+          if (buffer.remaining() < 7) {
+            return MessageParseResult.Failure("Failed byte count validation!")
+          }
+          val ping = buffer.getUnsignedInt()
+          val userID = buffer.getUnsignedShort()
+          val connectionType = buffer.get()
+          Player(userName, ping, userID, ConnectionType.fromByteValue(connectionType))
         }
-        val userName = EmuUtil.readString(buffer)
-        if (buffer.remaining() < 7) {
-          return MessageParseResult.Failure("Failed byte count validation!")
-        }
-        val ping = buffer.getUnsignedInt()
-        val userID = buffer.getUnsignedShort()
-        val connectionType = buffer.get()
-        players.add(Player(userName, ping, userID, ConnectionType.fromByteValue(connectionType)))
-      }
       return MessageParseResult.Success(PlayerInformation(messageNumber, players))
     }
 
-    object PlayerInformationSerializer : MessageSerializer<PlayerInformation> {
-      override val messageTypeId: Byte = ID
-
-      override fun read(
-        buffer: ByteBuffer,
-        messageNumber: Int
-      ): MessageParseResult<PlayerInformation> {
-        TODO("Not yet implemented")
-      }
-
-      override fun write(buffer: ByteBuffer, message: PlayerInformation) {
-        TODO("Not yet implemented")
-      }
+    override fun write(buffer: ByteBuffer, message: PlayerInformation) {
+      buffer.put(0x00.toByte())
+      buffer.putInt(message.players.size)
+      message.players.forEach { it.writeTo(buffer) }
     }
   }
 }

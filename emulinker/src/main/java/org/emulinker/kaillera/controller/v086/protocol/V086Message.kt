@@ -73,6 +73,34 @@ abstract class V086Message : ByteBufferMessage() {
   protected abstract fun writeBodyTo(buffer: ByteBuffer)
 
   companion object {
+    val SERIALIZERS: Map<Byte, MessageSerializer<out V086Message>> =
+      arrayOf(
+          Ack.ClientAckSerializer,
+          Ack.ServerAckSerializer,
+          AllReady.AllReadySerializer,
+          CachedGameData.CachedGameDataSerializer,
+          Chat.ChatSerializer,
+          CloseGame.CloseGameSerializer,
+          ConnectionRejected.ConnectionRejectedSerializer,
+          CreateGame.CreateGameSerializer,
+          GameChat.GameChatSerializer,
+          GameData.Companion.GameDataSerializer,
+          GameKick.Companion.GameKickSerializer,
+          GameStatus.Companion.GameStatusSerializer,
+          InformationMessage.InformationMessageSerializer,
+          JoinGame.JoinGameSerializer,
+          KeepAlive.Companion.KeepAliveSerializer,
+          PlayerDrop.PlayerDropSerializer,
+          PlayerInformation.PlayerInformationSerializer,
+          Quit.QuitSerializer,
+          QuitGame.QuitGameSerializer,
+          ServerStatus.ServerStatusSerializer,
+          StartGame.StartGameSerializer,
+          UserInformation.UserInformationSerializer,
+          UserJoined.UserJoinedSerializer,
+        )
+        .associateBy { it.messageTypeId }
+
     protected fun <T : V086Message> T.validateMessageNumber(): MessageParseResult<T> {
       return if (this.messageNumber !in 0..0xFFFF) {
         return MessageParseResult.Failure("Invalid message number: ${this.messageNumber}")
@@ -84,34 +112,12 @@ abstract class V086Message : ByteBufferMessage() {
     @Throws(ParseException::class, MessageFormatException::class)
     fun parse(messageNumber: Int, messageLength: Int, buffer: ByteBuffer): V086Message {
 
-      var parseResult: MessageParseResult<out V086Message> =
-        when (val messageType = buffer.get()) {
-          Quit.ID -> Quit.parse(messageNumber, buffer)
-          UserJoined.ID -> UserJoined.parse(messageNumber, buffer)
-          UserInformation.ID -> UserInformation.parse(messageNumber, buffer)
-          ServerStatus.ID -> ServerStatus.parse(messageNumber, buffer)
-          Ack.ServerAck.ID -> Ack.ServerAck.parse(messageNumber, buffer)
-          Ack.ClientAck.ID -> Ack.ClientAck.parse(messageNumber, buffer)
-          Chat.ID -> Chat.parse(messageNumber, buffer)
-          GameChat.ID -> GameChat.parse(messageNumber, buffer)
-          KeepAlive.ID -> KeepAlive.parse(messageNumber, buffer)
-          CreateGame.ID -> CreateGame.parse(messageNumber, buffer)
-          QuitGame.ID -> QuitGame.parse(messageNumber, buffer)
-          JoinGame.ID -> JoinGame.parse(messageNumber, buffer)
-          PlayerInformation.ID -> PlayerInformation.parse(messageNumber, buffer)
-          GameStatus.ID -> GameStatus.parse(messageNumber, buffer)
-          GameKick.ID -> GameKick.parse(messageNumber, buffer)
-          CloseGame.ID -> CloseGame.parse(messageNumber, buffer)
-          StartGame.ID -> StartGame.parse(messageNumber, buffer)
-          GameData.ID -> GameData.parse(messageNumber, buffer)
-          CachedGameData.ID -> CachedGameData.parse(messageNumber, buffer)
-          PlayerDrop.ID -> PlayerDrop.parse(messageNumber, buffer)
-          AllReady.ID -> AllReady.parse(messageNumber, buffer)
-          ConnectionRejected.ID -> ConnectionRejected.parse(messageNumber, buffer)
-          InformationMessage.ID -> InformationMessage.parse(messageNumber, buffer)
-          // TODO(nue): Replace with a sealed class.
-          else -> throw MessageFormatException("Invalid message type: $messageType")
-        }
+      val messageType = buffer.get()
+
+      val serializer =
+        checkNotNull(SERIALIZERS[messageType]) { "Unrecognized message ID: $messageType" }
+
+      var parseResult: MessageParseResult<out V086Message> = serializer.read(buffer, messageNumber)
       if (parseResult is MessageParseResult.Success) {
         parseResult = parseResult.message.validateMessageNumber()
       }

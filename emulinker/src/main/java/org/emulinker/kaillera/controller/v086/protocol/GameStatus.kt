@@ -36,12 +36,7 @@ constructor(
   }
 
   public override fun writeBodyTo(buffer: ByteBuffer) {
-    buffer.put(0x00.toByte())
-    buffer.putUnsignedShort(gameId)
-    buffer.putUnsignedShort(val1)
-    buffer.put(gameStatus.byteValue)
-    buffer.put(numPlayers)
-    buffer.put(maxPlayers)
+    GameStatusSerializer.write(buffer, this)
   }
 
   companion object {
@@ -49,37 +44,44 @@ constructor(
 
     @Throws(ParseException::class, MessageFormatException::class)
     fun parse(messageNumber: Int, buffer: ByteBuffer): MessageParseResult<GameStatus> {
-      if (buffer.remaining() < 8) {
-        return MessageParseResult.Failure("Failed byte count validation!")
-      }
-      val b = buffer.get()
-      require(b.toInt() == 0x00) { "Invalid Game Status format: byte 0 = " + EmuUtil.byteToHex(b) }
-      val gameID = buffer.getUnsignedShort()
-      val val1 = buffer.getUnsignedShort()
-      val gameStatus = buffer.get()
-      val numPlayers = buffer.get()
-      val maxPlayers = buffer.get()
-      return MessageParseResult.Success(
-        GameStatus(
-          messageNumber,
-          gameID,
-          val1,
-          org.emulinker.kaillera.model.GameStatus.fromByteValue(gameStatus),
-          numPlayers,
-          maxPlayers
-        )
-      )
+      return GameStatusSerializer.read(buffer, messageNumber)
     }
 
     object GameStatusSerializer : MessageSerializer<GameStatus> {
       override val messageTypeId: Byte = ID
 
       override fun read(buffer: ByteBuffer, messageNumber: Int): MessageParseResult<GameStatus> {
-        TODO("Not yet implemented")
+        if (buffer.remaining() < 8) {
+          return MessageParseResult.Failure("Failed byte count validation!")
+        }
+        val b = buffer.get()
+        require(b.toInt() == 0x00) {
+          "Invalid Game Status format: byte 0 = " + EmuUtil.byteToHex(b)
+        }
+        val gameID = buffer.getUnsignedShort()
+        val val1 = buffer.getUnsignedShort()
+        val gameStatus = buffer.get()
+        val numPlayers = buffer.get()
+        val maxPlayers = buffer.get()
+        return MessageParseResult.Success(
+          GameStatus(
+            messageNumber,
+            gameID,
+            val1,
+            org.emulinker.kaillera.model.GameStatus.fromByteValue(gameStatus),
+            numPlayers,
+            maxPlayers
+          )
+        )
       }
 
       override fun write(buffer: ByteBuffer, message: GameStatus) {
-        TODO("Not yet implemented")
+        buffer.put(0x00.toByte())
+        buffer.putUnsignedShort(message.gameId)
+        buffer.putUnsignedShort(message.val1)
+        buffer.put(message.gameStatus.byteValue)
+        buffer.put(message.numPlayers)
+        buffer.put(message.maxPlayers)
       }
     }
   }

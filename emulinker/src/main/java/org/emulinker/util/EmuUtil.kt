@@ -92,14 +92,17 @@ object EmuUtil {
     return sb.toString()
   }
 
-  @OptIn(ExperimentalUnsignedTypes::class)
-  fun ByteArray.toHexString() =
-    this.asUByteArray()
-      .joinToString("") { it.toString(16).padStart(2, '0') }
-      .uppercase()
-      .chunked(size = 2)
-      .joinToString(separator = ",")
+  fun ByteArray.toHexString(): String =
+    this.joinToString("") { it.toHexString() }.chunked(size = 2).joinToString(separator = ",")
 
+  fun Byte.toHexString(): String = this.toUByte().toString(16).padStart(2, '0').uppercase()
+
+  @Deprecated(
+    message = "This doesn't work very well",
+    replaceWith =
+      ReplaceWith("b.toHexString()", imports = arrayOf("org.emulinker.util.Byte.toHexString")),
+    level = DeprecationLevel.WARNING
+  )
   fun byteToHex(b: Byte): String {
     return (HEX_CHARS[b.toInt() and 0xf0 shr 4].toString() +
       HEX_CHARS[b.toInt() and 0xf].toString())

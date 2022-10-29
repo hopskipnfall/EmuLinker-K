@@ -1,34 +1,31 @@
 package org.emulinker.kaillera.controller.v086.protocol
 
 import java.nio.ByteBuffer
-import org.emulinker.kaillera.controller.messaging.MessageFormatException
-import org.emulinker.kaillera.controller.messaging.ParseException
 import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.kaillera.controller.v086.V086Utils.getNumBytesPlusStopByte
 import org.emulinker.util.EmuUtil
 
 sealed class PlayerDrop : V086Message() {
-  abstract val username: String
-  abstract val playerNumber: Byte
+  override val messageTypeId = ID
 
   override val bodyBytes: Int
-    get() = username.getNumBytesPlusStopByte() + V086Utils.Bytes.SINGLE_BYTE
+    get() =
+      when (this) {
+        is Request -> REQUEST_USERNAME
+        is Notification -> username
+      }.getNumBytesPlusStopByte() + V086Utils.Bytes.SINGLE_BYTE
 
   public override fun writeBodyTo(buffer: ByteBuffer) {
-    EmuUtil.writeString(buffer, username)
-    buffer.put(playerNumber)
+    PlayerDropSerializer.write(buffer, this)
   }
 
   data class Notification
-  @Throws(MessageFormatException::class)
   constructor(
     override val messageNumber: Int,
-    override val username: String,
-    // TODO(nue): Should we really be using a byte for this??
-    override val playerNumber: Byte
+    val username: String,
+    /** The port number, not the player ID. */
+    val playerNumber: Byte
   ) : PlayerDrop() {
-
-    override val messageTypeId = ID
 
     init {
       require(playerNumber in 0..255) { "playerNumber out of acceptable range: $playerNumber" }
@@ -36,60 +33,49 @@ sealed class PlayerDrop : V086Message() {
     }
   }
 
-  data class Request
-  @Throws(MessageFormatException::class)
-  constructor(override val messageNumber: Int) : PlayerDrop() {
-
-    override val messageTypeId = ID
-
-    override val username = ""
-    override val playerNumber = 0.toByte()
-  }
+  data class Request constructor(override val messageNumber: Int) : PlayerDrop()
 
   companion object {
     const val ID: Byte = 0x14
-    @Throws(ParseException::class, MessageFormatException::class)
+
+    private const val REQUEST_USERNAME = ""
+    private const val REQUEST_PLAYER_NUMBER = 0.toByte()
+
     fun parse(messageNumber: Int, buffer: ByteBuffer): MessageParseResult<PlayerDrop> {
+      return PlayerDropSerializer.read(buffer, messageNumber)
+    }
+  }
+
+  object PlayerDropSerializer : MessageSerializer<PlayerDrop> {
+    override val messageTypeId: Byte = ID
+
+    override fun read(buffer: ByteBuffer, messageNumber: Int): MessageParseResult<PlayerDrop> {
       if (buffer.remaining() < 2) {
         return MessageParseResult.Failure("Failed byte count validation!")
       }
       val userName = EmuUtil.readString(buffer)
       val playerNumber = buffer.get()
       return MessageParseResult.Success(
-        if (userName.isBlank() && playerNumber.toInt() == 0) {
+        if (userName == REQUEST_USERNAME && playerNumber == REQUEST_PLAYER_NUMBER) {
           Request(messageNumber)
         } else Notification(messageNumber, userName, playerNumber)
       )
     }
 
-    object PlayerDropRequestSerializer : MessageSerializer<PlayerDrop.Request> {
-      override val messageTypeId: Byte = ID
-
-      override fun read(
-        buffer: ByteBuffer,
-        messageNumber: Int
-      ): MessageParseResult<PlayerDrop.Request> {
-        TODO("Not yet implemented")
-      }
-
-      override fun write(buffer: ByteBuffer, message: PlayerDrop.Request) {
-        TODO("Not yet implemented")
-      }
-    }
-
-    object PlayerDropNotificationSerializer : MessageSerializer<PlayerDrop.Notification> {
-      override val messageTypeId: Byte = ID
-
-      override fun read(
-        buffer: ByteBuffer,
-        messageNumber: Int
-      ): MessageParseResult<PlayerDrop.Notification> {
-        TODO("Not yet implemented")
-      }
-
-      override fun write(buffer: ByteBuffer, message: PlayerDrop.Notification) {
-        TODO("Not yet implemented")
-      }
+    override fun write(buffer: ByteBuffer, message: PlayerDrop) {
+      EmuUtil.writeString(
+        buffer,
+        when (message) {
+          is Request -> REQUEST_USERNAME
+          is Notification -> message.username
+        }
+      )
+      buffer.put(
+        when (message) {
+          is Request -> REQUEST_PLAYER_NUMBER
+          is Notification -> message.playerNumber
+        }
+      )
     }
   }
 }

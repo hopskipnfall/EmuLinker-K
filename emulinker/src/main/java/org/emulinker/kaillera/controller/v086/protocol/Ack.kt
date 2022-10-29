@@ -26,16 +26,7 @@ sealed class Ack : V086Message() {
       const val ID: Byte = 0x06
 
       fun parse(messageNumber: Int, buffer: ByteBuffer): MessageParseResult<Ack.ClientAck> {
-        if (buffer.remaining() < 17) {
-          return MessageParseResult.Failure("Failed byte count validation!")
-        }
-        val b = buffer.get()
-        if (b.toInt() != 0x00) {
-          throw MessageFormatException(
-            "Invalid Client to Server ACK format: byte 0 = ${EmuUtil.byteToHex(b)}"
-          )
-        }
-        return MessageParseResult.Success(ClientAck(messageNumber))
+        return ClientAckSerializer.read(buffer, messageNumber)
       }
     }
   }
@@ -51,51 +42,33 @@ sealed class Ack : V086Message() {
       const val ID: Byte = 0x05
 
       fun parse(messageNumber: Int, buffer: ByteBuffer): MessageParseResult<ServerAck> {
-        if (buffer.remaining() < 17) {
-          return MessageParseResult.Failure("Failed byte count validation!")
-        }
-        val b = buffer.get()
-        if (b.toInt() != 0x00) {
-          throw MessageFormatException("byte 0 = " + EmuUtil.byteToHex(b))
-        }
-        val val1 = buffer.getUnsignedInt()
-        val val2 = buffer.getUnsignedInt()
-        val val3 = buffer.getUnsignedInt()
-        val val4 = buffer.getUnsignedInt()
-        if (val1 != 0L || val2 != 1L || val3 != 2L || val4 != 3L)
-          throw MessageFormatException(
-            "Invalid Server to Client ACK format: bytes do not match acceptable format!"
-          )
-        return MessageParseResult.Success(ServerAck(messageNumber))
+        return ServerAckSerializer.read(buffer, messageNumber)
       }
     }
   }
 
-  companion object {
-    object ClientAckSerializer : MessageSerializer<Ack.ClientAck> {
-      override val messageTypeId: Byte = ClientAck.ID
+  object ClientAckSerializer : MessageSerializer<Ack.ClientAck> {
+    override val messageTypeId: Byte = ClientAck.ID
 
-      override fun read(buffer: ByteBuffer, messageNumber: Int): MessageParseResult<Ack.ClientAck> {
-        if (buffer.remaining() < 17) {
-          return MessageParseResult.Failure("Failed byte count validation!")
-        }
-        val b = buffer.get()
-        if (b.toInt() != 0x00) {
-          throw MessageFormatException(
-            "Invalid Client to Server ACK format: byte 0 = " + EmuUtil.byteToHex(b)
-          )
-        }
-
-        return MessageParseResult.Success(Ack.ClientAck(messageNumber))
+    override fun read(buffer: ByteBuffer, messageNumber: Int): MessageParseResult<Ack.ClientAck> {
+      if (buffer.remaining() < 17) {
+        return MessageParseResult.Failure("Failed byte count validation!")
       }
-
-      override fun write(buffer: ByteBuffer, message: Ack.ClientAck) {
-        buffer.put(0x00.toByte())
-        buffer.putUnsignedInt(0L)
-        buffer.putUnsignedInt(1L)
-        buffer.putUnsignedInt(2L)
-        buffer.putUnsignedInt(3L)
+      val b = buffer.get()
+      if (b.toInt() != 0x00) {
+        throw MessageFormatException(
+          "Invalid Client to Server ACK format: byte 0 = ${EmuUtil.byteToHex(b)}"
+        )
       }
+      return MessageParseResult.Success(ClientAck(messageNumber))
+    }
+
+    override fun write(buffer: ByteBuffer, message: Ack.ClientAck) {
+      buffer.put(0x00.toByte())
+      buffer.putUnsignedInt(0L)
+      buffer.putUnsignedInt(1L)
+      buffer.putUnsignedInt(2L)
+      buffer.putUnsignedInt(3L)
     }
   }
 
@@ -108,12 +81,17 @@ sealed class Ack : V086Message() {
       }
       val b = buffer.get()
       if (b.toInt() != 0x00) {
-        throw MessageFormatException(
-          "Invalid Client to Server ACK format: byte 0 = ${EmuUtil.byteToHex(b)}"
-        )
+        throw MessageFormatException("byte 0 = " + EmuUtil.byteToHex(b))
       }
-
-      return MessageParseResult.Success(Ack.ServerAck(messageNumber))
+      val val1 = buffer.getUnsignedInt()
+      val val2 = buffer.getUnsignedInt()
+      val val3 = buffer.getUnsignedInt()
+      val val4 = buffer.getUnsignedInt()
+      if (val1 != 0L || val2 != 1L || val3 != 2L || val4 != 3L)
+        throw MessageFormatException(
+          "Invalid Server to Client ACK format: bytes do not match acceptable format!"
+        )
+      return MessageParseResult.Success(ServerAck(messageNumber))
     }
 
     override fun write(buffer: ByteBuffer, message: Ack.ServerAck) {

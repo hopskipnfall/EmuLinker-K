@@ -13,11 +13,9 @@ import org.emulinker.util.UnsignedUtil.putUnsignedInt
 import org.emulinker.util.UnsignedUtil.putUnsignedShort
 
 sealed class JoinGame : V086Message() {
+  override val messageTypeId = ID
+
   abstract val gameId: Int
-  abstract val val1: Int
-  abstract val username: String
-  abstract val ping: Long
-  abstract val userId: Int
   abstract val connectionType: ConnectionType
 
   override val bodyBytes: Int
@@ -25,34 +23,28 @@ sealed class JoinGame : V086Message() {
       V086Utils.Bytes.SINGLE_BYTE +
         V086Utils.Bytes.SHORT +
         V086Utils.Bytes.SHORT +
-        username.getNumBytesPlusStopByte() +
+        when (this) {
+          is Request -> REQUEST_USERNAME
+          is Notification -> this.username
+        }.getNumBytesPlusStopByte() +
         V086Utils.Bytes.INTEGER +
         V086Utils.Bytes.SHORT +
         V086Utils.Bytes.SINGLE_BYTE
 
   public override fun writeBodyTo(buffer: ByteBuffer) {
-    buffer.put(0x00.toByte())
-    buffer.putUnsignedShort(gameId)
-    buffer.putUnsignedShort(val1)
-    EmuUtil.writeString(buffer, username)
-    buffer.putUnsignedInt(ping)
-    buffer.putUnsignedShort(userId)
-    buffer.put(connectionType.byteValue)
+    JoinGameSerializer.write(buffer, this)
   }
 
   data class Notification
-  @Throws(MessageFormatException::class)
   constructor(
     override val messageNumber: Int,
     override val gameId: Int,
-    override val val1: Int,
-    override val username: String,
-    override val ping: Long,
-    override val userId: Int,
+    val val1: Int,
+    val username: String,
+    val ping: Long,
+    val userId: Int,
     override val connectionType: ConnectionType
   ) : JoinGame() {
-
-    override val messageTypeId = ID
 
     init {
       require(gameId in 0..0xFFFF) { "gameID out of acceptable range: $gameId" }
@@ -63,19 +55,11 @@ sealed class JoinGame : V086Message() {
   }
 
   data class Request
-  @Throws(MessageFormatException::class)
   constructor(
     override val messageNumber: Int,
     override val gameId: Int,
     override val connectionType: ConnectionType
   ) : JoinGame() {
-
-    override val messageTypeId = ID
-
-    override val val1 = 0
-    override val username = ""
-    override val ping = 0L
-    override val userId = 0xFFFF
 
     init {
       require(gameId in 0..0xFFFF) { "gameID out of acceptable range: $gameId" }
@@ -85,8 +69,21 @@ sealed class JoinGame : V086Message() {
   companion object {
     const val ID: Byte = 0x0C
 
+    private const val REQUEST_VAL1 = 0
+    private const val REQUEST_USERNAME = ""
+    private const val REQUEST_PING = 0L
+    private const val REQUEST_USER_ID = 0xFFFF
+
     @Throws(ParseException::class, MessageFormatException::class)
     fun parse(messageNumber: Int, buffer: ByteBuffer): MessageParseResult<JoinGame> {
+      return JoinGameSerializer.read(buffer, messageNumber)
+    }
+  }
+
+  object JoinGameSerializer : MessageSerializer<JoinGame> {
+    override val messageTypeId: Byte = ID
+
+    override fun read(buffer: ByteBuffer, messageNumber: Int): MessageParseResult<JoinGame> {
       if (buffer.remaining() < 13) {
         return MessageParseResult.Failure("Failed byte count validation!")
       }
@@ -118,34 +115,35 @@ sealed class JoinGame : V086Message() {
       )
     }
 
-    object JoinGameRequestSerializer : MessageSerializer<JoinGame.Request> {
-      override val messageTypeId: Byte = ID
-
-      override fun read(
-        buffer: ByteBuffer,
-        messageNumber: Int
-      ): MessageParseResult<JoinGame.Request> {
-        TODO("Not yet implemented")
-      }
-
-      override fun write(buffer: ByteBuffer, message: JoinGame.Request) {
-        TODO("Not yet implemented")
-      }
-    }
-
-    object JoinGameNotificationSerializer : MessageSerializer<JoinGame.Notification> {
-      override val messageTypeId: Byte = ID
-
-      override fun read(
-        buffer: ByteBuffer,
-        messageNumber: Int
-      ): MessageParseResult<JoinGame.Notification> {
-        TODO("Not yet implemented")
-      }
-
-      override fun write(buffer: ByteBuffer, message: JoinGame.Notification) {
-        TODO("Not yet implemented")
-      }
+    override fun write(buffer: ByteBuffer, message: JoinGame) {
+      buffer.put(0x00.toByte())
+      buffer.putUnsignedShort(message.gameId)
+      buffer.putUnsignedShort(
+        when (message) {
+          is Request -> REQUEST_VAL1
+          is Notification -> message.val1
+        }
+      )
+      EmuUtil.writeString(
+        buffer,
+        when (message) {
+          is Request -> REQUEST_USERNAME
+          is Notification -> message.username
+        }
+      )
+      buffer.putUnsignedInt(
+        when (message) {
+          is Request -> REQUEST_PING
+          is Notification -> message.ping
+        }
+      )
+      buffer.putUnsignedShort(
+        when (message) {
+          is Request -> REQUEST_USER_ID
+          is Notification -> message.userId
+        }
+      )
+      buffer.put(message.connectionType.byteValue)
     }
   }
 }

@@ -26,11 +26,12 @@ class ACKAction @Inject internal constructor() :
 
   override fun toString() = "ACKAction"
 
-  @Throws(FatalActionException::class)
   override suspend fun performAction(message: Ack.ClientAck, clientHandler: V086ClientHandler) {
     actionPerformedCount++
     val user = clientHandler.user
-    if (user.loggedIn) return
+    if (user.loggedIn) {
+      return
+    }
     clientHandler.addSpeedMeasurement()
     if (clientHandler.speedMeasurementCount > clientHandler.numAcksForSpeedTest) {
       user.ping = clientHandler.averageNetworkSpeed
@@ -49,7 +50,8 @@ class ACKAction @Inject internal constructor() :
           clientHandler.send(
             ConnectionRejected(
               clientHandler.nextMessageNumber,
-              "server",
+              // TODO(nue): Localize this?
+              username = "server",
               user.userData.id,
               e.message ?: ""
             )

@@ -8,6 +8,7 @@ import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets
 import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.kaillera.controller.v086.V086Utils.toKtorAddress
+import org.emulinker.kaillera.controller.v086.protocol.V086Message.Companion.SERIALIZERS
 import org.emulinker.kaillera.model.ConnectionType
 import org.emulinker.kaillera.model.GameStatus
 import org.emulinker.kaillera.model.UserStatus
@@ -216,5 +217,11 @@ class V086BundleTest {
     assertThat(converted).isEqualTo(converted)
     assertThat(converted.hostname).isEqualTo("127.2.0.1")
     assertThat(converted.port).isEqualTo(42)
+  }
+
+  @Test
+  fun serializerMapShouldBeExhaustive() {
+    assertThat(SERIALIZERS.map { it.value::class })
+      .containsExactlyElementsIn(MessageSerializer::class.sealedSubclasses)
   }
 }

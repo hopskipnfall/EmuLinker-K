@@ -22,9 +22,7 @@ constructor(
     V086Utils.Bytes.SINGLE_BYTE + V086Utils.Bytes.SHORT + V086Utils.Bytes.SHORT
 
   public override fun writeBodyTo(buffer: ByteBuffer) {
-    buffer.put(0x00.toByte())
-    buffer.putUnsignedShort(gameId)
-    buffer.putUnsignedShort(val1)
+    CloseGameSerializer.write(buffer, this)
   }
 
   init {
@@ -39,27 +37,27 @@ constructor(
     fun parse(messageNumber: Int, buffer: ByteBuffer): MessageParseResult<CloseGame> {
       return CloseGameSerializer.read(buffer, messageNumber)
     }
+  }
 
-    object CloseGameSerializer : MessageSerializer<CloseGame> {
-      override val messageTypeId: Byte = ID
+  object CloseGameSerializer : MessageSerializer<CloseGame> {
+    override val messageTypeId: Byte = ID
 
-      override fun read(buffer: ByteBuffer, messageNumber: Int): MessageParseResult<CloseGame> {
-        if (buffer.remaining() < 5) {
-          return MessageParseResult.Failure("Failed byte count validation!")
-        }
-        val b = buffer.get()
-        if (b.toInt() != 0x00)
-          throw MessageFormatException(
-            "Invalid Close Game format: byte 0 = " + EmuUtil.byteToHex(b)
-          )
-        val gameID = buffer.getUnsignedShort()
-        val val1 = buffer.getUnsignedShort()
-        return MessageParseResult.Success(CloseGame(messageNumber, gameID, val1))
+    override fun read(buffer: ByteBuffer, messageNumber: Int): MessageParseResult<CloseGame> {
+      if (buffer.remaining() < 5) {
+        return MessageParseResult.Failure("Failed byte count validation!")
       }
+      val b = buffer.get()
+      if (b.toInt() != 0x00)
+        throw MessageFormatException("Invalid Close Game format: byte 0 = " + EmuUtil.byteToHex(b))
+      val gameID = buffer.getUnsignedShort()
+      val val1 = buffer.getUnsignedShort()
+      return MessageParseResult.Success(CloseGame(messageNumber, gameID, val1))
+    }
 
-      override fun write(buffer: ByteBuffer, message: CloseGame) {
-        TODO("Not yet implemented")
-      }
+    override fun write(buffer: ByteBuffer, message: CloseGame) {
+      buffer.put(0x00.toByte())
+      buffer.putUnsignedShort(message.gameId)
+      buffer.putUnsignedShort(message.val1)
     }
   }
 }
