@@ -450,6 +450,7 @@ class KailleraUserImpl(
       }
       gameDataErrorTime = 0
     } catch (e: GameDataException) {
+      // TODO(nue): Investigate this comment:
       // this should be warn level, but it creates tons of lines in the log
       logger.atFine().withCause(e).log("%s add game data failed", this)
 
@@ -507,11 +508,10 @@ class KailleraUserImpl(
     }
   }
 
-  // TODO(nue): Get rid of this for loop. We should be able to trigger event listeners as soon as
-  // the new data is added.
+  // TODO(nue): Remove this method.
   @Deprecated("Call handleEvent() instead")
   override suspend fun run(globalContext: CoroutineContext) {
-    TODO("DON'T CALL RUN")
+    TODO("Call handleEvent() individually instead.")
   }
 
   companion object {
