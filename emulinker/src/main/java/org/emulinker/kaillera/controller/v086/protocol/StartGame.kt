@@ -21,7 +21,7 @@ sealed class StartGame : V086Message() {
     StartGameSerializer.write(buffer, this)
   }
 
-  data class Notification
+  data class StartGameNotification
   constructor(
     override val messageNumber: Int,
     val val1: Int,
@@ -36,7 +36,7 @@ sealed class StartGame : V086Message() {
     }
   }
 
-  data class Request constructor(override val messageNumber: Int) : StartGame()
+  data class StartGameRequest constructor(override val messageNumber: Int) : StartGame()
 
   companion object {
     const val ID: Byte = 0x11
@@ -66,8 +66,8 @@ sealed class StartGame : V086Message() {
             playerNumber == REQUEST_PLAYER_NUMBER &&
             numPlayers == REQUEST_NUM_PLAYERS
         )
-          Request(messageNumber)
-        else Notification(messageNumber, val1, playerNumber, numPlayers)
+          StartGameRequest(messageNumber)
+        else StartGameNotification(messageNumber, val1, playerNumber, numPlayers)
       )
     }
 
@@ -75,20 +75,20 @@ sealed class StartGame : V086Message() {
       buffer.put(0x00.toByte())
       buffer.putUnsignedShort(
         when (message) {
-          is Request -> REQUEST_VAL1
-          is Notification -> message.val1
+          is StartGameRequest -> REQUEST_VAL1
+          is StartGameNotification -> message.val1
         }
       )
       buffer.putUnsignedByte(
         when (message) {
-          is Request -> REQUEST_PLAYER_NUMBER.toInt()
-          is Notification -> message.playerNumber.toInt()
+          is StartGameRequest -> REQUEST_PLAYER_NUMBER.toInt()
+          is StartGameNotification -> message.playerNumber.toInt()
         }
       )
       buffer.putUnsignedByte(
         when (message) {
-          is Request -> REQUEST_NUM_PLAYERS.toInt()
-          is Notification -> message.numPlayers.toInt()
+          is StartGameRequest -> REQUEST_NUM_PLAYERS.toInt()
+          is StartGameNotification -> message.numPlayers.toInt()
         }
       )
     }

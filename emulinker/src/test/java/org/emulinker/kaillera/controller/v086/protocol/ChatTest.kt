@@ -3,6 +3,8 @@ package org.emulinker.kaillera.controller.v086.protocol
 import com.google.common.truth.Truth.assertThat
 import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.v086.V086Utils
+import org.emulinker.kaillera.controller.v086.protocol.Chat.ChatNotification
+import org.emulinker.kaillera.controller.v086.protocol.Chat.ChatRequest
 import org.emulinker.kaillera.controller.v086.protocol.MessageTestUtils.assertBufferContainsExactly
 import org.junit.Test
 
@@ -68,7 +70,7 @@ class ChatTest : ProtocolBaseTest() {
     private const val CHAT_REQUEST_BODY_BYTES = "00,48,65,6C,6C,6F,2C,20,77,6F,72,6C,64,21,00"
 
     private val CHAT_NOTIFICATION =
-      Chat.Notification(messageNumber = MESSAGE_NUMBER, username = USERNAME, message = MESSAGE)
-    private val CHAT_REQUEST = Chat.Request(messageNumber = MESSAGE_NUMBER, message = MESSAGE)
+      ChatNotification(messageNumber = MESSAGE_NUMBER, username = USERNAME, message = MESSAGE)
+    private val CHAT_REQUEST = ChatRequest(messageNumber = MESSAGE_NUMBER, message = MESSAGE)
   }
 }

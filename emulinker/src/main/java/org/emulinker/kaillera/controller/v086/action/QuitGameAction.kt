@@ -16,7 +16,7 @@ import org.emulinker.kaillera.model.exception.QuitGameException
 
 @Singleton
 class QuitGameAction @Inject constructor(private val lookingForGameReporter: TwitterBroadcaster) :
-  V086Action<QuitGame.Request>, V086GameEventHandler<UserQuitGameEvent> {
+  V086Action<QuitGame.QuitGameRequest>, V086GameEventHandler<UserQuitGameEvent> {
   override var actionPerformedCount = 0
     private set
   override var handledEventCount = 0
@@ -25,7 +25,10 @@ class QuitGameAction @Inject constructor(private val lookingForGameReporter: Twi
   override fun toString() = "QuitGameAction"
 
   @Throws(FatalActionException::class)
-  override suspend fun performAction(message: QuitGame.Request, clientHandler: V086ClientHandler) {
+  override suspend fun performAction(
+    message: QuitGame.QuitGameRequest,
+    clientHandler: V086ClientHandler
+  ) {
     actionPerformedCount++
     try {
       clientHandler.user.quitGame()
@@ -47,7 +50,7 @@ class QuitGameAction @Inject constructor(private val lookingForGameReporter: Twi
       val user = event.user
       if (!user.inStealthMode) {
         clientHandler.send(
-          QuitGame.Notification(
+          QuitGame.QuitGameNotification(
             clientHandler.nextMessageNumber,
             user.userData.name,
             user.userData.id
@@ -57,7 +60,7 @@ class QuitGameAction @Inject constructor(private val lookingForGameReporter: Twi
       if (thisUser === user) {
         if (user.inStealthMode)
           clientHandler.send(
-            QuitGame.Notification(
+            QuitGame.QuitGameNotification(
               clientHandler.nextMessageNumber,
               user.userData.name,
               user.userData.id

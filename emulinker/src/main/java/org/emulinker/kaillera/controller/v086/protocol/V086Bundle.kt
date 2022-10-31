@@ -41,8 +41,6 @@ class V086Bundle constructor(val messages: Array<V086Message?>, numToWrite: Int 
 
   override fun writeTo(buffer: ByteBuffer) {
     buffer.order(ByteOrder.LITTLE_ENDIAN)
-    // no real need for unsigned
-    // UnsignedUtil.putUnsignedByte(buffer, numToWrite);
     buffer.put(numMessages.toByte())
     for (i in 0 until numMessages) {
       val message = messages[i] ?: break

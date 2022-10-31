@@ -4,6 +4,8 @@ import com.google.common.truth.Truth.assertThat
 import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.kaillera.controller.v086.protocol.MessageTestUtils.assertBufferContainsExactly
+import org.emulinker.kaillera.controller.v086.protocol.StartGame.StartGameNotification
+import org.emulinker.kaillera.controller.v086.protocol.StartGame.StartGameRequest
 import org.junit.Test
 
 class StartGameTest : ProtocolBaseTest() {
@@ -64,12 +66,12 @@ class StartGameTest : ProtocolBaseTest() {
     private const val REQUEST_BODY_BYTES = "00, FF, FF, FF, FF"
 
     private val START_GAME_NOTIFICATION =
-      StartGame.Notification(
+      StartGameNotification(
         messageNumber = MESSAGE_NUMBER,
         numPlayers = 4,
         playerNumber = 42,
         val1 = 2000
       )
-    private val START_GAME_REQUEST = StartGame.Request(messageNumber = MESSAGE_NUMBER)
+    private val START_GAME_REQUEST = StartGameRequest(messageNumber = MESSAGE_NUMBER)
   }
 }

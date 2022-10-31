@@ -11,15 +11,15 @@ sealed class PlayerDrop : V086Message() {
   override val bodyBytes: Int
     get() =
       when (this) {
-        is Request -> REQUEST_USERNAME
-        is Notification -> username
+        is PlayerDropRequest -> REQUEST_USERNAME
+        is PlayerDropNotification -> username
       }.getNumBytesPlusStopByte() + V086Utils.Bytes.SINGLE_BYTE
 
   public override fun writeBodyTo(buffer: ByteBuffer) {
     PlayerDropSerializer.write(buffer, this)
   }
 
-  data class Notification
+  data class PlayerDropNotification
   constructor(
     override val messageNumber: Int,
     val username: String,
@@ -33,7 +33,7 @@ sealed class PlayerDrop : V086Message() {
     }
   }
 
-  data class Request constructor(override val messageNumber: Int) : PlayerDrop()
+  data class PlayerDropRequest constructor(override val messageNumber: Int) : PlayerDrop()
 
   companion object {
     const val ID: Byte = 0x14
@@ -53,8 +53,8 @@ sealed class PlayerDrop : V086Message() {
       val playerNumber = buffer.get()
       return MessageParseResult.Success(
         if (userName == REQUEST_USERNAME && playerNumber == REQUEST_PLAYER_NUMBER) {
-          Request(messageNumber)
-        } else Notification(messageNumber, userName, playerNumber)
+          PlayerDropRequest(messageNumber)
+        } else PlayerDropNotification(messageNumber, userName, playerNumber)
       )
     }
 
@@ -62,14 +62,14 @@ sealed class PlayerDrop : V086Message() {
       EmuUtil.writeString(
         buffer,
         when (message) {
-          is Request -> REQUEST_USERNAME
-          is Notification -> message.username
+          is PlayerDropRequest -> REQUEST_USERNAME
+          is PlayerDropNotification -> message.username
         }
       )
       buffer.put(
         when (message) {
-          is Request -> REQUEST_PLAYER_NUMBER
-          is Notification -> message.playerNumber
+          is PlayerDropRequest -> REQUEST_PLAYER_NUMBER
+          is PlayerDropNotification -> message.playerNumber
         }
       )
     }

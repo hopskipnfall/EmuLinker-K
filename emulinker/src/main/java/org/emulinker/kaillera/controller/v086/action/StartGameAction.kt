@@ -15,7 +15,7 @@ import org.emulinker.kaillera.model.exception.StartGameException
 class StartGameAction
 @Inject
 internal constructor(private val lookingForGameReporter: TwitterBroadcaster) :
-  V086Action<StartGame.Request>, V086GameEventHandler<GameStartedEvent> {
+  V086Action<StartGame.StartGameRequest>, V086GameEventHandler<GameStartedEvent> {
   override var actionPerformedCount = 0
     private set
   override var handledEventCount = 0
@@ -23,7 +23,10 @@ internal constructor(private val lookingForGameReporter: TwitterBroadcaster) :
 
   override fun toString() = "StartGameAction"
 
-  override suspend fun performAction(message: StartGame.Request, clientHandler: V086ClientHandler) {
+  override suspend fun performAction(
+    message: StartGame.StartGameRequest,
+    clientHandler: V086ClientHandler
+  ) {
     actionPerformedCount++
     try {
       clientHandler.user.startGame()
@@ -52,7 +55,7 @@ internal constructor(private val lookingForGameReporter: TwitterBroadcaster) :
         }
       val playerNumber = game.getPlayerNumber(clientHandler.user)
       clientHandler.send(
-        StartGame.Notification(
+        StartGame.StartGameNotification(
           clientHandler.nextMessageNumber,
           delay.toShort().toInt(),
           playerNumber.toByte().toShort(),

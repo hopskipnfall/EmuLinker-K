@@ -37,7 +37,7 @@ class JoinGameAction @Inject internal constructor() :
           )
         )
         clientHandler.send(
-          QuitGame.Notification(
+          QuitGame.QuitGameNotification(
             clientHandler.nextMessageNumber,
             clientHandler.user.userData.name,
             clientHandler.user.userData.id

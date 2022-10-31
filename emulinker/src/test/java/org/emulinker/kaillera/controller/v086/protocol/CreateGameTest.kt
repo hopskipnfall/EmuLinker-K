@@ -3,6 +3,8 @@ package org.emulinker.kaillera.controller.v086.protocol
 import com.google.common.truth.Truth.assertThat
 import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.v086.V086Utils
+import org.emulinker.kaillera.controller.v086.protocol.CreateGame.CreateGameNotification
+import org.emulinker.kaillera.controller.v086.protocol.CreateGame.CreateGameRequest
 import org.emulinker.kaillera.controller.v086.protocol.MessageTestUtils.assertBufferContainsExactly
 import org.junit.Test
 
@@ -65,7 +67,7 @@ class CreateGameTest : ProtocolBaseTest() {
       "6E, 75, 65, 00, 4D, 79, 20, 47, 61, 6D, 65, 00, 4D, 79, 20, 4E, 36, 34, 20, 45, 6D, 75, 6C, 61, 74, 6F, 72, 00, 00, 64, 10, 92"
 
     private val CREATE_GAME_NOTIFICATION =
-      CreateGame.Notification(
+      CreateGameNotification(
         messageNumber = MESSAGE_NUMBER,
         username = "nue",
         romName = "My Game",
@@ -74,6 +76,6 @@ class CreateGameTest : ProtocolBaseTest() {
         val1 = 4242
       )
     private val CREATE_GAME_REQUEST =
-      CreateGame.Request(messageNumber = MESSAGE_NUMBER, romName = "My Game")
+      CreateGameRequest(messageNumber = MESSAGE_NUMBER, romName = "My Game")
   }
 }

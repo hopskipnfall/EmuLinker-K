@@ -10,7 +10,7 @@ import org.emulinker.util.UnsignedUtil.putUnsignedShort
 sealed class CreateGame : V086Message() {
   abstract val romName: String
 
-  data class Notification
+  data class CreateGameNotification
   constructor(
     override val messageNumber: Int,
     val username: String,
@@ -41,8 +41,8 @@ sealed class CreateGame : V086Message() {
     }
   }
 
-  data class Request constructor(override val messageNumber: Int, override val romName: String) :
-    CreateGame() {
+  data class CreateGameRequest
+  constructor(override val messageNumber: Int, override val romName: String) : CreateGame() {
     override val messageTypeId = ID
 
     private val username = ""
@@ -93,8 +93,8 @@ sealed class CreateGame : V086Message() {
       val val1 = buffer.getUnsignedShort()
       return MessageParseResult.Success(
         if (userName == REQUEST_USERNAME && gameID == REQUEST_GAME_ID && val1 == REQUEST_VAL1)
-          Request(messageNumber, romName)
-        else Notification(messageNumber, userName, romName, clientType, gameID, val1)
+          CreateGameRequest(messageNumber, romName)
+        else CreateGameNotification(messageNumber, userName, romName, clientType, gameID, val1)
       )
     }
 
@@ -102,28 +102,28 @@ sealed class CreateGame : V086Message() {
       EmuUtil.writeString(
         buffer,
         when (message) {
-          is Request -> REQUEST_USERNAME
-          is Notification -> message.username
+          is CreateGameRequest -> REQUEST_USERNAME
+          is CreateGameNotification -> message.username
         }
       )
       EmuUtil.writeString(buffer, message.romName)
       EmuUtil.writeString(
         buffer,
         when (message) {
-          is Request -> REQUEST_CLIENT_TYPE
-          is Notification -> message.clientType
+          is CreateGameRequest -> REQUEST_CLIENT_TYPE
+          is CreateGameNotification -> message.clientType
         }
       )
       buffer.putUnsignedShort(
         when (message) {
-          is Request -> REQUEST_GAME_ID
-          is Notification -> message.gameId
+          is CreateGameRequest -> REQUEST_GAME_ID
+          is CreateGameNotification -> message.gameId
         }
       )
       buffer.putUnsignedShort(
         when (message) {
-          is Request -> REQUEST_VAL1
-          is Notification -> message.val1
+          is CreateGameRequest -> REQUEST_VAL1
+          is CreateGameNotification -> message.val1
         }
       )
     }

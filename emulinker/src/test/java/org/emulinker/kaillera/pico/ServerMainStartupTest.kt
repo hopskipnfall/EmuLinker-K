@@ -2,6 +2,7 @@ package org.emulinker.kaillera.pico
 
 import com.google.common.truth.Truth.assertThat
 import io.ktor.network.sockets.InetSocketAddress
+import java.nio.charset.Charset
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
@@ -26,6 +27,7 @@ class ServerMainStartupTest {
   fun setup() {
     // Set number of Dispatchers.IO coroutine workers.
     System.setProperty(IO_PARALLELISM_PROPERTY_NAME, 1000.toString())
+    AppModule.charsetDoNotUse = Charset.forName("Shift_JIS")
   }
 
   @Test

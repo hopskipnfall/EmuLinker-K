@@ -10,7 +10,7 @@ sealed interface MessageParseResult<T : V086Message> {
       logger
         .atSevere()
         .withCause(cause)
-        .withStackTrace(StackSize.FULL)
+        .withStackTrace(StackSize.SMALL)
         .log("MessageParseResult.Failure: %s", message)
     }
   }

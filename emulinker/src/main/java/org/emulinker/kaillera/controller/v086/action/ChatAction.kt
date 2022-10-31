@@ -24,7 +24,7 @@ private const val ADMIN_COMMAND_ESCAPE_STRING = "/"
 
 @Singleton
 class ChatAction @Inject internal constructor(private val adminCommandAction: AdminCommandAction) :
-  V086Action<Chat.Request>, V086ServerEventHandler<ChatEvent> {
+  V086Action<Chat.ChatRequest>, V086ServerEventHandler<ChatEvent> {
   override var actionPerformedCount = 0
     private set
   override var handledEventCount = 0
@@ -33,7 +33,7 @@ class ChatAction @Inject internal constructor(private val adminCommandAction: Ad
   override fun toString() = "ChatAction"
 
   @Throws(FatalActionException::class)
-  override suspend fun performAction(message: Chat.Request, clientHandler: V086ClientHandler) {
+  override suspend fun performAction(message: Chat.ChatRequest, clientHandler: V086ClientHandler) {
     if (message.message.startsWith(ADMIN_COMMAND_ESCAPE_STRING)) {
       if (clientHandler.user.accessLevel > AccessManager.ACCESS_ELEVATED) {
         try {
@@ -73,7 +73,10 @@ class ChatAction @Inject internal constructor(private val adminCommandAction: Ad
   }
 
   @Throws(FatalActionException::class)
-  private suspend fun checkCommands(chatMessage: Chat.Request, clientHandler: V086ClientHandler) {
+  private suspend fun checkCommands(
+    chatMessage: Chat.ChatRequest,
+    clientHandler: V086ClientHandler
+  ) {
     var doCommand = true
     val userN = clientHandler.user as KailleraUserImpl
     if (userN.accessLevel < AccessManager.ACCESS_ELEVATED) {
@@ -741,7 +744,7 @@ class ChatAction @Inject internal constructor(private val adminCommandAction: Ad
       }
       val m = event.message
       clientHandler.send(
-        Chat.Notification(clientHandler.nextMessageNumber, event.user.userData.name, m)
+        Chat.ChatNotification(clientHandler.nextMessageNumber, event.user.userData.name, m)
       )
     } catch (e: MessageFormatException) {
       logger.atSevere().withCause(e).log("Failed to construct Chat.Notification message")

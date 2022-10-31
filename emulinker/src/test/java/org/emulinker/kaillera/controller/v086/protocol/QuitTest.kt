@@ -4,6 +4,8 @@ import com.google.common.truth.Truth.assertThat
 import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.kaillera.controller.v086.protocol.MessageTestUtils.assertBufferContainsExactly
+import org.emulinker.kaillera.controller.v086.protocol.Quit.QuitNotification
+import org.emulinker.kaillera.controller.v086.protocol.Quit.QuitRequest
 import org.junit.Test
 
 class QuitTest : ProtocolBaseTest() {
@@ -66,13 +68,13 @@ class QuitTest : ProtocolBaseTest() {
       "00, FF, FF, 48, 65, 6C, 6C, 6F, 2C, 20, 77, 6F, 72, 6C, 64, 21, 00"
 
     private val QUIT_NOTIFICATION =
-      Quit.Notification(
+      QuitNotification(
         messageNumber = MESSAGE_NUMBER,
         username = "nue",
         userId = 13,
         message = "Hello, world!"
       )
     private val QUIT_REQUEST =
-      Quit.Request(messageNumber = MESSAGE_NUMBER, message = "Hello, world!")
+      QuitRequest(messageNumber = MESSAGE_NUMBER, message = "Hello, world!")
   }
 }
