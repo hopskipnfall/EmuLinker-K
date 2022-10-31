@@ -42,7 +42,7 @@ class CreateGameAction @Inject internal constructor() :
           )
         )
         clientHandler.send(
-          QuitGame.Notification(
+          QuitGame.QuitGameNotification(
             clientHandler.nextMessageNumber,
             clientHandler.user.userData.name,
             clientHandler.user.userData.id
@@ -65,7 +65,7 @@ class CreateGameAction @Inject internal constructor() :
           )
         )
         clientHandler.send(
-          QuitGame.Notification(
+          QuitGame.QuitGameNotification(
             clientHandler.nextMessageNumber,
             clientHandler.user.userData.name,
             clientHandler.user.userData.id
@@ -83,7 +83,7 @@ class CreateGameAction @Inject internal constructor() :
       val game = event.game
       val owner = game.owner
       clientHandler.send(
-        CreateGame.Notification(
+        CreateGame.CreateGameNotification(
           clientHandler.nextMessageNumber,
           owner.userData.name,
           game.romName,

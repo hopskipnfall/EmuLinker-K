@@ -21,7 +21,7 @@ class PlayerDesynchAction @Inject internal constructor() :
     handledEventCount++
     try {
       clientHandler.send(
-        GameChat.Notification(
+        GameChat.GameChatNotification(
           clientHandler.nextMessageNumber,
           EmuLang.getString("PlayerDesynchAction.DesynchDetected"),
           event.message

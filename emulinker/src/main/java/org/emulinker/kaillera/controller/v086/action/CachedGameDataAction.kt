@@ -47,7 +47,7 @@ class CachedGameDataAction @Inject internal constructor() : V086Action<CachedGam
       // This may not always be the best thing to do...
       try {
         clientHandler.send(
-          GameChat.Notification(
+          GameChat.GameChatNotification(
             clientHandler.nextMessageNumber,
             "Error",
             "Game Data Error!  Game state will be inconsistent!"

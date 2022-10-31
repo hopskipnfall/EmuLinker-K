@@ -11,7 +11,7 @@ import org.emulinker.kaillera.model.exception.DropGameException
 
 @Singleton
 class DropGameAction @Inject internal constructor() :
-  V086Action<PlayerDrop.Request>, V086GameEventHandler<UserDroppedGameEvent> {
+  V086Action<PlayerDrop.PlayerDropRequest>, V086GameEventHandler<UserDroppedGameEvent> {
   override var actionPerformedCount = 0
     private set
   override var handledEventCount = 0
@@ -21,7 +21,7 @@ class DropGameAction @Inject internal constructor() :
 
   @Throws(FatalActionException::class)
   override suspend fun performAction(
-    message: PlayerDrop.Request,
+    message: PlayerDrop.PlayerDropRequest,
     clientHandler: V086ClientHandler
   ) {
     actionPerformedCount++
@@ -41,7 +41,7 @@ class DropGameAction @Inject internal constructor() :
       // user.getName(), (byte) game.getPlayerNumber(user)));
       if (!user.inStealthMode)
         clientHandler.send(
-          PlayerDrop.Notification(
+          PlayerDrop.PlayerDropNotification(
             clientHandler.nextMessageNumber,
             user.userData.name,
             playerNumber.toByte()

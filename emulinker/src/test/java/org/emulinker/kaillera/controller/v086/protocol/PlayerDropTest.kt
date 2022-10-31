@@ -4,6 +4,8 @@ import com.google.common.truth.Truth.assertThat
 import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.kaillera.controller.v086.protocol.MessageTestUtils.assertBufferContainsExactly
+import org.emulinker.kaillera.controller.v086.protocol.PlayerDrop.PlayerDropNotification
+import org.emulinker.kaillera.controller.v086.protocol.PlayerDrop.PlayerDropRequest
 import org.junit.Test
 
 class PlayerDropTest {
@@ -64,7 +66,7 @@ class PlayerDropTest {
     private const val NOTIFICATION_BODY_BYTES = "6E, 75, 65, 00, 64"
 
     private val PLAYER_DROP_NOTIFICATION =
-      PlayerDrop.Notification(messageNumber = MESSAGE_NUMBER, username = "nue", playerNumber = 100)
-    private val PLAYER_DROP_REQUEST = PlayerDrop.Request(messageNumber = MESSAGE_NUMBER)
+      PlayerDropNotification(messageNumber = MESSAGE_NUMBER, username = "nue", playerNumber = 100)
+    private val PLAYER_DROP_REQUEST = PlayerDropRequest(messageNumber = MESSAGE_NUMBER)
   }
 }

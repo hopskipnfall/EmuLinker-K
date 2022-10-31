@@ -11,7 +11,7 @@ import org.emulinker.kaillera.model.exception.ActionException
 
 @Singleton
 class QuitAction @Inject internal constructor() :
-  V086Action<Quit.Request>, V086ServerEventHandler<UserQuitEvent> {
+  V086Action<Quit.QuitRequest>, V086ServerEventHandler<UserQuitEvent> {
   override var actionPerformedCount = 0
     private set
   override var handledEventCount = 0
@@ -20,7 +20,7 @@ class QuitAction @Inject internal constructor() :
   override fun toString() = "QuitAction"
 
   @Throws(FatalActionException::class)
-  override suspend fun performAction(message: Quit.Request, clientHandler: V086ClientHandler) {
+  override suspend fun performAction(message: Quit.QuitRequest, clientHandler: V086ClientHandler) {
     actionPerformedCount++
     try {
       clientHandler.user.quit(message.message)
@@ -34,7 +34,7 @@ class QuitAction @Inject internal constructor() :
     try {
       val user = event.user
       clientHandler.send(
-        Quit.Notification(
+        Quit.QuitNotification(
           clientHandler.nextMessageNumber,
           user.userData.name,
           user.userData.id,

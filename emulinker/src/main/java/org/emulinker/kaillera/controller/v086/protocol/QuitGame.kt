@@ -17,13 +17,13 @@ sealed class QuitGame : V086Message() {
   override val bodyBytes: Int
     get() =
       when (this) {
-        is Request -> REQUEST_USERNAME
-        is Notification -> this.username
+        is QuitGameRequest -> REQUEST_USERNAME
+        is QuitGameNotification -> this.username
       }.getNumBytesPlusStopByte() + V086Utils.Bytes.SHORT
 
-  data class Request constructor(override val messageNumber: Int) : QuitGame()
+  data class QuitGameRequest constructor(override val messageNumber: Int) : QuitGame()
 
-  data class Notification
+  data class QuitGameNotification
   constructor(override val messageNumber: Int, val username: String, val userId: Int) : QuitGame() {
 
     init {
@@ -52,9 +52,9 @@ sealed class QuitGame : V086Message() {
       val userID = buffer.getUnsignedShort()
       return MessageParseResult.Success(
         if (userName == REQUEST_USERNAME && userID == REQUEST_USER_ID) {
-          Request(messageNumber)
+          QuitGameRequest(messageNumber)
         } else {
-          Notification(messageNumber, userName, userID)
+          QuitGameNotification(messageNumber, userName, userID)
         }
       )
     }
@@ -63,14 +63,14 @@ sealed class QuitGame : V086Message() {
       EmuUtil.writeString(
         buffer,
         when (message) {
-          is Request -> REQUEST_USERNAME
-          is Notification -> message.username
+          is QuitGameRequest -> REQUEST_USERNAME
+          is QuitGameNotification -> message.username
         }
       )
       buffer.putUnsignedShort(
         when (message) {
-          is Request -> REQUEST_USER_ID
-          is Notification -> message.userId
+          is QuitGameRequest -> REQUEST_USER_ID
+          is QuitGameNotification -> message.userId
         }
       )
     }

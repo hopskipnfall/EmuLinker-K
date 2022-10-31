@@ -20,7 +20,7 @@ class GameDesynchAction @Inject internal constructor() : V086GameEventHandler<Ga
     handledEventCount++
     try {
       clientHandler.send(
-        GameChat.Notification(
+        GameChat.GameChatNotification(
           clientHandler.nextMessageNumber,
           EmuLang.getString("GameDesynchAction.DesynchDetected"),
           event.message

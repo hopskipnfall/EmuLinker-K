@@ -15,15 +15,15 @@ sealed class Quit : V086Message() {
   override val bodyBytes: Int
     get() =
       when (this) {
-        is Request -> REQUEST_USERNAME
-        is Notification -> username
+        is QuitRequest -> REQUEST_USERNAME
+        is QuitNotification -> username
       }.getNumBytesPlusStopByte() + V086Utils.Bytes.SHORT + message.getNumBytesPlusStopByte()
 
   public override fun writeBodyTo(buffer: ByteBuffer) {
     QuitSerializer.write(buffer, this)
   }
 
-  data class Notification
+  data class QuitNotification
   constructor(
     override val messageNumber: Int,
     val username: String,
@@ -37,8 +37,8 @@ sealed class Quit : V086Message() {
     }
   }
 
-  data class Request constructor(override val messageNumber: Int, override val message: String) :
-    Quit()
+  data class QuitRequest
+  constructor(override val messageNumber: Int, override val message: String) : Quit()
 
   companion object {
     const val ID: Byte = 0x01
@@ -62,9 +62,9 @@ sealed class Quit : V086Message() {
       val message = EmuUtil.readString(buffer)
       return MessageParseResult.Success(
         if (userName.isBlank() && userID == REQUEST_USER_ID) {
-          Request(messageNumber, message)
+          QuitRequest(messageNumber, message)
         } else {
-          Notification(messageNumber, userName, userID, message)
+          QuitNotification(messageNumber, userName, userID, message)
         }
       )
     }
@@ -73,14 +73,14 @@ sealed class Quit : V086Message() {
       EmuUtil.writeString(
         buffer,
         when (message) {
-          is Request -> REQUEST_USERNAME
-          is Notification -> message.username
+          is QuitRequest -> REQUEST_USERNAME
+          is QuitNotification -> message.username
         }
       )
       buffer.putUnsignedShort(
         when (message) {
-          is Request -> REQUEST_USER_ID
-          is Notification -> message.userId
+          is QuitRequest -> REQUEST_USER_ID
+          is QuitNotification -> message.userId
         }
       )
       EmuUtil.writeString(buffer, message.message)

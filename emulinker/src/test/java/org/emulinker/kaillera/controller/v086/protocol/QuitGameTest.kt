@@ -4,6 +4,8 @@ import com.google.common.truth.Truth.assertThat
 import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.kaillera.controller.v086.protocol.MessageTestUtils.assertBufferContainsExactly
+import org.emulinker.kaillera.controller.v086.protocol.QuitGame.QuitGameNotification
+import org.emulinker.kaillera.controller.v086.protocol.QuitGame.QuitGameRequest
 import org.junit.Test
 
 class QuitGameTest : ProtocolBaseTest() {
@@ -64,7 +66,7 @@ class QuitGameTest : ProtocolBaseTest() {
     private const val QUIT_GAME_NOTIFICATION_BODY_BYTES = "6E, 75, 65, 00, 00, 0D"
 
     private val QUIT_GAME_NOTIFICATION =
-      QuitGame.Notification(messageNumber = MESSAGE_NUMBER, username = "nue", userId = 13)
-    private val QUIT_GAME_REQUEST = QuitGame.Request(messageNumber = MESSAGE_NUMBER)
+      QuitGameNotification(messageNumber = MESSAGE_NUMBER, username = "nue", userId = 13)
+    private val QUIT_GAME_REQUEST = QuitGameRequest(messageNumber = MESSAGE_NUMBER)
   }
 }

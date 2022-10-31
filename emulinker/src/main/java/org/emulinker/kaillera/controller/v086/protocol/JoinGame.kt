@@ -23,8 +23,8 @@ sealed class JoinGame : V086Message() {
         V086Utils.Bytes.SHORT +
         V086Utils.Bytes.SHORT +
         when (this) {
-          is Request -> REQUEST_USERNAME
-          is Notification -> this.username
+          is JoinGameRequest -> REQUEST_USERNAME
+          is JoinGameNotification -> this.username
         }.getNumBytesPlusStopByte() +
         V086Utils.Bytes.INTEGER +
         V086Utils.Bytes.SHORT +
@@ -34,7 +34,7 @@ sealed class JoinGame : V086Message() {
     JoinGameSerializer.write(buffer, this)
   }
 
-  data class Notification
+  data class JoinGameNotification
   constructor(
     override val messageNumber: Int,
     override val gameId: Int,
@@ -53,7 +53,7 @@ sealed class JoinGame : V086Message() {
     }
   }
 
-  data class Request
+  data class JoinGameRequest
   constructor(
     override val messageNumber: Int,
     override val gameId: Int,
@@ -95,9 +95,9 @@ sealed class JoinGame : V086Message() {
       val connectionType = buffer.get()
       return MessageParseResult.Success(
         if (userName.isBlank() && ping == 0L && userID == 0xFFFF)
-          Request(messageNumber, gameID, ConnectionType.fromByteValue(connectionType))
+          JoinGameRequest(messageNumber, gameID, ConnectionType.fromByteValue(connectionType))
         else
-          Notification(
+          JoinGameNotification(
             messageNumber,
             gameID,
             val1,
@@ -114,27 +114,27 @@ sealed class JoinGame : V086Message() {
       buffer.putUnsignedShort(message.gameId)
       buffer.putUnsignedShort(
         when (message) {
-          is Request -> REQUEST_VAL1
-          is Notification -> message.val1
+          is JoinGameRequest -> REQUEST_VAL1
+          is JoinGameNotification -> message.val1
         }
       )
       EmuUtil.writeString(
         buffer,
         when (message) {
-          is Request -> REQUEST_USERNAME
-          is Notification -> message.username
+          is JoinGameRequest -> REQUEST_USERNAME
+          is JoinGameNotification -> message.username
         }
       )
       buffer.putUnsignedInt(
         when (message) {
-          is Request -> REQUEST_PING
-          is Notification -> message.ping
+          is JoinGameRequest -> REQUEST_PING
+          is JoinGameNotification -> message.ping
         }
       )
       buffer.putUnsignedShort(
         when (message) {
-          is Request -> REQUEST_USER_ID
-          is Notification -> message.userId
+          is JoinGameRequest -> REQUEST_USER_ID
+          is JoinGameNotification -> message.userId
         }
       )
       buffer.put(message.connectionType.byteValue)

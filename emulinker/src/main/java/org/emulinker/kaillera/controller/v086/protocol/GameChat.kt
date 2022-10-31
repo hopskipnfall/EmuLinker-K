@@ -12,20 +12,20 @@ sealed class GameChat : V086Message() {
   override val bodyBytes: Int
     get() =
       when (this) {
-        is Request -> REQUEST_USERNAME
-        is Notification -> this.username
+        is GameChatRequest -> REQUEST_USERNAME
+        is GameChatNotification -> this.username
       }.getNumBytesPlusStopByte() + message.getNumBytesPlusStopByte()
 
   public override fun writeBodyTo(buffer: ByteBuffer) {
     GameChatSerializer.write(buffer, this)
   }
 
-  data class Notification
+  data class GameChatNotification
   @Throws(MessageFormatException::class)
   constructor(override val messageNumber: Int, val username: String, override val message: String) :
     GameChat()
 
-  data class Request
+  data class GameChatRequest
   @Throws(MessageFormatException::class)
   constructor(override val messageNumber: Int, override val message: String) : GameChat()
 
@@ -49,9 +49,9 @@ sealed class GameChat : V086Message() {
       val message = EmuUtil.readString(buffer)
       return MessageParseResult.Success(
         if (userName == REQUEST_USERNAME) {
-          Request(messageNumber, message)
+          GameChatRequest(messageNumber, message)
         } else {
-          Notification(messageNumber, userName, message)
+          GameChatNotification(messageNumber, userName, message)
         }
       )
     }
@@ -60,8 +60,8 @@ sealed class GameChat : V086Message() {
       EmuUtil.writeString(
         buffer,
         when (message) {
-          is Request -> REQUEST_USERNAME
-          is Notification -> message.username
+          is GameChatRequest -> REQUEST_USERNAME
+          is GameChatNotification -> message.username
         }
       )
       EmuUtil.writeString(buffer, message.message)

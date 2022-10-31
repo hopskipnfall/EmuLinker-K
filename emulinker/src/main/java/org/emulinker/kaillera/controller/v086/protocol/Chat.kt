@@ -12,20 +12,20 @@ sealed class Chat : V086Message() {
   override val bodyBytes: Int
     get() =
       when (this) {
-        is Request -> ""
-        is Notification -> username
+        is ChatRequest -> ""
+        is ChatNotification -> username
       }.getNumBytesPlusStopByte() + message.getNumBytesPlusStopByte()
 
   public override fun writeBodyTo(buffer: ByteBuffer) {
     ChatSerializer.write(buffer, this)
   }
 
-  data class Notification
+  data class ChatNotification
   constructor(override val messageNumber: Int, val username: String, override val message: String) :
     Chat()
 
-  data class Request constructor(override val messageNumber: Int, override val message: String) :
-    Chat()
+  data class ChatRequest
+  constructor(override val messageNumber: Int, override val message: String) : Chat()
 
   companion object {
     const val ID: Byte = 0x07
@@ -45,9 +45,9 @@ sealed class Chat : V086Message() {
       val message = EmuUtil.readString(buffer)
       return MessageParseResult.Success(
         if (username.isBlank()) {
-          Request(messageNumber = messageNumber, message = message)
+          ChatRequest(messageNumber = messageNumber, message = message)
         } else {
-          Notification(messageNumber = messageNumber, username = username, message = message)
+          ChatNotification(messageNumber = messageNumber, username = username, message = message)
         }
       )
     }
@@ -56,8 +56,8 @@ sealed class Chat : V086Message() {
       EmuUtil.writeString(
         buffer,
         when (message) {
-          is Request -> ""
-          is Notification -> message.username
+          is ChatRequest -> ""
+          is ChatNotification -> message.username
         }
       )
       EmuUtil.writeString(buffer, message.message)
