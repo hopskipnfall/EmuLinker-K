@@ -1,14 +1,23 @@
 package org.emulinker.eval.client
 
 import com.google.common.flogger.FluentLogger
-import io.ktor.network.selector.*
-import io.ktor.network.sockets.*
-import io.ktor.utils.io.core.*
-import java.nio.Buffer
-import java.nio.ByteBuffer
-import kotlin.time.Duration.Companion.seconds
-import kotlinx.coroutines.*
+import io.ktor.network.selector.SelectorManager
+import io.ktor.network.sockets.ConnectedDatagramSocket
+import io.ktor.network.sockets.Datagram
+import io.ktor.network.sockets.InetSocketAddress
+import io.ktor.network.sockets.aSocket
+import io.ktor.network.sockets.isClosed
+import io.ktor.utils.io.core.ByteReadPacket
+import io.ktor.utils.io.core.Closeable
+import io.ktor.utils.io.core.readByteBuffer
+import io.ktor.utils.io.core.use
+import kotlinx.coroutines.CoroutineName
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.plus
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import org.emulinker.kaillera.controller.connectcontroller.protocol.ConnectMessage
@@ -17,10 +26,33 @@ import org.emulinker.kaillera.controller.connectcontroller.protocol.RequestPriva
 import org.emulinker.kaillera.controller.messaging.ParseException
 import org.emulinker.kaillera.controller.v086.LastMessageBuffer
 import org.emulinker.kaillera.controller.v086.V086Controller
-import org.emulinker.kaillera.controller.v086.protocol.*
+import org.emulinker.kaillera.controller.v086.protocol.Ack
+import org.emulinker.kaillera.controller.v086.protocol.AllReady
+import org.emulinker.kaillera.controller.v086.protocol.CachedGameData
+import org.emulinker.kaillera.controller.v086.protocol.CreateGame.CreateGameNotification
+import org.emulinker.kaillera.controller.v086.protocol.CreateGame.CreateGameRequest
+import org.emulinker.kaillera.controller.v086.protocol.GameData
+import org.emulinker.kaillera.controller.v086.protocol.GameStatus
+import org.emulinker.kaillera.controller.v086.protocol.InformationMessage
+import org.emulinker.kaillera.controller.v086.protocol.JoinGame.JoinGameNotification
+import org.emulinker.kaillera.controller.v086.protocol.JoinGame.JoinGameRequest
+import org.emulinker.kaillera.controller.v086.protocol.PlayerDrop.PlayerDropRequest
+import org.emulinker.kaillera.controller.v086.protocol.PlayerInformation
+import org.emulinker.kaillera.controller.v086.protocol.Quit.QuitRequest
+import org.emulinker.kaillera.controller.v086.protocol.QuitGame.QuitGameRequest
+import org.emulinker.kaillera.controller.v086.protocol.ServerStatus
+import org.emulinker.kaillera.controller.v086.protocol.StartGame.StartGameNotification
+import org.emulinker.kaillera.controller.v086.protocol.StartGame.StartGameRequest
+import org.emulinker.kaillera.controller.v086.protocol.UserInformation
+import org.emulinker.kaillera.controller.v086.protocol.UserJoined
+import org.emulinker.kaillera.controller.v086.protocol.V086Bundle
+import org.emulinker.kaillera.controller.v086.protocol.V086Message
 import org.emulinker.kaillera.model.ConnectionType
 import org.emulinker.util.ClientGameDataCache
 import org.emulinker.util.GameDataCache
+import java.nio.Buffer
+import java.nio.ByteBuffer
+import kotlin.time.Duration.Companion.seconds
 
 /** Fake client for testing. */
 class EvalClient(
@@ -124,10 +156,10 @@ class EvalClient(
       }
       is InformationMessage -> {}
       is UserJoined -> {}
-      is CreateGame.Notification -> {}
+      is CreateGameNotification -> {}
       is GameStatus -> {}
       is PlayerInformation -> {}
-      is JoinGame.Notification -> {}
+      is JoinGameNotification -> {}
       is AllReady -> {
         if (simulateGameLag) {
           delay(delayBetweenPackets)
@@ -352,7 +384,7 @@ class EvalClient(
           )
         }
       }
-      is StartGame.Notification -> {
+      is StartGameNotification -> {
         playerNumber = message.playerNumber.toInt()
         delay(1.seconds)
         sendWithMessageId { AllReady(messageNumber = it) }
@@ -365,7 +397,7 @@ class EvalClient(
 
   suspend fun createGame() {
     sendWithMessageId {
-      CreateGame.Request(
+      CreateGameRequest(
         messageNumber = it,
         romName = "Nintendo All-Star! Dairantou Smash Brothers (J)"
       )
@@ -374,7 +406,7 @@ class EvalClient(
   }
 
   suspend fun startOwnGame() {
-    sendWithMessageId { StartGame.Request(messageNumber = it) }
+    sendWithMessageId { StartGameRequest(messageNumber = it) }
     giveServerTime()
   }
 
@@ -382,7 +414,7 @@ class EvalClient(
     // TODO(nue): Make it listen to individual game creation updates too.
     val games = requireNotNull(latestServerStatus?.games)
     sendWithMessageId {
-      JoinGame.Request(messageNumber = it, gameId = games.first().gameId, connectionType)
+      JoinGameRequest(messageNumber = it, gameId = games.first().gameId, connectionType)
     }
     giveServerTime()
   }
@@ -417,17 +449,17 @@ class EvalClient(
   }
 
   suspend fun dropGame() {
-    sendWithMessageId { PlayerDrop.Request(messageNumber = it) }
+    sendWithMessageId { PlayerDropRequest(messageNumber = it) }
     giveServerTime()
   }
 
   suspend fun quitGame() {
-    sendWithMessageId { QuitGame.Request(messageNumber = it) }
+    sendWithMessageId { QuitGameRequest(messageNumber = it) }
     giveServerTime()
   }
 
   suspend fun quitServer() {
-    sendWithMessageId { Quit.Request(messageNumber = it, message = "End of test.") }
+    sendWithMessageId { QuitRequest(messageNumber = it, message = "End of test.") }
     giveServerTime()
   }
 

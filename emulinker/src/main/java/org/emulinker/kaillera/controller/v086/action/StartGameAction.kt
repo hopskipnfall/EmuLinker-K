@@ -34,7 +34,7 @@ internal constructor(private val lookingForGameReporter: TwitterBroadcaster) :
       logger.atFine().withCause(e).log("Failed to start game")
       try {
         clientHandler.send(
-          GameChat.Notification(clientHandler.nextMessageNumber, "Error", e.message!!)
+          GameChat.GameChatNotification(clientHandler.nextMessageNumber, "Error", e.message!!)
         )
       } catch (ex: MessageFormatException) {
         logger.atSevere().withCause(ex).log("Failed to construct GameChat.Notification message")

@@ -24,7 +24,7 @@ class GameChatAction
 internal constructor(
   private val gameOwnerCommandAction: GameOwnerCommandAction,
   private val lookingForGameReporter: TwitterBroadcaster
-) : V086Action<GameChat.Request>, V086GameEventHandler<GameChatEvent> {
+) : V086Action<GameChat.GameChatRequest>, V086GameEventHandler<GameChatEvent> {
   override var actionPerformedCount = 0
     private set
   override var handledEventCount = 0
@@ -33,7 +33,7 @@ internal constructor(
   override fun toString() = "GameChatAction"
 
   @Throws(FatalActionException::class)
-  override suspend fun performAction(message: GameChat.Request, clientHandler: V086ClientHandler) {
+  override suspend fun performAction(message: GameChat.GameChatRequest, clientHandler: V086ClientHandler) {
     if (clientHandler.user.game == null) return
     if (message.message.startsWith(ADMIN_COMMAND_ESCAPE_STRING)) {
       // if(clientHandler.getUser().getAccess() >= AccessManager.ACCESS_ADMIN ||
@@ -492,7 +492,7 @@ internal constructor(
       }
       val m = gameChatEvent.message
       clientHandler.send(
-        GameChat.Notification(clientHandler.nextMessageNumber, gameChatEvent.user.userData.name, m)
+        GameChat.GameChatNotification(clientHandler.nextMessageNumber, gameChatEvent.user.userData.name, m)
       )
     } catch (e: MessageFormatException) {
       logger.atSevere().withCause(e).log("Failed to construct GameChat.Notification message")

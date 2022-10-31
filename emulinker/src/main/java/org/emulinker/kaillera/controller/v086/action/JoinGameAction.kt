@@ -13,7 +13,7 @@ import org.emulinker.util.EmuLang
 
 @Singleton
 class JoinGameAction @Inject internal constructor() :
-  V086Action<JoinGame.Request>, V086GameEventHandler<UserJoinedGameEvent> {
+  V086Action<JoinGame.JoinGameRequest>, V086GameEventHandler<UserJoinedGameEvent> {
   override var actionPerformedCount = 0
     private set
   override var handledEventCount = 0
@@ -22,7 +22,7 @@ class JoinGameAction @Inject internal constructor() :
   override fun toString() = "JoinGameAction"
 
   @Throws(FatalActionException::class)
-  override suspend fun performAction(message: JoinGame.Request, clientHandler: V086ClientHandler) {
+  override suspend fun performAction(message: JoinGame.JoinGameRequest, clientHandler: V086ClientHandler) {
     actionPerformedCount++
     try {
       clientHandler.user.joinGame(message.gameId)
@@ -72,7 +72,7 @@ class JoinGameAction @Inject internal constructor() :
       }
       if (!user.inStealthMode)
         clientHandler.send(
-          JoinGame.Notification(
+          JoinGame.JoinGameNotification(
             clientHandler.nextMessageNumber,
             game.id,
             0,
