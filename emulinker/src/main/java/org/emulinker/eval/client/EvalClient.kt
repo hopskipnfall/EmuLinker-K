@@ -11,6 +11,9 @@ import io.ktor.utils.io.core.ByteReadPacket
 import io.ktor.utils.io.core.Closeable
 import io.ktor.utils.io.core.readByteBuffer
 import io.ktor.utils.io.core.use
+import java.nio.Buffer
+import java.nio.ByteBuffer
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -50,9 +53,6 @@ import org.emulinker.kaillera.controller.v086.protocol.V086Message
 import org.emulinker.kaillera.model.ConnectionType
 import org.emulinker.util.ClientGameDataCache
 import org.emulinker.util.GameDataCache
-import java.nio.Buffer
-import java.nio.ByteBuffer
-import kotlin.time.Duration.Companion.seconds
 
 /** Fake client for testing. */
 class EvalClient(
