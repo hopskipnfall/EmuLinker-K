@@ -21,7 +21,10 @@ class TwitterBroadcaster
 @Inject
 internal constructor(private val flags: RuntimeFlags, private val twitter: Twitter) {
 
-  private val scope = CoroutineScope(Dispatchers.IO)
+  /** Dispatcher with maximum parallelism of 1. */
+  @OptIn(ExperimentalCoroutinesApi::class)
+  private val dispatcher = Dispatchers.IO.limitedParallelism(1)
+  private val scope = CoroutineScope(dispatcher)
 
   private val pendingReports: ConcurrentMap<LookingForGameEvent, Job> = ConcurrentHashMap()
   private val postedTweets: ConcurrentMap<LookingForGameEvent, Long> = ConcurrentHashMap()
