@@ -1,11 +1,10 @@
 package org.emulinker.kaillera.pico
 
+import com.codahale.metrics.ConsoleReporter
+import com.codahale.metrics.CsvReporter
 import com.codahale.metrics.MetricFilter
-import com.codahale.metrics.graphite.Graphite
-import com.codahale.metrics.graphite.GraphiteReporter
-import com.codahale.metrics.jvm.MemoryUsageGaugeSet
-import com.codahale.metrics.jvm.ThreadStatesGaugeSet
 import com.google.common.flogger.FluentLogger
+import java.io.File
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -14,6 +13,7 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import java.util.concurrent.TimeUnit.MINUTES
 
 private val logger = FluentLogger.forEnclosingClass()
 
@@ -49,18 +49,34 @@ fun main(): Unit = runBlocking {
   component.masterListUpdater.start()
   if (flags.metricsEnabled) {
     val metrics = component.metricRegistry
-    metrics.registerAll(ThreadStatesGaugeSet())
-    metrics.registerAll(MemoryUsageGaugeSet())
+    //    metrics.registerAll(ThreadStatesGaugeSet())
+    //    metrics.registerAll(MemoryUsageGaugeSet())
+
     // TODO(nue): Pass this data to a central server so we can see how performance changes over
     // time in prod.
     // "graphite" is the name of a service in docker-compose.yaml.
-    val graphite = Graphite(java.net.InetSocketAddress("graphite", 2003))
-    val reporter =
-      GraphiteReporter.forRegistry(metrics)
-        .convertRatesTo(TimeUnit.SECONDS)
-        .convertDurationsTo(TimeUnit.MILLISECONDS)
-        .filter(MetricFilter.ALL)
-        .build(graphite)
-    reporter.start(30, TimeUnit.SECONDS)
+    //    val graphite = Graphite(java.net.InetSocketAddress("graphite", 2003))
+    //    val reporter =
+    //      GraphiteReporter.forRegistry(metrics)
+    //        .convertRatesTo(TimeUnit.SECONDS)
+    //        .convertDurationsTo(TimeUnit.MILLISECONDS)
+    //        .filter(MetricFilter.ALL)
+    //        .build(graphite)
+
+    ConsoleReporter.forRegistry(metrics)
+      .convertRatesTo(TimeUnit.SECONDS)
+      .convertDurationsTo(TimeUnit.MILLISECONDS)
+      .filter(MetricFilter.ALL)
+      .build()
+      .start(10, MINUTES)
+
+    val file = File("./metrics/")
+    file.mkdirs()
+    CsvReporter.forRegistry(metrics)
+      .convertRatesTo(TimeUnit.SECONDS)
+      .convertDurationsTo(TimeUnit.MILLISECONDS)
+      .filter(MetricFilter.ALL)
+      .build(file)
+      .start(5, MINUTES)
   }
 }

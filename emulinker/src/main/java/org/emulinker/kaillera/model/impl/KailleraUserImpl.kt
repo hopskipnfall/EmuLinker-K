@@ -485,7 +485,7 @@ class KailleraUserImpl(
       }
     }
     // TODO(nue): Can we make [addEvent] a suspend method instead?
-    userCoroutineScope.launch(Dispatchers.IO) { handleEvent(event) }
+    userCoroutineScope.launch { handleEvent(event) }
   }
 
   suspend fun handleEvent(event: KailleraEvent) {

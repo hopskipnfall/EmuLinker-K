@@ -26,7 +26,12 @@ class AccessManager2 @Inject internal constructor(private val flags: RuntimeFlag
     private val logger = FluentLogger.forEnclosingClass()
   }
 
-  private val scope = CoroutineScope(Dispatchers.IO)
+  @OptIn(ExperimentalCoroutinesApi::class)
+  private val scope =
+    CoroutineScope(
+      // Dispatcher with only 10 coroutines allowed to run simultaneously.
+      Dispatchers.IO.limitedParallelism(10)
+    ) + CoroutineName("AccessManager2")
 
   private var stopFlag = false
   private var accessFile: File?
@@ -71,14 +76,15 @@ class AccessManager2 @Inject internal constructor(private val flags: RuntimeFlag
           continue
         }
         val type = st.nextToken()
-        try {
-          if (type.equals("user", ignoreCase = true)) userList.add(UserAccess(st))
-          else if (type.equals("game", ignoreCase = true)) gameList.add(GameAccess(st))
-          else if (type.equals("emulator", ignoreCase = true)) emulatorList.add(EmulatorAccess(st))
-          else if (type.equals("ipaddress", ignoreCase = true)) addressList.add(AddressAccess(st))
-          else throw Exception("Unrecognized access type: $type")
-        } catch (e: Exception) {
-          logger.atSevere().withCause(e).log("Failed to load access line: %s", line)
+        when (type.lowercase()) {
+          "user" -> userList.add(UserAccess(st))
+          "game" -> gameList.add(GameAccess(st))
+          "emulator" -> emulatorList.add(EmulatorAccess(st))
+          "ipaddress" -> addressList.add(AddressAccess(st))
+          else ->
+            logger
+              .atSevere()
+              .log("Failed to load access line: %s. Unrecognized access type: %s", line, type)
         }
       }
       reader.close()
@@ -111,10 +117,13 @@ class AccessManager2 @Inject internal constructor(private val flags: RuntimeFlag
     list: MutableList<T>,
     attribute: T
   ) {
+    logger.atInfo().log("Adding temporary attribute: %s", attribute)
     list.add(attribute)
+    // TODO(nue): Use some kind of time-based cache.
     scope.launch {
       delay(attribute.duration)
       list.remove(attribute)
+      logger.atInfo().log("Removing temporary attribute: %s", attribute)
     }
   }
 

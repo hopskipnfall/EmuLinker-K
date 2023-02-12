@@ -96,8 +96,7 @@ abstract class UDPServer : Executable {
    */
   protected abstract suspend fun handleReceived(
     buffer: ByteBuffer,
-    remoteSocketAddress: InetSocketAddress,
-    requestScope: CoroutineScope
+    remoteSocketAddress: InetSocketAddress
   )
 
   protected suspend fun send(buffer: ByteBuffer, toSocketAddress: InetSocketAddress) {
@@ -127,16 +126,12 @@ abstract class UDPServer : Executable {
     while (!stopFlag) {
       supervisorScope {
         val datagram = serverSocket.incoming.receive()
-
         val buffer = datagram.packet.readByteBuffer()
 
-        // TODO(nue): Can we just pass coroutineContext?
-        val requestContext = CoroutineScope(coroutineContext)
         try {
           handleReceived(
             buffer,
             V086Utils.toJavaAddress(datagram.address as io.ktor.network.sockets.InetSocketAddress),
-            requestScope = requestContext
           )
         } catch (e: Exception) {
           if (e is CancellationException) {

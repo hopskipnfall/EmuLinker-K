@@ -759,6 +759,8 @@ internal constructor(
     logger.atFine().log("KailleraServer thread running...")
     try {
       while (!stopFlag) {
+        // TODO(nue): Can we remove this try/catch? I don't know if InterruptedException gets
+        // thrown.
         try {
           delay((flags.maxPing * 3).milliseconds)
         } catch (e: InterruptedException) {
@@ -777,13 +779,10 @@ internal constructor(
 
             // LagStat
             if (user.loggedIn) {
-              if (
-                user.game != null &&
-                  user.game!!.status == GameStatus.PLAYING &&
-                  !user.game!!.startTimeout
-              ) {
-                if (System.currentTimeMillis() - user.game!!.startTimeoutTime > 15000) {
-                  user.game!!.startTimeout = true
+              val game = user.game
+              if (game != null && game.status == GameStatus.PLAYING && !game.startTimeout) {
+                if (System.currentTimeMillis() - game.startTimeoutTime > 15000) {
+                  game.startTimeout = true
                 }
               }
             }

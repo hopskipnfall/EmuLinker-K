@@ -8,7 +8,6 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.coroutines.CoroutineContext
 import kotlin.time.Duration.Companion.minutes
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import org.apache.commons.configuration.Configuration
@@ -25,6 +24,7 @@ import org.emulinker.net.UDPServer
 import org.emulinker.net.UdpSocketProvider
 import org.emulinker.util.EmuUtil.dumpBuffer
 import org.emulinker.util.EmuUtil.formatSocketAddress
+import org.emulinker.util.LoggingUtils.debugLog
 
 /**
  * The UDP Server implementation.
@@ -114,11 +114,7 @@ internal constructor(
     }
   }
 
-  override suspend fun handleReceived(
-    buffer: ByteBuffer,
-    remoteSocketAddress: InetSocketAddress,
-    requestScope: CoroutineScope
-  ) {
+  override suspend fun handleReceived(buffer: ByteBuffer, remoteSocketAddress: InetSocketAddress) {
     requestCount++
     val formattedSocketAddress = formatSocketAddress(remoteSocketAddress)
     // TODO(nue): Remove this catch logic.
@@ -141,7 +137,7 @@ internal constructor(
         return
       }
 
-    logger.atFinest().log("-> FROM %s: %s", formattedSocketAddress, inMessage)
+    debugLog { logger.atFinest().log("-> FROM %s: %s", formattedSocketAddress, inMessage) }
 
     // the message set of the ConnectController isn't really complex enough to warrant a complicated
     // request/action class
@@ -245,7 +241,9 @@ internal constructor(
   }
 
   private suspend fun send(outMessage: ConnectMessage, toSocketAddress: InetSocketAddress) {
-    logger.atFinest().log("<- TO %s: %s", formatSocketAddress(toSocketAddress), outMessage)
+    debugLog {
+      logger.atFinest().log("<- TO %s: %s", formatSocketAddress(toSocketAddress), outMessage)
+    }
 
     send(outMessage.toBuffer(), toSocketAddress)
     outMessage.releaseBuffer()
