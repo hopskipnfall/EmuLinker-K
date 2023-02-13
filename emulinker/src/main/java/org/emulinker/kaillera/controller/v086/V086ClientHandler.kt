@@ -11,7 +11,7 @@ import java.nio.Buffer
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.util.concurrent.TimeUnit.MINUTES
-import kotlinx.coroutines.CoroutineScope
+import java.util.concurrent.TimeUnit.SECONDS
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -33,6 +33,7 @@ import org.emulinker.util.EmuUtil.dumpBuffer
 import org.emulinker.util.EmuUtil.dumpBufferFromBeginning
 import org.emulinker.util.EmuUtil.formatSocketAddress
 import org.emulinker.util.GameDataCache
+import org.emulinker.util.LoggingUtils.debugLog
 
 /** A private UDP server allocated for communication with a single client. */
 class V086ClientHandler
@@ -96,22 +97,18 @@ constructor(
     ): V086ClientHandler
   }
 
-  override suspend fun handleReceived(
-    buffer: ByteBuffer,
-    remoteSocketAddress: InetSocketAddress,
-    requestScope: CoroutineScope
-  ) {
+  override suspend fun handleReceived(buffer: ByteBuffer, remoteSocketAddress: InetSocketAddress) {
     if (!this::remoteSocketAddress.isInitialized) {
       this.remoteSocketAddress = remoteSocketAddress
     } else if (remoteSocketAddress != this.remoteSocketAddress) {
       logger
-        .atWarning()
+        .atSevere()
+        .atMostEvery(10, SECONDS)
         .log(
           "Rejecting packet received from wrong address. Expected=%s but was %s",
           formatSocketAddress(this.remoteSocketAddress),
           formatSocketAddress(remoteSocketAddress)
         )
-
       return
     }
     clientRequestTimer.time().use {
@@ -227,6 +224,8 @@ constructor(
   }
 
   private suspend fun handleReceived(buffer: ByteBuffer) {
+    // TODO(nue): Since there's only one request running at a time, I think we can safely remove
+    // this.
     inMutex.withLock {
       val lastMessageNumberUsed = lastMessageNumber
       val inBundle =
@@ -261,14 +260,16 @@ constructor(
             user.userData.id,
             inBundle.messages.size,
             inBundle.numMessages,
-            lazy { buffer.dumpBufferFromBeginning() },
+            buffer.dumpBufferFromBeginning(),
             lastMessageNumberUsed
           )
       }
 
-      logger
-        .atFinest()
-        .log("-> FROM user %d: %s", user.userData.id, inBundle.messages.firstOrNull())
+      debugLog {
+        logger
+          .atFinest()
+          .log("-> FROM user %d: %s", user.userData.id, inBundle.messages.firstOrNull())
+      }
       clientRetryCount =
         if (inBundle.numMessages == 0) {
           logger
@@ -396,7 +397,7 @@ constructor(
       }
       numToSend = lastMessageBuffer.fill(outMessages, numToSend)
       val outBundle = V086Bundle(outMessages, numToSend)
-      logger.atFinest().log("<- TO P%d: %s", user.playerNumber, outMessage)
+      debugLog { logger.atFinest().log("<- TO P%d: %s", user.playerNumber, outMessage) }
       outBundle.writeTo(outBuffer)
       // Cast to avoid issue with java version mismatch:
       // https://stackoverflow.com/a/61267496/2875073
