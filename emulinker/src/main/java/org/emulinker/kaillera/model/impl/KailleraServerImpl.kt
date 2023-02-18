@@ -883,15 +883,19 @@ class KailleraServerImpl
     }
     metrics.register(
         MetricRegistry.name(this.javaClass, "users", "idle"),
-        Gauge { usersMap.values.count { it.status == UserStatus.IDLE } })
+        Gauge { usersMap.values.count { it.status == UserStatus.IDLE } }
+    )
     metrics.register(
         MetricRegistry.name(this.javaClass, "users", "playing"),
-        Gauge { usersMap.values.count { it.status == UserStatus.PLAYING } })
+        Gauge { usersMap.values.count { it.status == UserStatus.PLAYING } }
+    )
     metrics.register(
         MetricRegistry.name(this.javaClass, "games", "waiting"),
-        Gauge { gamesMap.values.count { it.status == GameStatus.WAITING } })
+        Gauge { gamesMap.values.count { it.status == GameStatus.WAITING } }
+    )
     metrics.register(
         MetricRegistry.name(this.javaClass, "games", "playing"),
-        Gauge { gamesMap.values.count { it.status == GameStatus.PLAYING } })
+        Gauge { gamesMap.values.count { it.status == GameStatus.PLAYING } }
+    )
   }
 }

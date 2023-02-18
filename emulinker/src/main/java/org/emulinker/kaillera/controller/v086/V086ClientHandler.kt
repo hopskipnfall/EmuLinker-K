@@ -73,6 +73,9 @@ class V086ClientHandler
   private var clientRetryCount = 0
   private var lastResend: Long = 0
 
+  private val clientRequestTimer =
+      metrics!!.timer(MetricRegistry.name(this.javaClass, "clientRequests"))
+
   @AssistedFactory
   interface Factory {
     fun create(
@@ -210,6 +213,12 @@ class V086ClientHandler
   }
 
   override fun handleReceived(buffer: ByteBuffer) {
+    clientRequestTimer.time().use {
+      handleReceivedInternal(buffer)
+    }
+  }
+
+  private fun handleReceivedInternal(buffer: ByteBuffer) {
     var inBundle: V086Bundle? = null
     inBundle =
         try {
