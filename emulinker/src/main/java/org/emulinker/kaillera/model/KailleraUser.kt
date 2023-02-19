@@ -3,6 +3,7 @@ package org.emulinker.kaillera.model
 import java.net.InetSocketAddress
 import java.time.Instant
 import kotlin.Throws
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.sync.Mutex
 import org.emulinker.kaillera.model.event.KailleraEventListener
 import org.emulinker.kaillera.model.exception.*
@@ -121,4 +122,5 @@ interface KailleraUser {
 
   suspend fun stop()
   val mutex: Mutex
+  val userCoroutineScope: CoroutineScope
 }

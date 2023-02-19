@@ -1,5 +1,6 @@
 package org.emulinker.kaillera.controller.v086
 
+import com.codahale.metrics.Counter
 import com.codahale.metrics.MetricRegistry
 import com.google.common.flogger.FluentLogger
 import dagger.assisted.Assisted
@@ -12,6 +13,7 @@ import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.util.concurrent.TimeUnit.MINUTES
 import java.util.concurrent.TimeUnit.SECONDS
+import javax.inject.Named
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -43,8 +45,9 @@ constructor(
   private val flags: RuntimeFlags,
   @Assisted remoteSocketAddress: InetSocketAddress,
   /** The V086Controller that started this client handler. */
-  @param:Assisted val controller: V086Controller
-) : UDPServer(), KailleraEventListener {
+  @param:Assisted val controller: V086Controller,
+  @Named("listeningOnPortsCounter") listeningOnPortsCounter: Counter,
+) : UDPServer(listeningOnPortsCounter), KailleraEventListener {
   lateinit var user: KailleraUser
     private set
 
