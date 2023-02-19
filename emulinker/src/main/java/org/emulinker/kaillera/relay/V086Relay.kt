@@ -1,5 +1,6 @@
 package org.emulinker.kaillera.relay
 
+import com.codahale.metrics.Counter
 import com.google.common.flogger.FluentLogger
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -7,6 +8,7 @@ import dagger.assisted.AssistedInject
 import java.net.InetSocketAddress
 import java.nio.Buffer
 import java.nio.ByteBuffer
+import javax.inject.Named
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.messaging.ParseException
 import org.emulinker.kaillera.controller.v086.protocol.V086Bundle
@@ -20,8 +22,11 @@ private val logger = FluentLogger.forEnclosingClass()
 class V086Relay
     @AssistedInject
     internal constructor(
-        @Assisted listenPort: Int, @Assisted serverSocketAddress: InetSocketAddress
-    ) : UDPRelay(listenPort, serverSocketAddress) {
+        @Assisted listenPort: Int,
+        @Assisted serverSocketAddress: InetSocketAddress,
+        @Named("listeningOnPortsCounter")
+        listeningOnPortsCounter: Counter
+    ) : UDPRelay(listenPort, serverSocketAddress, listeningOnPortsCounter) {
   private var lastServerMessageNumber = -1
   private var lastClientMessageNumber = -1
 

@@ -1,5 +1,6 @@
 package org.emulinker.kaillera.pico
 
+import com.codahale.metrics.Counter
 import com.codahale.metrics.MetricRegistry
 import dagger.Binds
 import dagger.Module
@@ -9,6 +10,7 @@ import java.nio.charset.Charset
 import java.util.concurrent.SynchronousQueue
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
+import javax.inject.Named
 import javax.inject.Singleton
 import org.apache.commons.configuration.Configuration
 import org.emulinker.config.RuntimeFlags
@@ -74,6 +76,12 @@ abstract class AppModule {
     fun provideTwitter(twitterFactory: TwitterFactory): Twitter {
       return twitterFactory.instance
     }
+
+    @Provides
+    @Singleton
+    @Named("listeningOnPortsCounter")
+    fun bindPortListenerCounter(metrics: MetricRegistry): Counter =
+        metrics.counter("listeningOnPorts")
 
     @Provides
     @Singleton

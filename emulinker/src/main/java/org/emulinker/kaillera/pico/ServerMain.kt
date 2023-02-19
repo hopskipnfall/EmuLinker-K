@@ -3,17 +3,12 @@ package org.emulinker.kaillera.pico
 import com.codahale.metrics.ConsoleReporter
 import com.codahale.metrics.CsvReporter
 import com.codahale.metrics.MetricFilter
-import com.codahale.metrics.graphite.Graphite
-import com.codahale.metrics.graphite.GraphiteReporter
-import com.codahale.metrics.jvm.MemoryUsageGaugeSet
 import com.codahale.metrics.jvm.ThreadStatesGaugeSet
 import com.google.common.flogger.FluentLogger
 import java.io.File
-import java.net.InetSocketAddress
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
-import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeUnit.*
 
 private val logger = FluentLogger.forEnclosingClass()
@@ -37,7 +32,7 @@ fun main(args: Array<String>) {
   component.masterListUpdater.start()
   val metrics = component.metricRegistry
   metrics.registerAll(ThreadStatesGaugeSet())
-//  metrics.registerAll(MemoryUsageGaugeSet())
+  //  metrics.registerAll(MemoryUsageGaugeSet())
   val flags = component.runtimeFlags
   if (flags.metricsEnabled) {
     ConsoleReporter.forRegistry(metrics)
@@ -45,7 +40,7 @@ fun main(args: Array<String>) {
         .convertDurationsTo(MILLISECONDS)
         .filter(MetricFilter.ALL)
         .build()
-        .start(10, MINUTES)
+        .start(15, MINUTES)
 
     val file = File("./metrics/")
     file.mkdirs()
@@ -54,7 +49,7 @@ fun main(args: Array<String>) {
         .convertDurationsTo(MILLISECONDS)
         .filter(MetricFilter.ALL)
         .build(file)
-        .start(5, MINUTES)
+        .start(flags.metricsLoggingFrequency.inWholeSeconds, SECONDS)
   }
 
   //  // Hacky code but it works! Tests that two users can make and play a game.

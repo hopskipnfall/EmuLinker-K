@@ -1,5 +1,6 @@
 package org.emulinker.kaillera.relay
 
+import com.codahale.metrics.Counter
 import com.codahale.metrics.MetricRegistry
 import com.google.common.flogger.FluentLogger
 import dagger.assisted.Assisted
@@ -8,6 +9,7 @@ import dagger.assisted.AssistedInject
 import java.net.InetSocketAddress
 import java.nio.Buffer
 import java.nio.ByteBuffer
+import javax.inject.Named
 import org.emulinker.kaillera.controller.connectcontroller.protocol.ConnectMessage
 import org.emulinker.kaillera.controller.connectcontroller.protocol.ConnectMessage.Companion.parse
 import org.emulinker.kaillera.controller.connectcontroller.protocol.ConnectMessage_HELLO
@@ -26,8 +28,10 @@ internal class KailleraRelay
         @Assisted listenPort: Int,
         @Assisted serverSocketAddress: InetSocketAddress?,
         metrics: MetricRegistry?,
-        private val v086RelayFactory: V086Relay.Factory
-    ) : UDPRelay(listenPort, serverSocketAddress!!) {
+        private val v086RelayFactory: V086Relay.Factory,
+        @Named("listeningOnPortsCounter")
+        listeningOnPortsCounter: Counter
+    ) : UDPRelay(listenPort, serverSocketAddress!!, listeningOnPortsCounter) {
   // TODO(nue): Can we just remove this?
   // public static void main(String args[]) throws Exception {
   //   int localPort = Integer.parseInt(args[0]);

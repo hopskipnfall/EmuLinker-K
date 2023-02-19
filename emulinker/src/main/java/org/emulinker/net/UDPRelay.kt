@@ -1,5 +1,6 @@
 package org.emulinker.net
 
+import com.codahale.metrics.Counter
 import com.google.common.flogger.FluentLogger
 import java.io.IOException
 import java.lang.Exception
@@ -18,8 +19,11 @@ import org.emulinker.util.EmuUtil.formatSocketAddress
 
 private val logger = FluentLogger.forEnclosingClass()
 
-abstract class UDPRelay(var listenPort: Int, var serverSocketAddress: InetSocketAddress) :
-    Runnable {
+abstract class UDPRelay(
+    var listenPort: Int,
+    var serverSocketAddress: InetSocketAddress,
+    private val listeningOnPortsCounter: Counter
+) : Runnable {
   var listenChannel: DatagramChannel? = null
     protected set
   protected var clients = Collections.synchronizedMap(HashMap<InetSocketAddress, ClientHandler>())
@@ -34,6 +38,7 @@ abstract class UDPRelay(var listenPort: Int, var serverSocketAddress: InetSocket
   override fun run() {
     logger.atInfo().log("Main port $listenPort thread running...")
     try {
+      listeningOnPortsCounter.inc()
       while (true) {
         val buffer = ByteBuffer.allocate(2048)
         val clientAddress = listenChannel!!.receive(buffer) as InetSocketAddress
@@ -63,6 +68,7 @@ abstract class UDPRelay(var listenPort: Int, var serverSocketAddress: InetSocket
     } catch (e: Exception) {
       logger.atSevere().withCause(e).log("Main port $listenPort thread caught exception")
     } finally {
+      listeningOnPortsCounter.dec()
       try {
         listenChannel!!.close()
       } catch (e: Exception) {}
@@ -90,6 +96,7 @@ abstract class UDPRelay(var listenPort: Int, var serverSocketAddress: InetSocket
                   formatSocketAddress(clientSocketAddress) +
                   " runnning...")
       try {
+        listeningOnPortsCounter.inc()
         while (true) {
           val buffer = ByteBuffer.allocate(2048)
           val receiveAddress = clientChannel.receive(buffer) as InetSocketAddress
@@ -113,6 +120,7 @@ abstract class UDPRelay(var listenPort: Int, var serverSocketAddress: InetSocket
                     formatSocketAddress(clientSocketAddress) +
                     " caught exception")
       } finally {
+        listeningOnPortsCounter.dec()
         try {
           clientChannel.close()
         } catch (e: Exception) {}

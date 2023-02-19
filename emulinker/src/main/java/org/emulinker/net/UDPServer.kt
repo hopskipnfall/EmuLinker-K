@@ -1,5 +1,6 @@
 package org.emulinker.net
 
+import com.codahale.metrics.Counter
 import com.codahale.metrics.MetricRegistry
 import com.google.common.flogger.FluentLogger
 import java.io.IOException
@@ -15,7 +16,9 @@ import org.emulinker.util.Executable
 
 private val logger = FluentLogger.forEnclosingClass()
 
-abstract class UDPServer(shutdownOnExit: Boolean, metrics: MetricRegistry?) : Executable {
+abstract class UDPServer(
+    shutdownOnExit: Boolean, metrics: MetricRegistry?, private val listeningOnPortsCounter: Counter
+) : Executable {
   /*
   	private static int		artificalPacketLossPercentage = 0;
   	private static int		artificalDelay = 0;
@@ -136,6 +139,7 @@ abstract class UDPServer(shutdownOnExit: Boolean, metrics: MetricRegistry?) : Ex
     threadIsActive = true
     logger.atFine().log(toString() + ": thread running...")
     try {
+      listeningOnPortsCounter!!.inc()
       while (!stopFlag) {
         try {
           val buffer = buffer
@@ -181,6 +185,7 @@ abstract class UDPServer(shutdownOnExit: Boolean, metrics: MetricRegistry?) : Ex
           .log("UDPServer on port %d caught unexpected exception!", bindPort)
       stop()
     } finally {
+      listeningOnPortsCounter.dec()
       threadIsActive = false
       logger.atFine().log(toString() + ": thread exiting...")
     }

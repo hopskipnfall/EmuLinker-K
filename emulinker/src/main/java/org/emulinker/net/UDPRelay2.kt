@@ -1,5 +1,6 @@
 package org.emulinker.net
 
+import com.codahale.metrics.Counter
 import com.google.common.flogger.FluentLogger
 import java.io.IOException
 import java.lang.Exception
@@ -19,7 +20,8 @@ abstract class UDPRelay2
     constructor(
         var serverSocketAddress: InetSocketAddress,
         var listenPort: Int,
-        var bufferSize: Int = DEFAULT_BUFFER_SIZE
+        var bufferSize: Int = DEFAULT_BUFFER_SIZE,
+        private val listeningOnPortsCounter: Counter
     ) {
   var isStarted = false
     protected set
@@ -101,6 +103,7 @@ abstract class UDPRelay2
     override fun run() {
       logger.atFine().log("$toStringRepresentation Running")
       try {
+        listeningOnPortsCounter.inc()
         val receiveBuffer = ByteBuffer.allocate(DEFAULT_BUFFER_SIZE)
         while (!stopFlag) {
           running = true
@@ -157,6 +160,7 @@ abstract class UDPRelay2
         logger.atSevere().withCause(e).log("$toStringRepresentation caught unexpected exception")
         if (exception != null) exception = e
       } finally {
+        listeningOnPortsCounter.dec()
         this@UDPRelay2.stop()
         running = false
       }

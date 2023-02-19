@@ -1,11 +1,13 @@
 package org.emulinker.kaillera.controller.connectcontroller
 
+import com.codahale.metrics.Counter
 import com.codahale.metrics.MetricRegistry
 import com.google.common.flogger.FluentLogger
 import java.net.InetSocketAddress
 import java.nio.ByteBuffer
 import java.util.concurrent.ThreadPoolExecutor
 import javax.inject.Inject
+import javax.inject.Named
 import javax.inject.Singleton
 import org.apache.commons.configuration.Configuration
 import org.emulinker.kaillera.access.AccessManager
@@ -33,8 +35,10 @@ class ConnectController
         kailleraServerControllers: java.util.Set<KailleraServerController>,
         private val accessManager: AccessManager,
         config: Configuration,
-        metrics: MetricRegistry?
-    ) : UDPServer(/* shutdownOnExit= */ true, metrics) {
+        metrics: MetricRegistry?,
+        @Named("listeningOnPortsCounter")
+        listeningOnPortsCounter: Counter
+    ) : UDPServer(/* shutdownOnExit= */ true, metrics, listeningOnPortsCounter) {
 
   private val controllersMap: MutableMap<String?, KailleraServerController>
 

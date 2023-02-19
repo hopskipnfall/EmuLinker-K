@@ -1,18 +1,24 @@
 package org.emulinker.net
 
+import com.codahale.metrics.Counter
 import com.codahale.metrics.MetricRegistry
 import com.codahale.metrics.Timer
 import com.google.common.flogger.FluentLogger
 import java.net.InetAddress
 import java.net.InetSocketAddress
 import java.nio.ByteBuffer
+import javax.inject.Named
 import org.emulinker.util.EmuUtil.formatSocketAddress
 
 private val logger = FluentLogger.forEnclosingClass()
 
 abstract class PrivateUDPServer(
-    shutdownOnExit: Boolean, val remoteInetAddress: InetAddress, metrics: MetricRegistry
-) : UDPServer(shutdownOnExit, metrics) {
+    shutdownOnExit: Boolean,
+    val remoteInetAddress: InetAddress,
+    metrics: MetricRegistry,
+    @Named("listeningOnPortsCounter")
+    listeningOnPortsCounter: Counter
+) : UDPServer(shutdownOnExit, metrics, listeningOnPortsCounter) {
 
   private val clientRequestTimer: Timer
 

@@ -1,5 +1,6 @@
 package org.emulinker.kaillera.controller.v086
 
+import com.codahale.metrics.Counter
 import com.codahale.metrics.MetricRegistry
 import com.google.common.flogger.FluentLogger
 import dagger.assisted.Assisted
@@ -9,6 +10,7 @@ import java.net.InetSocketAddress
 import java.nio.Buffer
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
+import javax.inject.Named
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.messaging.ParseException
@@ -33,8 +35,12 @@ class V086ClientHandler
         metrics: MetricRegistry?,
         flags: RuntimeFlags,
         @Assisted remoteSocketAddress: InetSocketAddress,
-        @param:Assisted val controller: V086Controller
-    ) : PrivateUDPServer(false, remoteSocketAddress.address, metrics!!), KailleraEventListener {
+        @param:Assisted val controller: V086Controller,
+        @Named("listeningOnPortsCounter")
+        listeningOnPortsCounter: Counter
+    ) :
+    PrivateUDPServer(false, remoteSocketAddress.address, metrics!!, listeningOnPortsCounter),
+    KailleraEventListener {
   var user: KailleraUser? = null
     private set
 
@@ -213,9 +219,7 @@ class V086ClientHandler
   }
 
   override fun handleReceived(buffer: ByteBuffer) {
-    clientRequestTimer.time().use {
-      handleReceivedInternal(buffer)
-    }
+    clientRequestTimer.time().use { handleReceivedInternal(buffer) }
   }
 
   private fun handleReceivedInternal(buffer: ByteBuffer) {
