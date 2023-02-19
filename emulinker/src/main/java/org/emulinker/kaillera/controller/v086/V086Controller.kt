@@ -17,6 +17,7 @@ import org.emulinker.kaillera.controller.KailleraServerController
 import org.emulinker.kaillera.controller.v086.action.*
 import org.emulinker.kaillera.controller.v086.protocol.*
 import org.emulinker.kaillera.model.KailleraServer
+import org.emulinker.kaillera.model.KailleraUser
 import org.emulinker.kaillera.model.event.*
 import org.emulinker.kaillera.model.exception.NewConnectionException
 import org.emulinker.kaillera.model.exception.ServerFullException
@@ -130,7 +131,7 @@ internal constructor(
       .log("Creating new connection for address %d, protocol %s", clientSocketAddress, protocol)
 
     val clientHandler = v086ClientHandlerFactory.create(clientSocketAddress, this)
-    val user = server.newConnection(clientSocketAddress, protocol, clientHandler)
+    val user: KailleraUser = server.newConnection(clientSocketAddress, protocol, clientHandler)
     var boundPort: Int? = null
     var bindAttempts = 0
     while (bindAttempts++ < 5) {
@@ -142,7 +143,7 @@ internal constructor(
         logger.atInfo().log("Private port %d allocated to: %s", port, user)
         try {
           clientHandler.bind(udpSocketProvider, port)
-          controllerCoroutineScope.launch { clientHandler.run(coroutineContext) }
+          user.userCoroutineScope.launch { clientHandler.run(coroutineContext) }
           boundPort = port
           break
         } catch (e: SocketException) {

@@ -1,11 +1,13 @@
 package org.emulinker.kaillera.pico
 
+import com.codahale.metrics.Counter
 import com.codahale.metrics.MetricRegistry
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
 import dagger.multibindings.IntoSet
 import java.nio.charset.Charset
+import javax.inject.Named
 import javax.inject.Singleton
 import org.apache.commons.configuration.Configuration
 import org.emulinker.config.RuntimeFlags
@@ -59,14 +61,17 @@ abstract class AppModule {
     lateinit var charsetDoNotUse: Charset
 
     @Provides
-    fun provideTwitter(twitterFactory: TwitterFactory): Twitter {
-      return twitterFactory.instance
-    }
+    @Singleton
+    @Named("listeningOnPortsCounter")
+    fun bindPortListenerCounter(metrics: MetricRegistry): Counter =
+      metrics.counter("listeningOnPorts")
+
+    @Provides fun provideTwitter(twitterFactory: TwitterFactory): Twitter = twitterFactory.instance
 
     @Provides
     @Singleton
-    fun provideTwitterFactory(flags: RuntimeFlags): TwitterFactory {
-      return TwitterFactory(
+    fun provideTwitterFactory(flags: RuntimeFlags) =
+      TwitterFactory(
         ConfigurationBuilder()
           .setDebugEnabled(true)
           .setOAuthAccessToken(flags.twitterOAuthAccessToken)
@@ -75,13 +80,8 @@ abstract class AppModule {
           .setOAuthConsumerSecret(flags.twitterOAuthConsumerSecret)
           .build()
       )
-    }
 
-    @Provides
-    @Singleton
-    fun provideConfiguration(): Configuration {
-      return EmuLinkerPropertiesConfig()
-    }
+    @Provides @Singleton fun provideConfiguration(): Configuration = EmuLinkerPropertiesConfig()
 
     @Provides
     @Singleton
@@ -91,10 +91,6 @@ abstract class AppModule {
       return flags
     }
 
-    @Provides
-    @Singleton
-    fun provideMetricRegistry(): MetricRegistry {
-      return MetricRegistry()
-    }
+    @Provides @Singleton fun provideMetricRegistry(): MetricRegistry = MetricRegistry()
   }
 }

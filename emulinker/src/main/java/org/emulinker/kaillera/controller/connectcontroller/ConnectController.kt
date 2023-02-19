@@ -1,10 +1,12 @@
 package org.emulinker.kaillera.controller.connectcontroller
 
+import com.codahale.metrics.Counter
 import com.google.common.flogger.FluentLogger
 import java.net.InetSocketAddress
 import java.nio.ByteBuffer
 import java.util.Set as JavaSet
 import javax.inject.Inject
+import javax.inject.Named
 import javax.inject.Singleton
 import kotlin.coroutines.CoroutineContext
 import kotlin.time.Duration.Companion.minutes
@@ -40,7 +42,8 @@ internal constructor(
   private val accessManager: AccessManager,
   private val config: Configuration,
   flags: RuntimeFlags,
-) : UDPServer() {
+  @Named("listeningOnPortsCounter") listeningOnPortsCounter: Counter,
+) : UDPServer(listeningOnPortsCounter) {
 
   private val mutex = Mutex()
 

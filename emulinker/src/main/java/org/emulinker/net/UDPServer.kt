@@ -1,20 +1,21 @@
 package org.emulinker.net
 
+import com.codahale.metrics.Counter
 import com.google.common.flogger.FluentLogger
 import io.ktor.network.sockets.*
 import io.ktor.utils.io.core.*
 import java.net.InetSocketAddress
 import java.nio.ByteBuffer
-import kotlin.Exception
 import kotlin.coroutines.CoroutineContext
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.supervisorScope
 import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.kaillera.controller.v086.V086Utils.toKtorAddress
 import org.emulinker.util.EmuUtil.dumpBufferFromBeginning
 import org.emulinker.util.EmuUtil.formatSocketAddress
 import org.emulinker.util.Executable
 
-abstract class UDPServer : Executable {
+abstract class UDPServer(private val listeningOnPortsCounter: Counter) : Executable {
   abstract val bufferSize: Int
 
   /*
@@ -71,7 +72,9 @@ abstract class UDPServer : Executable {
   @Synchronized
   override suspend fun stop() {
     stopFlag = true
+    serverSocket.close()
     serverSocket.dispose()
+    serverSocket.incoming.cancel()
   }
 
   @Synchronized
@@ -122,41 +125,38 @@ abstract class UDPServer : Executable {
   override suspend fun run(globalContext: CoroutineContext) {
     this.globalContext = globalContext
     threadIsActive = true
+    listeningOnPortsCounter.inc()
 
-    while (!stopFlag) {
-      supervisorScope {
-        val datagram = serverSocket.incoming.receive()
-        val buffer = datagram.packet.readByteBuffer()
+    try {
+      while (!stopFlag) {
+        supervisorScope {
+          val datagram = serverSocket.receive()
+          val buffer = datagram.packet.readByteBuffer()
 
-        try {
-          handleReceived(
-            buffer,
-            V086Utils.toJavaAddress(datagram.address as io.ktor.network.sockets.InetSocketAddress),
-          )
-        } catch (e: Exception) {
-          if (e is CancellationException) {
-            throw e
+          try {
+            handleReceived(
+              buffer,
+              V086Utils.toJavaAddress(
+                datagram.address as io.ktor.network.sockets.InetSocketAddress
+              ),
+            )
+          } catch (e: Exception) {
+            if (e is CancellationException) {
+              throw e
+            }
+            logger
+              .atSevere()
+              .withCause(e)
+              .log("Error while handling request: %s", buffer.dumpBufferFromBeginning())
           }
-          logger
-            .atSevere()
-            .withCause(e)
-            .log("Error while handling request: %s", buffer.dumpBufferFromBeginning())
         }
       }
+    } finally {
+      logger.atFine().log("Ending infinite loop")
+      listeningOnPortsCounter.dec()
+      threadIsActive = false
     }
-
-    threadIsActive = false
   }
-
-  // TODO(nue): Investigate this.
-  //  private inner class ShutdownThread : Thread() {
-  //    override fun run() {
-  //      this@UDPServer.stop()
-  //    }
-  //  }
-  //  init {
-  //    if (shutdownOnExit) Runtime.getRuntime().addShutdownHook(ShutdownThread())
-  //  }
 
   companion object {
     private val logger = FluentLogger.forEnclosingClass()

@@ -4,18 +4,49 @@ import com.google.common.flogger.FluentLogger
 import java.net.InetSocketAddress
 import java.time.Duration
 import java.time.Instant
-import java.util.ArrayList
-import kotlin.Throws
 import kotlin.coroutines.CoroutineContext
 import kotlin.time.Duration.Companion.milliseconds
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineName
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.plus
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.access.AccessManager
-import org.emulinker.kaillera.model.*
-import org.emulinker.kaillera.model.event.*
-import org.emulinker.kaillera.model.exception.*
+import org.emulinker.kaillera.model.ConnectionType
+import org.emulinker.kaillera.model.KailleraGame
+import org.emulinker.kaillera.model.KailleraUser
+import org.emulinker.kaillera.model.UserData
+import org.emulinker.kaillera.model.UserStatus
+import org.emulinker.kaillera.model.event.GameDataEvent
+import org.emulinker.kaillera.model.event.GameStartedEvent
+import org.emulinker.kaillera.model.event.KailleraEvent
+import org.emulinker.kaillera.model.event.KailleraEventListener
+import org.emulinker.kaillera.model.event.StopFlagEvent
+import org.emulinker.kaillera.model.event.UserQuitEvent
+import org.emulinker.kaillera.model.event.UserQuitGameEvent
+import org.emulinker.kaillera.model.exception.ChatException
+import org.emulinker.kaillera.model.exception.ClientAddressException
+import org.emulinker.kaillera.model.exception.CloseGameException
+import org.emulinker.kaillera.model.exception.ConnectionTypeException
+import org.emulinker.kaillera.model.exception.CreateGameException
+import org.emulinker.kaillera.model.exception.DropGameException
+import org.emulinker.kaillera.model.exception.FloodException
+import org.emulinker.kaillera.model.exception.GameChatException
+import org.emulinker.kaillera.model.exception.GameDataException
+import org.emulinker.kaillera.model.exception.GameKickException
+import org.emulinker.kaillera.model.exception.JoinGameException
+import org.emulinker.kaillera.model.exception.LoginException
+import org.emulinker.kaillera.model.exception.PingTimeException
+import org.emulinker.kaillera.model.exception.QuitException
+import org.emulinker.kaillera.model.exception.QuitGameException
+import org.emulinker.kaillera.model.exception.StartGameException
+import org.emulinker.kaillera.model.exception.UserNameException
+import org.emulinker.kaillera.model.exception.UserReadyException
 import org.emulinker.util.EmuLang
 import org.emulinker.util.EmuUtil
 import org.emulinker.util.Executable
@@ -31,7 +62,7 @@ class KailleraUserImpl(
   flags: RuntimeFlags,
 ) : KailleraUser, Executable {
   /** [CoroutineScope] for long-running actions attached to the user. */
-  private val userCoroutineScope =
+  override val userCoroutineScope =
     CoroutineScope(Dispatchers.IO) + CoroutineName("User[${userData.id}]Scope")
 
   override var inStealthMode = false
@@ -181,6 +212,7 @@ class KailleraUserImpl(
       "]")
   }
 
+  // TODO(nue): Figure out why this is getting called twice.
   override suspend fun stop() {
     logger.atFine().log("Stopping KaillerUser for %d", userData.id)
     delay(500.milliseconds)

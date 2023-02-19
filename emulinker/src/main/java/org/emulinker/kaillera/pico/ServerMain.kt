@@ -3,13 +3,15 @@ package org.emulinker.kaillera.pico
 import com.codahale.metrics.ConsoleReporter
 import com.codahale.metrics.CsvReporter
 import com.codahale.metrics.MetricFilter
+import com.codahale.metrics.jvm.ThreadStatesGaugeSet
 import com.google.common.flogger.FluentLogger
 import java.io.File
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
-import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeUnit.MILLISECONDS
 import java.util.concurrent.TimeUnit.MINUTES
+import java.util.concurrent.TimeUnit.SECONDS
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO_PARALLELISM_PROPERTY_NAME
@@ -50,7 +52,7 @@ fun main(): Unit = runBlocking {
   component.masterListUpdater.start()
   if (flags.metricsEnabled) {
     val metrics = component.metricRegistry
-    //    metrics.registerAll(ThreadStatesGaugeSet())
+    metrics.registerAll(ThreadStatesGaugeSet())
     //    metrics.registerAll(MemoryUsageGaugeSet())
 
     // TODO(nue): Pass this data to a central server so we can see how performance changes over
@@ -65,19 +67,19 @@ fun main(): Unit = runBlocking {
     //        .build(graphite)
 
     ConsoleReporter.forRegistry(metrics)
-      .convertRatesTo(TimeUnit.SECONDS)
-      .convertDurationsTo(TimeUnit.MILLISECONDS)
+      .convertRatesTo(SECONDS)
+      .convertDurationsTo(MILLISECONDS)
       .filter(MetricFilter.ALL)
       .build()
-      .start(10, MINUTES)
+      .start(15, MINUTES)
 
     val file = File("./metrics/")
     file.mkdirs()
     CsvReporter.forRegistry(metrics)
-      .convertRatesTo(TimeUnit.SECONDS)
-      .convertDurationsTo(TimeUnit.MILLISECONDS)
+      .convertRatesTo(SECONDS)
+      .convertDurationsTo(MILLISECONDS)
       .filter(MetricFilter.ALL)
       .build(file)
-      .start(5, MINUTES)
+      .start(flags.metricsLoggingFrequency.inWholeSeconds, SECONDS)
   }
 }
