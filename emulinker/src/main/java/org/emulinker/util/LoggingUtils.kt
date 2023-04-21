@@ -1,14 +1,14 @@
 package org.emulinker.util
 
-object LoggingUtils {
-  const val DEBUG_LOGGING_ENABLED = false
+import org.emulinker.kaillera.pico.CompiledFlags
 
+object LoggingUtils {
   /**
-   * Wraps logging code that will not appear in the compiled binary if [DEBUG_LOGGING_ENABLED] is
-   * false.
+   * Wraps logging code that will not appear in the compiled binary if [CompiledFlags.DEBUG_BUILD]
+   * is false.
    */
   inline fun debugLog(logBlock: () -> Unit) {
-    if (DEBUG_LOGGING_ENABLED) {
+    if (CompiledFlags.DEBUG_BUILD) {
       logBlock()
     }
   }

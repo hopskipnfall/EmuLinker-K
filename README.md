@@ -21,14 +21,16 @@ EmuLinkerSF-netsma is maintained by [jonnjonn](https://twitter.com/6kRt62r2zvKp5
 
 From the emulinker/ directory, the following commands are supported:
 
-| Command               | Description             |
-| --------------------- | ----------------------- |
-| `mvn compile`         | Compile the code.       |
-| `mvn spotless:apply`  | Run the formatter.      |
-| `mvn spotless:check`  | Run the linter.         |
-| `mvn test`            | Run tests.              |
-| `mvn assembly:single` | Build the jar.          |
-| `mvn exec:java`       | Run the server locally. |
+|            Command            |       Description       |
+|-------------------------------|-------------------------|
+| `mvn compile`                 | Compile the code.       |
+| `mvn spotless:apply`          | Run the formatter.      |
+| `mvn spotless:check`          | Run the linter.         |
+| `mvn test`                    | Run tests.              |
+| `mvn assembly:single -P prod` | Build the jar.          |
+| `mvn exec:java`               | Run the server locally. |
+
+You can pass `-P prod` to emulate a prod environment, where debug logs are stripped out.
 
 Note: You will need to have Maven installed.
 
@@ -67,3 +69,4 @@ You can then access the Graphite dashboard at http://localhost/dashboard
 [twitter]: https://twitter.com/intent/tweet?text=https://github.com/hopskipnfall/EmuLinkerSF-netsma%20%F0%9F%91%8D
 [twitter-badge]: https://img.shields.io/twitter/url/https/github.com/hopskipnfall/EmuLinkerSF-netsma.svg?style=social
 [maintained-badge]: https://img.shields.io/badge/maintained-yes-brightgreen
+
