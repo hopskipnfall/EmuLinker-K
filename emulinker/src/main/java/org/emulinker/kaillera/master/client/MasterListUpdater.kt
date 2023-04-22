@@ -1,10 +1,12 @@
 package org.emulinker.kaillera.master.client
 
 import com.google.common.flogger.FluentLogger
+import java.util.Timer
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.concurrent.schedule
 import kotlin.coroutines.CoroutineContext
-import kotlin.time.Duration.Companion.seconds
+import kotlin.time.Duration.Companion.minutes
 import kotlinx.coroutines.delay
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.controller.connectcontroller.ConnectController
@@ -28,6 +30,7 @@ internal constructor(
   private var emulinkerMasterTask: EmuLinkerMasterUpdateTask? = null
   private var kailleraMasterTask: KailleraMasterUpdateTask? = null
   private var stopFlag = false
+  private val timer = Timer()
 
   @get:Synchronized
   override var threadIsActive = false
@@ -46,33 +49,21 @@ internal constructor(
     }
   }
 
-  @Synchronized
   override suspend fun stop() {
     if (publicInfo != null) {
       logger.atFine().log("MasterListUpdater thread received stop request!")
-      if (!threadIsActive) {
-        logger.atFine().log("MasterListUpdater thread stop request ignored: not running!")
-        return
-      }
+      timer.cancel()
       stopFlag = true
     }
   }
 
   override suspend fun run(globalContext: CoroutineContext) {
     threadIsActive = true
-    logger.atFine().log("MasterListUpdater thread running...")
-    try {
-      while (!stopFlag) {
-        delay(60.seconds)
-        if (stopFlag) break
-        logger.atInfo().log("MasterListUpdater touching masters...")
-        emulinkerMasterTask?.touchMaster()
-        kailleraMasterTask?.touchMaster()
-        statsCollector.clearStartedGamesList()
-      }
-    } finally {
-      threadIsActive = false
-      logger.atFine().log("MasterListUpdater thread exiting...")
+    timer.schedule(delay = 1.minutes.inWholeMilliseconds, period = 1.minutes.inWholeMilliseconds) {
+      logger.atInfo().log("MasterListUpdater touching masters...")
+      emulinkerMasterTask?.touchMaster()
+      kailleraMasterTask?.touchMaster()
+      statsCollector.clearStartedGamesList()
     }
   }
 

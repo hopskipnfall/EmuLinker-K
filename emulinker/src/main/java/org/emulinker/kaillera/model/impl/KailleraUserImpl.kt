@@ -10,11 +10,10 @@ import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.plus
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.runBlocking
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.access.AccessManager
 import org.emulinker.kaillera.model.ConnectionType
@@ -26,7 +25,6 @@ import org.emulinker.kaillera.model.event.GameDataEvent
 import org.emulinker.kaillera.model.event.GameStartedEvent
 import org.emulinker.kaillera.model.event.KailleraEvent
 import org.emulinker.kaillera.model.event.KailleraEventListener
-import org.emulinker.kaillera.model.event.StopFlagEvent
 import org.emulinker.kaillera.model.event.UserQuitEvent
 import org.emulinker.kaillera.model.event.UserQuitGameEvent
 import org.emulinker.kaillera.model.exception.ChatException
@@ -66,8 +64,6 @@ class KailleraUserImpl(
     CoroutineScope(Dispatchers.IO) + CoroutineName("User[${userData.id}]Scope")
 
   override var inStealthMode = false
-
-  override val mutex = Mutex()
 
   /** Example: "Project 64k 0.13 (01 Aug 2003)" */
   override var clientType: String? = null
@@ -134,6 +130,8 @@ class KailleraUserImpl(
   override var lastMsgID = -1
   override var isMuted = false
 
+  private val eventChannel = Channel<KailleraEvent>(10)
+
   private val lostInput: MutableList<ByteArray> = ArrayList()
   /** Note that this is a different type from lostInput. */
   override fun getLostInput(): ByteArray {
@@ -150,6 +148,7 @@ class KailleraUserImpl(
 
   override var tempDelay = 0
 
+  @Deprecated("This doesn't belong on [KailleraUser].")
   override val allUsersInServer: Collection<KailleraUserImpl>
     get() = server.users
 
@@ -212,11 +211,9 @@ class KailleraUserImpl(
       "]")
   }
 
-  // TODO(nue): Figure out why this is getting called twice.
   override suspend fun stop() {
     logger.atFine().log("Stopping KaillerUser for %d", userData.id)
     delay(500.milliseconds)
-    addEvent(StopFlagEvent())
     listener.stop()
     userCoroutineScope.cancel("Stopping KailleraUser $userData")
   }
@@ -227,7 +224,6 @@ class KailleraUserImpl(
   }
 
   // server actions
-  @Synchronized
   @Throws(
     PingTimeException::class,
     ClientAddressException::class,
@@ -259,7 +255,6 @@ class KailleraUserImpl(
     game?.kick(this, userID)
   }
 
-  @Synchronized
   @Throws(CreateGameException::class, FloodException::class)
   override suspend fun createGame(romName: String): KailleraGame {
     updateLastActivity()
@@ -291,7 +286,6 @@ class KailleraUserImpl(
     loggedIn = false
   }
 
-  @Synchronized
   @Throws(JoinGameException::class)
   override suspend fun joinGame(gameID: Int): KailleraGame {
     updateLastActivity()
@@ -516,34 +510,30 @@ class KailleraUserImpl(
         if (event.toString() == "InfoMessageEvent") return
       }
     }
-    // TODO(nue): Can we make [addEvent] a suspend method instead?
-    userCoroutineScope.launch { handleEvent(event) }
+    // TODO(nue): This method should be marked as suspend instead.
+    runBlocking { eventChannel.send(event) }
   }
 
   suspend fun handleEvent(event: KailleraEvent) {
-    mutex.withLock {
-      if (event is StopFlagEvent) {
-        return
+    listener.actionPerformed(event)
+    when {
+      event is GameStartedEvent -> {
+        status = UserStatus.PLAYING
+        if (improvedLagstat) {
+          lastUpdate = Instant.now()
+        }
       }
-      listener.actionPerformed(event)
-      when {
-        event is GameStartedEvent -> {
-          status = UserStatus.PLAYING
-          if (improvedLagstat) {
-            lastUpdate = Instant.now()
-          }
-        }
-        event is UserQuitEvent && event.user == this -> {
-          stop()
-        }
+      event is UserQuitEvent && event.user == this -> {
+        stop()
       }
     }
   }
 
-  // TODO(nue): Remove this method.
-  @Deprecated("Call handleEvent() instead")
   override suspend fun run(globalContext: CoroutineContext) {
-    TODO("Call handleEvent() individually instead.")
+    // Run over all events as they come in.
+    for (event in eventChannel) {
+      handleEvent(event)
+    }
   }
 
   companion object {

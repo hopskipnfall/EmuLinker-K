@@ -4,7 +4,6 @@ import java.net.InetSocketAddress
 import java.time.Instant
 import kotlin.Throws
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.sync.Mutex
 import org.emulinker.kaillera.model.event.KailleraEventListener
 import org.emulinker.kaillera.model.exception.*
 import org.emulinker.kaillera.model.impl.KailleraGameImpl
@@ -121,6 +120,5 @@ interface KailleraUser {
   fun droppedPacket()
 
   suspend fun stop()
-  val mutex: Mutex
   val userCoroutineScope: CoroutineScope
 }

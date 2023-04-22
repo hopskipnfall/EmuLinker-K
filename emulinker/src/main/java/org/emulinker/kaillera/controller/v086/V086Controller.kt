@@ -2,14 +2,12 @@ package org.emulinker.kaillera.controller.v086
 
 import com.google.common.flogger.FluentLogger
 import java.net.InetSocketAddress
-import java.net.SocketException
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentLinkedQueue
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.reflect.KClass
-import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.*
 import org.apache.commons.configuration.Configuration
 import org.emulinker.config.RuntimeFlags
@@ -132,40 +130,19 @@ internal constructor(
 
     val clientHandler = v086ClientHandlerFactory.create(clientSocketAddress, this)
     val user: KailleraUser = server.newConnection(clientSocketAddress, protocol, clientHandler)
-    var boundPort: Int? = null
-    var bindAttempts = 0
-    while (bindAttempts++ < 5) {
-      val portInteger = portRangeQueue.poll()
-      if (portInteger == null) {
-        logger.atSevere().log("No ports are available to bind for: %s", user)
-      } else {
-        val port = portInteger.toInt()
-        logger.atInfo().log("Private port %d allocated to: %s", port, user)
-        try {
-          clientHandler.bind(udpSocketProvider, port)
-          user.userCoroutineScope.launch { clientHandler.run(coroutineContext) }
-          boundPort = port
-          break
-        } catch (e: SocketException) {
-          logger.atSevere().withCause(e).log("Failed to bind to port %d for: %s", port, user)
-          logger
-            .atFine()
-            .log(
-              "%s returning port %d to available port queue: %d available",
-              this,
-              port,
-              portRangeQueue.size + 1
-            )
-          portRangeQueue.add(port)
-        }
-      }
-      // pause very briefly to give the OS a chance to free a port
-      delay(5.milliseconds)
+    val boundPort: Int
+    val portInteger = portRangeQueue.poll()
+    if (portInteger == null) {
+      throw NewConnectionException("No ports are available to bind for $user")
+    } else {
+      val port = portInteger.toInt()
+      logger.atInfo().log("Allocating private port %d for: %s", port, user)
+      clientHandler.bind(udpSocketProvider, port)
+      user.userCoroutineScope.launch { clientHandler.run(coroutineContext) }
+      boundPort = port
     }
-    if (boundPort == null) {
-      clientHandler.stop()
-      throw NewConnectionException("Failed to bind!")
-    }
+    // pause very briefly to give the OS a chance to free a port
+    Thread.sleep(5)
     clientHandler.start(user)
     return boundPort
   }
@@ -175,7 +152,6 @@ internal constructor(
     isRunning = true
   }
 
-  @Synchronized
   override suspend fun stop() {
     isRunning = false
     clientHandlers.values.forEach { it.stop() }

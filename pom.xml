@@ -15,7 +15,7 @@
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <build-timestamp>${maven.build.timestamp}</build-timestamp>
     <maven.build.timestamp.format>yyyy-MM-dd'T'HH:mm:ss'Z'</maven.build.timestamp.format>
-    <kotlin.version>1.7.10</kotlin.version>
+    <kotlin.version>1.8.20</kotlin.version>
     <dagger.version>2.43.2</dagger.version>
     <log4j.version>2.19.0</log4j.version>
     <ktor.version>2.1.1</ktor.version>

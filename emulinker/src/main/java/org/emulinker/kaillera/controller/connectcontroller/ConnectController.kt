@@ -190,7 +190,7 @@ internal constructor(
                 lastAddressCount = 0
                 failedToStartCount++
                 logger
-                  .atFine()
+                  .atInfo()
                   .log("SF MOD: HAMMER PROTECTION (2 Min Ban): %s", formattedSocketAddress)
                 accessManager.addTempBan(remoteSocketAddress.address.hostAddress, 2.minutes)
                 return

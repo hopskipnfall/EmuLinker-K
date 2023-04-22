@@ -58,7 +58,6 @@ abstract class UDPServer(private val listeningOnPortsCounter: Counter) : Executa
       return !serverSocket.isClosed
     }
 
-  @Synchronized
   open suspend fun start(udpSocketProvider: UdpSocketProvider, globalContext: CoroutineContext) {
     this.globalContext = globalContext
     logger.atFine().log("%s received start request!", this)
@@ -69,7 +68,6 @@ abstract class UDPServer(private val listeningOnPortsCounter: Counter) : Executa
     stopFlag = false
   }
 
-  @Synchronized
   override suspend fun stop() {
     stopFlag = true
     serverSocket.close()

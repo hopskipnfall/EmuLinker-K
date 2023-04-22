@@ -54,6 +54,8 @@ internal constructor(private val flags: RuntimeFlags, private val twitter: Twitt
     }
 
     pendingReports[lookingForGameEvent] =
+      // TODO(nue): Use a timer. But this doesn't really matter anymore because Twitter killed their
+      // free tier.
       scope.launch {
         delay(flags.twitterBroadcastDelay)
 

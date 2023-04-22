@@ -1,5 +1,6 @@
 package org.emulinker.kaillera.access
 
+import java.io.Closeable
 import java.net.InetAddress
 import kotlin.time.Duration
 
@@ -12,7 +13,7 @@ import kotlin.time.Duration
  * Most of the main EmuLinker components are passed a handle to the current AccessManager and make
  * calls to it upon user interactions.
  */
-interface AccessManager {
+interface AccessManager : Closeable {
   /**
    * Checks if address is allowed to connect.
    *
