@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
@@ -16,16 +15,14 @@
     <build-timestamp>${maven.build.timestamp}</build-timestamp>
     <maven.build.timestamp.format>yyyy-MM-dd'T'HH:mm:ss'Z'</maven.build.timestamp.format>
     <kotlin.version>1.8.20</kotlin.version>
-    <dagger.version>2.43.2</dagger.version>
-    <log4j.version>2.19.0</log4j.version>
-    <ktor.version>2.1.1</ktor.version>
+    <dagger.version>2.45</dagger.version>
+    <log4j.version>2.20.0</log4j.version>
+    <ktor.version>2.2.4</ktor.version>
     <flogger.version>0.7.4</flogger.version>
-    <!-- Optional but gives us incremental builds. -->
     <kotlin.compiler.incremental>true</kotlin.compiler.incremental>
   </properties>
 
   <dependencies>
-
     <dependency>
       <groupId>org.jetbrains.kotlin</groupId>
       <artifactId>kotlin-stdlib</artifactId>
@@ -60,12 +57,6 @@
     </dependency>
 
     <!-- https://mvnrepository.com/artifact/com.google.flogger/flogger -->
-    <dependency>
-      <groupId>io.reactivex.rxjava3</groupId>
-      <artifactId>rxjava</artifactId>
-      <version>3.1.1</version>
-    </dependency>
-
     <dependency>
       <groupId>com.google.flogger</groupId>
       <artifactId>flogger</artifactId>
@@ -104,13 +95,6 @@
     <dependency>
       <groupId>com.google.dagger</groupId>
       <artifactId>dagger</artifactId>
-      <version>${dagger.version}</version>
-    </dependency>
-
-    <!-- https://mvnrepository.com/artifact/com.google.dagger/dagger-compiler -->
-    <dependency>
-      <groupId>com.google.dagger</groupId>
-      <artifactId>dagger-compiler</artifactId>
       <version>${dagger.version}</version>
     </dependency>
 
@@ -227,8 +211,16 @@
   </dependencies>
 
   <build>
-    <sourceDirectory>emulinker/src/main/java</sourceDirectory>
-    <testSourceDirectory>emulinker/src/test/java</testSourceDirectory>
+    <resources>
+      <resource>
+        <directory>emulinker/conf</directory>
+      </resource>
+
+      <resource>
+        <filtering>true</filtering>
+        <directory>emulinker/src/main/resources</directory>
+      </resource>
+    </resources>
 
     <plugins>
       <!-- clean lifecycle, see https://maven.apache.org/ref/current/maven-core/lifecycles.html#clean_Lifecycle -->
@@ -248,6 +240,24 @@
       <plugin>
         <artifactId>maven-project-info-reports-plugin</artifactId>
         <version>3.0.0</version>
+      </plugin>
+
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>templating-maven-plugin</artifactId>
+        <version>1.0.0</version>
+        <executions>
+          <execution>
+            <id>filter-src</id>
+            <goals>
+              <goal>filter-sources</goal>
+            </goals>
+            <configuration>
+              <sourceDirectory>${basedir}/emulinker/src/main/java-templates</sourceDirectory>
+              <outputDirectory>${project.build.directory}/generated-sources/java-templates</outputDirectory>
+            </configuration>
+          </execution>
+        </executions>
       </plugin>
 
       <plugin>
@@ -284,6 +294,7 @@
             <configuration>
               <sourceDirs>
                 <sourceDir>emulinker/src/main/java</sourceDir>
+                <sourceDir>target/generated-sources/java-templates</sourceDir>
               </sourceDirs>
             </configuration>
           </execution>
@@ -306,6 +317,11 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
         <version>3.7.0</version>
+        <configuration>
+          <showWarnings>true</showWarnings>
+          <source>8</source>
+          <target>8</target>
+        </configuration>
         <executions>
           <!-- Replacing default-compile as it is treated specially by maven -->
           <execution>
@@ -319,30 +335,25 @@
           </execution>
           <execution>
             <id>java-compile</id>
-            <phase>compile</phase>
             <goals>
               <goal>compile</goal>
             </goals>
+            <phase>compile</phase>
           </execution>
           <execution>
             <id>java-test-compile</id>
-            <phase>test-compile</phase>
             <goals>
               <goal>testCompile</goal>
             </goals>
+            <phase>test-compile</phase>
           </execution>
         </executions>
-        <configuration>
-          <showWarnings>true</showWarnings>
-          <source>8</source>
-          <target>8</target>
-        </configuration>
       </plugin>
 
       <plugin>
         <groupId>com.diffplug.spotless</groupId>
         <artifactId>spotless-maven-plugin</artifactId>
-        <version>2.27.2</version>
+        <version>2.36.0</version>
         <configuration>
 
           <formats>
@@ -350,12 +361,16 @@
             <format>
               <!-- define the files to apply to -->
               <includes>
-                <include>*.md</include>
                 <include>.gitignore</include>
               </includes>
+              <excludes>
+                <exclude>target/</exclude>
+                <exclude>.git/</exclude>
+                <exclude>.idea/</exclude>
+              </excludes>
               <!-- define the steps to apply to those files -->
-              <trimTrailingWhitespace />
-              <endWithNewline />
+              <trimTrailingWhitespace/>
+              <endWithNewline/>
               <indent>
                 <tabs>true</tabs>
                 <spacesPerTab>2</spacesPerTab>
@@ -365,14 +380,60 @@
 
           <kotlin>
             <includes>
-              <include>emulinker/src/main/java/**/*.kt</include>
-              <include>emulinker/src/test/java/**/*.kt</include>
+              <include>**/*.kt</include>
+              <include>**/*.kt</include>
             </includes>
+            <excludes>
+              <exclude>target/</exclude>
+              <exclude>.git/</exclude>
+              <exclude>.idea/</exclude>
+              <exclude>emulinker/src/main/java-templates/</exclude>
+            </excludes>
 
             <ktfmt>
               <style>GOOGLE</style>
             </ktfmt>
           </kotlin>
+
+          <yaml>
+            <includes>
+              <include>**/*.yaml</include>
+              <include>**/*.yml</include>
+            </includes>
+            <excludes>
+              <exclude>target/</exclude>
+              <exclude>.git/</exclude>
+              <exclude>.idea/</exclude>
+            </excludes>
+
+            <jackson/>
+          </yaml>
+
+          <pom>
+            <includes>
+              <include>pom.xml</include>
+            </includes>
+
+            <sortPom>
+              <expandEmptyElements>false</expandEmptyElements>
+            </sortPom>
+            <!-- has its own section below -->
+          </pom>
+
+          <markdown>
+            <includes>
+              <!-- You have to set the target manually -->
+              <include>**/*.md</include>
+            </includes>
+            <excludes>
+              <exclude>target/</exclude>
+              <exclude>.git/</exclude>
+              <exclude>.idea/</exclude>
+            </excludes>
+
+            <flexmark/>
+            <!-- has its own section below -->
+          </markdown>
         </configuration>
       </plugin>
 
@@ -401,25 +462,37 @@
         </configuration>
         <executions>
           <execution>
-            <id>make-assembly</id> <!-- this is used for inheritance merges -->
-            <phase>package</phase> <!-- bind to the packaging phase -->
+            <id>make-assembly</id>
+            <!-- bind to the packaging phase -->
             <goals>
               <goal>single</goal>
             </goals>
+            <!-- this is used for inheritance merges -->
+            <phase>package</phase>
           </execution>
         </executions>
       </plugin>
     </plugins>
-
-    <resources>
-      <resource>
-        <directory>emulinker/conf</directory>
-      </resource>
-
-      <resource>
-        <directory>emulinker/src/main/resources</directory>
-        <filtering>true</filtering>
-      </resource>
-    </resources>
+    <sourceDirectory>emulinker/src/main/java</sourceDirectory>
+    <testSourceDirectory>emulinker/src/test/java</testSourceDirectory>
   </build>
+
+  <profiles>
+    <profile>
+      <id>dev</id>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
+      <properties>
+        <isDev>true</isDev>
+      </properties>
+
+    </profile>
+    <profile>
+      <id>prod</id>
+      <properties>
+        <isDev>false</isDev>
+      </properties>
+    </profile>
+  </profiles>
 </project>

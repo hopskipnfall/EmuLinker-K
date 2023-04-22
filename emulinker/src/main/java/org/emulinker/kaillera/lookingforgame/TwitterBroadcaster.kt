@@ -63,9 +63,10 @@ internal constructor(private val flags: RuntimeFlags, private val twitter: Twitt
         val user: KailleraUser = lookingForGameEvent.user
         val message =
           """
-                  User: ${user.userData.name}
-                  Game: ${lookingForGameEvent.gameTitle}
-                  Server: ${flags.serverName} (${flags.serverAddress})"""
+            User: ${user.userData.name}
+            Game: ${lookingForGameEvent.gameTitle}
+            Server: ${flags.serverName} (${flags.serverAddress})
+          """
             .trimIndent()
         val tweet = twitter.updateStatus(message)
         user.game!!.announce(tweet.getUrl(), user)
