@@ -2,7 +2,6 @@ package org.emulinker.kaillera.model.impl
 
 import com.codahale.metrics.Gauge
 import com.codahale.metrics.MetricRegistry
-import com.google.common.base.Strings
 import com.google.common.flogger.FluentLogger
 import java.net.InetSocketAddress
 import java.time.Duration
@@ -235,7 +234,7 @@ internal constructor(
       throw PingTimeException(getString("KailleraServerImpl.LoginErrorInvalidPing", user.ping))
     }
     if (
-      access == AccessManager.ACCESS_NORMAL && Strings.isNullOrEmpty(user.userData.name) ||
+      access == AccessManager.ACCESS_NORMAL && user.userData.name.isEmpty() ||
         user.userData.name.isBlank()
     ) {
       logger.atInfo().log("%s login denied: Empty UserName", user)

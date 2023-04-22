@@ -14,7 +14,7 @@ import org.emulinker.util.EmuUtil
  * The connection handshake goes as follows:
  * - Client sends a [RequestPrivateKailleraPortRequest]
  * - Server responds with [RequestPrivateKailleraPortResponse], which includes a private port
- * allocated for that client.
+ *   allocated for that client.
  *
  * After that point the client never interacts with the connect server. There are other subtypes
  * [ConnectMessage_TOO], [ConnectMessage_PING], and [ConnectMessage_PONG] which I do not believe are
