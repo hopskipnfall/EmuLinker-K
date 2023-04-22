@@ -69,6 +69,7 @@ abstract class UDPServer(private val listeningOnPortsCounter: Counter) : Executa
   }
 
   override suspend fun stop() {
+    logger.atSevere().log("YOU DID IT, IT IS STOPPING") // REMOVEME
     stopFlag = true
     serverSocket.close()
     serverSocket.dispose()

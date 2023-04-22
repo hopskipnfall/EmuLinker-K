@@ -12,7 +12,6 @@ import javax.inject.Singleton
 import kotlin.concurrent.schedule
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
-import kotlinx.coroutines.*
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.util.WildcardStringPattern
 
@@ -26,13 +25,6 @@ class AccessManager2 @Inject internal constructor(private val flags: RuntimeFlag
 
     private val logger = FluentLogger.forEnclosingClass()
   }
-
-  @OptIn(ExperimentalCoroutinesApi::class)
-  private val scope =
-    CoroutineScope(
-      // Dispatcher with only 10 coroutines allowed to run simultaneously.
-      Dispatchers.IO.limitedParallelism(10)
-    ) + CoroutineName("AccessManager2")
 
   private var accessFile: File?
   private var lastLoadModifiedTime: Long = -1

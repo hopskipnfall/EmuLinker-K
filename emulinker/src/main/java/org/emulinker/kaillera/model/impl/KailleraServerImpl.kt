@@ -56,10 +56,10 @@ internal constructor(
   var statsCollector: StatsCollector? = null
 
   private val usersMap: MutableMap<Int, KailleraUserImpl> = ConcurrentHashMap(flags.maxUsers)
-  override val users = usersMap.values
+  override val users: MutableCollection<KailleraUserImpl> = usersMap.values
 
   var gamesMap: MutableMap<Int, KailleraGameImpl> = ConcurrentHashMap(flags.maxGames)
-  override val games = gamesMap.values
+  override val games: MutableCollection<KailleraGameImpl> = gamesMap.values
 
   override var trivia: Trivia? = null
 
@@ -124,6 +124,9 @@ internal constructor(
     return autoFireDetectorFactory.getInstance(game!!, flags.gameAutoFireSensitivity)
   }
 
+  private val coroutineCounter =
+    metrics.counter(MetricRegistry.name(KailleraServerImpl::class.java, "activeCoroutines"))
+
   @Synchronized
   @Throws(ServerFullException::class, NewConnectionException::class)
   override fun newConnection(
@@ -170,7 +173,14 @@ internal constructor(
     usersMap[userId] = user
 
     // look for the infinite loop inside of the user class
-    kailleraServerCoroutineScope.launch { user.run(coroutineContext) }
+    user.userCoroutineScope.launch {
+      coroutineCounter.inc()
+      try {
+        user.run(coroutineContext)
+      } finally {
+        coroutineCounter.dec()
+      }
+    }
     return user
   }
 
@@ -448,6 +458,7 @@ internal constructor(
     CloseGameException::class
   )
   override fun quit(user: KailleraUser, message: String?) {
+    logger.atSevere().log("QUITTING THE SERVER") // REMOVEME
     lookingForGameReporter.cancelActionsForUser(user.userData.id)
     if (!user.loggedIn) {
       usersMap.remove(user.userData.id)
@@ -729,12 +740,11 @@ internal constructor(
         if (user.status != UserStatus.IDLE) {
           if (user.ignoringUnnecessaryServerActivity) {
             when (event) {
-              is GameDataEvent -> user.addEvent(event)
-              is ChatEvent -> continue
-              is UserJoinedEvent -> continue
-              is UserQuitEvent -> continue
-              is GameStatusChangedEvent -> continue
-              is GameClosedEvent -> continue
+              is ChatEvent,
+              is UserJoinedEvent,
+              is UserQuitEvent,
+              is GameStatusChangedEvent,
+              is GameClosedEvent,
               is GameCreatedEvent -> continue
               else -> user.addEvent(event)
             }
@@ -809,6 +819,7 @@ internal constructor(
               (Instant.now().toEpochMilli() - user.lastActivity.toEpochMilli() >
                 flags.idleTimeout.inWholeMilliseconds)
           ) {
+            // TODO(nue): THIS ISN'T WORKING FOR SOME REASON
             logger.atInfo().log("%s inactivity timeout!", user)
             try {
               quit(user, getString("KailleraServerImpl.ForcedQuitInactivityTimeout"))

@@ -25,6 +25,7 @@ import org.emulinker.kaillera.model.event.GameDataEvent
 import org.emulinker.kaillera.model.event.GameStartedEvent
 import org.emulinker.kaillera.model.event.KailleraEvent
 import org.emulinker.kaillera.model.event.KailleraEventListener
+import org.emulinker.kaillera.model.event.StopFlagEvent
 import org.emulinker.kaillera.model.event.UserQuitEvent
 import org.emulinker.kaillera.model.event.UserQuitGameEvent
 import org.emulinker.kaillera.model.exception.ChatException
@@ -214,7 +215,9 @@ class KailleraUserImpl(
   override suspend fun stop() {
     logger.atFine().log("Stopping KaillerUser for %d", userData.id)
     delay(500.milliseconds)
+    addEvent(StopFlagEvent())
     listener.stop()
+    eventChannel.cancel()
     userCoroutineScope.cancel("Stopping KailleraUser $userData")
   }
 
@@ -515,6 +518,9 @@ class KailleraUserImpl(
   }
 
   suspend fun handleEvent(event: KailleraEvent) {
+    if (event is StopFlagEvent) {
+      return
+    }
     listener.actionPerformed(event)
     when {
       event is GameStartedEvent -> {

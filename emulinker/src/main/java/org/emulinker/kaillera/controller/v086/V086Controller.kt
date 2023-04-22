@@ -1,5 +1,6 @@
 package org.emulinker.kaillera.controller.v086
 
+import com.codahale.metrics.MetricRegistry
 import com.google.common.flogger.FluentLogger
 import java.net.InetSocketAddress
 import java.util.*
@@ -51,7 +52,8 @@ internal constructor(
   gameTimeoutAction: GameTimeoutAction,
   infoMessageAction: InfoMessageAction,
   private val v086ClientHandlerFactory: V086ClientHandler.Factory,
-  flags: RuntimeFlags
+  flags: RuntimeFlags,
+  metrics: MetricRegistry
 ) : KailleraServerController {
   /** [CoroutineScope] for long-running actions attached to the controller. */
   private val controllerCoroutineScope =
@@ -111,6 +113,9 @@ internal constructor(
     return "V086Controller[clients=${clientHandlers.size} isRunning=$isRunning]"
   }
 
+  private val coroutineCounter =
+    metrics.counter(MetricRegistry.name(V086Controller::class.java, "activeCoroutines"))
+
   /**
    * Receives new connections and delegates to a new V086ClientHandler instance for communication
    * over a separate port.
@@ -138,7 +143,14 @@ internal constructor(
       val port = portInteger.toInt()
       logger.atInfo().log("Allocating private port %d for: %s", port, user)
       clientHandler.bind(udpSocketProvider, port)
-      user.userCoroutineScope.launch { clientHandler.run(coroutineContext) }
+      user.userCoroutineScope.launch {
+        coroutineCounter.inc()
+        try {
+          clientHandler.run(coroutineContext)
+        } finally {
+          coroutineCounter.dec()
+        }
+      }
       boundPort = port
     }
     // pause very briefly to give the OS a chance to free a port
