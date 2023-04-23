@@ -16,6 +16,7 @@ import kotlinx.coroutines.*
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.access.AccessManager
 import org.emulinker.kaillera.access.AccessManager.Companion.ACCESS_NAMES
+import org.emulinker.kaillera.controller.v086.V086ClientHandler
 import org.emulinker.kaillera.controller.v086.V086Utils.toKtorAddress
 import org.emulinker.kaillera.lookingforgame.LookingForGameEvent
 import org.emulinker.kaillera.lookingforgame.TwitterBroadcaster
@@ -132,7 +133,8 @@ internal constructor(
   override fun newConnection(
     clientSocketAddress: InetSocketAddress,
     protocol: String,
-    listener: KailleraEventListener
+    // For acting on Kaillera events.
+    v086ClientHandler: V086ClientHandler
   ): KailleraUser {
     // we'll assume at this point that ConnectController has already asked AccessManager if this IP
     // is banned, so no need to do it again here
@@ -157,7 +159,7 @@ internal constructor(
         UserData(userId, name = "[PENDING]", clientSocketAddress.toKtorAddress()),
         protocol,
         clientSocketAddress,
-        listener,
+        v086ClientHandler,
         this,
         flags
       )

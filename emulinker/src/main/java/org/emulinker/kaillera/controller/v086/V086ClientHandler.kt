@@ -47,7 +47,7 @@ constructor(
   /** The V086Controller that started this client handler. */
   @param:Assisted val controller: V086Controller,
   @Named("listeningOnPortsCounter") listeningOnPortsCounter: Counter,
-) : UDPServer(listeningOnPortsCounter), KailleraEventListener {
+) : UDPServer(listeningOnPortsCounter) {
   lateinit var user: KailleraUser
     private set
 
@@ -202,8 +202,6 @@ constructor(
   }
 
   private suspend fun handleReceived(buffer: ByteBuffer) {
-    // TODO(nue): Since there's only one request running at a time, I think we can safely remove
-    // this.
     val lastMessageNumberUsed = lastMessageNumber
     val inBundle =
       try {
@@ -303,7 +301,7 @@ constructor(
 
   override val bufferSize = flags.v086BufferSize
 
-  override suspend fun actionPerformed(event: KailleraEvent) {
+  suspend fun handleKailleraEvent(event: KailleraEvent) {
     when (event) {
       is GameEvent -> {
         val eventHandler = controller.gameEventHandlers[event::class]

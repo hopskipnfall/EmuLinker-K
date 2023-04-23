@@ -16,6 +16,7 @@ import kotlinx.coroutines.plus
 import kotlinx.coroutines.runBlocking
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.access.AccessManager
+import org.emulinker.kaillera.controller.v086.V086ClientHandler
 import org.emulinker.kaillera.model.ConnectionType
 import org.emulinker.kaillera.model.KailleraGame
 import org.emulinker.kaillera.model.KailleraUser
@@ -24,7 +25,6 @@ import org.emulinker.kaillera.model.UserStatus
 import org.emulinker.kaillera.model.event.GameDataEvent
 import org.emulinker.kaillera.model.event.GameStartedEvent
 import org.emulinker.kaillera.model.event.KailleraEvent
-import org.emulinker.kaillera.model.event.KailleraEventListener
 import org.emulinker.kaillera.model.event.StopFlagEvent
 import org.emulinker.kaillera.model.event.UserQuitEvent
 import org.emulinker.kaillera.model.event.UserQuitGameEvent
@@ -56,7 +56,7 @@ class KailleraUserImpl(
   override var userData: UserData,
   override val protocol: String,
   override val connectSocketAddress: InetSocketAddress,
-  override val listener: KailleraEventListener,
+  override val listener: V086ClientHandler,
   override val server: KailleraServerImpl,
   flags: RuntimeFlags,
 ) : KailleraUser, Executable {
@@ -521,7 +521,7 @@ class KailleraUserImpl(
     if (event is StopFlagEvent) {
       return
     }
-    listener.actionPerformed(event)
+    listener.handleKailleraEvent(event)
     when {
       event is GameStartedEvent -> {
         status = UserStatus.PLAYING

@@ -21,8 +21,7 @@ sealed class StartGame : V086Message() {
     StartGameSerializer.write(buffer, this)
   }
 
-  data class StartGameNotification
-  constructor(
+  data class StartGameNotification(
     override val messageNumber: Int,
     val val1: Int,
     val playerNumber: Short,
@@ -36,7 +35,7 @@ sealed class StartGame : V086Message() {
     }
   }
 
-  data class StartGameRequest constructor(override val messageNumber: Int) : StartGame()
+  data class StartGameRequest(override val messageNumber: Int) : StartGame()
 
   companion object {
     const val ID: Byte = 0x11

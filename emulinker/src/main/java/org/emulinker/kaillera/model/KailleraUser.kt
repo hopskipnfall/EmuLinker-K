@@ -1,13 +1,12 @@
 package org.emulinker.kaillera.model
 
-import java.net.InetSocketAddress
-import java.time.Instant
-import kotlin.Throws
 import kotlinx.coroutines.CoroutineScope
-import org.emulinker.kaillera.model.event.KailleraEventListener
+import org.emulinker.kaillera.controller.v086.V086ClientHandler
 import org.emulinker.kaillera.model.exception.*
 import org.emulinker.kaillera.model.impl.KailleraGameImpl
 import org.emulinker.kaillera.model.impl.KailleraUserImpl
+import java.net.InetSocketAddress
+import java.time.Instant
 
 interface KailleraUser {
   // Fields that only support getters.
@@ -27,7 +26,7 @@ interface KailleraUser {
   val isEmuLinkerClient: Boolean
   val lastActivity: Instant
   val lastKeepAlive: Instant
-  val listener: KailleraEventListener
+  val listener: V086ClientHandler
   val loggedIn: Boolean
   val protocol: String
   val server: KailleraServer

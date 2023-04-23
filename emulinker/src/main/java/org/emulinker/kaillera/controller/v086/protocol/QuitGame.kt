@@ -21,10 +21,13 @@ sealed class QuitGame : V086Message() {
         is QuitGameNotification -> this.username
       }.getNumBytesPlusStopByte() + V086Utils.Bytes.SHORT
 
-  data class QuitGameRequest constructor(override val messageNumber: Int) : QuitGame()
+  data class QuitGameRequest(override val messageNumber: Int) : QuitGame()
 
-  data class QuitGameNotification
-  constructor(override val messageNumber: Int, val username: String, val userId: Int) : QuitGame() {
+  data class QuitGameNotification(
+    override val messageNumber: Int,
+    val username: String,
+    val userId: Int
+  ) : QuitGame() {
 
     init {
       require(userId in 0..0xFFFF) { "UserID out of acceptable range: $userId" }
