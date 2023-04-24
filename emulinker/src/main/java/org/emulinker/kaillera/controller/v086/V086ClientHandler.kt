@@ -70,7 +70,6 @@ constructor(
   private val inBuffer: ByteBuffer = ByteBuffer.allocateDirect(flags.v086BufferSize)
   private val outBuffer: ByteBuffer = ByteBuffer.allocateDirect(flags.v086BufferSize)
 
-  private val inMutex = Mutex()
   private val outMutex = Mutex()
 
   private var testStart: Long = 0
@@ -126,7 +125,7 @@ constructor(
   }
 
   override fun toString() =
-    if (bindPort > 0) "V086Controller($bindPort)" else "V086Controller(unbound)"
+    if (boundPort != null) "V086Controller($boundPort)" else "V086Controller(unbound)"
 
   @get:Synchronized
   val nextMessageNumber: Int
@@ -173,12 +172,12 @@ constructor(
   override suspend fun stop() {
     logger.atSevere().log("Stopping ClientHandler for %d", user.userData.id) // REMOVEME
     if (stopFlag) return
-    var port = -1
+    var port: Int? = null
     if (isBound) {
-      port = bindPort
+      port = boundPort
     }
     super.stop()
-    if (port > 0) {
+    if (port != null) {
       logger
         .atFine()
         .log(
@@ -245,6 +244,7 @@ constructor(
         .atFinest()
         .log("-> FROM user %d: %s", user.userData.id, inBundle.messages.firstOrNull())
     }
+
     clientRetryCount =
       if (inBundle.numMessages == 0) {
         logger
@@ -256,6 +256,7 @@ constructor(
       } else {
         0
       }
+
     try {
       val messages = inBundle.messages
       if (inBundle.numMessages == 1) {
@@ -342,8 +343,6 @@ constructor(
   }
 
   suspend fun resend(timeoutCounter: Int) {
-    // TODO(nue): Confirm it's safe to remove this.
-    //    outMutex.withLock {
     // if ((System.currentTimeMillis() - lastResend) > (user.getPing()*3))
     if (System.currentTimeMillis() - lastResend > controller.server.maxPing) {
       // int numToSend = (3+timeoutCounter);
@@ -355,7 +354,6 @@ constructor(
     } else {
       logger.atFine().log("Skipping resend...")
     }
-    //    }
   }
 
   suspend fun send(outMessage: V086Message?, numToSend: Int = 5) {

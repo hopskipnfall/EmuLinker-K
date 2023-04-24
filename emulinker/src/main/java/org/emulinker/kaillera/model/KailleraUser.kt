@@ -1,12 +1,11 @@
 package org.emulinker.kaillera.model
 
+import java.net.InetSocketAddress
+import java.time.Instant
 import kotlinx.coroutines.CoroutineScope
 import org.emulinker.kaillera.controller.v086.V086ClientHandler
 import org.emulinker.kaillera.model.exception.*
 import org.emulinker.kaillera.model.impl.KailleraGameImpl
-import org.emulinker.kaillera.model.impl.KailleraUserImpl
-import java.net.InetSocketAddress
-import java.time.Instant
 
 interface KailleraUser {
   // Fields that only support getters.
@@ -31,10 +30,6 @@ interface KailleraUser {
   val protocol: String
   val server: KailleraServer
   val status: UserStatus
-
-  // TODO(nue): Get rid of this field.
-  @Deprecated("This doesn't belong on [KailleraUser].")
-  val allUsersInServer: Collection<KailleraUserImpl?>?
 
   var userData: UserData
 

@@ -684,8 +684,8 @@ class ChatAction @Inject internal constructor(private val adminCommandAction: Ad
         var foundCount = 0
         val str = chatMessage.message.substring(space + 1)
         // WildcardStringPattern pattern = new WildcardStringPattern
-        for (user in clientHandler.user.allUsersInServer!!) {
-          if (!user!!.loggedIn) continue
+        for (user in clientHandler.user.server.users) {
+          if (!user.loggedIn) continue
           if (
             user.userData.name
               .lowercase(Locale.getDefault())

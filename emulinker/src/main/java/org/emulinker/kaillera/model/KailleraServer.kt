@@ -1,5 +1,6 @@
 package org.emulinker.kaillera.model
 
+import java.net.InetSocketAddress
 import org.emulinker.kaillera.access.AccessManager
 import org.emulinker.kaillera.controller.v086.V086ClientHandler
 import org.emulinker.kaillera.model.exception.ChatException
@@ -20,7 +21,6 @@ import org.emulinker.kaillera.model.impl.KailleraGameImpl
 import org.emulinker.kaillera.model.impl.KailleraUserImpl
 import org.emulinker.kaillera.model.impl.Trivia
 import org.emulinker.kaillera.release.ReleaseInfo
-import java.net.InetSocketAddress
 
 interface KailleraServer {
   val maxUsers: Int

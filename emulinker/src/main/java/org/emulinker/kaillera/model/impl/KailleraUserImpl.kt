@@ -149,10 +149,6 @@ class KailleraUserImpl(
 
   override var tempDelay = 0
 
-  @Deprecated("This doesn't belong on [KailleraUser].")
-  override val allUsersInServer: Collection<KailleraUserImpl>
-    get() = server.users
-
   override fun addIgnoredUser(address: String) {
     ignoredUsers.add(address)
   }
@@ -178,9 +174,7 @@ class KailleraUserImpl(
     return here
   }
 
-  override fun searchIgnoredUsers(address: String): Boolean {
-    return ignoredUsers.any { it == address }
-  }
+  override fun searchIgnoredUsers(address: String): Boolean = ignoredUsers.any { it == address }
 
   override var loggedIn = false
 
@@ -217,7 +211,7 @@ class KailleraUserImpl(
     delay(500.milliseconds)
     addEvent(StopFlagEvent())
     listener.stop()
-    eventChannel.cancel()
+    eventChannel.close()
     userCoroutineScope.cancel("Stopping KailleraUser $userData")
   }
 

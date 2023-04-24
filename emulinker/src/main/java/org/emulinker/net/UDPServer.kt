@@ -39,8 +39,7 @@ abstract class UDPServer(private val listeningOnPortsCounter: Counter) : Executa
   			logger.atWarning().log("Introducing " + artificalDelay + "ms artifical delay!");
   	}
   */
-  // TODO(nue): This is supposed to be the server's port i guess but is always 0..
-  val bindPort = 0
+  var boundPort: Int? = null
 
   private lateinit var serverSocket: BoundDatagramSocket
 
@@ -72,8 +71,6 @@ abstract class UDPServer(private val listeningOnPortsCounter: Counter) : Executa
     logger.atSevere().log("YOU DID IT, IT IS STOPPING") // REMOVEME
     stopFlag = true
     serverSocket.close()
-    serverSocket.dispose()
-    serverSocket.incoming.cancel()
   }
 
   @Synchronized
@@ -83,7 +80,7 @@ abstract class UDPServer(private val listeningOnPortsCounter: Counter) : Executa
         io.ktor.network.sockets.InetSocketAddress("0.0.0.0", port),
         bufferSize
       )
-
+    boundPort = port
     logger.atInfo().log("Accepting messages at %s", serverSocket.localAddress)
   }
 
@@ -117,7 +114,7 @@ abstract class UDPServer(private val listeningOnPortsCounter: Counter) : Executa
     try {
       serverSocket.send(Datagram(ByteReadPacket(buffer), toSocketAddress.toKtorAddress()))
     } catch (e: Exception) {
-      logger.atSevere().withCause(e).log("Failed to send on port %s", bindPort)
+      logger.atSevere().withCause(e).log("Failed to send on port %s", boundPort)
     }
   }
 
