@@ -7,7 +7,6 @@ import javax.inject.Singleton
 import kotlin.concurrent.schedule
 import kotlin.coroutines.CoroutineContext
 import kotlin.time.Duration.Companion.minutes
-import kotlinx.coroutines.delay
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.controller.connectcontroller.ConnectController
 import org.emulinker.kaillera.master.PublicServerInformation

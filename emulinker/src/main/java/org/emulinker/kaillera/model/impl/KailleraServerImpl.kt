@@ -460,7 +460,6 @@ internal constructor(
     CloseGameException::class
   )
   override fun quit(user: KailleraUser, message: String?) {
-    logger.atSevere().log("QUITTING THE SERVER") // REMOVEME
     lookingForGameReporter.cancelActionsForUser(user.userData.id)
     if (!user.loggedIn) {
       usersMap.remove(user.userData.id)
@@ -780,7 +779,6 @@ internal constructor(
         for (user in users) {
 
           //          TODO(nue): Is this necessary?
-          // user.mutex.withLock {
           val access = accessManager.getAccess(user.connectSocketAddress.address)
           user.accessLevel = access
 
@@ -853,7 +851,6 @@ internal constructor(
                 .log("Error forcing %s quit because emulator restricted!", user)
             }
           } else {}
-          // End of user.mutex.withLock {
         }
       }
     } catch (e: Throwable) {

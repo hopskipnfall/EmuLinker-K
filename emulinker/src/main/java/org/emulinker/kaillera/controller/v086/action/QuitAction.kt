@@ -27,14 +27,11 @@ class QuitAction @Inject internal constructor() :
   override suspend fun performAction(message: Quit.QuitRequest, clientHandler: V086ClientHandler) {
     actionPerformedCount++
     try {
-      logger.atSevere().log("Received quit action: %s", message) // REMOVEME
       clientHandler.user.quit(message.message)
 
+      // There are race conditions at play...
       Timer().schedule(delay = 1.seconds.inWholeMilliseconds) {
-        runBlocking {
-          logger.atSevere().log("STOPPING THE CLIENT HANDLER") // REMOVEME
-          clientHandler.stop()
-        }
+        runBlocking { clientHandler.stop() }
       }
     } catch (e: ActionException) {
       throw FatalActionException("Failed to quit: " + e.message)
