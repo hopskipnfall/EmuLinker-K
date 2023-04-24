@@ -170,7 +170,6 @@ constructor(
   }
 
   override suspend fun stop() {
-    logger.atSevere().log("Stopping ClientHandler for %d", user.userData.id) // REMOVEME
     if (stopFlag) return
     var port: Int? = null
     if (isBound) {
