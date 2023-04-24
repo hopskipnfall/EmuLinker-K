@@ -23,8 +23,7 @@ sealed class Quit : V086Message() {
     QuitSerializer.write(buffer, this)
   }
 
-  data class QuitNotification
-  constructor(
+  data class QuitNotification(
     override val messageNumber: Int,
     val username: String,
     val userId: Int,
@@ -37,8 +36,7 @@ sealed class Quit : V086Message() {
     }
   }
 
-  data class QuitRequest
-  constructor(override val messageNumber: Int, override val message: String) : Quit()
+  data class QuitRequest(override val messageNumber: Int, override val message: String) : Quit()
 
   companion object {
     const val ID: Byte = 0x01

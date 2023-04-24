@@ -45,7 +45,7 @@ class KailleraMasterUpdateTask(
     val params =
       arrayOf(
         NameValuePair("servername", publicInfo.serverName),
-        NameValuePair("port", connectController.bindPort.toString()),
+        NameValuePair("port", connectController.boundPort.toString()),
         NameValuePair("nbusers", kailleraServer.users.size.toString()),
         NameValuePair("maxconn", kailleraServer.maxUsers.toString()),
         NameValuePair("version", "ESF" + releaseInfo.versionString),

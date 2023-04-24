@@ -1,10 +1,22 @@
 package org.emulinker.kaillera.model
 
 import java.net.InetSocketAddress
-import kotlin.Throws
 import org.emulinker.kaillera.access.AccessManager
-import org.emulinker.kaillera.model.event.KailleraEventListener
-import org.emulinker.kaillera.model.exception.*
+import org.emulinker.kaillera.controller.v086.V086ClientHandler
+import org.emulinker.kaillera.model.exception.ChatException
+import org.emulinker.kaillera.model.exception.ClientAddressException
+import org.emulinker.kaillera.model.exception.CloseGameException
+import org.emulinker.kaillera.model.exception.ConnectionTypeException
+import org.emulinker.kaillera.model.exception.CreateGameException
+import org.emulinker.kaillera.model.exception.DropGameException
+import org.emulinker.kaillera.model.exception.FloodException
+import org.emulinker.kaillera.model.exception.LoginException
+import org.emulinker.kaillera.model.exception.NewConnectionException
+import org.emulinker.kaillera.model.exception.PingTimeException
+import org.emulinker.kaillera.model.exception.QuitException
+import org.emulinker.kaillera.model.exception.QuitGameException
+import org.emulinker.kaillera.model.exception.ServerFullException
+import org.emulinker.kaillera.model.exception.UserNameException
 import org.emulinker.kaillera.model.impl.KailleraGameImpl
 import org.emulinker.kaillera.model.impl.KailleraUserImpl
 import org.emulinker.kaillera.model.impl.Trivia
@@ -32,7 +44,8 @@ interface KailleraServer {
   fun newConnection(
     clientSocketAddress: InetSocketAddress,
     protocol: String,
-    listener: KailleraEventListener
+    // For acting on KailleraEvents.
+    v086ClientHandler: V086ClientHandler
   ): KailleraUser
 
   @Throws(

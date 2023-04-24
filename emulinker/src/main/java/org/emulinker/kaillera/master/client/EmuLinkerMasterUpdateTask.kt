@@ -47,7 +47,7 @@ class EmuLinkerMasterUpdateTask(
           "ipAddress" to publicInfo.connectAddress,
           "location" to publicInfo.location,
           "website" to publicInfo.website,
-          "port" to connectController.bindPort.toString(),
+          "port" to connectController.boundPort.toString(),
           "numUsers" to kailleraServer.users.size.toString(),
           "maxUsers" to kailleraServer.maxUsers.toString(),
           "numGames" to kailleraServer.games.size.toString(),

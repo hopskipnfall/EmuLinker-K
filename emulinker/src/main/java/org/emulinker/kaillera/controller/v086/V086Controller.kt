@@ -1,24 +1,88 @@
 package org.emulinker.kaillera.controller.v086
 
+import com.codahale.metrics.MetricRegistry
 import com.google.common.flogger.FluentLogger
 import java.net.InetSocketAddress
-import java.net.SocketException
-import java.util.*
+import java.util.Queue
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentLinkedQueue
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.reflect.KClass
-import kotlin.time.Duration.Companion.milliseconds
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineName
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.plus
 import org.apache.commons.configuration.Configuration
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.controller.KailleraServerController
-import org.emulinker.kaillera.controller.v086.action.*
-import org.emulinker.kaillera.controller.v086.protocol.*
+import org.emulinker.kaillera.controller.v086.action.ACKAction
+import org.emulinker.kaillera.controller.v086.action.CachedGameDataAction
+import org.emulinker.kaillera.controller.v086.action.ChatAction
+import org.emulinker.kaillera.controller.v086.action.CloseGameAction
+import org.emulinker.kaillera.controller.v086.action.CreateGameAction
+import org.emulinker.kaillera.controller.v086.action.DropGameAction
+import org.emulinker.kaillera.controller.v086.action.GameChatAction
+import org.emulinker.kaillera.controller.v086.action.GameDataAction
+import org.emulinker.kaillera.controller.v086.action.GameDesynchAction
+import org.emulinker.kaillera.controller.v086.action.GameInfoAction
+import org.emulinker.kaillera.controller.v086.action.GameKickAction
+import org.emulinker.kaillera.controller.v086.action.GameStatusAction
+import org.emulinker.kaillera.controller.v086.action.GameTimeoutAction
+import org.emulinker.kaillera.controller.v086.action.InfoMessageAction
+import org.emulinker.kaillera.controller.v086.action.JoinGameAction
+import org.emulinker.kaillera.controller.v086.action.KeepAliveAction
+import org.emulinker.kaillera.controller.v086.action.LoginAction
+import org.emulinker.kaillera.controller.v086.action.PlayerDesynchAction
+import org.emulinker.kaillera.controller.v086.action.QuitAction
+import org.emulinker.kaillera.controller.v086.action.QuitGameAction
+import org.emulinker.kaillera.controller.v086.action.StartGameAction
+import org.emulinker.kaillera.controller.v086.action.UserReadyAction
+import org.emulinker.kaillera.controller.v086.action.V086Action
+import org.emulinker.kaillera.controller.v086.action.V086GameEventHandler
+import org.emulinker.kaillera.controller.v086.action.V086ServerEventHandler
+import org.emulinker.kaillera.controller.v086.action.V086UserEventHandler
+import org.emulinker.kaillera.controller.v086.protocol.Ack
+import org.emulinker.kaillera.controller.v086.protocol.AllReady
+import org.emulinker.kaillera.controller.v086.protocol.CachedGameData
+import org.emulinker.kaillera.controller.v086.protocol.Chat
+import org.emulinker.kaillera.controller.v086.protocol.CreateGame
+import org.emulinker.kaillera.controller.v086.protocol.GameChat
+import org.emulinker.kaillera.controller.v086.protocol.GameData
+import org.emulinker.kaillera.controller.v086.protocol.GameKick
+import org.emulinker.kaillera.controller.v086.protocol.JoinGame
+import org.emulinker.kaillera.controller.v086.protocol.KeepAlive
+import org.emulinker.kaillera.controller.v086.protocol.PlayerDrop
+import org.emulinker.kaillera.controller.v086.protocol.Quit
+import org.emulinker.kaillera.controller.v086.protocol.QuitGame
+import org.emulinker.kaillera.controller.v086.protocol.StartGame
+import org.emulinker.kaillera.controller.v086.protocol.UserInformation
 import org.emulinker.kaillera.model.KailleraServer
 import org.emulinker.kaillera.model.KailleraUser
-import org.emulinker.kaillera.model.event.*
+import org.emulinker.kaillera.model.event.AllReadyEvent
+import org.emulinker.kaillera.model.event.ChatEvent
+import org.emulinker.kaillera.model.event.ConnectedEvent
+import org.emulinker.kaillera.model.event.GameChatEvent
+import org.emulinker.kaillera.model.event.GameClosedEvent
+import org.emulinker.kaillera.model.event.GameCreatedEvent
+import org.emulinker.kaillera.model.event.GameDataEvent
+import org.emulinker.kaillera.model.event.GameDesynchEvent
+import org.emulinker.kaillera.model.event.GameEvent
+import org.emulinker.kaillera.model.event.GameInfoEvent
+import org.emulinker.kaillera.model.event.GameStartedEvent
+import org.emulinker.kaillera.model.event.GameStatusChangedEvent
+import org.emulinker.kaillera.model.event.GameTimeoutEvent
+import org.emulinker.kaillera.model.event.InfoMessageEvent
+import org.emulinker.kaillera.model.event.PlayerDesynchEvent
+import org.emulinker.kaillera.model.event.ServerEvent
+import org.emulinker.kaillera.model.event.UserDroppedGameEvent
+import org.emulinker.kaillera.model.event.UserEvent
+import org.emulinker.kaillera.model.event.UserJoinedEvent
+import org.emulinker.kaillera.model.event.UserJoinedGameEvent
+import org.emulinker.kaillera.model.event.UserQuitEvent
+import org.emulinker.kaillera.model.event.UserQuitGameEvent
 import org.emulinker.kaillera.model.exception.NewConnectionException
 import org.emulinker.kaillera.model.exception.ServerFullException
 import org.emulinker.net.UdpSocketProvider
@@ -53,7 +117,8 @@ internal constructor(
   gameTimeoutAction: GameTimeoutAction,
   infoMessageAction: InfoMessageAction,
   private val v086ClientHandlerFactory: V086ClientHandler.Factory,
-  flags: RuntimeFlags
+  flags: RuntimeFlags,
+  metrics: MetricRegistry
 ) : KailleraServerController {
   /** [CoroutineScope] for long-running actions attached to the controller. */
   private val controllerCoroutineScope =
@@ -113,6 +178,9 @@ internal constructor(
     return "V086Controller[clients=${clientHandlers.size} isRunning=$isRunning]"
   }
 
+  private val coroutineCounter =
+    metrics.counter(MetricRegistry.name(V086Controller::class.java, "activeCoroutines"))
+
   /**
    * Receives new connections and delegates to a new V086ClientHandler instance for communication
    * over a separate port.
@@ -132,40 +200,26 @@ internal constructor(
 
     val clientHandler = v086ClientHandlerFactory.create(clientSocketAddress, this)
     val user: KailleraUser = server.newConnection(clientSocketAddress, protocol, clientHandler)
-    var boundPort: Int? = null
-    var bindAttempts = 0
-    while (bindAttempts++ < 5) {
-      val portInteger = portRangeQueue.poll()
-      if (portInteger == null) {
-        logger.atSevere().log("No ports are available to bind for: %s", user)
-      } else {
-        val port = portInteger.toInt()
-        logger.atInfo().log("Private port %d allocated to: %s", port, user)
+    val boundPort: Int
+    val portInteger = portRangeQueue.poll()
+    if (portInteger == null) {
+      throw NewConnectionException("No ports are available to bind for $user")
+    } else {
+      val port = portInteger.toInt()
+      logger.atInfo().log("Allocating private port %d for: %s", port, user)
+      clientHandler.bind(udpSocketProvider, port)
+      user.userCoroutineScope.launch {
+        coroutineCounter.inc()
         try {
-          clientHandler.bind(udpSocketProvider, port)
-          user.userCoroutineScope.launch { clientHandler.run(coroutineContext) }
-          boundPort = port
-          break
-        } catch (e: SocketException) {
-          logger.atSevere().withCause(e).log("Failed to bind to port %d for: %s", port, user)
-          logger
-            .atFine()
-            .log(
-              "%s returning port %d to available port queue: %d available",
-              this,
-              port,
-              portRangeQueue.size + 1
-            )
-          portRangeQueue.add(port)
+          clientHandler.run(coroutineContext)
+        } finally {
+          coroutineCounter.dec()
         }
       }
-      // pause very briefly to give the OS a chance to free a port
-      delay(5.milliseconds)
+      boundPort = port
     }
-    if (boundPort == null) {
-      clientHandler.stop()
-      throw NewConnectionException("Failed to bind!")
-    }
+    // pause very briefly to give the OS a chance to free a port
+    Thread.sleep(5)
     clientHandler.start(user)
     return boundPort
   }
@@ -175,7 +229,6 @@ internal constructor(
     isRunning = true
   }
 
-  @Synchronized
   override suspend fun stop() {
     isRunning = false
     clientHandlers.values.forEach { it.stop() }

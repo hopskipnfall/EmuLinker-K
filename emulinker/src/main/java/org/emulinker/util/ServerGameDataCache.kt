@@ -4,6 +4,7 @@ import java.lang.IndexOutOfBoundsException
 import java.util.Arrays
 import java.util.HashMap
 
+// TODO(nue): This class is never used. Remove?
 // Adapted from http://www.smotricz.com/kabutz/Issue027.html
 class ServerGameDataCache(size: Int) : GameDataCache {
   // array holds the elements
@@ -30,12 +31,14 @@ class ServerGameDataCache(size: Int) : GameDataCache {
 
   override fun toString() = "ServerGameDataCache[size=$size head=$head tail=$tail]"
 
-  // or size == 0
-  override val isEmpty = head == tail
+  override fun contains(element: ByteArray?): Boolean = indexOf(element) >= 0
 
-  override fun contains(data: ByteArray?): Boolean {
-    return indexOf(data) >= 0
-  }
+  override fun containsAll(elements: Collection<ByteArray?>): Boolean =
+    elements.all { contains(it) }
+
+  override fun isEmpty(): Boolean = size == 0
+
+  override fun iterator(): Iterator<ByteArray?> = array.iterator()
 
   override fun indexOf(data: ByteArray?): Int {
     //		Integer i = map.get(Arrays.toString(data));
@@ -90,7 +93,9 @@ class ServerGameDataCache(size: Int) : GameDataCache {
   }
 
   override fun clear() {
-    for (i in 0 until size) array[convert(i)] = null
+    for (i in 0 until size) {
+      array[convert(i)] = null
+    }
     size = 0
     tail = size
     head = tail

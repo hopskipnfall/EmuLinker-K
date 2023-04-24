@@ -8,14 +8,17 @@ import org.emulinker.kaillera.model.ConnectionType
 import org.emulinker.kaillera.model.GameStatus
 import org.emulinker.kaillera.model.UserStatus
 import org.emulinker.util.EmuUtil
+import org.emulinker.util.EmuUtil.toHexString
 import org.emulinker.util.UnsignedUtil.getUnsignedInt
 import org.emulinker.util.UnsignedUtil.getUnsignedShort
 import org.emulinker.util.UnsignedUtil.putUnsignedInt
 import org.emulinker.util.UnsignedUtil.putUnsignedShort
 
-data class ServerStatus
-constructor(override val messageNumber: Int, val users: List<User>, val games: List<Game>) :
-  V086Message() {
+data class ServerStatus(
+  override val messageNumber: Int,
+  val users: List<User>,
+  val games: List<Game>
+) : V086Message() {
 
   override val messageTypeId = ID
 
@@ -31,8 +34,7 @@ constructor(override val messageNumber: Int, val users: List<User>, val games: L
   }
 
   // TODO(nue): this User and Game class should not be here.
-  data class User
-  constructor(
+  data class User(
     val username: String,
     val ping: Long,
     val status: UserStatus,
@@ -71,8 +73,7 @@ constructor(override val messageNumber: Int, val users: List<User>, val games: L
     }
   }
 
-  data class Game
-  constructor(
+  data class Game(
     val romName: String,
     val gameId: Int,
     val clientType: String,
@@ -126,9 +127,7 @@ constructor(override val messageNumber: Int, val users: List<User>, val games: L
       }
       val b = buffer.get()
       if (b.toInt() != 0x00) {
-        throw MessageFormatException(
-          "Invalid Server Status format: byte 0 = " + EmuUtil.byteToHex(b)
-        )
+        throw MessageFormatException("Invalid Server Status format: byte 0 = " + b.toHexString())
       }
       val numUsers = buffer.int
       val numGames = buffer.int

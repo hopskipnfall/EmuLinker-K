@@ -95,7 +95,7 @@ internal constructor(
   }
 
   override fun toString(): String =
-    if (bindPort > 0) "ConnectController($bindPort)" else "ConnectController(unbound)"
+    if (boundPort != null) "ConnectController($boundPort)" else "ConnectController(unbound)"
 
   override suspend fun start(
     udpSocketProvider: UdpSocketProvider,
@@ -147,7 +147,6 @@ internal constructor(
     // structure, so I'm going to handle it  all in this class alone
     if (inMessage is ConnectMessage_PING) {
       pingCount++
-      logger.atFine().log("Ping from: %s", formattedSocketAddress)
       send(ConnectMessage_PONG(), remoteSocketAddress)
       return
     }
@@ -190,7 +189,7 @@ internal constructor(
                 lastAddressCount = 0
                 failedToStartCount++
                 logger
-                  .atFine()
+                  .atInfo()
                   .log("SF MOD: HAMMER PROTECTION (2 Min Ban): %s", formattedSocketAddress)
                 accessManager.addTempBan(remoteSocketAddress.address.hostAddress, 2.minutes)
                 return

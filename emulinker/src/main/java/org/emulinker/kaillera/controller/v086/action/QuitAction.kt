@@ -1,8 +1,12 @@
 package org.emulinker.kaillera.controller.v086.action
 
 import com.google.common.flogger.FluentLogger
+import java.util.Timer
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.concurrent.schedule
+import kotlin.time.Duration.Companion.seconds
+import kotlinx.coroutines.runBlocking
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086ClientHandler
 import org.emulinker.kaillera.controller.v086.protocol.Quit
@@ -24,6 +28,11 @@ class QuitAction @Inject internal constructor() :
     actionPerformedCount++
     try {
       clientHandler.user.quit(message.message)
+
+      // There are race conditions at play...
+      Timer().schedule(delay = 1.seconds.inWholeMilliseconds) {
+        runBlocking { clientHandler.stop() }
+      }
     } catch (e: ActionException) {
       throw FatalActionException("Failed to quit: " + e.message)
     }

@@ -24,15 +24,19 @@ class ClientGameDataCache(size: Int) : GameDataCache {
   override var size = 0
     private set
 
+  override fun containsAll(elements: Collection<ByteArray?>): Boolean =
+    elements.all { contains(it) }
+
+  override fun isEmpty(): Boolean = size == 0
+
+  override fun iterator(): Iterator<ByteArray?> = array.iterator()
+
   override fun toString(): String {
     return "ClientGameDataCache[size=$size head=$head tail=$tail]"
   }
 
-  // or size == 0
-  override val isEmpty = head == tail // or size == 0
-
-  override fun contains(data: ByteArray?): Boolean {
-    return indexOf(data) >= 0
+  override fun contains(element: ByteArray?): Boolean {
+    return indexOf(element) >= 0
   }
 
   override fun indexOf(data: ByteArray?): Int {
@@ -40,12 +44,12 @@ class ClientGameDataCache(size: Int) : GameDataCache {
     return -1
   }
 
-  override fun get(index: Int): ByteArray? {
+  override operator fun get(index: Int): ByteArray? {
     rangeCheck(index)
     return array[convert(index)]
   }
 
-  override fun set(index: Int, data: ByteArray?): ByteArray? {
+  override operator fun set(index: Int, data: ByteArray?): ByteArray? {
     rangeCheck(index)
     val convertedIndex = convert(index)
     val oldValue = array[convertedIndex]

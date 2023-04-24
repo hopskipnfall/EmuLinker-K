@@ -3,7 +3,6 @@ package org.emulinker.kaillera.access
 import java.time.Instant
 import java.util.*
 import kotlin.time.Duration
-import kotlin.time.ExperimentalTime
 import kotlin.time.toJavaDuration
 import org.emulinker.util.WildcardStringPattern
 
@@ -15,7 +14,6 @@ sealed class TemporaryAttribute(accessStr: String, val duration: Duration) {
       .map { WildcardStringPattern(it) }
       .toList()
 
-  @OptIn(ExperimentalTime::class)
   private val endTime = Instant.now().plus(duration.toJavaDuration())
 
   val isExpired

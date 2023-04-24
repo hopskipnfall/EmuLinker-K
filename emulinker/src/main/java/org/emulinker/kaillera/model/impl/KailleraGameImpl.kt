@@ -193,7 +193,6 @@ class KailleraGameImpl(
     throw GameKickException(EmuLang.getString("KailleraGameImpl.GameKickErrorUserNotFound"))
   }
 
-  @Synchronized
   @Throws(JoinGameException::class)
   override suspend fun join(user: KailleraUser): Int {
     val access = server.accessManager.getAccess(user.socketAddress.address)

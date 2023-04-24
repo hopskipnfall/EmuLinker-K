@@ -60,8 +60,7 @@ data class RuntimeFlags(
     require(maxUserNameLength <= 31) { "server.maxUserNameLength must be <= 31" }
     require(maxGameNameLength <= 127) { "server.maxGameNameLength must be <= 127" }
     require(maxClientNameLength <= 127) { "server.maxClientNameLength must be <= 127" }
-    require(maxPing > 0) { "server.maxPing can not be <= 0" }
-    require(maxPing <= 1000) { "server.maxPing can not be > 1000" }
+    require(maxPing in 1..1000) { "server.maxPing must be in 1..1000" }
     require(keepAliveTimeout.isPositive()) {
       "server.keepAliveTimeout must be > 0 (190 is recommended)"
     }

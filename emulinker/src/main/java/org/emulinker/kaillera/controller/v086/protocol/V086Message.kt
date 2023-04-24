@@ -34,7 +34,8 @@ abstract class V086Message : ByteBufferMessage() {
    */
   abstract val messageNumber: Int
 
-  @Deprecated("We should try to use a sealed class instead of relying on this messageId field")
+  // TODO(nue): Think about this:
+  //  @Deprecated("We should try to use a sealed class instead of relying on this messageId field")
   abstract val messageTypeId: Byte
 
   /** The total number of bytes the message takes up, including the message ID byte. */

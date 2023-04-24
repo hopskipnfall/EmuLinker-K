@@ -47,11 +47,9 @@ constructor(
   /** The V086Controller that started this client handler. */
   @param:Assisted val controller: V086Controller,
   @Named("listeningOnPortsCounter") listeningOnPortsCounter: Counter,
-) : UDPServer(listeningOnPortsCounter), KailleraEventListener {
+) : UDPServer(listeningOnPortsCounter) {
   lateinit var user: KailleraUser
     private set
-
-  private val mutex = Mutex()
 
   private var messageNumberCounter = 0
 
@@ -72,7 +70,6 @@ constructor(
   private val inBuffer: ByteBuffer = ByteBuffer.allocateDirect(flags.v086BufferSize)
   private val outBuffer: ByteBuffer = ByteBuffer.allocateDirect(flags.v086BufferSize)
 
-  private val inMutex = Mutex()
   private val outMutex = Mutex()
 
   private var testStart: Long = 0
@@ -128,7 +125,7 @@ constructor(
   }
 
   override fun toString() =
-    if (bindPort > 0) "V086Controller($bindPort)" else "V086Controller(unbound)"
+    if (boundPort != null) "V086Controller($boundPort)" else "V086Controller(unbound)"
 
   @get:Synchronized
   val nextMessageNumber: Int
@@ -169,50 +166,26 @@ constructor(
 
   fun start(user: KailleraUser) {
     this.user = user
-
-    //    controller.threadPool.execute(this) // NUEFIXME
-
-    /*
-    long s = System.currentTimeMillis();
-    while (!isBound() && (System.currentTimeMillis() - s) < 1000)
-    {
-    try
-    {
-    delay(100.milliseconds);
-    }
-    catch (Exception e)
-    {
-    logger.atSevere().withCause(e).log("Sleep Interrupted!");
-    }
-    }
-
-    if (!isBound())
-    {
-    logger.atSevere().log("V086ClientHandler failed to start for client from " + getRemoteInetAddress().getHostAddress());
-    return;
-    }
-    */
     controller.clientHandlers[user.userData.id] = this
   }
 
   override suspend fun stop() {
-    mutex.withLock {
-      logger.atFine().log("Stopping ClientHandler for %d", user.userData.id)
-      if (stopFlag) return
-      var port = -1
-      if (isBound) port = bindPort
-      super.stop()
-      if (port > 0) {
-        logger
-          .atFine()
-          .log(
-            "%s returning port %d to available port queue: %d available",
-            this,
-            port,
-            controller.portRangeQueue.size + 1
-          )
-        controller.portRangeQueue.add(port)
-      }
+    if (stopFlag) return
+    var port: Int? = null
+    if (isBound) {
+      port = boundPort
+    }
+    super.stop()
+    if (port != null) {
+      logger
+        .atFine()
+        .log(
+          "%s returning port %d to available port queue: %d available",
+          this,
+          port,
+          controller.portRangeQueue.size + 1
+        )
+      controller.portRangeQueue.add(port)
     }
     controller.clientHandlers.remove(user.userData.id)
     user.stop()
@@ -227,115 +200,108 @@ constructor(
   }
 
   private suspend fun handleReceived(buffer: ByteBuffer) {
-    // TODO(nue): Since there's only one request running at a time, I think we can safely remove
-    // this.
-    inMutex.withLock {
-      val lastMessageNumberUsed = lastMessageNumber
-      val inBundle =
-        try {
-          parse(buffer, lastMessageNumber)
-        } catch (e: ParseException) {
-          buffer.rewind()
-          logger.atWarning().withCause(e).log("%s failed to parse: %s", this, dumpBuffer(buffer))
-          null
-        } catch (e: V086BundleFormatException) {
-          buffer.rewind()
-          logger
-            .atWarning()
-            .withCause(e)
-            .log("%s received invalid message bundle: %s", this, dumpBuffer(buffer))
-          null
-        } catch (e: MessageFormatException) {
-          buffer.rewind()
-          logger
-            .atWarning()
-            .withCause(e)
-            .log("%s received invalid message: %s}", this, dumpBuffer(buffer))
-          null
-        } ?: return
+    val lastMessageNumberUsed = lastMessageNumber
+    val inBundle =
+      try {
+        parse(buffer, lastMessageNumber)
+      } catch (e: ParseException) {
+        buffer.rewind()
+        logger.atWarning().withCause(e).log("%s failed to parse: %s", this, dumpBuffer(buffer))
+        null
+      } catch (e: V086BundleFormatException) {
+        buffer.rewind()
+        logger
+          .atWarning()
+          .withCause(e)
+          .log("%s received invalid message bundle: %s", this, dumpBuffer(buffer))
+        null
+      } catch (e: MessageFormatException) {
+        buffer.rewind()
+        logger
+          .atWarning()
+          .withCause(e)
+          .log("%s received invalid message: %s}", this, dumpBuffer(buffer))
+        null
+      } ?: return
 
-      if (inBundle.messages.firstOrNull() == null) {
+    if (inBundle.messages.firstOrNull() == null) {
+      logger
+        .atFine()
+        .atMostEvery(1, MINUTES)
+        .log(
+          "Received request from User %d containing no messages. inBundle.messages.size = %d. numMessages: %d, buffer dump: %s, lastMessageNumberUsed: %d",
+          user.userData.id,
+          inBundle.messages.size,
+          inBundle.numMessages,
+          buffer.dumpBufferFromBeginning(),
+          lastMessageNumberUsed
+        )
+    }
+
+    debugLog {
+      logger
+        .atFinest()
+        .log("-> FROM user %d: %s", user.userData.id, inBundle.messages.firstOrNull())
+    }
+
+    clientRetryCount =
+      if (inBundle.numMessages == 0) {
         logger
           .atFine()
-          .atMostEvery(1, MINUTES)
-          .log(
-            "Received request from User %d containing no messages. inBundle.messages.size = %d. numMessages: %d, buffer dump: %s, lastMessageNumberUsed: %d",
-            user.userData.id,
-            inBundle.messages.size,
-            inBundle.numMessages,
-            buffer.dumpBufferFromBeginning(),
-            lastMessageNumberUsed
-          )
+          .log("%s received bundle of %d messages from %s", this, inBundle.numMessages, user)
+        clientRetryCount++
+        resend(clientRetryCount)
+        return
+      } else {
+        0
       }
 
-      debugLog {
-        logger
-          .atFinest()
-          .log("-> FROM user %d: %s", user.userData.id, inBundle.messages.firstOrNull())
-      }
-      clientRetryCount =
-        if (inBundle.numMessages == 0) {
-          logger
-            .atFine()
-            .log("%s received bundle of %d messages from %s", this, inBundle.numMessages, user)
-          clientRetryCount++
-          resend(clientRetryCount)
-          return
-        } else {
-          0
+    try {
+      val messages = inBundle.messages
+      if (inBundle.numMessages == 1) {
+        lastMessageNumber = messages.single()!!.messageNumber
+        val action = controller.actions[messages[0]!!.messageTypeId.toInt()]
+        if (action == null) {
+          logger.atSevere().log("No action defined to handle client message: %s", messages[0])
         }
-      try {
-        val messages = inBundle.messages
-        if (inBundle.numMessages == 1) {
-          lastMessageNumber = messages.single()!!.messageNumber
-          val action = controller.actions[messages[0]!!.messageTypeId.toInt()]
-          if (action == null) {
-            logger.atSevere().log("No action defined to handle client message: %s", messages[0])
-          }
-          (action as V086Action<V086Message>).performAction(messages[0]!!, this)
-        } else {
-          // read the bundle from back to front to process the oldest messages first
-          for (i in inBundle.numMessages - 1 downTo 0) {
-            /**
-             * already extracts messages with higher numbers when parsing, it does not need to be
-             * checked and this causes an error if messageNumber is 0 and lastMessageNumber is
-             * 0xFFFF if (messages [i].getNumber() > lastMessageNumber)
-             */
-            prevMessageNumber = lastMessageNumber
-            lastMessageNumber = messages[i]!!.messageNumber
-            if (prevMessageNumber + 1 != lastMessageNumber) {
-              if (prevMessageNumber == 0xFFFF && lastMessageNumber == 0) {
-                // exception; do nothing
-              } else {
-                logger
-                  .atWarning()
-                  .log(
-                    "%s dropped a packet! (%d to %d)",
-                    user,
-                    prevMessageNumber,
-                    lastMessageNumber
-                  )
-                user.droppedPacket()
-              }
-            }
-            val action = controller.actions[messages[i]!!.messageTypeId.toInt()]
-            if (action == null) {
-              logger.atSevere().log("No action defined to handle client message: %s", messages[i])
+        (action as V086Action<V086Message>).performAction(messages[0]!!, this)
+      } else {
+        // read the bundle from back to front to process the oldest messages first
+        for (i in inBundle.numMessages - 1 downTo 0) {
+          /**
+           * already extracts messages with higher numbers when parsing, it does not need to be
+           * checked and this causes an error if messageNumber is 0 and lastMessageNumber is 0xFFFF
+           * if (messages [i].getNumber() > lastMessageNumber)
+           */
+          prevMessageNumber = lastMessageNumber
+          lastMessageNumber = messages[i]!!.messageNumber
+          if (prevMessageNumber + 1 != lastMessageNumber) {
+            if (prevMessageNumber == 0xFFFF && lastMessageNumber == 0) {
+              // exception; do nothing
             } else {
-              (action as V086Action<V086Message>).performAction(messages[i]!!, this)
+              logger
+                .atWarning()
+                .log("%s dropped a packet! (%d to %d)", user, prevMessageNumber, lastMessageNumber)
+              user.droppedPacket()
             }
           }
+          val action = controller.actions[messages[i]!!.messageTypeId.toInt()]
+          if (action == null) {
+            logger.atSevere().log("No action defined to handle client message: %s", messages[i])
+          } else {
+            (action as V086Action<V086Message>).performAction(messages[i]!!, this)
+          }
         }
-      } catch (e: FatalActionException) {
-        logger.atWarning().withCause(e).log("%s fatal action, closing connection", this)
-        stop()
       }
+    } catch (e: FatalActionException) {
+      logger.atWarning().withCause(e).log("%s fatal action, closing connection", this)
+      stop()
     }
   }
 
   override val bufferSize = flags.v086BufferSize
 
-  override suspend fun actionPerformed(event: KailleraEvent) {
+  suspend fun handleKailleraEvent(event: KailleraEvent) {
     when (event) {
       is GameEvent -> {
         val eventHandler = controller.gameEventHandlers[event::class]
@@ -376,8 +342,6 @@ constructor(
   }
 
   suspend fun resend(timeoutCounter: Int) {
-    // TODO(nue): Confirm it's safe to remove this.
-    //    outMutex.withLock {
     // if ((System.currentTimeMillis() - lastResend) > (user.getPing()*3))
     if (System.currentTimeMillis() - lastResend > controller.server.maxPing) {
       // int numToSend = (3+timeoutCounter);
@@ -389,7 +353,6 @@ constructor(
     } else {
       logger.atFine().log("Skipping resend...")
     }
-    //    }
   }
 
   suspend fun send(outMessage: V086Message?, numToSend: Int = 5) {

@@ -2,13 +2,10 @@ package org.emulinker.kaillera.model
 
 import java.net.InetSocketAddress
 import java.time.Instant
-import kotlin.Throws
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.sync.Mutex
-import org.emulinker.kaillera.model.event.KailleraEventListener
+import org.emulinker.kaillera.controller.v086.V086ClientHandler
 import org.emulinker.kaillera.model.exception.*
 import org.emulinker.kaillera.model.impl.KailleraGameImpl
-import org.emulinker.kaillera.model.impl.KailleraUserImpl
 
 interface KailleraUser {
   // Fields that only support getters.
@@ -28,15 +25,11 @@ interface KailleraUser {
   val isEmuLinkerClient: Boolean
   val lastActivity: Instant
   val lastKeepAlive: Instant
-  val listener: KailleraEventListener
+  val listener: V086ClientHandler
   val loggedIn: Boolean
   val protocol: String
   val server: KailleraServer
   val status: UserStatus
-
-  // TODO(nue): Get rid of this field.
-  @Deprecated("This doesn't belong on [KailleraUser].")
-  val allUsersInServer: Collection<KailleraUserImpl?>?
 
   var userData: UserData
 
@@ -121,6 +114,5 @@ interface KailleraUser {
   fun droppedPacket()
 
   suspend fun stop()
-  val mutex: Mutex
   val userCoroutineScope: CoroutineScope
 }
