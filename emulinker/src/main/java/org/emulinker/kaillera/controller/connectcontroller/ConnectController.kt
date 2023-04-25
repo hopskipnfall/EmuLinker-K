@@ -61,25 +61,17 @@ internal constructor(
   override val bufferSize = flags.connectControllerBufferSize
 
   private var internalBufferSize = 0
-  var startTime: Long = 0
-    private set
-  var requestCount = 0
-    private set
-  var messageFormatErrorCount = 0
-    private set
-  var protocolErrorCount = 0
-    private set
-  var deniedServerFullCount = 0
-    private set
-  var deniedOtherCount = 0
-    private set
+  private var startTime: Long = 0
+  private var requestCount = 0
+  private var messageFormatErrorCount = 0
+  private var protocolErrorCount = 0
+  private var deniedServerFullCount = 0
+  private var deniedOtherCount = 0
   private var lastAddress: String? = null
   private var lastAddressCount = 0
-  var failedToStartCount = 0
-    private set
+  private var failedToStartCount = 0
   private var connectCount = 0
-  var pingCount = 0
-    private set
+  private var pingCount = 0
 
   private lateinit var udpSocketProvider: UdpSocketProvider
 

@@ -16,6 +16,7 @@ abstract class ByteBufferMessage {
   }
 
   fun releaseBuffer() {}
+
   fun toBuffer(): ByteBuffer {
     initBuffer()
     writeTo(buffer)

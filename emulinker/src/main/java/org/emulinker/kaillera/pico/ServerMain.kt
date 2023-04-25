@@ -20,7 +20,7 @@ import kotlinx.coroutines.runBlocking
 
 private val logger = FluentLogger.forEnclosingClass()
 
-val MINIMUM_JAVA_VERSION = 11
+const val MINIMUM_JAVA_VERSION = 11
 
 /** Main entry point for the Kaillera server. */
 fun main(): Unit = runBlocking {
