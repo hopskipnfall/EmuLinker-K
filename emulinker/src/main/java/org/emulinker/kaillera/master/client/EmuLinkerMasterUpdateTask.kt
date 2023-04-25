@@ -12,8 +12,7 @@ import org.emulinker.kaillera.model.GameStatus
 import org.emulinker.kaillera.model.KailleraServer
 import org.emulinker.kaillera.release.ReleaseInfo
 
-// TODO(nue): Update this.
-private const val TOUCH_LIST_URL = "http://master.emulinker.org/touch_list.php"
+private const val TOUCH_LIST_URL = "http://kaillerareborn.2manygames.fr/touch_list.php"
 
 class EmuLinkerMasterUpdateTask(
   private val publicInfo: PublicServerInformation,
@@ -63,13 +62,13 @@ class EmuLinkerMasterUpdateTask(
     try {
       val statusCode = httpClient.executeMethod(meth)
       if (statusCode != HttpStatus.SC_OK)
-        logger.atSevere().log("Failed to touch EmuLinker Master: %s", meth.statusLine)
+        logger.atWarning().log("Failed to touch EmuLinker Master: %s", meth.statusLine)
       else {
         props.load(meth.responseBodyAsStream)
-        logger.atInfo().log("Touching EmuLinker Master done")
+        logger.atFine().log("Touching EmuLinker Master done")
       }
     } catch (e: Exception) {
-      logger.atSevere().withCause(e).log("Failed to touch EmuLinker Master")
+      logger.atWarning().withCause(e).log("Failed to touch EmuLinker Master")
     } finally {
       try {
         meth.releaseConnection()

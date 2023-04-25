@@ -49,7 +49,7 @@ fun main(): Unit = runBlocking {
     )
   }
 
-  component.masterListUpdater.start()
+  component.masterListUpdater.run()
   if (flags.metricsEnabled) {
     val metrics = component.metricRegistry
     metrics.registerAll(ThreadStatesGaugeSet())
