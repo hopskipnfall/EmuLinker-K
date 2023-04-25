@@ -11,7 +11,6 @@ import io.ktor.utils.io.core.ByteReadPacket
 import io.ktor.utils.io.core.Closeable
 import io.ktor.utils.io.core.readByteBuffer
 import io.ktor.utils.io.core.use
-import java.nio.Buffer
 import java.nio.ByteBuffer
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineName
@@ -84,6 +83,8 @@ class EvalClient(
 
   private val delayBetweenPackets = 1.seconds.div(connectionType.updatesPerSecond).times(frameDelay)
 
+  private var lastIncomingMessageNumber: Int = -1
+
   /**
    * Registers as a new user with the ConnectController server and joins the dedicated port
    * allocated for the user.
@@ -119,7 +120,11 @@ class EvalClient(
     evalCoroutineScope.launch {
       while (!killSwitch) {
         try {
-          val response = V086Bundle.parse(socket.receive().packet.readByteBuffer())
+          val response =
+            V086Bundle.parse(
+              socket.receive().packet.readByteBuffer(),
+              lastMessageID = lastIncomingMessageNumber
+            )
           handleIncoming(response)
         } catch (e: ParseException) {
 
@@ -143,7 +148,22 @@ class EvalClient(
   }
 
   private suspend fun handleIncoming(bundle: V086Bundle) {
-    val message = bundle.messages.first()
+    val message = bundle.messages.firstOrNull()
+
+    if (message == null) {
+      logger.atInfo().log("Received bundle with no messages!")
+      return
+    }
+    if (message.messageNumber != lastIncomingMessageNumber + 1) {
+      logger
+        .atSevere()
+        .log(
+          "Received message with unexpected messageNumber.. lastMessageNumber=%d, message=%d",
+          lastIncomingMessageNumber,
+          message
+        )
+    }
+    lastIncomingMessageNumber = message.messageNumber
 
     logger.atInfo().log("<<<<<<<< Received message: %s", message)
 
@@ -442,7 +462,7 @@ class EvalClient(
       lastMessageBuffer.fill(messageAsArray, messageAsArray.size)
       val outBundle = V086Bundle(messageAsArray, messageAsArray.size)
       outBundle.writeTo(outBuffer)
-      (outBuffer as Buffer).flip()
+      outBuffer.flip()
       logger.atInfo().log(">>>>>>>> SENT message: %s", outBundle.messages.first())
       socket.send(Datagram(ByteReadPacket(outBuffer), socket.remoteAddress))
     }

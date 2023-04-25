@@ -8,7 +8,6 @@ import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import java.net.InetAddress
 import java.net.InetSocketAddress
-import java.nio.Buffer
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.util.concurrent.TimeUnit.MINUTES
@@ -193,9 +192,7 @@ constructor(
 
   override fun allocateBuffer(): ByteBuffer {
     // return ByteBufferMessage.getBuffer(bufferSize);
-    // Cast to avoid issue with java version mismatch:
-    // https://stackoverflow.com/a/61267496/2875073
-    (inBuffer as Buffer).clear()
+    inBuffer.clear()
     return inBuffer
   }
 
@@ -365,11 +362,9 @@ constructor(
       val outBundle = V086Bundle(outMessages, numToSend)
       debugLog { logger.atFinest().log("<- TO P%d: %s", user.playerNumber, outMessage) }
       outBundle.writeTo(outBuffer)
-      // Cast to avoid issue with java version mismatch:
-      // https://stackoverflow.com/a/61267496/2875073
-      (outBuffer as Buffer).flip()
+      outBuffer.flip()
       send(outBuffer)
-      (outBuffer as Buffer).clear()
+      outBuffer.clear()
     }
   }
 

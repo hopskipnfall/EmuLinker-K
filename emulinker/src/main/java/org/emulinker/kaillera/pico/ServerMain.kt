@@ -3,9 +3,9 @@ package org.emulinker.kaillera.pico
 import com.codahale.metrics.ConsoleReporter
 import com.codahale.metrics.CsvReporter
 import com.codahale.metrics.MetricFilter
-import com.codahale.metrics.jvm.ThreadStatesGaugeSet
 import com.google.common.flogger.FluentLogger
 import java.io.File
+import java.lang.IllegalStateException
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -20,8 +20,25 @@ import kotlinx.coroutines.runBlocking
 
 private val logger = FluentLogger.forEnclosingClass()
 
+val MINIMUM_JAVA_VERSION = 11
+
 /** Main entry point for the Kaillera server. */
 fun main(): Unit = runBlocking {
+  val javaVersion: Double? = System.getProperty("java.specification.version").toDoubleOrNull()
+  when {
+    javaVersion == null -> {
+      logger.atSevere().log("Unable to detect installed Java version!")
+    }
+    javaVersion < MINIMUM_JAVA_VERSION -> {
+      throw IllegalStateException(
+        "Installed Java version $javaVersion is below the required minimum $MINIMUM_JAVA_VERSION. Please install a recent version of Java to run this server."
+      )
+    }
+    else -> {
+      logger.atInfo().log("Detected installed Java version: %f", javaVersion)
+    }
+  }
+
   val component = DaggerAppComponent.create()
   val flags = component.runtimeFlags
   // Change number of Dispatchers.IO coroutines.
@@ -52,7 +69,7 @@ fun main(): Unit = runBlocking {
   component.masterListUpdater.run()
   if (flags.metricsEnabled) {
     val metrics = component.metricRegistry
-    metrics.registerAll(ThreadStatesGaugeSet())
+    //    metrics.registerAll(ThreadStatesGaugeSet())
     //    metrics.registerAll(MemoryUsageGaugeSet())
 
     // TODO(nue): Pass this data to a central server so we can see how performance changes over

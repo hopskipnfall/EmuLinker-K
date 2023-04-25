@@ -4,7 +4,6 @@ import java.io.File
 import java.io.FileInputStream
 import java.net.InetSocketAddress
 import java.net.SocketAddress
-import java.nio.Buffer
 import java.nio.ByteBuffer
 import java.nio.charset.Charset
 import java.text.DateFormat
@@ -177,8 +176,7 @@ object EmuUtil {
   @JvmOverloads
   fun dumpBuffer(buffer: ByteBuffer, allHex: Boolean = false): String {
     val sb = StringBuilder()
-    // Cast to avoid issue with java version mismatch: https://stackoverflow.com/a/61267496/2875073
-    (buffer as Buffer).mark()
+    buffer.mark()
     while (buffer.hasRemaining()) {
       val b = buffer.get()
       if (!allHex && Character.isLetterOrDigit(Char(b.toUShort()))) sb.append(Char(b.toUShort()))
@@ -191,9 +189,8 @@ object EmuUtil {
 
   fun ByteBuffer.dumpBufferFromBeginning(allHex: Boolean = false): String {
     val sb = StringBuilder()
-    // Cast to avoid issue with java version mismatch: https://stackoverflow.com/a/61267496/2875073
     val pos = this.position()
-    (this as Buffer).position(0)
+    this.position(0)
     val byteList = mutableListOf<Byte>()
     while (this.hasRemaining()) {
       val b = this.get()
@@ -218,8 +215,7 @@ object EmuUtil {
       if (buffer.get().also { b = it }.toInt() == stopByte) break
       tempBuffer.put(b)
     }
-    // Cast to avoid issue with java version mismatch: https://stackoverflow.com/a/61267496/2875073
-    return charset.decode((tempBuffer as Buffer).flip() as ByteBuffer).toString()
+    return charset.decode(tempBuffer.flip() as ByteBuffer).toString()
   }
 
   fun writeString(

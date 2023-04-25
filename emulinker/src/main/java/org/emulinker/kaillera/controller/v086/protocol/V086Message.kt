@@ -1,7 +1,6 @@
 package org.emulinker.kaillera.controller.v086.protocol
 
 import com.google.common.flogger.FluentLogger
-import java.nio.Buffer
 import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.messaging.ByteBufferMessage
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
@@ -61,9 +60,7 @@ abstract class V086Message : ByteBufferMessage() {
     } else {
       buffer.putUnsignedShort(messageNumber)
       // there no realistic reason to use unsigned here since a single packet can't be that large
-      // Cast to avoid issue with java version mismatch:
-      // https://stackoverflow.com/a/61267496/2875073
-      (buffer as Buffer).mark()
+      buffer.mark()
       buffer.putUnsignedShort(len)
       //		buffer.putShort((short)getLength());
       buffer.put(messageTypeId)
