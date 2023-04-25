@@ -22,19 +22,19 @@ class AutoFireScanner2(private var game: KailleraGame, sensitivity: Int) : AutoF
       }
     }
 
-  protected var maxDelay = 0
-  protected var minReps = 0
+  private var maxDelay = 0
+  private var minReps = 0
 
-  protected var scanningJobs: Array<ScanningJob?>? = null
+  private var scanningJobs: Array<ScanningJob?>? = null
 
   override fun start(numPlayers: Int) {
     if (sensitivity <= 0) return
     scanningJobs = arrayOfNulls(numPlayers)
   }
 
-  override fun addPlayer(player: KailleraUser, playerNumber: Int) {
+  override fun addPlayer(user: KailleraUser, playerNumber: Int) {
     if (sensitivity <= 0 || scanningJobs == null) return
-    scanningJobs!![playerNumber - 1] = ScanningJob(player, playerNumber)
+    scanningJobs!![playerNumber - 1] = ScanningJob(user, playerNumber)
   }
 
   override fun stop(playerNumber: Int) {

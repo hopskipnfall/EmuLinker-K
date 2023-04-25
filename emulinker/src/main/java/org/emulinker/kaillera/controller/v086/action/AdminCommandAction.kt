@@ -701,17 +701,21 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
     clientHandler: V086ClientHandler?
   ) {
     if (admin.game != null) throw ActionException("Can't use /stealth while in a gameroom.")
-    if (message == "/stealthon") {
-      admin.inStealthMode = true
-      clientHandler!!.send(
-        InformationMessage(clientHandler.nextMessageNumber, "server", "Stealth Mode is on.")
-      )
-    } else if (message == "/stealthoff") {
-      admin.inStealthMode = false
-      clientHandler!!.send(
-        InformationMessage(clientHandler.nextMessageNumber, "server", "Stealth Mode is off.")
-      )
-    } else throw ActionException("Stealth Mode Error: /stealthon /stealthoff")
+    when (message) {
+      "/stealthon" -> {
+        admin.inStealthMode = true
+        clientHandler!!.send(
+          InformationMessage(clientHandler.nextMessageNumber, "server", "Stealth Mode is on.")
+        )
+      }
+      "/stealthoff" -> {
+        admin.inStealthMode = false
+        clientHandler!!.send(
+          InformationMessage(clientHandler.nextMessageNumber, "server", "Stealth Mode is off.")
+        )
+      }
+      else -> throw ActionException("Stealth Mode Error: /stealthon /stealthoff")
+    }
   }
 
   @Throws(ActionException::class, MessageFormatException::class)

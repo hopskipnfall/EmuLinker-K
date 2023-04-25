@@ -15,7 +15,7 @@ class PlayerDesynchAction @Inject internal constructor() :
   override var handledEventCount = 0
     private set
 
-  override fun toString() = PlayerDesynchAction::class.java.simpleName
+  override fun toString(): String = PlayerDesynchAction::class.java.simpleName
 
   override suspend fun handleEvent(event: PlayerDesynchEvent, clientHandler: V086ClientHandler) {
     handledEventCount++

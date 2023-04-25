@@ -67,15 +67,15 @@ class EvalClient(
 
   private val lastMessageBuffer = LastMessageBuffer(V086Controller.MAX_BUNDLE_SIZE)
 
-  lateinit var socket: ConnectedDatagramSocket
+  private lateinit var socket: ConnectedDatagramSocket
 
-  var gameDataCache: GameDataCache = ClientGameDataCache(256)
+  private var gameDataCache: GameDataCache = ClientGameDataCache(256)
 
   private val outMutex = Mutex()
 
   private var killSwitch = false
 
-  var lastOutgoingMessageNumber = -1
+  private var lastOutgoingMessageNumber = -1
 
   private var latestServerStatus: ServerStatus? = null
 

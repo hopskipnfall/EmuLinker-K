@@ -59,8 +59,8 @@ internal constructor(
   private val usersMap: MutableMap<Int, KailleraUserImpl> = ConcurrentHashMap(flags.maxUsers)
   override val users: MutableCollection<KailleraUserImpl> = usersMap.values
 
-  var gamesMap: MutableMap<Int, KailleraGameImpl> = ConcurrentHashMap(flags.maxGames)
-  override val games: MutableCollection<KailleraGameImpl> = gamesMap.values
+  private var gameIdToGame: MutableMap<Int, KailleraGameImpl> = ConcurrentHashMap(flags.maxGames)
+  override val games: MutableCollection<KailleraGameImpl> = gameIdToGame.values
 
   override var trivia: Trivia? = null
 
@@ -72,9 +72,7 @@ internal constructor(
     return usersMap[userID]
   }
 
-  override fun getGame(gameID: Int): KailleraGame? {
-    return gamesMap[gameID]
-  }
+  override fun getGame(gameID: Int): KailleraGame? = gameIdToGame[gameID]
 
   override val maxPing = flags.maxPing
   override val maxUsers = flags.maxUsers
@@ -103,7 +101,7 @@ internal constructor(
     stopFlag = true
     usersMap.values.forEach { it.stop() }
     usersMap.clear()
-    gamesMap.clear()
+    gameIdToGame.clear()
     kailleraServerCoroutineScope.cancel()
   }
 
@@ -603,7 +601,7 @@ internal constructor(
     }
     val gameID = getNextGameID()
     val game = KailleraGameImpl(gameID, romName, user, this, flags.gameBufferSize)
-    gamesMap[gameID] = game
+    gameIdToGame[gameID] = game
     addEvent(GameCreatedEvent(this, game))
     logger.atInfo().log("%s created: %s: %s", user, game, game.romName)
     try {
@@ -640,12 +638,12 @@ internal constructor(
       logger.atSevere().log("%s close %s failed: Not logged in", user, game)
       throw CloseGameException(getString("KailleraServerImpl.NotLoggedIn"))
     }
-    if (!gamesMap.containsKey(game.id)) {
+    if (!gameIdToGame.containsKey(game.id)) {
       logger.atSevere().log("%s close %s failed: not in list: %s", user, game, game)
       return
     }
     (game as KailleraGameImpl).close(user)
-    gamesMap.remove(game.id)
+    gameIdToGame.remove(game.id)
     logger.atInfo().log("%s closed: %s", user, game)
     addEvent(GameClosedEvent(this, game))
   }
@@ -890,11 +888,11 @@ internal constructor(
       )
       metrics.register(
         MetricRegistry.name(this.javaClass, "games", "waiting"),
-        Gauge { gamesMap.values.count { it.status == GameStatus.WAITING } }
+        Gauge { gameIdToGame.values.count { it.status == GameStatus.WAITING } }
       )
       metrics.register(
         MetricRegistry.name(this.javaClass, "games", "playing"),
-        Gauge { gamesMap.values.count { it.status == GameStatus.PLAYING } }
+        Gauge { gameIdToGame.values.count { it.status == GameStatus.PLAYING } }
       )
     }
   }

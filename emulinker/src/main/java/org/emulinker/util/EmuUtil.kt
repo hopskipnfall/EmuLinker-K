@@ -17,8 +17,8 @@ import org.emulinker.kaillera.pico.AppModule
 object EmuUtil {
   private val HEX_CHARS =
     charArrayOf('0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F')
-  @JvmField val LB = System.getProperty("line.separator")
-  @JvmField var DATE_FORMAT: DateFormat = SimpleDateFormat("MM/dd/yyyy HH:mm:ss")
+  val LB: String = System.getProperty("line.separator")
+  var DATE_FORMAT: DateFormat = SimpleDateFormat("MM/dd/yyyy HH:mm:ss")
 
   // TODO(nue): This looks like a hack. Maybe clean it up.
   fun systemIsWindows(): Boolean {
@@ -35,7 +35,7 @@ object EmuUtil {
     }
   }
 
-  fun loadProperties(file: File): Properties? {
+  private fun loadProperties(file: File): Properties? {
     var p: Properties? = null
     try {
       val `in` = FileInputStream(file)
@@ -64,7 +64,7 @@ object EmuUtil {
     return sb.toString()
   }
 
-  fun bytesToHex(data: ByteArray, sep: Char): String {
+  private fun bytesToHex(data: ByteArray, sep: Char): String {
     val len = data.size
     val sb = StringBuilder(len * 3)
     for (i in 0 until len) {
