@@ -1,6 +1,5 @@
 package org.emulinker.kaillera.controller.messaging
 
-import java.nio.Buffer
 import java.nio.ByteBuffer
 
 abstract class ByteBufferMessage {
@@ -20,8 +19,7 @@ abstract class ByteBufferMessage {
   fun toBuffer(): ByteBuffer {
     initBuffer()
     writeTo(buffer)
-    // Cast to avoid issue with java version mismatch: https://stackoverflow.com/a/61267496/2875073
-    (buffer as Buffer).flip()
+    buffer.flip()
     return buffer
   }
 

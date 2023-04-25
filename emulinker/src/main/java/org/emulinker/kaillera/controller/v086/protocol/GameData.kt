@@ -1,6 +1,5 @@
 package org.emulinker.kaillera.controller.v086.protocol
 
-import java.nio.Buffer
 import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086Utils
@@ -59,9 +58,7 @@ constructor(override val messageNumber: Int, val gameData: ByteArray) : V086Mess
       val byteBuffer = ByteBuffer.allocateDirect(4096)
       for (i in 0..0xfffe) {
         msg.writeTo(byteBuffer)
-        // Cast to avoid issue with java version mismatch:
-        // https://stackoverflow.com/a/61267496/2875073
-        (byteBuffer as Buffer).clear()
+        byteBuffer.clear()
       }
       println("et=" + (System.currentTimeMillis() - st))
     }

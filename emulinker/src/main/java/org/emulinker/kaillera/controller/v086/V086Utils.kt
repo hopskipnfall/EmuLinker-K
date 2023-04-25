@@ -3,7 +3,6 @@ package org.emulinker.kaillera.controller.v086
 import io.ktor.util.network.*
 import java.lang.StringBuilder
 import java.net.InetSocketAddress
-import java.nio.Buffer
 import java.nio.ByteBuffer
 import org.emulinker.kaillera.pico.AppModule
 
@@ -65,8 +64,7 @@ object V086Utils {
     original.rewind()
     clone.put(original)
     original.rewind()
-    // Cast to avoid issue with java version mismatch: https://stackoverflow.com/a/61267496/2875073
-    (clone as Buffer).flip()
+    clone.flip()
     original.position(position)
     return clone
   }
