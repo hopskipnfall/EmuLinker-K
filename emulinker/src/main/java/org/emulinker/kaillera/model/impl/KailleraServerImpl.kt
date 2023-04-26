@@ -11,6 +11,7 @@ import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.concurrent.schedule
+import kotlin.coroutines.CoroutineContext
 import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.*
 import org.emulinker.config.RuntimeFlags
@@ -28,6 +29,7 @@ import org.emulinker.kaillera.release.ReleaseInfo
 import org.emulinker.util.EmuLang.getString
 import org.emulinker.util.EmuLang.hasString
 import org.emulinker.util.EmuUtil.formatSocketAddress
+import org.emulinker.util.Executable
 
 @Singleton
 class KailleraServerImpl
@@ -40,7 +42,7 @@ internal constructor(
   private val autoFireDetectorFactory: AutoFireDetectorFactory,
   private val lookingForGameReporter: TwitterBroadcaster,
   metrics: MetricRegistry
-) : KailleraServer {
+) : KailleraServer, Executable {
   /** [CoroutineScope] for long-running actions. */
   private val kailleraServerCoroutineScope =
     CoroutineScope(Dispatchers.IO) + CoroutineName("KailleraServerScope")
@@ -48,7 +50,7 @@ internal constructor(
   private var allowedConnectionTypes = BooleanArray(7)
   private val loginMessages: List<String>
   private var stopFlag = false
-  var threadIsActive = false
+  override var threadIsActive = false
     private set
   private var connectionCounter = 1
   private var gameCounter = 1
@@ -104,7 +106,6 @@ internal constructor(
     usersMap.clear()
     gameIdToGame.clear()
     kailleraServerCoroutineScope.cancel()
-    timer.cancel()
   }
 
   // not synchronized because I know the caller will be thread safe
@@ -178,7 +179,7 @@ internal constructor(
     user.userCoroutineScope.launch {
       coroutineCounter.inc()
       try {
-        user.run()
+        user.run(coroutineContext)
       } finally {
         coroutineCounter.dec()
       }
@@ -842,6 +843,8 @@ internal constructor(
       }
     }
   }
+
+  override suspend fun run(globalContext: CoroutineContext) = TODO("TODO(nue): Get rid of this.")
 
   init {
     val loginMessagesBuilder = mutableListOf<String>()
