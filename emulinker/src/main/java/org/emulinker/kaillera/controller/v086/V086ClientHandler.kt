@@ -168,7 +168,7 @@ constructor(
     controller.clientHandlers[user.userData.id] = this
   }
 
-  override suspend fun stop() {
+  override suspend fun stopInternal() {
     if (stopFlag) return
     var port: Int? = null
     if (isBound) {

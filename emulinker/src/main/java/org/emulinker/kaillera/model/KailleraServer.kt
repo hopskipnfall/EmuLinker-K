@@ -70,4 +70,5 @@ interface KailleraServer {
   )
   fun quit(user: KailleraUser, message: String?)
   suspend fun stop()
+  fun run()
 }

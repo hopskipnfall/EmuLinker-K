@@ -10,7 +10,7 @@ import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import javax.inject.Singleton
-import kotlin.coroutines.CoroutineContext
+import kotlin.concurrent.schedule
 import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.*
 import org.emulinker.config.RuntimeFlags
@@ -28,7 +28,6 @@ import org.emulinker.kaillera.release.ReleaseInfo
 import org.emulinker.util.EmuLang.getString
 import org.emulinker.util.EmuLang.hasString
 import org.emulinker.util.EmuUtil.formatSocketAddress
-import org.emulinker.util.Executable
 
 @Singleton
 class KailleraServerImpl
@@ -41,7 +40,7 @@ internal constructor(
   private val autoFireDetectorFactory: AutoFireDetectorFactory,
   private val lookingForGameReporter: TwitterBroadcaster,
   metrics: MetricRegistry
-) : KailleraServer, Executable {
+) : KailleraServer {
   /** [CoroutineScope] for long-running actions. */
   private val kailleraServerCoroutineScope =
     CoroutineScope(Dispatchers.IO) + CoroutineName("KailleraServerScope")
@@ -49,12 +48,14 @@ internal constructor(
   private var allowedConnectionTypes = BooleanArray(7)
   private val loginMessages: List<String>
   private var stopFlag = false
-  override var threadIsActive = false
+  var threadIsActive = false
     private set
   private var connectionCounter = 1
   private var gameCounter = 1
 
   var statsCollector: StatsCollector? = null
+
+  private val timer = Timer()
 
   private val usersMap: MutableMap<Int, KailleraUserImpl> = ConcurrentHashMap(flags.maxUsers)
   override val users: MutableCollection<KailleraUserImpl> = usersMap.values
@@ -103,6 +104,7 @@ internal constructor(
     usersMap.clear()
     gameIdToGame.clear()
     kailleraServerCoroutineScope.cancel()
+    timer.cancel()
   }
 
   // not synchronized because I know the caller will be thread safe
@@ -176,7 +178,7 @@ internal constructor(
     user.userCoroutineScope.launch {
       coroutineCounter.inc()
       try {
-        user.run(coroutineContext)
+        user.run()
       } finally {
         coroutineCounter.dec()
       }
@@ -759,23 +761,11 @@ internal constructor(
     }
   }
 
-  override suspend fun run(globalContext: CoroutineContext) {
-    threadIsActive = true
-    logger.atFine().log("KailleraServer thread running...")
-    try {
-      while (!stopFlag) {
-        // TODO(nue): Can we remove this try/catch? I don't know if InterruptedException gets
-        // thrown.
-        try {
-          delay((flags.maxPing * 3).milliseconds)
-        } catch (e: InterruptedException) {
-          logger.atSevere().withCause(e).log("Sleep Interrupted!")
-        }
-
-        if (stopFlag) break
-        if (usersMap.isEmpty()) continue
+  override fun run() {
+    // TODO(nue): Pick reasonable values for these timer parameters.
+    timer.schedule(delay = flags.maxPing * 6L, period = flags.maxPing * 6L) {
+      runBlocking(Dispatchers.IO) {
         for (user in users) {
-
           //          TODO(nue): Is this necessary?
           val access = accessManager.getAccess(user.connectSocketAddress.address)
           user.accessLevel = access
@@ -817,7 +807,6 @@ internal constructor(
               (Instant.now().toEpochMilli() - user.lastActivity.toEpochMilli() >
                 flags.idleTimeout.inWholeMilliseconds)
           ) {
-            // TODO(nue): THIS ISN'T WORKING FOR SOME REASON
             logger.atInfo().log("%s inactivity timeout!", user)
             try {
               quit(user, getString("KailleraServerImpl.ForcedQuitInactivityTimeout"))
@@ -851,13 +840,6 @@ internal constructor(
           } else {}
         }
       }
-    } catch (e: Throwable) {
-      if (!stopFlag) {
-        logger.atSevere().withCause(e).log("KailleraServer thread caught unexpected exception")
-      }
-    } finally {
-      threadIsActive = false
-      logger.atFine().log("KailleraServer thread exiting...")
     }
   }
 

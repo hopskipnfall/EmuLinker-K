@@ -11,8 +11,7 @@ import org.emulinker.util.UnsignedUtil.getUnsignedShort
 import org.emulinker.util.UnsignedUtil.putUnsignedInt
 import org.emulinker.util.UnsignedUtil.putUnsignedShort
 
-data class UserJoined
-constructor(
+data class UserJoined(
   override val messageNumber: Int,
   val username: String,
   val userId: Int,

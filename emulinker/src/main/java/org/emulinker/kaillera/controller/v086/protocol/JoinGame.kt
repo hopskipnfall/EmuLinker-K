@@ -34,8 +34,7 @@ sealed class JoinGame : V086Message() {
     JoinGameSerializer.write(buffer, this)
   }
 
-  data class JoinGameNotification
-  constructor(
+  data class JoinGameNotification(
     override val messageNumber: Int,
     override val gameId: Int,
     val val1: Int,
@@ -53,8 +52,7 @@ sealed class JoinGame : V086Message() {
     }
   }
 
-  data class JoinGameRequest
-  constructor(
+  data class JoinGameRequest(
     override val messageNumber: Int,
     override val gameId: Int,
     override val connectionType: ConnectionType

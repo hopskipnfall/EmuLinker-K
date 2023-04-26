@@ -9,7 +9,7 @@ import org.emulinker.kaillera.controller.v086.protocol.V086Message.Companion.par
 import org.emulinker.util.EmuUtil
 import org.emulinker.util.UnsignedUtil.getUnsignedShort
 
-class V086Bundle constructor(val messages: Array<V086Message?>, numToWrite: Int = Int.MAX_VALUE) :
+class V086Bundle(val messages: Array<V086Message?>, numToWrite: Int = Int.MAX_VALUE) :
   ByteBufferMessage() {
   var numMessages: Int
     private set

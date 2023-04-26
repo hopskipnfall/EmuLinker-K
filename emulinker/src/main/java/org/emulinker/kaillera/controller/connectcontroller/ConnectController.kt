@@ -102,11 +102,8 @@ internal constructor(
     this.run(globalContext)
   }
 
-  override suspend fun stop() {
-    mutex.withLock {
-      super.stop()
-      for (controller in controllersMap.values) controller.stop()
-    }
+  override suspend fun stopInternal() {
+    for (controller in controllersMap.values) controller.stop()
   }
 
   override suspend fun handleReceived(buffer: ByteBuffer, remoteSocketAddress: InetSocketAddress) {

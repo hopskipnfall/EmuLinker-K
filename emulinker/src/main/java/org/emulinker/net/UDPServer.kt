@@ -13,9 +13,8 @@ import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.kaillera.controller.v086.V086Utils.toKtorAddress
 import org.emulinker.util.EmuUtil.dumpBufferFromBeginning
 import org.emulinker.util.EmuUtil.formatSocketAddress
-import org.emulinker.util.Executable
 
-abstract class UDPServer(private val listeningOnPortsCounter: Counter) : Executable {
+abstract class UDPServer(private val listeningOnPortsCounter: Counter) {
   abstract val bufferSize: Int
 
   /*
@@ -45,7 +44,7 @@ abstract class UDPServer(private val listeningOnPortsCounter: Counter) : Executa
 
   protected lateinit var globalContext: CoroutineContext
 
-  final override var threadIsActive = false
+  var threadIsActive = false
     private set
 
   protected var stopFlag = false
@@ -67,9 +66,12 @@ abstract class UDPServer(private val listeningOnPortsCounter: Counter) : Executa
     stopFlag = false
   }
 
-  override suspend fun stop() {
+  abstract suspend fun stopInternal()
+
+  suspend fun stop() {
     stopFlag = true
     serverSocket.close()
+    stopInternal()
   }
 
   @Synchronized
@@ -117,7 +119,7 @@ abstract class UDPServer(private val listeningOnPortsCounter: Counter) : Executa
     }
   }
 
-  override suspend fun run(globalContext: CoroutineContext) {
+  suspend fun run(globalContext: CoroutineContext) {
     this.globalContext = globalContext
     threadIsActive = true
     listeningOnPortsCounter.inc()

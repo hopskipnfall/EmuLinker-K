@@ -10,7 +10,7 @@ class GameDataQueue(
   val retries: Int
 ) {
   private val playerQueues: Array<PlayerDataQueue> =
-    (1..numPlayers).map { PlayerDataQueue(it) }.toTypedArray()
+    (1..numPlayers).map { PlayerDataQueue() }.toTypedArray()
   private var gameDesynched = false
 
   fun setGameDesynched() {
@@ -32,14 +32,14 @@ class GameDataQueue(
     return playerQueues[playerNumber - 1].getData(byteCount, bytesPerAction)
   }
 
-  private inner class PlayerDataQueue internal constructor(playerNumber: Int) {
+  private inner class PlayerDataQueue {
     private val queues: Array<CircularBlockingByteQueue?> = arrayOfNulls(numPlayers)
     private var lastI = 0
     private var lastJ = 0
     private var lastData: ByteArray? = null
     private var timeoutCounter = 0
 
-    internal fun addData(playerNumber: Int, data: Byte) {
+    fun addData(playerNumber: Int, data: Byte) {
       queues[playerNumber - 1]!!.put(data)
     }
 

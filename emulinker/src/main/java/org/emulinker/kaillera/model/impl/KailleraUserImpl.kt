@@ -4,7 +4,6 @@ import com.google.common.flogger.FluentLogger
 import java.net.InetSocketAddress
 import java.time.Duration
 import java.time.Instant
-import kotlin.coroutines.CoroutineContext
 import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
@@ -48,7 +47,6 @@ import org.emulinker.kaillera.model.exception.UserNameException
 import org.emulinker.kaillera.model.exception.UserReadyException
 import org.emulinker.util.EmuLang
 import org.emulinker.util.EmuUtil
-import org.emulinker.util.Executable
 
 private const val EMULINKER_CLIENT_NAME = "EmulinkerSF Admin Client"
 
@@ -59,7 +57,7 @@ class KailleraUserImpl(
   override val listener: V086ClientHandler,
   override val server: KailleraServerImpl,
   flags: RuntimeFlags,
-) : KailleraUser, Executable {
+) : KailleraUser {
   /** [CoroutineScope] for long-running actions attached to the user. */
   override val userCoroutineScope =
     CoroutineScope(Dispatchers.IO) + CoroutineName("User[${userData.id}]Scope")
@@ -141,11 +139,6 @@ class KailleraUserImpl(
 
   private val ignoredUsers: MutableList<String> = ArrayList()
   private var gameDataErrorTime: Long = -1
-
-  // TODO(nue): Get rid of this.
-  @Deprecated(message = "Isn't needed", level = DeprecationLevel.ERROR)
-  override var threadIsActive = false
-    private set
 
   override var tempDelay = 0
 
@@ -418,8 +411,7 @@ class KailleraUserImpl(
       Duration.ofSeconds(1)
         .dividedBy(connectionType.updatesPerSecond.toLong())
         .multipliedBy(frameDelay.toLong())
-        // Effectively this is the delay that is allowed before calling it a lag spike.
-        .plusMillis(70)
+        .plusMillis(50)
     game!!.ready(this, playerNumber)
   }
 
@@ -529,7 +521,7 @@ class KailleraUserImpl(
     }
   }
 
-  override suspend fun run(globalContext: CoroutineContext) {
+  suspend fun run() {
     // Run over all events as they come in.
     for (event in eventChannel) {
       handleEvent(event)
