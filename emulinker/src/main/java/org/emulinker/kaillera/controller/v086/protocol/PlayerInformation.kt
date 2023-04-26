@@ -11,8 +11,8 @@ import org.emulinker.util.UnsignedUtil.getUnsignedShort
 import org.emulinker.util.UnsignedUtil.putUnsignedInt
 import org.emulinker.util.UnsignedUtil.putUnsignedShort
 
-data class PlayerInformation
-constructor(override val messageNumber: Int, val players: List<Player>) : V086Message() {
+data class PlayerInformation(override val messageNumber: Int, val players: List<Player>) :
+  V086Message() {
   override val messageTypeId = ID
 
   val numPlayers: Int = players.size
@@ -24,8 +24,7 @@ constructor(override val messageNumber: Int, val players: List<Player>) : V086Me
     PlayerInformationSerializer.write(buffer, this)
   }
 
-  data class Player
-  constructor(
+  data class Player(
     val username: String,
     val ping: Long,
     val userId: Int,

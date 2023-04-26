@@ -66,6 +66,7 @@ fun main(): Unit = runBlocking {
     )
   }
 
+  component.kailleraServer.run()
   component.masterListUpdater.run()
   if (flags.metricsEnabled) {
     val metrics = component.metricRegistry

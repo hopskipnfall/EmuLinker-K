@@ -19,8 +19,7 @@ sealed class PlayerDrop : V086Message() {
     PlayerDropSerializer.write(buffer, this)
   }
 
-  data class PlayerDropNotification
-  constructor(
+  data class PlayerDropNotification(
     override val messageNumber: Int,
     val username: String,
     /** The port number, not the player ID. */
@@ -33,7 +32,7 @@ sealed class PlayerDrop : V086Message() {
     }
   }
 
-  data class PlayerDropRequest constructor(override val messageNumber: Int) : PlayerDrop()
+  data class PlayerDropRequest(override val messageNumber: Int) : PlayerDrop()
 
   companion object {
     const val ID: Byte = 0x14

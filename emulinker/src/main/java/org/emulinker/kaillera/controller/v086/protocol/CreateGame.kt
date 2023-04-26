@@ -10,8 +10,7 @@ import org.emulinker.util.UnsignedUtil.putUnsignedShort
 sealed class CreateGame : V086Message() {
   abstract val romName: String
 
-  data class CreateGameNotification
-  constructor(
+  data class CreateGameNotification(
     override val messageNumber: Int,
     val username: String,
     override val romName: String,

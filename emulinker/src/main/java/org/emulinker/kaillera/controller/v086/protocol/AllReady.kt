@@ -4,7 +4,7 @@ import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.util.EmuUtil
 
-data class AllReady constructor(override val messageNumber: Int) : V086Message() {
+data class AllReady(override val messageNumber: Int) : V086Message() {
   override val messageTypeId = ID
 
   override val bodyBytes = V086Utils.Bytes.SINGLE_BYTE

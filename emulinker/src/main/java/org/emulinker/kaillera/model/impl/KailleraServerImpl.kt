@@ -10,6 +10,7 @@ import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.concurrent.schedule
 import kotlin.coroutines.CoroutineContext
 import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.*
@@ -55,6 +56,8 @@ internal constructor(
   private var gameCounter = 1
 
   var statsCollector: StatsCollector? = null
+
+  private val timer = Timer()
 
   private val usersMap: MutableMap<Int, KailleraUserImpl> = ConcurrentHashMap(flags.maxUsers)
   override val users: MutableCollection<KailleraUserImpl> = usersMap.values
@@ -759,23 +762,11 @@ internal constructor(
     }
   }
 
-  override suspend fun run(globalContext: CoroutineContext) {
-    threadIsActive = true
-    logger.atFine().log("KailleraServer thread running...")
-    try {
-      while (!stopFlag) {
-        // TODO(nue): Can we remove this try/catch? I don't know if InterruptedException gets
-        // thrown.
-        try {
-          delay((flags.maxPing * 3).milliseconds)
-        } catch (e: InterruptedException) {
-          logger.atSevere().withCause(e).log("Sleep Interrupted!")
-        }
-
-        if (stopFlag) break
-        if (usersMap.isEmpty()) continue
+  override fun run() {
+    // TODO(nue): Pick reasonable values for these timer parameters.
+    timer.schedule(delay = flags.maxPing * 6L, period = flags.maxPing * 6L) {
+      runBlocking(Dispatchers.IO) {
         for (user in users) {
-
           //          TODO(nue): Is this necessary?
           val access = accessManager.getAccess(user.connectSocketAddress.address)
           user.accessLevel = access
@@ -817,7 +808,6 @@ internal constructor(
               (Instant.now().toEpochMilli() - user.lastActivity.toEpochMilli() >
                 flags.idleTimeout.inWholeMilliseconds)
           ) {
-            // TODO(nue): THIS ISN'T WORKING FOR SOME REASON
             logger.atInfo().log("%s inactivity timeout!", user)
             try {
               quit(user, getString("KailleraServerImpl.ForcedQuitInactivityTimeout"))
@@ -851,15 +841,10 @@ internal constructor(
           } else {}
         }
       }
-    } catch (e: Throwable) {
-      if (!stopFlag) {
-        logger.atSevere().withCause(e).log("KailleraServer thread caught unexpected exception")
-      }
-    } finally {
-      threadIsActive = false
-      logger.atFine().log("KailleraServer thread exiting...")
     }
   }
+
+  override suspend fun run(globalContext: CoroutineContext) = TODO("TODO(nue): Get rid of this.")
 
   init {
     val loginMessagesBuilder = mutableListOf<String>()

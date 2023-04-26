@@ -2,8 +2,7 @@ package org.emulinker.kaillera.model.impl
 
 import java.lang.Exception
 
-data class PlayerTimeoutException
-constructor(
+data class PlayerTimeoutException(
   val playerNumber: Int,
   var timeoutNumber: Int = -1,
   val player: KailleraUserImpl? = null
