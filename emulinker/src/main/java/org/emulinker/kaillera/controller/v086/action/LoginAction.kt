@@ -12,7 +12,6 @@ import org.emulinker.kaillera.controller.v086.protocol.UserInformation
 import org.emulinker.kaillera.controller.v086.protocol.UserJoined
 import org.emulinker.kaillera.model.KailleraUser
 import org.emulinker.kaillera.model.event.UserJoinedEvent
-import org.emulinker.kaillera.model.impl.KailleraUserImpl
 
 @Singleton
 class LoginAction @Inject internal constructor() :
@@ -43,7 +42,7 @@ class LoginAction @Inject internal constructor() :
   override suspend fun handleEvent(event: UserJoinedEvent, clientHandler: V086ClientHandler) {
     handledEventCount++
     try {
-      val user = event.user as KailleraUserImpl
+      val user = event.user as KailleraUser
       clientHandler.send(
         UserJoined(
           clientHandler.nextMessageNumber,
@@ -53,7 +52,7 @@ class LoginAction @Inject internal constructor() :
           user.connectionType
         )
       )
-      val thisUser = clientHandler.user as KailleraUserImpl
+      val thisUser = clientHandler.user as KailleraUser
       if (thisUser.isEmuLinkerClient && thisUser.accessLevel >= AccessManager.ACCESS_SUPERADMIN) {
         if (user != thisUser) {
           val sb = StringBuilder()

@@ -59,11 +59,11 @@ internal constructor(
 
   private val timer = Timer()
 
-  private val usersMap: MutableMap<Int, KailleraUserImpl> = ConcurrentHashMap(flags.maxUsers)
-  override val users: MutableCollection<KailleraUserImpl> = usersMap.values
+  private val usersMap: MutableMap<Int, KailleraUser> = ConcurrentHashMap(flags.maxUsers)
+  override val users: MutableCollection<KailleraUser> = usersMap.values
 
-  private var gameIdToGame: MutableMap<Int, KailleraGameImpl> = ConcurrentHashMap(flags.maxGames)
-  override val games: MutableCollection<KailleraGameImpl> = gameIdToGame.values
+  private var gameIdToGame: MutableMap<Int, KailleraGame> = ConcurrentHashMap(flags.maxGames)
+  override val games: MutableCollection<KailleraGame> = gameIdToGame.values
 
   override var trivia: Trivia? = null
 
@@ -156,7 +156,7 @@ internal constructor(
     }
     val userId = getNextUserID()
     val user =
-      KailleraUserImpl(
+      KailleraUser(
         UserData(userId, name = "[PENDING]", clientSocketAddress.toKtorAddress()),
         protocol,
         clientSocketAddress,
@@ -195,7 +195,7 @@ internal constructor(
     LoginException::class
   )
   override suspend fun login(user: KailleraUser) {
-    val userImpl = user as KailleraUserImpl
+    val userImpl = user as KailleraUser
     logger
       .atInfo()
       .log(
@@ -469,7 +469,7 @@ internal constructor(
     }
     if (usersMap.remove(user.userData.id) == null)
       logger.atSevere().log("%s quit failed: not in user list", user)
-    val userGame = (user as KailleraUserImpl).game
+    val userGame = (user as KailleraUser).game
     if (userGame != null) user.quitGame()
     var quitMsg = message!!.trim { it <= ' ' }
     if (
@@ -510,7 +510,7 @@ internal constructor(
     if (
       access == AccessManager.ACCESS_NORMAL &&
         flags.chatFloodTime > 0 &&
-        (System.currentTimeMillis() - (user as KailleraUserImpl).lastChatTime <
+        (System.currentTimeMillis() - (user as KailleraUser).lastChatTime <
           flags.chatFloodTime * 1000)
     ) {
       logger.atWarning().log("%s chat denied: Flood: %s", user, message)
@@ -549,7 +549,7 @@ internal constructor(
       logger.atSevere().log("%s create game failed: Not logged in", user)
       throw CreateGameException(getString("KailleraServerImpl.NotLoggedIn"))
     }
-    if ((user as KailleraUserImpl).game != null) {
+    if ((user as KailleraUser).game != null) {
       logger.atSevere().log("%s create game failed: already in game: %s", user, user.game)
       throw CreateGameException(getString("KailleraServerImpl.CreateGameErrorAlreadyInGame"))
     }
@@ -603,7 +603,7 @@ internal constructor(
       }
     }
     val gameID = getNextGameID()
-    val game = KailleraGameImpl(gameID, romName, user, this, flags.gameBufferSize)
+    val game = KailleraGame(gameID, romName, user, this, flags.gameBufferSize)
     gameIdToGame[gameID] = game
     addEvent(GameCreatedEvent(this, game))
     logger.atInfo().log("%s created: %s: %s", user, game, game.romName)
@@ -645,7 +645,7 @@ internal constructor(
       logger.atSevere().log("%s close %s failed: not in list: %s", user, game, game)
       return
     }
-    (game as KailleraGameImpl).close(user)
+    (game as KailleraGame).close(user)
     gameIdToGame.remove(game.id)
     logger.atInfo().log("%s closed: %s", user, game)
     addEvent(GameClosedEvent(this, game))
@@ -691,7 +691,7 @@ internal constructor(
     announce(message, gamesAlso, targetUser = null)
   }
 
-  override fun announce(message: String, gamesAlso: Boolean, targetUser: KailleraUserImpl?) {
+  override fun announce(message: String, gamesAlso: Boolean, targetUser: KailleraUser?) {
     if (targetUser == null) {
       users
         .asSequence()

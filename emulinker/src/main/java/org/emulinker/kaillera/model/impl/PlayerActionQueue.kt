@@ -5,10 +5,11 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.Throws
 import kotlin.concurrent.withLock
+import org.emulinker.kaillera.model.KailleraUser
 
 class PlayerActionQueue(
   val playerNumber: Int,
-  val player: KailleraUserImpl,
+  val player: KailleraUser,
   numPlayers: Int,
   private val gameBufferSize: Int,
   private val gameTimeoutMillis: Int

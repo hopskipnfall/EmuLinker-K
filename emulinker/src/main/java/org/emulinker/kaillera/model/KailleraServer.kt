@@ -17,8 +17,6 @@ import org.emulinker.kaillera.model.exception.QuitException
 import org.emulinker.kaillera.model.exception.QuitGameException
 import org.emulinker.kaillera.model.exception.ServerFullException
 import org.emulinker.kaillera.model.exception.UserNameException
-import org.emulinker.kaillera.model.impl.KailleraGameImpl
-import org.emulinker.kaillera.model.impl.KailleraUserImpl
 import org.emulinker.kaillera.model.impl.Trivia
 import org.emulinker.kaillera.release.ReleaseInfo
 
@@ -29,13 +27,13 @@ interface KailleraServer {
 
   val releaseInfo: ReleaseInfo
   val accessManager: AccessManager
-  val users: Collection<KailleraUserImpl>
-  val games: Collection<KailleraGameImpl>
+  val users: Collection<KailleraUser>
+  val games: Collection<KailleraGame>
   var trivia: Trivia?
   var switchTrivia: Boolean
 
   fun announce(message: String, gamesAlso: Boolean)
-  fun announce(message: String, gamesAlso: Boolean, targetUser: KailleraUserImpl?)
+  fun announce(message: String, gamesAlso: Boolean, targetUser: KailleraUser?)
   fun getUser(userID: Int): KailleraUser?
   fun getGame(gameID: Int): KailleraGame?
   fun checkMe(user: KailleraUser, message: String): Boolean
