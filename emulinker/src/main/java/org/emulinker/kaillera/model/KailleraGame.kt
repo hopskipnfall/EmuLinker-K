@@ -109,10 +109,6 @@ class KailleraGame(
 
   override fun toString() = toString
 
-  fun toDetailedString(): String {
-    return "KailleraGame[id=$id romName=$romName owner=$owner numPlayers=${players.size} status=$status]"
-  }
-
   private val playingCount: Int
     get() = players.asSequence().filter { it.status == UserStatus.PLAYING }.count()
 
@@ -513,7 +509,7 @@ class KailleraGame(
   }
 
   @Throws(DropGameException::class, QuitGameException::class, CloseGameException::class)
-  fun quit(user: KailleraUser, playerNumber: Int) {
+  fun quit(user: KailleraUser) {
     synchronized(this) {
       if (!players.remove(user)) {
         logger.atWarning().log("%s quit game failed: not in %s", user, this)

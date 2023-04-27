@@ -25,14 +25,13 @@ import org.emulinker.kaillera.model.event.UserQuitEvent
 import org.emulinker.kaillera.model.event.UserQuitGameEvent
 import org.emulinker.kaillera.model.exception.*
 import org.emulinker.util.EmuLang
-import org.emulinker.util.EmuUtil
 import org.emulinker.util.Executable
 
 class KailleraUser(
   var userData: UserData,
   val protocol: String,
   val connectSocketAddress: InetSocketAddress,
-  val listener: V086ClientHandler,
+  private val listener: V086ClientHandler,
   val server: KailleraServer,
   flags: RuntimeFlags,
 ) : Executable {
@@ -84,7 +83,7 @@ class KailleraUser(
   // Saved to a variable because I think this might give a speed boost.
   private val improvedLagstat = flags.improvedLagstatEnabled
 
-  fun updateLastActivity() {
+  private fun updateLastActivity() {
     lastKeepAlive = Instant.now()
     lastActivity = lastKeepAlive
   }
@@ -122,10 +121,6 @@ class KailleraUser(
   private val eventChannel = Channel<KailleraEvent>(10)
 
   private val lostInput: MutableList<ByteArray> = ArrayList()
-  /** Note that this is a different type from lostInput. */
-  fun getLostInput(): ByteArray {
-    return lostInput[0]
-  }
 
   private val ignoredUsers: MutableList<String> = ArrayList()
   private var gameDataErrorTime: Long = -1
@@ -185,14 +180,6 @@ class KailleraUser(
     get() = AccessManager.ACCESS_NAMES[accessLevel]
 
   override fun equals(other: Any?) = other is KailleraUser && other.userData.id == userData.id
-
-  fun toDetailedString(): String {
-    return ("KailleraUser[id=${userData.id} protocol=$protocol status=$status name=${userData.name} clientType=$clientType ping=$ping connectionType=$connectionType remoteAddress=" +
-      (if (!this::socketAddress.isInitialized) {
-        EmuUtil.formatSocketAddress(connectSocketAddress)
-      } else EmuUtil.formatSocketAddress(socketAddress)) +
-      "]")
-  }
 
   override suspend fun stop() {
     logger.atFine().log("Stopping KaillerUser for %d", userData.id)
@@ -358,7 +345,7 @@ class KailleraUser(
       status = UserStatus.IDLE
       game!!.drop(this, playerNumber)
     }
-    game!!.quit(this, playerNumber)
+    game!!.quit(this)
     if (status != UserStatus.IDLE) {
       status = UserStatus.IDLE
     }
