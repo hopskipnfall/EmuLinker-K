@@ -14,7 +14,6 @@ import org.emulinker.kaillera.lookingforgame.TwitterBroadcaster
 import org.emulinker.kaillera.model.event.GameChatEvent
 import org.emulinker.kaillera.model.exception.ActionException
 import org.emulinker.kaillera.model.exception.GameChatException
-import org.emulinker.kaillera.model.impl.KailleraUserImpl
 
 private const val ADMIN_COMMAND_ESCAPE_STRING = "/"
 
@@ -73,21 +72,21 @@ internal constructor(
     }
     if (doCommand) {
       if ((message as GameChat).message == "/msgon") {
-        val user = clientHandler.user as KailleraUserImpl
+        val user = clientHandler.user
         try {
           clientHandler.user.isAcceptingDirectMessages = true
           user.game!!.announce("Private messages are now on.", user)
         } catch (e: Exception) {}
         return
       } else if (message.message == "/msgoff") {
-        val user = clientHandler.user as KailleraUserImpl
+        val user = clientHandler.user
         try {
           clientHandler.user.isAcceptingDirectMessages = false
           user.game!!.announce("Private messages are now off.", user)
         } catch (e: Exception) {}
         return
       } else if (message.message.startsWith("/p2p")) {
-        val user = clientHandler.user as KailleraUserImpl
+        val user = clientHandler.user
         if (message.message == "/p2pon") {
           if (clientHandler.user.game!!.owner == clientHandler.user) {
             clientHandler.user.game!!.ignoringUnnecessaryServerActivity = true
@@ -140,7 +139,7 @@ internal constructor(
         }
         return
       } else if (message.message.startsWith("/msg")) {
-        val user1 = clientHandler.user as KailleraUserImpl
+        val user1 = clientHandler.user
         val scanner = Scanner(message.message).useDelimiter(" ")
         val access =
           clientHandler.user.server.accessManager.getAccess(
@@ -227,7 +226,7 @@ internal constructor(
         } catch (e: NoSuchElementException) {
           if (user1.lastMsgID != -1) {
             try {
-              val user = clientHandler.user.server.getUser(user1.lastMsgID) as KailleraUserImpl?
+              val user = clientHandler.user.server.getUser(user1.lastMsgID)
               val sb = StringBuilder()
               while (scanner.hasNext()) {
                 sb.append(scanner.next())
@@ -293,7 +292,7 @@ internal constructor(
           }
         }
       } else if (message.message == "/ignoreall") {
-        val user = clientHandler.user as KailleraUserImpl
+        val user = clientHandler.user
         try {
           clientHandler.user.ignoreAll = true
           user.server.announce(
@@ -304,7 +303,7 @@ internal constructor(
         } catch (e: Exception) {}
         return
       } else if (message.message == "/unignoreall") {
-        val user = clientHandler.user as KailleraUserImpl
+        val user = clientHandler.user
         try {
           clientHandler.user.ignoreAll = false
           user.server.announce(
@@ -315,7 +314,7 @@ internal constructor(
         } catch (e: Exception) {}
         return
       } else if (message.message.startsWith("/ignore")) {
-        val user1 = clientHandler.user as KailleraUserImpl
+        val user1 = clientHandler.user
         val scanner = Scanner(message.message).useDelimiter(" ")
         try {
           scanner.next()
@@ -345,7 +344,7 @@ internal constructor(
           )
           return
         } catch (e: NoSuchElementException) {
-          val user = clientHandler.user as KailleraUserImpl
+          val user = clientHandler.user
           user.game!!.announce("Ignore User Error: /ignore <UserID>", user)
           logger
             .atInfo()
@@ -358,7 +357,7 @@ internal constructor(
           return
         }
       } else if (message.message.startsWith("/unignore")) {
-        val user1 = clientHandler.user as KailleraUserImpl
+        val user1 = clientHandler.user
         val scanner = Scanner(message.message).useDelimiter(" ")
         try {
           scanner.next()
@@ -391,7 +390,7 @@ internal constructor(
             } catch (e: Exception) {}
           return
         } catch (e: NoSuchElementException) {
-          val user = clientHandler.user as KailleraUserImpl
+          val user = clientHandler.user
           user.game!!.announce("Unignore User Error: /ignore <UserID>", user)
           logger
             .atInfo()
@@ -437,13 +436,11 @@ internal constructor(
           return
         }
       } else if (message.message == "/help") {
-        val user = clientHandler.user as KailleraUserImpl?
-        user!!
-          .game!!
-          .announce(
-            "/me <message> to make personal message eg. /me is bored ...SupraFast is bored.",
-            user
-          )
+        val user = clientHandler.user
+        user.game!!.announce(
+          "/me <message> to make personal message eg. /me is bored ...SupraFast is bored.",
+          user
+        )
         delay(20.milliseconds)
         user.game!!.announce(
           "/msg <UserID> <msg> to PM somebody. /msgoff or /msgon to turn pm off | on.",
@@ -461,7 +458,7 @@ internal constructor(
         )
         delay(20.milliseconds)
       } else if (message.message == "/stop") {
-        val user = clientHandler.user as KailleraUserImpl
+        val user = clientHandler.user
         if (lookingForGameReporter.cancelActionsForUser(user.userData.id)) {
           user.game!!.announce("Canceled pending tweet.", user)
         } else {

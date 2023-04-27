@@ -17,10 +17,9 @@ import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086ClientHandler
 import org.emulinker.kaillera.controller.v086.protocol.Chat
 import org.emulinker.kaillera.controller.v086.protocol.InformationMessage
+import org.emulinker.kaillera.model.KailleraServer
+import org.emulinker.kaillera.model.KailleraUser
 import org.emulinker.kaillera.model.exception.ActionException
-import org.emulinker.kaillera.model.impl.KailleraGameImpl
-import org.emulinker.kaillera.model.impl.KailleraServerImpl
-import org.emulinker.kaillera.model.impl.KailleraUserImpl
 import org.emulinker.kaillera.model.impl.Trivia
 import org.emulinker.util.EmuLang
 import org.emulinker.util.EmuUtil
@@ -91,9 +90,9 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
   @Throws(FatalActionException::class)
   override suspend fun performAction(message: Chat, clientHandler: V086ClientHandler) {
     val chat: String = message.message
-    val server = clientHandler.controller.server as KailleraServerImpl
+    val server = clientHandler.controller.server
     val accessManager = server.accessManager
-    val user = clientHandler.user as KailleraUserImpl
+    val user = clientHandler.user
     if (accessManager.getAccess(clientHandler.remoteInetAddress) < AccessManager.ACCESS_ADMIN) {
       if (
         chat.startsWith(COMMAND_SILENCE) ||
@@ -193,8 +192,8 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
   @Throws(ActionException::class, MessageFormatException::class)
   private suspend fun processHelp(
     message: String?,
-    server: KailleraServerImpl,
-    admin: KailleraUserImpl,
+    server: KailleraServer,
+    admin: KailleraUser,
     clientHandler: V086ClientHandler
   ) {
     if (admin.accessLevel == AccessManager.ACCESS_MODERATOR) return
@@ -354,8 +353,8 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
   @Throws(ActionException::class, MessageFormatException::class)
   private suspend fun processFindUser(
     message: String,
-    server: KailleraServerImpl,
-    admin: KailleraUserImpl,
+    server: KailleraServer,
+    admin: KailleraUser,
     clientHandler: V086ClientHandler?
   ) {
     val space = message.indexOf(' ')
@@ -392,8 +391,8 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
   @Throws(ActionException::class, MessageFormatException::class)
   private suspend fun processFindGame(
     message: String,
-    server: KailleraServerImpl,
-    admin: KailleraUserImpl,
+    server: KailleraServer,
+    admin: KailleraUser,
     clientHandler: V086ClientHandler
   ) {
     val space = message.indexOf(' ')
@@ -429,8 +428,8 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
   @Throws(ActionException::class, MessageFormatException::class)
   private fun processSilence(
     message: String,
-    server: KailleraServerImpl,
-    admin: KailleraUserImpl,
+    server: KailleraServer,
+    admin: KailleraUser,
     clientHandler: V086ClientHandler?
   ) {
     val scanner = Scanner(message).useDelimiter(" ")
@@ -439,7 +438,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
       val userID = scanner.nextInt()
       val minutes = scanner.nextInt()
       val user =
-        server.getUser(userID) as KailleraUserImpl?
+        server.getUser(userID)
           ?: throw ActionException(EmuLang.getString("AdminCommandAction.UserNotFound", +userID))
       if (user.userData.id == admin.userData.id)
         throw ActionException(EmuLang.getString("AdminCommandAction.CanNotSilenceSelf"))
@@ -477,8 +476,8 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
   @Throws(ActionException::class, MessageFormatException::class)
   private fun processKick(
     message: String,
-    server: KailleraServerImpl,
-    admin: KailleraUserImpl,
+    server: KailleraServer,
+    admin: KailleraUser,
     clientHandler: V086ClientHandler?
   ) {
     val scanner = Scanner(message).useDelimiter(" ")
@@ -486,7 +485,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
       scanner.next()
       val userID = scanner.nextInt()
       val user =
-        server.getUser(userID) as KailleraUserImpl?
+        server.getUser(userID)
           ?: throw ActionException(EmuLang.getString("AdminCommandAction.UserNotFound", userID))
       if (user.userData.id == admin.userData.id)
         throw ActionException(EmuLang.getString("AdminCommandAction.CanNotKickSelf"))
@@ -509,8 +508,8 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
   @Throws(ActionException::class, MessageFormatException::class)
   private fun processCloseGame(
     message: String,
-    server: KailleraServerImpl,
-    admin: KailleraUserImpl,
+    server: KailleraServer,
+    admin: KailleraUser,
     clientHandler: V086ClientHandler?
   ) {
     val scanner = Scanner(message).useDelimiter(" ")
@@ -518,7 +517,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
       scanner.next()
       val gameID = scanner.nextInt()
       val game =
-        server.getGame(gameID) as KailleraGameImpl?
+        server.getGame(gameID)
           ?: throw ActionException(EmuLang.getString("AdminCommandAction.GameNotFound", gameID))
       val owner = game.owner
       val access = server.accessManager.getAccess(owner.connectSocketAddress.address)
@@ -537,8 +536,8 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
   @Throws(ActionException::class, MessageFormatException::class)
   private fun processBan(
     message: String,
-    server: KailleraServerImpl,
-    admin: KailleraUserImpl,
+    server: KailleraServer,
+    admin: KailleraUser,
     clientHandler: V086ClientHandler?
   ) {
     val scanner = Scanner(message).useDelimiter(" ")
@@ -547,7 +546,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
       val userID = scanner.nextInt()
       val minutes = scanner.nextInt()
       val user =
-        server.getUser(userID) as KailleraUserImpl?
+        server.getUser(userID)
           ?: throw ActionException(EmuLang.getString("AdminCommandAction.UserNotFound", userID))
       if (user.userData.id == admin.userData.id)
         throw ActionException(EmuLang.getString("AdminCommandAction.CanNotBanSelf"))
@@ -574,8 +573,8 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
   @Throws(ActionException::class, MessageFormatException::class)
   private fun processTempElevated(
     message: String,
-    server: KailleraServerImpl,
-    admin: KailleraUserImpl,
+    server: KailleraServer,
+    admin: KailleraUser,
     clientHandler: V086ClientHandler?
   ) {
     if (admin.accessLevel != AccessManager.ACCESS_SUPERADMIN) {
@@ -587,7 +586,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
       val userID = scanner.nextInt()
       val minutes = scanner.nextInt()
       val user =
-        server.getUser(userID) as KailleraUserImpl?
+        server.getUser(userID)
           ?: throw ActionException(EmuLang.getString("AdminCommandAction.UserNotFound", userID))
       if (user.userData.id == admin.userData.id)
         throw ActionException(EmuLang.getString("AdminCommandAction.AlreadyAdmin"))
@@ -616,8 +615,8 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
   @Throws(ActionException::class, MessageFormatException::class)
   private fun processTempModerator(
     message: String,
-    server: KailleraServerImpl,
-    admin: KailleraUserImpl,
+    server: KailleraServer,
+    admin: KailleraUser,
     clientHandler: V086ClientHandler?
   ) {
     if (admin.accessLevel != AccessManager.ACCESS_SUPERADMIN) {
@@ -629,7 +628,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
       val userID = scanner.nextInt()
       val minutes = scanner.nextInt()
       val user =
-        server.getUser(userID) as KailleraUserImpl?
+        server.getUser(userID)
           ?: throw ActionException(EmuLang.getString("AdminCommandAction.UserNotFound", userID))
       if (user.userData.id == admin.userData.id)
         throw ActionException(EmuLang.getString("AdminCommandAction.AlreadyAdmin"))
@@ -657,8 +656,8 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
   @Throws(ActionException::class, MessageFormatException::class)
   private fun processTempAdmin(
     message: String,
-    server: KailleraServerImpl,
-    admin: KailleraUserImpl,
+    server: KailleraServer,
+    admin: KailleraUser,
     clientHandler: V086ClientHandler?
   ) {
     if (admin.accessLevel != AccessManager.ACCESS_SUPERADMIN) {
@@ -670,7 +669,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
       val userID = scanner.nextInt()
       val minutes = scanner.nextInt()
       val user =
-        server.getUser(userID) as KailleraUserImpl?
+        server.getUser(userID)
           ?: throw ActionException(EmuLang.getString("AdminCommandAction.UserNotFound", userID))
       if (user.userData.id == admin.userData.id)
         throw ActionException(EmuLang.getString("AdminCommandAction.AlreadyAdmin"))
@@ -696,8 +695,8 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
   @Throws(ActionException::class, MessageFormatException::class)
   private suspend fun processStealth(
     message: String,
-    server: KailleraServerImpl,
-    admin: KailleraUserImpl,
+    server: KailleraServer,
+    admin: KailleraUser,
     clientHandler: V086ClientHandler?
   ) {
     if (admin.game != null) throw ActionException("Can't use /stealth while in a gameroom.")
@@ -721,8 +720,8 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
   @Throws(ActionException::class, MessageFormatException::class)
   private fun processTrivia(
     message: String,
-    server: KailleraServerImpl,
-    admin: KailleraUserImpl,
+    server: KailleraServer,
+    admin: KailleraUser,
     clientHandler: V086ClientHandler?
   ) {
     if (message == "/triviareset") {
@@ -828,8 +827,8 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
   @Throws(ActionException::class, MessageFormatException::class)
   private fun processAnnounce(
     message: String,
-    server: KailleraServerImpl,
-    admin: KailleraUserImpl,
+    server: KailleraServer,
+    admin: KailleraUser,
     clientHandler: V086ClientHandler?
   ) {
     val space = message.indexOf(' ')
@@ -850,8 +849,8 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
   @Throws(ActionException::class, MessageFormatException::class)
   private fun processGameAnnounce(
     message: String,
-    server: KailleraServerImpl,
-    admin: KailleraUserImpl,
+    server: KailleraServer,
+    admin: KailleraUser,
     clientHandler: V086ClientHandler?
   ) {
     val scanner = Scanner(message).useDelimiter(" ")
@@ -864,7 +863,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
         sb.append(" ")
       }
       val game =
-        server.getGame(gameID) as KailleraGameImpl?
+        server.getGame(gameID)
           ?: throw ActionException(EmuLang.getString("AdminCommandAction.GameNotFound", gameID))
       game.announce(sb.toString())
     } catch (e: NoSuchElementException) {
@@ -875,8 +874,8 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
   @Throws(ActionException::class, MessageFormatException::class)
   private suspend fun processClear(
     message: String,
-    server: KailleraServerImpl,
-    admin: KailleraUserImpl,
+    server: KailleraServer,
+    admin: KailleraUser,
     clientHandler: V086ClientHandler?
   ) {
     val space = message.indexOf(' ')
@@ -914,8 +913,8 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
   @Throws(ActionException::class, MessageFormatException::class)
   private suspend fun processVersion(
     message: String?,
-    server: KailleraServerImpl,
-    admin: KailleraUserImpl,
+    server: KailleraServer,
+    admin: KailleraUser,
     clientHandler: V086ClientHandler?
   ) {
     try {
