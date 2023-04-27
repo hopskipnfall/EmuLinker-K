@@ -300,7 +300,7 @@ class KailleraUser(
     //
     // }
     playerNumber = game.join(this)
-    this.game = game as KailleraGame?
+    this.game = game
     gameDataErrorTime = -1
     return game
   }
@@ -446,7 +446,7 @@ class KailleraUser(
           response[i] = 0
         }
         lostInput.add(data)
-        addEvent(GameDataEvent(game as KailleraGame, response))
+        addEvent(GameDataEvent(game!!, response))
         frameCount++
       } else {
         // lostInput.add(data);

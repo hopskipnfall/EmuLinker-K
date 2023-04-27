@@ -78,7 +78,7 @@ class GameOwnerCommandAction @Inject internal constructor(private val flags: Run
   @Throws(FatalActionException::class)
   override suspend fun performAction(message: GameChat, clientHandler: V086ClientHandler) {
     val chat = message.message
-    val user = clientHandler.user as KailleraUser
+    val user = clientHandler.user
     val game =
       user.game ?: throw FatalActionException("GameOwner Command Failed: Not in a game: $chat")
     if (user != game.owner && user.accessLevel < AccessManager.ACCESS_SUPERADMIN) {
@@ -344,7 +344,7 @@ class GameOwnerCommandAction @Inject internal constructor(private val flags: Run
         return
       }
       val userID = scanner.nextInt()
-      val user = clientHandler.user.server.getUser(userID) as KailleraUser?
+      val user = clientHandler.user.server.getUser(userID)
       if (user == null) {
         admin.game!!.announce("Player doesn't exist!", admin)
         return
@@ -364,12 +364,12 @@ class GameOwnerCommandAction @Inject internal constructor(private val flags: Run
       // mute by IP
       game.mutedUsers.add(user.connectSocketAddress.address.hostAddress)
       user.isMuted = true
-      val user1 = clientHandler.user as KailleraUser
+      val user1 = clientHandler.user
       user1.game!!.announce(
         user.userData.name + " has been muted!",
       )
     } catch (e: NoSuchElementException) {
-      val user = clientHandler.user as KailleraUser
+      val user = clientHandler.user
       user.game!!.announce("Mute Player Error: /mute <UserID>", admin)
     }
   }
@@ -414,13 +414,11 @@ class GameOwnerCommandAction @Inject internal constructor(private val flags: Run
       game.mutedUsers.remove(user.connectSocketAddress.address.hostAddress)
       user.isMuted = false
       val user1 = clientHandler.user
-      (user1 as KailleraUser)
-        .game!!
-        .announce(
-          user.userData.name + " has been unmuted!",
-        )
+      user1.game!!.announce(
+        user.userData.name + " has been unmuted!",
+      )
     } catch (e: NoSuchElementException) {
-      val user = clientHandler.user as KailleraUser
+      val user = clientHandler.user
       user.game!!.announce("Unmute Player Error: /unmute <UserID>", admin)
     }
   }
@@ -490,7 +488,7 @@ class GameOwnerCommandAction @Inject internal constructor(private val flags: Run
           // PlayerActionQueue temp = game.getPlayerActionQueue()[0];
           i = 0
           while (i < str.length) {
-            val player = game.players[i] as KailleraUser
+            val player = game.players[i]
             player.playerNumber = num[i]
             /*if(num[i] == 1){
             	game.getPlayerActionQueue()[i] = temp;

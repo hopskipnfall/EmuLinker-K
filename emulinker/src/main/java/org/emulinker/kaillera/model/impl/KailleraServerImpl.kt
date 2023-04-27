@@ -195,7 +195,6 @@ internal constructor(
     LoginException::class
   )
   override suspend fun login(user: KailleraUser) {
-    val userImpl = user as KailleraUser
     logger
       .atInfo()
       .log(
@@ -374,14 +373,14 @@ internal constructor(
     }
 
     // passed all checks
-    userImpl.accessLevel = access
-    userImpl.status = UserStatus.IDLE
-    userImpl.loggedIn = true
-    usersMap[userListKey] = userImpl
-    userImpl.addEvent(ConnectedEvent(this, user))
+    user.accessLevel = access
+    user.status = UserStatus.IDLE
+    user.loggedIn = true
+    usersMap[userListKey] = user
+    user.addEvent(ConnectedEvent(this, user))
     delay(20.milliseconds)
     for (loginMessage in loginMessages) {
-      userImpl.addEvent(InfoMessageEvent(user, loginMessage))
+      user.addEvent(InfoMessageEvent(user, loginMessage))
       delay(20.milliseconds)
     }
     if (access > AccessManager.ACCESS_NORMAL)
@@ -390,7 +389,7 @@ internal constructor(
 
     // this is fairly ugly
     if (user.isEmuLinkerClient) {
-      userImpl.addEvent(InfoMessageEvent(user, ":ACCESS=" + userImpl.accessStr))
+      user.addEvent(InfoMessageEvent(user, ":ACCESS=" + user.accessStr))
       if (access >= AccessManager.ACCESS_SUPERADMIN) {
         var sb = StringBuilder()
         sb.append(":USERINFO=")
@@ -430,7 +429,7 @@ internal constructor(
     }
     delay(20.milliseconds)
     if (access >= AccessManager.ACCESS_ADMIN)
-      userImpl.addEvent(InfoMessageEvent(user, getString("KailleraServerImpl.AdminWelcomeMessage")))
+      user.addEvent(InfoMessageEvent(user, getString("KailleraServerImpl.AdminWelcomeMessage")))
     delay(20.milliseconds)
     // TODO(nue): Localize this welcome message?
     // userImpl.addEvent(
@@ -469,7 +468,7 @@ internal constructor(
     }
     if (usersMap.remove(user.userData.id) == null)
       logger.atSevere().log("%s quit failed: not in user list", user)
-    val userGame = (user as KailleraUser).game
+    val userGame = user.game
     if (userGame != null) user.quitGame()
     var quitMsg = message!!.trim { it <= ' ' }
     if (
@@ -510,8 +509,7 @@ internal constructor(
     if (
       access == AccessManager.ACCESS_NORMAL &&
         flags.chatFloodTime > 0 &&
-        (System.currentTimeMillis() - (user as KailleraUser).lastChatTime <
-          flags.chatFloodTime * 1000)
+        (System.currentTimeMillis() - user.lastChatTime < flags.chatFloodTime * 1000)
     ) {
       logger.atWarning().log("%s chat denied: Flood: %s", user, message)
       throw FloodException(getString("KailleraServerImpl.ChatDeniedFloodControl"))
@@ -549,7 +547,7 @@ internal constructor(
       logger.atSevere().log("%s create game failed: Not logged in", user)
       throw CreateGameException(getString("KailleraServerImpl.NotLoggedIn"))
     }
-    if ((user as KailleraUser).game != null) {
+    if (user.game != null) {
       logger.atSevere().log("%s create game failed: already in game: %s", user, user.game)
       throw CreateGameException(getString("KailleraServerImpl.CreateGameErrorAlreadyInGame"))
     }
@@ -645,7 +643,7 @@ internal constructor(
       logger.atSevere().log("%s close %s failed: not in list: %s", user, game, game)
       return
     }
-    (game as KailleraGame).close(user)
+    game.close(user)
     gameIdToGame.remove(game.id)
     logger.atInfo().log("%s closed: %s", user, game)
     addEvent(GameClosedEvent(this, game))

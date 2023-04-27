@@ -121,7 +121,7 @@ class KailleraGame(
     get() = playerActionQueue?.count { it.synched } ?: 0
 
   private fun addEvent(event: GameEvent) {
-    players.forEach { (it as KailleraUser).addEvent(event) }
+    players.forEach { it.addEvent(event) }
   }
 
   @Synchronized
@@ -260,7 +260,7 @@ class KailleraGame(
     if (mutedUsers.contains(user.connectSocketAddress.address.hostAddress)) {
       user.isMuted = true
     }
-    players.add(user as KailleraUser)
+    players.add(user)
     user.playerNumber = players.size
     server.addEvent(GameStatusChangedEvent(server, this))
     logger.atInfo().log("%s joined: %s", user, this)
@@ -403,13 +403,7 @@ class KailleraGame(
       player.timeouts = 0
       player.frameCount = 0
       actionQueueBuilder[i] =
-        PlayerActionQueue(
-          playerNumber,
-          player as KailleraUser,
-          players.size,
-          bufferSize,
-          timeoutMillis
-        )
+        PlayerActionQueue(playerNumber, player, players.size, bufferSize, timeoutMillis)
       // SF MOD - player.setPlayerNumber(playerNumber);
       // SF MOD - Delay Value = [(60/connectionType) * (ping/1000)] + 1
       val delayVal = 60 / player.connectionType.byteValue * (player.ping.toDouble() / 1000) + 1

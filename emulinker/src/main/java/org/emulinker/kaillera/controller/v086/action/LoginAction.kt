@@ -42,7 +42,7 @@ class LoginAction @Inject internal constructor() :
   override suspend fun handleEvent(event: UserJoinedEvent, clientHandler: V086ClientHandler) {
     handledEventCount++
     try {
-      val user = event.user as KailleraUser
+      val user = event.user
       clientHandler.send(
         UserJoined(
           clientHandler.nextMessageNumber,
@@ -52,7 +52,7 @@ class LoginAction @Inject internal constructor() :
           user.connectionType
         )
       )
-      val thisUser = clientHandler.user as KailleraUser
+      val thisUser = clientHandler.user
       if (thisUser.isEmuLinkerClient && thisUser.accessLevel >= AccessManager.ACCESS_SUPERADMIN) {
         if (user != thisUser) {
           val sb = StringBuilder()
