@@ -24,7 +24,6 @@ import org.emulinker.kaillera.model.event.StopFlagEvent
 import org.emulinker.kaillera.model.event.UserQuitEvent
 import org.emulinker.kaillera.model.event.UserQuitGameEvent
 import org.emulinker.kaillera.model.exception.*
-import org.emulinker.kaillera.model.impl.KailleraServerImpl
 import org.emulinker.util.EmuLang
 import org.emulinker.util.EmuUtil
 import org.emulinker.util.Executable
@@ -34,7 +33,7 @@ class KailleraUser(
   val protocol: String,
   val connectSocketAddress: InetSocketAddress,
   val listener: V086ClientHandler,
-  val server: KailleraServerImpl,
+  val server: KailleraServer,
   flags: RuntimeFlags,
 ) : Executable {
 

@@ -32,7 +32,6 @@ import org.emulinker.kaillera.model.exception.QuitGameException
 import org.emulinker.kaillera.model.exception.StartGameException
 import org.emulinker.kaillera.model.exception.UserReadyException
 import org.emulinker.kaillera.model.impl.AutoFireDetector
-import org.emulinker.kaillera.model.impl.KailleraServerImpl
 import org.emulinker.kaillera.model.impl.PlayerActionQueue
 import org.emulinker.kaillera.model.impl.PlayerTimeoutException
 import org.emulinker.util.EmuLang
@@ -41,7 +40,7 @@ class KailleraGame(
   val id: Int,
   val romName: String,
   val owner: KailleraUser,
-  val server: KailleraServerImpl,
+  val server: KailleraServer,
   val bufferSize: Int,
 ) {
   var highestUserFrameDelay = 0
