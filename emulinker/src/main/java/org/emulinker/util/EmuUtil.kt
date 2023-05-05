@@ -2,13 +2,8 @@ package org.emulinker.util
 
 import java.io.File
 import java.io.FileInputStream
-import java.lang.Exception
-import java.lang.InstantiationException
-import java.lang.NumberFormatException
-import java.lang.StringBuilder
 import java.net.InetSocketAddress
 import java.net.SocketAddress
-import java.nio.Buffer
 import java.nio.ByteBuffer
 import java.nio.charset.Charset
 import java.text.DateFormat
@@ -17,14 +12,15 @@ import java.time.Instant
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import java.util.Properties
-import kotlin.Throws
-import kotlin.jvm.JvmOverloads
+import org.emulinker.kaillera.pico.AppModule
 
 object EmuUtil {
   private val HEX_CHARS =
     charArrayOf('0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F')
-  @JvmField val LB = System.getProperty("line.separator")
-  @JvmField var DATE_FORMAT: DateFormat = SimpleDateFormat("MM/dd/yyyy HH:mm:ss")
+  val LB: String = System.getProperty("line.separator")
+  var DATE_FORMAT: DateFormat = SimpleDateFormat("MM/dd/yyyy HH:mm:ss")
+
+  // TODO(nue): This looks like a hack. Maybe clean it up.
   fun systemIsWindows(): Boolean {
     return File.separatorChar == '\\'
   }
@@ -39,7 +35,7 @@ object EmuUtil {
     }
   }
 
-  fun loadProperties(file: File): Properties? {
+  private fun loadProperties(file: File): Properties? {
     var p: Properties? = null
     try {
       val `in` = FileInputStream(file)
@@ -68,7 +64,7 @@ object EmuUtil {
     return sb.toString()
   }
 
-  fun bytesToHex(data: ByteArray, sep: Char): String {
+  private fun bytesToHex(data: ByteArray, sep: Char): String {
     val len = data.size
     val sb = StringBuilder(len * 3)
     for (i in 0 until len) {
@@ -78,8 +74,7 @@ object EmuUtil {
     return sb.toString()
   }
 
-  fun bytesToHex(data: ByteArray?): String {
-    if (data == null) return "null"
+  fun bytesToHex(data: ByteArray): String {
     val len = data.size
     val sb = StringBuilder(len * 3)
     for (i in 0 until len) {
@@ -88,8 +83,7 @@ object EmuUtil {
     return sb.toString()
   }
 
-  fun bytesToHex(data: ByteArray?, pos: Int, len: Int): String {
-    if (data == null) return "null"
+  fun bytesToHex(data: ByteArray, pos: Int, len: Int): String {
     val sb = StringBuilder(len * 2)
     for (i in pos until pos + len) {
       sb.append(byteToHex(data[i]))
@@ -97,6 +91,17 @@ object EmuUtil {
     return sb.toString()
   }
 
+  fun ByteArray.toHexString(): String =
+    this.joinToString("") { it.toHexString() }.chunked(size = 2).joinToString(separator = ",")
+
+  fun Byte.toHexString(): String = this.toUByte().toString(16).padStart(2, '0').uppercase()
+
+  @Deprecated(
+    message = "This doesn't work very well",
+    replaceWith =
+      ReplaceWith("b.toHexString()", imports = arrayOf("org.emulinker.util.Byte.toHexString")),
+    level = DeprecationLevel.WARNING
+  )
   fun byteToHex(b: Byte): String {
     return (HEX_CHARS[b.toInt() and 0xf0 shr 4].toString() +
       HEX_CHARS[b.toInt() and 0xf].toString())
@@ -171,8 +176,7 @@ object EmuUtil {
   @JvmOverloads
   fun dumpBuffer(buffer: ByteBuffer, allHex: Boolean = false): String {
     val sb = StringBuilder()
-    // Cast to avoid issue with java version mismatch: https://stackoverflow.com/a/61267496/2875073
-    (buffer as Buffer).mark()
+    buffer.mark()
     while (buffer.hasRemaining()) {
       val b = buffer.get()
       if (!allHex && Character.isLetterOrDigit(Char(b.toUShort()))) sb.append(Char(b.toUShort()))
@@ -183,24 +187,43 @@ object EmuUtil {
     return sb.toString()
   }
 
-  fun readString(buffer: ByteBuffer, stopByte: Int, charset: Charset): String {
+  fun ByteBuffer.dumpBufferFromBeginning(allHex: Boolean = false): String {
+    val sb = StringBuilder()
+    val pos = this.position()
+    this.position(0)
+    val byteList = mutableListOf<Byte>()
+    while (this.hasRemaining()) {
+      val b = this.get()
+      byteList.add(b)
+      if (!allHex && Character.isLetterOrDigit(Char(b.toUShort()))) sb.append(Char(b.toUShort()))
+      else sb.append(byteToHex(b))
+      if (this.hasRemaining()) sb.append(",")
+    }
+    this.position(pos)
+    //    return sb.toString()
+    return byteList.toByteArray().toHexString()
+  }
+
+  fun readString(
+    buffer: ByteBuffer,
+    stopByte: Int = 0x00,
+    charset: Charset = AppModule.charsetDoNotUse
+  ): String {
     val tempBuffer = ByteBuffer.allocate(buffer.remaining())
-    //		char[] tempArray = new char[buffer.remaining()];
-    //		byte b;
-    //		int  i;
-    while (buffer.hasRemaining()) // 		for(i=0; i<tempArray.length; i++)
-    {
+    while (buffer.hasRemaining()) {
       var b: Byte
       if (buffer.get().also { b = it }.toInt() == stopByte) break
       tempBuffer.put(b)
-      //			tempArray[i] = (char)b;
     }
-    // Cast to avoid issue with java version mismatch: https://stackoverflow.com/a/61267496/2875073
-    return charset.decode((tempBuffer as Buffer).flip() as ByteBuffer).toString()
-    //		return new String(tempArray, 0, i);
+    return charset.decode(tempBuffer.flip() as ByteBuffer).toString()
   }
 
-  fun writeString(buffer: ByteBuffer, s: String, stopByte: Int, charset: Charset) {
+  fun writeString(
+    buffer: ByteBuffer,
+    s: String,
+    stopByte: Int = 0x00,
+    charset: Charset = AppModule.charsetDoNotUse
+  ) {
     buffer.put(charset.encode(s))
     //		char[] tempArray = s.toCharArray();
     //		for(int i=0; i<tempArray.length; i++)
@@ -221,7 +244,7 @@ object EmuUtil {
     }
   }
 
-  fun toSimpleUtcDatetime(instant: Instant?): String {
+  fun toSimpleUtcDatetime(instant: Instant): String {
     return DateTimeFormatter.RFC_1123_DATE_TIME.withZone(ZoneOffset.UTC).format(instant)
   }
 }

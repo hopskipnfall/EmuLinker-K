@@ -30,6 +30,7 @@ import org.emulinker.util.EmuLang.getString
 import org.emulinker.util.EmuLang.hasString
 import org.emulinker.util.EmuUtil.formatSocketAddress
 import org.emulinker.util.Executable
+import java.time.Instant
 
 private val logger = FluentLogger.forEnclosingClass()
 
@@ -85,14 +86,14 @@ internal constructor(
     return count
   }
 
-  override val maxPing = flags.maxPing
-  override val maxUsers = flags.maxUsers
-  override val maxGames = flags.maxGames
+  override val maxPing: Int = flags.maxPing
+  override val maxUsers: Int = flags.maxUsers
+  override val maxGames: Int = flags.maxGames
 
   val allowSinglePlayer = flags.allowSinglePlayer
-  private val maxUserNameLength = flags.maxUserNameLength
+  private val maxUserNameLength: Int = flags.maxUserNameLength
   val maxGameChatLength = flags.maxGameChatLength
-  private val maxClientNameLength = flags.maxClientNameLength
+  private val maxClientNameLength: Int = flags.maxClientNameLength
 
   override fun toString(): String {
     return String.format(
@@ -879,10 +880,11 @@ internal constructor(
                   .log("Error forcing $user quit for keepalive timeout!")
               }
             } else if (
-              flags.idleTimeout > 0 &&
+              flags.idleTimeout.isPositive() &&
                 access == AccessManager.ACCESS_NORMAL &&
                 user.loggedIn &&
-                (System.currentTimeMillis() - user.lastActivity > flags.idleTimeout * 1000)
+              (Instant.now().toEpochMilli() - user.lastActivity >
+                  flags.idleTimeout.inWholeMilliseconds)
             ) {
               logger.atInfo().log("$user inactivity timeout!")
               try {

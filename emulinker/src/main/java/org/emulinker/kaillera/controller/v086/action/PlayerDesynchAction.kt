@@ -5,11 +5,9 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086ClientHandler
-import org.emulinker.kaillera.controller.v086.protocol.GameChat_Notification
+import org.emulinker.kaillera.controller.v086.protocol.GameChat
 import org.emulinker.kaillera.model.event.PlayerDesynchEvent
 import org.emulinker.util.EmuLang
-
-private val logger = FluentLogger.forEnclosingClass()
 
 @Singleton
 class PlayerDesynchAction @Inject internal constructor() :
@@ -17,13 +15,13 @@ class PlayerDesynchAction @Inject internal constructor() :
   override var handledEventCount = 0
     private set
 
-  override fun toString() = PlayerDesynchAction::class.java.simpleName
+  override fun toString(): String = PlayerDesynchAction::class.java.simpleName
 
   override fun handleEvent(event: PlayerDesynchEvent, clientHandler: V086ClientHandler) {
     handledEventCount++
     try {
       clientHandler.send(
-        GameChat_Notification(
+        GameChat.GameChatNotification(
           clientHandler.nextMessageNumber,
           EmuLang.getString("PlayerDesynchAction.DesynchDetected"),
           event.message
@@ -32,11 +30,15 @@ class PlayerDesynchAction @Inject internal constructor() :
       // if (clientHandler.getUser().getStatus() == KailleraUser.STATUS_PLAYING)
       //	clientHandler.getUser().dropGame();
     } catch (e: MessageFormatException) {
-      logger.atSevere().withCause(e).log("Failed to construct GameChat_Notification message")
+      logger.atSevere().withCause(e).log("Failed to construct GameChat.Notification message")
     }
     // catch (DropGameException e)
     // {
     //	logger.atSevere().withCause(e).log("Failed to drop game during desynch");
     // }
+  }
+
+  companion object {
+    private val logger = FluentLogger.forEnclosingClass()
   }
 }

@@ -1,53 +1,89 @@
 package org.emulinker.eval.client
 
 import com.google.common.flogger.FluentLogger
-import io.ktor.network.selector.*
-import io.ktor.network.sockets.*
-import io.ktor.utils.io.core.*
-import java.nio.Buffer
+import io.ktor.network.selector.SelectorManager
+import io.ktor.network.sockets.ConnectedDatagramSocket
+import io.ktor.network.sockets.Datagram
+import io.ktor.network.sockets.InetSocketAddress
+import io.ktor.network.sockets.aSocket
+import io.ktor.network.sockets.isClosed
+import io.ktor.utils.io.core.ByteReadPacket
+import io.ktor.utils.io.core.Closeable
+import io.ktor.utils.io.core.readByteBuffer
+import io.ktor.utils.io.core.use
 import java.nio.ByteBuffer
 import kotlin.time.Duration.Companion.seconds
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineName
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.plus
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import org.emulinker.kaillera.controller.connectcontroller.protocol.ConnectMessage
-import org.emulinker.kaillera.controller.connectcontroller.protocol.ConnectMessage_HELLO
-import org.emulinker.kaillera.controller.connectcontroller.protocol.ConnectMessage_HELLOD00D
+import org.emulinker.kaillera.controller.connectcontroller.protocol.RequestPrivateKailleraPortRequest
+import org.emulinker.kaillera.controller.connectcontroller.protocol.RequestPrivateKailleraPortResponse
 import org.emulinker.kaillera.controller.messaging.ParseException
 import org.emulinker.kaillera.controller.v086.LastMessageBuffer
 import org.emulinker.kaillera.controller.v086.V086Controller
-import org.emulinker.kaillera.controller.v086.protocol.*
+import org.emulinker.kaillera.controller.v086.protocol.Ack
+import org.emulinker.kaillera.controller.v086.protocol.AllReady
+import org.emulinker.kaillera.controller.v086.protocol.CachedGameData
+import org.emulinker.kaillera.controller.v086.protocol.CreateGame.CreateGameNotification
+import org.emulinker.kaillera.controller.v086.protocol.CreateGame.CreateGameRequest
+import org.emulinker.kaillera.controller.v086.protocol.GameData
+import org.emulinker.kaillera.controller.v086.protocol.GameStatus
+import org.emulinker.kaillera.controller.v086.protocol.InformationMessage
+import org.emulinker.kaillera.controller.v086.protocol.JoinGame.JoinGameNotification
+import org.emulinker.kaillera.controller.v086.protocol.JoinGame.JoinGameRequest
+import org.emulinker.kaillera.controller.v086.protocol.PlayerDrop.PlayerDropRequest
+import org.emulinker.kaillera.controller.v086.protocol.PlayerInformation
+import org.emulinker.kaillera.controller.v086.protocol.Quit.QuitRequest
+import org.emulinker.kaillera.controller.v086.protocol.QuitGame.QuitGameRequest
+import org.emulinker.kaillera.controller.v086.protocol.ServerStatus
+import org.emulinker.kaillera.controller.v086.protocol.StartGame.StartGameNotification
+import org.emulinker.kaillera.controller.v086.protocol.StartGame.StartGameRequest
+import org.emulinker.kaillera.controller.v086.protocol.UserInformation
+import org.emulinker.kaillera.controller.v086.protocol.UserJoined
+import org.emulinker.kaillera.controller.v086.protocol.V086Bundle
+import org.emulinker.kaillera.controller.v086.protocol.V086Message
 import org.emulinker.kaillera.model.ConnectionType
 import org.emulinker.util.ClientGameDataCache
 import org.emulinker.util.GameDataCache
 
-private val logger = FluentLogger.forEnclosingClass()
-
+/** Fake client for testing. */
 class EvalClient(
   private val username: String,
   private val connectControllerAddress: InetSocketAddress,
   private val simulateGameLag: Boolean = false,
   private val connectionType: ConnectionType = ConnectionType.LAN,
-  private val frameDelay: Int = 1
+  private val frameDelay: Int = 1,
+  private val clientType: String = "Project 64k 0.13 (01 Aug 2003)"
 ) : Closeable {
+  private val evalCoroutineScope =
+    CoroutineScope(Dispatchers.IO) + CoroutineName("EvalClient[${username}]Scope")
+
   private val lastMessageBuffer = LastMessageBuffer(V086Controller.MAX_BUNDLE_SIZE)
 
-  var socket: ConnectedDatagramSocket? = null
+  private lateinit var socket: ConnectedDatagramSocket
 
-  var gameDataCache: GameDataCache = ClientGameDataCache(256)
+  private var gameDataCache: GameDataCache = ClientGameDataCache(256)
 
   private val outMutex = Mutex()
 
   private var killSwitch = false
 
-  var lastOutgoingMessageNumber = -1
+  private var lastOutgoingMessageNumber = -1
 
   private var latestServerStatus: ServerStatus? = null
 
   private var playerNumber: Int? = null
 
   private val delayBetweenPackets = 1.seconds.div(connectionType.updatesPerSecond).times(frameDelay)
+
+  private var lastIncomingMessageNumber: Int = -1
 
   /**
    * Registers as a new user with the ConnectController server and joins the dedicated port
@@ -58,34 +94,37 @@ class EvalClient(
     socket = aSocket(selectorManager).udp().connect(connectControllerAddress)
 
     val allocatedPort =
-      socket?.use { connectedSocket ->
+      socket.use { connectedSocket ->
         logger.atInfo().log("Started new eval client at %s", connectedSocket.localAddress)
 
-        sendConnectMessage(ConnectMessage_HELLO(protocol = "0.83"))
+        sendConnectMessage(RequestPrivateKailleraPortRequest(protocol = "0.83"))
 
         val response = ConnectMessage.parse(connectedSocket.receive().packet.readByteBuffer())
         logger.atInfo().log("<<<<<<<< Received message: %s", response)
-        require(response is ConnectMessage_HELLOD00D)
+        require(response is RequestPrivateKailleraPortResponse)
 
         response.port
       }
-    requireNotNull(allocatedPort)
 
     socket =
       aSocket(selectorManager)
         .udp()
         .connect(InetSocketAddress(connectControllerAddress.hostname, allocatedPort))
-    logger.atInfo().log("Changing connection to: %s", socket!!.remoteAddress)
+    logger.atInfo().log("Changing connection to: %s", socket.remoteAddress)
+
+    giveServerTime()
   }
 
   /** Interacts in the server */
-  @OptIn(DelicateCoroutinesApi::class) // GlobalScope.
   suspend fun start() {
-
-    GlobalScope.launch(Dispatchers.IO) {
+    evalCoroutineScope.launch {
       while (!killSwitch) {
         try {
-          val response = V086Bundle.parse(socket!!.receive().packet.readByteBuffer())
+          val response =
+            V086Bundle.parse(
+              socket.receive().packet.readByteBuffer(),
+              lastMessageID = lastIncomingMessageNumber
+            )
           handleIncoming(response)
         } catch (e: ParseException) {
 
@@ -104,34 +143,43 @@ class EvalClient(
       logger.atInfo().log("EvalClient shut down.")
     }
 
-    sendWithMessageId {
-      UserInformation(
-        messageNumber = it,
-        username,
-        "Project 64k 0.13 (01 Aug 2003)",
-        connectionType
-      )
-    }
+    sendWithMessageId { UserInformation(messageNumber = it, username, clientType, connectionType) }
+    giveServerTime()
   }
 
   private suspend fun handleIncoming(bundle: V086Bundle) {
-    val message = bundle.messages.first()
+    val message = bundle.messages.firstOrNull()
+
+    if (message == null) {
+      logger.atInfo().log("Received bundle with no messages!")
+      return
+    }
+    if (message.messageNumber != lastIncomingMessageNumber + 1) {
+      logger
+        .atSevere()
+        .log(
+          "Received message with unexpected messageNumber.. lastMessageNumber=%d, message=%d",
+          lastIncomingMessageNumber,
+          message
+        )
+    }
+    lastIncomingMessageNumber = message.messageNumber
 
     logger.atInfo().log("<<<<<<<< Received message: %s", message)
 
     when (message) {
-      is ServerACK -> {
-        sendWithMessageId { ClientACK(messageNumber = it) }
+      is Ack.ServerAck -> {
+        sendWithMessageId { Ack.ClientAck(messageNumber = it) }
       }
       is ServerStatus -> {
         latestServerStatus = message
       }
       is InformationMessage -> {}
       is UserJoined -> {}
-      is CreateGame_Notification -> {}
+      is CreateGameNotification -> {}
       is GameStatus -> {}
       is PlayerInformation -> {}
-      is JoinGame_Notification -> {}
+      is JoinGameNotification -> {}
       is AllReady -> {
         if (simulateGameLag) {
           delay(delayBetweenPackets)
@@ -283,7 +331,7 @@ class EvalClient(
         }
       }
       is CachedGameData -> {
-        require(gameDataCache[message.key] != null)
+        requireNotNull(gameDataCache[message.key])
         if (simulateGameLag) {
           delay(delayBetweenPackets)
         }
@@ -356,7 +404,7 @@ class EvalClient(
           )
         }
       }
-      is StartGame_Notification -> {
+      is StartGameNotification -> {
         playerNumber = message.playerNumber.toInt()
         delay(1.seconds)
         sendWithMessageId { AllReady(messageNumber = it) }
@@ -369,33 +417,39 @@ class EvalClient(
 
   suspend fun createGame() {
     sendWithMessageId {
-      CreateGame_Request(
+      CreateGameRequest(
         messageNumber = it,
         romName = "Nintendo All-Star! Dairantou Smash Brothers (J)"
       )
     }
+    giveServerTime()
   }
 
   suspend fun startOwnGame() {
-    sendWithMessageId { StartGame_Request(messageNumber = it) }
+    sendWithMessageId { StartGameRequest(messageNumber = it) }
+    giveServerTime()
   }
 
   suspend fun joinAnyAvailableGame() {
     // TODO(nue): Make it listen to individual game creation updates too.
     val games = requireNotNull(latestServerStatus?.games)
     sendWithMessageId {
-      JoinGame_Request(messageNumber = it, gameId = games.first().gameId, connectionType)
+      JoinGameRequest(messageNumber = it, gameId = games.first().gameId, connectionType)
     }
+    giveServerTime()
   }
 
   override fun close() {
     logger.atInfo().log("Shutting down EvalClient.")
     killSwitch = true
-    socket?.close()
+    if (!socket.isClosed) {
+      socket.close()
+    }
+    evalCoroutineScope.cancel()
   }
 
   private suspend fun sendConnectMessage(message: ConnectMessage) {
-    socket!!.send(Datagram(ByteReadPacket(message.toBuffer()!!), socket!!.remoteAddress))
+    socket.send(Datagram(ByteReadPacket(message.toBuffer()), socket.remoteAddress))
   }
 
   private suspend fun sendWithMessageId(messageIdToMessage: (messageNumber: Int) -> V086Message) {
@@ -408,21 +462,32 @@ class EvalClient(
       lastMessageBuffer.fill(messageAsArray, messageAsArray.size)
       val outBundle = V086Bundle(messageAsArray, messageAsArray.size)
       outBundle.writeTo(outBuffer)
-      (outBuffer as Buffer).flip()
+      outBuffer.flip()
       logger.atInfo().log(">>>>>>>> SENT message: %s", outBundle.messages.first())
-      socket!!.send(Datagram(ByteReadPacket(outBuffer), socket!!.remoteAddress))
+      socket.send(Datagram(ByteReadPacket(outBuffer), socket.remoteAddress))
     }
   }
 
   suspend fun dropGame() {
-    sendWithMessageId { PlayerDrop_Request(messageNumber = it) }
+    sendWithMessageId { PlayerDropRequest(messageNumber = it) }
+    giveServerTime()
   }
 
   suspend fun quitGame() {
-    sendWithMessageId { QuitGame_Request(messageNumber = it) }
+    sendWithMessageId { QuitGameRequest(messageNumber = it) }
+    giveServerTime()
   }
 
   suspend fun quitServer() {
-    sendWithMessageId { Quit_Request(messageNumber = it, message = "End of test.") }
+    sendWithMessageId { QuitRequest(messageNumber = it, message = "End of test.") }
+    giveServerTime()
+  }
+
+  private suspend fun giveServerTime() {
+    delay(1.seconds)
+  }
+
+  companion object {
+    private val logger = FluentLogger.forEnclosingClass()
   }
 }

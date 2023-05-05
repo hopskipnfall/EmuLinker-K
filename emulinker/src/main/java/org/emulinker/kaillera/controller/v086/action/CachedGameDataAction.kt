@@ -8,11 +8,9 @@ import kotlin.Throws
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086ClientHandler
 import org.emulinker.kaillera.controller.v086.protocol.CachedGameData
-import org.emulinker.kaillera.controller.v086.protocol.GameChat_Notification
+import org.emulinker.kaillera.controller.v086.protocol.GameChat
 import org.emulinker.kaillera.controller.v086.protocol.GameData.Companion.create
 import org.emulinker.kaillera.model.exception.GameDataException
-
-private val logger = FluentLogger.forEnclosingClass()
 
 @Singleton
 class CachedGameDataAction @Inject internal constructor() : V086Action<CachedGameData> {
@@ -28,7 +26,7 @@ class CachedGameDataAction @Inject internal constructor() : V086Action<CachedGam
         logger.atFine().log("Game Cache Error: null data")
         return
       }
-      user!!.addGameData(data)
+      user.addGameData(data)
     } catch (e: GameDataException) {
       logger.atFine().withCause(e).log("Game data error")
       if (e.response != null) {
@@ -49,15 +47,19 @@ class CachedGameDataAction @Inject internal constructor() : V086Action<CachedGam
       // This may not always be the best thing to do...
       try {
         clientHandler.send(
-          GameChat_Notification(
+          GameChat.GameChatNotification(
             clientHandler.nextMessageNumber,
             "Error",
             "Game Data Error!  Game state will be inconsistent!"
           )
         )
       } catch (e2: MessageFormatException) {
-        logger.atSevere().withCause(e2).log("Failed to construct new GameChat_Notification")
+        logger.atSevere().withCause(e2).log("Failed to construct new GameChat.Notification")
       }
     }
+  }
+
+  companion object {
+    private val logger = FluentLogger.forEnclosingClass()
   }
 }

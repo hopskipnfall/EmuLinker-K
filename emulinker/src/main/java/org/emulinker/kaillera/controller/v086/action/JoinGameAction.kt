@@ -11,11 +11,9 @@ import org.emulinker.kaillera.model.event.UserJoinedGameEvent
 import org.emulinker.kaillera.model.exception.JoinGameException
 import org.emulinker.util.EmuLang
 
-private val logger = FluentLogger.forEnclosingClass()
-
 @Singleton
 class JoinGameAction @Inject internal constructor() :
-  V086Action<JoinGame_Request>, V086GameEventHandler<UserJoinedGameEvent> {
+  V086Action<JoinGame.JoinGameRequest>, V086GameEventHandler<UserJoinedGameEvent> {
   override var actionPerformedCount = 0
     private set
   override var handledEventCount = 0
@@ -24,10 +22,10 @@ class JoinGameAction @Inject internal constructor() :
   override fun toString() = "JoinGameAction"
 
   @Throws(FatalActionException::class)
-  override fun performAction(message: JoinGame_Request, clientHandler: V086ClientHandler) {
+  override fun performAction(message: JoinGame.JoinGameRequest, clientHandler: V086ClientHandler) {
     actionPerformedCount++
     try {
-      clientHandler.user!!.joinGame(message.gameId)
+      clientHandler.user.joinGame(message.gameId)
     } catch (e: JoinGameException) {
       logger.atSevere().withCause(e).log("Failed to join game.")
       try {
@@ -39,10 +37,10 @@ class JoinGameAction @Inject internal constructor() :
           )
         )
         clientHandler.send(
-          QuitGame_Notification(
+          QuitGame.QuitGameNotification(
             clientHandler.nextMessageNumber,
-            clientHandler.user!!.name!!,
-            clientHandler.user!!.id
+            clientHandler.user.name!!,
+            clientHandler.user.id
           )
         )
       } catch (e2: MessageFormatException) {
@@ -59,24 +57,17 @@ class JoinGameAction @Inject internal constructor() :
       val user = event.user
       if (user == thisUser) {
         val players: MutableList<Player> = ArrayList()
-        for (player in game.players) {
-          if (player != thisUser) {
-            if (!player.inStealthMode)
-              players.add(
-                PlayerInformation.Player(
-                  player.name!!,
-                  player.ping.toLong(),
-                  player.id,
-                  player.connectionType
-                )
-              )
+        game.players
+          .asSequence()
+          .filter { it != thisUser && !it.inStealthMode }
+          .mapTo(players) {
+            PlayerInformation.Player(it.name!!, it.ping.toLong(), it.id, it.connectionType)
           }
-        }
         clientHandler.send(PlayerInformation(clientHandler.nextMessageNumber, players))
       }
       if (!user.inStealthMode)
         clientHandler.send(
-          JoinGame_Notification(
+          JoinGame.JoinGameNotification(
             clientHandler.nextMessageNumber,
             game.id,
             0,
@@ -87,7 +78,11 @@ class JoinGameAction @Inject internal constructor() :
           )
         )
     } catch (e: MessageFormatException) {
-      logger.atSevere().withCause(e).log("Failed to construct JoinGame_Notification message")
+      logger.atSevere().withCause(e).log("Failed to construct JoinGame.Notification message")
     }
+  }
+
+  companion object {
+    private val logger = FluentLogger.forEnclosingClass()
   }
 }

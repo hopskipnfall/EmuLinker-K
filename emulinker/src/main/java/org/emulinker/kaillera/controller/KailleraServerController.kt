@@ -13,7 +13,7 @@ interface KailleraServerController {
   val clientTypes: Array<String>
 
   @Throws(ServerFullException::class, NewConnectionException::class)
-  fun newConnection(clientSocketAddress: InetSocketAddress?, protocol: String?): Int
+  fun newConnection(clientSocketAddress: InetSocketAddress, protocol: String): Int
 
   fun start()
 

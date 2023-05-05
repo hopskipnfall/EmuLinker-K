@@ -1,41 +1,87 @@
 package org.emulinker.kaillera.controller.v086.protocol
 
 import java.nio.ByteBuffer
-import org.emulinker.kaillera.controller.messaging.MessageFormatException
-import org.emulinker.kaillera.controller.messaging.ParseException
-import org.emulinker.kaillera.pico.AppModule
+import org.emulinker.kaillera.controller.v086.V086Utils
+import org.emulinker.kaillera.controller.v086.V086Utils.getNumBytesPlusStopByte
 import org.emulinker.util.EmuUtil
-import org.emulinker.util.UnsignedUtil
+import org.emulinker.util.UnsignedUtil.getUnsignedShort
+import org.emulinker.util.UnsignedUtil.putUnsignedShort
 
-abstract class Quit : V086Message() {
-  /** NOTE: May be the empty string. */
-  abstract val username: String
-  abstract val userId: Int
+sealed class Quit : V086Message() {
+  override val messageTypeId = ID
+
   abstract val message: String
 
-  override val bodyLength: Int
-    get() = getNumBytes(username) + getNumBytes(message) + 4
+  override val bodyBytes: Int
+    get() =
+      when (this) {
+        is QuitRequest -> REQUEST_USERNAME
+        is QuitNotification -> username
+      }.getNumBytesPlusStopByte() + V086Utils.Bytes.SHORT + message.getNumBytesPlusStopByte()
 
   public override fun writeBodyTo(buffer: ByteBuffer) {
-    EmuUtil.writeString(buffer, username, 0x00, AppModule.charsetDoNotUse)
-    UnsignedUtil.putUnsignedShort(buffer, userId)
-    EmuUtil.writeString(buffer, message, 0x00, AppModule.charsetDoNotUse)
+    QuitSerializer.write(buffer, this)
   }
+
+  data class QuitNotification(
+    override val messageNumber: Int,
+    val username: String,
+    val userId: Int,
+    override val message: String
+  ) : Quit() {
+
+    init {
+      require(userId in 0..0xFFFF) { "UserID out of acceptable range: $userId" }
+      require(username.isNotBlank()) { "Username cannot be empty" }
+    }
+  }
+
+  data class QuitRequest(override val messageNumber: Int, override val message: String) : Quit()
 
   companion object {
     const val ID: Byte = 0x01
-    @Throws(ParseException::class, MessageFormatException::class)
-    fun parse(messageNumber: Int, buffer: ByteBuffer): Quit {
-      if (buffer.remaining() < 5) throw ParseException("Failed byte count validation!")
-      val userName = EmuUtil.readString(buffer, 0x00, AppModule.charsetDoNotUse)
-      if (buffer.remaining() < 3) throw ParseException("Failed byte count validation!")
-      val userID = UnsignedUtil.getUnsignedShort(buffer)
-      val message = EmuUtil.readString(buffer, 0x00, AppModule.charsetDoNotUse)
-      return if (userName.isNullOrBlank() && userID == 0xFFFF) {
-        Quit_Request(messageNumber, message)
-      } else {
-        Quit_Notification(messageNumber, userName, userID, message)
+
+    private const val REQUEST_USERNAME = ""
+    private const val REQUEST_USER_ID = 0xFFFF
+  }
+
+  object QuitSerializer : MessageSerializer<Quit> {
+    override val messageTypeId: Byte = ID
+
+    override fun read(buffer: ByteBuffer, messageNumber: Int): MessageParseResult<Quit> {
+      if (buffer.remaining() < 5) {
+        return MessageParseResult.Failure("Failed byte count validation!")
       }
+      val userName = EmuUtil.readString(buffer)
+      if (buffer.remaining() < 3) {
+        return MessageParseResult.Failure("Failed byte count validation!")
+      }
+      val userID = buffer.getUnsignedShort()
+      val message = EmuUtil.readString(buffer)
+      return MessageParseResult.Success(
+        if (userName.isBlank() && userID == REQUEST_USER_ID) {
+          QuitRequest(messageNumber, message)
+        } else {
+          QuitNotification(messageNumber, userName, userID, message)
+        }
+      )
+    }
+
+    override fun write(buffer: ByteBuffer, message: Quit) {
+      EmuUtil.writeString(
+        buffer,
+        when (message) {
+          is QuitRequest -> REQUEST_USERNAME
+          is QuitNotification -> message.username
+        }
+      )
+      buffer.putUnsignedShort(
+        when (message) {
+          is QuitRequest -> REQUEST_USER_ID
+          is QuitNotification -> message.userId
+        }
+      )
+      EmuUtil.writeString(buffer, message.message)
     }
   }
 }

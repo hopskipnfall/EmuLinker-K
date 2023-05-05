@@ -9,7 +9,8 @@ class GameDataQueue(
   val timeoutMillis: Int,
   val retries: Int
 ) {
-  private val playerQueues: Array<PlayerDataQueue?> = arrayOfNulls(numPlayers)
+  private val playerQueues: Array<PlayerDataQueue> =
+    (1..numPlayers).map { PlayerDataQueue() }.toTypedArray()
   private var gameDesynched = false
 
   fun setGameDesynched() {
@@ -21,22 +22,24 @@ class GameDataQueue(
   }
 
   fun addData(playerNumber: Int, data: Byte) {
-    for (i in 0 until numPlayers) playerQueues[i]!!.addData(playerNumber, data)
+    for (i in 0 until numPlayers) {
+      playerQueues[i].addData(playerNumber, data)
+    }
   }
 
   @Throws(PlayerTimeoutException::class, DesynchException::class)
   fun getData(playerNumber: Int, byteCount: Int, bytesPerAction: Int): ByteArray? {
-    return playerQueues[playerNumber - 1]!!.getData(byteCount, bytesPerAction)
+    return playerQueues[playerNumber - 1].getData(byteCount, bytesPerAction)
   }
 
-  private inner class PlayerDataQueue internal constructor(playerNumber: Int) {
+  private inner class PlayerDataQueue {
     private val queues: Array<CircularBlockingByteQueue?> = arrayOfNulls(numPlayers)
     private var lastI = 0
     private var lastJ = 0
     private var lastData: ByteArray? = null
     private var timeoutCounter = 0
 
-    internal fun addData(playerNumber: Int, data: Byte) {
+    fun addData(playerNumber: Int, data: Byte) {
       queues[playerNumber - 1]!!.put(data)
     }
 
@@ -85,8 +88,4 @@ class GameDataQueue(
     Exception(e)
   class DesynchException(msg: String, val playerNumber: Int, e: TimeoutException) :
     Exception(msg, e)
-
-  init {
-    for (i in playerQueues.indices) playerQueues[i] = PlayerDataQueue(i + 1)
-  }
 }

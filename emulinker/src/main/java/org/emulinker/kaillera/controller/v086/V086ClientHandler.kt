@@ -7,7 +7,6 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import java.net.InetSocketAddress
-import java.nio.Buffer
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import javax.inject.Named
@@ -26,21 +25,21 @@ import org.emulinker.net.PrivateUDPServer
 import org.emulinker.util.ClientGameDataCache
 import org.emulinker.util.EmuUtil.dumpBuffer
 import org.emulinker.util.GameDataCache
+import org.emulinker.util.LoggingUtils.debugLog
 
-private val logger = FluentLogger.forEnclosingClass()
-
+/** A private UDP server allocated for communication with a single client. */
 class V086ClientHandler
 @AssistedInject
 constructor(
-  metrics: MetricRegistry?,
+  metrics: MetricRegistry,
   flags: RuntimeFlags,
   @Assisted remoteSocketAddress: InetSocketAddress,
   @param:Assisted val controller: V086Controller,
   @Named("listeningOnPortsCounter") listeningOnPortsCounter: Counter
 ) :
-  PrivateUDPServer(false, remoteSocketAddress.address, metrics!!, listeningOnPortsCounter),
+  PrivateUDPServer(false, remoteSocketAddress.address, metrics, listeningOnPortsCounter),
   KailleraEventListener {
-  var user: KailleraUser? = null
+  lateinit var user: KailleraUser
     private set
 
   private var messageNumberCounter = 0
@@ -48,12 +47,7 @@ constructor(
   // TODO(nue): Add this to RuntimeFlags and increase to at least 5.
   val numAcksForSpeedTest = 3
 
-  /*
-  public List<V086Message> getLastMessage()
-  {
-  return lastMessages;
-  }
-  */ var prevMessageNumber = -1
+  private var prevMessageNumber = -1
     private set
   var lastMessageNumber = -1
     private set
@@ -62,7 +56,6 @@ constructor(
   var serverGameDataCache: GameDataCache = ClientGameDataCache(256)
     private set
 
-  // private LinkedList<V086Message>	lastMessages			= new LinkedList<V086Message>();
   private val lastMessageBuffer = LastMessageBuffer(V086Controller.MAX_BUNDLE_SIZE)
   private val outMessages = arrayOfNulls<V086Message>(V086Controller.MAX_BUNDLE_SIZE)
   private val inBuffer: ByteBuffer = ByteBuffer.allocateDirect(flags.v086BufferSize)
@@ -76,16 +69,16 @@ constructor(
   var bestNetworkSpeed = Int.MAX_VALUE
     private set
   private var clientRetryCount = 0
-  private var lastResend: Long = 0
+  private var lastResend = 0L
 
   private val clientRequestTimer =
-    metrics!!.timer(MetricRegistry.name(this.javaClass, "clientRequests"))
+    metrics.timer(MetricRegistry.name(this.javaClass, "clientRequests"))
 
   @AssistedFactory
   interface Factory {
     fun create(
-      remoteSocketAddress: InetSocketAddress?,
-      v086Controller: V086Controller?
+      remoteSocketAddress: InetSocketAddress,
+      v086Controller: V086Controller
     ): V086ClientHandler
   }
 
@@ -116,7 +109,9 @@ constructor(
 
   fun addSpeedMeasurement() {
     val et = (System.currentTimeMillis() - lastMeasurement).toInt()
-    if (et < bestNetworkSpeed) bestNetworkSpeed = et
+    if (et < bestNetworkSpeed) {
+      bestNetworkSpeed = et
+    }
     speedMeasurementCount++
     lastMeasurement = System.currentTimeMillis()
   }
@@ -181,38 +176,30 @@ constructor(
       if (stopFlag) return
       var port = -1
       if (isBound) port = bindPort
-      logger.atFine().log("$this Stopping!")
       super.stop()
       if (port > 0) {
         logger
           .atFine()
           .log(
-            toString() +
-              " returning port " +
-              port +
-              " to available port queue: " +
-              (controller.portRangeQueue.size + 1) +
-              " available"
+            "%s returning port %d to available port queue: %d available",
+            this,
+            port,
+            controller.portRangeQueue.size + 1
           )
         controller.portRangeQueue.add(port)
       }
     }
-    if (user != null) {
-      controller.clientHandlers.remove(user!!.id)
-      user!!.stop()
-      user = null
-    }
+    controller.clientHandlers.remove(user.id)
+    user.stop()
   }
 
   // return ByteBufferMessage.getBuffer(bufferSize);
   // Cast to avoid issue with java version mismatch:
   // https://stackoverflow.com/a/61267496/2875073
   override val buffer: ByteBuffer
-    protected get() {
+    get() {
       // return ByteBufferMessage.getBuffer(bufferSize);
-      // Cast to avoid issue with java version mismatch:
-      // https://stackoverflow.com/a/61267496/2875073
-      (inBuffer as Buffer).clear()
+      inBuffer.clear()
       return inBuffer
     }
 
@@ -226,39 +213,35 @@ constructor(
   }
 
   private fun handleReceivedInternal(buffer: ByteBuffer) {
-    var inBundle: V086Bundle? = null
-    inBundle =
+    val inBundle =
       try {
         parse(buffer, lastMessageNumber)
-        // inBundle = V086Bundle.parse(buffer, -1);
       } catch (e: ParseException) {
         buffer.rewind()
-        logger.atWarning().withCause(e).log(toString() + " failed to parse: " + dumpBuffer(buffer))
-        return
+        logger.atWarning().withCause(e).log("%s failed to parse: %s", this, dumpBuffer(buffer))
+        null
       } catch (e: V086BundleFormatException) {
         buffer.rewind()
         logger
           .atWarning()
           .withCause(e)
-          .log(toString() + " received invalid message bundle: " + dumpBuffer(buffer))
-        return
+          .log("%s received invalid message bundle: %s", this, dumpBuffer(buffer))
+        null
       } catch (e: MessageFormatException) {
         buffer.rewind()
         logger
           .atWarning()
           .withCause(e)
-          .log(toString() + " received invalid message: " + dumpBuffer(buffer))
-        return
-      }
+          .log("%s received invalid message: %s}", this, dumpBuffer(buffer))
+        null
+      } ?: return
 
     logger.atFinest().log("<- FROM P%d: %s", user?.playerNumber, inBundle?.messages?.firstOrNull())
     clientRetryCount =
       if (inBundle!!.numMessages == 0) {
         logger
           .atFine()
-          .log(
-            toString() + " received bundle of " + inBundle.numMessages + " messages from " + user
-          )
+          .log("%s received bundle of %d messages from %s", this, inBundle.numMessages, user)
         clientRetryCount++
         resend(clientRetryCount)
         return
@@ -270,7 +253,7 @@ constructor(
         val messages = inBundle.messages
         if (inBundle.numMessages == 1) {
           lastMessageNumber = messages[0]!!.messageNumber
-          val action = controller.actions[messages[0]!!.messageId.toInt()]
+          val action = controller.actions[messages[0]!!.messageTypeId.toInt()]
           if (action == null) {
             logger.atSevere().log("No action defined to handle client message: " + messages[0])
           }
@@ -293,17 +276,15 @@ constructor(
                   logger
                     .atWarning()
                     .log(
-                      user.toString() +
-                        " dropped a packet! (" +
-                        prevMessageNumber +
-                        " to " +
-                        lastMessageNumber +
-                        ")"
+                      "%s dropped a packet! (%d to %d)",
+                      user,
+                      prevMessageNumber,
+                      lastMessageNumber
                     )
-                  user!!.droppedPacket()
+                  user.droppedPacket()
                 }
               }
-              val action = controller.actions[messages[i]!!.messageId.toInt()]
+              val action = controller.actions[messages[i]!!.messageTypeId.toInt()]
               if (action == null) {
                 logger.atSevere().log("No action defined to handle client message: " + messages[i])
               } else {
@@ -321,36 +302,44 @@ constructor(
     }
   }
 
-  override fun actionPerformed(event: KailleraEvent?) {
-    if (event is GameEvent) {
-      val eventHandler = controller.gameEventHandlers[event.javaClass]
-      if (eventHandler == null) {
-        logger
-          .atSevere()
-          .log(toString() + " found no GameEventHandler registered to handle game event: " + event)
-        return
+  override fun actionPerformed(event: KailleraEvent) {
+    when (event) {
+      is GameEvent -> {
+        val eventHandler = controller.gameEventHandlers[event::class]
+        if (eventHandler == null) {
+          logger
+            .atSevere()
+            .log("%s found no GameEventHandler registered to handle game event: %s", this, event)
+          return
+        }
+        (eventHandler as V086GameEventHandler<GameEvent>).handleEvent(event, this)
       }
-      (eventHandler as V086GameEventHandler<GameEvent>).handleEvent(event as GameEvent, this)
-    } else if (event is ServerEvent) {
-      val eventHandler = controller.serverEventHandlers[event.javaClass]
-      if (eventHandler == null) {
-        logger
-          .atSevere()
-          .log(
-            toString() + " found no ServerEventHandler registered to handle server event: " + event
-          )
-        return
+      is ServerEvent -> {
+        val eventHandler = controller.serverEventHandlers[event::class]
+        if (eventHandler == null) {
+          logger
+            .atSevere()
+            .log(
+              "%s found no ServerEventHandler registered to handle server event: %s",
+              this,
+              event
+            )
+          return
+        }
+        (eventHandler as V086ServerEventHandler<ServerEvent>).handleEvent(event, this)
       }
-      (eventHandler as V086ServerEventHandler<ServerEvent>).handleEvent(event, this)
-    } else if (event is UserEvent) {
-      val eventHandler = controller.userEventHandlers[event.javaClass]
-      if (eventHandler == null) {
-        logger
-          .atSevere()
-          .log(toString() + " found no UserEventHandler registered to handle user event: " + event)
-        return
+      is UserEvent -> {
+        val eventHandler = controller.userEventHandlers[event::class]
+        if (eventHandler == null) {
+          logger
+            .atSevere()
+            .log("%s found no UserEventHandler registered to handle user event: ", this, event)
+          return
+
+          (eventHandler as V086UserEventHandler<UserEvent>).handleEvent(event, this)
+        }
       }
-      (eventHandler as V086UserEventHandler<UserEvent>).handleEvent(event as UserEvent, this)
+      is StopFlagEvent -> {}
     }
   }
 
@@ -361,7 +350,7 @@ constructor(
         // int numToSend = (3+timeoutCounter);
         var numToSend = 3 * timeoutCounter
         if (numToSend > V086Controller.MAX_BUNDLE_SIZE) numToSend = V086Controller.MAX_BUNDLE_SIZE
-        logger.atFine().log("$this: resending last $numToSend messages")
+        logger.atFine().log("%s: resending last %d messages", this, numToSend)
         send(null, numToSend)
         lastResend = System.currentTimeMillis()
       } else {
@@ -370,7 +359,6 @@ constructor(
     }
   }
 
-  @JvmOverloads
   fun send(outMessage: V086Message?, numToSend: Int = 5) {
     var numToSend = numToSend
     synchronized(outSynch) {
@@ -378,15 +366,12 @@ constructor(
         lastMessageBuffer.add(outMessage)
       }
       numToSend = lastMessageBuffer.fill(outMessages, numToSend)
-      // System.out.println("Server -> " + numToSend);
       val outBundle = V086Bundle(outMessages, numToSend)
-      logger.atFinest().log("<- TO P%d: %s", user?.playerNumber, outMessage)
+      debugLog { logger.atFinest().log("<- TO P%d: %s", user.playerNumber, outMessage) }
       outBundle.writeTo(outBuffer)
-      // Cast to avoid issue with java version mismatch:
-      // https://stackoverflow.com/a/61267496/2875073
-      (outBuffer as Buffer).flip()
-      super.send(outBuffer)
-      (outBuffer as Buffer).clear()
+      outBuffer.flip()
+      send(outBuffer)
+      outBuffer.clear()
     }
   }
 
@@ -394,5 +379,9 @@ constructor(
     inBuffer.order(ByteOrder.LITTLE_ENDIAN)
     outBuffer.order(ByteOrder.LITTLE_ENDIAN)
     resetGameDataCache()
+  }
+
+  companion object {
+    private val logger = FluentLogger.forEnclosingClass()
   }
 }

@@ -6,6 +6,7 @@ import com.codahale.metrics.MetricFilter
 import com.codahale.metrics.jvm.ThreadStatesGaugeSet
 import com.google.common.flogger.FluentLogger
 import java.io.File
+import java.lang.IllegalStateException
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -13,21 +14,40 @@ import java.util.concurrent.TimeUnit.*
 
 private val logger = FluentLogger.forEnclosingClass()
 
+const val MINIMUM_JAVA_VERSION = 11
+
 /** Main entry point for the Kaillera server. */
-fun main(args: Array<String>) {
+fun main() {
+  val javaVersion: Double? = System.getProperty("java.specification.version").toDoubleOrNull()
+  when {
+    javaVersion == null -> {
+      logger.atSevere().log("Unable to detect installed Java version!")
+    }
+    javaVersion < MINIMUM_JAVA_VERSION -> {
+      throw IllegalStateException(
+        "Installed Java version $javaVersion is below the required minimum $MINIMUM_JAVA_VERSION. Please install a recent version of Java to run this server."
+      )
+    }
+    else -> {
+      logger.atInfo().log("Detected installed Java version: %f", javaVersion)
+    }
+  }
+
+  val component = DaggerAppComponent.create()
+  // Use log4j as the flogger backend.
   System.setProperty(
     "flogger.backend_factory",
     "com.google.common.flogger.backend.log4j2.Log4j2BackendFactory#getInstance"
   )
-  val component = DaggerAppComponent.create()
+
   logger.atInfo().log("EmuLinker server Starting...")
   logger.atInfo().log(component.releaseInfo.welcome)
   logger
     .atInfo()
     .log(
-      "EmuLinker server is running @ ${DateTimeFormatter.ISO_ZONED_DATE_TIME.withZone(ZoneId.systemDefault()).format(Instant.now())}"
+      "EmuLinker server is running @ %s",
+      DateTimeFormatter.ISO_ZONED_DATE_TIME.withZone(ZoneId.systemDefault()).format(Instant.now())
     )
-  component.accessManager.start()
   component.kailleraServerController.start()
   component.server.start()
   component.kailleraServer.start()

@@ -61,21 +61,7 @@ abstract class AppModule {
     // TODO(nue): Burn this with fire!!!
     // NOTE: This is NOT marked final and there are race conditions involved. Inject @RuntimeFlags
     // instead!
-    private var charsetLoaded = false
-    var charsetDoNotUse: Charset = Charsets.UTF_8
-      set(value) {
-        charsetLoaded = true
-        field = value
-      }
-      get() {
-        assert(charsetLoaded)
-        return field
-      }
-
-    @Provides
-    fun provideTwitter(twitterFactory: TwitterFactory): Twitter {
-      return twitterFactory.instance
-    }
+    lateinit var charsetDoNotUse: Charset
 
     @Provides
     @Singleton
@@ -83,10 +69,12 @@ abstract class AppModule {
     fun bindPortListenerCounter(metrics: MetricRegistry): Counter =
       metrics.counter("listeningOnPorts")
 
+    @Provides fun provideTwitter(twitterFactory: TwitterFactory): Twitter = twitterFactory.instance
+
     @Provides
     @Singleton
-    fun provideTwitterFactory(flags: RuntimeFlags): TwitterFactory {
-      return TwitterFactory(
+    fun provideTwitterFactory(flags: RuntimeFlags) =
+      TwitterFactory(
         ConfigurationBuilder()
           .setDebugEnabled(true)
           .setOAuthAccessToken(flags.twitterOAuthAccessToken)
@@ -95,7 +83,6 @@ abstract class AppModule {
           .setOAuthConsumerSecret(flags.twitterOAuthConsumerSecret)
           .build()
       )
-    }
 
     @Provides
     @Singleton

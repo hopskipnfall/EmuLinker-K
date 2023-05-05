@@ -1,67 +1,57 @@
 package org.emulinker.util
 
 import java.nio.ByteBuffer
-import kotlin.jvm.JvmOverloads
 
 object UnsignedUtil {
-  fun getUnsignedByte(bb: ByteBuffer): Short = (bb.get().toInt() and 0xff).toShort()
+  fun ByteBuffer.getUnsignedByte(): Short = (this.get().toInt() and 0xff).toShort()
 
-  fun putUnsignedByte(bb: ByteBuffer, value: Int) {
-    bb.put((value and 0xff).toByte())
+  fun ByteBuffer.putUnsignedByte(value: Int) {
+    this.put((value and 0xff).toByte())
   }
 
-  fun getUnsignedByte(bb: ByteBuffer, position: Int): Short =
-    (bb[position].toInt() and 0xff).toShort()
+  fun ByteBuffer.getUnsignedByte(position: Int) = (this[position].toInt() and 0xff).toShort()
 
-  fun putUnsignedByte(bb: ByteBuffer, position: Int, value: Int) {
-    bb.put(position, (value and 0xff).toByte())
-  }
-
-  // ---------------------------------------------------------------
-  fun getUnsignedShort(bb: ByteBuffer): Int {
-    return bb.short.toInt() and 0xffff
-  }
-
-  fun putUnsignedShort(bb: ByteBuffer, value: Int) {
-    bb.putShort((value and 0xffff).toShort())
-  }
-
-  fun getUnsignedShort(bb: ByteBuffer, position: Int): Int {
-    return bb.getShort(position).toInt() and 0xffff
-  }
-
-  fun putUnsignedShort(bb: ByteBuffer, position: Int, value: Int) {
-    bb.putShort(position, (value and 0xffff).toShort())
+  fun ByteBuffer.putUnsignedByte(position: Int, value: Int) {
+    this.put(position, (value and 0xff).toByte())
   }
 
   // ---------------------------------------------------------------
-  fun getUnsignedInt(bb: ByteBuffer): Long {
-    return bb.int.toLong() and 0xffffffffL
+  fun ByteBuffer.getUnsignedShort(): Int = this.short.toInt() and 0xffff
+
+  fun ByteBuffer.putUnsignedShort(value: Int) {
+    this.putShort((value and 0xffff).toShort())
   }
 
-  fun putUnsignedInt(bb: ByteBuffer, value: Long) {
-    bb.putInt((value and 0xffffffffL).toInt())
+  fun ByteBuffer.getUnsignedShort(position: Int): Int = this.getShort(position).toInt() and 0xffff
+
+  fun ByteBuffer.putUnsignedShort(position: Int, value: Int) {
+    this.putShort(position, (value and 0xffff).toShort())
   }
 
-  fun getUnsignedInt(bb: ByteBuffer, position: Int): Long =
-    bb.getInt(position).toLong() and 0xffffffffL
+  // ---------------------------------------------------------------
+  fun ByteBuffer.getUnsignedInt(): Long = this.int.toLong() and 0xffffffffL
 
-  fun putUnsignedInt(bb: ByteBuffer, position: Int, value: Long) {
-    bb.putInt(position, (value and 0xffffffffL).toInt())
+  fun ByteBuffer.putUnsignedInt(value: Long) {
+    this.putInt((value and 0xffffffffL).toInt())
+  }
+
+  fun ByteBuffer.getUnsignedInt(position: Int): Long =
+    this.getInt(position).toLong() and 0xffffffffL
+
+  fun ByteBuffer.putUnsignedInt(position: Int, value: Long) {
+    this.putInt(position, (value and 0xffffffffL).toInt())
   }
 
   // -----------------
-  fun readUnsignedByte(bytes: ByteArray, offset: Int): Short =
-    (bytes[offset].toInt() and 0xFF).toShort()
+  fun ByteArray.readUnsignedByte(offset: Int): Short = (this[offset].toInt() and 0xFF).toShort()
 
-  fun writeUnsignedByte(s: Short, bytes: ByteArray, offset: Int) {
-    bytes[offset] = (s.toInt() and 0xFF).toByte()
+  fun ByteArray.writeUnsignedByte(s: Short, offset: Int) {
+    this[offset] = (s.toInt() and 0xFF).toByte()
   }
 
-  @JvmOverloads
-  fun readUnsignedShort(bytes: ByteArray, offset: Int, littleEndian: Boolean = false): Int =
-    if (littleEndian) (bytes[offset + 1].toInt() and 0xFF shl 8) + (bytes[offset].toInt() and 0xFF)
-    else (bytes[offset].toInt() and 0xFF shl 8) + (bytes[offset + 1].toInt() and 0xFF)
+  fun ByteArray.readUnsignedShort(offset: Int, littleEndian: Boolean = false): Int =
+    if (littleEndian) (this[offset + 1].toInt() and 0xFF shl 8) + (this[offset].toInt() and 0xFF)
+    else (this[offset].toInt() and 0xFF shl 8) + (this[offset + 1].toInt() and 0xFF)
 
   fun writeUnsignedShort(s: Int, bytes: ByteArray?, offset: Int) {
     writeUnsignedShort(s, bytes, offset)
@@ -77,28 +67,29 @@ object UnsignedUtil {
     }
   }
 
-  @JvmOverloads
-  fun readUnsignedInt(bytes: ByteArray, offset: Int, littleEndian: Boolean = false): Long {
-    val i1: Int = bytes[offset + 0].toInt() and 0xFF
-    val i2: Int = bytes[offset + 1].toInt() and 0xFF
-    val i3: Int = bytes[offset + 2].toInt() and 0xFF
-    val i4: Int = bytes[offset + 3].toInt() and 0xFF
-    return if (littleEndian) ((i4 shl 24) + (i3 shl 16) + (i2 shl 8) + i1).toLong()
-    else ((i1 shl 24) + (i2 shl 16) + (i3 shl 8) + i4).toLong()
+  fun ByteArray.readUnsignedInt(offset: Int, littleEndian: Boolean = false): Long {
+    val i1: Int = this[offset + 0].toInt() and 0xFF
+    val i2: Int = this[offset + 1].toInt() and 0xFF
+    val i3: Int = this[offset + 2].toInt() and 0xFF
+    val i4: Int = this[offset + 3].toInt() and 0xFF
+    return if (littleEndian) {
+      ((i4 shl 24) + (i3 shl 16) + (i2 shl 8) + i1).toLong()
+    } else {
+      ((i1 shl 24) + (i2 shl 16) + (i3 shl 8) + i4).toLong()
+    }
   }
 
-  @JvmOverloads
-  fun writeUnsignedInt(i: Long, bytes: ByteArray, offset: Int, littleEndian: Boolean = false) {
+  fun ByteArray.writeUnsignedInt(i: Long, offset: Int, littleEndian: Boolean = false) {
     if (littleEndian) {
-      bytes[offset + 0] = (i and 0xFF).toByte()
-      bytes[offset + 1] = (i ushr 8 and 0xFF).toByte()
-      bytes[offset + 2] = (i ushr 16 and 0xFF).toByte()
-      bytes[offset + 3] = (i ushr 24 and 0xFF).toByte()
+      this[offset + 0] = (i and 0xFF).toByte()
+      this[offset + 1] = (i ushr 8 and 0xFF).toByte()
+      this[offset + 2] = (i ushr 16 and 0xFF).toByte()
+      this[offset + 3] = (i ushr 24 and 0xFF).toByte()
     } else {
-      bytes[offset + 0] = (i ushr 24 and 0xFF).toByte()
-      bytes[offset + 1] = (i ushr 16 and 0xFF).toByte()
-      bytes[offset + 2] = (i ushr 8 and 0xFF).toByte()
-      bytes[offset + 3] = (i and 0xFF).toByte()
+      this[offset + 0] = (i ushr 24 and 0xFF).toByte()
+      this[offset + 1] = (i ushr 16 and 0xFF).toByte()
+      this[offset + 2] = (i ushr 8 and 0xFF).toByte()
+      this[offset + 3] = (i and 0xFF).toByte()
     }
   }
 }

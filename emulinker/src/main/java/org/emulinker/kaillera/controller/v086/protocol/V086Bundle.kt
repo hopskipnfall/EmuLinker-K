@@ -9,21 +9,18 @@ import org.emulinker.kaillera.controller.v086.protocol.V086Message.Companion.par
 import org.emulinker.util.EmuUtil
 import org.emulinker.util.UnsignedUtil.getUnsignedShort
 
-class V086Bundle constructor(messages: Array<V086Message?>, numToWrite: Int = Int.MAX_VALUE) :
+class V086Bundle(val messages: Array<V086Message?>, numToWrite: Int = Int.MAX_VALUE) :
   ByteBufferMessage() {
-  var messages: Array<V086Message?>
-    private set
-
   var numMessages: Int
     private set
 
-  override var length = -1
+  override var bodyBytesPlusMessageIdType = -1
     private set
     get() {
       if (field == -1) {
         for (i in 0 until numMessages) {
           if (messages[i] == null) break
-          field += messages[i]!!.length
+          field += messages[i]!!.bodyBytesPlusMessageIdType
         }
       }
       return field
@@ -31,23 +28,23 @@ class V086Bundle constructor(messages: Array<V086Message?>, numToWrite: Int = In
 
   override fun toString(): String {
     val sb = StringBuilder()
-    sb.append("${this.javaClass.simpleName} ($numMessages messages) ($length bytes)")
+    sb.append(
+      "${this.javaClass.simpleName} ($numMessages messages) ($bodyBytesPlusMessageIdType bytes)"
+    )
     sb.append(EmuUtil.LB)
     for (i in 0 until numMessages) {
       if (messages[i] == null) break
-      sb.append("\tMessage " + (i + 1) + ": " + messages[i].toString() + EmuUtil.LB)
+      sb.append("\tMessage ${i + 1}: ${messages[i]}${EmuUtil.LB}")
     }
     return sb.toString()
   }
 
-  override fun writeTo(buffer: ByteBuffer?) {
-    buffer!!.order(ByteOrder.LITTLE_ENDIAN)
-    // no real need for unsigned
-    // UnsignedUtil.putUnsignedByte(buffer, numToWrite);
+  override fun writeTo(buffer: ByteBuffer) {
+    buffer.order(ByteOrder.LITTLE_ENDIAN)
     buffer.put(numMessages.toByte())
     for (i in 0 until numMessages) {
-      if (messages[i] == null) break
-      messages[i]!!.writeTo(buffer)
+      val message = messages[i] ?: break
+      message.writeTo(buffer)
     }
   }
 
@@ -56,11 +53,9 @@ class V086Bundle constructor(messages: Array<V086Message?>, numToWrite: Int = In
     @Throws(ParseException::class, V086BundleFormatException::class, MessageFormatException::class)
     fun parse(buffer: ByteBuffer, lastMessageID: Int = -1): V086Bundle {
       buffer.order(ByteOrder.LITTLE_ENDIAN)
-      if (buffer.limit() < 5)
-        throw V086BundleFormatException(
-          "Invalid buffer length: " + buffer.limit(),
-          /* cause= */ null
-        )
+      if (buffer.limit() < 5) {
+        throw V086BundleFormatException("Invalid buffer length: " + buffer.limit(), cause = null)
+      }
 
       // again no real need for unsigned
       // int messageCount = UnsignedUtil.getUnsignedByte(buffer);
@@ -71,31 +66,30 @@ class V086Bundle constructor(messages: Array<V086Message?>, numToWrite: Int = In
         throw V086BundleFormatException("Invalid bundle length: " + buffer.limit(), cause = null)
       var parsedCount = 0
       val messages: Array<V086Message?>
-      val msgNum =
-        buffer
-          .getChar(1)
-          .code // buffer.getShort(1); - mistake. max value of short is 0x7FFF but we need
-      // 0xFFFF
+      // buffer.getShort(1); - mistake. max value of short is 0x7FFF but we need 0xFFFF
+      val msgNum = buffer.getChar(1).code
+      //      if (1 + 1 == 2) throw ParseException("The answer is $msgNum, message length =
+      // $messageCount")
       if (
         msgNum - 1 == lastMessageID || msgNum == 0 && lastMessageID == 0xFFFF
       ) { // exception for 0 and 0xFFFF
         messageCount = 1
         messages = arrayOfNulls(messageCount)
-        val messageNumber = getUnsignedShort(buffer)
-        val messageLength = buffer.short
-        if (messageLength < 2 || messageLength > buffer.remaining())
+        val messageNumber = buffer.getUnsignedShort()
+        val messageLength = buffer.getShort()
+        if (messageLength !in 2..buffer.remaining()) {
           throw ParseException("Invalid message length: $messageLength")
+        }
         messages[parsedCount] = parse(messageNumber, messageLength.toInt(), buffer)
         parsedCount++
       } else {
         messages = arrayOfNulls(messageCount)
         parsedCount = 0
         while (parsedCount < messageCount) {
-          val messageNumber = getUnsignedShort(buffer)
+          val messageNumber = buffer.getUnsignedShort()
           if (messageNumber <= lastMessageID) {
             if (messageNumber < 0x20 && lastMessageID > 0xFFDF) {
-              // exception when messageNumber with lower value is greater
-              // do nothing
+              // exception when messageNumber with lower value is greater do nothing
             } else {
               break
             }
@@ -104,8 +98,9 @@ class V086Bundle constructor(messages: Array<V086Message?>, numToWrite: Int = In
             break
           }
           val messageLength = buffer.short
-          if (messageLength < 2 || messageLength > buffer.remaining())
+          if (messageLength < 2 || messageLength > buffer.remaining()) {
             throw ParseException("Invalid message length: $messageLength")
+          }
           messages[parsedCount] = parse(messageNumber, messageLength.toInt(), buffer)
           parsedCount++
         }
@@ -116,7 +111,8 @@ class V086Bundle constructor(messages: Array<V086Message?>, numToWrite: Int = In
 
   init {
     numMessages = messages.size
-    if (numToWrite < numMessages) numMessages = numToWrite
-    this.messages = messages
+    if (numToWrite < numMessages) {
+      numMessages = numToWrite
+    }
   }
 }

@@ -10,8 +10,6 @@ import org.emulinker.kaillera.controller.v086.protocol.GameData
 import org.emulinker.kaillera.model.event.GameDataEvent
 import org.emulinker.kaillera.model.exception.GameDataException
 
-private val logger = FluentLogger.forEnclosingClass()
-
 @Singleton
 class GameDataAction @Inject internal constructor() :
   V086Action<GameData>, V086GameEventHandler<GameDataEvent> {
@@ -26,7 +24,7 @@ class GameDataAction @Inject internal constructor() :
       val user = clientHandler.user
       val data = message.gameData
       clientHandler.clientGameDataCache.add(data)
-      user!!.addGameData(data)
+      user.addGameData(data)
     } catch (e: GameDataException) {
       logger.atFine().withCause(e).log("Game data error")
       if (e.response != null) {
@@ -56,5 +54,9 @@ class GameDataAction @Inject internal constructor() :
         logger.atSevere().withCause(e).log("Failed to construct CachedGameData message")
       }
     }
+  }
+
+  companion object {
+    private val logger = FluentLogger.forEnclosingClass()
   }
 }

@@ -12,8 +12,8 @@ import java.nio.ByteBuffer
 import javax.inject.Named
 import org.emulinker.kaillera.controller.connectcontroller.protocol.ConnectMessage
 import org.emulinker.kaillera.controller.connectcontroller.protocol.ConnectMessage.Companion.parse
-import org.emulinker.kaillera.controller.connectcontroller.protocol.ConnectMessage_HELLO
-import org.emulinker.kaillera.controller.connectcontroller.protocol.ConnectMessage_HELLOD00D
+import org.emulinker.kaillera.controller.connectcontroller.protocol.RequestPrivateKailleraPortRequest
+import org.emulinker.kaillera.controller.connectcontroller.protocol.RequestPrivateKailleraPortResponse
 import org.emulinker.kaillera.controller.connectcontroller.protocol.ConnectMessage_TOO
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.net.UDPRelay
@@ -70,7 +70,7 @@ constructor(
           ": " +
           inMessage
       )
-    if (inMessage is ConnectMessage_HELLO) {
+    if (inMessage is RequestPrivateKailleraPortRequest) {
       logger.atInfo().log("Client version is " + inMessage.protocol)
     } else {
       logger.atWarning().log("Client sent an invalid message: $inMessage")
@@ -107,7 +107,7 @@ constructor(
           ": " +
           inMessage
       )
-    if (inMessage is ConnectMessage_HELLOD00D) {
+    if (inMessage is RequestPrivateKailleraPortResponse) {
       val portMsg = inMessage
       logger.atInfo().log("Starting client relay on port " + (portMsg.port - 1))
       try {

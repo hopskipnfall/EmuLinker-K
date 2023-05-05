@@ -5,10 +5,10 @@ import com.codahale.metrics.MetricRegistry
 import com.google.common.flogger.FluentLogger
 import java.net.InetSocketAddress
 import java.nio.ByteBuffer
-import java.util.concurrent.ThreadPoolExecutor
 import javax.inject.Inject
 import javax.inject.Named
 import javax.inject.Singleton
+import kotlin.time.Duration.Companion.minutes
 import org.apache.commons.configuration.Configuration
 import org.emulinker.kaillera.access.AccessManager
 import org.emulinker.kaillera.controller.KailleraServerController
@@ -23,6 +23,8 @@ import org.emulinker.net.BindException
 import org.emulinker.net.UDPServer
 import org.emulinker.util.EmuUtil.dumpBuffer
 import org.emulinker.util.EmuUtil.formatSocketAddress
+import org.emulinker.util.LoggingUtils.debugLog
+import java.util.concurrent.ThreadPoolExecutor
 
 private val logger = FluentLogger.forEnclosingClass()
 
@@ -56,12 +58,9 @@ internal constructor(
     private set
   private var lastAddress: String? = null
   private var lastAddressCount = 0
-  var failedToStartCount = 0
-    private set
-  var connectCount = 0
-    private set
-  var pingCount = 0
-    private set
+  private var failedToStartCount = 0
+  private var connectCount = 0
+  private var pingCount = 0
 
   fun getController(clientType: String?): KailleraServerController? {
     return controllersMap[clientType]
@@ -116,8 +115,9 @@ internal constructor(
   }
 
   @Synchronized
-  override fun handleReceived(buffer: ByteBuffer, fromSocketAddress: InetSocketAddress) {
+  override fun handleReceived(buffer: ByteBuffer, remoteSocketAddress: InetSocketAddress) {
     requestCount++
+    val formattedSocketAddress = formatSocketAddress(remoteSocketAddress)
     var inMessage: ConnectMessage? = null
     inMessage =
       try {
@@ -131,10 +131,9 @@ internal constructor(
             logger
               .atWarning()
               .log(
-                "Received invalid message from " +
-                  formatSocketAddress(fromSocketAddress) +
-                  ": " +
-                  dumpBuffer(buffer)
+                "Received invalid message from %s: %s",
+                formattedSocketAddress,
+                dumpBuffer(buffer)
               )
             return
           }
@@ -142,124 +141,111 @@ internal constructor(
         }
       }
 
-    //    logger.atInfo().log("IN-> $inMessage")
+    debugLog { logger.atFinest().log("-> FROM %s: %s", formattedSocketAddress, inMessage) }
 
     // the message set of the ConnectController isn't really complex enough to warrant a complicated
     // request/action class
     // structure, so I'm going to handle it  all in this class alone
     if (inMessage is ConnectMessage_PING) {
       pingCount++
-      logger.atFine().log("Ping from: " + formatSocketAddress(fromSocketAddress))
-      send(ConnectMessage_PONG(), fromSocketAddress)
+      send(ConnectMessage_PONG(), remoteSocketAddress)
       return
     }
-    if (inMessage !is ConnectMessage_HELLO) {
+    if (inMessage !is RequestPrivateKailleraPortRequest) {
       messageFormatErrorCount++
       logger
         .atWarning()
         .log(
           "Received unexpected message type from " +
-            formatSocketAddress(fromSocketAddress) +
+            formatSocketAddress(remoteSocketAddress) +
             ": " +
             inMessage
         )
       return
     }
-    val connectMessage = inMessage
 
     // now we need to find the specific server this client is request to
     // connect to using the client type
-    val protocolController = getController(connectMessage.protocol)
+    val protocolController = getController(inMessage.protocol)
     if (protocolController == null) {
       protocolErrorCount++
       logger
         .atSevere()
         .log(
-          "Client requested an unhandled protocol " +
-            formatSocketAddress(fromSocketAddress) +
-            ": " +
-            connectMessage.protocol
+          "Client requested an unhandled protocol %s: %s",
+          formattedSocketAddress,
+          inMessage.protocol
         )
       return
     }
-    if (!accessManager.isAddressAllowed(fromSocketAddress.address)) {
+    if (!accessManager.isAddressAllowed(remoteSocketAddress.address)) {
       deniedOtherCount++
-      logger
-        .atWarning()
-        .log("AccessManager denied connection from " + formatSocketAddress(fromSocketAddress))
+      logger.atWarning().log("AccessManager denied connection from %s", formattedSocketAddress)
       return
     } else {
-      var privatePort = -1
-      val access = accessManager.getAccess(fromSocketAddress.address)
+      val privatePort: Int
+      val access = accessManager.getAccess(remoteSocketAddress.address)
       try {
         // SF MOD - Hammer Protection
         if (access < AccessManager.ACCESS_ADMIN && connectCount > 0) {
-          if (lastAddress == fromSocketAddress.address.hostAddress) {
+          if (lastAddress == remoteSocketAddress.address.hostAddress) {
             lastAddressCount++
             if (lastAddressCount >= 4) {
               lastAddressCount = 0
               failedToStartCount++
               logger
-                .atFine()
-                .log(
-                  "SF MOD: HAMMER PROTECTION (2 Min Ban): " + formatSocketAddress(fromSocketAddress)
-                )
-              accessManager.addTempBan(fromSocketAddress.address.hostAddress, 2)
+                .atInfo()
+                .log("SF MOD: HAMMER PROTECTION (2 Min Ban): %s", formattedSocketAddress)
+              accessManager.addTempBan(remoteSocketAddress.address.hostAddress, 2.minutes)
               return
             }
           } else {
-            lastAddress = fromSocketAddress.address.hostAddress
+            lastAddress = remoteSocketAddress.address.hostAddress
             lastAddressCount = 0
           }
-        } else lastAddress = fromSocketAddress.address.hostAddress
-        privatePort = protocolController.newConnection(fromSocketAddress, connectMessage.protocol)
+        } else lastAddress = remoteSocketAddress.address.hostAddress
+        privatePort = protocolController.newConnection(remoteSocketAddress, inMessage.protocol)
         if (privatePort <= 0) {
           failedToStartCount++
           logger
             .atSevere()
-            .log(
-              protocolController.toString() +
-                " failed to start for " +
-                formatSocketAddress(fromSocketAddress)
-            )
+            .log("%s failed to start for %s", protocolController, formattedSocketAddress)
           return
         }
         connectCount++
         logger
           .atFine()
           .log(
-            protocolController.toString() +
-              " allocated port " +
-              privatePort +
-              " to client from " +
-              fromSocketAddress.address.hostAddress
+            "%s allocated port %d to client from %s",
+            protocolController,
+            privatePort,
+            remoteSocketAddress.address.hostAddress
           )
-        send(ConnectMessage_HELLOD00D(privatePort), fromSocketAddress)
+        send(RequestPrivateKailleraPortResponse(privatePort), remoteSocketAddress)
       } catch (e: ServerFullException) {
         deniedServerFullCount++
         logger
           .atFine()
           .withCause(e)
-          .log("Sending server full response to " + formatSocketAddress(fromSocketAddress))
-        send(ConnectMessage_TOO(), fromSocketAddress)
+          .log("Sending server full response to %s", formattedSocketAddress)
+        send(ConnectMessage_TOO(), remoteSocketAddress)
         return
       } catch (e: NewConnectionException) {
         deniedOtherCount++
         logger
           .atWarning()
           .withCause(e)
-          .log(
-            protocolController.toString() +
-              " denied connection from " +
-              formatSocketAddress(fromSocketAddress)
-          )
+          .log("%s denied connection from %s", protocolController, formattedSocketAddress)
         return
       }
     }
   }
 
-  protected fun send(outMessage: ConnectMessage, toSocketAddress: InetSocketAddress?) {
-    //    logger.atInfo().log("<-OUT $outMessage")
+  private fun send(outMessage: ConnectMessage, toSocketAddress: InetSocketAddress) {
+    debugLog {
+      logger.atFinest().log("<- TO %s: %s", formatSocketAddress(toSocketAddress), outMessage)
+    }
+
     send(outMessage.toBuffer(), toSocketAddress)
     outMessage.releaseBuffer()
   }

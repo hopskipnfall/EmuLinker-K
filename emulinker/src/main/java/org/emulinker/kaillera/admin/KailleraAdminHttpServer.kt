@@ -16,8 +16,6 @@ import org.mortbay.jetty.servlet.ServletHandler
 import org.mortbay.jetty.servlet.ServletHttpContext
 import org.mortbay.util.InetAddrPort
 
-private val logger = FluentLogger.forEnclosingClass()
-
 class KailleraAdminHttpServer(
   config: Configuration,
   threadPool: ThreadPoolExecutor?,
@@ -46,8 +44,8 @@ class KailleraAdminHttpServer(
       if (userFile.isNullOrBlank() || userFile.isBlank()) {
         userFile = "conf/user.properties"
       }
-      logger.atInfo().log("Establishing realm $realmName")
-      logger.atInfo().log("Loading usernames and passwords from $userFile")
+      logger.atInfo().log("Establishing realm %s", realmName)
+      logger.atInfo().log("Loading usernames and passwords from %s", userFile)
       val sh = SecurityHandler()
       sh.authMethod = "BASIC"
       sh.name = realmName
@@ -107,5 +105,9 @@ class KailleraAdminHttpServer(
     context.addHandler(NotFoundHandler())
     context.resourceBase = jspDir
     context.addServlet("JSP", "*.jsp", "org.apache.jasper.servlet.JspServlet")
+  }
+
+  companion object {
+    private val logger = FluentLogger.forEnclosingClass()
   }
 }

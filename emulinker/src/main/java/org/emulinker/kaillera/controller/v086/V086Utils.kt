@@ -1,7 +1,8 @@
 package org.emulinker.kaillera.controller.v086
 
+import io.ktor.util.network.*
 import java.lang.StringBuilder
-import java.nio.Buffer
+import java.net.InetSocketAddress
 import java.nio.ByteBuffer
 import org.emulinker.kaillera.pico.AppModule
 
@@ -9,6 +10,7 @@ import org.emulinker.kaillera.pico.AppModule
 object V086Utils {
   private const val HEX_STRING = "0123456789abcdef"
 
+  /** Number of bytes made up by each type. */
   object Bytes {
     const val SHORT = 2
     const val INTEGER = 4
@@ -17,11 +19,12 @@ object V086Utils {
 
   fun hexStringToByteBuffer(hex: String): ByteBuffer {
     var hex = hex
-    hex = hex.replace(" ", "")
+    hex = hex.replace(", ", "").replace(",", "").replace(" ", "").lowercase()
     val bytes = hexStringToByteArray2(hex)
     val buffer = ByteBuffer.allocate(bytes.size)
     buffer.put(bytes)
     buffer.position(0)
+    //    buffer.limit(hex.length / 2)
     return buffer
   }
 
@@ -61,23 +64,20 @@ object V086Utils {
     original.rewind()
     clone.put(original)
     original.rewind()
-    // Cast to avoid issue with java version mismatch: https://stackoverflow.com/a/61267496/2875073
-    (clone as Buffer).flip()
+    clone.flip()
     original.position(position)
     return clone
-  }
-
-  /** Gets the number of bytes to represent the string in the charset defined in emulinker.config */
-  @Deprecated("You probably want getNumBytesPlusStopByte instead")
-  fun getNumBytes(s: String): Int {
-    return s.toByteArray(AppModule.charsetDoNotUse).size
   }
 
   /**
    * Gets the number of bytes to represent the string in the charset defined in emulinker.config,
    * plus one for the stop byte.
    */
-  fun getNumBytesPlusStopByte(s: String): Int {
-    return s.toByteArray(AppModule.charsetDoNotUse).size + 1
-  }
+  fun String.getNumBytesPlusStopByte(): Int = this.toByteArray(AppModule.charsetDoNotUse).size + 1
+
+  fun toJavaAddress(address: io.ktor.network.sockets.InetSocketAddress) =
+    InetSocketAddress(address.hostname, address.port)
+
+  fun InetSocketAddress.toKtorAddress() =
+    io.ktor.network.sockets.InetSocketAddress(this.hostname, this.port)
 }

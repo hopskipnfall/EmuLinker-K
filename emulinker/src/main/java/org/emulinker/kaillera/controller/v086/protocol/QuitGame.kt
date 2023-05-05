@@ -1,38 +1,81 @@
 package org.emulinker.kaillera.controller.v086.protocol
 
 import java.nio.ByteBuffer
-import org.emulinker.kaillera.controller.messaging.MessageFormatException
-import org.emulinker.kaillera.controller.messaging.ParseException
-import org.emulinker.kaillera.pico.AppModule
+import org.emulinker.kaillera.controller.v086.V086Utils
+import org.emulinker.kaillera.controller.v086.V086Utils.getNumBytesPlusStopByte
 import org.emulinker.util.EmuUtil
-import org.emulinker.util.UnsignedUtil
+import org.emulinker.util.UnsignedUtil.getUnsignedShort
+import org.emulinker.util.UnsignedUtil.putUnsignedShort
 
-abstract class QuitGame : V086Message() {
-  abstract val username: String
-  abstract val userId: Int
-
-  override val messageId = ID
-
-  override val bodyLength: Int
-    get() = getNumBytes(username) + 3
+sealed class QuitGame : V086Message() {
+  override val messageTypeId = ID
 
   public override fun writeBodyTo(buffer: ByteBuffer) {
-    EmuUtil.writeString(buffer, username, 0x00, AppModule.charsetDoNotUse)
-    UnsignedUtil.putUnsignedShort(buffer, userId)
+    QuitGameSerializer.write(buffer, this)
+  }
+
+  override val bodyBytes: Int
+    get() =
+      when (this) {
+        is QuitGameRequest -> REQUEST_USERNAME
+        is QuitGameNotification -> this.username
+      }.getNumBytesPlusStopByte() + V086Utils.Bytes.SHORT
+
+  data class QuitGameRequest(override val messageNumber: Int) : QuitGame()
+
+  data class QuitGameNotification(
+    override val messageNumber: Int,
+    val username: String,
+    val userId: Int
+  ) : QuitGame() {
+
+    init {
+      require(userId in 0..0xFFFF) { "UserID out of acceptable range: $userId" }
+    }
   }
 
   companion object {
     const val ID: Byte = 0x0B
 
-    @Throws(ParseException::class, MessageFormatException::class)
-    fun parse(messageNumber: Int, buffer: ByteBuffer): QuitGame {
-      if (buffer.remaining() < 3) throw ParseException("Failed byte count validation!")
-      val userName = EmuUtil.readString(buffer, 0x00, AppModule.charsetDoNotUse)
-      if (buffer.remaining() < 2) throw ParseException("Failed byte count validation!")
-      val userID = UnsignedUtil.getUnsignedShort(buffer)
-      return if (userName.isBlank() && userID == 0xFFFF) {
-        QuitGame_Request(messageNumber)
-      } else QuitGame_Notification(messageNumber, userName, userID)
+    private const val REQUEST_USERNAME = ""
+    private const val REQUEST_USER_ID = 0xFFFF
+  }
+
+  object QuitGameSerializer : MessageSerializer<QuitGame> {
+    override val messageTypeId: Byte = ID
+
+    override fun read(buffer: ByteBuffer, messageNumber: Int): MessageParseResult<QuitGame> {
+      if (buffer.remaining() < 3) {
+        return MessageParseResult.Failure("Failed byte count validation!")
+      }
+      val userName = EmuUtil.readString(buffer)
+      if (buffer.remaining() < 2) {
+        return MessageParseResult.Failure("Failed byte count validation!")
+      }
+      val userID = buffer.getUnsignedShort()
+      return MessageParseResult.Success(
+        if (userName == REQUEST_USERNAME && userID == REQUEST_USER_ID) {
+          QuitGameRequest(messageNumber)
+        } else {
+          QuitGameNotification(messageNumber, userName, userID)
+        }
+      )
+    }
+
+    override fun write(buffer: ByteBuffer, message: QuitGame) {
+      EmuUtil.writeString(
+        buffer,
+        when (message) {
+          is QuitGameRequest -> REQUEST_USERNAME
+          is QuitGameNotification -> message.username
+        }
+      )
+      buffer.putUnsignedShort(
+        when (message) {
+          is QuitGameRequest -> REQUEST_USER_ID
+          is QuitGameNotification -> message.userId
+        }
+      )
     }
   }
 }

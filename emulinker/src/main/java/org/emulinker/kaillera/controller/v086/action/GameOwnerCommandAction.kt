@@ -46,8 +46,6 @@ private const val COMMAND_SAMEDELAY = "/samedelay"
 
 private const val COMMAND_NUM = "/num"
 
-private val logger = FluentLogger.forEnclosingClass()
-
 @Singleton
 class GameOwnerCommandAction @Inject internal constructor(private val flags: RuntimeFlags) :
   V086Action<GameChat> {
@@ -368,7 +366,7 @@ class GameOwnerCommandAction @Inject internal constructor(private val flags: Run
         return
       }
       val userID = scanner.nextInt()
-      val user = clientHandler.user!!.server.getUser(userID) as KailleraUserImpl
+      val user = clientHandler.user.server.getUser(userID) as KailleraUserImpl
       if (user == null) {
         admin.game!!.announce("Player doesn't exist!", admin)
         return
@@ -409,9 +407,9 @@ class GameOwnerCommandAction @Inject internal constructor(private val flags: Run
     try {
       val str = scanner.next()
       if (str == "/unmuteall") {
-        for (w in 1..game.players.size) {
-          game.getPlayer(w)!!.isMuted = false
-          game.mutedUsers.remove(game.getPlayer(w)!!.connectSocketAddress.address.hostAddress)
+        game.players.forEach { kailleraUser ->
+          kailleraUser.isMuted = false
+          game.mutedUsers.remove(kailleraUser.connectSocketAddress.address.hostAddress)
         }
         admin.game!!.announce(
           "All players have been unmuted!",
@@ -419,7 +417,7 @@ class GameOwnerCommandAction @Inject internal constructor(private val flags: Run
         return
       }
       val userID = scanner.nextInt()
-      val user = clientHandler.user!!.server.getUser(userID)
+      val user = clientHandler.user.server.getUser(userID)
       if (user == null) {
         admin.game!!.announce("Player doesn't exist!", admin)
         return
@@ -438,11 +436,9 @@ class GameOwnerCommandAction @Inject internal constructor(private val flags: Run
       game.mutedUsers.remove(user.connectSocketAddress.address.hostAddress)
       user.isMuted = false
       val user1 = clientHandler.user
-      (user1 as KailleraUserImpl?)!!
-        .game!!
-        .announce(
-          user.name + " has been unmuted!",
-        )
+      user1.game!!.announce(
+        user.name + " has been unmuted!",
+      )
     } catch (e: NoSuchElementException) {
       val user = clientHandler.user as KailleraUserImpl
       user.game!!.announce("Unmute Player Error: /unmute <UserID>", admin)
@@ -646,5 +642,6 @@ class GameOwnerCommandAction @Inject internal constructor(private val flags: Run
 
   companion object {
     private var lastMaxUserChange: Long = 0
+    private val logger = FluentLogger.forEnclosingClass()
   }
 }
