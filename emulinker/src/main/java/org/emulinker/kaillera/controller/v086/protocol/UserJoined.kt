@@ -10,14 +10,14 @@ import org.emulinker.util.EmuUtil
 import org.emulinker.util.UnsignedUtil
 
 data class UserJoined
-    @Throws(MessageFormatException::class)
-    constructor(
-        override val messageNumber: Int,
-        val username: String,
-        val userId: Int,
-        val ping: Long,
-        val connectionType: ConnectionType
-    ) : V086Message() {
+@Throws(MessageFormatException::class)
+constructor(
+  override val messageNumber: Int,
+  val username: String,
+  val userId: Int,
+  val ping: Long,
+  val connectionType: ConnectionType
+) : V086Message() {
 
   override val messageId = ID
 
@@ -49,7 +49,12 @@ data class UserJoined
       val ping = UnsignedUtil.getUnsignedInt(buffer)
       val connectionType = buffer.get()
       return UserJoined(
-          messageNumber, userName, userID, ping, ConnectionType.fromByteValue(connectionType))
+        messageNumber,
+        userName,
+        userID,
+        ping,
+        ConnectionType.fromByteValue(connectionType)
+      )
     }
   }
 }

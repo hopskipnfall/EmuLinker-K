@@ -6,8 +6,8 @@ import org.emulinker.kaillera.controller.messaging.ParseException
 import org.emulinker.util.UnsignedUtil
 
 data class KeepAlive
-    @Throws(MessageFormatException::class)
-    constructor(override val messageNumber: Int, val value: Short) : V086Message() {
+@Throws(MessageFormatException::class)
+constructor(override val messageNumber: Int, val value: Short) : V086Message() {
 
   override val messageId = ID
   override val bodyLength = 1

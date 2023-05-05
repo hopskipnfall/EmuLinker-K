@@ -21,15 +21,17 @@ class GameTimeoutAction @Inject internal constructor() : V086GameEventHandler<Ga
     val user = clientHandler.user
     if (player == user) {
       logger
-          .atFine()
-          .log(
-              "$user received timeout event ${event.timeoutNumber} for ${event.game}: resending messages...")
+        .atFine()
+        .log(
+          "$user received timeout event ${event.timeoutNumber} for ${event.game}: resending messages..."
+        )
       clientHandler.resend(event.timeoutNumber)
     } else {
       logger
-          .atFine()
-          .log(
-              "${user.toString()} received timeout event ${event.timeoutNumber} from $player for ${event.game}")
+        .atFine()
+        .log(
+          "${user.toString()} received timeout event ${event.timeoutNumber} from $player for ${event.game}"
+        )
     }
   }
 }

@@ -16,15 +16,17 @@ private val logger = FluentLogger.forEnclosingClass()
 /** Main entry point for the Kaillera server. */
 fun main(args: Array<String>) {
   System.setProperty(
-      "flogger.backend_factory",
-      "com.google.common.flogger.backend.log4j2.Log4j2BackendFactory#getInstance")
+    "flogger.backend_factory",
+    "com.google.common.flogger.backend.log4j2.Log4j2BackendFactory#getInstance"
+  )
   val component = DaggerAppComponent.create()
   logger.atInfo().log("EmuLinker server Starting...")
   logger.atInfo().log(component.releaseInfo.welcome)
   logger
-      .atInfo()
-      .log(
-          "EmuLinker server is running @ ${DateTimeFormatter.ISO_ZONED_DATE_TIME.withZone(ZoneId.systemDefault()).format(Instant.now())}")
+    .atInfo()
+    .log(
+      "EmuLinker server is running @ ${DateTimeFormatter.ISO_ZONED_DATE_TIME.withZone(ZoneId.systemDefault()).format(Instant.now())}"
+    )
   component.accessManager.start()
   component.kailleraServerController.start()
   component.server.start()
@@ -36,20 +38,20 @@ fun main(args: Array<String>) {
   val flags = component.runtimeFlags
   if (flags.metricsEnabled) {
     ConsoleReporter.forRegistry(metrics)
-        .convertRatesTo(SECONDS)
-        .convertDurationsTo(MILLISECONDS)
-        .filter(MetricFilter.ALL)
-        .build()
-        .start(15, MINUTES)
+      .convertRatesTo(SECONDS)
+      .convertDurationsTo(MILLISECONDS)
+      .filter(MetricFilter.ALL)
+      .build()
+      .start(15, MINUTES)
 
     val file = File("./metrics/")
     file.mkdirs()
     CsvReporter.forRegistry(metrics)
-        .convertRatesTo(SECONDS)
-        .convertDurationsTo(MILLISECONDS)
-        .filter(MetricFilter.ALL)
-        .build(file)
-        .start(flags.metricsLoggingFrequency.inWholeSeconds, SECONDS)
+      .convertRatesTo(SECONDS)
+      .convertDurationsTo(MILLISECONDS)
+      .filter(MetricFilter.ALL)
+      .build(file)
+      .start(flags.metricsLoggingFrequency.inWholeSeconds, SECONDS)
   }
 
   //  // Hacky code but it works! Tests that two users can make and play a game.

@@ -24,7 +24,8 @@ class GameInfoAction @Inject internal constructor() : V086GameEventHandler<GameI
     }
     try {
       clientHandler.send(
-          GameChat_Notification(clientHandler.nextMessageNumber, "Server", event.message))
+        GameChat_Notification(clientHandler.nextMessageNumber, "Server", event.message)
+      )
     } catch (e: MessageFormatException) {
       logger.atSevere().withCause(e).log("Failed to construct GameChat_Notification message")
     }

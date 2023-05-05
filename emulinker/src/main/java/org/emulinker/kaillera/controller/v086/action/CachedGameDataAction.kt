@@ -40,20 +40,21 @@ class CachedGameDataAction @Inject internal constructor() : V086Action<CachedGam
       }
     } catch (e: IndexOutOfBoundsException) {
       logger
-          .atSevere()
-          .withCause(e)
-          .log(
-              "Game data error!  The client cached key " +
-                  message.key +
-                  " was not found in the cache!")
+        .atSevere()
+        .withCause(e)
+        .log(
+          "Game data error!  The client cached key " + message.key + " was not found in the cache!"
+        )
 
       // This may not always be the best thing to do...
       try {
         clientHandler.send(
-            GameChat_Notification(
-                clientHandler.nextMessageNumber,
-                "Error",
-                "Game Data Error!  Game state will be inconsistent!"))
+          GameChat_Notification(
+            clientHandler.nextMessageNumber,
+            "Error",
+            "Game Data Error!  Game state will be inconsistent!"
+          )
+        )
       } catch (e2: MessageFormatException) {
         logger.atSevere().withCause(e2).log("Failed to construct new GameChat_Notification")
       }

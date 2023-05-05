@@ -66,9 +66,9 @@ class Trivia(private val server: KailleraServerImpl) : Runnable {
           hint2 = false
           server.announce("<Trivia> " + questions[questionsCount].question, false, null)
           if (!isAnswered)
-              try {
-                Thread.sleep(10000)
-              } catch (e: Exception) {}
+            try {
+              Thread.sleep(10000)
+            } catch (e: Exception) {}
           if (!isAnswered) {
             server.announce("<Trivia> " + "35 seconds left...", false, null)
             try {
@@ -92,9 +92,9 @@ class Trivia(private val server: KailleraServerImpl) : Runnable {
           answer = answer!!.replace("_", " _ ")
           server.announce("<Trivia> Hint1: $answer", false, null)
           if (!isAnswered)
-              try {
-                Thread.sleep(10000)
-              } catch (e: Exception) {}
+            try {
+              Thread.sleep(10000)
+            } catch (e: Exception) {}
           if (!isAnswered) {
             server.announce("<Trivia> " + "20 seconds left...", false, null)
             try {
@@ -118,9 +118,9 @@ class Trivia(private val server: KailleraServerImpl) : Runnable {
           answer = answer!!.replace("_", " _ ")
           server.announce("<Trivia> Hint2: $answer", false, null)
           if (!isAnswered)
-              try {
-                Thread.sleep(10000)
-              } catch (e: Exception) {}
+            try {
+              Thread.sleep(10000)
+            } catch (e: Exception) {}
           if (!isAnswered) {
             server.announce("<Trivia> " + "5 seconds left...", false, null)
             try {
@@ -130,16 +130,18 @@ class Trivia(private val server: KailleraServerImpl) : Runnable {
         }
         if (!isAnswered) {
           server.announce(
-              "<Trivia> " + "Time's up! The answer is: " + questions[questionsCount].answer,
-              false,
-              null)
+            "<Trivia> " + "Time's up! The answer is: " + questions[questionsCount].answer,
+            false,
+            null
+          )
         }
         if (count == questions.size) {
           count = 0
           server.announce(
-              "<Trivia> " + "***All questions have been exhaused! Restarting list...***",
-              false,
-              null)
+            "<Trivia> " + "***All questions have been exhaused! Restarting list...***",
+            false,
+            null
+          )
         }
 
         // Find questions not repeated
@@ -158,14 +160,15 @@ class Trivia(private val server: KailleraServerImpl) : Runnable {
           Thread.sleep(5000)
         } catch (e: Exception) {}
         server.announce(
-            "<Trivia> " +
-                questionTime / 1000 +
-                " seconds until the next question. Get ready for question " +
-                (count + 1) +
-                " of " +
-                questions.size,
-            false,
-            null)
+          "<Trivia> " +
+            questionTime / 1000 +
+            " seconds until the next question. Get ready for question " +
+            (count + 1) +
+            " of " +
+            questions.size,
+          false,
+          null
+        )
         try {
           Thread.sleep(questionTime.toLong())
         } catch (e: Exception) {}
@@ -184,57 +187,60 @@ class Trivia(private val server: KailleraServerImpl) : Runnable {
   fun isCorrect(message: String): Boolean {
     var message = message
     val numbers0 =
-        arrayOf(
-            "zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten")
+      arrayOf("zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten")
     val numbers1 = arrayOf("0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10")
     val placement0 =
-        arrayOf(
-            "first",
-            "second",
-            "third",
-            "fourth",
-            "fifth",
-            "sixth",
-            "seventh",
-            "eighth",
-            "nineth",
-            "tenth")
+      arrayOf(
+        "first",
+        "second",
+        "third",
+        "fourth",
+        "fifth",
+        "sixth",
+        "seventh",
+        "eighth",
+        "nineth",
+        "tenth"
+      )
     val placement1 = arrayOf("1st", "2nd", "3rd", "4th", "5th", "6th", "7th", "8th", "9th", "10th")
-    if (message.lowercase(Locale.getDefault()) ==
-        questions[questionsCount].answer.lowercase(Locale.getDefault())) {
+    if (
+      message.lowercase(Locale.getDefault()) ==
+        questions[questionsCount].answer.lowercase(Locale.getDefault())
+    ) {
       isAnswered = true
       return true
     } else {
       for (i in numbers0.indices) {
         if (questions[questionsCount].answer.lowercase(Locale.getDefault()).contains(numbers0[i])) {
           message = message.replace(numbers1[i], numbers0[i])
-        } else if (questions[questionsCount]
-            .answer
-            .lowercase(Locale.getDefault())
-            .contains(numbers1[i])) {
+        } else if (
+          questions[questionsCount].answer.lowercase(Locale.getDefault()).contains(numbers1[i])
+        ) {
           message = message.replace(numbers0[i], numbers1[i])
         }
       }
-      if (message.lowercase(Locale.getDefault()) ==
-          questions[questionsCount].answer.lowercase(Locale.getDefault())) {
+      if (
+        message.lowercase(Locale.getDefault()) ==
+          questions[questionsCount].answer.lowercase(Locale.getDefault())
+      ) {
         isAnswered = true
         return true
       } else {
         for (i in placement0.indices) {
-          if (questions[questionsCount]
-              .answer
-              .lowercase(Locale.getDefault())
-              .contains(placement0[i])) {
+          if (
+            questions[questionsCount].answer.lowercase(Locale.getDefault()).contains(placement0[i])
+          ) {
             message = message.replace(placement1[i], placement0[i])
-          } else if (questions[questionsCount]
-              .answer
-              .lowercase(Locale.getDefault())
-              .contains(placement1[i])) {
+          } else if (
+            questions[questionsCount].answer.lowercase(Locale.getDefault()).contains(placement1[i])
+          ) {
             message = message.replace(placement0[i], placement1[i])
           }
         }
-        if (message.lowercase(Locale.getDefault()) ==
-            questions[questionsCount].answer.lowercase(Locale.getDefault())) {
+        if (
+          message.lowercase(Locale.getDefault()) ==
+            questions[questionsCount].answer.lowercase(Locale.getDefault())
+        ) {
           isAnswered = true
           return true
         }
@@ -262,14 +268,15 @@ class Trivia(private val server: KailleraServerImpl) : Runnable {
         s++
         scores[i].score = s
         server.announce(
-            "<Trivia> " +
-                nick +
-                " is the winner of this round (" +
-                questions[questionsCount].answer +
-                ")! Your score is: " +
-                s,
-            false,
-            null)
+          "<Trivia> " +
+            nick +
+            " is the winner of this round (" +
+            questions[questionsCount].answer +
+            ")! Your score is: " +
+            s,
+          false,
+          null
+        )
         if (ipStreak == ip) {
           scoreStreak++
           if (scoreStreak > 1) {
@@ -289,10 +296,16 @@ class Trivia(private val server: KailleraServerImpl) : Runnable {
           server.announce("<Trivia> $nick, you're doing great. Keep it up tiger!", false, null)
         } else if (s == 50) {
           server.announce(
-              "<Trivia> $nick, you're so smart you're going to break the Trivia Bot!", false, null)
+            "<Trivia> $nick, you're so smart you're going to break the Trivia Bot!",
+            false,
+            null
+          )
         } else if (s == 100) {
           server.announce(
-              "<Trivia> $nick, you're in a league of your own. Nobody can compete!", false, null)
+            "<Trivia> $nick, you're in a league of your own. Nobody can compete!",
+            false,
+            null
+          )
         } else if (s % 100 == 0) {
           server.announce("<Trivia> $nick, you're a God at SupraTrivia!", false, null)
         }
@@ -303,7 +316,10 @@ class Trivia(private val server: KailleraServerImpl) : Runnable {
     scoreStreak = 1
     ipStreak = ip
     server.announce(
-        "<Trivia> $nick is the winner of this round ($answer)! His score is: 1", false, null)
+      "<Trivia> $nick is the winner of this round ($answer)! His score is: 1",
+      false,
+      null
+    )
   }
 
   fun displayHighScores(winner: Boolean) {
@@ -360,7 +376,7 @@ class Trivia(private val server: KailleraServerImpl) : Runnable {
       }
       out.close()
       if (display)
-          server.announce("<Trivia> " + "SupraTrivia Scores were Saved Successfully!", false, null)
+        server.announce("<Trivia> " + "SupraTrivia Scores were Saved Successfully!", false, null)
     } catch (e: Exception) {
       server.announce("<Trivia> " + "Error Saving SupraTrivia Scores!", false, null)
     }
@@ -395,10 +411,12 @@ class Trivia(private val server: KailleraServerImpl) : Runnable {
       istream = BufferedReader(InputStreamReader(ist, StandardCharsets.UTF_8))
       str = istream.readLine() // First Score
       while (str != null) {
-        if (str!!.startsWith("ip:") ||
+        if (
+          str!!.startsWith("ip:") ||
             str!!.startsWith("IP:") ||
             str!!.startsWith("Ip:") ||
-            str!!.startsWith("iP:")) {
+            str!!.startsWith("iP:")
+        ) {
           var ip: String = str!!.substring("ip:".length).trim { it <= ' ' }
           str = istream.readLine()
           var s: String = str.substring("s:".length).trim { it <= ' ' }

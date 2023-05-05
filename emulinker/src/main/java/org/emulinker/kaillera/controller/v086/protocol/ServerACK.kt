@@ -7,8 +7,8 @@ import org.emulinker.util.EmuUtil
 import org.emulinker.util.UnsignedUtil
 
 data class ServerACK
-    @Throws(MessageFormatException::class)
-    constructor(override val messageNumber: Int) : ACK() {
+@Throws(MessageFormatException::class)
+constructor(override val messageNumber: Int) : ACK() {
 
   override val val1 = 0L
   override val val2 = 1L
@@ -36,8 +36,9 @@ data class ServerACK
       val val3 = UnsignedUtil.getUnsignedInt(buffer)
       val val4 = UnsignedUtil.getUnsignedInt(buffer)
       if (val1 != 0L || val2 != 1L || val3 != 2L || val4 != 3L)
-          throw MessageFormatException(
-              "Invalid Server to Client ACK format: bytes do not match acceptable format!")
+        throw MessageFormatException(
+          "Invalid Server to Client ACK format: bytes do not match acceptable format!"
+        )
       return ServerACK(messageNumber)
     }
   }

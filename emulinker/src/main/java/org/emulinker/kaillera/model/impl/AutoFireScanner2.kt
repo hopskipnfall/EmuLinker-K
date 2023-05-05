@@ -55,7 +55,8 @@ class AutoFireScanner2(private var game: KailleraGame, sensitivity: Int) : AutoF
   }
 
   protected inner class ScanningJob(
-      private val user: KailleraUser?, private val playerNumber: Int
+    private val user: KailleraUser?,
+    private val playerNumber: Int
   ) : Runnable {
     private var bytesPerAction = -1
     private val sizeLimit: Int
@@ -186,23 +187,24 @@ class AutoFireScanner2(private var game: KailleraGame, sensitivity: Int) : AutoF
             if (aSequenceCount >= minReps && bSequenceCount >= minReps && !stopFlag) {
               val gameImpl = game as KailleraGameImpl
               gameImpl.announce(
-                  getString("AutoFireScanner2.AutoFireDetected", user!!.name),
+                getString("AutoFireScanner2.AutoFireDetected", user!!.name),
               )
               logger
-                  .atInfo()
-                  .log(
-                      "AUTOUSERDUMP\t" +
-                          EmuUtil.DATE_FORMAT.format(gameImpl.startDate) +
-                          "\t" +
-                          (if (aSequence < bSequence) aSequence else bSequence) +
-                          "\t" +
-                          game.id +
-                          "\t" +
-                          game.romName +
-                          "\t" +
-                          user.name +
-                          "\t" +
-                          user.socketAddress!!.address.hostAddress)
+                .atInfo()
+                .log(
+                  "AUTOUSERDUMP\t" +
+                    EmuUtil.DATE_FORMAT.format(gameImpl.startDate) +
+                    "\t" +
+                    (if (aSequence < bSequence) aSequence else bSequence) +
+                    "\t" +
+                    game.id +
+                    "\t" +
+                    game.romName +
+                    "\t" +
+                    user.name +
+                    "\t" +
+                    user.socketAddress!!.address.hostAddress
+                )
               //							logger.atFine().log("thisAction=" + EmuUtil.bytesToHex(thisAction) + "
               // actionA=" +
               // EmuUtil.bytesToHex(actionA) + " aCount=" + aCount + " actionB=" +
@@ -232,13 +234,14 @@ class AutoFireScanner2(private var game: KailleraGame, sensitivity: Int) : AutoF
   companion object {
     // MAX DELAY, MIN REPEITIONS
     private val SENSITIVITY_TABLE =
-        arrayOf(
-            intArrayOf(0, 0),
-            intArrayOf(2, 13),
-            intArrayOf(3, 11),
-            intArrayOf(4, 9),
-            intArrayOf(5, 7),
-            intArrayOf(6, 5))
+      arrayOf(
+        intArrayOf(0, 0),
+        intArrayOf(2, 13),
+        intArrayOf(3, 11),
+        intArrayOf(4, 9),
+        intArrayOf(5, 7),
+        intArrayOf(6, 5)
+      )
     protected var executor = Executors.newCachedThreadPool()
   }
 

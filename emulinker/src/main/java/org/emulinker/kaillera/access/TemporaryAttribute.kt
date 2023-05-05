@@ -7,11 +7,11 @@ import org.emulinker.util.WildcardStringPattern
 
 sealed class TemporaryAttribute(accessStr: String, duration: Duration) {
   private val patterns =
-      accessStr
-          .lowercase(Locale.getDefault())
-          .splitToSequence("|")
-          .map { WildcardStringPattern(it) }
-          .toList()
+    accessStr
+      .lowercase(Locale.getDefault())
+      .splitToSequence("|")
+      .map { WildcardStringPattern(it) }
+      .toList()
   private val endTime = Instant.now().plus(duration)
 
   val isExpired
@@ -27,7 +27,7 @@ class TempBan(accessStr: String, duration: Duration) : TemporaryAttribute(access
 class TempAdmin(accessStr: String, duration: Duration) : TemporaryAttribute(accessStr, duration)
 
 class TempModerator(accessStr: String, duration: Duration) :
-    TemporaryAttribute(accessStr, duration)
+  TemporaryAttribute(accessStr, duration)
 
 class TempElevated(accessStr: String, duration: Duration) : TemporaryAttribute(accessStr, duration)
 

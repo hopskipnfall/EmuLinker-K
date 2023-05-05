@@ -38,7 +38,7 @@ abstract class CreateGame : V086Message() {
       val gameID = UnsignedUtil.getUnsignedShort(buffer)
       val val1 = UnsignedUtil.getUnsignedShort(buffer)
       return if (userName.isNullOrBlank() && gameID == 0xFFFF && val1 == 0xFFFF)
-          CreateGame_Request(messageNumber, romName)
+        CreateGame_Request(messageNumber, romName)
       else CreateGame_Notification(messageNumber, userName, romName, clientType, gameID, val1)
     }
   }

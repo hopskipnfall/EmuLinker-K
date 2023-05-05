@@ -17,7 +17,9 @@ import org.emulinker.util.Executable
 private val logger = FluentLogger.forEnclosingClass()
 
 abstract class UDPServer(
-    shutdownOnExit: Boolean, metrics: MetricRegistry?, private val listeningOnPortsCounter: Counter
+  shutdownOnExit: Boolean,
+  metrics: MetricRegistry?,
+  private val listeningOnPortsCounter: Counter
 ) : Executable {
   /*
   	private static int		artificalPacketLossPercentage = 0;
@@ -115,11 +117,12 @@ abstract class UDPServer(
   protected fun send(buffer: ByteBuffer?, toSocketAddress: InetSocketAddress?) {
     if (!isBound) {
       logger
-          .atWarning()
-          .log(
-              "Failed to send to " +
-                  formatSocketAddress(toSocketAddress!!) +
-                  ": UDPServer is not bound!")
+        .atWarning()
+        .log(
+          "Failed to send to " +
+            formatSocketAddress(toSocketAddress!!) +
+            ": UDPServer is not bound!"
+        )
       return
     }
     /*
@@ -146,7 +149,7 @@ abstract class UDPServer(
           val fromSocketAddress = channel!!.receive(buffer) as InetSocketAddress
           if (stopFlag) break
           if (fromSocketAddress == null)
-              throw IOException("Failed to receive from DatagramChannel: fromSocketAddress == null")
+            throw IOException("Failed to receive from DatagramChannel: fromSocketAddress == null")
           /*
           if(artificalPacketLossPercentage > 0 && Math.abs(random.nextInt()%100) < artificalPacketLossPercentage)
           {
@@ -180,9 +183,9 @@ abstract class UDPServer(
       }
     } catch (e: Throwable) {
       logger
-          .atSevere()
-          .withCause(e)
-          .log("UDPServer on port %d caught unexpected exception!", bindPort)
+        .atSevere()
+        .withCause(e)
+        .log("UDPServer on port %d caught unexpected exception!", bindPort)
       stop()
     } finally {
       listeningOnPortsCounter.dec()

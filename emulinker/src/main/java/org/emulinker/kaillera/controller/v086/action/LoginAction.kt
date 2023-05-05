@@ -18,7 +18,7 @@ private val logger = FluentLogger.forEnclosingClass()
 
 @Singleton
 class LoginAction @Inject internal constructor() :
-    V086Action<UserInformation>, V086ServerEventHandler<UserJoinedEvent> {
+  V086Action<UserInformation>, V086ServerEventHandler<UserJoinedEvent> {
   override var actionPerformedCount = 0
     private set
   override var handledEventCount = 0
@@ -47,12 +47,14 @@ class LoginAction @Inject internal constructor() :
     try {
       val user = event.user as KailleraUserImpl
       clientHandler.send(
-          UserJoined(
-              clientHandler.nextMessageNumber,
-              user.name!!,
-              user.id,
-              user.ping.toLong(),
-              user.connectionType))
+        UserJoined(
+          clientHandler.nextMessageNumber,
+          user.name!!,
+          user.id,
+          user.ping.toLong(),
+          user.connectionType
+        )
+      )
       val thisUser = clientHandler.user as KailleraUserImpl
       if (thisUser.isEmuLinkerClient && thisUser.accessLevel >= AccessManager.ACCESS_SUPERADMIN) {
         if (user != thisUser) {
@@ -74,7 +76,8 @@ class LoginAction @Inject internal constructor() :
           sb.append(0x02.toChar())
           sb.append(user.connectionType.byteValue.toInt())
           clientHandler.send(
-              InformationMessage(clientHandler.nextMessageNumber, "server", sb.toString()))
+            InformationMessage(clientHandler.nextMessageNumber, "server", sb.toString())
+          )
         }
       }
     } catch (e: MessageFormatException) {

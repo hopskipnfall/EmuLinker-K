@@ -30,17 +30,16 @@ import org.emulinker.util.GameDataCache
 private val logger = FluentLogger.forEnclosingClass()
 
 class V086ClientHandler
-    @AssistedInject
-    constructor(
-        metrics: MetricRegistry?,
-        flags: RuntimeFlags,
-        @Assisted remoteSocketAddress: InetSocketAddress,
-        @param:Assisted val controller: V086Controller,
-        @Named("listeningOnPortsCounter")
-        listeningOnPortsCounter: Counter
-    ) :
-    PrivateUDPServer(false, remoteSocketAddress.address, metrics!!, listeningOnPortsCounter),
-    KailleraEventListener {
+@AssistedInject
+constructor(
+  metrics: MetricRegistry?,
+  flags: RuntimeFlags,
+  @Assisted remoteSocketAddress: InetSocketAddress,
+  @param:Assisted val controller: V086Controller,
+  @Named("listeningOnPortsCounter") listeningOnPortsCounter: Counter
+) :
+  PrivateUDPServer(false, remoteSocketAddress.address, metrics!!, listeningOnPortsCounter),
+  KailleraEventListener {
   var user: KailleraUser? = null
     private set
 
@@ -80,12 +79,13 @@ class V086ClientHandler
   private var lastResend: Long = 0
 
   private val clientRequestTimer =
-      metrics!!.timer(MetricRegistry.name(this.javaClass, "clientRequests"))
+    metrics!!.timer(MetricRegistry.name(this.javaClass, "clientRequests"))
 
   @AssistedFactory
   interface Factory {
     fun create(
-        remoteSocketAddress: InetSocketAddress?, v086Controller: V086Controller?
+      remoteSocketAddress: InetSocketAddress?,
+      v086Controller: V086Controller?
     ): V086ClientHandler
   }
 
@@ -132,14 +132,15 @@ class V086ClientHandler
   fun start(user: KailleraUser) {
     this.user = user
     logger
-        .atFine()
-        .log(
-            toString() +
-                " thread starting (ThreadPool:" +
-                controller.threadPool.activeCount +
-                "/" +
-                controller.threadPool.poolSize +
-                ")")
+      .atFine()
+      .log(
+        toString() +
+          " thread starting (ThreadPool:" +
+          controller.threadPool.activeCount +
+          "/" +
+          controller.threadPool.poolSize +
+          ")"
+      )
     controller.threadPool.execute(this)
     Thread.yield()
 
@@ -163,14 +164,15 @@ class V086ClientHandler
     return;
     }
     */ logger
-        .atFine()
-        .log(
-            toString() +
-                " thread started (ThreadPool:" +
-                controller.threadPool.activeCount +
-                "/" +
-                controller.threadPool.poolSize +
-                ")")
+      .atFine()
+      .log(
+        toString() +
+          " thread started (ThreadPool:" +
+          controller.threadPool.activeCount +
+          "/" +
+          controller.threadPool.poolSize +
+          ")"
+      )
     controller.clientHandlers[user.id] = this
   }
 
@@ -183,14 +185,15 @@ class V086ClientHandler
       super.stop()
       if (port > 0) {
         logger
-            .atFine()
-            .log(
-                toString() +
-                    " returning port " +
-                    port +
-                    " to available port queue: " +
-                    (controller.portRangeQueue.size + 1) +
-                    " available")
+          .atFine()
+          .log(
+            toString() +
+              " returning port " +
+              port +
+              " to available port queue: " +
+              (controller.portRangeQueue.size + 1) +
+              " available"
+          )
         controller.portRangeQueue.add(port)
       }
     }
@@ -225,49 +228,43 @@ class V086ClientHandler
   private fun handleReceivedInternal(buffer: ByteBuffer) {
     var inBundle: V086Bundle? = null
     inBundle =
-        try {
-          parse(buffer, lastMessageNumber)
-          // inBundle = V086Bundle.parse(buffer, -1);
-        } catch (e: ParseException) {
-          buffer.rewind()
-          logger
-              .atWarning()
-              .withCause(e)
-              .log(toString() + " failed to parse: " + dumpBuffer(buffer))
-          return
-        } catch (e: V086BundleFormatException) {
-          buffer.rewind()
-          logger
-              .atWarning()
-              .withCause(e)
-              .log(toString() + " received invalid message bundle: " + dumpBuffer(buffer))
-          return
-        } catch (e: MessageFormatException) {
-          buffer.rewind()
-          logger
-              .atWarning()
-              .withCause(e)
-              .log(toString() + " received invalid message: " + dumpBuffer(buffer))
-          return
-        }
+      try {
+        parse(buffer, lastMessageNumber)
+        // inBundle = V086Bundle.parse(buffer, -1);
+      } catch (e: ParseException) {
+        buffer.rewind()
+        logger.atWarning().withCause(e).log(toString() + " failed to parse: " + dumpBuffer(buffer))
+        return
+      } catch (e: V086BundleFormatException) {
+        buffer.rewind()
+        logger
+          .atWarning()
+          .withCause(e)
+          .log(toString() + " received invalid message bundle: " + dumpBuffer(buffer))
+        return
+      } catch (e: MessageFormatException) {
+        buffer.rewind()
+        logger
+          .atWarning()
+          .withCause(e)
+          .log(toString() + " received invalid message: " + dumpBuffer(buffer))
+        return
+      }
 
     logger.atFinest().log("<- FROM P%d: %s", user?.playerNumber, inBundle?.messages?.firstOrNull())
     clientRetryCount =
-        if (inBundle!!.numMessages == 0) {
-          logger
-              .atFine()
-              .log(
-                  toString() +
-                      " received bundle of " +
-                      inBundle.numMessages +
-                      " messages from " +
-                      user)
-          clientRetryCount++
-          resend(clientRetryCount)
-          return
-        } else {
-          0
-        }
+      if (inBundle!!.numMessages == 0) {
+        logger
+          .atFine()
+          .log(
+            toString() + " received bundle of " + inBundle.numMessages + " messages from " + user
+          )
+        clientRetryCount++
+        resend(clientRetryCount)
+        return
+      } else {
+        0
+      }
     try {
       synchronized(inSynch) {
         val messages = inBundle.messages
@@ -294,14 +291,15 @@ class V086ClientHandler
                   // exception; do nothing
                 } else {
                   logger
-                      .atWarning()
-                      .log(
-                          user.toString() +
-                              " dropped a packet! (" +
-                              prevMessageNumber +
-                              " to " +
-                              lastMessageNumber +
-                              ")")
+                    .atWarning()
+                    .log(
+                      user.toString() +
+                        " dropped a packet! (" +
+                        prevMessageNumber +
+                        " to " +
+                        lastMessageNumber +
+                        ")"
+                    )
                   user!!.droppedPacket()
                 }
               }
@@ -328,9 +326,8 @@ class V086ClientHandler
       val eventHandler = controller.gameEventHandlers[event.javaClass]
       if (eventHandler == null) {
         logger
-            .atSevere()
-            .log(
-                toString() + " found no GameEventHandler registered to handle game event: " + event)
+          .atSevere()
+          .log(toString() + " found no GameEventHandler registered to handle game event: " + event)
         return
       }
       (eventHandler as V086GameEventHandler<GameEvent>).handleEvent(event as GameEvent, this)
@@ -338,11 +335,10 @@ class V086ClientHandler
       val eventHandler = controller.serverEventHandlers[event.javaClass]
       if (eventHandler == null) {
         logger
-            .atSevere()
-            .log(
-                toString() +
-                    " found no ServerEventHandler registered to handle server event: " +
-                    event)
+          .atSevere()
+          .log(
+            toString() + " found no ServerEventHandler registered to handle server event: " + event
+          )
         return
       }
       (eventHandler as V086ServerEventHandler<ServerEvent>).handleEvent(event, this)
@@ -350,9 +346,8 @@ class V086ClientHandler
       val eventHandler = controller.userEventHandlers[event.javaClass]
       if (eventHandler == null) {
         logger
-            .atSevere()
-            .log(
-                toString() + " found no UserEventHandler registered to handle user event: " + event)
+          .atSevere()
+          .log(toString() + " found no UserEventHandler registered to handle user event: " + event)
         return
       }
       (eventHandler as V086UserEventHandler<UserEvent>).handleEvent(event as UserEvent, this)

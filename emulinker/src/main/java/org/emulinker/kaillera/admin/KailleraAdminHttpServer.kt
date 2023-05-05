@@ -19,10 +19,10 @@ import org.mortbay.util.InetAddrPort
 private val logger = FluentLogger.forEnclosingClass()
 
 class KailleraAdminHttpServer(
-    config: Configuration,
-    threadPool: ThreadPoolExecutor?,
-    connectController: ConnectController?,
-    kailleraServer: KailleraServer?
+  config: Configuration,
+  threadPool: ThreadPoolExecutor?,
+  connectController: ConnectController?,
+  kailleraServer: KailleraServer?
 ) : AdminServer {
   private var appServer = Server()
 

@@ -10,7 +10,7 @@ enum class UserStatus(val byteValue: Byte, private val readableName: String) {
   companion object {
     fun fromByteValue(byteValue: Byte): UserStatus {
       return values().find { it.byteValue == byteValue }
-          ?: throw IllegalArgumentException("Invalid byte value: $byteValue")
+        ?: throw IllegalArgumentException("Invalid byte value: $byteValue")
     }
   }
 }
@@ -25,18 +25,18 @@ enum class GameStatus(val byteValue: Byte, private val readableName: String) {
   companion object {
     fun fromByteValue(byteValue: Byte): GameStatus {
       return values().find { it.byteValue == byteValue }
-          ?: throw IllegalArgumentException("Invalid byte value: $byteValue")
+        ?: throw IllegalArgumentException("Invalid byte value: $byteValue")
     }
   }
 }
 
 enum class ConnectionType(
-    /**
-     * ID for the connection type used over the wire, but has a more concrete meaning in that it
-     * determines the number of updates per second while inside a game: 60/byteValue qps.
-     */
-    val byteValue: Byte,
-    val readableName: String
+  /**
+   * ID for the connection type used over the wire, but has a more concrete meaning in that it
+   * determines the number of updates per second while inside a game: 60/byteValue qps.
+   */
+  val byteValue: Byte,
+  val readableName: String
 ) {
   DISABLED(0, "DISABLED"),
   LAN(1, "LAN"),
@@ -53,7 +53,7 @@ enum class ConnectionType(
   companion object {
     fun fromByteValue(byteValue: Byte): ConnectionType {
       return values().find { it.byteValue == byteValue }
-          ?: throw IllegalArgumentException("Invalid byte value: $byteValue")
+        ?: throw IllegalArgumentException("Invalid byte value: $byteValue")
     }
   }
 }

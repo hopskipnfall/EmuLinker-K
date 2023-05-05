@@ -7,8 +7,8 @@ import org.emulinker.kaillera.controller.v086.protocol.V086Message.Companion.val
 import org.emulinker.util.UnsignedUtil
 
 data class GameKick
-    @Throws(MessageFormatException::class)
-    constructor(override val messageNumber: Int, val userId: Int) : V086Message() {
+@Throws(MessageFormatException::class)
+constructor(override val messageNumber: Int, val userId: Int) : V086Message() {
 
   override val bodyLength = 3
   override val messageId = ID

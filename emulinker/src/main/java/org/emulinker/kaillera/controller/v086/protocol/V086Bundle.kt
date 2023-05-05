@@ -10,7 +10,7 @@ import org.emulinker.util.EmuUtil
 import org.emulinker.util.UnsignedUtil.getUnsignedShort
 
 class V086Bundle constructor(messages: Array<V086Message?>, numToWrite: Int = Int.MAX_VALUE) :
-    ByteBufferMessage() {
+  ByteBufferMessage() {
   var messages: Array<V086Message?>
     private set
 
@@ -57,30 +57,34 @@ class V086Bundle constructor(messages: Array<V086Message?>, numToWrite: Int = In
     fun parse(buffer: ByteBuffer, lastMessageID: Int = -1): V086Bundle {
       buffer.order(ByteOrder.LITTLE_ENDIAN)
       if (buffer.limit() < 5)
-          throw V086BundleFormatException(
-              "Invalid buffer length: " + buffer.limit(), /* cause= */ null)
+        throw V086BundleFormatException(
+          "Invalid buffer length: " + buffer.limit(),
+          /* cause= */ null
+        )
 
       // again no real need for unsigned
       // int messageCount = UnsignedUtil.getUnsignedByte(buffer);
       var messageCount = buffer.get().toInt()
       if (messageCount <= 0 || messageCount > 32)
-          throw V086BundleFormatException("Invalid message count: $messageCount", cause = null)
+        throw V086BundleFormatException("Invalid message count: $messageCount", cause = null)
       if (buffer.limit() < 1 + messageCount * 6)
-          throw V086BundleFormatException("Invalid bundle length: " + buffer.limit(), cause = null)
+        throw V086BundleFormatException("Invalid bundle length: " + buffer.limit(), cause = null)
       var parsedCount = 0
       val messages: Array<V086Message?>
       val msgNum =
-          buffer.getChar(1)
-              .code // buffer.getShort(1); - mistake. max value of short is 0x7FFF but we need
+        buffer
+          .getChar(1)
+          .code // buffer.getShort(1); - mistake. max value of short is 0x7FFF but we need
       // 0xFFFF
-      if (msgNum - 1 == lastMessageID ||
-          msgNum == 0 && lastMessageID == 0xFFFF) { // exception for 0 and 0xFFFF
+      if (
+        msgNum - 1 == lastMessageID || msgNum == 0 && lastMessageID == 0xFFFF
+      ) { // exception for 0 and 0xFFFF
         messageCount = 1
         messages = arrayOfNulls(messageCount)
         val messageNumber = getUnsignedShort(buffer)
         val messageLength = buffer.short
         if (messageLength < 2 || messageLength > buffer.remaining())
-            throw ParseException("Invalid message length: $messageLength")
+          throw ParseException("Invalid message length: $messageLength")
         messages[parsedCount] = parse(messageNumber, messageLength.toInt(), buffer)
         parsedCount++
       } else {
@@ -101,7 +105,7 @@ class V086Bundle constructor(messages: Array<V086Message?>, numToWrite: Int = In
           }
           val messageLength = buffer.short
           if (messageLength < 2 || messageLength > buffer.remaining())
-              throw ParseException("Invalid message length: $messageLength")
+            throw ParseException("Invalid message length: $messageLength")
           messages[parsedCount] = parse(messageNumber, messageLength.toInt(), buffer)
           parsedCount++
         }

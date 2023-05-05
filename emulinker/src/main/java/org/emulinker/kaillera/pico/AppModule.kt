@@ -36,25 +36,25 @@ abstract class AppModule {
 
   @Binds
   abstract fun bindAutoFireDetectorFactory(
-      autoFireDetectorFactoryImpl: AutoFireDetectorFactoryImpl?
+    autoFireDetectorFactoryImpl: AutoFireDetectorFactoryImpl?
   ): AutoFireDetectorFactory?
 
   @Binds abstract fun bindKailleraServer(kailleraServerImpl: KailleraServerImpl?): KailleraServer?
 
   @Binds
   abstract fun bindKailleraServerController(
-      v086Controller: V086Controller?
+    v086Controller: V086Controller?
   ): KailleraServerController?
 
   @Binds
   @IntoSet
   abstract fun bindKailleraServerControllerToSet(
-      v086Controller: V086Controller?
+    v086Controller: V086Controller?
   ): KailleraServerController?
 
   @Binds
   abstract fun bindStatsCollector(
-      masterListStatsCollector: MasterListStatsCollector?
+    masterListStatsCollector: MasterListStatsCollector?
   ): StatsCollector?
 
   companion object {
@@ -81,19 +81,20 @@ abstract class AppModule {
     @Singleton
     @Named("listeningOnPortsCounter")
     fun bindPortListenerCounter(metrics: MetricRegistry): Counter =
-        metrics.counter("listeningOnPorts")
+      metrics.counter("listeningOnPorts")
 
     @Provides
     @Singleton
     fun provideTwitterFactory(flags: RuntimeFlags): TwitterFactory {
       return TwitterFactory(
-          ConfigurationBuilder()
-              .setDebugEnabled(true)
-              .setOAuthAccessToken(flags.twitterOAuthAccessToken)
-              .setOAuthAccessTokenSecret(flags.twitterOAuthAccessTokenSecret)
-              .setOAuthConsumerKey(flags.twitterOAuthConsumerKey)
-              .setOAuthConsumerSecret(flags.twitterOAuthConsumerSecret)
-              .build())
+        ConfigurationBuilder()
+          .setDebugEnabled(true)
+          .setOAuthAccessToken(flags.twitterOAuthAccessToken)
+          .setOAuthAccessTokenSecret(flags.twitterOAuthAccessTokenSecret)
+          .setOAuthConsumerKey(flags.twitterOAuthConsumerKey)
+          .setOAuthConsumerSecret(flags.twitterOAuthConsumerSecret)
+          .build()
+      )
     }
 
     @Provides
@@ -113,7 +114,12 @@ abstract class AppModule {
     @Provides
     fun provideThreadPoolExecutor(flags: RuntimeFlags): ThreadPoolExecutor {
       return ThreadPoolExecutor(
-          flags.coreThreadPoolSize, Int.MAX_VALUE, 60L, TimeUnit.SECONDS, SynchronousQueue())
+        flags.coreThreadPoolSize,
+        Int.MAX_VALUE,
+        60L,
+        TimeUnit.SECONDS,
+        SynchronousQueue()
+      )
     }
 
     @Provides

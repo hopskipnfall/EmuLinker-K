@@ -19,7 +19,7 @@ private val logger = FluentLogger.forEnclosingClass()
 
 @Singleton
 class ACKAction @Inject internal constructor() :
-    V086Action<ClientACK>, V086UserEventHandler<UserEvent> {
+  V086Action<ClientACK>, V086UserEventHandler<UserEvent> {
   override var actionPerformedCount = 0
     private set
   override var handledEventCount = 0
@@ -36,16 +36,17 @@ class ACKAction @Inject internal constructor() :
     if (clientHandler.speedMeasurementCount > clientHandler.numAcksForSpeedTest) {
       user.ping = clientHandler.averageNetworkSpeed
       logger
-          .atFine()
-          .log(
-              "Calculated $user ping time: average=${clientHandler.averageNetworkSpeed}, best=${clientHandler.bestNetworkSpeed}")
+        .atFine()
+        .log(
+          "Calculated $user ping time: average=${clientHandler.averageNetworkSpeed}, best=${clientHandler.bestNetworkSpeed}"
+        )
       try {
         user.login()
       } catch (e: LoginException) {
         try {
           clientHandler.send(
-              ConnectionRejected(
-                  clientHandler.nextMessageNumber, "server", user.id, e.message ?: ""))
+            ConnectionRejected(clientHandler.nextMessageNumber, "server", user.id, e.message ?: "")
+          )
         } catch (e2: MessageFormatException) {
           logger.atSevere().withCause(e2).log("Failed to construct new ConnectionRejected")
         }
@@ -71,9 +72,15 @@ class ACKAction @Inject internal constructor() :
     try {
       for (user in server.users) {
         if (user.status != UserStatus.CONNECTING && user != thisUser)
-            users.add(
-                ServerStatus.User(
-                    user.name!!, user.ping.toLong(), user.status, user.id, user.connectionType))
+          users.add(
+            ServerStatus.User(
+              user.name!!,
+              user.ping.toLong(),
+              user.status,
+              user.id,
+              user.connectionType
+            )
+          )
       }
     } catch (e: MessageFormatException) {
       logger.atSevere().withCause(e).log("Failed to construct new ServerStatus.User")
@@ -86,13 +93,15 @@ class ACKAction @Inject internal constructor() :
           if (!user.inStealthMode) num++
         }
         games.add(
-            ServerStatus.Game(
-                game.romName,
-                game.id,
-                game.clientType!!,
-                game.owner.name!!,
-                "$num/${game.maxUsers}",
-                game.status))
+          ServerStatus.Game(
+            game.romName,
+            game.id,
+            game.clientType!!,
+            game.owner.name!!,
+            "$num/${game.maxUsers}",
+            game.status
+          )
+        )
       }
     } catch (e: MessageFormatException) {
       logger.atSevere().withCause(e).log("Failed to construct new ServerStatus.User")
@@ -148,14 +157,14 @@ class ACKAction @Inject internal constructor() :
       gamesSubList.add(game)
     }
     if (usersSubList.size > 0 || gamesSubList.size > 0 || !sent)
-        sendServerStatus(clientHandler, usersSubList, gamesSubList, counter)
+      sendServerStatus(clientHandler, usersSubList, gamesSubList, counter)
   }
 
   private fun sendServerStatus(
-      clientHandler: V086ClientHandler?,
-      users: List<ServerStatus.User>,
-      games: List<Game>,
-      counter: Int
+    clientHandler: V086ClientHandler?,
+    users: List<ServerStatus.User>,
+    games: List<Game>,
+    counter: Int
   ) {
     val sb = StringBuilder()
     for (game in games) {
@@ -163,9 +172,10 @@ class ACKAction @Inject internal constructor() :
       sb.append(",")
     }
     logger
-        .atFine()
-        .log(
-            "Sending ServerStatus to ${clientHandler!!.user}: ${users.size} users, ${games.size} games in $counter bytes, games: $sb")
+      .atFine()
+      .log(
+        "Sending ServerStatus to ${clientHandler!!.user}: ${users.size} users, ${games.size} games in $counter bytes, games: $sb"
+      )
     try {
       clientHandler.send(ServerStatus(clientHandler.nextMessageNumber, users, games))
     } catch (e: MessageFormatException) {

@@ -24,41 +24,41 @@ private val logger = FluentLogger.forEnclosingClass()
 
 @Singleton
 class V086Controller
-    @Inject
-    internal constructor(
-        override var server: KailleraServer,
-        var threadPool: ThreadPoolExecutor,
-        config: Configuration,
-        loginAction: LoginAction,
-        ackAction: ACKAction,
-        chatAction: ChatAction,
-        createGameAction: CreateGameAction,
-        joinGameAction: JoinGameAction,
-        keepAliveAction: KeepAliveAction,
-        quitGameAction: QuitGameAction,
-        quitAction: QuitAction,
-        startGameAction: StartGameAction,
-        gameChatAction: GameChatAction,
-        gameKickAction: GameKickAction,
-        userReadyAction: UserReadyAction,
-        cachedGameDataAction: CachedGameDataAction,
-        gameDataAction: GameDataAction,
-        dropGameAction: DropGameAction,
-        closeGameAction: CloseGameAction,
-        gameStatusAction: GameStatusAction,
-        gameDesynchAction: GameDesynchAction,
-        playerDesynchAction: PlayerDesynchAction,
-        gameInfoAction: GameInfoAction,
-        gameTimeoutAction: GameTimeoutAction,
-        infoMessageAction: InfoMessageAction,
-        private val v086ClientHandlerFactory: V086ClientHandler.Factory,
-        private val flags: RuntimeFlags
-    ) : KailleraServerController {
+@Inject
+internal constructor(
+  override var server: KailleraServer,
+  var threadPool: ThreadPoolExecutor,
+  config: Configuration,
+  loginAction: LoginAction,
+  ackAction: ACKAction,
+  chatAction: ChatAction,
+  createGameAction: CreateGameAction,
+  joinGameAction: JoinGameAction,
+  keepAliveAction: KeepAliveAction,
+  quitGameAction: QuitGameAction,
+  quitAction: QuitAction,
+  startGameAction: StartGameAction,
+  gameChatAction: GameChatAction,
+  gameKickAction: GameKickAction,
+  userReadyAction: UserReadyAction,
+  cachedGameDataAction: CachedGameDataAction,
+  gameDataAction: GameDataAction,
+  dropGameAction: DropGameAction,
+  closeGameAction: CloseGameAction,
+  gameStatusAction: GameStatusAction,
+  gameDesynchAction: GameDesynchAction,
+  playerDesynchAction: PlayerDesynchAction,
+  gameInfoAction: GameInfoAction,
+  gameTimeoutAction: GameTimeoutAction,
+  infoMessageAction: InfoMessageAction,
+  private val v086ClientHandlerFactory: V086ClientHandler.Factory,
+  private val flags: RuntimeFlags
+) : KailleraServerController {
   var isRunning = false
     private set
 
   override val clientTypes: Array<String> =
-      config.getStringArray("controllers.v086.clientTypes.clientType")
+    config.getStringArray("controllers.v086.clientTypes.clientType")
 
   var clientHandlers: MutableMap<Int, V086ClientHandler> = ConcurrentHashMap()
 
@@ -103,9 +103,10 @@ class V086Controller
         } catch (e: BindException) {
           logger.atSevere().withCause(e).log("Failed to bind to port $port for: $user")
           logger
-              .atFine()
-              .log(
-                  "${toString()} returning port $port to available port queue: ${portRangeQueue.size + 1} available")
+            .atFine()
+            .log(
+              "${toString()} returning port $port to available port queue: ${portRangeQueue.size + 1} available"
+            )
           portRangeQueue.add(port)
         }
       }
@@ -145,9 +146,10 @@ class V086Controller
       maxPort = i
     }
     logger
-        .atWarning()
-        .log(
-            "Listening on UDP ports: $portRangeStart to $maxPort.  Make sure these ports are open in your firewall!")
+      .atWarning()
+      .log(
+        "Listening on UDP ports: $portRangeStart to $maxPort.  Make sure these ports are open in your firewall!"
+      )
     require(flags.v086BufferSize > 0) { "controllers.v086.bufferSize must be > 0" }
 
     // array access should be faster than a hash and we won't have to create
@@ -169,32 +171,32 @@ class V086Controller
     actions[PlayerDrop.ID.toInt()] = dropGameAction
 
     serverEventHandlers =
-        ImmutableMap.builder<Class<*>, V086ServerEventHandler<*>>()
-            .put(ChatEvent::class.java, chatAction)
-            .put(GameCreatedEvent::class.java, createGameAction)
-            .put(UserJoinedEvent::class.java, loginAction)
-            .put(GameClosedEvent::class.java, closeGameAction)
-            .put(UserQuitEvent::class.java, quitAction)
-            .put(GameStatusChangedEvent::class.java, gameStatusAction)
-            .build()
+      ImmutableMap.builder<Class<*>, V086ServerEventHandler<*>>()
+        .put(ChatEvent::class.java, chatAction)
+        .put(GameCreatedEvent::class.java, createGameAction)
+        .put(UserJoinedEvent::class.java, loginAction)
+        .put(GameClosedEvent::class.java, closeGameAction)
+        .put(UserQuitEvent::class.java, quitAction)
+        .put(GameStatusChangedEvent::class.java, gameStatusAction)
+        .build()
     gameEventHandlers =
-        ImmutableMap.builder<Class<*>, V086GameEventHandler<*>>()
-            .put(UserJoinedGameEvent::class.java, joinGameAction)
-            .put(UserQuitGameEvent::class.java, quitGameAction)
-            .put(GameStartedEvent::class.java, startGameAction)
-            .put(GameChatEvent::class.java, gameChatAction)
-            .put(AllReadyEvent::class.java, userReadyAction)
-            .put(GameDataEvent::class.java, gameDataAction)
-            .put(UserDroppedGameEvent::class.java, dropGameAction)
-            .put(GameDesynchEvent::class.java, gameDesynchAction)
-            .put(PlayerDesynchEvent::class.java, playerDesynchAction)
-            .put(GameInfoEvent::class.java, gameInfoAction)
-            .put(GameTimeoutEvent::class.java, gameTimeoutAction)
-            .build()
+      ImmutableMap.builder<Class<*>, V086GameEventHandler<*>>()
+        .put(UserJoinedGameEvent::class.java, joinGameAction)
+        .put(UserQuitGameEvent::class.java, quitGameAction)
+        .put(GameStartedEvent::class.java, startGameAction)
+        .put(GameChatEvent::class.java, gameChatAction)
+        .put(AllReadyEvent::class.java, userReadyAction)
+        .put(GameDataEvent::class.java, gameDataAction)
+        .put(UserDroppedGameEvent::class.java, dropGameAction)
+        .put(GameDesynchEvent::class.java, gameDesynchAction)
+        .put(PlayerDesynchEvent::class.java, playerDesynchAction)
+        .put(GameInfoEvent::class.java, gameInfoAction)
+        .put(GameTimeoutEvent::class.java, gameTimeoutAction)
+        .build()
     userEventHandlers =
-        ImmutableMap.builder<Class<*>, V086UserEventHandler<*>>()
-            .put(ConnectedEvent::class.java, ackAction)
-            .put(InfoMessageEvent::class.java, infoMessageAction)
-            .build()
+      ImmutableMap.builder<Class<*>, V086UserEventHandler<*>>()
+        .put(ConnectedEvent::class.java, ackAction)
+        .put(InfoMessageEvent::class.java, infoMessageAction)
+        .build()
   }
 }

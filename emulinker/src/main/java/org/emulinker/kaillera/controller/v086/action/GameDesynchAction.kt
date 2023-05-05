@@ -22,10 +22,12 @@ class GameDesynchAction @Inject internal constructor() : V086GameEventHandler<Ga
     handledEventCount++
     try {
       clientHandler.send(
-          GameChat_Notification(
-              clientHandler.nextMessageNumber,
-              EmuLang.getString("GameDesynchAction.DesynchDetected"),
-              event.message))
+        GameChat_Notification(
+          clientHandler.nextMessageNumber,
+          EmuLang.getString("GameDesynchAction.DesynchDetected"),
+          event.message
+        )
+      )
       // if (clientHandler.getUser().getStatus() == KailleraUser.STATUS_PLAYING)
       //	clientHandler.getUser().dropGame();
     } catch (e: MessageFormatException) {

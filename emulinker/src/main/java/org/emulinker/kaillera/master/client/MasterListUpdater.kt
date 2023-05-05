@@ -16,15 +16,15 @@ private val logger = FluentLogger.forEnclosingClass()
 
 @Singleton
 class MasterListUpdater
-    @Inject
-    internal constructor(
-        private val flags: RuntimeFlags,
-        private val threadPool: ThreadPoolExecutor,
-        connectController: ConnectController?,
-        kailleraServer: KailleraServer?,
-        private val statsCollector: StatsCollector,
-        releaseInfo: ReleaseInfo?
-    ) : Executable {
+@Inject
+internal constructor(
+  private val flags: RuntimeFlags,
+  private val threadPool: ThreadPoolExecutor,
+  connectController: ConnectController?,
+  kailleraServer: KailleraServer?,
+  private val statsCollector: StatsCollector,
+  releaseInfo: ReleaseInfo?
+) : Executable {
   private var publicInfo: PublicServerInformation? = null
   private var emulinkerMasterTask: EmuLinkerMasterUpdateTask? = null
   private var kailleraMasterTask: KailleraMasterUpdateTask? = null
@@ -37,10 +37,10 @@ class MasterListUpdater
   @Synchronized
   override fun toString(): String {
     return ("MasterListUpdater[touchKaillera=" +
-        flags.touchKaillera +
-        " touchEmulinker=" +
-        flags.touchEmulinker +
-        "]")
+      flags.touchKaillera +
+      " touchEmulinker=" +
+      flags.touchEmulinker +
+      "]")
   }
 
   @Synchronized
@@ -48,23 +48,25 @@ class MasterListUpdater
     if (publicInfo != null) {
       logger.atFine().log("MasterListUpdater thread received start request!")
       logger
-          .atFine()
-          .log(
-              "MasterListUpdater thread starting (ThreadPool:" +
-                  threadPool.activeCount +
-                  "/" +
-                  threadPool.poolSize +
-                  ")")
+        .atFine()
+        .log(
+          "MasterListUpdater thread starting (ThreadPool:" +
+            threadPool.activeCount +
+            "/" +
+            threadPool.poolSize +
+            ")"
+        )
       threadPool.execute(this)
       Thread.yield()
       logger
-          .atFine()
-          .log(
-              "MasterListUpdater thread started (ThreadPool:" +
-                  threadPool.activeCount +
-                  "/" +
-                  threadPool.poolSize +
-                  ")")
+        .atFine()
+        .log(
+          "MasterListUpdater thread started (ThreadPool:" +
+            threadPool.activeCount +
+            "/" +
+            threadPool.poolSize +
+            ")"
+        )
     }
   }
 
@@ -106,13 +108,22 @@ class MasterListUpdater
     }
     if (flags.touchKaillera) {
       kailleraMasterTask =
-          KailleraMasterUpdateTask(
-              publicInfo!!, connectController!!, kailleraServer!!, statsCollector, releaseInfo!!)
+        KailleraMasterUpdateTask(
+          publicInfo!!,
+          connectController!!,
+          kailleraServer!!,
+          statsCollector,
+          releaseInfo!!
+        )
     }
     if (flags.touchEmulinker) {
       emulinkerMasterTask =
-          EmuLinkerMasterUpdateTask(
-              publicInfo!!, connectController!!, kailleraServer!!, releaseInfo!!)
+        EmuLinkerMasterUpdateTask(
+          publicInfo!!,
+          connectController!!,
+          kailleraServer!!,
+          releaseInfo!!
+        )
     }
   }
 }

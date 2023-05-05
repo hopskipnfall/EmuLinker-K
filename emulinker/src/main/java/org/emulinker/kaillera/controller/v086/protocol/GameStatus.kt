@@ -7,15 +7,15 @@ import org.emulinker.util.EmuUtil
 import org.emulinker.util.UnsignedUtil
 
 data class GameStatus
-    @Throws(MessageFormatException::class)
-    constructor(
-        override val messageNumber: Int,
-        val gameId: Int,
-        val val1: Int,
-        val gameStatus: org.emulinker.kaillera.model.GameStatus,
-        val numPlayers: Byte,
-        val maxPlayers: Byte
-    ) : V086Message() {
+@Throws(MessageFormatException::class)
+constructor(
+  override val messageNumber: Int,
+  val gameId: Int,
+  val val1: Int,
+  val gameStatus: org.emulinker.kaillera.model.GameStatus,
+  val numPlayers: Byte,
+  val maxPlayers: Byte
+) : V086Message() {
 
   override val messageId = ID
 
@@ -52,12 +52,13 @@ data class GameStatus
       val numPlayers = buffer.get()
       val maxPlayers = buffer.get()
       return GameStatus(
-          messageNumber,
-          gameID,
-          val1,
-          org.emulinker.kaillera.model.GameStatus.fromByteValue(gameStatus),
-          numPlayers,
-          maxPlayers)
+        messageNumber,
+        gameID,
+        val1,
+        org.emulinker.kaillera.model.GameStatus.fromByteValue(gameStatus),
+        numPlayers,
+        maxPlayers
+      )
     }
   }
 }

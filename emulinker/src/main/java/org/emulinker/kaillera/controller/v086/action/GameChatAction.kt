@@ -20,11 +20,11 @@ private val logger = FluentLogger.forEnclosingClass()
 
 @Singleton
 class GameChatAction
-    @Inject
-    internal constructor(
-        private val gameOwnerCommandAction: GameOwnerCommandAction,
-        private val lookingForGameReporter: TwitterBroadcaster
-    ) : V086Action<GameChat_Request>, V086GameEventHandler<GameChatEvent> {
+@Inject
+internal constructor(
+  private val gameOwnerCommandAction: GameOwnerCommandAction,
+  private val lookingForGameReporter: TwitterBroadcaster
+) : V086Action<GameChat_Request>, V086GameEventHandler<GameChatEvent> {
   override var actionPerformedCount = 0
     private set
   override var handledEventCount = 0
@@ -95,7 +95,9 @@ class GameChatAction
               u.ignoringUnnecessaryServerActivity = true
               if (u.loggedIn) {
                 u.game!!.announce(
-                    "This game will NOT receive any server activity during gameplay!", u)
+                  "This game will NOT receive any server activity during gameplay!",
+                  u
+                )
               }
             }
           } else {
@@ -103,8 +105,9 @@ class GameChatAction
             for (u in clientHandler.user!!.game!!.players) {
               if (u.loggedIn) {
                 u.game!!.announce(
-                    "${clientHandler.user!!.name} will NOT receive any server activity during gameplay!",
-                    u)
+                  "${clientHandler.user!!.name} will NOT receive any server activity during gameplay!",
+                  u
+                )
               }
             }
           }
@@ -115,7 +118,9 @@ class GameChatAction
               u.ignoringUnnecessaryServerActivity = false
               if (u.loggedIn) {
                 u.game!!.announce(
-                    "This game will NOW receive ALL server activity during gameplay!", u)
+                  "This game will NOW receive ALL server activity during gameplay!",
+                  u
+                )
               }
             }
           } else {
@@ -123,9 +128,10 @@ class GameChatAction
             for (u in clientHandler.user!!.game!!.players) {
               if (u.loggedIn) {
                 u.game!!.announce(
-                    clientHandler.user!!.name +
-                        " will NOW receive ALL server activity during gameplay!",
-                    u)
+                  clientHandler.user!!.name +
+                    " will NOW receive ALL server activity during gameplay!",
+                  u
+                )
               }
             }
           }
@@ -137,11 +143,17 @@ class GameChatAction
         val user1 = clientHandler.user as KailleraUserImpl
         val scanner = Scanner(message.message).useDelimiter(" ")
         val access =
-            clientHandler.user!!.server.accessManager.getAccess(
-                clientHandler.user!!.socketAddress!!.address)
-        if (access < AccessManager.ACCESS_SUPERADMIN &&
-            clientHandler.user!!.server.accessManager.isSilenced(
-                clientHandler.user!!.socketAddress!!.address)) {
+          clientHandler.user!!
+            .server
+            .accessManager
+            .getAccess(clientHandler.user!!.socketAddress!!.address)
+        if (
+          access < AccessManager.ACCESS_SUPERADMIN &&
+            clientHandler.user!!
+              .server
+              .accessManager
+              .isSilenced(clientHandler.user!!.socketAddress!!.address)
+        ) {
           user1.game!!.announce("You are silenced!", user1)
           return
         }
@@ -166,9 +178,10 @@ class GameChatAction
             user1.game!!.announce("You can't private message yourself!", user1)
             return
           }
-          if (!user.isAcceptingDirectMessages ||
-              user.searchIgnoredUsers(
-                  clientHandler.user!!.connectSocketAddress.address.hostAddress)) {
+          if (
+            !user.isAcceptingDirectMessages ||
+              user.searchIgnoredUsers(clientHandler.user!!.connectSocketAddress.address.hostAddress)
+          ) {
             user1.game!!.announce("<" + user.name + "> Is not accepting private messages!", user1)
             return
           }
@@ -181,7 +194,9 @@ class GameChatAction
               if (chars[i].code < 32) {
                 logger.atWarning().log("$user /msg denied: Illegal characters in message")
                 user1.game!!.announce(
-                    "Private Message Denied: Illegal characters in message", user1)
+                  "Private Message Denied: Illegal characters in message",
+                  user1
+                )
                 return
               }
             }
@@ -201,12 +216,15 @@ class GameChatAction
           // clientHandler.getUser().getID() + "): " + m, false, user);
           if (user1.game != null) {
             user1.game!!.announce(
-                "TO: <${user.name}>(${user.id}) <${clientHandler.user!!.name}> (${clientHandler.user!!.id}): $m",
-                user1)
+              "TO: <${user.name}>(${user.id}) <${clientHandler.user!!.name}> (${clientHandler.user!!.id}): $m",
+              user1
+            )
           }
           if (user.game != null) {
             user.game!!.announce(
-                "<${clientHandler.user!!.name}> (${clientHandler.user!!.id}): $m", user)
+              "<${clientHandler.user!!.name}> (${clientHandler.user!!.id}): $m",
+              user
+            )
           }
           return
         } catch (e: NoSuchElementException) {
@@ -240,7 +258,9 @@ class GameChatAction
                   if (chars[i].code < 32) {
                     logger.atWarning().log("$user /msg denied: Illegal characters in message")
                     user1.game!!.announce(
-                        "Private Message Denied: Illegal characters in message", user1)
+                      "Private Message Denied: Illegal characters in message",
+                      user1
+                    )
                     return
                   }
                   i++
@@ -259,12 +279,15 @@ class GameChatAction
               // clientHandler.getUser().getID() + "): " + m, false, user);
               if (user1.game != null) {
                 user1.game!!.announce(
-                    "TO: <${user.name}>(${user.id}) <${clientHandler.user!!.name}> (${clientHandler.user!!.id}): $m",
-                    user1)
+                  "TO: <${user.name}>(${user.id}) <${clientHandler.user!!.name}> (${clientHandler.user!!.id}): $m",
+                  user1
+                )
               }
               if (user.game != null) {
                 user.game!!.announce(
-                    "<${clientHandler.user!!.name}> (${clientHandler.user!!.id}): $m", user)
+                  "<${clientHandler.user!!.name}> (${clientHandler.user!!.id}): $m",
+                  user
+                )
               }
               return
             } catch (e1: Exception) {
@@ -281,7 +304,10 @@ class GameChatAction
         try {
           clientHandler.user!!.ignoreAll = true
           user.server.announce(
-              clientHandler.user!!.name + " is now ignoring everyone!", false, null)
+            clientHandler.user!!.name + " is now ignoring everyone!",
+            false,
+            null
+          )
         } catch (e: Exception) {}
         return
       } else if (message.message == "/unignoreall") {
@@ -289,7 +315,10 @@ class GameChatAction
         try {
           clientHandler.user!!.ignoreAll = false
           user.server.announce(
-              clientHandler.user!!.name + " is now unignoring everyone!", false, null)
+            clientHandler.user!!.name + " is now unignoring everyone!",
+            false,
+            null
+          )
         } catch (e: Exception) {}
         return
       } else if (message.message.startsWith("/ignore")) {
@@ -317,18 +346,18 @@ class GameChatAction
           }
           clientHandler.user!!.addIgnoredUser(user.connectSocketAddress.address.hostAddress)
           user.server.announce(
-              "${clientHandler.user!!.name} is now ignoring <${user.name}> ID: ${user.id}",
-              false,
-              null)
+            "${clientHandler.user!!.name} is now ignoring <${user.name}> ID: ${user.id}",
+            false,
+            null
+          )
           return
         } catch (e: NoSuchElementException) {
           val user = clientHandler.user as KailleraUserImpl
           user.game!!.announce("Ignore User Error: /ignore <UserID>", user)
           logger
-              .atInfo()
-              .withCause(e)
-              .log(
-                  "IGNORE USER ERROR: ${user.name}: ${clientHandler.remoteSocketAddress!!.hostName}")
+            .atInfo()
+            .withCause(e)
+            .log("IGNORE USER ERROR: ${user.name}: ${clientHandler.remoteSocketAddress!!.hostName}")
           return
         }
       } else if (message.message.startsWith("/unignore")) {
@@ -342,32 +371,39 @@ class GameChatAction
             user1.game!!.announce("User Not Found!", user1)
             return
           }
-          if (!clientHandler.user!!.findIgnoredUser(
-              user.connectSocketAddress.address.hostAddress)) {
+          if (
+            !clientHandler.user!!.findIgnoredUser(user.connectSocketAddress.address.hostAddress)
+          ) {
             user1.game!!.announce("You can't unignore a user that isn't ignored", user1)
             return
           }
-          if (clientHandler.user!!.removeIgnoredUser(
-              user.connectSocketAddress.address.hostAddress, false))
-              user.server.announce(
-                  "${clientHandler.user!!.name} is now unignoring <${user.name}> ID: ${user.id}",
-                  false,
-                  null)
+          if (
+            clientHandler.user!!.removeIgnoredUser(
+              user.connectSocketAddress.address.hostAddress,
+              false
+            )
+          )
+            user.server.announce(
+              "${clientHandler.user!!.name} is now unignoring <${user.name}> ID: ${user.id}",
+              false,
+              null
+            )
           else
-              try {
-                clientHandler.send(
-                    InformationMessage(
-                        clientHandler.nextMessageNumber, "server", "User Not Found!"))
-              } catch (e: Exception) {}
+            try {
+              clientHandler.send(
+                InformationMessage(clientHandler.nextMessageNumber, "server", "User Not Found!")
+              )
+            } catch (e: Exception) {}
           return
         } catch (e: NoSuchElementException) {
           val user = clientHandler.user as KailleraUserImpl
           user.game!!.announce("Unignore User Error: /ignore <UserID>", user)
           logger
-              .atInfo()
-              .withCause(e)
-              .log(
-                  "UNIGNORE USER ERROR: ${user.name}: ${clientHandler.remoteSocketAddress!!.hostName}")
+            .atInfo()
+            .withCause(e)
+            .log(
+              "UNIGNORE USER ERROR: ${user.name}: ${clientHandler.remoteSocketAddress!!.hostName}"
+            )
           return
         }
       } else if (message.message.startsWith("/me")) {
@@ -378,15 +414,22 @@ class GameChatAction
         }
         var announcement = message.message.substring(space + 1)
         if (announcement.startsWith(":"))
-            announcement =
-                announcement.substring(
-                    1) // this protects against people screwing up the emulinker supraclient
+          announcement =
+            announcement.substring(
+              1
+            ) // this protects against people screwing up the emulinker supraclient
         val access =
-            clientHandler.user!!.server.accessManager.getAccess(
-                clientHandler.user!!.socketAddress!!.address)
-        if (access < AccessManager.ACCESS_SUPERADMIN &&
-            clientHandler.user!!.server.accessManager.isSilenced(
-                clientHandler.user!!.socketAddress!!.address)) {
+          clientHandler.user!!
+            .server
+            .accessManager
+            .getAccess(clientHandler.user!!.socketAddress!!.address)
+        if (
+          access < AccessManager.ACCESS_SUPERADMIN &&
+            clientHandler.user!!
+              .server
+              .accessManager
+              .isSilenced(clientHandler.user!!.socketAddress!!.address)
+        ) {
           clientHandler.user!!.game!!.announce("You are silenced!", clientHandler.user)
           return
         }
@@ -400,24 +443,33 @@ class GameChatAction
         }
       } else if (message.message == "/help") {
         val user = clientHandler.user as KailleraUserImpl?
-        user!!.game!!.announce(
-            "/me <message> to make personal message eg. /me is bored ...SupraFast is bored.", user)
+        user!!
+          .game!!
+          .announce(
+            "/me <message> to make personal message eg. /me is bored ...SupraFast is bored.",
+            user
+          )
         try {
           Thread.sleep(20)
         } catch (e: Exception) {}
         user.game!!.announce(
-            "/msg <UserID> <msg> to PM somebody. /msgoff or /msgon to turn pm off | on.", user)
+          "/msg <UserID> <msg> to PM somebody. /msgoff or /msgon to turn pm off | on.",
+          user
+        )
         try {
           Thread.sleep(20)
         } catch (e: Exception) {}
         user.game!!.announce(
-            "/ignore <UserID> or /unignore <UserID> or /ignoreall or /unignoreall to ignore users.",
-            user)
+          "/ignore <UserID> or /unignore <UserID> or /ignoreall or /unignoreall to ignore users.",
+          user
+        )
         try {
           Thread.sleep(20)
         } catch (e: Exception) {}
         user.game!!.announce(
-            "/p2pon or /p2poff this option ignores all server activity during gameplay.", user)
+          "/p2pon or /p2poff this option ignores all server activity during gameplay.",
+          user
+        )
         try {
           Thread.sleep(20)
         } catch (e: Exception) {}
@@ -429,8 +481,9 @@ class GameChatAction
           user.game!!.announce("No pending tweets.", user)
         }
       } else
-          clientHandler.user!!.game!!.announce(
-              "Unknown Command: " + message.message, clientHandler.user)
+        clientHandler.user!!
+          .game!!
+          .announce("Unknown Command: " + message.message, clientHandler.user)
     } else {
       clientHandler.user!!.game!!.announce("Denied: Flood Control", clientHandler.user)
     }
@@ -439,17 +492,23 @@ class GameChatAction
   override fun handleEvent(gameChatEvent: GameChatEvent, clientHandler: V086ClientHandler) {
     handledEventCount++
     try {
-      if (clientHandler.user!!.searchIgnoredUsers(
-          gameChatEvent.user.connectSocketAddress.address.hostAddress))
-          return
+      if (
+        clientHandler.user!!.searchIgnoredUsers(
+          gameChatEvent.user.connectSocketAddress.address.hostAddress
+        )
+      )
+        return
       else if (clientHandler.user!!.ignoreAll) {
-        if (gameChatEvent.user.accessLevel < AccessManager.ACCESS_ADMIN &&
-            gameChatEvent.user !== clientHandler.user)
-            return
+        if (
+          gameChatEvent.user.accessLevel < AccessManager.ACCESS_ADMIN &&
+            gameChatEvent.user !== clientHandler.user
+        )
+          return
       }
       val m = gameChatEvent.message
       clientHandler.send(
-          GameChat_Notification(clientHandler.nextMessageNumber, gameChatEvent.user.name!!, m))
+        GameChat_Notification(clientHandler.nextMessageNumber, gameChatEvent.user.name!!, m)
+      )
     } catch (e: MessageFormatException) {
       logger.atSevere().withCause(e).log("Failed to construct GameChat_Notification message")
     }

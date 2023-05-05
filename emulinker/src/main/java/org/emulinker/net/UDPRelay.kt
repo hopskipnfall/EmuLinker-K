@@ -20,19 +20,23 @@ import org.emulinker.util.EmuUtil.formatSocketAddress
 private val logger = FluentLogger.forEnclosingClass()
 
 abstract class UDPRelay(
-    var listenPort: Int,
-    var serverSocketAddress: InetSocketAddress,
-    private val listeningOnPortsCounter: Counter
+  var listenPort: Int,
+  var serverSocketAddress: InetSocketAddress,
+  private val listeningOnPortsCounter: Counter
 ) : Runnable {
   var listenChannel: DatagramChannel? = null
     protected set
   protected var clients = Collections.synchronizedMap(HashMap<InetSocketAddress, ClientHandler>())
   protected abstract fun processClientToServer(
-      receiveBuffer: ByteBuffer, fromAddress: InetSocketAddress, toAddress: InetSocketAddress
+    receiveBuffer: ByteBuffer,
+    fromAddress: InetSocketAddress,
+    toAddress: InetSocketAddress
   ): ByteBuffer?
 
   protected abstract fun processServerToClient(
-      receiveBuffer: ByteBuffer, fromAddress: InetSocketAddress, toAddress: InetSocketAddress
+    receiveBuffer: ByteBuffer,
+    fromAddress: InetSocketAddress,
+    toAddress: InetSocketAddress
   ): ByteBuffer?
 
   override fun run() {
@@ -45,17 +49,15 @@ abstract class UDPRelay(
         var clientHandler = clients[clientAddress]
         if (clientHandler == null) {
           clientHandler =
-              try {
-                ClientHandler(clientAddress)
-              } catch (e: Exception) {
-                logger
-                    .atSevere()
-                    .withCause(e)
-                    .log(
-                        "Failed to start new ClientHandler for " +
-                            formatSocketAddress(clientAddress))
-                continue
-              }
+            try {
+              ClientHandler(clientAddress)
+            } catch (e: Exception) {
+              logger
+                .atSevere()
+                .withCause(e)
+                .log("Failed to start new ClientHandler for " + formatSocketAddress(clientAddress))
+              continue
+            }
           clients[clientAddress] = clientHandler
           threadPool.execute(clientHandler)
         }
@@ -78,7 +80,7 @@ abstract class UDPRelay(
   }
 
   protected inner class ClientHandler(protected var clientSocketAddress: InetSocketAddress) :
-      Runnable {
+    Runnable {
     protected var clientChannel: DatagramChannel
     @Throws(Exception::class)
     fun send(buffer: ByteBuffer) {
@@ -90,11 +92,10 @@ abstract class UDPRelay(
 
     override fun run() {
       logger
-          .atInfo()
-          .log(
-              "ClientHandler thread for " +
-                  formatSocketAddress(clientSocketAddress) +
-                  " runnning...")
+        .atInfo()
+        .log(
+          "ClientHandler thread for " + formatSocketAddress(clientSocketAddress) + " runnning..."
+        )
       try {
         listeningOnPortsCounter.inc()
         while (true) {
@@ -113,12 +114,13 @@ abstract class UDPRelay(
         }
       } catch (e: Exception) {
         logger
-            .atInfo()
-            .withCause(e)
-            .log(
-                "ClientHandler thread for " +
-                    formatSocketAddress(clientSocketAddress) +
-                    " caught exception")
+          .atInfo()
+          .withCause(e)
+          .log(
+            "ClientHandler thread for " +
+              formatSocketAddress(clientSocketAddress) +
+              " caught exception"
+          )
       } finally {
         listeningOnPortsCounter.dec()
         try {
@@ -127,23 +129,21 @@ abstract class UDPRelay(
         clients.remove(clientSocketAddress)
       }
       logger
-          .atInfo()
-          .log(
-              "ClientHandler thread for " +
-                  formatSocketAddress(clientSocketAddress) +
-                  " exiting...")
+        .atInfo()
+        .log("ClientHandler thread for " + formatSocketAddress(clientSocketAddress) + " exiting...")
     }
 
     init {
       clientChannel = DatagramChannel.open()
       clientChannel.socket().bind(null)
       logger
-          .atInfo()
-          .log(
-              "ClientHandler for " +
-                  formatSocketAddress(clientSocketAddress) +
-                  " bound to port " +
-                  clientChannel.socket().port)
+        .atInfo()
+        .log(
+          "ClientHandler for " +
+            formatSocketAddress(clientSocketAddress) +
+            " bound to port " +
+            clientChannel.socket().port
+        )
     }
   }
 

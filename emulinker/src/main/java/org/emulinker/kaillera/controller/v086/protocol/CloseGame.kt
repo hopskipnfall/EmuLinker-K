@@ -7,8 +7,8 @@ import org.emulinker.util.EmuUtil
 import org.emulinker.util.UnsignedUtil
 
 data class CloseGame
-    @Throws(MessageFormatException::class)
-    constructor(override val messageNumber: Int, val gameId: Int, val val1: Int) : V086Message() {
+@Throws(MessageFormatException::class)
+constructor(override val messageNumber: Int, val gameId: Int, val val1: Int) : V086Message() {
 
   override val messageId = ID
 
@@ -34,8 +34,7 @@ data class CloseGame
       if (buffer.remaining() < 5) throw ParseException("Failed byte count validation!")
       val b = buffer.get()
       if (b.toInt() != 0x00)
-          throw MessageFormatException(
-              "Invalid Close Game format: byte 0 = " + EmuUtil.byteToHex(b))
+        throw MessageFormatException("Invalid Close Game format: byte 0 = " + EmuUtil.byteToHex(b))
       val gameID = UnsignedUtil.getUnsignedShort(buffer)
       val val1 = UnsignedUtil.getUnsignedShort(buffer)
       return CloseGame(messageNumber, gameID, val1)

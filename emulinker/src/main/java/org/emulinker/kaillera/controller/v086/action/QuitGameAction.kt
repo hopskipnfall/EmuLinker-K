@@ -17,9 +17,9 @@ private val logger = FluentLogger.forEnclosingClass()
 
 @Singleton
 class QuitGameAction
-    @Inject
-    internal constructor(private val lookingForGameReporter: TwitterBroadcaster) :
-    V086Action<QuitGame_Request>, V086GameEventHandler<UserQuitGameEvent> {
+@Inject
+internal constructor(private val lookingForGameReporter: TwitterBroadcaster) :
+  V086Action<QuitGame_Request>, V086GameEventHandler<UserQuitGameEvent> {
   override var actionPerformedCount = 0
     private set
   override var handledEventCount = 0
@@ -53,12 +53,14 @@ class QuitGameAction
     try {
       val user = event.user
       if (!user.inStealthMode)
-          clientHandler.send(
-              QuitGame_Notification(clientHandler.nextMessageNumber, user.name!!, user.id))
+        clientHandler.send(
+          QuitGame_Notification(clientHandler.nextMessageNumber, user.name!!, user.id)
+        )
       if (thisUser === user) {
         if (user.inStealthMode)
-            clientHandler.send(
-                QuitGame_Notification(clientHandler.nextMessageNumber, user.name!!, user.id))
+          clientHandler.send(
+            QuitGame_Notification(clientHandler.nextMessageNumber, user.name!!, user.id)
+          )
       }
     } catch (e: MessageFormatException) {
       logger.atSevere().withCause(e).log("Failed to construct QuitGame_Notification message")

@@ -19,7 +19,7 @@ import twitter4j.Twitter
 private val logger = FluentLogger.forEnclosingClass()
 
 private fun getUrl(tweet: Status) =
-    "https://twitter.com/${tweet.user.screenName}/status/${tweet.id}"
+  "https://twitter.com/${tweet.user.screenName}/status/${tweet.id}"
 
 /**
  * Observes when a user is looking for a game opponent and publishes a report to one or more
@@ -27,8 +27,8 @@ private fun getUrl(tweet: Status) =
  */
 @Singleton
 class TwitterBroadcaster
-    @Inject
-    internal constructor(private val flags: RuntimeFlags, private val twitter: Twitter) {
+@Inject
+internal constructor(private val flags: RuntimeFlags, private val twitter: Twitter) {
 
   private val pendingReports: ConcurrentMap<LookingForGameEvent, Disposable> = ConcurrentHashMap()
   private val postedTweets: ConcurrentMap<LookingForGameEvent, Long> = ConcurrentHashMap()
@@ -47,9 +47,11 @@ class TwitterBroadcaster
     // Note: This isn't the normal @ character..
     if (username.contains("＠")) {
       val afterAt = username.substring(username.indexOf("＠"))
-      if (flags.twitterPreventBroadcastNameSuffixes.stream().anyMatch { suffix: String? ->
-        afterAt.contains(suffix!!)
-      }) {
+      if (
+        flags.twitterPreventBroadcastNameSuffixes.stream().anyMatch { suffix: String? ->
+          afterAt.contains(suffix!!)
+        }
+      ) {
         return false
       }
     }
@@ -59,23 +61,27 @@ class TwitterBroadcaster
       return false
     }
     val disposable =
-        Completable.timer(
-                flags.twitterBroadcastDelay.inWholeSeconds, TimeUnit.SECONDS, Schedulers.io())
-            .subscribe {
-              pendingReports.remove(lookingForGameEvent)
-              val user: KailleraUser = lookingForGameEvent.user
-              val message =
-                  java.lang.String.format(
-                      "User: %s\nGame: %s\nServer: %s (%s)",
-                      user.name,
-                      lookingForGameEvent.gameTitle,
-                      flags.serverName,
-                      flags.serverAddress)
-              val tweet = twitter.updateStatus(message)
-              user.game!!.announce(getUrl(tweet), user)
-              logger.atInfo().log("Posted tweet: %s", getUrl(tweet))
-              postedTweets[lookingForGameEvent] = tweet.id
-            }
+      Completable.timer(
+          flags.twitterBroadcastDelay.inWholeSeconds,
+          TimeUnit.SECONDS,
+          Schedulers.io()
+        )
+        .subscribe {
+          pendingReports.remove(lookingForGameEvent)
+          val user: KailleraUser = lookingForGameEvent.user
+          val message =
+            java.lang.String.format(
+              "User: %s\nGame: %s\nServer: %s (%s)",
+              user.name,
+              lookingForGameEvent.gameTitle,
+              flags.serverName,
+              flags.serverAddress
+            )
+          val tweet = twitter.updateStatus(message)
+          user.game!!.announce(getUrl(tweet), user)
+          logger.atInfo().log("Posted tweet: %s", getUrl(tweet))
+          postedTweets[lookingForGameEvent] = tweet.id
+        }
     pendingReports[lookingForGameEvent] = disposable
     return true
   }
@@ -90,47 +96,43 @@ class TwitterBroadcaster
 
   private fun cancelMatchingEvents(predicate: (LookingForGameEvent) -> Boolean): Boolean {
     val anyModified =
-        pendingReports
-            .keys
-            .stream()
-            .filter(
-                predicate) // Use map instead of foreach because it lets us return whether or not
-            // something was
-            // modified.
-            .map { event: LookingForGameEvent ->
-              val disposable = pendingReports[event]
-              if (disposable != null) {
-                disposable.dispose()
-                pendingReports.remove(event)
-                logger.atInfo().log("Prevented pending tweet")
-              }
-              event
-            }
-            .findAny()
-            .isPresent
+      pendingReports.keys
+        .stream()
+        .filter(predicate) // Use map instead of foreach because it lets us return whether or not
+        // something was
+        // modified.
+        .map { event: LookingForGameEvent ->
+          val disposable = pendingReports[event]
+          if (disposable != null) {
+            disposable.dispose()
+            pendingReports.remove(event)
+            logger.atInfo().log("Prevented pending tweet")
+          }
+          event
+        }
+        .findAny()
+        .isPresent
     val tweetsClosed =
-        postedTweets
-            .keys
-            .stream()
-            .filter(
-                predicate) // Use map instead of foreach because it lets us return whether or not
-            // something was
-            // modified.
-            .map { event: LookingForGameEvent ->
-              val tweetId = postedTweets[event]
-              if (tweetId != null) {
-                postedTweets.remove(event)
-                Observable.just(tweetId).subscribeOn(Schedulers.io()).subscribe { id: Long? ->
-                  val reply = StatusUpdate("〆")
-                  reply.inReplyToStatusId = id!!
-                  val tweet = twitter.updateStatus(reply)
-                  logger.atInfo().log("Posted tweet canceling LFG: %s", getUrl(tweet))
-                }
-              }
-              event
+      postedTweets.keys
+        .stream()
+        .filter(predicate) // Use map instead of foreach because it lets us return whether or not
+        // something was
+        // modified.
+        .map { event: LookingForGameEvent ->
+          val tweetId = postedTweets[event]
+          if (tweetId != null) {
+            postedTweets.remove(event)
+            Observable.just(tweetId).subscribeOn(Schedulers.io()).subscribe { id: Long? ->
+              val reply = StatusUpdate("〆")
+              reply.inReplyToStatusId = id!!
+              val tweet = twitter.updateStatus(reply)
+              logger.atInfo().log("Posted tweet canceling LFG: %s", getUrl(tweet))
             }
-            .findAny()
-            .isPresent
+          }
+          event
+        }
+        .findAny()
+        .isPresent
     return anyModified || tweetsClosed
   }
 }

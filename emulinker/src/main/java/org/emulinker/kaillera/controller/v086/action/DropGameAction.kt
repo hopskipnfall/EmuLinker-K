@@ -14,7 +14,7 @@ private val logger = FluentLogger.forEnclosingClass()
 
 @Singleton
 class DropGameAction @Inject internal constructor() :
-    V086Action<PlayerDrop_Request>, V086GameEventHandler<UserDroppedGameEvent> {
+  V086Action<PlayerDrop_Request>, V086GameEventHandler<UserDroppedGameEvent> {
   override var actionPerformedCount = 0
     private set
   override var handledEventCount = 0
@@ -40,9 +40,13 @@ class DropGameAction @Inject internal constructor() :
       //			clientHandler.send(PlayerDrop_Notification.create(clientHandler.getNextMessageNumber(),
       // user.getName(), (byte) game.getPlayerNumber(user)));
       if (!user.inStealthMode)
-          clientHandler.send(
-              PlayerDrop_Notification(
-                  clientHandler.nextMessageNumber, user.name!!, playerNumber.toByte()))
+        clientHandler.send(
+          PlayerDrop_Notification(
+            clientHandler.nextMessageNumber,
+            user.name!!,
+            playerNumber.toByte()
+          )
+        )
     } catch (e: MessageFormatException) {
       logger.atSevere().withCause(e).log("Failed to construct PlayerDrop_Notification message")
     }

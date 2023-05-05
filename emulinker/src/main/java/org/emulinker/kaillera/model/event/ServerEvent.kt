@@ -9,21 +9,25 @@ sealed interface ServerEvent : KailleraEvent {
 }
 
 data class GameStatusChangedEvent(override val server: KailleraServer, val game: KailleraGame) :
-    ServerEvent
+  ServerEvent
 
 data class ChatEvent(
-    override val server: KailleraServer, val user: KailleraUser, val message: String
+  override val server: KailleraServer,
+  val user: KailleraUser,
+  val message: String
 ) : ServerEvent
 
 data class GameClosedEvent(override val server: KailleraServer, val game: KailleraGame) :
-    ServerEvent
+  ServerEvent
 
 data class GameCreatedEvent(override val server: KailleraServer, val game: KailleraGame) :
-    ServerEvent
+  ServerEvent
 
 data class UserJoinedEvent(override val server: KailleraServer, val user: KailleraUser) :
-    ServerEvent
+  ServerEvent
 
 data class UserQuitEvent(
-    override val server: KailleraServer, val user: KailleraUser, val message: String
+  override val server: KailleraServer,
+  val user: KailleraUser,
+  val message: String
 ) : ServerEvent

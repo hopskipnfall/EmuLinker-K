@@ -6,9 +6,7 @@ import org.emulinker.kaillera.controller.messaging.ParseException
 import org.emulinker.kaillera.pico.AppModule
 import org.emulinker.util.EmuUtil
 
-abstract class Chat
-    @Throws(MessageFormatException::class)
-    constructor() : V086Message() {
+abstract class Chat @Throws(MessageFormatException::class) constructor() : V086Message() {
   abstract val username: String
   abstract val message: String
 

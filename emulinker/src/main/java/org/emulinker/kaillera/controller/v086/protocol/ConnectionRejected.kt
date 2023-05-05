@@ -9,10 +9,13 @@ import org.emulinker.util.EmuUtil
 import org.emulinker.util.UnsignedUtil
 
 data class ConnectionRejected
-    @Throws(MessageFormatException::class)
-    constructor(
-        override val messageNumber: Int, val username: String, val userId: Int, val message: String
-    ) : V086Message() {
+@Throws(MessageFormatException::class)
+constructor(
+  override val messageNumber: Int,
+  val username: String,
+  val userId: Int,
+  val message: String
+) : V086Message() {
 
   override val messageId = ID
 

@@ -11,7 +11,7 @@ object UnsignedUtil {
   }
 
   fun getUnsignedByte(bb: ByteBuffer, position: Int): Short =
-      (bb[position].toInt() and 0xff).toShort()
+    (bb[position].toInt() and 0xff).toShort()
 
   fun putUnsignedByte(bb: ByteBuffer, position: Int, value: Int) {
     bb.put(position, (value and 0xff).toByte())
@@ -44,7 +44,7 @@ object UnsignedUtil {
   }
 
   fun getUnsignedInt(bb: ByteBuffer, position: Int): Long =
-      bb.getInt(position).toLong() and 0xffffffffL
+    bb.getInt(position).toLong() and 0xffffffffL
 
   fun putUnsignedInt(bb: ByteBuffer, position: Int, value: Long) {
     bb.putInt(position, (value and 0xffffffffL).toInt())
@@ -52,7 +52,7 @@ object UnsignedUtil {
 
   // -----------------
   fun readUnsignedByte(bytes: ByteArray, offset: Int): Short =
-      (bytes[offset].toInt() and 0xFF).toShort()
+    (bytes[offset].toInt() and 0xFF).toShort()
 
   fun writeUnsignedByte(s: Short, bytes: ByteArray, offset: Int) {
     bytes[offset] = (s.toInt() and 0xFF).toByte()
@@ -60,9 +60,8 @@ object UnsignedUtil {
 
   @JvmOverloads
   fun readUnsignedShort(bytes: ByteArray, offset: Int, littleEndian: Boolean = false): Int =
-      if (littleEndian)
-          (bytes[offset + 1].toInt() and 0xFF shl 8) + (bytes[offset].toInt() and 0xFF)
-      else (bytes[offset].toInt() and 0xFF shl 8) + (bytes[offset + 1].toInt() and 0xFF)
+    if (littleEndian) (bytes[offset + 1].toInt() and 0xFF shl 8) + (bytes[offset].toInt() and 0xFF)
+    else (bytes[offset].toInt() and 0xFF shl 8) + (bytes[offset + 1].toInt() and 0xFF)
 
   fun writeUnsignedShort(s: Int, bytes: ByteArray?, offset: Int) {
     writeUnsignedShort(s, bytes, offset)

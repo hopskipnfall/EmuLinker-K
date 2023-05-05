@@ -18,7 +18,7 @@ private val logger = FluentLogger.forEnclosingClass()
 
 @Singleton
 class CreateGameAction @Inject internal constructor() :
-    V086Action<CreateGame>, V086ServerEventHandler<GameCreatedEvent> {
+  V086Action<CreateGame>, V086ServerEventHandler<GameCreatedEvent> {
   override var actionPerformedCount = 0
     private set
   override var handledEventCount = 0
@@ -33,39 +33,47 @@ class CreateGameAction @Inject internal constructor() :
       clientHandler.user!!.createGame(message.romName)
     } catch (e: CreateGameException) {
       logger
-          .atInfo()
-          .withCause(e)
-          .log("Create Game Denied: " + clientHandler.user + ": " + message.romName)
+        .atInfo()
+        .withCause(e)
+        .log("Create Game Denied: " + clientHandler.user + ": " + message.romName)
       try {
         clientHandler.send(
-            InformationMessage(
-                clientHandler.nextMessageNumber,
-                "server",
-                EmuLang.getString("CreateGameAction.CreateGameDenied", e.message)))
+          InformationMessage(
+            clientHandler.nextMessageNumber,
+            "server",
+            EmuLang.getString("CreateGameAction.CreateGameDenied", e.message)
+          )
+        )
         clientHandler.send(
-            QuitGame_Notification(
-                clientHandler.nextMessageNumber,
-                clientHandler.user!!.name!!,
-                clientHandler.user!!.id))
+          QuitGame_Notification(
+            clientHandler.nextMessageNumber,
+            clientHandler.user!!.name!!,
+            clientHandler.user!!.id
+          )
+        )
       } catch (e2: MessageFormatException) {
         logger.atSevere().withCause(e2).log("Failed to construct message")
       }
     } catch (e: FloodException) {
       logger
-          .atInfo()
-          .withCause(e)
-          .log("Create Game Denied: " + clientHandler.user + ": " + message.romName)
+        .atInfo()
+        .withCause(e)
+        .log("Create Game Denied: " + clientHandler.user + ": " + message.romName)
       try {
         clientHandler.send(
-            InformationMessage(
-                clientHandler.nextMessageNumber,
-                "server",
-                EmuLang.getString("CreateGameAction.CreateGameDeniedFloodControl")))
+          InformationMessage(
+            clientHandler.nextMessageNumber,
+            "server",
+            EmuLang.getString("CreateGameAction.CreateGameDeniedFloodControl")
+          )
+        )
         clientHandler.send(
-            QuitGame_Notification(
-                clientHandler.nextMessageNumber,
-                clientHandler.user!!.name!!,
-                clientHandler.user!!.id))
+          QuitGame_Notification(
+            clientHandler.nextMessageNumber,
+            clientHandler.user!!.name!!,
+            clientHandler.user!!.id
+          )
+        )
       } catch (e2: MessageFormatException) {
         logger.atSevere().withCause(e2).log("Failed to construct message")
       }
@@ -78,13 +86,15 @@ class CreateGameAction @Inject internal constructor() :
       val game = event.game
       val owner = game.owner
       clientHandler.send(
-          CreateGame_Notification(
-              clientHandler.nextMessageNumber,
-              owner!!.name!!,
-              game.romName,
-              owner.clientType!!,
-              game.id,
-              0.toShort().toInt()))
+        CreateGame_Notification(
+          clientHandler.nextMessageNumber,
+          owner!!.name!!,
+          game.romName,
+          owner.clientType!!,
+          game.id,
+          0.toShort().toInt()
+        )
+      )
     } catch (e: MessageFormatException) {
       logger.atSevere().withCause(e).log("Failed to construct CreateGame_Notification message")
     }

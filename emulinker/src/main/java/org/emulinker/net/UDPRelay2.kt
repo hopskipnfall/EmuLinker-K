@@ -16,13 +16,13 @@ import org.emulinker.util.EmuUtil.formatSocketAddress
 private val logger = FluentLogger.forEnclosingClass()
 
 abstract class UDPRelay2
-    @JvmOverloads
-    constructor(
-        var serverSocketAddress: InetSocketAddress,
-        var listenPort: Int,
-        var bufferSize: Int = DEFAULT_BUFFER_SIZE,
-        private val listeningOnPortsCounter: Counter
-    ) {
+@JvmOverloads
+constructor(
+  var serverSocketAddress: InetSocketAddress,
+  var listenPort: Int,
+  var bufferSize: Int = DEFAULT_BUFFER_SIZE,
+  private val listeningOnPortsCounter: Counter
+) {
   var isStarted = false
     protected set
   protected var stopFlag = false
@@ -31,11 +31,15 @@ abstract class UDPRelay2
   protected var relayThreads = Hashtable<InetSocketAddress, RelayThread>()
   protected var channels = Hashtable<Int, DatagramChannel?>()
   protected abstract fun processClientToServer(
-      receiveBuffer: ByteBuffer?, fromAddress: InetSocketAddress?, toAddress: InetSocketAddress?
+    receiveBuffer: ByteBuffer?,
+    fromAddress: InetSocketAddress?,
+    toAddress: InetSocketAddress?
   ): ByteBuffer?
 
   protected abstract fun processServerToClient(
-      receiveBuffer: ByteBuffer?, fromAddress: InetSocketAddress?, toAddress: InetSocketAddress?
+    receiveBuffer: ByteBuffer?,
+    fromAddress: InetSocketAddress?,
+    toAddress: InetSocketAddress?
   ): ByteBuffer?
 
   @Synchronized
@@ -118,36 +122,37 @@ abstract class UDPRelay2
           lastActivity = System.currentTimeMillis()
           var sendBuffer: ByteBuffer? = null
           sendBuffer =
-              if (fromAddress == serverSocketAddress) {
-                // logger.atFine().log("Server at " +
-                // EmuUtil.formatSocketAddress(fromAddress) + " sent " +
-                // receiveBuffer.limit() + " bytes to relay port " +
-                // channel.socket().getLocalPort() + " which it will
-                // forward to " +
-                // EmuUtil.formatSocketAddress(getForwardAddress()));
-                // logger.atFine().log("Buffer Dump: " +
-                // EmuUtil.INSTANCE.dumpBuffer(receiveBuffer));
-                processServerToClient(receiveBuffer, fromAddress, forwardAddress)
-              } else {
-                // logger.atFine().log("Client at " +
-                // EmuUtil.formatSocketAddress(fromAddress) + " sent " +
-                // receiveBuffer.limit() + " bytes to relay port " +
-                // channel.socket().getLocalPort() + " which it will
-                // forward to " +
-                // EmuUtil.formatSocketAddress(getForwardAddress()));
-                // logger.atFine().log("Buffer Dump: " +
-                // EmuUtil.INSTANCE.dumpBuffer(receiveBuffer));
-                processClientToServer(receiveBuffer, fromAddress, forwardAddress)
-              }
+            if (fromAddress == serverSocketAddress) {
+              // logger.atFine().log("Server at " +
+              // EmuUtil.formatSocketAddress(fromAddress) + " sent " +
+              // receiveBuffer.limit() + " bytes to relay port " +
+              // channel.socket().getLocalPort() + " which it will
+              // forward to " +
+              // EmuUtil.formatSocketAddress(getForwardAddress()));
+              // logger.atFine().log("Buffer Dump: " +
+              // EmuUtil.INSTANCE.dumpBuffer(receiveBuffer));
+              processServerToClient(receiveBuffer, fromAddress, forwardAddress)
+            } else {
+              // logger.atFine().log("Client at " +
+              // EmuUtil.formatSocketAddress(fromAddress) + " sent " +
+              // receiveBuffer.limit() + " bytes to relay port " +
+              // channel.socket().getLocalPort() + " which it will
+              // forward to " +
+              // EmuUtil.formatSocketAddress(getForwardAddress()));
+              // logger.atFine().log("Buffer Dump: " +
+              // EmuUtil.INSTANCE.dumpBuffer(receiveBuffer));
+              processClientToServer(receiveBuffer, fromAddress, forwardAddress)
+            }
           if (sendBuffer == null || sendBuffer.limit() <= 0) continue
           var responseThread = relayThreads[fromAddress]
           if (responseThread == null) {
             logger
-                .atFine()
-                .log(
-                    "No RelayThread is registered to forward to " +
-                        formatSocketAddress(fromAddress) +
-                        "... creating new RelayThread")
+              .atFine()
+              .log(
+                "No RelayThread is registered to forward to " +
+                  formatSocketAddress(fromAddress) +
+                  "... creating new RelayThread"
+              )
             responseThread = RelayThread(fromAddress)
             relayThreads[fromAddress] = responseThread
           }
@@ -175,41 +180,44 @@ abstract class UDPRelay2
           channel!!.socket().bind(InetSocketAddress(port))
           channels[port] = channel
           logger
-              .atFine()
-              .log(
-                  "Created new DatagramChannel bound to specific port " +
-                      channel!!.socket().localPort +
-                      " that will forward to " +
-                      formatSocketAddress(forwardAddress!!))
+            .atFine()
+            .log(
+              "Created new DatagramChannel bound to specific port " +
+                channel!!.socket().localPort +
+                " that will forward to " +
+                formatSocketAddress(forwardAddress!!)
+            )
         } else {
           logger
-              .atFine()
-              .log(
-                  "Using previously created DatagramChannel bound to port " +
-                      channel!!.socket().localPort +
-                      " that will forward to " +
-                      formatSocketAddress(forwardAddress!!))
+            .atFine()
+            .log(
+              "Using previously created DatagramChannel bound to port " +
+                channel!!.socket().localPort +
+                " that will forward to " +
+                formatSocketAddress(forwardAddress!!)
+            )
         }
       } else {
         channel = DatagramChannel.open()
         channel!!.socket().bind(null)
         logger
-            .atFine()
-            .log(
-                "Creating new DatagramChannel bound to arbitrary port " +
-                    channel!!.socket().localPort +
-                    " that will forward to " +
-                    formatSocketAddress(forwardAddress!!))
+          .atFine()
+          .log(
+            "Creating new DatagramChannel bound to arbitrary port " +
+              channel!!.socket().localPort +
+              " that will forward to " +
+              formatSocketAddress(forwardAddress!!)
+          )
       }
       lastActivity = System.currentTimeMillis()
       this.forwardAddress = forwardAddress
       this.toStringRepresentation =
-          ("RelayThread." +
-              threadCounter++ +
-              ": " +
-              channel!!.socket().localPort +
-              "->" +
-              formatSocketAddress(forwardAddress))
+        ("RelayThread." +
+          threadCounter++ +
+          ": " +
+          channel!!.socket().localPort +
+          "->" +
+          formatSocketAddress(forwardAddress))
       this.start()
       while (!running) {
         try {

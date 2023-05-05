@@ -37,11 +37,11 @@ import org.emulinker.util.EmuLang
 private val logger = FluentLogger.forEnclosingClass()
 
 class KailleraGameImpl(
-    override val id: Int,
-    override val romName: String,
-    override val owner: KailleraUserImpl,
-    override val server: KailleraServerImpl,
-    val bufferSize: Int,
+  override val id: Int,
+  override val romName: String,
+  override val owner: KailleraUserImpl,
+  override val server: KailleraServerImpl,
+  val bufferSize: Int,
 ) : KailleraGame {
 
   override var highestUserFrameDelay = 0
@@ -72,8 +72,11 @@ class KailleraGameImpl(
     }
 
   private val toString =
-      String.format(
-          "Game%d(%s)", id, if (romName.length > 15) romName.substring(0, 15) + "..." else romName)
+    String.format(
+      "Game%d(%s)",
+      id,
+      if (romName.length > 15) romName.substring(0, 15) + "..." else romName
+    )
   private var lastAddress = "null"
   private var lastAddressCount = 0
   private var isSynched = false
@@ -135,11 +138,15 @@ class KailleraGameImpl(
     if (user.accessLevel == AccessManager.ACCESS_NORMAL) {
       if (server.maxGameChatLength > 0 && message!!.length > server.maxGameChatLength) {
         logger
-            .atWarning()
-            .log("$user gamechat denied: Message Length > ${server.maxGameChatLength}")
+          .atWarning()
+          .log("$user gamechat denied: Message Length > ${server.maxGameChatLength}")
         addEvent(
-            GameInfoEvent(
-                this, EmuLang.getString("KailleraGameImpl.GameChatDeniedMessageTooLong"), user))
+          GameInfoEvent(
+            this,
+            EmuLang.getString("KailleraGameImpl.GameChatDeniedMessageTooLong"),
+            user
+          )
+        )
         throw GameChatException(EmuLang.getString("KailleraGameImpl.GameChatDeniedMessageTooLong"))
       }
     }
@@ -181,9 +188,9 @@ class KailleraGameImpl(
         } catch (e: Exception) {
           // this shouldn't happen
           logger
-              .atSevere()
-              .withCause(e)
-              .log("Caught exception while making user quit game! This shouldn't happen!")
+            .atSevere()
+            .withCause(e)
+            .log("Caught exception while making user quit game! This shouldn't happen!")
         }
       }
     }
@@ -229,24 +236,27 @@ class KailleraGameImpl(
     if (access < AccessManager.ACCESS_ELEVATED && aEmulator != "any") {
       if (aEmulator != user.clientType) {
         logger
-            .atWarning()
-            .log("$user join game denied: owner doesn't allow that emulator: ${user.clientType}")
+          .atWarning()
+          .log("$user join game denied: owner doesn't allow that emulator: ${user.clientType}")
         throw JoinGameException("Owner only allows emulator version: $aEmulator")
       }
     }
     if (access < AccessManager.ACCESS_ELEVATED && aConnection != "any") {
       if (user.connectionType != owner.connectionType) {
         logger
-            .atWarning()
-            .log(
-                user.toString() +
-                    "join game denied: owner doesn't allow that connection type: " +
-                    user.connectionType)
+          .atWarning()
+          .log(
+            user.toString() +
+              "join game denied: owner doesn't allow that connection type: " +
+              user.connectionType
+          )
         throw JoinGameException("Owner only allows connection type: " + owner.connectionType)
       }
     }
-    if (access < AccessManager.ACCESS_ADMIN &&
-        kickedUsers.contains(user.connectSocketAddress.address.hostAddress)) {
+    if (
+      access < AccessManager.ACCESS_ADMIN &&
+        kickedUsers.contains(user.connectSocketAddress.address.hostAddress)
+    ) {
       logger.atWarning().log("$user join game denied: previously kicked: $this")
       throw JoinGameException(EmuLang.getString("KailleraGameImpl.JoinGameDeniedPreviouslyKicked"))
     }
@@ -309,12 +319,18 @@ class KailleraGameImpl(
     // }
 
     // new SF MOD - different emulator versions notifications
-    if (access < AccessManager.ACCESS_ADMIN &&
+    if (
+      access < AccessManager.ACCESS_ADMIN &&
         user.clientType != owner.clientType &&
-        !owner.game!!.romName.startsWith("*"))
-        addEvent(
-            GameInfoEvent(
-                this, user.name + " using different emulator version: " + user.clientType, null))
+        !owner.game!!.romName.startsWith("*")
+    )
+      addEvent(
+        GameInfoEvent(
+          this,
+          user.name + " using different emulator version: " + user.clientType,
+          null
+        )
+      )
     return players.indexOf(user) + 1
   }
 
@@ -325,7 +341,8 @@ class KailleraGameImpl(
     if (user != owner && access < AccessManager.ACCESS_ADMIN) {
       logger.atWarning().log("$user start game denied: not the owner of $this")
       throw StartGameException(
-          EmuLang.getString("KailleraGameImpl.StartGameDeniedOnlyOwnerMayStart"))
+        EmuLang.getString("KailleraGameImpl.StartGameDeniedOnlyOwnerMayStart")
+      )
     }
     if (status == GameStatus.SYNCHRONIZING) {
       logger.atWarning().log("$user start game failed: $this status is $status")
@@ -337,7 +354,8 @@ class KailleraGameImpl(
     if (access == AccessManager.ACCESS_NORMAL && players.size < 2 && !server.allowSinglePlayer) {
       logger.atWarning().log("$user start game denied: $this needs at least 2 players")
       throw StartGameException(
-          EmuLang.getString("KailleraGameImpl.StartGameDeniedSinglePlayerNotAllowed"))
+        EmuLang.getString("KailleraGameImpl.StartGameDeniedSinglePlayerNotAllowed")
+      )
     }
 
     // do not start if not game
@@ -346,28 +364,36 @@ class KailleraGameImpl(
       if (!player.inStealthMode) {
         if (player.connectionType != owner.connectionType) {
           logger
-              .atWarning()
-              .log("$user start game denied: $this: All players must use the same connection type")
+            .atWarning()
+            .log("$user start game denied: $this: All players must use the same connection type")
           addEvent(
-              GameInfoEvent(
-                  this,
-                  EmuLang.getString(
-                      "KailleraGameImpl.StartGameConnectionTypeMismatchInfo", owner.connectionType),
-                  null))
+            GameInfoEvent(
+              this,
+              EmuLang.getString(
+                "KailleraGameImpl.StartGameConnectionTypeMismatchInfo",
+                owner.connectionType
+              ),
+              null
+            )
+          )
           throw StartGameException(
-              EmuLang.getString("KailleraGameImpl.StartGameDeniedConnectionTypeMismatch"))
+            EmuLang.getString("KailleraGameImpl.StartGameDeniedConnectionTypeMismatch")
+          )
         }
         if (player.clientType != clientType) {
           logger
-              .atWarning()
-              .log("$user start game denied: $this: All players must use the same emulator!")
+            .atWarning()
+            .log("$user start game denied: $this: All players must use the same emulator!")
           addEvent(
-              GameInfoEvent(
-                  this,
-                  EmuLang.getString("KailleraGameImpl.StartGameEmulatorMismatchInfo", clientType),
-                  null))
+            GameInfoEvent(
+              this,
+              EmuLang.getString("KailleraGameImpl.StartGameEmulatorMismatchInfo", clientType),
+              null
+            )
+          )
           throw StartGameException(
-              EmuLang.getString("KailleraGameImpl.StartGameDeniedEmulatorMismatch"))
+            EmuLang.getString("KailleraGameImpl.StartGameDeniedEmulatorMismatch")
+          )
         }
       }
     }
@@ -387,13 +413,14 @@ class KailleraGameImpl(
       player.timeouts = 0
       player.frameCount = 0
       actionQueueBuilder[i] =
-          PlayerActionQueue(
-              playerNumber,
-              player as KailleraUserImpl,
-              players.size,
-              bufferSize,
-              timeoutMillis,
-              true)
+        PlayerActionQueue(
+          playerNumber,
+          player as KailleraUserImpl,
+          players.size,
+          bufferSize,
+          timeoutMillis,
+          true
+        )
       // SF MOD - player.setPlayerNumber(playerNumber);
       // SF MOD - Delay Value = [(60/connectionType) * (ping/1000)] + 1
       val delayVal = 60 / player.connectionType.byteValue * (player.ping.toDouble() / 1000) + 1
@@ -476,7 +503,7 @@ class KailleraGameImpl(
     }
     logger.atInfo().log("$user dropped: $this")
     if (playerNumber - 1 < playerActionQueue!!.size)
-        playerActionQueue!![playerNumber - 1].synched = false
+      playerActionQueue!![playerNumber - 1].synched = false
     if (synchedCount < 2 && isSynched) {
       isSynched = false
       for (q in playerActionQueue!!) {
@@ -555,18 +582,21 @@ class KailleraGameImpl(
     val playerNumber = user.playerNumber
     if (user.playerNumber > playerActionQueue!!.size) {
       logger
-          .atInfo()
-          .log(
-              "$this: $user: player desynched: dropped a packet! Also left the game already: KailleraGameImpl -> DroppedPacket")
+        .atInfo()
+        .log(
+          "$this: $user: player desynched: dropped a packet! Also left the game already: KailleraGameImpl -> DroppedPacket"
+        )
     }
     if (playerActionQueue != null && playerActionQueue!![playerNumber - 1].synched) {
       playerActionQueue!![playerNumber - 1].synched = false
       logger.atInfo().log("$this: $user: player desynched: dropped a packet!")
       addEvent(
-          PlayerDesynchEvent(
-              this,
-              user,
-              EmuLang.getString("KailleraGameImpl.DesynchDetectedDroppedPacket", user.name)))
+        PlayerDesynchEvent(
+          this,
+          user,
+          EmuLang.getString("KailleraGameImpl.DesynchDetectedDroppedPacket", user.name)
+        )
+      )
       if (synchedCount < 2 && isSynched) {
         isSynched = false
         for (q in playerActionQueue!!) q.synched = false
@@ -584,11 +614,12 @@ class KailleraGameImpl(
     // int arraySize = (playerActionQueues.length * actionsPerMessage * user.getBytesPerAction());
     if (!isSynched) {
       throw GameDataException(
-          EmuLang.getString("KailleraGameImpl.DesynchedWarning"),
-          data,
-          actionsPerMessage,
-          playerNumber,
-          playerActionQueueCopy.size)
+        EmuLang.getString("KailleraGameImpl.DesynchedWarning"),
+        data,
+        actionsPerMessage,
+        playerNumber,
+        playerActionQueueCopy.size
+      )
     }
     playerActionQueueCopy[playerNumber - 1].addActions(data)
     autoFireDetector?.addData(playerNumber, data, user.bytesPerAction)
@@ -598,11 +629,12 @@ class KailleraGameImpl(
         while (isSynched) {
           try {
             playerActionQueueCopy[playerCounter].getAction(
-                playerNumber,
-                response,
-                actionCounter * (playerActionQueueCopy.size * user.bytesPerAction) +
-                    playerCounter * user.bytesPerAction,
-                user.bytesPerAction)
+              playerNumber,
+              response,
+              actionCounter * (playerActionQueueCopy.size * user.bytesPerAction) +
+                playerCounter * user.bytesPerAction,
+              user.bytesPerAction
+            )
             break
           } catch (e: PlayerTimeoutException) {
             e.timeoutNumber = ++timeoutCounter
@@ -612,12 +644,13 @@ class KailleraGameImpl(
       }
     }
     if (!isSynched)
-        throw GameDataException(
-            EmuLang.getString("KailleraGameImpl.DesynchedWarning"),
-            data,
-            user.bytesPerAction,
-            playerNumber,
-            playerActionQueueCopy.size)
+      throw GameDataException(
+        EmuLang.getString("KailleraGameImpl.DesynchedWarning"),
+        data,
+        user.bytesPerAction,
+        playerNumber,
+        playerActionQueueCopy.size
+      )
     (user as KailleraUserImpl?)!!.addEvent(GameDataEvent(this, response))
   }
 
@@ -642,10 +675,12 @@ class KailleraGameImpl(
       playerActionQueue.synched = false
       logger.atInfo().log("$this: $player: player desynched: Lagged!")
       addEvent(
-          PlayerDesynchEvent(
-              this,
-              player,
-              EmuLang.getString("KailleraGameImpl.DesynchDetectedPlayerLagged", player.name)))
+        PlayerDesynchEvent(
+          this,
+          player,
+          EmuLang.getString("KailleraGameImpl.DesynchDetectedPlayerLagged", player.name)
+        )
+      )
       if (synchedCount < 2) {
         isSynched = false
         for (q in this.playerActionQueue!!) q.synched = false

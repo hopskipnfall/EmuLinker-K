@@ -20,13 +20,12 @@ import org.emulinker.util.EmuUtil.dumpBuffer
 private val logger = FluentLogger.forEnclosingClass()
 
 class V086Relay
-    @AssistedInject
-    internal constructor(
-        @Assisted listenPort: Int,
-        @Assisted serverSocketAddress: InetSocketAddress,
-        @Named("listeningOnPortsCounter")
-        listeningOnPortsCounter: Counter
-    ) : UDPRelay(listenPort, serverSocketAddress, listeningOnPortsCounter) {
+@AssistedInject
+internal constructor(
+  @Assisted listenPort: Int,
+  @Assisted serverSocketAddress: InetSocketAddress,
+  @Named("listeningOnPortsCounter") listeningOnPortsCounter: Counter
+) : UDPRelay(listenPort, serverSocketAddress, listeningOnPortsCounter) {
   private var lastServerMessageNumber = -1
   private var lastClientMessageNumber = -1
 
@@ -36,40 +35,39 @@ class V086Relay
   }
 
   override fun toString() =
-      "Kaillera client datagram relay version 0.86 on port ${super.listenPort}"
+    "Kaillera client datagram relay version 0.86 on port ${super.listenPort}"
 
   override fun processClientToServer(
-      receiveBuffer: ByteBuffer, fromAddress: InetSocketAddress, toAddress: InetSocketAddress
+    receiveBuffer: ByteBuffer,
+    fromAddress: InetSocketAddress,
+    toAddress: InetSocketAddress
   ): ByteBuffer? {
     //    logger.atFine().log("-> " + dumpBuffer(receiveBuffer))
     val inBundle: V086Bundle =
-        try {
-          // inBundle = V086Bundle.parse(receiveBuffer, lastClientMessageNumber);
-          parse(receiveBuffer, -1)
-        } catch (e: ParseException) {
-          receiveBuffer.rewind()
-          logger.atWarning().withCause(e).log("Failed to parse: " + dumpBuffer(receiveBuffer))
-          return null
-        } catch (e: V086BundleFormatException) {
-          receiveBuffer.rewind()
-          logger
-              .atWarning()
-              .withCause(e)
-              .log("Invalid message bundle format: " + dumpBuffer(receiveBuffer))
-          return null
-        } catch (e: MessageFormatException) {
-          receiveBuffer.rewind()
-          logger
-              .atWarning()
-              .withCause(e)
-              .log("Invalid message format: " + dumpBuffer(receiveBuffer))
-          return null
-        }
+      try {
+        // inBundle = V086Bundle.parse(receiveBuffer, lastClientMessageNumber);
+        parse(receiveBuffer, -1)
+      } catch (e: ParseException) {
+        receiveBuffer.rewind()
+        logger.atWarning().withCause(e).log("Failed to parse: " + dumpBuffer(receiveBuffer))
+        return null
+      } catch (e: V086BundleFormatException) {
+        receiveBuffer.rewind()
+        logger
+          .atWarning()
+          .withCause(e)
+          .log("Invalid message bundle format: " + dumpBuffer(receiveBuffer))
+        return null
+      } catch (e: MessageFormatException) {
+        receiveBuffer.rewind()
+        logger.atWarning().withCause(e).log("Invalid message format: " + dumpBuffer(receiveBuffer))
+        return null
+      }
     //    logger.atInfo().log("-> $inBundle")
     val inMessages = inBundle.messages
     for (i in 0 until inBundle.numMessages) {
       if (inMessages[i]!!.messageNumber > lastClientMessageNumber)
-          lastClientMessageNumber = inMessages[i]!!.messageNumber
+        lastClientMessageNumber = inMessages[i]!!.messageNumber
     }
     val sendBuffer = ByteBuffer.allocate(receiveBuffer.limit())
     receiveBuffer.rewind()
@@ -80,37 +78,36 @@ class V086Relay
   }
 
   override fun processServerToClient(
-      receiveBuffer: ByteBuffer, fromAddress: InetSocketAddress, toAddress: InetSocketAddress
+    receiveBuffer: ByteBuffer,
+    fromAddress: InetSocketAddress,
+    toAddress: InetSocketAddress
   ): ByteBuffer? {
     //    logger.atFine().log("<- " + dumpBuffer(receiveBuffer))
     val inBundle: V086Bundle =
-        try {
-          // inBundle = V086Bundle.parse(receiveBuffer, lastServerMessageNumber);
-          parse(receiveBuffer, -1)
-        } catch (e: ParseException) {
-          receiveBuffer.rewind()
-          logger.atWarning().withCause(e).log("Failed to parse: " + dumpBuffer(receiveBuffer))
-          return null
-        } catch (e: V086BundleFormatException) {
-          receiveBuffer.rewind()
-          logger
-              .atWarning()
-              .withCause(e)
-              .log("Invalid message bundle format: " + dumpBuffer(receiveBuffer))
-          return null
-        } catch (e: MessageFormatException) {
-          receiveBuffer.rewind()
-          logger
-              .atWarning()
-              .withCause(e)
-              .log("Invalid message format: " + dumpBuffer(receiveBuffer))
-          return null
-        }
+      try {
+        // inBundle = V086Bundle.parse(receiveBuffer, lastServerMessageNumber);
+        parse(receiveBuffer, -1)
+      } catch (e: ParseException) {
+        receiveBuffer.rewind()
+        logger.atWarning().withCause(e).log("Failed to parse: " + dumpBuffer(receiveBuffer))
+        return null
+      } catch (e: V086BundleFormatException) {
+        receiveBuffer.rewind()
+        logger
+          .atWarning()
+          .withCause(e)
+          .log("Invalid message bundle format: " + dumpBuffer(receiveBuffer))
+        return null
+      } catch (e: MessageFormatException) {
+        receiveBuffer.rewind()
+        logger.atWarning().withCause(e).log("Invalid message format: " + dumpBuffer(receiveBuffer))
+        return null
+      }
     //    logger.atInfo().log("<- $inBundle")
     val inMessages = inBundle.messages
     for (i in 0 until inBundle.numMessages) {
       if (inMessages[i]!!.messageNumber > lastServerMessageNumber)
-          lastServerMessageNumber = inMessages[i]!!.messageNumber
+        lastServerMessageNumber = inMessages[i]!!.messageNumber
     }
     val sendBuffer = ByteBuffer.allocate(receiveBuffer.limit())
     receiveBuffer.rewind()

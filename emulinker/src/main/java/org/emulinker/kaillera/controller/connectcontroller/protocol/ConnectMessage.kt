@@ -17,12 +17,12 @@ abstract class ConnectMessage : ByteBufferMessage() {
     @Throws(MessageFormatException::class)
     fun parse(buffer: ByteBuffer): ConnectMessage {
       val messageStr =
-          try {
-            val stringDecoder = charset.newDecoder()
-            stringDecoder.decode(buffer).toString()
-          } catch (e: CharacterCodingException) {
-            throw MessageFormatException("Invalid bytes received: failed to decode to a string!", e)
-          }
+        try {
+          val stringDecoder = charset.newDecoder()
+          stringDecoder.decode(buffer).toString()
+        } catch (e: CharacterCodingException) {
+          throw MessageFormatException("Invalid bytes received: failed to decode to a string!", e)
+        }
 
       if (messageStr.startsWith(ConnectMessage_TOO.ID)) {
         return ConnectMessage_TOO.parse(messageStr)

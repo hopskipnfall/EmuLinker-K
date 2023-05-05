@@ -11,8 +11,8 @@ import org.emulinker.util.EmuUtil
 import org.emulinker.util.UnsignedUtil
 
 data class PlayerInformation
-    @Throws(MessageFormatException::class)
-    constructor(override val messageNumber: Int, val players: List<Player>) : V086Message() {
+@Throws(MessageFormatException::class)
+constructor(override val messageNumber: Int, val players: List<Player>) : V086Message() {
 
   override val messageId = ID
 
@@ -33,18 +33,23 @@ data class PlayerInformation
   }
 
   data class Player
-      constructor(
-          val username: String, val ping: Long, val userId: Int, val connectionType: ConnectionType
-      ) {
+  constructor(
+    val username: String,
+    val ping: Long,
+    val userId: Int,
+    val connectionType: ConnectionType
+  ) {
 
     init {
       if (ping < 0 || ping > 2048) { // what should max ping be?
         throw MessageFormatException(
-            "Invalid Player Information format: ping out of acceptable range: $ping")
+          "Invalid Player Information format: ping out of acceptable range: $ping"
+        )
       }
       if (userId < 0 || userId > 65535) {
         throw MessageFormatException(
-            "Invalid Player Information format: userID out of acceptable range: $userId")
+          "Invalid Player Information format: userID out of acceptable range: $userId"
+        )
       }
     }
 
@@ -67,8 +72,9 @@ data class PlayerInformation
       if (buffer.remaining() < 14) throw ParseException("Failed byte count validation!")
       val b = buffer.get()
       if (b.toInt() != 0x00)
-          throw MessageFormatException(
-              "Invalid Player Information format: byte 0 = ${EmuUtil.byteToHex(b)}")
+        throw MessageFormatException(
+          "Invalid Player Information format: byte 0 = ${EmuUtil.byteToHex(b)}"
+        )
       val numPlayers = buffer.int
       val minLen = numPlayers * 9
       if (buffer.remaining() < minLen) throw ParseException("Failed byte count validation!")

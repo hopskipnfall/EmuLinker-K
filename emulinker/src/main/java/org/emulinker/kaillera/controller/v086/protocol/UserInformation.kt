@@ -9,13 +9,13 @@ import org.emulinker.kaillera.pico.AppModule
 import org.emulinker.util.EmuUtil
 
 data class UserInformation
-    @Throws(MessageFormatException::class)
-    constructor(
-        override val messageNumber: Int,
-        val username: String,
-        val clientType: String,
-        val connectionType: ConnectionType
-    ) : V086Message() {
+@Throws(MessageFormatException::class)
+constructor(
+  override val messageNumber: Int,
+  val username: String,
+  val clientType: String,
+  val connectionType: ConnectionType
+) : V086Message() {
 
   override val messageId = ID
 
@@ -44,7 +44,11 @@ data class UserInformation
       if (buffer.remaining() < 1) throw ParseException("Failed byte count validation!")
       val connectionType = buffer.get()
       return UserInformation(
-          messageNumber, userName, clientType, ConnectionType.fromByteValue(connectionType))
+        messageNumber,
+        userName,
+        clientType,
+        ConnectionType.fromByteValue(connectionType)
+      )
     }
   }
 }

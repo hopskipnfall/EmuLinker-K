@@ -19,10 +19,9 @@ private val logger = FluentLogger.forEnclosingClass()
 
 @Singleton
 class AccessManager2
-    @Inject
-    internal constructor(
-        private val threadPool: ThreadPoolExecutor, private val flags: RuntimeFlags
-    ) : AccessManager, Runnable {
+@Inject
+internal constructor(private val threadPool: ThreadPoolExecutor, private val flags: RuntimeFlags) :
+  AccessManager, Runnable {
   companion object {
     init {
       Security.setProperty("networkaddress.cache.ttl", "60")
@@ -48,9 +47,10 @@ class AccessManager2
   fun start() {
     logger.atFine().log("AccessManager2 thread received start request!")
     logger
-        .atFine()
-        .log(
-            "AccessManager2 thread starting (ThreadPool:${threadPool.activeCount}/${threadPool.poolSize})")
+      .atFine()
+      .log(
+        "AccessManager2 thread starting (ThreadPool:${threadPool.activeCount}/${threadPool.poolSize})"
+      )
     threadPool.execute(this)
     Thread.yield()
   }
@@ -186,11 +186,11 @@ class AccessManager2
     }
     for (tempModerator in tempModeratorList) {
       if (tempModerator.matches(userAddress) && !tempModerator.isExpired)
-          return AccessManager.ACCESS_MODERATOR
+        return AccessManager.ACCESS_MODERATOR
     }
     for (tempElevated in tempElevatedList) {
       if (tempElevated.matches(userAddress) && !tempElevated.isExpired)
-          return AccessManager.ACCESS_ELEVATED
+        return AccessManager.ACCESS_ELEVATED
     }
     for (userAccess in userList) {
       if (userAccess.matches(userAddress)) return userAccess.access
@@ -308,17 +308,17 @@ class AccessManager2
 
     init {
       if (st.countTokens() < 2 || st.countTokens() > 3)
-          throw Exception("Wrong number of tokens: " + st.countTokens())
+        throw Exception("Wrong number of tokens: " + st.countTokens())
       val accessStr = st.nextToken().lowercase(Locale.getDefault())
       access =
-          when (accessStr) {
-            "normal" -> AccessManager.ACCESS_NORMAL
-            "elevated" -> AccessManager.ACCESS_ELEVATED
-            "moderator" -> AccessManager.ACCESS_MODERATOR
-            "admin" -> AccessManager.ACCESS_ADMIN
-            "superadmin" -> AccessManager.ACCESS_SUPERADMIN
-            else -> throw AccessException("Unrecognized access token: $accessStr")
-          }
+        when (accessStr) {
+          "normal" -> AccessManager.ACCESS_NORMAL
+          "elevated" -> AccessManager.ACCESS_ELEVATED
+          "moderator" -> AccessManager.ACCESS_MODERATOR
+          "admin" -> AccessManager.ACCESS_ADMIN
+          "superadmin" -> AccessManager.ACCESS_SUPERADMIN
+          else -> throw AccessException("Unrecognized access token: $accessStr")
+        }
       hostNames = ArrayList()
       resolvedAddresses = ArrayList()
       patterns = ArrayList()
@@ -334,9 +334,9 @@ class AccessManager2
             logger.atFine().log("Resolved " + hostName + " to " + a.hostAddress)
           } catch (e: Exception) {
             logger
-                .atWarning()
-                .withCause(e)
-                .log("Failed to resolve DNS entry to an address: $hostName")
+              .atWarning()
+              .withCause(e)
+              .log("Failed to resolve DNS entry to an address: $hostName")
           }
           hostNames.add(pat.substring(4))
         } else {
@@ -384,11 +384,11 @@ class AccessManager2
       if (st.countTokens() != 2) throw Exception("Wrong number of tokens: " + st.countTokens())
       val accessStr = st.nextToken().lowercase(Locale.getDefault())
       access =
-          when (accessStr) {
-            "allow" -> true
-            "deny" -> false
-            else -> throw AccessException("Unrecognized access token: $accessStr")
-          }
+        when (accessStr) {
+          "allow" -> true
+          "deny" -> false
+          else -> throw AccessException("Unrecognized access token: $accessStr")
+        }
       hostNames = ArrayList()
       resolvedAddresses = ArrayList()
       patterns = ArrayList()
@@ -404,9 +404,9 @@ class AccessManager2
             logger.atFine().log("Resolved " + hostName + " to " + a.hostAddress)
           } catch (e: Exception) {
             logger
-                .atWarning()
-                .withCause(e)
-                .log("Failed to resolve DNS entry to an address: $hostName")
+              .atWarning()
+              .withCause(e)
+              .log("Failed to resolve DNS entry to an address: $hostName")
           }
           hostNames.add(pat.substring(4))
         } else {
@@ -434,11 +434,11 @@ class AccessManager2
       if (st.countTokens() != 2) throw Exception("Wrong number of tokens: " + st.countTokens())
       val accessStr = st.nextToken().lowercase(Locale.getDefault())
       access =
-          when (accessStr) {
-            "allow" -> true
-            "deny" -> false
-            else -> throw AccessException("Unrecognized access token: $accessStr")
-          }
+        when (accessStr) {
+          "allow" -> true
+          "deny" -> false
+          else -> throw AccessException("Unrecognized access token: $accessStr")
+        }
       patterns = ArrayList()
       val s = st.nextToken().lowercase(Locale.getDefault())
       val pt = StringTokenizer(s, "|")
@@ -465,11 +465,11 @@ class AccessManager2
       if (st.countTokens() != 2) throw Exception("Wrong number of tokens: " + st.countTokens())
       val accessStr = st.nextToken().lowercase(Locale.getDefault())
       access =
-          when (accessStr) {
-            "allow" -> true
-            "deny" -> false
-            else -> throw AccessException("Unrecognized access token: $accessStr")
-          }
+        when (accessStr) {
+          "allow" -> true
+          "deny" -> false
+          else -> throw AccessException("Unrecognized access token: $accessStr")
+        }
       patterns = ArrayList()
       val s = st.nextToken().lowercase(Locale.getDefault())
       val pt = StringTokenizer(s, "|")
@@ -483,11 +483,11 @@ class AccessManager2
     val url = AccessManager2::class.java.getResource("/access.cfg")
     require(url != null) { "Resource not found: /access.conf" }
     accessFile =
-        try {
-          File(url.toURI())
-        } catch (e: URISyntaxException) {
-          throw IllegalStateException("Could not parse URI", e)
-        }
+      try {
+        File(url.toURI())
+      } catch (e: URISyntaxException) {
+        throw IllegalStateException("Could not parse URI", e)
+      }
     if (!accessFile!!.exists()) {
       throw IllegalStateException(FileNotFoundException("Resource not found: /access.conf"))
     }

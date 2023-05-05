@@ -23,15 +23,14 @@ private val logger = FluentLogger.forEnclosingClass()
 
 @Deprecated("This doesn't seem to be used anywhere! Maybe we can get rid of it. ")
 internal class KailleraRelay
-    @AssistedInject
-    constructor(
-        @Assisted listenPort: Int,
-        @Assisted serverSocketAddress: InetSocketAddress?,
-        metrics: MetricRegistry?,
-        private val v086RelayFactory: V086Relay.Factory,
-        @Named("listeningOnPortsCounter")
-        listeningOnPortsCounter: Counter
-    ) : UDPRelay(listenPort, serverSocketAddress!!, listeningOnPortsCounter) {
+@AssistedInject
+constructor(
+  @Assisted listenPort: Int,
+  @Assisted serverSocketAddress: InetSocketAddress?,
+  metrics: MetricRegistry?,
+  private val v086RelayFactory: V086Relay.Factory,
+  @Named("listeningOnPortsCounter") listeningOnPortsCounter: Counter
+) : UDPRelay(listenPort, serverSocketAddress!!, listeningOnPortsCounter) {
   // TODO(nue): Can we just remove this?
   // public static void main(String args[]) throws Exception {
   //   int localPort = Integer.parseInt(args[0]);
@@ -50,24 +49,27 @@ internal class KailleraRelay
   }
 
   override fun processClientToServer(
-      receiveBuffer: ByteBuffer, fromAddress: InetSocketAddress, toAddress: InetSocketAddress
+    receiveBuffer: ByteBuffer,
+    fromAddress: InetSocketAddress,
+    toAddress: InetSocketAddress
   ): ByteBuffer? {
     var inMessage: ConnectMessage? = null
     inMessage =
-        try {
-          parse(receiveBuffer)
-        } catch (e: MessageFormatException) {
-          logger.atWarning().withCause(e).log("Unrecognized message format!")
-          return null
-        }
+      try {
+        parse(receiveBuffer)
+      } catch (e: MessageFormatException) {
+        logger.atWarning().withCause(e).log("Unrecognized message format!")
+        return null
+      }
     logger
-        .atFine()
-        .log(
-            formatSocketAddress(fromAddress) +
-                " -> " +
-                formatSocketAddress(toAddress) +
-                ": " +
-                inMessage)
+      .atFine()
+      .log(
+        formatSocketAddress(fromAddress) +
+          " -> " +
+          formatSocketAddress(toAddress) +
+          ": " +
+          inMessage
+      )
     if (inMessage is ConnectMessage_HELLO) {
       logger.atInfo().log("Client version is " + inMessage.protocol)
     } else {
@@ -84,30 +86,35 @@ internal class KailleraRelay
   }
 
   override fun processServerToClient(
-      receiveBuffer: ByteBuffer, fromAddress: InetSocketAddress, toAddress: InetSocketAddress
+    receiveBuffer: ByteBuffer,
+    fromAddress: InetSocketAddress,
+    toAddress: InetSocketAddress
   ): ByteBuffer? {
     var inMessage: ConnectMessage? = null
     inMessage =
-        try {
-          parse(receiveBuffer)
-        } catch (e: MessageFormatException) {
-          logger.atWarning().withCause(e).log("Unrecognized message format!")
-          return null
-        }
+      try {
+        parse(receiveBuffer)
+      } catch (e: MessageFormatException) {
+        logger.atWarning().withCause(e).log("Unrecognized message format!")
+        return null
+      }
     logger
-        .atFine()
-        .log(
-            formatSocketAddress(fromAddress) +
-                " -> " +
-                formatSocketAddress(toAddress) +
-                ": " +
-                inMessage)
+      .atFine()
+      .log(
+        formatSocketAddress(fromAddress) +
+          " -> " +
+          formatSocketAddress(toAddress) +
+          ": " +
+          inMessage
+      )
     if (inMessage is ConnectMessage_HELLOD00D) {
       val portMsg = inMessage
       logger.atInfo().log("Starting client relay on port " + (portMsg.port - 1))
       try {
         v086RelayFactory.create(
-            portMsg.port, InetSocketAddress(serverSocketAddress.address, portMsg.port))
+          portMsg.port,
+          InetSocketAddress(serverSocketAddress.address, portMsg.port)
+        )
       } catch (e: Exception) {
         logger.atSevere().withCause(e).log("Failed to start!")
         return null

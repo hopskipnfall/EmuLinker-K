@@ -29,16 +29,15 @@ private val logger = FluentLogger.forEnclosingClass()
 /** The UDP Server implementation. */
 @Singleton
 class ConnectController
-    @Inject
-    internal constructor(
-        private val threadPool: ThreadPoolExecutor,
-        kailleraServerControllers: java.util.Set<KailleraServerController>,
-        private val accessManager: AccessManager,
-        config: Configuration,
-        metrics: MetricRegistry?,
-        @Named("listeningOnPortsCounter")
-        listeningOnPortsCounter: Counter
-    ) : UDPServer(/* shutdownOnExit= */ true, metrics, listeningOnPortsCounter) {
+@Inject
+internal constructor(
+  private val threadPool: ThreadPoolExecutor,
+  kailleraServerControllers: java.util.Set<KailleraServerController>,
+  private val accessManager: AccessManager,
+  config: Configuration,
+  metrics: MetricRegistry?,
+  @Named("listeningOnPortsCounter") listeningOnPortsCounter: Counter
+) : UDPServer(/* shutdownOnExit= */ true, metrics, listeningOnPortsCounter) {
 
   private val controllersMap: MutableMap<String?, KailleraServerController>
 
@@ -87,25 +86,27 @@ class ConnectController
   override fun start() {
     startTime = System.currentTimeMillis()
     logger
-        .atFine()
-        .log(
-            toString() +
-                " Thread starting (ThreadPool:" +
-                threadPool.activeCount +
-                "/" +
-                threadPool.poolSize +
-                ")")
+      .atFine()
+      .log(
+        toString() +
+          " Thread starting (ThreadPool:" +
+          threadPool.activeCount +
+          "/" +
+          threadPool.poolSize +
+          ")"
+      )
     threadPool.execute(this)
     Thread.yield()
     logger
-        .atFine()
-        .log(
-            toString() +
-                " Thread started (ThreadPool:" +
-                threadPool.activeCount +
-                "/" +
-                threadPool.poolSize +
-                ")")
+      .atFine()
+      .log(
+        toString() +
+          " Thread started (ThreadPool:" +
+          threadPool.activeCount +
+          "/" +
+          threadPool.poolSize +
+          ")"
+      )
   }
 
   @Synchronized
@@ -119,25 +120,27 @@ class ConnectController
     requestCount++
     var inMessage: ConnectMessage? = null
     inMessage =
-        try {
-          parse(buffer)
-        } catch (e: Exception) {
-          when (e) {
-            is MessageFormatException, is IllegalArgumentException -> {
-              messageFormatErrorCount++
-              buffer.rewind()
-              logger
-                  .atWarning()
-                  .log(
-                      "Received invalid message from " +
-                          formatSocketAddress(fromSocketAddress) +
-                          ": " +
-                          dumpBuffer(buffer))
-              return
-            }
-            else -> throw e
+      try {
+        parse(buffer)
+      } catch (e: Exception) {
+        when (e) {
+          is MessageFormatException,
+          is IllegalArgumentException -> {
+            messageFormatErrorCount++
+            buffer.rewind()
+            logger
+              .atWarning()
+              .log(
+                "Received invalid message from " +
+                  formatSocketAddress(fromSocketAddress) +
+                  ": " +
+                  dumpBuffer(buffer)
+              )
+            return
           }
+          else -> throw e
         }
+      }
 
     //    logger.atInfo().log("IN-> $inMessage")
 
@@ -153,12 +156,13 @@ class ConnectController
     if (inMessage !is ConnectMessage_HELLO) {
       messageFormatErrorCount++
       logger
-          .atWarning()
-          .log(
-              "Received unexpected message type from " +
-                  formatSocketAddress(fromSocketAddress) +
-                  ": " +
-                  inMessage)
+        .atWarning()
+        .log(
+          "Received unexpected message type from " +
+            formatSocketAddress(fromSocketAddress) +
+            ": " +
+            inMessage
+        )
       return
     }
     val connectMessage = inMessage
@@ -169,19 +173,20 @@ class ConnectController
     if (protocolController == null) {
       protocolErrorCount++
       logger
-          .atSevere()
-          .log(
-              "Client requested an unhandled protocol " +
-                  formatSocketAddress(fromSocketAddress) +
-                  ": " +
-                  connectMessage.protocol)
+        .atSevere()
+        .log(
+          "Client requested an unhandled protocol " +
+            formatSocketAddress(fromSocketAddress) +
+            ": " +
+            connectMessage.protocol
+        )
       return
     }
     if (!accessManager.isAddressAllowed(fromSocketAddress.address)) {
       deniedOtherCount++
       logger
-          .atWarning()
-          .log("AccessManager denied connection from " + formatSocketAddress(fromSocketAddress))
+        .atWarning()
+        .log("AccessManager denied connection from " + formatSocketAddress(fromSocketAddress))
       return
     } else {
       var privatePort = -1
@@ -195,10 +200,10 @@ class ConnectController
               lastAddressCount = 0
               failedToStartCount++
               logger
-                  .atFine()
-                  .log(
-                      "SF MOD: HAMMER PROTECTION (2 Min Ban): " +
-                          formatSocketAddress(fromSocketAddress))
+                .atFine()
+                .log(
+                  "SF MOD: HAMMER PROTECTION (2 Min Ban): " + formatSocketAddress(fromSocketAddress)
+                )
               accessManager.addTempBan(fromSocketAddress.address.hostAddress, 2)
               return
             }
@@ -211,40 +216,43 @@ class ConnectController
         if (privatePort <= 0) {
           failedToStartCount++
           logger
-              .atSevere()
-              .log(
-                  protocolController.toString() +
-                      " failed to start for " +
-                      formatSocketAddress(fromSocketAddress))
+            .atSevere()
+            .log(
+              protocolController.toString() +
+                " failed to start for " +
+                formatSocketAddress(fromSocketAddress)
+            )
           return
         }
         connectCount++
         logger
-            .atFine()
-            .log(
-                protocolController.toString() +
-                    " allocated port " +
-                    privatePort +
-                    " to client from " +
-                    fromSocketAddress.address.hostAddress)
+          .atFine()
+          .log(
+            protocolController.toString() +
+              " allocated port " +
+              privatePort +
+              " to client from " +
+              fromSocketAddress.address.hostAddress
+          )
         send(ConnectMessage_HELLOD00D(privatePort), fromSocketAddress)
       } catch (e: ServerFullException) {
         deniedServerFullCount++
         logger
-            .atFine()
-            .withCause(e)
-            .log("Sending server full response to " + formatSocketAddress(fromSocketAddress))
+          .atFine()
+          .withCause(e)
+          .log("Sending server full response to " + formatSocketAddress(fromSocketAddress))
         send(ConnectMessage_TOO(), fromSocketAddress)
         return
       } catch (e: NewConnectionException) {
         deniedOtherCount++
         logger
-            .atWarning()
-            .withCause(e)
-            .log(
-                protocolController.toString() +
-                    " denied connection from " +
-                    formatSocketAddress(fromSocketAddress))
+          .atWarning()
+          .withCause(e)
+          .log(
+            protocolController.toString() +
+              " denied connection from " +
+              formatSocketAddress(fromSocketAddress)
+          )
         return
       }
     }

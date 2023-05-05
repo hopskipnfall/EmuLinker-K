@@ -28,12 +28,12 @@ private val logger = FluentLogger.forEnclosingClass()
 private const val EMULINKER_CLIENT_NAME = "EmulinkerSF Admin Client"
 
 class KailleraUserImpl(
-    override val id: Int,
-    override val protocol: String,
-    override val connectSocketAddress: InetSocketAddress,
-    override val listener: KailleraEventListener,
-    override val server: KailleraServerImpl,
-    flags: RuntimeFlags,
+  override val id: Int,
+  override val protocol: String,
+  override val connectSocketAddress: InetSocketAddress,
+  override val listener: KailleraEventListener,
+  override val server: KailleraServerImpl,
+  flags: RuntimeFlags,
 ) : KailleraUser, Executable {
 
   override var inStealthMode = false
@@ -43,17 +43,17 @@ class KailleraUserImpl(
     set(clientType) {
       field = clientType
       if (clientType != null && clientType.startsWith(EMULINKER_CLIENT_NAME))
-          isEmuLinkerClient = true
+        isEmuLinkerClient = true
     }
 
   private val initTime = System.currentTimeMillis()
 
   override var connectionType: ConnectionType =
-      ConnectionType.DISABLED // TODO(nue): This probably shouldn't have a default.
+    ConnectionType.DISABLED // TODO(nue): This probably shouldn't have a default.
   override var ping = 0
   override var socketAddress: InetSocketAddress? = null
   override var status =
-      UserStatus.PLAYING // TODO(nue): This probably shouldn't have a default value..
+    UserStatus.PLAYING // TODO(nue): This probably shouldn't have a default value..
   override var accessLevel = 0
   override var isEmuLinkerClient = false
     private set
@@ -185,9 +185,9 @@ class KailleraUserImpl(
 
   fun toDetailedString(): String {
     return ("KailleraUserImpl[id=$id protocol=$protocol status=$status name=$name clientType=$clientType ping=$ping connectionType=$connectionType remoteAddress=" +
-        (if (socketAddress == null) EmuUtil.formatSocketAddress(connectSocketAddress)
-        else EmuUtil.formatSocketAddress(socketAddress!!)) +
-        "]")
+      (if (socketAddress == null) EmuUtil.formatSocketAddress(connectSocketAddress)
+      else EmuUtil.formatSocketAddress(socketAddress!!)) +
+      "]")
   }
 
   override fun stop() {
@@ -221,11 +221,12 @@ class KailleraUserImpl(
   // server actions
   @Synchronized
   @Throws(
-      PingTimeException::class,
-      ClientAddressException::class,
-      ConnectionTypeException::class,
-      UserNameException::class,
-      LoginException::class)
+    PingTimeException::class,
+    ClientAddressException::class,
+    ConnectionTypeException::class,
+    UserNameException::class,
+    LoginException::class
+  )
   override fun login() {
     updateLastActivity()
     server.login(this)
@@ -264,7 +265,8 @@ class KailleraUserImpl(
     } else if (status == UserStatus.CONNECTING) {
       logger.atWarning().log("$this create game failed: User status is Connecting!")
       throw CreateGameException(
-          EmuLang.getString("KailleraUserImpl.CreateGameErrorNotFullyConnected"))
+        EmuLang.getString("KailleraUserImpl.CreateGameErrorNotFullyConnected")
+      )
     }
     val game = server.createGame(this, romName)
     lastCreateGameTime = System.currentTimeMillis()
@@ -273,10 +275,11 @@ class KailleraUserImpl(
 
   @Synchronized
   @Throws(
-      QuitException::class,
-      DropGameException::class,
-      QuitGameException::class,
-      CloseGameException::class)
+    QuitException::class,
+    DropGameException::class,
+    QuitGameException::class,
+    CloseGameException::class
+  )
   override fun quit(message: String?) {
     updateLastActivity()
     server.quit(this, message)
@@ -404,24 +407,26 @@ class KailleraUserImpl(
       logger.atWarning().log("$this player ready failed: Not in a game")
       throw UserReadyException(EmuLang.getString("KailleraUserImpl.PlayerReadyErrorNotInGame"))
     }
-    if (playerNumber > game!!.playerActionQueue!!.size ||
-        game!!.playerActionQueue!![playerNumber - 1].synched) {
+    if (
+      playerNumber > game!!.playerActionQueue!!.size ||
+        game!!.playerActionQueue!![playerNumber - 1].synched
+    ) {
       return
     }
     totalDelay = game!!.highestUserFrameDelay + tempDelay + 5
 
     smallLagThreshold =
-        Duration.ofSeconds(1)
-            .dividedBy(connectionType.updatesPerSecond.toLong())
-            .multipliedBy(frameDelay.toLong())
-            // Effectively this is the delay that is allowed before calling it a lag spike.
-            .plusMillis(10)
+      Duration.ofSeconds(1)
+        .dividedBy(connectionType.updatesPerSecond.toLong())
+        .multipliedBy(frameDelay.toLong())
+        // Effectively this is the delay that is allowed before calling it a lag spike.
+        .plusMillis(10)
     bigSpikeThreshold =
-        Duration.ofSeconds(1)
-            .dividedBy(connectionType.updatesPerSecond.toLong())
-            .multipliedBy(frameDelay.toLong())
-            // Effectively this is the delay that is allowed before calling it a lag spike.
-            .plusMillis(70)
+      Duration.ofSeconds(1)
+        .dividedBy(connectionType.updatesPerSecond.toLong())
+        .multipliedBy(frameDelay.toLong())
+        // Effectively this is the delay that is allowed before calling it a lag spike.
+        .plusMillis(70)
     game!!.ready(this, playerNumber)
   }
 
@@ -439,12 +444,13 @@ class KailleraUserImpl(
     updateLastActivity()
     try {
       if (game == null)
-          throw GameDataException(
-              EmuLang.getString("KailleraUserImpl.GameDataErrorNotInGame"),
-              data,
-              connectionType.byteValue.toInt(),
-              1,
-              1)
+        throw GameDataException(
+          EmuLang.getString("KailleraUserImpl.GameDataErrorNotInGame"),
+          data,
+          connectionType.byteValue.toInt(),
+          1,
+          1
+        )
 
       // Initial Delay
       // totalDelay = (game.getDelay() + tempDelay + 5)
@@ -476,8 +482,9 @@ class KailleraUserImpl(
       // but this uses extra bandwidth, so we'll set a counter to prevent people from leaving
       // games running for a long time in this state
       if (gameDataErrorTime > 0) {
-        if (System.currentTimeMillis() - gameDataErrorTime >
-            30000) // give the user time to close the game
+        if (
+          System.currentTimeMillis() - gameDataErrorTime > 30000
+        ) // give the user time to close the game
         {
           // this should be warn level, but it creates tons of lines in the log
           logger.atFine().log("$this: error game data exceeds drop timeout!")

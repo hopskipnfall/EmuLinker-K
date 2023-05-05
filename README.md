@@ -12,8 +12,8 @@ EmuLinkerSF-netsma (ネトスマ) is a SSB64-specific (originally just Japan-foc
 
 The aim of this repository is to:
 
- - Add new features useful to SSB64 netplay.
- - Modernize the codebase and fix vulnerabilities while maintaining or increasing the level of performance.
+- Add new features useful to SSB64 netplay.
+- Modernize the codebase and fix vulnerabilities while maintaining or increasing the level of performance.
 
 EmuLinkerSF-netsma is maintained by [jonnjonn](https://twitter.com/6kRt62r2zvKp5Rh).
 
@@ -21,8 +21,8 @@ EmuLinkerSF-netsma is maintained by [jonnjonn](https://twitter.com/6kRt62r2zvKp5
 
 From the emulinker/ directory, the following commands are supported:
 
-| Command               | Description             |
-| --------------------- | ----------------------- |
+|        Command        |       Description       |
+|-----------------------|-------------------------|
 | `mvn compile`         | Compile the code.       |
 | `mvn spotless:apply`  | Run the formatter.      |
 | `mvn spotless:check`  | Run the linter.         |
@@ -67,3 +67,4 @@ You can then access the Graphite dashboard at http://localhost/dashboard
 [twitter]: https://twitter.com/intent/tweet?text=https://github.com/hopskipnfall/EmuLinkerSF-netsma%20%F0%9F%91%8D
 [twitter-badge]: https://img.shields.io/twitter/url/https/github.com/hopskipnfall/EmuLinkerSF-netsma.svg?style=social
 [maintained-badge]: https://img.shields.io/badge/maintained-yes-brightgreen
+

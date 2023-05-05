@@ -13,11 +13,10 @@ import org.emulinker.util.EmuUtil.formatSocketAddress
 private val logger = FluentLogger.forEnclosingClass()
 
 abstract class PrivateUDPServer(
-    shutdownOnExit: Boolean,
-    val remoteInetAddress: InetAddress,
-    metrics: MetricRegistry,
-    @Named("listeningOnPortsCounter")
-    listeningOnPortsCounter: Counter
+  shutdownOnExit: Boolean,
+  val remoteInetAddress: InetAddress,
+  metrics: MetricRegistry,
+  @Named("listeningOnPortsCounter") listeningOnPortsCounter: Counter
 ) : UDPServer(shutdownOnExit, metrics, listeningOnPortsCounter) {
 
   private val clientRequestTimer: Timer
@@ -29,12 +28,13 @@ abstract class PrivateUDPServer(
     if (remoteSocketAddress == null) remoteSocketAddress = inboundSocketAddress
     else if (inboundSocketAddress != remoteSocketAddress) {
       logger
-          .atWarning()
-          .log(
-              "Rejecting packet received from wrong address: " +
-                  formatSocketAddress(inboundSocketAddress) +
-                  " != " +
-                  formatSocketAddress(remoteSocketAddress!!))
+        .atWarning()
+        .log(
+          "Rejecting packet received from wrong address: " +
+            formatSocketAddress(inboundSocketAddress) +
+            " != " +
+            formatSocketAddress(remoteSocketAddress!!)
+        )
       return
     }
     clientRequestTimer.time().use { context -> handleReceived(buffer) }

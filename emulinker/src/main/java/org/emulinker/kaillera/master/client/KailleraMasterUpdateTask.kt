@@ -16,11 +16,11 @@ import org.emulinker.kaillera.release.ReleaseInfo
 private val logger = FluentLogger.forEnclosingClass()
 
 class KailleraMasterUpdateTask(
-    private val publicInfo: PublicServerInformation,
-    private val connectController: ConnectController,
-    private val kailleraServer: KailleraServer,
-    private val statsCollector: StatsCollector,
-    private val releaseInfo: ReleaseInfo
+  private val publicInfo: PublicServerInformation,
+  private val connectController: ConnectController,
+  private val kailleraServer: KailleraServer,
+  private val statsCollector: StatsCollector,
+  private val releaseInfo: ReleaseInfo
 ) : MasterListUpdateTask {
 
   private val httpClient: HttpClient = HttpClient()
@@ -41,20 +41,21 @@ class KailleraMasterUpdateTask(
     for (game in kailleraServer.games) {
       if (game.status != GameStatus.WAITING) continue
       waitingGames.append(
-          "${game.id}|${game.romName}|${game.owner.name}|${game.owner.clientType}|${game.players.size}|")
+        "${game.id}|${game.romName}|${game.owner.name}|${game.owner.clientType}|${game.players.size}|"
+      )
     }
     val params =
-        arrayOf(
-            NameValuePair("servername", publicInfo.serverName),
-            NameValuePair("port", connectController.bindPort.toString()),
-            NameValuePair("nbusers", kailleraServer.users.size.toString()),
-            NameValuePair("maxconn", kailleraServer.maxUsers.toString()),
-            NameValuePair("version", "ESF" + releaseInfo.versionString),
-            NameValuePair("nbgames", kailleraServer.games.size.toString()),
-            NameValuePair("location", publicInfo.location),
-            NameValuePair("ip", publicInfo.connectAddress),
-            NameValuePair("url", publicInfo.website),
-        )
+      arrayOf(
+        NameValuePair("servername", publicInfo.serverName),
+        NameValuePair("port", connectController.bindPort.toString()),
+        NameValuePair("nbusers", kailleraServer.users.size.toString()),
+        NameValuePair("maxconn", kailleraServer.maxUsers.toString()),
+        NameValuePair("version", "ESF" + releaseInfo.versionString),
+        NameValuePair("nbgames", kailleraServer.games.size.toString()),
+        NameValuePair("location", publicInfo.location),
+        NameValuePair("ip", publicInfo.connectAddress),
+        NameValuePair("url", publicInfo.website),
+      )
     val kailleraTouch: HttpMethod = GetMethod("http://www.kaillera.com/touch_server.php")
     kailleraTouch.setQueryString(params)
     kailleraTouch.setRequestHeader("Kaillera-games", createdGames.toString())
@@ -62,7 +63,7 @@ class KailleraMasterUpdateTask(
     try {
       val statusCode = httpClient.executeMethod(kailleraTouch)
       if (statusCode != HttpStatus.SC_OK)
-          logger.atSevere().log("Failed to touch Kaillera Master: " + kailleraTouch.statusLine)
+        logger.atSevere().log("Failed to touch Kaillera Master: " + kailleraTouch.statusLine)
       else logger.atInfo().log("Touching Kaillera Master done")
     } catch (e: Exception) {
       logger.atSevere().withCause(e).log("Failed to touch Kaillera Master")

@@ -12,7 +12,7 @@ private val logger = FluentLogger.forEnclosingClass()
 
 @Singleton
 class GameStatusAction @Inject internal constructor() :
-    V086ServerEventHandler<GameStatusChangedEvent> {
+  V086ServerEventHandler<GameStatusChangedEvent> {
   override var handledEventCount = 0
     private set
 
@@ -24,13 +24,15 @@ class GameStatusAction @Inject internal constructor() :
       val game = event.game
       val visiblePlayers = game.players.count { !it.inStealthMode }
       clientHandler.send(
-          GameStatus(
-              clientHandler.nextMessageNumber,
-              game.id,
-              0.toShort().toInt(),
-              game.status,
-              visiblePlayers.toByte(),
-              game.maxUsers.toByte()))
+        GameStatus(
+          clientHandler.nextMessageNumber,
+          game.id,
+          0.toShort().toInt(),
+          game.status,
+          visiblePlayers.toByte(),
+          game.maxUsers.toByte()
+        )
+      )
     } catch (e: MessageFormatException) {
       logger.atSevere().withCause(e).log("Failed to construct CreateGame_Notification message")
     }

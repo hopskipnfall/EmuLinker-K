@@ -6,8 +6,8 @@ import org.emulinker.kaillera.controller.messaging.ParseException
 import org.emulinker.util.EmuUtil
 
 data class AllReady
-    @Throws(MessageFormatException::class)
-    constructor(override val messageNumber: Int) : V086Message() {
+@Throws(MessageFormatException::class)
+constructor(override val messageNumber: Int) : V086Message() {
   override val bodyLength = 1
 
   override val messageId = ID
@@ -28,8 +28,9 @@ data class AllReady
       if (buffer.remaining() < 1) throw ParseException("Failed byte count validation!")
       val b = buffer.get()
       if (b.toInt() != 0x00)
-          throw MessageFormatException(
-              "Invalid All Ready Signal format: byte 0 = " + EmuUtil.byteToHex(b))
+        throw MessageFormatException(
+          "Invalid All Ready Signal format: byte 0 = " + EmuUtil.byteToHex(b)
+        )
       return AllReady(messageNumber)
     }
   }

@@ -15,7 +15,7 @@ private val logger = FluentLogger.forEnclosingClass()
 
 @Singleton
 class JoinGameAction @Inject internal constructor() :
-    V086Action<JoinGame_Request>, V086GameEventHandler<UserJoinedGameEvent> {
+  V086Action<JoinGame_Request>, V086GameEventHandler<UserJoinedGameEvent> {
   override var actionPerformedCount = 0
     private set
   override var handledEventCount = 0
@@ -32,15 +32,19 @@ class JoinGameAction @Inject internal constructor() :
       logger.atSevere().withCause(e).log("Failed to join game.")
       try {
         clientHandler.send(
-            InformationMessage(
-                clientHandler.nextMessageNumber,
-                "server",
-                EmuLang.getString("JoinGameAction.JoinGameDenied", e.message)))
+          InformationMessage(
+            clientHandler.nextMessageNumber,
+            "server",
+            EmuLang.getString("JoinGameAction.JoinGameDenied", e.message)
+          )
+        )
         clientHandler.send(
-            QuitGame_Notification(
-                clientHandler.nextMessageNumber,
-                clientHandler.user!!.name!!,
-                clientHandler.user!!.id))
+          QuitGame_Notification(
+            clientHandler.nextMessageNumber,
+            clientHandler.user!!.name!!,
+            clientHandler.user!!.id
+          )
+        )
       } catch (e2: MessageFormatException) {
         logger.atSevere().withCause(e2).log("Failed to construct new Message")
       }
@@ -58,23 +62,30 @@ class JoinGameAction @Inject internal constructor() :
         for (player in game.players) {
           if (player != thisUser) {
             if (!player.inStealthMode)
-                players.add(
-                    PlayerInformation.Player(
-                        player.name!!, player.ping.toLong(), player.id, player.connectionType))
+              players.add(
+                PlayerInformation.Player(
+                  player.name!!,
+                  player.ping.toLong(),
+                  player.id,
+                  player.connectionType
+                )
+              )
           }
         }
         clientHandler.send(PlayerInformation(clientHandler.nextMessageNumber, players))
       }
       if (!user.inStealthMode)
-          clientHandler.send(
-              JoinGame_Notification(
-                  clientHandler.nextMessageNumber,
-                  game.id,
-                  0,
-                  user.name!!,
-                  user.ping.toLong(),
-                  user.id,
-                  user.connectionType))
+        clientHandler.send(
+          JoinGame_Notification(
+            clientHandler.nextMessageNumber,
+            game.id,
+            0,
+            user.name!!,
+            user.ping.toLong(),
+            user.id,
+            user.connectionType
+          )
+        )
     } catch (e: MessageFormatException) {
       logger.atSevere().withCause(e).log("Failed to construct JoinGame_Notification message")
     }

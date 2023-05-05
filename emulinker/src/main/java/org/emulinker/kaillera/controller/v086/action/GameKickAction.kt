@@ -28,7 +28,8 @@ class GameKickAction @Inject internal constructor() : V086Action<GameKick> {
       // new SF MOD - kick errors notifications
       try {
         clientHandler.send(
-            GameChat_Notification(clientHandler.nextMessageNumber, "Error", e.message!!))
+          GameChat_Notification(clientHandler.nextMessageNumber, "Error", e.message!!)
+        )
       } catch (ex: MessageFormatException) {
         logger.atSevere().withCause(ex).log("Failed to construct GameChat_Notification message")
       }

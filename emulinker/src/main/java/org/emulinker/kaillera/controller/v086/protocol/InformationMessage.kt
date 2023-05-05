@@ -8,9 +8,9 @@ import org.emulinker.kaillera.pico.AppModule
 import org.emulinker.util.EmuUtil
 
 data class InformationMessage
-    @Throws(MessageFormatException::class)
-    constructor(override val messageNumber: Int, val source: String, val message: String) :
-    V086Message() {
+@Throws(MessageFormatException::class)
+constructor(override val messageNumber: Int, val source: String, val message: String) :
+  V086Message() {
 
   override val messageId = ID
 

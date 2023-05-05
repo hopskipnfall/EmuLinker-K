@@ -7,8 +7,8 @@ import org.emulinker.kaillera.controller.messaging.ParseException
 import org.emulinker.util.UnsignedUtil
 
 data class GameData
-    @Throws(MessageFormatException::class)
-    constructor(override val messageNumber: Int, val gameData: ByteArray) : V086Message() {
+@Throws(MessageFormatException::class)
+constructor(override val messageNumber: Int, val gameData: ByteArray) : V086Message() {
 
   override val messageId = ID
 
@@ -62,7 +62,7 @@ data class GameData
       // EmuUtil.byteToHex(b));
       val dataSize = UnsignedUtil.getUnsignedShort(buffer)
       if (dataSize <= 0 || dataSize > buffer.remaining())
-          throw MessageFormatException("Invalid Game Data format: dataSize = $dataSize")
+        throw MessageFormatException("Invalid Game Data format: dataSize = $dataSize")
       val gameData = ByteArray(dataSize)
       buffer[gameData]
       return create(messageNumber, gameData)

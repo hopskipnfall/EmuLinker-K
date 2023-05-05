@@ -22,7 +22,7 @@ import kotlin.jvm.JvmOverloads
 
 object EmuUtil {
   private val HEX_CHARS =
-      charArrayOf('0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F')
+    charArrayOf('0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F')
   @JvmField val LB = System.getProperty("line.separator")
   @JvmField var DATE_FORMAT: DateFormat = SimpleDateFormat("MM/dd/yyyy HH:mm:ss")
   fun systemIsWindows(): Boolean {
@@ -61,7 +61,7 @@ object EmuUtil {
     val sb = StringBuilder()
     for (i in 0 until len) {
       if (Character.isLetterOrDigit(data[i].toInt().toChar()) || data[i] in 32..126)
-          sb.append(data[i].toInt().toChar())
+        sb.append(data[i].toInt().toChar())
       else sb.append(byteToHex(data[i]))
       if (i < len - 1) sb.append(',')
     }
@@ -99,14 +99,15 @@ object EmuUtil {
 
   fun byteToHex(b: Byte): String {
     return (HEX_CHARS[b.toInt() and 0xf0 shr 4].toString() +
-        HEX_CHARS[b.toInt() and 0xf].toString())
+      HEX_CHARS[b.toInt() and 0xf].toString())
   }
 
   @Throws(NumberFormatException::class)
   fun hexToByteArray(hex: String): ByteArray {
     if (hex.length % 2 != 0)
-        throw NumberFormatException(
-            "The string has the wrong length, not pairs of hex representations.")
+      throw NumberFormatException(
+        "The string has the wrong length, not pairs of hex representations."
+      )
     val len = hex.length / 2
     val ba = ByteArray(len)
     var pos = 0
@@ -122,26 +123,26 @@ object EmuUtil {
     if (hex.size != 2) throw NumberFormatException("Invalid number of digits in " + String(hex))
     var i = 0
     var nibble: Byte =
-        if (hex[i] in '0'..'9') {
-          (hex[i] - '0' shl 4).toByte()
-        } else if (hex[i] in 'A'..'F') {
-          ((hex[i] - ('A'.code - 0x0A)).code shl 4).toByte()
-        } else if (hex[i] in 'a'..'f') {
-          ((hex[i] - ('a'.code - 0x0A)).code shl 4).toByte()
-        } else {
-          throw NumberFormatException(hex[i].toString() + " is not a hexadecimal string.")
-        }
+      if (hex[i] in '0'..'9') {
+        (hex[i] - '0' shl 4).toByte()
+      } else if (hex[i] in 'A'..'F') {
+        ((hex[i] - ('A'.code - 0x0A)).code shl 4).toByte()
+      } else if (hex[i] in 'a'..'f') {
+        ((hex[i] - ('a'.code - 0x0A)).code shl 4).toByte()
+      } else {
+        throw NumberFormatException(hex[i].toString() + " is not a hexadecimal string.")
+      }
     i++
     nibble =
-        if (hex[i] in '0'..'9') {
-          (nibble.toInt() or hex[i] - '0').toByte()
-        } else if (hex[i] in 'A'..'F') {
-          (nibble.toInt() or (hex[i] - ('A'.code - 0x0A)).code).toByte()
-        } else if (hex[i] in 'a'..'f') {
-          (nibble.toInt() or (hex[i] - ('a'.code - 0x0A)).code).toByte()
-        } else {
-          throw NumberFormatException(hex[i].toString() + " is not a hexadecimal string.")
-        }
+      if (hex[i] in '0'..'9') {
+        (nibble.toInt() or hex[i] - '0').toByte()
+      } else if (hex[i] in 'A'..'F') {
+        (nibble.toInt() or (hex[i] - ('A'.code - 0x0A)).code).toByte()
+      } else if (hex[i] in 'a'..'f') {
+        (nibble.toInt() or (hex[i] - ('a'.code - 0x0A)).code).toByte()
+      } else {
+        throw NumberFormatException(hex[i].toString() + " is not a hexadecimal string.")
+      }
     return nibble
   }
 
