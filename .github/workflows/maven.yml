@@ -7,6 +7,7 @@ name: "Java CI with Maven"
   pull_request:
     branches:
     - "master"
+    - "062-monitoring"
 jobs:
   build:
     runs-on: "ubuntu-latest"
