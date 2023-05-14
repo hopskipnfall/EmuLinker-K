@@ -42,8 +42,7 @@ abstract class UDPServer(
   			logger.atWarning().log("Introducing " + artificalDelay + "ms artifical delay!");
   	}
   */
-  var bindPort = 0
-    private set
+  var boundPort: Int? = null
   private var channel: DatagramChannel? = null
 
   final override var threadIsActive = false
@@ -96,7 +95,7 @@ abstract class UDPServer(
       channel = DatagramChannel.open()
       if (port > 0) channel!!.socket().bind(InetSocketAddress(port))
       else channel!!.socket().bind(null)
-      bindPort = channel!!.socket().localPort
+      boundPort = channel!!.socket().localPort
       val tempBuffer = buffer
       val bufferSize = tempBuffer.capacity() * 2
       releaseBuffer(tempBuffer)
@@ -134,7 +133,7 @@ abstract class UDPServer(
       //			logger.atFine().log("send("+EmuUtil.INSTANCE.dumpBuffer(buffer, false)+")");
       channel!!.send(buffer, toSocketAddress)
     } catch (e: Exception) {
-      logger.atSevere().withCause(e).log("Failed to send on port $bindPort")
+      logger.atSevere().withCause(e).log("Failed to send on port %s", boundPort)
     }
   }
 
@@ -175,17 +174,17 @@ abstract class UDPServer(
           releaseBuffer(buffer)
         } catch (e: SocketException) {
           if (stopFlag) break
-          logger.atSevere().withCause(e).log("Failed to receive on port %d", bindPort)
+          logger.atSevere().withCause(e).log("Failed to receive on port %d", boundPort)
         } catch (e: IOException) {
           if (stopFlag) break
-          logger.atSevere().withCause(e).log("Failed to receive on port %d", bindPort)
+          logger.atSevere().withCause(e).log("Failed to receive on port %d", boundPort)
         }
       }
     } catch (e: Throwable) {
       logger
         .atSevere()
         .withCause(e)
-        .log("UDPServer on port %d caught unexpected exception!", bindPort)
+        .log("UDPServer on port %d caught unexpected exception!", boundPort)
       stop()
     } finally {
       listeningOnPortsCounter.dec()

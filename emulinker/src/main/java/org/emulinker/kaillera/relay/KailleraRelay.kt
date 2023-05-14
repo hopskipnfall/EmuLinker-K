@@ -12,9 +12,9 @@ import java.nio.ByteBuffer
 import javax.inject.Named
 import org.emulinker.kaillera.controller.connectcontroller.protocol.ConnectMessage
 import org.emulinker.kaillera.controller.connectcontroller.protocol.ConnectMessage.Companion.parse
+import org.emulinker.kaillera.controller.connectcontroller.protocol.ConnectMessage_TOO
 import org.emulinker.kaillera.controller.connectcontroller.protocol.RequestPrivateKailleraPortRequest
 import org.emulinker.kaillera.controller.connectcontroller.protocol.RequestPrivateKailleraPortResponse
-import org.emulinker.kaillera.controller.connectcontroller.protocol.ConnectMessage_TOO
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.net.UDPRelay
 import org.emulinker.util.EmuUtil.formatSocketAddress

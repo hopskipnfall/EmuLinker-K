@@ -5,6 +5,7 @@ import com.codahale.metrics.MetricRegistry
 import com.google.common.flogger.FluentLogger
 import java.net.InetSocketAddress
 import java.nio.ByteBuffer
+import java.util.concurrent.ThreadPoolExecutor
 import javax.inject.Inject
 import javax.inject.Named
 import javax.inject.Singleton
@@ -14,7 +15,6 @@ import org.emulinker.kaillera.access.AccessManager
 import org.emulinker.kaillera.controller.KailleraServerController
 import org.emulinker.kaillera.controller.connectcontroller.protocol.*
 import org.emulinker.kaillera.controller.connectcontroller.protocol.ConnectMessage.Companion.parse
-import org.emulinker.kaillera.controller.messaging.ByteBufferMessage
 import org.emulinker.kaillera.controller.messaging.ByteBufferMessage.Companion.getBuffer
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.model.exception.NewConnectionException
@@ -24,9 +24,6 @@ import org.emulinker.net.UDPServer
 import org.emulinker.util.EmuUtil.dumpBuffer
 import org.emulinker.util.EmuUtil.formatSocketAddress
 import org.emulinker.util.LoggingUtils.debugLog
-import java.util.concurrent.ThreadPoolExecutor
-
-private val logger = FluentLogger.forEnclosingClass()
 
 /** The UDP Server implementation. */
 @Singleton
@@ -71,15 +68,10 @@ internal constructor(
   override val buffer: ByteBuffer
     protected get() = getBuffer(bufferSize)
 
-  override fun releaseBuffer(buffer: ByteBuffer) {
-    ByteBufferMessage.releaseBuffer(buffer)
-  }
+  override fun releaseBuffer(buffer: ByteBuffer) {}
 
-  override fun toString(): String {
-    // return "ConnectController[port=" + getBindPort() + " isRunning=" + isRunning() + "]";
-    // return "ConnectController[port=" + getBindPort() + "]";
-    return if (bindPort > 0) "ConnectController($bindPort)" else "ConnectController(unbound)"
-  }
+  override fun toString(): String =
+    if (boundPort != null) "ConnectController($boundPort)" else "ConnectController(unbound)"
 
   @Synchronized
   override fun start() {
@@ -155,12 +147,7 @@ internal constructor(
       messageFormatErrorCount++
       logger
         .atWarning()
-        .log(
-          "Received unexpected message type from " +
-            formatSocketAddress(remoteSocketAddress) +
-            ": " +
-            inMessage
-        )
+        .log("Received unexpected message type from %s: %s", formattedSocketAddress, inMessage)
       return
     }
 
@@ -247,7 +234,6 @@ internal constructor(
     }
 
     send(outMessage.toBuffer(), toSocketAddress)
-    outMessage.releaseBuffer()
   }
 
   init {
@@ -268,5 +254,9 @@ internal constructor(
       throw IllegalStateException(e)
     }
     logger.atInfo().log("Ready to accept connections on port $port")
+  }
+
+  companion object {
+    private val logger = FluentLogger.forEnclosingClass()
   }
 }

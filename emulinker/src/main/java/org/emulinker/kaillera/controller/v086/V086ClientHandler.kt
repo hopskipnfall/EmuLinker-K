@@ -82,9 +82,8 @@ constructor(
     ): V086ClientHandler
   }
 
-  override fun toString(): String {
-    return if (bindPort > 0) "V086Controller($bindPort)" else "V086Controller(unbound)"
-  }
+  override fun toString(): String =
+    if (boundPort != null) "V086Controller($boundPort)" else "V086Controller(unbound)"
 
   @get:Synchronized
   val nextMessageNumber: Int
@@ -174,10 +173,10 @@ constructor(
   override fun stop() {
     synchronized(this) {
       if (stopFlag) return
-      var port = -1
-      if (isBound) port = bindPort
+      var port: Int? = null
+      if (isBound) port = boundPort
       super.stop()
-      if (port > 0) {
+      if (port != null) {
         logger
           .atFine()
           .log(

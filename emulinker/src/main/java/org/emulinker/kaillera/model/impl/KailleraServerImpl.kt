@@ -6,6 +6,7 @@ import com.google.common.base.Strings
 import com.google.common.collect.ImmutableList
 import com.google.common.flogger.FluentLogger
 import java.net.InetSocketAddress
+import java.time.Instant
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ThreadPoolExecutor
@@ -30,7 +31,6 @@ import org.emulinker.util.EmuLang.getString
 import org.emulinker.util.EmuLang.hasString
 import org.emulinker.util.EmuUtil.formatSocketAddress
 import org.emulinker.util.Executable
-import java.time.Instant
 
 private val logger = FluentLogger.forEnclosingClass()
 
@@ -868,7 +868,8 @@ internal constructor(
               usersMap.remove(user.id)
             } else if (
               user.loggedIn &&
-                System.currentTimeMillis() - user.lastKeepAlive > flags.keepAliveTimeout * 1000
+                System.currentTimeMillis() - user.lastKeepAlive >
+                  flags.keepAliveTimeout.inWholeMilliseconds
             ) {
               logger.atInfo().log("$user keepalive timeout!")
               try {
@@ -883,7 +884,7 @@ internal constructor(
               flags.idleTimeout.isPositive() &&
                 access == AccessManager.ACCESS_NORMAL &&
                 user.loggedIn &&
-              (Instant.now().toEpochMilli() - user.lastActivity >
+                (Instant.now().toEpochMilli() - user.lastActivity >
                   flags.idleTimeout.inWholeMilliseconds)
             ) {
               logger.atInfo().log("$user inactivity timeout!")
