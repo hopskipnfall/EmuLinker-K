@@ -10,9 +10,9 @@ import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086ClientHandler
 import org.emulinker.kaillera.controller.v086.protocol.GameChat
 import org.emulinker.kaillera.model.GameStatus
+import org.emulinker.kaillera.model.KailleraUser
 import org.emulinker.kaillera.model.exception.ActionException
 import org.emulinker.kaillera.model.impl.KailleraGameImpl
-import org.emulinker.kaillera.model.impl.KailleraUserImpl
 import org.emulinker.util.EmuLang
 
 @Singleton
@@ -45,7 +45,7 @@ class GameOwnerCommandAction @Inject internal constructor(private val flags: Run
   @Throws(FatalActionException::class)
   override fun performAction(message: GameChat, clientHandler: V086ClientHandler) {
     val chat = message.message
-    val user = clientHandler.user as KailleraUserImpl
+    val user = clientHandler.user
     val game =
       user.game ?: throw FatalActionException("GameOwner Command Failed: Not in a game: $chat")
     if (user != game.owner && user.accessLevel < AccessManager.ACCESS_SUPERADMIN) {
@@ -92,7 +92,7 @@ class GameOwnerCommandAction @Inject internal constructor(private val flags: Run
   private fun processHelp(
     message: String,
     game: KailleraGameImpl,
-    admin: KailleraUserImpl,
+    admin: KailleraUser,
     clientHandler: V086ClientHandler
   ) {
     if (admin != game.owner && admin.accessLevel < AccessManager.ACCESS_SUPERADMIN) return
@@ -154,7 +154,7 @@ class GameOwnerCommandAction @Inject internal constructor(private val flags: Run
     } catch (e: Exception) {}
   }
 
-  private fun autoFireHelp(game: KailleraGameImpl, admin: KailleraUserImpl) {
+  private fun autoFireHelp(game: KailleraGameImpl, admin: KailleraUser) {
     val cur = game.autoFireDetector!!.sensitivity
     game.announce(EmuLang.getString("GameOwnerCommandAction.HelpSensitivity"), admin)
     try {
@@ -175,7 +175,7 @@ class GameOwnerCommandAction @Inject internal constructor(private val flags: Run
   private fun processDetectAutoFire(
     message: String,
     game: KailleraGameImpl,
-    admin: KailleraUserImpl,
+    admin: KailleraUser,
     clientHandler: V086ClientHandler
   ) {
     if (game.status != GameStatus.WAITING) {
@@ -208,7 +208,7 @@ class GameOwnerCommandAction @Inject internal constructor(private val flags: Run
   private fun processEmu(
     message: String,
     game: KailleraGameImpl,
-    admin: KailleraUserImpl,
+    admin: KailleraUser,
     clientHandler: V086ClientHandler
   ) {
     var emu = game.owner.clientType
@@ -227,7 +227,7 @@ class GameOwnerCommandAction @Inject internal constructor(private val flags: Run
   private fun processConn(
     message: String,
     game: KailleraGameImpl,
-    admin: KailleraUserImpl,
+    admin: KailleraUser,
     clientHandler: V086ClientHandler
   ) {
     var conn = game.owner.connectionType.readableName
@@ -245,7 +245,7 @@ class GameOwnerCommandAction @Inject internal constructor(private val flags: Run
   private fun processNum(
     message: String,
     game: KailleraGameImpl,
-    admin: KailleraUserImpl,
+    admin: KailleraUser,
     clientHandler: V086ClientHandler
   ) {
     admin.game!!.announce("${game.players.size} in the room!", admin)
@@ -255,7 +255,7 @@ class GameOwnerCommandAction @Inject internal constructor(private val flags: Run
   private fun processLagstat(
     message: String,
     game: KailleraGameImpl,
-    admin: KailleraUserImpl,
+    admin: KailleraUser,
     clientHandler: V086ClientHandler
   ) {
     if (message == "/lagstat") {
@@ -294,7 +294,7 @@ class GameOwnerCommandAction @Inject internal constructor(private val flags: Run
   private fun processSameDelay(
     message: String,
     game: KailleraGameImpl,
-    admin: KailleraUserImpl,
+    admin: KailleraUser,
     clientHandler: V086ClientHandler
   ) {
     if (message == "/samedelay true") {
@@ -314,7 +314,7 @@ class GameOwnerCommandAction @Inject internal constructor(private val flags: Run
   private fun processMute(
     message: String,
     game: KailleraGameImpl,
-    admin: KailleraUserImpl,
+    admin: KailleraUser,
     clientHandler: V086ClientHandler
   ) {
     val scanner = Scanner(message).useDelimiter(" ")
@@ -337,7 +337,7 @@ class GameOwnerCommandAction @Inject internal constructor(private val flags: Run
         return
       }
       val userID = scanner.nextInt()
-      val user = clientHandler.user.server.getUser(userID) as KailleraUserImpl
+      val user = clientHandler.user.server.getUser(userID)
       if (user == null) {
         admin.game!!.announce("Player doesn't exist!", admin)
         return
@@ -357,12 +357,12 @@ class GameOwnerCommandAction @Inject internal constructor(private val flags: Run
       // mute by IP
       game.mutedUsers.add(user.connectSocketAddress.address.hostAddress)
       user.isMuted = true
-      val user1 = clientHandler.user as KailleraUserImpl
+      val user1 = clientHandler.user
       user1.game!!.announce(
         user.name + " has been muted!",
       )
     } catch (e: NoSuchElementException) {
-      val user = clientHandler.user as KailleraUserImpl
+      val user = clientHandler.user
       user.game!!.announce("Mute Player Error: /mute <UserID>", admin)
     }
   }
@@ -371,7 +371,7 @@ class GameOwnerCommandAction @Inject internal constructor(private val flags: Run
   private fun processUnmute(
     message: String,
     game: KailleraGameImpl,
-    admin: KailleraUserImpl,
+    admin: KailleraUser,
     clientHandler: V086ClientHandler
   ) {
     val scanner = Scanner(message).useDelimiter(" ")
@@ -411,7 +411,7 @@ class GameOwnerCommandAction @Inject internal constructor(private val flags: Run
         user.name + " has been unmuted!",
       )
     } catch (e: NoSuchElementException) {
-      val user = clientHandler.user as KailleraUserImpl
+      val user = clientHandler.user
       user.game!!.announce("Unmute Player Error: /unmute <UserID>", admin)
     }
   }
@@ -420,7 +420,7 @@ class GameOwnerCommandAction @Inject internal constructor(private val flags: Run
   private fun processStartN(
     message: String,
     game: KailleraGameImpl,
-    admin: KailleraUserImpl,
+    admin: KailleraUser,
     clientHandler: V086ClientHandler
   ) {
     val scanner = Scanner(message).useDelimiter(" ")
@@ -444,7 +444,7 @@ class GameOwnerCommandAction @Inject internal constructor(private val flags: Run
   private fun processSwap(
     message: String,
     game: KailleraGameImpl,
-    admin: KailleraUserImpl,
+    admin: KailleraUser,
     clientHandler: V086ClientHandler
   ) {
     /*if(game.getStatus() != KailleraGame.STATUS_PLAYING){
@@ -481,7 +481,7 @@ class GameOwnerCommandAction @Inject internal constructor(private val flags: Run
           // PlayerActionQueue temp = game.getPlayerActionQueue()[0];
           i = 0
           while (i < str.length) {
-            val player = game.players[i] as KailleraUserImpl
+            val player = game.players[i]
             player.playerNumber = num[i]
             /*if(num[i] == 1){
             	game.getPlayerActionQueue()[i] = temp;
@@ -511,7 +511,7 @@ class GameOwnerCommandAction @Inject internal constructor(private val flags: Run
   private fun processStart(
     message: String,
     game: KailleraGameImpl,
-    admin: KailleraUserImpl,
+    admin: KailleraUser,
     clientHandler: V086ClientHandler
   ) {
     game.start(admin)
@@ -521,7 +521,7 @@ class GameOwnerCommandAction @Inject internal constructor(private val flags: Run
   private fun processKick(
     message: String,
     game: KailleraGameImpl,
-    admin: KailleraUserImpl,
+    admin: KailleraUser,
     clientHandler: V086ClientHandler
   ) {
     val scanner = Scanner(message).useDelimiter(" ")
@@ -560,7 +560,7 @@ class GameOwnerCommandAction @Inject internal constructor(private val flags: Run
   private fun processMaxUsers(
     message: String,
     game: KailleraGameImpl,
-    admin: KailleraUserImpl,
+    admin: KailleraUser,
     clientHandler: V086ClientHandler
   ) {
     if (System.currentTimeMillis() - lastMaxUserChange <= 3000) {
@@ -591,7 +591,7 @@ class GameOwnerCommandAction @Inject internal constructor(private val flags: Run
   private fun processMaxPing(
     message: String,
     game: KailleraGameImpl,
-    admin: KailleraUserImpl,
+    admin: KailleraUser,
     clientHandler: V086ClientHandler
   ) {
     val scanner = Scanner(message).useDelimiter(" ")

@@ -14,7 +14,6 @@ import org.emulinker.kaillera.controller.v086.protocol.Chat
 import org.emulinker.kaillera.controller.v086.protocol.InformationMessage
 import org.emulinker.kaillera.model.event.ChatEvent
 import org.emulinker.kaillera.model.exception.ActionException
-import org.emulinker.kaillera.model.impl.KailleraUserImpl
 import org.emulinker.util.EmuLang
 import org.emulinker.util.EmuUtil
 
@@ -73,7 +72,7 @@ class ChatAction @Inject internal constructor(private val adminCommandAction: Ad
   @Throws(FatalActionException::class)
   private fun checkCommands(chatMessage: Chat.ChatRequest, clientHandler: V086ClientHandler) {
     var doCommand = true
-    val userN = clientHandler.user as KailleraUserImpl
+    val userN = clientHandler.user
     if (userN.accessLevel < AccessManager.ACCESS_ELEVATED) {
       try {
         clientHandler.user.chat(":USER_COMMAND")
@@ -180,11 +179,11 @@ class ChatAction @Inject internal constructor(private val adminCommandAction: Ad
         if (clientHandler.user.server.checkMe(clientHandler.user, announcement)) {
           val m = announcement
           announcement = "*" + clientHandler.user.name + " " + m
-          val user1 = clientHandler.user as KailleraUserImpl
+          val user1 = clientHandler.user
           clientHandler.user.server.announce(announcement, true, user1)
         }
       } else if (chatMessage.message.startsWith("/msg")) {
-        val user1 = clientHandler.user as KailleraUserImpl
+        val user1 = clientHandler.user
         val scanner = Scanner(chatMessage.message).useDelimiter(" ")
         val access =
           clientHandler.user.server.accessManager.getAccess(
@@ -291,7 +290,7 @@ class ChatAction @Inject internal constructor(private val adminCommandAction: Ad
           user.server.announce(
             "<${clientHandler.user.name}> (${clientHandler.user.id}): $m",
             false,
-            user as KailleraUserImpl
+            user
           )
 
           /*if(user1.getGame() != null){
@@ -386,7 +385,7 @@ class ChatAction @Inject internal constructor(private val adminCommandAction: Ad
               user.server.announce(
                 "<${clientHandler.user.name}> (${clientHandler.user.id}): $m",
                 false,
-                user as KailleraUserImpl
+                user
               )
               /*if(user1.getGame() != null){
               	user1.getGame().announce("TO: <" + user.getName() + ">(" + user.getID() + ") <" + clientHandler.getUser().getName() + "> (" + clientHandler.getUser().getID() + "): " + m, user1);
@@ -424,23 +423,19 @@ class ChatAction @Inject internal constructor(private val adminCommandAction: Ad
         val user = clientHandler.user
         try {
           clientHandler.user.ignoreAll = true
-          (user as KailleraUserImpl)
-            .server
-            .announce(
-              clientHandler.user.name + " is now ignoring everyone!",
-              false,
-            )
+          user.server.announce(
+            clientHandler.user.name + " is now ignoring everyone!",
+            false,
+          )
         } catch (e: Exception) {}
       } else if (chatMessage.message == "/unignoreall") {
         val user = clientHandler.user
         try {
           clientHandler.user.ignoreAll = false
-          (user as KailleraUserImpl)
-            .server
-            .announce(
-              clientHandler.user.name + " is now unignoring everyone!",
-              false,
-            )
+          user.server.announce(
+            clientHandler.user.name + " is now unignoring everyone!",
+            false,
+          )
         } catch (e: Exception) {}
       } else if (chatMessage.message.startsWith("/ignore")) {
         val scanner = Scanner(chatMessage.message).useDelimiter(" ")
@@ -498,7 +493,7 @@ class ChatAction @Inject internal constructor(private val adminCommandAction: Ad
             false,
           )
         } catch (e: NoSuchElementException) {
-          val user = clientHandler.user as KailleraUserImpl
+          val user = clientHandler.user
           user.server.announce("Ignore User Error: /ignore <UserID>", false, user)
           logger
             .atInfo()
@@ -552,12 +547,19 @@ class ChatAction @Inject internal constructor(private val adminCommandAction: Ad
               )
             } catch (e: Exception) {}
         } catch (e: NoSuchElementException) {
-          val user = clientHandler.user as KailleraUserImpl?
-          user!!.server.announce("Unignore User Error: /ignore <UserID>", false, user)
+          clientHandler.user.server.announce(
+            "Unignore User Error: /ignore <UserID>",
+            false,
+            clientHandler.user
+          )
           logger
             .atInfo()
             .withCause(e)
-            .log("UNIGNORE USER ERROR: %s: %s", user.name, clientHandler.remoteSocketAddress)
+            .log(
+              "UNIGNORE USER ERROR: %s: %s",
+              clientHandler.user.name,
+              clientHandler.remoteSocketAddress
+            )
           return
         }
       } else if (chatMessage.message == "/help") {

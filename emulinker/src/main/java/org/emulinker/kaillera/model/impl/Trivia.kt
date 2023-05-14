@@ -7,8 +7,9 @@ import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.util.*
+import org.emulinker.kaillera.model.KailleraServer
 
-class Trivia(private val server: KailleraServerImpl) : Runnable {
+class Trivia(private val server: KailleraServer) : Runnable {
 
   private var exitThread = false
   private var triviaPaused = false

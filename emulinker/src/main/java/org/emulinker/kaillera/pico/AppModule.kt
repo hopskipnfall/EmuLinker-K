@@ -21,10 +21,8 @@ import org.emulinker.kaillera.controller.KailleraServerController
 import org.emulinker.kaillera.controller.v086.V086Controller
 import org.emulinker.kaillera.master.MasterListStatsCollector
 import org.emulinker.kaillera.master.StatsCollector
-import org.emulinker.kaillera.model.KailleraServer
 import org.emulinker.kaillera.model.impl.AutoFireDetectorFactory
 import org.emulinker.kaillera.model.impl.AutoFireDetectorFactoryImpl
-import org.emulinker.kaillera.model.impl.KailleraServerImpl
 import org.emulinker.util.EmuLinkerPropertiesConfig
 import twitter4j.Twitter
 import twitter4j.TwitterFactory
@@ -38,8 +36,6 @@ abstract class AppModule {
   abstract fun bindAutoFireDetectorFactory(
     autoFireDetectorFactoryImpl: AutoFireDetectorFactoryImpl?
   ): AutoFireDetectorFactory?
-
-  @Binds abstract fun bindKailleraServer(kailleraServerImpl: KailleraServerImpl?): KailleraServer?
 
   @Binds
   abstract fun bindKailleraServerController(

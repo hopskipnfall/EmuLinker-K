@@ -17,49 +17,14 @@ import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086ClientHandler
 import org.emulinker.kaillera.controller.v086.protocol.Chat
 import org.emulinker.kaillera.controller.v086.protocol.InformationMessage
+import org.emulinker.kaillera.model.KailleraServer
+import org.emulinker.kaillera.model.KailleraUser
 import org.emulinker.kaillera.model.exception.ActionException
 import org.emulinker.kaillera.model.impl.KailleraGameImpl
-import org.emulinker.kaillera.model.impl.KailleraServerImpl
-import org.emulinker.kaillera.model.impl.KailleraUserImpl
 import org.emulinker.kaillera.model.impl.Trivia
 import org.emulinker.util.EmuLang
 import org.emulinker.util.EmuUtil
 import org.emulinker.util.WildcardStringPattern
-
-private const val COMMAND_ANNOUNCE = "/announce"
-
-private const val COMMAND_ANNOUNCEALL = "/announceall"
-
-private const val COMMAND_ANNOUNCEGAME = "/announcegame"
-
-private const val COMMAND_BAN = "/ban"
-
-private const val COMMAND_CLEAR = "/clear"
-
-private const val COMMAND_CLOSEGAME = "/closegame"
-
-private const val COMMAND_FINDGAME = "/findgame"
-
-private const val COMMAND_FINDUSER = "/finduser"
-
-private const val COMMAND_HELP = "/help"
-
-private const val COMMAND_KICK = "/kick"
-
-private const val COMMAND_SILENCE = "/silence"
-
-private const val COMMAND_TEMPADMIN = "/tempadmin"
-
-private const val COMMAND_TRIVIA = "/trivia"
-
-private const val COMMAND_VERSION = "/version"
-
-// SF MOD
-private const val COMMAND_STEALTH = "/stealth"
-
-private const val COMMAND_TEMPELEVATED = "/tempelevated"
-
-private const val COMMAND_TEMPMODERATOR = "/tempmoderator"
 
 @Singleton
 class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
@@ -91,9 +56,9 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
   @Throws(FatalActionException::class)
   override fun performAction(chatMessage: Chat, clientHandler: V086ClientHandler) {
     val chat: String = chatMessage.message
-    val server = clientHandler.controller.server as KailleraServerImpl
+    val server = clientHandler.controller.server
     val accessManager = server.accessManager
-    val user = clientHandler.user as KailleraUserImpl
+    val user = clientHandler.user
     if (accessManager.getAccess(clientHandler.remoteInetAddress) < AccessManager.ACCESS_ADMIN) {
       if (
         chat.startsWith(COMMAND_SILENCE) ||
@@ -193,8 +158,8 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
   @Throws(ActionException::class, MessageFormatException::class)
   private fun processHelp(
     message: String?,
-    server: KailleraServerImpl,
-    admin: KailleraUserImpl,
+    server: KailleraServer,
+    admin: KailleraUser,
     clientHandler: V086ClientHandler?
   ) {
     if (admin.accessLevel == AccessManager.ACCESS_MODERATOR) return
@@ -354,8 +319,8 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
   @Throws(ActionException::class, MessageFormatException::class)
   private fun processFindUser(
     message: String?,
-    server: KailleraServerImpl,
-    admin: KailleraUserImpl,
+    server: KailleraServer,
+    admin: KailleraUser,
     clientHandler: V086ClientHandler?
   ) {
     val space = message!!.indexOf(' ')
@@ -388,8 +353,8 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
   @Throws(ActionException::class, MessageFormatException::class)
   private fun processFindGame(
     message: String?,
-    server: KailleraServerImpl,
-    admin: KailleraUserImpl,
+    server: KailleraServer,
+    admin: KailleraUser,
     clientHandler: V086ClientHandler?
   ) {
     val space = message!!.indexOf(' ')
@@ -424,8 +389,8 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
   @Throws(ActionException::class, MessageFormatException::class)
   private fun processSilence(
     message: String,
-    server: KailleraServerImpl,
-    admin: KailleraUserImpl,
+    server: KailleraServer,
+    admin: KailleraUser,
     clientHandler: V086ClientHandler?
   ) {
     val scanner = Scanner(message).useDelimiter(" ")
@@ -434,7 +399,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
       val userID = scanner.nextInt()
       val minutes = scanner.nextInt()
       val user =
-        server.getUser(userID) as KailleraUserImpl
+        server.getUser(userID)
           ?: throw ActionException(EmuLang.getString("AdminCommandAction.UserNotFound", +userID))
       if (user.id == admin.id)
         throw ActionException(EmuLang.getString("AdminCommandAction.CanNotSilenceSelf"))
@@ -472,8 +437,8 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
   @Throws(ActionException::class, MessageFormatException::class)
   private fun processKick(
     message: String,
-    server: KailleraServerImpl,
-    admin: KailleraUserImpl,
+    server: KailleraServer,
+    admin: KailleraUser,
     clientHandler: V086ClientHandler?
   ) {
     val scanner = Scanner(message).useDelimiter(" ")
@@ -481,7 +446,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
       scanner.next()
       val userID = scanner.nextInt()
       val user =
-        server.getUser(userID) as KailleraUserImpl
+        server.getUser(userID)
           ?: throw ActionException(EmuLang.getString("AdminCommandAction.UserNotFound", userID))
       if (user.id == admin.id)
         throw ActionException(EmuLang.getString("AdminCommandAction.CanNotKickSelf"))
@@ -504,8 +469,8 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
   @Throws(ActionException::class, MessageFormatException::class)
   private fun processCloseGame(
     message: String,
-    server: KailleraServerImpl,
-    admin: KailleraUserImpl,
+    server: KailleraServer,
+    admin: KailleraUser,
     clientHandler: V086ClientHandler?
   ) {
     val scanner = Scanner(message).useDelimiter(" ")
@@ -532,8 +497,8 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
   @Throws(ActionException::class, MessageFormatException::class)
   private fun processBan(
     message: String,
-    server: KailleraServerImpl,
-    admin: KailleraUserImpl,
+    server: KailleraServer,
+    admin: KailleraUser,
     clientHandler: V086ClientHandler?
   ) {
     val scanner = Scanner(message).useDelimiter(" ")
@@ -542,7 +507,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
       val userID = scanner.nextInt()
       val minutes = scanner.nextInt()
       val user =
-        server.getUser(userID) as KailleraUserImpl
+        server.getUser(userID)
           ?: throw ActionException(EmuLang.getString("AdminCommandAction.UserNotFound", userID))
       if (user.id == admin.id)
         throw ActionException(EmuLang.getString("AdminCommandAction.CanNotBanSelf"))
@@ -569,8 +534,8 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
   @Throws(ActionException::class, MessageFormatException::class)
   private fun processTempElevated(
     message: String,
-    server: KailleraServerImpl,
-    admin: KailleraUserImpl,
+    server: KailleraServer,
+    admin: KailleraUser,
     clientHandler: V086ClientHandler?
   ) {
     if (admin.accessLevel != AccessManager.ACCESS_SUPERADMIN) {
@@ -582,7 +547,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
       val userID = scanner.nextInt()
       val minutes = scanner.nextInt()
       val user =
-        server.getUser(userID) as KailleraUserImpl
+        server.getUser(userID)
           ?: throw ActionException(EmuLang.getString("AdminCommandAction.UserNotFound", userID))
       if (user.id == admin.id)
         throw ActionException(EmuLang.getString("AdminCommandAction.AlreadyAdmin"))
@@ -611,8 +576,8 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
   @Throws(ActionException::class, MessageFormatException::class)
   private fun processTempModerator(
     message: String,
-    server: KailleraServerImpl,
-    admin: KailleraUserImpl,
+    server: KailleraServer,
+    admin: KailleraUser,
     clientHandler: V086ClientHandler?
   ) {
     if (admin.accessLevel != AccessManager.ACCESS_SUPERADMIN) {
@@ -624,7 +589,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
       val userID = scanner.nextInt()
       val minutes = scanner.nextInt()
       val user =
-        server.getUser(userID) as KailleraUserImpl
+        server.getUser(userID)
           ?: throw ActionException(EmuLang.getString("AdminCommandAction.UserNotFound", userID))
       if (user.id == admin.id)
         throw ActionException(EmuLang.getString("AdminCommandAction.AlreadyAdmin"))
@@ -652,8 +617,8 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
   @Throws(ActionException::class, MessageFormatException::class)
   private fun processTempAdmin(
     message: String,
-    server: KailleraServerImpl,
-    admin: KailleraUserImpl,
+    server: KailleraServer,
+    admin: KailleraUser,
     clientHandler: V086ClientHandler?
   ) {
     if (admin.accessLevel != AccessManager.ACCESS_SUPERADMIN) {
@@ -665,7 +630,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
       val userID = scanner.nextInt()
       val minutes = scanner.nextInt()
       val user =
-        server.getUser(userID) as KailleraUserImpl
+        server.getUser(userID)
           ?: throw ActionException(EmuLang.getString("AdminCommandAction.UserNotFound", userID))
       if (user.id == admin.id)
         throw ActionException(EmuLang.getString("AdminCommandAction.AlreadyAdmin"))
@@ -691,8 +656,8 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
   @Throws(ActionException::class, MessageFormatException::class)
   private fun processStealth(
     message: String,
-    server: KailleraServerImpl,
-    admin: KailleraUserImpl,
+    server: KailleraServer,
+    admin: KailleraUser,
     clientHandler: V086ClientHandler?
   ) {
     if (admin.game != null) throw ActionException("Can't use /stealth while in a gameroom.")
@@ -712,8 +677,8 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
   @Throws(ActionException::class, MessageFormatException::class)
   private fun processTrivia(
     message: String,
-    server: KailleraServerImpl,
-    admin: KailleraUserImpl,
+    server: KailleraServer,
+    admin: KailleraUser,
     clientHandler: V086ClientHandler?
   ) {
     if (message == "/triviareset") {
@@ -819,8 +784,8 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
   @Throws(ActionException::class, MessageFormatException::class)
   private fun processAnnounce(
     message: String,
-    server: KailleraServerImpl,
-    admin: KailleraUserImpl,
+    server: KailleraServer,
+    admin: KailleraUser,
     clientHandler: V086ClientHandler?
   ) {
     val space = message.indexOf(' ')
@@ -841,8 +806,8 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
   @Throws(ActionException::class, MessageFormatException::class)
   private fun processGameAnnounce(
     message: String,
-    server: KailleraServerImpl,
-    admin: KailleraUserImpl,
+    server: KailleraServer,
+    admin: KailleraUser,
     clientHandler: V086ClientHandler?
   ) {
     val scanner = Scanner(message).useDelimiter(" ")
@@ -866,8 +831,8 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
   @Throws(ActionException::class, MessageFormatException::class)
   private fun processClear(
     message: String,
-    server: KailleraServerImpl,
-    admin: KailleraUserImpl,
+    server: KailleraServer,
+    admin: KailleraUser,
     clientHandler: V086ClientHandler?
   ) {
     val space = message.indexOf(' ')
@@ -905,8 +870,8 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
   @Throws(ActionException::class, MessageFormatException::class)
   private fun processVersion(
     message: String?,
-    server: KailleraServerImpl,
-    admin: KailleraUserImpl,
+    server: KailleraServer,
+    admin: KailleraUser,
     clientHandler: V086ClientHandler?
   ) {
     try {
@@ -1049,5 +1014,40 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
 
   companion object {
     private val logger = FluentLogger.forEnclosingClass()
+
+    private const val COMMAND_ANNOUNCE = "/announce"
+
+    private const val COMMAND_ANNOUNCEALL = "/announceall"
+
+    private const val COMMAND_ANNOUNCEGAME = "/announcegame"
+
+    private const val COMMAND_BAN = "/ban"
+
+    private const val COMMAND_CLEAR = "/clear"
+
+    private const val COMMAND_CLOSEGAME = "/closegame"
+
+    private const val COMMAND_FINDGAME = "/findgame"
+
+    private const val COMMAND_FINDUSER = "/finduser"
+
+    private const val COMMAND_HELP = "/help"
+
+    private const val COMMAND_KICK = "/kick"
+
+    private const val COMMAND_SILENCE = "/silence"
+
+    private const val COMMAND_TEMPADMIN = "/tempadmin"
+
+    private const val COMMAND_TRIVIA = "/trivia"
+
+    private const val COMMAND_VERSION = "/version"
+
+    // SF MOD
+    private const val COMMAND_STEALTH = "/stealth"
+
+    private const val COMMAND_TEMPELEVATED = "/tempelevated"
+
+    private const val COMMAND_TEMPMODERATOR = "/tempmoderator"
   }
 }

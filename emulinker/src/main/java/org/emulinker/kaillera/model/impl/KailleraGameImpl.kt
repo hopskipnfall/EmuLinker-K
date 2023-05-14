@@ -9,6 +9,7 @@ import org.emulinker.kaillera.access.AccessManager
 import org.emulinker.kaillera.master.StatsCollector
 import org.emulinker.kaillera.model.GameStatus
 import org.emulinker.kaillera.model.KailleraGame
+import org.emulinker.kaillera.model.KailleraServer
 import org.emulinker.kaillera.model.KailleraUser
 import org.emulinker.kaillera.model.UserStatus
 import org.emulinker.kaillera.model.event.AllReadyEvent
@@ -37,8 +38,8 @@ import org.emulinker.util.EmuLang
 class KailleraGameImpl(
   override val id: Int,
   override val romName: String,
-  override val owner: KailleraUserImpl,
-  override val server: KailleraServerImpl,
+  override val owner: KailleraUser,
+  override val server: KailleraServer,
   val bufferSize: Int,
 ) : KailleraGame {
 
@@ -123,7 +124,7 @@ class KailleraGameImpl(
     }
 
   private fun addEvent(event: GameEvent?) {
-    for (player in players) (player as KailleraUserImpl).addEvent(event)
+    for (player in players) player.addEvent(event)
   }
 
   @Synchronized
@@ -265,7 +266,7 @@ class KailleraGameImpl(
     if (mutedUsers.contains(user.connectSocketAddress.address.hostAddress)) {
       user.isMuted = true
     }
-    players.add(user as KailleraUserImpl)
+    players.add(user)
     user.playerNumber = players.size
     server.addEvent(GameStatusChangedEvent(server, this))
     logger.atInfo().log("$user joined: $this")
@@ -411,14 +412,7 @@ class KailleraGameImpl(
       player.timeouts = 0
       player.frameCount = 0
       actionQueueBuilder[i] =
-        PlayerActionQueue(
-          playerNumber,
-          player as KailleraUserImpl,
-          players.size,
-          bufferSize,
-          timeoutMillis,
-          true
-        )
+        PlayerActionQueue(playerNumber, player, players.size, bufferSize, timeoutMillis, true)
       // SF MOD - player.setPlayerNumber(playerNumber);
       // SF MOD - Delay Value = [(60/connectionType) * (ping/1000)] + 1
       val delayVal = 60 / player.connectionType.byteValue * (player.ping.toDouble() / 1000) + 1
@@ -519,7 +513,7 @@ class KailleraGameImpl(
     }
     addEvent(UserDroppedGameEvent(this, user, playerNumber))
     if (user.ignoringUnnecessaryServerActivity) {
-      // KailleraUserImpl u = (KailleraUserImpl) user;
+      // KailleraUser u = (KailleraUser) user;
       // u.addEvent(ServerACK.create(.getNextMessageNumber());
       // u.addEvent(new ConnectedEvent(server, user));
       // u.addEvent(new UserQuitEvent(server, user, "Rejoining..."));
@@ -563,7 +557,7 @@ class KailleraGameImpl(
       logger.atInfo().log("$this: game desynched: game closed!")
     }
     players.forEach {
-      (it as KailleraUserImpl).apply {
+      it.apply {
         status = UserStatus.IDLE
         isMuted = false
         ignoringUnnecessaryServerActivity = false
@@ -649,7 +643,7 @@ class KailleraGameImpl(
         playerNumber,
         playerActionQueueCopy.size
       )
-    (user as KailleraUserImpl?)!!.addEvent(GameDataEvent(this, response))
+    user.addEvent(GameDataEvent(this, response))
   }
 
   // it's very important this method is synchronized
