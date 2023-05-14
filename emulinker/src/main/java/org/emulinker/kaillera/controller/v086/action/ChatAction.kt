@@ -55,10 +55,7 @@ class ChatAction @Inject internal constructor(private val adminCommandAction: Ad
     try {
       clientHandler.user.chat(message.message)
     } catch (e: ActionException) {
-      logger
-        .atInfo()
-        .withCause(e)
-        .log("Chat Denied: " + clientHandler.user + ": " + message.message)
+      logger.atInfo().withCause(e).log("Chat Denied: %s: %s", clientHandler.user, message.message)
       try {
         clientHandler.send(
           InformationMessage(
@@ -292,7 +289,7 @@ class ChatAction @Inject internal constructor(private val adminCommandAction: Ad
             user1
           )
           user.server.announce(
-            "<" + clientHandler.user.name + "> (" + clientHandler.user.id + "): " + m,
+            "<${clientHandler.user.name}> (${clientHandler.user.id}): $m",
             false,
             user as KailleraUserImpl
           )
@@ -347,7 +344,7 @@ class ChatAction @Inject internal constructor(private val adminCommandAction: Ad
               }
               var m = sb.toString()
               m = m.trim { it <= ' ' }
-              if (m.isNullOrBlank() || m.startsWith("�") || m.startsWith("�")) return
+              if (m.isBlank() || m.startsWith("�") || m.startsWith("�")) return
               if (access == AccessManager.ACCESS_NORMAL) {
                 val chars = m.toCharArray()
                 var i = 0
@@ -506,10 +503,9 @@ class ChatAction @Inject internal constructor(private val adminCommandAction: Ad
           logger
             .atInfo()
             .log(
-              "IGNORE USER ERROR: " +
-                user.name +
-                ": " +
-                clientHandler.remoteSocketAddress!!.hostName
+              "IGNORE USER ERROR: %s: %s",
+              user.name,
+              clientHandler.remoteSocketAddress!!.hostName
             )
           return
         }
@@ -561,9 +557,7 @@ class ChatAction @Inject internal constructor(private val adminCommandAction: Ad
           logger
             .atInfo()
             .withCause(e)
-            .log(
-              "UNIGNORE USER ERROR: ${user.name}: ${clientHandler.remoteSocketAddress!!.hostName}"
-            )
+            .log("UNIGNORE USER ERROR: %s: %s", user.name, clientHandler.remoteSocketAddress)
           return
         }
       } else if (chatMessage.message == "/help") {

@@ -23,10 +23,6 @@ import org.emulinker.util.EmuLang
 import org.emulinker.util.EmuUtil
 import org.emulinker.util.Executable
 
-private val logger = FluentLogger.forEnclosingClass()
-
-private const val EMULINKER_CLIENT_NAME = "EmulinkerSF Admin Client"
-
 class KailleraUserImpl(
   override val id: Int,
   override val protocol: String,
@@ -542,5 +538,11 @@ class KailleraUserImpl(
       threadIsActive = false
       logger.atFine().log("$this thread exiting...")
     }
+  }
+
+  companion object {
+    private val logger = FluentLogger.forEnclosingClass()
+
+    private const val EMULINKER_CLIENT_NAME = "EmulinkerSF Admin Client"
   }
 }

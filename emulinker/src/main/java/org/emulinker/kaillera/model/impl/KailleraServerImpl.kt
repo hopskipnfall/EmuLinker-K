@@ -32,8 +32,6 @@ import org.emulinker.util.EmuLang.hasString
 import org.emulinker.util.EmuUtil.formatSocketAddress
 import org.emulinker.util.Executable
 
-private val logger = FluentLogger.forEnclosingClass()
-
 @Singleton
 class KailleraServerImpl
 @Inject
@@ -964,5 +962,9 @@ internal constructor(
       MetricRegistry.name(this.javaClass, "games", "playing"),
       Gauge { gamesMap.values.count { it.status == GameStatus.PLAYING } }
     )
+  }
+
+  companion object {
+    private val logger = FluentLogger.forEnclosingClass()
   }
 }

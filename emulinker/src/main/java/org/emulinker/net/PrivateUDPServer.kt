@@ -10,8 +10,6 @@ import java.nio.ByteBuffer
 import javax.inject.Named
 import org.emulinker.util.EmuUtil.formatSocketAddress
 
-private val logger = FluentLogger.forEnclosingClass()
-
 abstract class PrivateUDPServer(
   shutdownOnExit: Boolean,
   val remoteInetAddress: InetAddress,
@@ -48,5 +46,9 @@ abstract class PrivateUDPServer(
 
   init {
     clientRequestTimer = metrics.timer(MetricRegistry.name(this.javaClass, "clientRequests"))
+  }
+
+  companion object {
+    private val logger = FluentLogger.forEnclosingClass()
   }
 }

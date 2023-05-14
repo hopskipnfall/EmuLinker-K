@@ -5,7 +5,7 @@ import org.emulinker.kaillera.model.KailleraServer
 import org.emulinker.kaillera.model.KailleraUser
 
 sealed interface ServerEvent : KailleraEvent {
-  val server: KailleraServer?
+  val server: KailleraServer
 }
 
 data class GameStatusChangedEvent(override val server: KailleraServer, val game: KailleraGame) :

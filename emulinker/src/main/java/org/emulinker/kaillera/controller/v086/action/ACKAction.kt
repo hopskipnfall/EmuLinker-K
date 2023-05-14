@@ -27,7 +27,9 @@ class ACKAction @Inject internal constructor() :
   override fun performAction(message: Ack.ClientAck, clientHandler: V086ClientHandler) {
     actionPerformedCount++
     val user = clientHandler.user
-    if (user!!.loggedIn) return
+    if (user.loggedIn) {
+      return
+    }
     clientHandler.addSpeedMeasurement()
     if (clientHandler.speedMeasurementCount > clientHandler.numAcksForSpeedTest) {
       user.ping = clientHandler.averageNetworkSpeed
@@ -44,7 +46,13 @@ class ACKAction @Inject internal constructor() :
       } catch (e: LoginException) {
         try {
           clientHandler.send(
-            ConnectionRejected(clientHandler.nextMessageNumber, "server", user.id, e.message ?: "")
+            ConnectionRejected(
+              clientHandler.nextMessageNumber,
+              // TODO(nue): Localize this?
+              username = "server",
+              user.id,
+              e.message ?: ""
+            )
           )
         } catch (e2: MessageFormatException) {
           logger.atSevere().withCause(e2).log("Failed to construct new ConnectionRejected")

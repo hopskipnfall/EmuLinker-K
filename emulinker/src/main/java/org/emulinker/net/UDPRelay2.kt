@@ -13,8 +13,6 @@ import kotlin.Throws
 import kotlin.jvm.JvmOverloads
 import org.emulinker.util.EmuUtil.formatSocketAddress
 
-private val logger = FluentLogger.forEnclosingClass()
-
 abstract class UDPRelay2
 @JvmOverloads
 constructor(
@@ -230,6 +228,8 @@ constructor(
   }
 
   companion object {
+    private val logger = FluentLogger.forEnclosingClass()
+
     private const val DEFAULT_BUFFER_SIZE = 4096
     private var threadCounter = 0
   }

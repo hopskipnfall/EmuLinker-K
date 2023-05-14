@@ -12,8 +12,6 @@ import org.emulinker.kaillera.model.KailleraServer
 import org.emulinker.kaillera.release.ReleaseInfo
 import org.emulinker.util.Executable
 
-private val logger = FluentLogger.forEnclosingClass()
-
 @Singleton
 class MasterListUpdater
 @Inject
@@ -61,11 +59,9 @@ internal constructor(
       logger
         .atFine()
         .log(
-          "MasterListUpdater thread started (ThreadPool:" +
-            threadPool.activeCount +
-            "/" +
-            threadPool.poolSize +
-            ")"
+          "MasterListUpdater thread started (ThreadPool:%d/%d)",
+          threadPool.activeCount,
+          threadPool.poolSize
         )
     }
   }
@@ -125,5 +121,9 @@ internal constructor(
           releaseInfo!!
         )
     }
+  }
+
+  companion object {
+    private val logger = FluentLogger.forEnclosingClass()
   }
 }

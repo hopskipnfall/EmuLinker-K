@@ -5,6 +5,7 @@ import com.codahale.metrics.MetricRegistry
 import com.google.common.flogger.FluentLogger
 import java.net.InetSocketAddress
 import java.nio.ByteBuffer
+import java.util.Set as JavaSet
 import java.util.concurrent.ThreadPoolExecutor
 import javax.inject.Inject
 import javax.inject.Named
@@ -25,13 +26,17 @@ import org.emulinker.util.EmuUtil.dumpBuffer
 import org.emulinker.util.EmuUtil.formatSocketAddress
 import org.emulinker.util.LoggingUtils.debugLog
 
-/** The UDP Server implementation. */
+/**
+ * The UDP Server implementation.
+ *
+ * This is the main server for new connections (usually on 27888).
+ */
 @Singleton
 class ConnectController
 @Inject
 internal constructor(
   private val threadPool: ThreadPoolExecutor,
-  kailleraServerControllers: java.util.Set<KailleraServerController>,
+  kailleraServerControllers: JavaSet<KailleraServerController>,
   private val accessManager: AccessManager,
   config: Configuration,
   metrics: MetricRegistry?,
@@ -79,24 +84,20 @@ internal constructor(
     logger
       .atFine()
       .log(
-        toString() +
-          " Thread starting (ThreadPool:" +
-          threadPool.activeCount +
-          "/" +
-          threadPool.poolSize +
-          ")"
+        "%s Thread starting (ThreadPool:%d/%d)",
+        this,
+        threadPool.activeCount,
+        threadPool.poolSize
       )
     threadPool.execute(this)
     Thread.yield()
     logger
       .atFine()
       .log(
-        toString() +
-          " Thread started (ThreadPool:" +
-          threadPool.activeCount +
-          "/" +
-          threadPool.poolSize +
-          ")"
+        "%s Thread starting (ThreadPool:%d/%d)",
+        this,
+        threadPool.activeCount,
+        threadPool.poolSize
       )
   }
 
@@ -253,7 +254,7 @@ internal constructor(
     } catch (e: BindException) {
       throw IllegalStateException(e)
     }
-    logger.atInfo().log("Ready to accept connections on port $port")
+    logger.atInfo().log("Ready to accept connections on port %d", port)
   }
 
   companion object {

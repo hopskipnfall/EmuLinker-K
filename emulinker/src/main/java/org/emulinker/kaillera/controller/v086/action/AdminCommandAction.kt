@@ -26,8 +26,6 @@ import org.emulinker.util.EmuLang
 import org.emulinker.util.EmuUtil
 import org.emulinker.util.WildcardStringPattern
 
-private val logger = FluentLogger.forEnclosingClass()
-
 private const val COMMAND_ANNOUNCE = "/announce"
 
 private const val COMMAND_ANNOUNCEALL = "/announceall"
@@ -121,7 +119,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
         throw FatalActionException("Admin Command Denied: $user does not have Admin access: $chat")
       }
     }
-    logger.atInfo().log("$user: Admin Command: $chat")
+    logger.atInfo().log("%s: Admin Command: %s", user, chat)
     try {
       when {
         chat.startsWith(COMMAND_HELP) -> {
@@ -175,7 +173,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
         else -> throw ActionException("Invalid Command: $chat")
       }
     } catch (e: ActionException) {
-      logger.atSevere().withCause(e).log("Admin Command Failed: $user: $chat")
+      logger.atSevere().withCause(e).log("Admin Command Failed: %s: %s", user, chat)
       try {
         clientHandler.send(
           InformationMessage(
@@ -210,9 +208,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
         EmuLang.getString("AdminCommandAction.HelpVersion")
       )
     )
-    try {
-      Thread.sleep(20)
-    } catch (e: Exception) {}
+    sleep(20.milliseconds)
     clientHandler.send(
       InformationMessage(
         clientHandler.nextMessageNumber,
@@ -220,9 +216,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
         EmuLang.getString("AdminCommandAction.HelpKick")
       )
     )
-    try {
-      Thread.sleep(20)
-    } catch (e: Exception) {}
+    sleep(20.milliseconds)
     clientHandler.send(
       InformationMessage(
         clientHandler.nextMessageNumber,
@@ -230,9 +224,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
         EmuLang.getString("AdminCommandAction.HelpSilence")
       )
     )
-    try {
-      Thread.sleep(20)
-    } catch (e: Exception) {}
+    sleep(20.milliseconds)
     clientHandler.send(
       InformationMessage(
         clientHandler.nextMessageNumber,
@@ -240,9 +232,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
         EmuLang.getString("AdminCommandAction.HelpBan")
       )
     )
-    try {
-      Thread.sleep(20)
-    } catch (e: Exception) {}
+    sleep(20.milliseconds)
     if (admin.accessLevel == AccessManager.ACCESS_ADMIN) {
       clientHandler.send(
         InformationMessage(
@@ -251,9 +241,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
           EmuLang.getString("AdminCommandAction.HelpClear")
         )
       )
-      try {
-        Thread.sleep(20)
-      } catch (e: Exception) {}
+      sleep(20.milliseconds)
     }
     clientHandler.send(
       InformationMessage(
@@ -262,9 +250,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
         EmuLang.getString("AdminCommandAction.HelpCloseGame")
       )
     )
-    try {
-      Thread.sleep(20)
-    } catch (e: Exception) {}
+    sleep(20.milliseconds)
     clientHandler.send(
       InformationMessage(
         clientHandler.nextMessageNumber,
@@ -272,9 +258,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
         EmuLang.getString("AdminCommandAction.HelpAnnounce")
       )
     )
-    try {
-      Thread.sleep(20)
-    } catch (e: Exception) {}
+    sleep(20.milliseconds)
     clientHandler.send(
       InformationMessage(
         clientHandler.nextMessageNumber,
@@ -282,9 +266,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
         EmuLang.getString("AdminCommandAction.HelpAnnounceAll")
       )
     )
-    try {
-      Thread.sleep(20)
-    } catch (e: Exception) {}
+    sleep(20.milliseconds)
     clientHandler.send(
       InformationMessage(
         clientHandler.nextMessageNumber,
@@ -292,9 +274,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
         EmuLang.getString("AdminCommandAction.HelpAnnounceGame")
       )
     )
-    try {
-      Thread.sleep(20)
-    } catch (e: Exception) {}
+    sleep(20.milliseconds)
     clientHandler.send(
       InformationMessage(
         clientHandler.nextMessageNumber,
@@ -302,9 +282,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
         EmuLang.getString("AdminCommandAction.HelpFindUser")
       )
     )
-    try {
-      Thread.sleep(20)
-    } catch (e: Exception) {}
+    sleep(20.milliseconds)
     clientHandler.send(
       InformationMessage(
         clientHandler.nextMessageNumber,
@@ -312,9 +290,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
         EmuLang.getString("AdminCommandAction.HelpFindGame")
       )
     )
-    try {
-      Thread.sleep(20)
-    } catch (e: Exception) {}
+    sleep(20.milliseconds)
     clientHandler.send(
       InformationMessage(
         clientHandler.nextMessageNumber,
@@ -322,9 +298,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
         "/triviaon to start the trivia bot- /triviapause to pause the bot- /triviaresume to resume the bot after pause- /triviasave to save the bot's scores- /triviatime <#> to change the question delay"
       )
     )
-    try {
-      Thread.sleep(20)
-    } catch (e: Exception) {}
+    sleep(20.milliseconds)
     clientHandler.send(
       InformationMessage(
         clientHandler.nextMessageNumber,
@@ -332,9 +306,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
         "/triviaoff to stop the bot- /triviascores to show top 3 scores- /triviawin to show a winner- /triviaupdate <IP Address> <New IP Address> to update ip address"
       )
     )
-    try {
-      Thread.sleep(20)
-    } catch (e: Exception) {}
+    sleep(20.milliseconds)
     clientHandler.send(
       InformationMessage(
         clientHandler.nextMessageNumber,
@@ -342,9 +314,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
         "/stealthon /stealthoff to join a room invisibly."
       )
     )
-    try {
-      Thread.sleep(20)
-    } catch (e: Exception) {}
+    sleep(20.milliseconds)
     if (admin.accessLevel == AccessManager.ACCESS_SUPERADMIN) {
       clientHandler.send(
         InformationMessage(
@@ -353,9 +323,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
           "/tempelevated <UserID> <min> to give a user temporary elevated access."
         )
       )
-      try {
-        Thread.sleep(20)
-      } catch (e: Exception) {}
+      sleep(20.milliseconds)
       clientHandler.send(
         InformationMessage(
           clientHandler.nextMessageNumber,
@@ -363,9 +331,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
           "/tempmoderator <UserID> <min> to give a user temporary moderator access."
         )
       )
-      try {
-        Thread.sleep(20)
-      } catch (e: Exception) {}
+      sleep(20.milliseconds)
       clientHandler.send(
         InformationMessage(
           clientHandler.nextMessageNumber,
@@ -373,9 +339,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
           EmuLang.getString("AdminCommandAction.HelpTempAdmin")
         )
       )
-      try {
-        Thread.sleep(20)
-      } catch (e: Exception) {}
+      sleep(20.milliseconds)
       clientHandler.send(
         InformationMessage(
           clientHandler.nextMessageNumber,
@@ -383,9 +347,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
           "/clear <IP Address> to remove any temp ban, silence, elevated, moderator or admin."
         )
       )
-      try {
-        Thread.sleep(20)
-      } catch (e: Exception) {}
+      sleep(20.milliseconds)
     }
   }
 
@@ -759,7 +721,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
         server.trivia!!.saveScores(true)
         server.triviaThread!!.stop()
       }
-      server.announce("<Trivia> " + "SupraTrivia has been reset!", false, null)
+      server.announce("<Trivia> SupraTrivia has been reset!", false, null)
       val trivia = Trivia(server)
       val triviaThread = Thread(trivia)
       triviaThread.start()
@@ -787,13 +749,13 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
         throw ActionException("Trivia needs to be started first!")
       }
       server.trivia!!.setTriviaPaused(true)
-      server.announce("<Trivia> " + "SupraTrivia will be paused after this question!", false, null)
+      server.announce("<Trivia> SupraTrivia will be paused after this question!", false, null)
     } else if (message == "/triviaresume") {
       if (server.trivia == null) {
         throw ActionException("Trivia needs to be started first!")
       }
       server.trivia!!.setTriviaPaused(false)
-      server.announce("<Trivia> " + "SupraTrivia has been resumed!", false, null)
+      server.announce("<Trivia> SupraTrivia has been resumed!", false, null)
     } else if (message == "/triviasave") {
       if (server.trivia == null) {
         throw ActionException("Trivia needs to be started first!")
@@ -844,7 +806,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
         val questionTime = scanner.nextInt()
         server.trivia!!.setQuestionTime(questionTime * 1000)
         server.announce(
-          "<Trivia> " + "SupraTrivia's question delay has been changed to " + questionTime + "s!",
+          "<Trivia> SupraTrivia's question delay has been changed to " + questionTime + "s!",
           false,
           admin
         )
@@ -1083,5 +1045,9 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
     try {
       Thread.sleep(d.inWholeMilliseconds)
     } catch (e: Exception) {}
+  }
+
+  companion object {
+    private val logger = FluentLogger.forEnclosingClass()
   }
 }

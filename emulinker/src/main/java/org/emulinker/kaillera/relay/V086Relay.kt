@@ -17,8 +17,6 @@ import org.emulinker.kaillera.controller.v086.protocol.V086BundleFormatException
 import org.emulinker.net.UDPRelay
 import org.emulinker.util.EmuUtil.dumpBuffer
 
-private val logger = FluentLogger.forEnclosingClass()
-
 class V086Relay
 @AssistedInject
 internal constructor(
@@ -115,5 +113,9 @@ internal constructor(
     // Cast to avoid issue with java version mismatch: https://stackoverflow.com/a/61267496/2875073
     (sendBuffer as Buffer).flip()
     return sendBuffer
+  }
+
+  companion object {
+    private val logger = FluentLogger.forEnclosingClass()
   }
 }

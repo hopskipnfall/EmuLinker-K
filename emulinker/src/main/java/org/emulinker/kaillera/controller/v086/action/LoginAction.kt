@@ -36,7 +36,7 @@ class LoginAction @Inject internal constructor() :
     try {
       clientHandler.send(Ack.ServerAck(clientHandler.nextMessageNumber))
     } catch (e: MessageFormatException) {
-      logger.atSevere().withCause(e).log("Failed to construct ServerACK message")
+      logger.atSevere().withCause(e).log("Failed to construct ACK.ServerACK message")
     }
   }
 

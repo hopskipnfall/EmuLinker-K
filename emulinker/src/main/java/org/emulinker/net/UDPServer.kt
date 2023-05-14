@@ -14,8 +14,6 @@ import kotlin.Throws
 import org.emulinker.util.EmuUtil.formatSocketAddress
 import org.emulinker.util.Executable
 
-private val logger = FluentLogger.forEnclosingClass()
-
 abstract class UDPServer(
   shutdownOnExit: Boolean,
   metrics: MetricRegistry?,
@@ -201,5 +199,9 @@ abstract class UDPServer(
 
   init {
     if (shutdownOnExit) Runtime.getRuntime().addShutdownHook(ShutdownThread())
+  }
+
+  companion object {
+    private val logger = FluentLogger.forEnclosingClass()
   }
 }

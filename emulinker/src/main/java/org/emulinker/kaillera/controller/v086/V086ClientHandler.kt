@@ -128,12 +128,9 @@ constructor(
     logger
       .atFine()
       .log(
-        toString() +
-          " thread starting (ThreadPool:" +
-          controller.threadPool.activeCount +
-          "/" +
-          controller.threadPool.poolSize +
-          ")"
+        toString() + " thread starting (ThreadPool:%d/%d)",
+        controller.threadPool.activeCount,
+        controller.threadPool.poolSize
       )
     controller.threadPool.execute(this)
     Thread.yield()
@@ -160,12 +157,9 @@ constructor(
     */ logger
       .atFine()
       .log(
-        toString() +
-          " thread started (ThreadPool:" +
-          controller.threadPool.activeCount +
-          "/" +
-          controller.threadPool.poolSize +
-          ")"
+        toString() + " thread started (ThreadPool:%d/%d)",
+        controller.threadPool.activeCount,
+        controller.threadPool.poolSize
       )
     controller.clientHandlers[user.id] = this
   }
@@ -235,9 +229,11 @@ constructor(
         null
       } ?: return
 
-    logger.atFinest().log("<- FROM P%d: %s", user?.playerNumber, inBundle?.messages?.firstOrNull())
+    debugLog {
+      logger.atFinest().log("<- FROM P%d: %s", user.playerNumber, inBundle.messages.firstOrNull())
+    }
     clientRetryCount =
-      if (inBundle!!.numMessages == 0) {
+      if (inBundle.numMessages == 0) {
         logger
           .atFine()
           .log("%s received bundle of %d messages from %s", this, inBundle.numMessages, user)
@@ -295,8 +291,7 @@ constructor(
         }
       }
     } catch (e: FatalActionException) {
-      logger.atWarning().withCause(e).log(toString() + " fatal action, closing connection")
-      Thread.yield()
+      logger.atWarning().withCause(e).log("%s fatal action, closing connection", this)
       stop()
     }
   }
@@ -334,9 +329,8 @@ constructor(
             .atSevere()
             .log("%s found no UserEventHandler registered to handle user event: ", this, event)
           return
-
-          (eventHandler as V086UserEventHandler<UserEvent>).handleEvent(event, this)
         }
+        (eventHandler as V086UserEventHandler<UserEvent>).handleEvent(event, this)
       }
       is StopFlagEvent -> {}
     }

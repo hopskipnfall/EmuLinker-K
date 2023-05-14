@@ -14,8 +14,6 @@ import org.emulinker.kaillera.model.exception.ActionException
 import org.emulinker.kaillera.model.exception.GameChatException
 import org.emulinker.kaillera.model.impl.KailleraUserImpl
 
-private const val ADMIN_COMMAND_ESCAPE_STRING = "/"
-
 @Singleton
 class GameChatAction
 @Inject
@@ -180,7 +178,7 @@ internal constructor(
           }
           var m = sb.toString()
           m = m.trim { it <= ' ' }
-          if (m.isNullOrBlank() || m.startsWith("�") || m.startsWith("�")) return
+          if (m.isBlank() || m.startsWith("�") || m.startsWith("�")) return
           if (access == AccessManager.ACCESS_NORMAL) {
             val chars = m.toCharArray()
             for (i in chars.indices) {
@@ -242,7 +240,7 @@ internal constructor(
                 var i = 0
                 while (i < chars.size) {
                   if (chars[i].code < 32) {
-                    logger.atWarning().log("$user /msg denied: Illegal characters in message")
+                    logger.atWarning().log("%s /msg denied: Illegal characters in message", user)
                     user1.game!!.announce(
                       "Private Message Denied: Illegal characters in message",
                       user1
@@ -497,5 +495,7 @@ internal constructor(
 
   companion object {
     private val logger = FluentLogger.forEnclosingClass()
+
+    private const val ADMIN_COMMAND_ESCAPE_STRING = "/"
   }
 }

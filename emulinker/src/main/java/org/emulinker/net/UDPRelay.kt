@@ -17,8 +17,6 @@ import java.util.concurrent.Executors
 import kotlin.Throws
 import org.emulinker.util.EmuUtil.formatSocketAddress
 
-private val logger = FluentLogger.forEnclosingClass()
-
 abstract class UDPRelay(
   var listenPort: Int,
   var serverSocketAddress: InetSocketAddress,
@@ -148,6 +146,8 @@ abstract class UDPRelay(
   }
 
   companion object {
+    private val logger = FluentLogger.forEnclosingClass()
+
     protected var threadPool = Executors.newCachedThreadPool()
   }
 

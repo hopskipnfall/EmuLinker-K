@@ -16,11 +16,6 @@ import twitter4j.Status
 import twitter4j.StatusUpdate
 import twitter4j.Twitter
 
-private val logger = FluentLogger.forEnclosingClass()
-
-private fun getUrl(tweet: Status) =
-  "https://twitter.com/${tweet.user.screenName}/status/${tweet.id}"
-
 /**
  * Observes when a user is looking for a game opponent and publishes a report to one or more
  * external services (e.g. Twitter, Discord).
@@ -134,5 +129,12 @@ internal constructor(private val flags: RuntimeFlags, private val twitter: Twitt
         .findAny()
         .isPresent
     return anyModified || tweetsClosed
+  }
+
+  companion object {
+    private val logger = FluentLogger.forEnclosingClass()
+
+    private fun getUrl(tweet: Status) =
+      "https://twitter.com/${tweet.user.screenName}/status/${tweet.id}"
   }
 }

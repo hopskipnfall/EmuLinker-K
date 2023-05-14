@@ -15,37 +15,6 @@ import org.emulinker.kaillera.model.impl.KailleraGameImpl
 import org.emulinker.kaillera.model.impl.KailleraUserImpl
 import org.emulinker.util.EmuLang
 
-private const val COMMAND_HELP = "/help"
-
-private const val COMMAND_DETECTAUTOFIRE = "/detectautofire"
-
-// SF MOD
-private const val COMMAND_LAGSTAT = "/lag"
-
-private const val COMMAND_MAXUSERS = "/maxusers"
-
-private const val COMMAND_MAXPING = "/maxping"
-
-private const val COMMAND_START = "/start"
-
-private const val COMMAND_STARTN = "/startn"
-
-private const val COMMAND_MUTE = "/mute"
-
-private const val COMMAND_UNMUTE = "/unmute"
-
-private const val COMMAND_SWAP = "/swap"
-
-private const val COMMAND_KICK = "/kick"
-
-private const val COMMAND_EMU = "/setemu"
-
-private const val COMMAND_CONN = "/setconn"
-
-private const val COMMAND_SAMEDELAY = "/samedelay"
-
-private const val COMMAND_NUM = "/num"
-
 @Singleton
 class GameOwnerCommandAction @Inject internal constructor(private val flags: RuntimeFlags) :
   V086Action<GameChat> {
@@ -81,7 +50,9 @@ class GameOwnerCommandAction @Inject internal constructor(private val flags: Run
       user.game ?: throw FatalActionException("GameOwner Command Failed: Not in a game: $chat")
     if (user != game.owner && user.accessLevel < AccessManager.ACCESS_SUPERADMIN) {
       if (!chat.startsWith(COMMAND_HELP)) {
-        logger.atWarning().log("GameOwner Command Denied: Not game owner: $game: $user: $chat")
+        logger
+          .atWarning()
+          .log("GameOwner Command Denied: Not game owner: %s: %s: %s", game, user, chat)
         game.announce("GameOwner Command Error: You are not an owner!", user)
         return
       }
@@ -643,5 +614,36 @@ class GameOwnerCommandAction @Inject internal constructor(private val flags: Run
   companion object {
     private var lastMaxUserChange: Long = 0
     private val logger = FluentLogger.forEnclosingClass()
+
+    private const val COMMAND_HELP = "/help"
+
+    private const val COMMAND_DETECTAUTOFIRE = "/detectautofire"
+
+    // SF MOD
+    private const val COMMAND_LAGSTAT = "/lag"
+
+    private const val COMMAND_MAXUSERS = "/maxusers"
+
+    private const val COMMAND_MAXPING = "/maxping"
+
+    private const val COMMAND_START = "/start"
+
+    private const val COMMAND_STARTN = "/startn"
+
+    private const val COMMAND_MUTE = "/mute"
+
+    private const val COMMAND_UNMUTE = "/unmute"
+
+    private const val COMMAND_SWAP = "/swap"
+
+    private const val COMMAND_KICK = "/kick"
+
+    private const val COMMAND_EMU = "/setemu"
+
+    private const val COMMAND_CONN = "/setconn"
+
+    private const val COMMAND_SAMEDELAY = "/samedelay"
+
+    private const val COMMAND_NUM = "/num"
   }
 }
