@@ -1,5 +1,5 @@
 ![Maintained][maintained-badge]
-[![build](https://github.com/hopskipnfall/EmuLinkerSF-netsma/actions/workflows/maven.yml/badge.svg)](https://github.com/hopskipnfall/EmuLinkerSF-netsma/actions/workflows/maven.yml)
+[![build](https://github.com/hopskipnfall/EmuLinkerSF-netsma/actions/workflows/gradle.yml/badge.svg)](https://github.com/hopskipnfall/EmuLinkerSF-netsma/actions/workflows/maven.yml)
 [![Make a pull request][prs-badge]][prs]
 
 [![Watch on GitHub][github-watch-badge]][github-watch]
@@ -38,6 +38,10 @@ From the root directory, the following commands are supported:
 ```
 
 Note: If you use non-ASCII characters in the `conf/language.properties` file, you need to run with at least Java 9 for the characters to appear correctly.
+
+## Documentation
+
+KDoc documentation is automatically published to https://hopskipnfall.github.io/EmuLinkerSF-netsma.
 
 ### Docker
 
