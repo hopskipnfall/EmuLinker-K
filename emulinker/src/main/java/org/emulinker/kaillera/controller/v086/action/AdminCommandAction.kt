@@ -9,9 +9,9 @@ import java.util.*
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.Throws
+import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
-import kotlinx.coroutines.delay
 import org.emulinker.kaillera.access.AccessManager
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086ClientHandler
@@ -20,45 +20,11 @@ import org.emulinker.kaillera.controller.v086.protocol.InformationMessage
 import org.emulinker.kaillera.model.KailleraServer
 import org.emulinker.kaillera.model.KailleraUser
 import org.emulinker.kaillera.model.exception.ActionException
+import org.emulinker.kaillera.model.impl.KailleraGameImpl
 import org.emulinker.kaillera.model.impl.Trivia
 import org.emulinker.util.EmuLang
 import org.emulinker.util.EmuUtil
 import org.emulinker.util.WildcardStringPattern
-
-private const val COMMAND_ANNOUNCE = "/announce"
-
-private const val COMMAND_ANNOUNCEALL = "/announceall"
-
-private const val COMMAND_ANNOUNCEGAME = "/announcegame"
-
-private const val COMMAND_BAN = "/ban"
-
-private const val COMMAND_CLEAR = "/clear"
-
-private const val COMMAND_CLOSEGAME = "/closegame"
-
-private const val COMMAND_FINDGAME = "/findgame"
-
-private const val COMMAND_FINDUSER = "/finduser"
-
-private const val COMMAND_HELP = "/help"
-
-private const val COMMAND_KICK = "/kick"
-
-private const val COMMAND_SILENCE = "/silence"
-
-private const val COMMAND_TEMPADMIN = "/tempadmin"
-
-private const val COMMAND_TRIVIA = "/trivia"
-
-private const val COMMAND_VERSION = "/version"
-
-// SF MOD
-private const val COMMAND_STEALTH = "/stealth"
-
-private const val COMMAND_TEMPELEVATED = "/tempelevated"
-
-private const val COMMAND_TEMPMODERATOR = "/tempmoderator"
 
 @Singleton
 class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
@@ -88,8 +54,8 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
   }
 
   @Throws(FatalActionException::class)
-  override suspend fun performAction(message: Chat, clientHandler: V086ClientHandler) {
-    val chat: String = message.message
+  override fun performAction(chatMessage: Chat, clientHandler: V086ClientHandler) {
+    val chat: String = chatMessage.message
     val server = clientHandler.controller.server
     val accessManager = server.accessManager
     val user = clientHandler.user
@@ -190,24 +156,24 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
   }
 
   @Throws(ActionException::class, MessageFormatException::class)
-  private suspend fun processHelp(
+  private fun processHelp(
     message: String?,
     server: KailleraServer,
     admin: KailleraUser,
-    clientHandler: V086ClientHandler
+    clientHandler: V086ClientHandler?
   ) {
     if (admin.accessLevel == AccessManager.ACCESS_MODERATOR) return
     // clientHandler.send(InformationMessage(clientHandler.getNextMessageNumber(), "server",
     // EmuLang.getString("AdminCommandAction.AdminCommands")));
-    // try { delay(20.milliseconds); } catch(Exception e) {}
-    clientHandler.send(
+    // try { Thread.sleep(20); } catch(Exception e) {}
+    clientHandler!!.send(
       InformationMessage(
         clientHandler.nextMessageNumber,
         "server",
         EmuLang.getString("AdminCommandAction.HelpVersion")
       )
     )
-    delay(20.milliseconds)
+    sleep(20.milliseconds)
     clientHandler.send(
       InformationMessage(
         clientHandler.nextMessageNumber,
@@ -215,7 +181,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
         EmuLang.getString("AdminCommandAction.HelpKick")
       )
     )
-    delay(20.milliseconds)
+    sleep(20.milliseconds)
     clientHandler.send(
       InformationMessage(
         clientHandler.nextMessageNumber,
@@ -223,7 +189,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
         EmuLang.getString("AdminCommandAction.HelpSilence")
       )
     )
-    delay(20.milliseconds)
+    sleep(20.milliseconds)
     clientHandler.send(
       InformationMessage(
         clientHandler.nextMessageNumber,
@@ -231,7 +197,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
         EmuLang.getString("AdminCommandAction.HelpBan")
       )
     )
-    delay(20.milliseconds)
+    sleep(20.milliseconds)
     if (admin.accessLevel == AccessManager.ACCESS_ADMIN) {
       clientHandler.send(
         InformationMessage(
@@ -240,7 +206,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
           EmuLang.getString("AdminCommandAction.HelpClear")
         )
       )
-      delay(20.milliseconds)
+      sleep(20.milliseconds)
     }
     clientHandler.send(
       InformationMessage(
@@ -249,7 +215,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
         EmuLang.getString("AdminCommandAction.HelpCloseGame")
       )
     )
-    delay(20.milliseconds)
+    sleep(20.milliseconds)
     clientHandler.send(
       InformationMessage(
         clientHandler.nextMessageNumber,
@@ -257,7 +223,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
         EmuLang.getString("AdminCommandAction.HelpAnnounce")
       )
     )
-    delay(20.milliseconds)
+    sleep(20.milliseconds)
     clientHandler.send(
       InformationMessage(
         clientHandler.nextMessageNumber,
@@ -265,7 +231,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
         EmuLang.getString("AdminCommandAction.HelpAnnounceAll")
       )
     )
-    delay(20.milliseconds)
+    sleep(20.milliseconds)
     clientHandler.send(
       InformationMessage(
         clientHandler.nextMessageNumber,
@@ -273,7 +239,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
         EmuLang.getString("AdminCommandAction.HelpAnnounceGame")
       )
     )
-    delay(20.milliseconds)
+    sleep(20.milliseconds)
     clientHandler.send(
       InformationMessage(
         clientHandler.nextMessageNumber,
@@ -281,7 +247,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
         EmuLang.getString("AdminCommandAction.HelpFindUser")
       )
     )
-    delay(20.milliseconds)
+    sleep(20.milliseconds)
     clientHandler.send(
       InformationMessage(
         clientHandler.nextMessageNumber,
@@ -289,7 +255,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
         EmuLang.getString("AdminCommandAction.HelpFindGame")
       )
     )
-    delay(20.milliseconds)
+    sleep(20.milliseconds)
     clientHandler.send(
       InformationMessage(
         clientHandler.nextMessageNumber,
@@ -297,7 +263,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
         "/triviaon to start the trivia bot- /triviapause to pause the bot- /triviaresume to resume the bot after pause- /triviasave to save the bot's scores- /triviatime <#> to change the question delay"
       )
     )
-    delay(20.milliseconds)
+    sleep(20.milliseconds)
     clientHandler.send(
       InformationMessage(
         clientHandler.nextMessageNumber,
@@ -305,7 +271,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
         "/triviaoff to stop the bot- /triviascores to show top 3 scores- /triviawin to show a winner- /triviaupdate <IP Address> <New IP Address> to update ip address"
       )
     )
-    delay(20.milliseconds)
+    sleep(20.milliseconds)
     clientHandler.send(
       InformationMessage(
         clientHandler.nextMessageNumber,
@@ -313,7 +279,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
         "/stealthon /stealthoff to join a room invisibly."
       )
     )
-    delay(20.milliseconds)
+    sleep(20.milliseconds)
     if (admin.accessLevel == AccessManager.ACCESS_SUPERADMIN) {
       clientHandler.send(
         InformationMessage(
@@ -322,7 +288,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
           "/tempelevated <UserID> <min> to give a user temporary elevated access."
         )
       )
-      delay(20.milliseconds)
+      sleep(20.milliseconds)
       clientHandler.send(
         InformationMessage(
           clientHandler.nextMessageNumber,
@@ -330,7 +296,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
           "/tempmoderator <UserID> <min> to give a user temporary moderator access."
         )
       )
-      delay(20.milliseconds)
+      sleep(20.milliseconds)
       clientHandler.send(
         InformationMessage(
           clientHandler.nextMessageNumber,
@@ -338,7 +304,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
           EmuLang.getString("AdminCommandAction.HelpTempAdmin")
         )
       )
-      delay(20.milliseconds)
+      sleep(20.milliseconds)
       clientHandler.send(
         InformationMessage(
           clientHandler.nextMessageNumber,
@@ -346,31 +312,27 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
           "/clear <IP Address> to remove any temp ban, silence, elevated, moderator or admin."
         )
       )
-      delay(20.milliseconds)
+      sleep(20.milliseconds)
     }
   }
 
   @Throws(ActionException::class, MessageFormatException::class)
-  private suspend fun processFindUser(
-    message: String,
+  private fun processFindUser(
+    message: String?,
     server: KailleraServer,
     admin: KailleraUser,
     clientHandler: V086ClientHandler?
   ) {
-    val space = message.indexOf(' ')
+    val space = message!!.indexOf(' ')
     if (space < 0) throw ActionException(EmuLang.getString("AdminCommandAction.FindUserError"))
     var foundCount = 0
     val str = message.substring(space + 1)
     // WildcardStringPattern pattern = new WildcardStringPattern
     for (user in server.users) {
       if (!user.loggedIn) continue
-      if (
-        user.userData.name
-          .lowercase(Locale.getDefault())
-          .contains(str.lowercase(Locale.getDefault()))
-      ) {
+      if (user.name!!.lowercase(Locale.getDefault()).contains(str.lowercase(Locale.getDefault()))) {
         var msg =
-          "UserID: ${user.userData.id}, IP: ${user.connectSocketAddress.address.hostAddress}, Nick: <${user.userData.name}>, Access: ${user.accessStr}"
+          "UserID: ${user.id}, IP: ${user.connectSocketAddress.address.hostAddress}, Nick: <${user.name}>, Access: ${user.accessStr}"
         msg +=
           if (user.game == null) "" else ", GameID: ${user.game!!.id}, Game: ${user.game!!.romName}"
 
@@ -389,13 +351,13 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
   }
 
   @Throws(ActionException::class, MessageFormatException::class)
-  private suspend fun processFindGame(
-    message: String,
+  private fun processFindGame(
+    message: String?,
     server: KailleraServer,
     admin: KailleraUser,
-    clientHandler: V086ClientHandler
+    clientHandler: V086ClientHandler?
   ) {
-    val space = message.indexOf(' ')
+    val space = message!!.indexOf(' ')
     if (space < 0) throw ActionException(EmuLang.getString("AdminCommandAction.FindGameError"))
     var foundCount = 0
     val pattern = WildcardStringPattern(message.substring(space + 1))
@@ -405,24 +367,23 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
         sb.append("GameID: ")
         sb.append(game.id)
         sb.append(", Owner: <")
-        sb.append(game.owner.userData.name)
+        sb.append(game.owner.name)
         sb.append(">, Game: ")
         sb.append(game.romName)
-        clientHandler.send(
+        clientHandler!!.send(
           InformationMessage(clientHandler.nextMessageNumber, "server", sb.toString())
         )
         foundCount++
       }
     }
-    if (foundCount == 0) {
-      clientHandler.send(
+    if (foundCount == 0)
+      clientHandler!!.send(
         InformationMessage(
           clientHandler.nextMessageNumber,
           "server",
           EmuLang.getString("AdminCommandAction.NoGamesFound")
         )
       )
-    }
   }
 
   @Throws(ActionException::class, MessageFormatException::class)
@@ -440,7 +401,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
       val user =
         server.getUser(userID)
           ?: throw ActionException(EmuLang.getString("AdminCommandAction.UserNotFound", +userID))
-      if (user.userData.id == admin.userData.id)
+      if (user.id == admin.id)
         throw ActionException(EmuLang.getString("AdminCommandAction.CanNotSilenceSelf"))
       val access = server.accessManager.getAccess(user.connectSocketAddress.address)
       if (
@@ -453,7 +414,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
       )
         throw ActionException("You cannot silence a moderator if you're not an admin!")
       if (admin.accessLevel == AccessManager.ACCESS_MODERATOR) {
-        if (server.accessManager.isSilenced(user.socketAddress.address))
+        if (server.accessManager.isSilenced(user.socketAddress!!.address))
           throw ActionException(
             "This User has already been Silenced.  Please wait until his time expires."
           )
@@ -464,7 +425,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
         minutes.minutes
       )
       server.announce(
-        EmuLang.getString("AdminCommandAction.Silenced", minutes, user.userData.name),
+        EmuLang.getString("AdminCommandAction.Silenced", minutes, user.name),
         false,
         null
       )
@@ -487,7 +448,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
       val user =
         server.getUser(userID)
           ?: throw ActionException(EmuLang.getString("AdminCommandAction.UserNotFound", userID))
-      if (user.userData.id == admin.userData.id)
+      if (user.id == admin.id)
         throw ActionException(EmuLang.getString("AdminCommandAction.CanNotKickSelf"))
       val access = server.accessManager.getAccess(user.connectSocketAddress.address)
       if (
@@ -517,7 +478,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
       scanner.next()
       val gameID = scanner.nextInt()
       val game =
-        server.getGame(gameID)
+        server.getGame(gameID) as KailleraGameImpl
           ?: throw ActionException(EmuLang.getString("AdminCommandAction.GameNotFound", gameID))
       val owner = game.owner
       val access = server.accessManager.getAccess(owner.connectSocketAddress.address)
@@ -548,7 +509,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
       val user =
         server.getUser(userID)
           ?: throw ActionException(EmuLang.getString("AdminCommandAction.UserNotFound", userID))
-      if (user.userData.id == admin.userData.id)
+      if (user.id == admin.id)
         throw ActionException(EmuLang.getString("AdminCommandAction.CanNotBanSelf"))
       val access = server.accessManager.getAccess(user.connectSocketAddress.address)
       if (
@@ -556,7 +517,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
       )
         throw ActionException(EmuLang.getString("AdminCommandAction.CanNotBanAdmin"))
       server.announce(
-        EmuLang.getString("AdminCommandAction.Banned", minutes, user.userData.name),
+        EmuLang.getString("AdminCommandAction.Banned", minutes, user.name),
         false,
         null
       )
@@ -588,7 +549,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
       val user =
         server.getUser(userID)
           ?: throw ActionException(EmuLang.getString("AdminCommandAction.UserNotFound", userID))
-      if (user.userData.id == admin.userData.id)
+      if (user.id == admin.id)
         throw ActionException(EmuLang.getString("AdminCommandAction.AlreadyAdmin"))
       val access = server.accessManager.getAccess(user.connectSocketAddress.address)
       if (
@@ -602,7 +563,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
         minutes.minutes
       )
       server.announce(
-        "Temp Elevated Granted: " + user.userData.name + " for " + minutes + "min",
+        "Temp Elevated Granted: " + user.name + " for " + minutes + "min",
         false,
         null
       )
@@ -630,7 +591,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
       val user =
         server.getUser(userID)
           ?: throw ActionException(EmuLang.getString("AdminCommandAction.UserNotFound", userID))
-      if (user.userData.id == admin.userData.id)
+      if (user.id == admin.id)
         throw ActionException(EmuLang.getString("AdminCommandAction.AlreadyAdmin"))
       val access = server.accessManager.getAccess(user.connectSocketAddress.address)
       if (
@@ -644,7 +605,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
         minutes.minutes
       )
       server.announce(
-        "Temp Moderator Granted: " + user.userData.name + " for " + minutes + "min.",
+        "Temp Moderator Granted: " + user.name + " for " + minutes + "min.",
         false,
         null
       )
@@ -671,7 +632,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
       val user =
         server.getUser(userID)
           ?: throw ActionException(EmuLang.getString("AdminCommandAction.UserNotFound", userID))
-      if (user.userData.id == admin.userData.id)
+      if (user.id == admin.id)
         throw ActionException(EmuLang.getString("AdminCommandAction.AlreadyAdmin"))
       val access = server.accessManager.getAccess(user.connectSocketAddress.address)
       if (
@@ -683,7 +644,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
         minutes.minutes
       )
       server.announce(
-        EmuLang.getString("AdminCommandAction.TempAdminGranted", minutes, user.userData.name),
+        EmuLang.getString("AdminCommandAction.TempAdminGranted", minutes, user.name),
         false,
         null
       )
@@ -693,28 +654,24 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
   }
 
   @Throws(ActionException::class, MessageFormatException::class)
-  private suspend fun processStealth(
+  private fun processStealth(
     message: String,
     server: KailleraServer,
     admin: KailleraUser,
     clientHandler: V086ClientHandler?
   ) {
     if (admin.game != null) throw ActionException("Can't use /stealth while in a gameroom.")
-    when (message) {
-      "/stealthon" -> {
-        admin.inStealthMode = true
-        clientHandler!!.send(
-          InformationMessage(clientHandler.nextMessageNumber, "server", "Stealth Mode is on.")
-        )
-      }
-      "/stealthoff" -> {
-        admin.inStealthMode = false
-        clientHandler!!.send(
-          InformationMessage(clientHandler.nextMessageNumber, "server", "Stealth Mode is off.")
-        )
-      }
-      else -> throw ActionException("Stealth Mode Error: /stealthon /stealthoff")
-    }
+    if (message == "/stealthon") {
+      admin.inStealthMode = true
+      clientHandler!!.send(
+        InformationMessage(clientHandler.nextMessageNumber, "server", "Stealth Mode is on.")
+      )
+    } else if (message == "/stealthoff") {
+      admin.inStealthMode = false
+      clientHandler!!.send(
+        InformationMessage(clientHandler.nextMessageNumber, "server", "Stealth Mode is off.")
+      )
+    } else throw ActionException("Stealth Mode Error: /stealthon /stealthoff")
   }
 
   @Throws(ActionException::class, MessageFormatException::class)
@@ -863,7 +820,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
         sb.append(" ")
       }
       val game =
-        server.getGame(gameID)
+        server.getGame(gameID) as KailleraGameImpl
           ?: throw ActionException(EmuLang.getString("AdminCommandAction.GameNotFound", gameID))
       game.announce(sb.toString())
     } catch (e: NoSuchElementException) {
@@ -872,7 +829,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
   }
 
   @Throws(ActionException::class, MessageFormatException::class)
-  private suspend fun processClear(
+  private fun processClear(
     message: String,
     server: KailleraServer,
     admin: KailleraUser,
@@ -911,7 +868,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
   }
 
   @Throws(ActionException::class, MessageFormatException::class)
-  private suspend fun processVersion(
+  private fun processVersion(
     message: String?,
     server: KailleraServer,
     admin: KailleraUser,
@@ -931,7 +888,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
             EmuUtil.toSimpleUtcDatetime(releaseInfo.buildDate)
         )
       )
-      delay(20.milliseconds)
+      sleep(20.milliseconds)
       if (admin.accessLevel >= AccessManager.ACCESS_ADMIN) {
         val props = System.getProperties()
         clientHandler.send(
@@ -941,7 +898,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
             "JAVAVER: " + props.getProperty("java.version")
           )
         )
-        delay(20.milliseconds)
+        sleep(20.milliseconds)
         clientHandler.send(
           InformationMessage(
             clientHandler.nextMessageNumber,
@@ -949,7 +906,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
             "JAVAVEND: " + props.getProperty("java.vendor")
           )
         )
-        delay(20.milliseconds)
+        sleep(20.milliseconds)
         clientHandler.send(
           InformationMessage(
             clientHandler.nextMessageNumber,
@@ -957,7 +914,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
             "OSNAME: " + props.getProperty("os.name")
           )
         )
-        delay(20.milliseconds)
+        sleep(20.milliseconds)
         clientHandler.send(
           InformationMessage(
             clientHandler.nextMessageNumber,
@@ -965,7 +922,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
             "OSARCH: " + props.getProperty("os.arch")
           )
         )
-        delay(20.milliseconds)
+        sleep(20.milliseconds)
         clientHandler.send(
           InformationMessage(
             clientHandler.nextMessageNumber,
@@ -973,7 +930,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
             "OSVER: " + props.getProperty("os.version")
           )
         )
-        delay(20.milliseconds)
+        sleep(20.milliseconds)
         val runtime = Runtime.getRuntime()
         clientHandler.send(
           InformationMessage(
@@ -982,7 +939,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
             "NUMPROCS: " + runtime.availableProcessors()
           )
         )
-        delay(20.milliseconds)
+        sleep(20.milliseconds)
         clientHandler.send(
           InformationMessage(
             clientHandler.nextMessageNumber,
@@ -990,7 +947,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
             "FREEMEM: " + runtime.freeMemory()
           )
         )
-        delay(20.milliseconds)
+        sleep(20.milliseconds)
         clientHandler.send(
           InformationMessage(
             clientHandler.nextMessageNumber,
@@ -998,7 +955,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
             "MAXMEM: " + runtime.maxMemory()
           )
         )
-        delay(20.milliseconds)
+        sleep(20.milliseconds)
         clientHandler.send(
           InformationMessage(
             clientHandler.nextMessageNumber,
@@ -1006,7 +963,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
             "TOTMEM: " + runtime.totalMemory()
           )
         )
-        delay(20.milliseconds)
+        sleep(20.milliseconds)
         val env = System.getenv()
         if (EmuUtil.systemIsWindows()) {
           clientHandler.send(
@@ -1016,7 +973,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
               "COMPNAME: " + env["COMPUTERNAME"]
             )
           )
-          delay(20.milliseconds)
+          sleep(20.milliseconds)
           clientHandler.send(
             InformationMessage(
               clientHandler.nextMessageNumber,
@@ -1024,7 +981,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
               "USER: " + env["USERNAME"]
             )
           )
-          delay(20.milliseconds)
+          sleep(20.milliseconds)
         } else {
           clientHandler.send(
             InformationMessage(
@@ -1033,7 +990,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
               "COMPNAME: " + env["HOSTNAME"]
             )
           )
-          delay(20.milliseconds)
+          sleep(20.milliseconds)
           clientHandler.send(
             InformationMessage(
               clientHandler.nextMessageNumber,
@@ -1041,7 +998,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
               "USER: " + env["USERNAME"]
             )
           )
-          delay(20.milliseconds)
+          sleep(20.milliseconds)
         }
       }
     } catch (e: NoSuchElementException) {
@@ -1049,7 +1006,48 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
     }
   }
 
+  private fun sleep(d: Duration) {
+    try {
+      Thread.sleep(d.inWholeMilliseconds)
+    } catch (e: Exception) {}
+  }
+
   companion object {
     private val logger = FluentLogger.forEnclosingClass()
+
+    private const val COMMAND_ANNOUNCE = "/announce"
+
+    private const val COMMAND_ANNOUNCEALL = "/announceall"
+
+    private const val COMMAND_ANNOUNCEGAME = "/announcegame"
+
+    private const val COMMAND_BAN = "/ban"
+
+    private const val COMMAND_CLEAR = "/clear"
+
+    private const val COMMAND_CLOSEGAME = "/closegame"
+
+    private const val COMMAND_FINDGAME = "/findgame"
+
+    private const val COMMAND_FINDUSER = "/finduser"
+
+    private const val COMMAND_HELP = "/help"
+
+    private const val COMMAND_KICK = "/kick"
+
+    private const val COMMAND_SILENCE = "/silence"
+
+    private const val COMMAND_TEMPADMIN = "/tempadmin"
+
+    private const val COMMAND_TRIVIA = "/trivia"
+
+    private const val COMMAND_VERSION = "/version"
+
+    // SF MOD
+    private const val COMMAND_STEALTH = "/stealth"
+
+    private const val COMMAND_TEMPELEVATED = "/tempelevated"
+
+    private const val COMMAND_TEMPMODERATOR = "/tempmoderator"
   }
 }

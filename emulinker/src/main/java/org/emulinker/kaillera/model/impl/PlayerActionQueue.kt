@@ -12,7 +12,8 @@ class PlayerActionQueue(
   val player: KailleraUser,
   numPlayers: Int,
   private val gameBufferSize: Int,
-  private val gameTimeoutMillis: Int
+  private val gameTimeoutMillis: Int,
+  capture: Boolean
 ) {
   var lastTimeout: PlayerTimeoutException? = null
   private val array = ByteArray(gameBufferSize)
@@ -61,9 +62,10 @@ class PlayerActionQueue(
       return
     }
     if (!synched) return
-    throw PlayerTimeoutException(this.playerNumber, timeoutNumber = -1, player)
+    throw PlayerTimeoutException(this.playerNumber, /* timeoutNumber= */ -1, player)
   }
 
-  private fun getSize(playerNumber: Int): Int =
-    (tail + gameBufferSize - heads[playerNumber - 1]) % gameBufferSize
+  private fun getSize(playerNumber: Int): Int {
+    return (tail + gameBufferSize - heads[playerNumber - 1]) % gameBufferSize
+  }
 }

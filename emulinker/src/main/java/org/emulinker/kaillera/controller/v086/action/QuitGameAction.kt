@@ -3,8 +3,6 @@ package org.emulinker.kaillera.controller.v086.action
 import com.google.common.flogger.FluentLogger
 import javax.inject.Inject
 import javax.inject.Singleton
-import kotlin.time.Duration.Companion.milliseconds
-import kotlinx.coroutines.delay
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086ClientHandler
 import org.emulinker.kaillera.controller.v086.protocol.QuitGame
@@ -25,14 +23,11 @@ class QuitGameAction @Inject constructor(private val lookingForGameReporter: Twi
   override fun toString() = "QuitGameAction"
 
   @Throws(FatalActionException::class)
-  override suspend fun performAction(
-    message: QuitGame.QuitGameRequest,
-    clientHandler: V086ClientHandler
-  ) {
+  override fun performAction(message: QuitGame.QuitGameRequest, clientHandler: V086ClientHandler) {
     actionPerformedCount++
     try {
       clientHandler.user.quitGame()
-      lookingForGameReporter.cancelActionsForUser(clientHandler.user.userData.id)
+      lookingForGameReporter.cancelActionsForUser(clientHandler.user.id)
     } catch (e: DropGameException) {
       logger.atSevere().withCause(e).log("Action failed")
     } catch (e: QuitGameException) {
@@ -40,31 +35,27 @@ class QuitGameAction @Inject constructor(private val lookingForGameReporter: Twi
     } catch (e: CloseGameException) {
       logger.atSevere().withCause(e).log("Action failed")
     }
-    delay(100.milliseconds)
+    try {
+      Thread.sleep(100)
+    } catch (e: InterruptedException) {
+      logger.atSevere().withCause(e).log("Sleep Interrupted!")
+    }
   }
 
-  override suspend fun handleEvent(event: UserQuitGameEvent, clientHandler: V086ClientHandler) {
+  override fun handleEvent(event: UserQuitGameEvent, clientHandler: V086ClientHandler) {
     handledEventCount++
     val thisUser = clientHandler.user
     try {
       val user = event.user
       if (!user.inStealthMode) {
         clientHandler.send(
-          QuitGame.QuitGameNotification(
-            clientHandler.nextMessageNumber,
-            user.userData.name,
-            user.userData.id
-          )
+          QuitGame.QuitGameNotification(clientHandler.nextMessageNumber, user.name!!, user.id)
         )
       }
       if (thisUser === user) {
         if (user.inStealthMode)
           clientHandler.send(
-            QuitGame.QuitGameNotification(
-              clientHandler.nextMessageNumber,
-              user.userData.name,
-              user.userData.id
-            )
+            QuitGame.QuitGameNotification(clientHandler.nextMessageNumber, user.name!!, user.id)
           )
       }
     } catch (e: MessageFormatException) {

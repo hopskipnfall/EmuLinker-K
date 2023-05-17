@@ -39,7 +39,7 @@ class KailleraMasterUpdateTask(
     for (game in kailleraServer.games) {
       if (game.status != GameStatus.WAITING) continue
       waitingGames.append(
-        "${game.id}|${game.romName}|${game.owner.userData.name}|${game.owner.clientType}|${game.players.size}|"
+        "${game.id}|${game.romName}|${game.owner.name}|${game.owner.clientType}|${game.players.size}|"
       )
     }
     val params =
@@ -62,7 +62,9 @@ class KailleraMasterUpdateTask(
       val statusCode = httpClient.executeMethod(kailleraTouch)
       if (statusCode != HttpStatus.SC_OK) {
         logger.atSevere().log("Failed to touch Kaillera Master: %s", kailleraTouch.statusLine)
-      } else logger.atInfo().log("Touching Kaillera Master done")
+      } else {
+        logger.atInfo().log("Touching Kaillera Master done")
+      }
     } catch (e: Exception) {
       logger.atSevere().withCause(e).log("Failed to touch Kaillera Master")
     } finally {

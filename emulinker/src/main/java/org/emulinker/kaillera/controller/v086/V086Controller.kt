@@ -1,19 +1,14 @@
 package org.emulinker.kaillera.controller.v086
 
-import com.codahale.metrics.MetricRegistry
 import com.google.common.flogger.FluentLogger
 import java.net.InetSocketAddress
 import java.util.Queue
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentLinkedQueue
+import java.util.concurrent.ThreadPoolExecutor
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.reflect.KClass
-import kotlinx.coroutines.CoroutineName
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.plus
 import org.apache.commons.configuration.Configuration
 import org.emulinker.config.RuntimeFlags
@@ -60,7 +55,6 @@ import org.emulinker.kaillera.controller.v086.protocol.QuitGame
 import org.emulinker.kaillera.controller.v086.protocol.StartGame
 import org.emulinker.kaillera.controller.v086.protocol.UserInformation
 import org.emulinker.kaillera.model.KailleraServer
-import org.emulinker.kaillera.model.KailleraUser
 import org.emulinker.kaillera.model.event.AllReadyEvent
 import org.emulinker.kaillera.model.event.ChatEvent
 import org.emulinker.kaillera.model.event.ConnectedEvent
@@ -85,7 +79,7 @@ import org.emulinker.kaillera.model.event.UserQuitEvent
 import org.emulinker.kaillera.model.event.UserQuitGameEvent
 import org.emulinker.kaillera.model.exception.NewConnectionException
 import org.emulinker.kaillera.model.exception.ServerFullException
-import org.emulinker.net.UdpSocketProvider
+import org.emulinker.net.BindException
 
 /** High level logic for handling messages on a port. Not tied to an individual user. */
 @Singleton
@@ -93,6 +87,7 @@ class V086Controller
 @Inject
 internal constructor(
   override var server: KailleraServer,
+  var threadPool: ThreadPoolExecutor,
   config: Configuration,
   loginAction: LoginAction,
   ackAction: ACKAction,
@@ -118,19 +113,14 @@ internal constructor(
   infoMessageAction: InfoMessageAction,
   private val v086ClientHandlerFactory: V086ClientHandler.Factory,
   flags: RuntimeFlags,
-  metrics: MetricRegistry
 ) : KailleraServerController {
-  /** [CoroutineScope] for long-running actions attached to the controller. */
-  private val controllerCoroutineScope =
-    CoroutineScope(Dispatchers.IO) + CoroutineName("V086ControllerScope")
-
   var isRunning = false
     private set
 
   override val clientTypes: Array<String> =
     config.getStringArray("controllers.v086.clientTypes.clientType")
 
-  override val clientHandlers: MutableMap<Int, V086ClientHandler> = ConcurrentHashMap()
+  var clientHandlers: MutableMap<Int, V086ClientHandler> = ConcurrentHashMap()
 
   private val portRangeStart: Int = config.getInt("controllers.v086.portRangeStart")
   private val extraPorts: Int = config.getInt("controllers.v086.extraPorts", 0)
@@ -178,49 +168,48 @@ internal constructor(
     return "V086Controller[clients=${clientHandlers.size} isRunning=$isRunning]"
   }
 
-  private val coroutineCounter =
-    metrics.counter(MetricRegistry.name(V086Controller::class.java, "activeCoroutines"))
-
   /**
    * Receives new connections and delegates to a new V086ClientHandler instance for communication
    * over a separate port.
    */
   @Throws(ServerFullException::class, NewConnectionException::class)
-  override suspend fun newConnection(
-    udpSocketProvider: UdpSocketProvider,
-    clientSocketAddress: InetSocketAddress,
-    protocol: String
-  ): Int {
-    if (!isRunning) {
-      throw NewConnectionException("Controller is not running")
-    }
-    logger
-      .atFine()
-      .log("Creating new connection for address %d, protocol %s", clientSocketAddress, protocol)
-
+  override fun newConnection(clientSocketAddress: InetSocketAddress, protocol: String): Int {
+    if (!isRunning) throw NewConnectionException("Controller is not running")
     val clientHandler = v086ClientHandlerFactory.create(clientSocketAddress, this)
-    val user: KailleraUser = server.newConnection(clientSocketAddress, protocol, clientHandler)
-    val boundPort: Int
-    val portInteger = portRangeQueue.poll()
-    if (portInteger == null) {
-      throw NewConnectionException("No ports are available to bind for $user")
-    } else {
-      val port = portInteger.toInt()
-      logger.atInfo().log("Allocating private port %d for: %s", port, user)
-      clientHandler.bind(udpSocketProvider, port)
-      user.userCoroutineScope.launch {
-        coroutineCounter.inc()
+    val user = server.newConnection(clientSocketAddress, protocol, clientHandler)
+    var boundPort = -1
+    var bindAttempts = 0
+    while (bindAttempts++ < 5) {
+      val portInteger = portRangeQueue.poll()
+      if (portInteger == null) {
+        throw NewConnectionException("No ports are available to bind for $user")
+      } else {
+        val port = portInteger.toInt()
+        logger.atInfo().log("Allocating private port %d for: %s", port, user)
         try {
-          clientHandler.run(coroutineContext)
-        } finally {
-          coroutineCounter.dec()
+          clientHandler.bind(port)
+          boundPort = port
+          break
+        } catch (e: BindException) {
+          logger.atSevere().withCause(e).log("Failed to bind to port $port for: $user")
+          logger
+            .atFine()
+            .log(
+              "${toString()} returning port $port to available port queue: ${portRangeQueue.size + 1} available"
+            )
+          portRangeQueue.add(port)
         }
       }
-      boundPort = port
+      try {
+        // pause very briefly to give the OS a chance to free a port
+        Thread.sleep(5)
+      } catch (e: InterruptedException) {}
     }
-    // pause very briefly to give the OS a chance to free a port
-    Thread.sleep(5)
-    clientHandler.start(user)
+    if (boundPort < 0) {
+      clientHandler.stop()
+      throw NewConnectionException("Failed to bind!")
+    }
+    clientHandler.start(user!!)
     return boundPort
   }
 
@@ -229,10 +218,10 @@ internal constructor(
     isRunning = true
   }
 
-  override suspend fun stop() {
+  @Synchronized
+  override fun stop() {
     isRunning = false
     clientHandlers.values.forEach { it.stop() }
-    controllerCoroutineScope.cancel("stop() method called")
     clientHandlers.clear()
   }
 

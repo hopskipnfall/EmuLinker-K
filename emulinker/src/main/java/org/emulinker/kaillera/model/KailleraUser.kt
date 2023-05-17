@@ -1,64 +1,55 @@
 package org.emulinker.kaillera.model
 
 import com.google.common.flogger.FluentLogger
+import java.lang.Exception
 import java.net.InetSocketAddress
 import java.time.Duration
 import java.time.Instant
-import kotlin.coroutines.CoroutineContext
-import kotlin.time.Duration.Companion.milliseconds
-import kotlinx.coroutines.CoroutineName
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.plus
-import kotlinx.coroutines.runBlocking
+import java.util.ArrayList
+import java.util.concurrent.BlockingQueue
+import java.util.concurrent.LinkedBlockingQueue
+import java.util.concurrent.TimeUnit
+import kotlin.Throws
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.access.AccessManager
-import org.emulinker.kaillera.controller.v086.V086ClientHandler
 import org.emulinker.kaillera.model.event.GameDataEvent
 import org.emulinker.kaillera.model.event.GameStartedEvent
 import org.emulinker.kaillera.model.event.KailleraEvent
+import org.emulinker.kaillera.model.event.KailleraEventListener
 import org.emulinker.kaillera.model.event.StopFlagEvent
 import org.emulinker.kaillera.model.event.UserQuitEvent
 import org.emulinker.kaillera.model.event.UserQuitGameEvent
 import org.emulinker.kaillera.model.exception.*
+import org.emulinker.kaillera.model.impl.KailleraGameImpl
 import org.emulinker.util.EmuLang
+import org.emulinker.util.EmuUtil
 import org.emulinker.util.Executable
 
 class KailleraUser(
-  var userData: UserData,
+  val id: Int,
   val protocol: String,
   val connectSocketAddress: InetSocketAddress,
-  private val listener: V086ClientHandler,
+  val listener: KailleraEventListener,
   val server: KailleraServer,
-  flags: RuntimeFlags,
+  flags: RuntimeFlags
 ) : Executable {
-
-  /** [CoroutineScope] for long-running actions attached to the user. */
-  val userCoroutineScope =
-    CoroutineScope(Dispatchers.IO) + CoroutineName("User[${userData.id}]Scope")
-
   var inStealthMode = false
 
   /** Example: "Project 64k 0.13 (01 Aug 2003)" */
   var clientType: String? = null
     set(clientType) {
       field = clientType
-      if (clientType != null && clientType.startsWith(EMULINKER_CLIENT_NAME)) {
+      if (clientType != null && clientType.startsWith(EMULINKER_CLIENT_NAME))
         isEmuLinkerClient = true
-      }
     }
 
-  private val initTime: Instant = Instant.now()
+  private val initTime = System.currentTimeMillis()
 
   var connectionType: ConnectionType =
     ConnectionType.DISABLED // TODO(nue): This probably shouldn't have a default.
   var ping = 0
-  lateinit var socketAddress: InetSocketAddress
+  var socketAddress: InetSocketAddress? = null
   var status = UserStatus.PLAYING // TODO(nue): This probably shouldn't have a default value..
-
   /**
    * Level of access that the user has.
    *
@@ -67,9 +58,9 @@ class KailleraUser(
   var accessLevel = 0
   var isEmuLinkerClient = false
     private set
-  val connectTime = initTime
+  val connectTime: Long = initTime
   var timeouts = 0
-  var lastActivity = initTime
+  var lastActivity: Long = initTime
     private set
 
   var smallLagSpikesCausedByUser = 0L
@@ -83,14 +74,14 @@ class KailleraUser(
   // Saved to a variable because I think this might give a speed boost.
   private val improvedLagstat = flags.improvedLagstatEnabled
 
-  private fun updateLastActivity() {
-    lastKeepAlive = Instant.now()
+  fun updateLastActivity() {
+    lastKeepAlive = System.currentTimeMillis()
     lastActivity = lastKeepAlive
   }
 
-  var lastKeepAlive = initTime
+  var lastKeepAlive: Long = initTime
     private set
-  var lastChatTime: Long = initTime.toEpochMilli()
+  var lastChatTime: Long = initTime
     private set
   var lastCreateGameTime: Long = 0
     private set
@@ -104,7 +95,6 @@ class KailleraUser(
   /** User action data response message size (in number of bytes). */
   var arraySize = 0
     private set
-
   /**
    * This is called "p2p mode" in the code and commands.
    *
@@ -112,25 +102,31 @@ class KailleraUser(
    */
   var ignoringUnnecessaryServerActivity = false
 
-  var playerNumber = -1 // TODO(nue): Make this nullable.
+  var playerNumber = -1
   var ignoreAll = false
   var isAcceptingDirectMessages = true
   var lastMsgID = -1
   var isMuted = false
 
-  private val eventChannel = Channel<KailleraEvent>(10)
-
   private val lostInput: MutableList<ByteArray> = ArrayList()
+  /** Note that this is a different type from lostInput. */
+  fun getLostInput(): ByteArray {
+    return lostInput[0]
+  }
 
   private val ignoredUsers: MutableList<String> = ArrayList()
   private var gameDataErrorTime: Long = -1
 
-  // TODO(nue): Get rid of this.
-  @Deprecated(message = "Isn't needed", level = DeprecationLevel.ERROR)
   override var threadIsActive = false
     private set
 
+  private var stopFlag = false
+  private val eventQueue: BlockingQueue<KailleraEvent> = LinkedBlockingQueue()
+
   var tempDelay = 0
+
+  val users: Collection<KailleraUser>
+    get() = server.users
 
   fun addIgnoredUser(address: String) {
     ignoredUsers.add(address)
@@ -157,18 +153,28 @@ class KailleraUser(
     return here
   }
 
-  fun searchIgnoredUsers(address: String): Boolean = ignoredUsers.any { it == address }
+  fun searchIgnoredUsers(address: String): Boolean {
+    return ignoredUsers.any { it == address }
+  }
 
   var loggedIn = false
 
-  override fun toString() =
-    "User${userData.id}(${if (userData.name.length > 15) userData.name.take(15) + "..." else userData.name}/${connectSocketAddress.address.hostAddress})"
-
-  fun updateLastKeepAlive() {
-    lastKeepAlive = Instant.now()
+  override fun toString(): String {
+    val n = name
+    return if (n == null) {
+      "User$id(${connectSocketAddress.address.hostAddress})"
+    } else {
+      "User$id(${if (n.length > 15) n.take(15) + "..." else n}/${connectSocketAddress.address.hostAddress})"
+    }
   }
 
-  var game: KailleraGame? = null
+  var name: String? = null
+
+  fun updateLastKeepAlive() {
+    lastKeepAlive = System.currentTimeMillis()
+  }
+
+  var game: KailleraGameImpl? = null
     set(value) {
       if (value == null) {
         playerNumber = -1
@@ -179,23 +185,47 @@ class KailleraUser(
   val accessStr: String
     get() = AccessManager.ACCESS_NAMES[accessLevel]
 
-  override fun equals(other: Any?) = other is KailleraUser && other.userData.id == userData.id
+  override fun equals(other: Any?): Boolean {
+    return other is KailleraUser && other.id == id
+  }
 
-  override suspend fun stop() {
-    logger.atFine().log("Stopping KaillerUser for %d", userData.id)
-    delay(500.milliseconds)
-    addEvent(StopFlagEvent())
+  fun toDetailedString(): String {
+    return ("KailleraUser[id=$id protocol=$protocol status=$status name=$name clientType=$clientType ping=$ping connectionType=$connectionType remoteAddress=" +
+      (if (socketAddress == null) EmuUtil.formatSocketAddress(connectSocketAddress)
+      else EmuUtil.formatSocketAddress(socketAddress!!)) +
+      "]")
+  }
+
+  override fun stop() {
+    synchronized(this) {
+      if (!threadIsActive) {
+        logger.atFine().log("$this  thread stop request ignored: not running!")
+        return
+      }
+      if (stopFlag) {
+        logger.atFine().log("$this  thread stop request ignored: already stopping!")
+        return
+      }
+      stopFlag = true
+      try {
+        Thread.sleep(500)
+      } catch (e: Exception) {}
+      addEvent(StopFlagEvent())
+    }
     listener.stop()
-    eventChannel.close()
-    userCoroutineScope.cancel("Stopping KailleraUser $userData")
   }
 
   @Synchronized
   fun droppedPacket() {
-    game?.droppedPacket(this)
+    if (game != null) {
+      // if(game.getStatus() == KailleraGame.STATUS_PLAYING){
+      game!!.droppedPacket(this)
+      // }
+    }
   }
 
   // server actions
+  @Synchronized
   @Throws(
     PingTimeException::class,
     ClientAddressException::class,
@@ -203,14 +233,14 @@ class KailleraUser(
     UserNameException::class,
     LoginException::class
   )
-  suspend fun login() {
+  fun login() {
     updateLastActivity()
     server.login(this)
   }
 
   @Synchronized
   @Throws(ChatException::class, FloodException::class)
-  fun chat(message: String) {
+  fun chat(message: String?) {
     updateLastActivity()
     server.chat(this, message)
     lastChatTime = System.currentTimeMillis()
@@ -221,21 +251,25 @@ class KailleraUser(
   fun gameKick(userID: Int) {
     updateLastActivity()
     if (game == null) {
-      logger.atWarning().log("%s kick User %d failed: Not in a game", this, userID)
+      logger.atWarning().log("$this kick User $userID failed: Not in a game")
       throw GameKickException(EmuLang.getString("KailleraUser.KickErrorNotInGame"))
     }
-    game?.kick(this, userID)
+    game!!.kick(this, userID)
   }
 
+  @Synchronized
   @Throws(CreateGameException::class, FloodException::class)
-  suspend fun createGame(romName: String): KailleraGame {
+  fun createGame(romName: String?): KailleraGame? {
     updateLastActivity()
-    requireNotNull(server.getUser(userData.id)) { "$this create game failed: User don't exist!" }
+    if (server.getUser(id) == null) {
+      logger.atSevere().log("$this create game failed: User don't exist!")
+      return null
+    }
     if (status == UserStatus.PLAYING) {
-      logger.atWarning().log("%s create game failed: User status is Playing!", this)
+      logger.atWarning().log("$this create game failed: User status is Playing!")
       throw CreateGameException(EmuLang.getString("KailleraUser.CreateGameErrorAlreadyInGame"))
     } else if (status == UserStatus.CONNECTING) {
-      logger.atWarning().log("%s create game failed: User status is Connecting!", this)
+      logger.atWarning().log("$this create game failed: User status is Connecting!")
       throw CreateGameException(EmuLang.getString("KailleraUser.CreateGameErrorNotFullyConnected"))
     }
     val game = server.createGame(this, romName)
@@ -256,23 +290,24 @@ class KailleraUser(
     loggedIn = false
   }
 
+  @Synchronized
   @Throws(JoinGameException::class)
-  suspend fun joinGame(gameID: Int): KailleraGame {
+  fun joinGame(gameID: Int): KailleraGame {
     updateLastActivity()
     if (game != null) {
-      logger.atWarning().log("%s join game failed: Already in: %s", this, game)
+      logger.atWarning().log("$this join game failed: Already in: $game")
       throw JoinGameException(EmuLang.getString("KailleraUser.JoinGameErrorAlreadyInGame"))
     }
     if (status == UserStatus.PLAYING) {
-      logger.atWarning().log("%s join game failed: User status is Playing!", this)
+      logger.atWarning().log("$this join game failed: User status is Playing!")
       throw JoinGameException(EmuLang.getString("KailleraUser.JoinGameErrorAnotherGameRunning"))
     } else if (status == UserStatus.CONNECTING) {
-      logger.atWarning().log("%s join game failed: User status is Connecting!", this)
+      logger.atWarning().log("$this join game failed: User status is Connecting!")
       throw JoinGameException(EmuLang.getString("KailleraUser.JoinGameErrorNotFullConnected"))
     }
     val game = server.getGame(gameID)
     if (game == null) {
-      logger.atWarning().log("%s join game failed: Game %d does not exist!", this, gameID)
+      logger.atWarning().log("$this join game failed: Game $gameID does not exist!")
       throw JoinGameException(EmuLang.getString("KailleraUser.JoinGameErrorDoesNotExist"))
     }
 
@@ -282,11 +317,11 @@ class KailleraUser(
     // connection type as
     // the owner: " + game.getOwner().getConnectionType());
     //	throw new
-    // JoinGameException(EmuLang.getString("KailleraGame.StartGameConnectionTypeMismatchInfo"));
+    // JoinGameException(EmuLang.getString("KailleraGameImpl.StartGameConnectionTypeMismatchInfo"));
     //
     // }
     playerNumber = game.join(this)
-    this.game = game
+    this.game = game as KailleraGameImpl?
     gameDataErrorTime = -1
     return game
   }
@@ -297,20 +332,23 @@ class KailleraUser(
   fun gameChat(message: String, messageID: Int) {
     updateLastActivity()
     if (game == null) {
-      logger.atWarning().log("%s game chat failed: Not in a game", this)
+      logger.atWarning().log("$this game chat failed: Not in a game")
       throw GameChatException(EmuLang.getString("KailleraUser.GameChatErrorNotInGame"))
     }
     if (isMuted) {
-      logger.atWarning().log("%s gamechat denied: Muted: %s", this, message)
+      logger.atWarning().log("$this gamechat denied: Muted: $message")
       game!!.announce("You are currently muted!", this)
       return
     }
-    if (server.accessManager.isSilenced(socketAddress.address)) {
-      logger.atWarning().log("%s gamechat denied: Silenced: %s", this, message)
+    if (server.accessManager.isSilenced(socketAddress!!.address)) {
+      logger.atWarning().log("$this gamechat denied: Silenced: $message")
       game!!.announce("You are currently silenced!", this)
       return
     }
-    game!!.chat(this, message)
+
+    /*if(this == null){
+    	throw new GameChatException("You don't exist!");
+    }*/ game!!.chat(this, message)
   }
 
   @Synchronized
@@ -327,7 +365,7 @@ class KailleraUser(
       /*if(p2P == true)
       	game.announce("Please Relogin, to update your client of missed server activity during P2P!", this);
       p2P = false;*/
-    } else logger.atFine().log("%s drop game failed: Not in a game", this)
+    } else logger.atFine().log("$this drop game failed: Not in a game")
   }
 
   @Synchronized
@@ -335,7 +373,7 @@ class KailleraUser(
   fun quitGame() {
     updateLastActivity()
     if (game == null) {
-      logger.atFine().log("%s quit game failed: Not in a game", this)
+      logger.atFine().log("$this quit game failed: Not in a game")
       // throw new QuitGameException("You are not in a game!");
       return
     }
@@ -345,13 +383,13 @@ class KailleraUser(
       status = UserStatus.IDLE
       game!!.drop(this, playerNumber)
     }
-    game!!.quit(this)
+    game!!.quit(this, playerNumber)
     if (status != UserStatus.IDLE) {
       status = UserStatus.IDLE
     }
     isMuted = false
     game = null
-    addEvent(UserQuitGameEvent(game = null, this))
+    addEvent(UserQuitGameEvent(game, this))
   }
 
   @Synchronized
@@ -359,7 +397,7 @@ class KailleraUser(
   fun startGame() {
     updateLastActivity()
     if (game == null) {
-      logger.atWarning().log("%s start game failed: Not in a game", this)
+      logger.atWarning().log("$this start game failed: Not in a game")
       throw StartGameException(EmuLang.getString("KailleraUser.StartGameErrorNotInGame"))
     }
     game!!.start(this)
@@ -370,7 +408,7 @@ class KailleraUser(
   fun playerReady() {
     updateLastActivity()
     if (game == null) {
-      logger.atWarning().log("%s player ready failed: Not in a game", this)
+      logger.atWarning().log("$this player ready failed: Not in a game")
       throw UserReadyException(EmuLang.getString("KailleraUser.PlayerReadyErrorNotInGame"))
     }
     if (
@@ -391,7 +429,8 @@ class KailleraUser(
       Duration.ofSeconds(1)
         .dividedBy(connectionType.updatesPerSecond.toLong())
         .multipliedBy(frameDelay.toLong())
-        .plusMillis(50)
+        // Effectively this is the delay that is allowed before calling it a lag spike.
+        .plusMillis(70)
     game!!.ready(this, playerNumber)
   }
 
@@ -403,24 +442,19 @@ class KailleraUser(
         smallLagSpikesCausedByUser++
       } else if (delaySinceLastResponse.nano > bigSpikeThreshold.nano) {
         bigLagSpikesCausedByUser++
-        // TODO(nue): Add some metric for laggy games/users and clean up this code.
-        if (bigLagSpikesCausedByUser == 50L) {
-          logger.atWarning().log("VERY LAGGY GAME! %s", this)
-        }
       }
     }
 
     updateLastActivity()
     try {
-      if (game == null) {
+      if (game == null)
         throw GameDataException(
           EmuLang.getString("KailleraUser.GameDataErrorNotInGame"),
           data,
           connectionType.byteValue.toInt(),
-          playerNumber = 1,
-          numPlayers = 1
+          1,
+          1
         )
-      }
 
       // Initial Delay
       // totalDelay = (game.getDelay() + tempDelay + 5)
@@ -432,7 +466,7 @@ class KailleraUser(
           response[i] = 0
         }
         lostInput.add(data)
-        addEvent(GameDataEvent(game!!, response))
+        addEvent(GameDataEvent(game as KailleraGameImpl, response))
         frameCount++
       } else {
         // lostInput.add(data);
@@ -445,18 +479,19 @@ class KailleraUser(
       }
       gameDataErrorTime = 0
     } catch (e: GameDataException) {
-      // TODO(nue): Investigate this comment:
       // this should be warn level, but it creates tons of lines in the log
-      logger.atFine().withCause(e).log("%s add game data failed", this)
+      logger.atFine().withCause(e).log("$this add game data failed")
 
       // i'm going to reflect the game data packet back at the user to prevent game lockups,
       // but this uses extra bandwidth, so we'll set a counter to prevent people from leaving
       // games running for a long time in this state
       if (gameDataErrorTime > 0) {
-        // give the user time to close the game
-        if (System.currentTimeMillis() - gameDataErrorTime > 30000) {
+        if (
+          System.currentTimeMillis() - gameDataErrorTime > 30000
+        ) // give the user time to close the game
+        {
           // this should be warn level, but it creates tons of lines in the log
-          logger.atFine().log("%s: error game data exceeds drop timeout!", this)
+          logger.atFine().log("$this: error game data exceeds drop timeout!")
           throw GameDataException(e.message)
         } else {
           // e.setReflectData(true);
@@ -473,38 +508,43 @@ class KailleraUser(
     }
   }
 
-  fun addEvent(event: KailleraEvent) {
+  fun addEvent(event: KailleraEvent?) {
+    if (event == null) {
+      logger.atSevere().log("$this: ignoring null event!")
+      return
+    }
     if (status != UserStatus.IDLE) {
       if (ignoringUnnecessaryServerActivity) {
         if (event.toString() == "InfoMessageEvent") return
       }
     }
-    // TODO(nue): This method should be marked as suspend instead.
-    runBlocking { eventChannel.send(event) }
+    eventQueue.offer(event)
   }
 
-  suspend fun handleEvent(event: KailleraEvent) {
-    if (event is StopFlagEvent) {
-      return
-    }
-    listener.handleKailleraEvent(event)
-    when {
-      event is GameStartedEvent -> {
-        status = UserStatus.PLAYING
-        if (improvedLagstat) {
-          lastUpdate = Instant.now()
+  override fun run() {
+    threadIsActive = true
+    logger.atFine().log("$this thread running...")
+    try {
+      while (!stopFlag) {
+        val event = eventQueue.poll(200, TimeUnit.SECONDS)
+        if (event == null) continue else if (event is StopFlagEvent) break
+        listener.actionPerformed(event)
+        if (event is GameStartedEvent) {
+          status = UserStatus.PLAYING
+          if (improvedLagstat) {
+            lastUpdate = Instant.now()
+          }
+        } else if (event is UserQuitEvent && event.user == this) {
+          stop()
         }
       }
-      event is UserQuitEvent && event.user == this -> {
-        stop()
-      }
-    }
-  }
-
-  override suspend fun run(globalContext: CoroutineContext) {
-    // Run over all events as they come in.
-    for (event in eventChannel) {
-      handleEvent(event)
+    } catch (e: InterruptedException) {
+      logger.atSevere().withCause(e).log("$this thread interrupted!")
+    } catch (e: Throwable) {
+      logger.atSevere().withCause(e).log("$this thread caught unexpected exception!")
+    } finally {
+      threadIsActive = false
+      logger.atFine().log("$this thread exiting...")
     }
   }
 

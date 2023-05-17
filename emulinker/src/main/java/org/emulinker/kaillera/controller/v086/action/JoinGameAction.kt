@@ -22,10 +22,7 @@ class JoinGameAction @Inject internal constructor() :
   override fun toString() = "JoinGameAction"
 
   @Throws(FatalActionException::class)
-  override suspend fun performAction(
-    message: JoinGame.JoinGameRequest,
-    clientHandler: V086ClientHandler
-  ) {
+  override fun performAction(message: JoinGame.JoinGameRequest, clientHandler: V086ClientHandler) {
     actionPerformedCount++
     try {
       clientHandler.user.joinGame(message.gameId)
@@ -42,8 +39,8 @@ class JoinGameAction @Inject internal constructor() :
         clientHandler.send(
           QuitGame.QuitGameNotification(
             clientHandler.nextMessageNumber,
-            clientHandler.user.userData.name,
-            clientHandler.user.userData.id
+            clientHandler.user.name!!,
+            clientHandler.user.id
           )
         )
       } catch (e2: MessageFormatException) {
@@ -52,7 +49,7 @@ class JoinGameAction @Inject internal constructor() :
     }
   }
 
-  override suspend fun handleEvent(event: UserJoinedGameEvent, clientHandler: V086ClientHandler) {
+  override fun handleEvent(event: UserJoinedGameEvent, clientHandler: V086ClientHandler) {
     handledEventCount++
     val thisUser = clientHandler.user
     try {
@@ -64,12 +61,7 @@ class JoinGameAction @Inject internal constructor() :
           .asSequence()
           .filter { it != thisUser && !it.inStealthMode }
           .mapTo(players) {
-            PlayerInformation.Player(
-              it.userData.name,
-              it.ping.toLong(),
-              it.userData.id,
-              it.connectionType
-            )
+            PlayerInformation.Player(it.name!!, it.ping.toLong(), it.id, it.connectionType)
           }
         clientHandler.send(PlayerInformation(clientHandler.nextMessageNumber, players))
       }
@@ -79,9 +71,9 @@ class JoinGameAction @Inject internal constructor() :
             clientHandler.nextMessageNumber,
             game.id,
             0,
-            user.userData.name,
+            user.name!!,
             user.ping.toLong(),
-            user.userData.id,
+            user.id,
             user.connectionType
           )
         )

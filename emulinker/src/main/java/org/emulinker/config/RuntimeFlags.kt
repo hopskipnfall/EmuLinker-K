@@ -14,8 +14,8 @@ data class RuntimeFlags(
   val allowSinglePlayer: Boolean,
   val charset: Charset,
   val chatFloodTime: Int,
-  val connectControllerBufferSize: Int,
   val connectionTypes: List<String>,
+  val coreThreadPoolSize: Int,
   val createGameFloodTime: Int,
   val gameAutoFireSensitivity: Int,
   val gameBufferSize: Int,
@@ -35,7 +35,6 @@ data class RuntimeFlags(
   val maxUsers: Int,
   val metricsEnabled: Boolean,
   val metricsLoggingFrequency: Duration,
-  val requestTimeout: Duration,
   val serverAddress: String,
   val serverLocation: String,
   val serverName: String,
@@ -50,7 +49,6 @@ data class RuntimeFlags(
   val twitterOAuthConsumerSecret: String,
   val twitterPreventBroadcastNameSuffixes: List<String>,
   val v086BufferSize: Int,
-  val numIoDispatchers: Int,
 ) {
 
   init {
@@ -88,6 +86,7 @@ data class RuntimeFlags(
         charset = Charset.forName(config.getString("emulinker.charset")),
         chatFloodTime = config.getInt("server.chatFloodTime"),
         connectionTypes = config.getList("server.allowedConnectionTypes") as List<String>,
+        coreThreadPoolSize = config.getInt("server.coreThreadpoolSize", 5),
         createGameFloodTime = config.getInt("server.createGameFloodTime"),
         gameAutoFireSensitivity = config.getInt("game.defaultAutoFireSensitivity"),
         gameBufferSize = config.getInt("game.bufferSize"),
@@ -107,10 +106,6 @@ data class RuntimeFlags(
         maxUsers = config.getInt("server.maxUsers"),
         metricsEnabled = config.getBoolean("metrics.enabled", false),
         metricsLoggingFrequency = config.getInt("metrics.loggingFrequencySeconds", 30).seconds,
-        requestTimeout =
-          config
-            .getInt("server.requestTimeoutMilliseconds", 5.seconds.inWholeMilliseconds.toInt())
-            .milliseconds,
         serverAddress = config.getString("masterList.serverConnectAddress", ""),
         serverLocation = config.getString("masterList.serverLocation", "Unknown"),
         serverName = config.getString("masterList.serverName", "Emulinker Server"),
@@ -129,8 +124,6 @@ data class RuntimeFlags(
           ), // TODO(nue): Read these from a file
         twitterPreventBroadcastNameSuffixes = listOf("待", "街", "町", "再起", "侍ち"),
         v086BufferSize = config.getInt("controllers.v086.bufferSize", 4096),
-        connectControllerBufferSize = config.getInt("controllers.connect.bufferSize", 4096),
-        numIoDispatchers = config.getInt("server.numIoDispatchers", 300),
       )
       // ImmutableList.copyOf(config.getString("twitter.preventBroadcastNameSuffixes",
       // "").split(",")))

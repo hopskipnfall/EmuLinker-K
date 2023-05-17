@@ -24,10 +24,10 @@ class LoginAction @Inject internal constructor() :
   override fun toString() = "LoginAction"
 
   @Throws(FatalActionException::class)
-  override suspend fun performAction(message: UserInformation, clientHandler: V086ClientHandler) {
+  override fun performAction(message: UserInformation, clientHandler: V086ClientHandler) {
     actionPerformedCount++
     val user: KailleraUser = clientHandler.user
-    user.userData = user.userData.copy(name = message.username)
+    user.name = message.username
     user.clientType = message.clientType
     user.socketAddress = clientHandler.remoteSocketAddress
     user.connectionType = message.connectionType
@@ -39,15 +39,15 @@ class LoginAction @Inject internal constructor() :
     }
   }
 
-  override suspend fun handleEvent(event: UserJoinedEvent, clientHandler: V086ClientHandler) {
+  override fun handleEvent(event: UserJoinedEvent, clientHandler: V086ClientHandler) {
     handledEventCount++
     try {
       val user = event.user
       clientHandler.send(
         UserJoined(
           clientHandler.nextMessageNumber,
-          user.userData.name,
-          user.userData.id,
+          user.name!!,
+          user.id,
           user.ping.toLong(),
           user.connectionType
         )
@@ -57,7 +57,7 @@ class LoginAction @Inject internal constructor() :
         if (user != thisUser) {
           val sb = StringBuilder()
           sb.append(":USERINFO=")
-          sb.append(user.userData.id)
+          sb.append(user.id)
           sb.append(0x02.toChar())
           sb.append(user.connectSocketAddress.address.hostAddress)
           sb.append(0x02.toChar())
@@ -65,7 +65,7 @@ class LoginAction @Inject internal constructor() :
           sb.append(0x02.toChar())
           // str = u3.getName().replace(',','.');
           // str = str.replace(';','.');
-          sb.append(user.userData.name)
+          sb.append(user.name)
           sb.append(0x02.toChar())
           sb.append(user.ping)
           sb.append(0x02.toChar())

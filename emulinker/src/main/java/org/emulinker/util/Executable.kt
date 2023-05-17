@@ -1,12 +1,9 @@
 package org.emulinker.util
 
-import kotlin.coroutines.CoroutineContext
+import java.lang.Runnable
 
-// TODO(nue): Get rid of this.
-interface Executable {
+interface Executable : Runnable {
   val threadIsActive: Boolean
 
-  suspend fun stop()
-
-  suspend fun run(globalContext: CoroutineContext)
+  fun stop()
 }

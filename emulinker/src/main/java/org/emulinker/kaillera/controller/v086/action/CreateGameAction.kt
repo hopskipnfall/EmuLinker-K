@@ -24,7 +24,7 @@ class CreateGameAction @Inject internal constructor() :
   override fun toString() = "CreateGameAction"
 
   @Throws(FatalActionException::class)
-  override suspend fun performAction(message: CreateGame, clientHandler: V086ClientHandler) {
+  override fun performAction(message: CreateGame, clientHandler: V086ClientHandler) {
     actionPerformedCount++
     try {
       clientHandler.user.createGame(message.romName)
@@ -44,8 +44,8 @@ class CreateGameAction @Inject internal constructor() :
         clientHandler.send(
           QuitGame.QuitGameNotification(
             clientHandler.nextMessageNumber,
-            clientHandler.user.userData.name,
-            clientHandler.user.userData.id
+            clientHandler.user.name!!,
+            clientHandler.user.id
           )
         )
       } catch (e2: MessageFormatException) {
@@ -67,8 +67,8 @@ class CreateGameAction @Inject internal constructor() :
         clientHandler.send(
           QuitGame.QuitGameNotification(
             clientHandler.nextMessageNumber,
-            clientHandler.user.userData.name,
-            clientHandler.user.userData.id
+            clientHandler.user.name!!,
+            clientHandler.user.id
           )
         )
       } catch (e2: MessageFormatException) {
@@ -77,7 +77,7 @@ class CreateGameAction @Inject internal constructor() :
     }
   }
 
-  override suspend fun handleEvent(event: GameCreatedEvent, clientHandler: V086ClientHandler) {
+  override fun handleEvent(event: GameCreatedEvent, clientHandler: V086ClientHandler) {
     handledEventCount++
     try {
       val game = event.game
@@ -85,7 +85,7 @@ class CreateGameAction @Inject internal constructor() :
       clientHandler.send(
         CreateGame.CreateGameNotification(
           clientHandler.nextMessageNumber,
-          owner.userData.name,
+          owner!!.name!!,
           game.romName,
           owner.clientType!!,
           game.id,

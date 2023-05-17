@@ -12,8 +12,6 @@ import org.emulinker.kaillera.model.GameStatus
 import org.emulinker.kaillera.model.KailleraServer
 import org.emulinker.kaillera.release.ReleaseInfo
 
-private const val TOUCH_LIST_URL = "http://kaillerareborn.2manygames.fr/touch_list.php"
-
 class EmuLinkerMasterUpdateTask(
   private val publicInfo: PublicServerInformation,
   private val connectController: ConnectController,
@@ -35,7 +33,7 @@ class EmuLinkerMasterUpdateTask(
       .filter { it.status == GameStatus.WAITING }
       .forEach {
         waitingGames.append(
-          "${it.romName}|${it.owner.userData.name}|${it.owner.clientType}|${it.players.size}/${it.maxUsers}|"
+          "${it.romName}|${it.owner.name}|${it.owner.clientType}|${it.players.size}/${it.maxUsers}|"
         )
       }
 
@@ -95,5 +93,7 @@ class EmuLinkerMasterUpdateTask(
 
   companion object {
     private val logger = FluentLogger.forEnclosingClass()
+
+    private const val TOUCH_LIST_URL = "http://master.emulinker.org/touch_list.php"
   }
 }

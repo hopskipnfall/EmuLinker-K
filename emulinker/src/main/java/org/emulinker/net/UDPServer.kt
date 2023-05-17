@@ -1,23 +1,24 @@
 package org.emulinker.net
 
 import com.codahale.metrics.Counter
+import com.codahale.metrics.MetricRegistry
 import com.google.common.flogger.FluentLogger
-import io.ktor.network.sockets.*
-import io.ktor.utils.io.core.*
+import java.io.IOException
+import java.lang.Exception
 import java.net.InetSocketAddress
+import java.net.SocketException
+import java.nio.Buffer
 import java.nio.ByteBuffer
-import kotlin.coroutines.CoroutineContext
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.supervisorScope
-import org.emulinker.kaillera.controller.v086.V086Utils
-import org.emulinker.kaillera.controller.v086.V086Utils.toKtorAddress
-import org.emulinker.util.EmuUtil.dumpBufferFromBeginning
+import java.nio.channels.DatagramChannel
+import kotlin.Throws
 import org.emulinker.util.EmuUtil.formatSocketAddress
 import org.emulinker.util.Executable
 
-abstract class UDPServer(private val listeningOnPortsCounter: Counter) : Executable {
-  abstract val bufferSize: Int
-
+abstract class UDPServer(
+  shutdownOnExit: Boolean,
+  metrics: MetricRegistry?,
+  private val listeningOnPortsCounter: Counter
+) : Executable {
   /*
   	private static int		artificalPacketLossPercentage = 0;
   	private static int		artificalDelay = 0;
@@ -40,10 +41,7 @@ abstract class UDPServer(private val listeningOnPortsCounter: Counter) : Executa
   	}
   */
   var boundPort: Int? = null
-
-  private lateinit var serverSocket: BoundDatagramSocket
-
-  protected lateinit var globalContext: CoroutineContext
+  private var channel: DatagramChannel? = null
 
   final override var threadIsActive = false
     private set
@@ -54,54 +52,74 @@ abstract class UDPServer(private val listeningOnPortsCounter: Counter) : Executa
   @get:Synchronized
   val isBound: Boolean
     get() {
-      return !serverSocket.isClosed
+      if (channel == null) return false
+      return if (channel!!.socket() == null) false else !channel!!.socket().isClosed
     }
+  val isConnected: Boolean
+    get() = channel!!.isConnected
 
-  open suspend fun start(udpSocketProvider: UdpSocketProvider, globalContext: CoroutineContext) {
-    this.globalContext = globalContext
-    logger.atFine().log("%s received start request!", this)
+  @Synchronized
+  open fun start() {
+    logger.atFine().log(toString() + " received start request!")
     if (threadIsActive) {
-      logger.atFine().log("%s start request ignored: already running!", this)
+      logger.atFine().log(toString() + " start request ignored: already running!")
       return
     }
     stopFlag = false
   }
 
-  override suspend fun stop() {
+  @Synchronized
+  override fun stop() {
     stopFlag = true
-    serverSocket.close()
+    if (channel != null) {
+      try {
+        channel!!.close()
+      } catch (e: IOException) {
+        logger.atSevere().withCause(e).log("Failed to close DatagramChannel")
+      }
+    }
   }
 
   @Synchronized
-  protected open fun bind(udpSocketProvider: UdpSocketProvider, port: Int) {
-    serverSocket =
-      udpSocketProvider.bindSocket(
-        io.ktor.network.sockets.InetSocketAddress("0.0.0.0", port),
-        bufferSize
-      )
-    boundPort = port
-    logger.atInfo().log("Accepting messages at %s", serverSocket.localAddress)
+  @Throws(BindException::class)
+  protected fun bind() {
+    bind(-1)
   }
 
-  protected abstract fun allocateBuffer(): ByteBuffer
+  @Synchronized
+  @Throws(BindException::class)
+  protected open fun bind(port: Int) {
+    try {
+      channel = DatagramChannel.open()
+      if (port > 0) channel!!.socket().bind(InetSocketAddress(port))
+      else channel!!.socket().bind(null)
+      boundPort = channel!!.socket().localPort
+      val tempBuffer = buffer
+      val bufferSize = tempBuffer.capacity() * 2
+      releaseBuffer(tempBuffer)
+      channel!!.socket().receiveBufferSize = bufferSize
+      channel!!.socket().sendBufferSize = bufferSize
+    } catch (e: IOException) {
+      throw BindException("Failed to bind to port $port", port, e)
+    }
+    start()
+  }
 
-  /**
-   * Handler for the request.
-   *
-   * Note that as this is communication over a socket and we do not send back a response, the client
-   * isn't waiting on a response message. That being said we do only handle one request per user so
-   * deadlocks are possible.
-   */
-  protected abstract suspend fun handleReceived(
-    buffer: ByteBuffer,
-    remoteSocketAddress: InetSocketAddress
-  )
+  protected abstract val buffer: ByteBuffer
 
-  protected suspend fun send(buffer: ByteBuffer, toSocketAddress: InetSocketAddress) {
+  protected abstract fun releaseBuffer(buffer: ByteBuffer)
+
+  protected abstract fun handleReceived(buffer: ByteBuffer, remoteSocketAddress: InetSocketAddress)
+
+  protected fun send(buffer: ByteBuffer?, toSocketAddress: InetSocketAddress?) {
     if (!isBound) {
       logger
         .atWarning()
-        .log("Failed to send to %s: UDPServer is not bound!", formatSocketAddress(toSocketAddress))
+        .log(
+          "Failed to send to " +
+            formatSocketAddress(toSocketAddress!!) +
+            ": UDPServer is not bound!"
+        )
       return
     }
     /*
@@ -109,48 +127,78 @@ abstract class UDPServer(private val listeningOnPortsCounter: Counter) : Executa
     {
     	return;
     }
-    */
-    try {
-      serverSocket.send(Datagram(ByteReadPacket(buffer), toSocketAddress.toKtorAddress()))
+    */ try {
+      //			logger.atFine().log("send("+EmuUtil.INSTANCE.dumpBuffer(buffer, false)+")");
+      channel!!.send(buffer, toSocketAddress)
     } catch (e: Exception) {
       logger.atSevere().withCause(e).log("Failed to send on port %s", boundPort)
     }
   }
 
-  override suspend fun run(globalContext: CoroutineContext) {
-    this.globalContext = globalContext
+  override fun run() {
     threadIsActive = true
-    listeningOnPortsCounter.inc()
-
+    logger.atFine().log(toString() + ": thread running...")
     try {
+      listeningOnPortsCounter!!.inc()
       while (!stopFlag) {
-        supervisorScope {
-          val datagram = serverSocket.receive()
-          val buffer = datagram.packet.readByteBuffer()
-
-          try {
-            handleReceived(
-              buffer,
-              V086Utils.toJavaAddress(
-                datagram.address as io.ktor.network.sockets.InetSocketAddress
-              ),
-            )
-          } catch (e: Exception) {
-            if (e is CancellationException) {
-              throw e
-            }
-            logger
-              .atSevere()
-              .withCause(e)
-              .log("Error while handling request: %s", buffer.dumpBufferFromBeginning())
+        try {
+          val buffer = buffer
+          val fromSocketAddress = channel!!.receive(buffer) as InetSocketAddress
+          if (stopFlag) break
+          if (fromSocketAddress == null)
+            throw IOException("Failed to receive from DatagramChannel: fromSocketAddress == null")
+          /*
+          if(artificalPacketLossPercentage > 0 && Math.abs(random.nextInt()%100) < artificalPacketLossPercentage)
+          {
+          	releaseBuffer(buffer);
+          	continue;
           }
+
+          if(artificalDelay > 0)
+          {
+          	try
+          	{
+          		Thread.sleep(artificalDelay);
+          	}
+          	catch(Exception e) {}
+          }
+          */
+          // Cast to avoid issue with java version mismatch:
+          // https://stackoverflow.com/a/61267496/2875073
+          (buffer as Buffer).flip()
+          //					logger.atFine().log("receive("+EmuUtil.INSTANCE.dumpBuffer(buffer, false)+")");
+          // TODO(nue): time this
+          handleReceived(buffer, fromSocketAddress)
+          releaseBuffer(buffer)
+        } catch (e: SocketException) {
+          if (stopFlag) break
+          logger.atSevere().withCause(e).log("Failed to receive on port %d", boundPort)
+        } catch (e: IOException) {
+          if (stopFlag) break
+          logger.atSevere().withCause(e).log("Failed to receive on port %d", boundPort)
         }
       }
+    } catch (e: Throwable) {
+      logger
+        .atSevere()
+        .withCause(e)
+        .log("UDPServer on port %d caught unexpected exception!", boundPort)
+      stop()
     } finally {
-      logger.atFine().log("Ending infinite loop")
       listeningOnPortsCounter.dec()
       threadIsActive = false
+      logger.atFine().log(toString() + ": thread exiting...")
     }
+  }
+
+  private inner class ShutdownThread : Thread() {
+    override fun run() {
+      this@UDPServer.stop()
+    }
+  }
+
+  init {
+    if (shutdownOnExit) Runtime.getRuntime().addShutdownHook(ShutdownThread())
   }
 
   companion object {

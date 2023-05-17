@@ -7,6 +7,9 @@ import dagger.Module
 import dagger.Provides
 import dagger.multibindings.IntoSet
 import java.nio.charset.Charset
+import java.util.concurrent.SynchronousQueue
+import java.util.concurrent.ThreadPoolExecutor
+import java.util.concurrent.TimeUnit
 import javax.inject.Named
 import javax.inject.Singleton
 import org.apache.commons.configuration.Configuration
@@ -77,7 +80,11 @@ abstract class AppModule {
           .build()
       )
 
-    @Provides @Singleton fun provideConfiguration(): Configuration = EmuLinkerPropertiesConfig()
+    @Provides
+    @Singleton
+    fun provideConfiguration(): Configuration {
+      return EmuLinkerPropertiesConfig()
+    }
 
     @Provides
     @Singleton
@@ -87,6 +94,21 @@ abstract class AppModule {
       return flags
     }
 
-    @Provides @Singleton fun provideMetricRegistry(): MetricRegistry = MetricRegistry()
+    @Provides
+    fun provideThreadPoolExecutor(flags: RuntimeFlags): ThreadPoolExecutor {
+      return ThreadPoolExecutor(
+        flags.coreThreadPoolSize,
+        Int.MAX_VALUE,
+        60L,
+        TimeUnit.SECONDS,
+        SynchronousQueue()
+      )
+    }
+
+    @Provides
+    @Singleton
+    fun provideMetricRegistry(): MetricRegistry {
+      return MetricRegistry()
+    }
   }
 }

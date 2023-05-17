@@ -5,7 +5,6 @@
       <list>
         <option value="emulinker/src/main/java" />
         <option value="emulinker/src/test/java" />
-        <option value="target/generated-sources/java-templates" />
       </list>
     </option>
   </component>

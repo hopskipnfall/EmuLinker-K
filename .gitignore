@@ -1,5 +1,6 @@
 # Compiled class file
 build/
+emulinker/build/
 target/
 *.class
 
@@ -28,8 +29,6 @@ hs_err_pid*
 
 metrics/
 
-.idea/libraries/
-.idea/workspace.xml
-.idea/ktfmt.xml
-
 .DS_Store
+
+.gradle

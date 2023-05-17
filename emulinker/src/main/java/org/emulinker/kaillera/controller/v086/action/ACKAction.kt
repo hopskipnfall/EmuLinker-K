@@ -3,14 +3,11 @@ package org.emulinker.kaillera.controller.v086.action
 import com.google.common.flogger.FluentLogger
 import javax.inject.Inject
 import javax.inject.Singleton
-import kotlin.time.Duration.Companion.milliseconds
-import kotlinx.coroutines.delay
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086ClientHandler
 import org.emulinker.kaillera.controller.v086.protocol.Ack
 import org.emulinker.kaillera.controller.v086.protocol.ConnectionRejected
 import org.emulinker.kaillera.controller.v086.protocol.ServerStatus
-import org.emulinker.kaillera.controller.v086.protocol.ServerStatus.Game
 import org.emulinker.kaillera.model.UserStatus
 import org.emulinker.kaillera.model.event.ConnectedEvent
 import org.emulinker.kaillera.model.event.UserEvent
@@ -26,7 +23,8 @@ class ACKAction @Inject internal constructor() :
 
   override fun toString() = "ACKAction"
 
-  override suspend fun performAction(message: Ack.ClientAck, clientHandler: V086ClientHandler) {
+  @Throws(FatalActionException::class)
+  override fun performAction(message: Ack.ClientAck, clientHandler: V086ClientHandler) {
     actionPerformedCount++
     val user = clientHandler.user
     if (user.loggedIn) {
@@ -52,7 +50,7 @@ class ACKAction @Inject internal constructor() :
               clientHandler.nextMessageNumber,
               // TODO(nue): Localize this?
               username = "server",
-              user.userData.id,
+              user.id,
               e.message ?: ""
             )
           )
@@ -71,7 +69,7 @@ class ACKAction @Inject internal constructor() :
     }
   }
 
-  override suspend fun handleEvent(event: UserEvent, clientHandler: V086ClientHandler) {
+  override fun handleEvent(event: UserEvent, clientHandler: V086ClientHandler) {
     handledEventCount++
     val connectedEvent = event as ConnectedEvent
     val server = connectedEvent.server
@@ -83,10 +81,10 @@ class ACKAction @Inject internal constructor() :
         if (user.status != UserStatus.CONNECTING && user != thisUser)
           users.add(
             ServerStatus.User(
-              user.userData.name,
+              user.name!!,
               user.ping.toLong(),
               user.status,
-              user.userData.id,
+              user.id,
               user.connectionType
             )
           )
@@ -106,7 +104,7 @@ class ACKAction @Inject internal constructor() :
             game.romName,
             game.id,
             game.clientType!!,
-            game.owner.userData.name,
+            game.owner.name!!,
             "$num/${game.maxUsers}",
             game.status
           )
@@ -132,7 +130,7 @@ class ACKAction @Inject internal constructor() :
     var counter = 0
     var sent = false
     var usersSubList: MutableList<ServerStatus.User> = ArrayList()
-    var gamesSubList: MutableList<Game> = ArrayList()
+    var gamesSubList: MutableList<ServerStatus.Game> = ArrayList()
     while (users.isNotEmpty()) {
       val user = users[0]
       users.removeAt(0)
@@ -142,7 +140,9 @@ class ACKAction @Inject internal constructor() :
         gamesSubList = ArrayList()
         counter = 0
         sent = true
-        delay(100.milliseconds) // SF MOD
+        try {
+          Thread.sleep(100)
+        } catch (e: Exception) {} // SF MOD
       }
       counter += user.numBytes
       usersSubList.add(user)
@@ -156,7 +156,9 @@ class ACKAction @Inject internal constructor() :
         gamesSubList = ArrayList()
         counter = 0
         sent = true
-        delay(100.milliseconds) // SF MOD
+        try {
+          Thread.sleep(100)
+        } catch (e: Exception) {} // SF MOD
       }
       counter += game.numBytes
       gamesSubList.add(game)
@@ -165,10 +167,10 @@ class ACKAction @Inject internal constructor() :
       sendServerStatus(clientHandler, usersSubList, gamesSubList, counter)
   }
 
-  private suspend fun sendServerStatus(
+  private fun sendServerStatus(
     clientHandler: V086ClientHandler,
     users: List<ServerStatus.User>,
-    games: List<Game>,
+    games: List<ServerStatus.Game>,
     counter: Int
   ) {
     logger

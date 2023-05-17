@@ -6,17 +6,10 @@ import com.google.common.flogger.FluentLogger
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
-import java.net.InetAddress
 import java.net.InetSocketAddress
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
-import java.util.concurrent.TimeUnit.MINUTES
-import java.util.concurrent.TimeUnit.SECONDS
 import javax.inject.Named
-import kotlinx.coroutines.TimeoutCancellationException
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
-import kotlinx.coroutines.withTimeout
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.messaging.ParseException
@@ -27,12 +20,10 @@ import org.emulinker.kaillera.controller.v086.protocol.V086BundleFormatException
 import org.emulinker.kaillera.controller.v086.protocol.V086Message
 import org.emulinker.kaillera.model.KailleraUser
 import org.emulinker.kaillera.model.event.*
-import org.emulinker.net.UDPServer
-import org.emulinker.net.UdpSocketProvider
+import org.emulinker.net.BindException
+import org.emulinker.net.PrivateUDPServer
 import org.emulinker.util.ClientGameDataCache
 import org.emulinker.util.EmuUtil.dumpBuffer
-import org.emulinker.util.EmuUtil.dumpBufferFromBeginning
-import org.emulinker.util.EmuUtil.formatSocketAddress
 import org.emulinker.util.GameDataCache
 import org.emulinker.util.LoggingUtils.debugLog
 
@@ -41,12 +32,13 @@ class V086ClientHandler
 @AssistedInject
 constructor(
   metrics: MetricRegistry,
-  private val flags: RuntimeFlags,
+  flags: RuntimeFlags,
   @Assisted remoteSocketAddress: InetSocketAddress,
-  /** The V086Controller that started this client handler. */
   @param:Assisted val controller: V086Controller,
-  @Named("listeningOnPortsCounter") listeningOnPortsCounter: Counter,
-) : UDPServer(listeningOnPortsCounter) {
+  @Named("listeningOnPortsCounter") listeningOnPortsCounter: Counter
+) :
+  PrivateUDPServer(false, remoteSocketAddress.address, metrics, listeningOnPortsCounter),
+  KailleraEventListener {
   lateinit var user: KailleraUser
     private set
 
@@ -68,9 +60,8 @@ constructor(
   private val outMessages = arrayOfNulls<V086Message>(V086Controller.MAX_BUNDLE_SIZE)
   private val inBuffer: ByteBuffer = ByteBuffer.allocateDirect(flags.v086BufferSize)
   private val outBuffer: ByteBuffer = ByteBuffer.allocateDirect(flags.v086BufferSize)
-
-  private val outMutex = Mutex()
-
+  private val inSynch = Any()
+  private val outSynch = Any()
   private var testStart: Long = 0
   private var lastMeasurement: Long = 0
   var speedMeasurementCount = 0
@@ -83,11 +74,6 @@ constructor(
   private val clientRequestTimer =
     metrics.timer(MetricRegistry.name(this.javaClass, "clientRequests"))
 
-  lateinit var remoteSocketAddress: InetSocketAddress
-    private set
-
-  val remoteInetAddress: InetAddress = remoteSocketAddress.address
-
   @AssistedFactory
   interface Factory {
     fun create(
@@ -96,34 +82,7 @@ constructor(
     ): V086ClientHandler
   }
 
-  override suspend fun handleReceived(buffer: ByteBuffer, remoteSocketAddress: InetSocketAddress) {
-    if (!this::remoteSocketAddress.isInitialized) {
-      this.remoteSocketAddress = remoteSocketAddress
-    } else if (remoteSocketAddress != this.remoteSocketAddress) {
-      logger
-        .atSevere()
-        .atMostEvery(10, SECONDS)
-        .log(
-          "Rejecting packet received from wrong address. Expected=%s but was %s",
-          formatSocketAddress(this.remoteSocketAddress),
-          formatSocketAddress(remoteSocketAddress)
-        )
-      return
-    }
-    clientRequestTimer.time().use {
-      try {
-        withTimeout(flags.requestTimeout) { handleReceived(buffer) }
-      } catch (e: TimeoutCancellationException) {
-        logger.atSevere().withCause(e).log("Request timed out")
-      }
-    }
-  }
-
-  private suspend fun send(buffer: ByteBuffer) {
-    super.send(buffer, remoteSocketAddress)
-  }
-
-  override fun toString() =
+  override fun toString(): String =
     if (boundPort != null) "V086Controller($boundPort)" else "V086Controller(unbound)"
 
   @get:Synchronized
@@ -159,45 +118,94 @@ constructor(
   val averageNetworkSpeed: Int
     get() = ((lastMeasurement - testStart) / speedMeasurementCount).toInt()
 
-  public override fun bind(udpSocketProvider: UdpSocketProvider, port: Int) {
-    super.bind(udpSocketProvider, port)
+  @Throws(BindException::class)
+  public override fun bind(port: Int) {
+    super.bind(port)
   }
 
   fun start(user: KailleraUser) {
     this.user = user
-    controller.clientHandlers[user.userData.id] = this
+    logger
+      .atFine()
+      .log(
+        toString() + " thread starting (ThreadPool:%d/%d)",
+        controller.threadPool.activeCount,
+        controller.threadPool.poolSize
+      )
+    controller.threadPool.execute(this)
+    Thread.yield()
+
+    /*
+    long s = System.currentTimeMillis();
+    while (!isBound() && (System.currentTimeMillis() - s) < 1000)
+    {
+    try
+    {
+    Thread.sleep(100);
+    }
+    catch (Exception e)
+    {
+    logger.atSevere().withCause(e).log("Sleep Interrupted!");
+    }
+    }
+
+    if (!isBound())
+    {
+    logger.atSevere().log("V086ClientHandler failed to start for client from " + getRemoteInetAddress().getHostAddress());
+    return;
+    }
+    */ logger
+      .atFine()
+      .log(
+        toString() + " thread started (ThreadPool:%d/%d)",
+        controller.threadPool.activeCount,
+        controller.threadPool.poolSize
+      )
+    controller.clientHandlers[user.id] = this
   }
 
-  override suspend fun stop() {
-    if (stopFlag) return
-    var port: Int? = null
-    if (isBound) {
-      port = boundPort
+  override fun stop() {
+    synchronized(this) {
+      if (stopFlag) return
+      var port: Int? = null
+      if (isBound) port = boundPort
+      super.stop()
+      if (port != null) {
+        logger
+          .atFine()
+          .log(
+            "%s returning port %d to available port queue: %d available",
+            this,
+            port,
+            controller.portRangeQueue.size + 1
+          )
+        controller.portRangeQueue.add(port)
+      }
     }
-    super.stop()
-    if (port != null) {
-      logger
-        .atFine()
-        .log(
-          "%s returning port %d to available port queue: %d available",
-          this,
-          port,
-          controller.portRangeQueue.size + 1
-        )
-      controller.portRangeQueue.add(port)
-    }
-    controller.clientHandlers.remove(user.userData.id)
+    controller.clientHandlers.remove(user.id)
     user.stop()
   }
 
-  override fun allocateBuffer(): ByteBuffer {
-    // return ByteBufferMessage.getBuffer(bufferSize);
-    inBuffer.clear()
-    return inBuffer
+  // return ByteBufferMessage.getBuffer(bufferSize);
+  // Cast to avoid issue with java version mismatch:
+  // https://stackoverflow.com/a/61267496/2875073
+  override val buffer: ByteBuffer
+    get() {
+      // return ByteBufferMessage.getBuffer(bufferSize);
+      inBuffer.clear()
+      return inBuffer
+    }
+
+  override fun releaseBuffer(buffer: ByteBuffer) {
+    // ByteBufferMessage.releaseBuffer(buffer);
+    // buffer.clear();
   }
 
-  private suspend fun handleReceived(buffer: ByteBuffer) {
-    val lastMessageNumberUsed = lastMessageNumber
+  override fun handleReceived(buffer: ByteBuffer) {
+    clientRequestTimer.time().use { handleReceivedInternal(buffer) }
+  }
+
+  private fun handleReceivedInternal(buffer: ByteBuffer) {
     val inBundle =
       try {
         parse(buffer, lastMessageNumber)
@@ -221,26 +229,9 @@ constructor(
         null
       } ?: return
 
-    if (inBundle.messages.firstOrNull() == null) {
-      logger
-        .atFine()
-        .atMostEvery(1, MINUTES)
-        .log(
-          "Received request from User %d containing no messages. inBundle.messages.size = %d. numMessages: %d, buffer dump: %s, lastMessageNumberUsed: %d",
-          user.userData.id,
-          inBundle.messages.size,
-          inBundle.numMessages,
-          buffer.dumpBufferFromBeginning(),
-          lastMessageNumberUsed
-        )
-    }
-
     debugLog {
-      logger
-        .atFinest()
-        .log("-> FROM user %d: %s", user.userData.id, inBundle.messages.firstOrNull())
+      logger.atFinest().log("<- FROM P%d: %s", user.playerNumber, inBundle.messages.firstOrNull())
     }
-
     clientRetryCount =
       if (inBundle.numMessages == 0) {
         logger
@@ -252,41 +243,50 @@ constructor(
       } else {
         0
       }
-
     try {
-      val messages = inBundle.messages
-      if (inBundle.numMessages == 1) {
-        lastMessageNumber = messages.single()!!.messageNumber
-        val action = controller.actions[messages[0]!!.messageTypeId.toInt()]
-        if (action == null) {
-          logger.atSevere().log("No action defined to handle client message: %s", messages[0])
-        }
-        (action as V086Action<V086Message>).performAction(messages[0]!!, this)
-      } else {
-        // read the bundle from back to front to process the oldest messages first
-        for (i in inBundle.numMessages - 1 downTo 0) {
-          /**
-           * already extracts messages with higher numbers when parsing, it does not need to be
-           * checked and this causes an error if messageNumber is 0 and lastMessageNumber is 0xFFFF
-           * if (messages [i].getNumber() > lastMessageNumber)
-           */
-          prevMessageNumber = lastMessageNumber
-          lastMessageNumber = messages[i]!!.messageNumber
-          if (prevMessageNumber + 1 != lastMessageNumber) {
-            if (prevMessageNumber == 0xFFFF && lastMessageNumber == 0) {
-              // exception; do nothing
-            } else {
-              logger
-                .atWarning()
-                .log("%s dropped a packet! (%d to %d)", user, prevMessageNumber, lastMessageNumber)
-              user.droppedPacket()
-            }
-          }
-          val action = controller.actions[messages[i]!!.messageTypeId.toInt()]
+      synchronized(inSynch) {
+        val messages = inBundle.messages
+        if (inBundle.numMessages == 1) {
+          lastMessageNumber = messages[0]!!.messageNumber
+          val action = controller.actions[messages[0]!!.messageTypeId.toInt()]
           if (action == null) {
-            logger.atSevere().log("No action defined to handle client message: %s", messages[i])
-          } else {
-            (action as V086Action<V086Message>).performAction(messages[i]!!, this)
+            logger.atSevere().log("No action defined to handle client message: " + messages[0])
+          }
+          (action as V086Action<V086Message>).performAction(messages[0]!!, this)
+        } else {
+          // read the bundle from back to front to process the oldest messages first
+          for (i in inBundle.numMessages - 1 downTo 0) {
+            /**
+             * already extracts messages with higher numbers when parsing, it does not need to be
+             * checked and this causes an error if messageNumber is 0 and lastMessageNumber is
+             * 0xFFFF if (messages [i].getNumber() > lastMessageNumber)
+             */
+            run {
+              prevMessageNumber = lastMessageNumber
+              lastMessageNumber = messages[i]!!.messageNumber
+              if (prevMessageNumber + 1 != lastMessageNumber) {
+                if (prevMessageNumber == 0xFFFF && lastMessageNumber == 0) {
+                  // exception; do nothing
+                } else {
+                  logger
+                    .atWarning()
+                    .log(
+                      "%s dropped a packet! (%d to %d)",
+                      user,
+                      prevMessageNumber,
+                      lastMessageNumber
+                    )
+                  user.droppedPacket()
+                }
+              }
+              val action = controller.actions[messages[i]!!.messageTypeId.toInt()]
+              if (action == null) {
+                logger.atSevere().log("No action defined to handle client message: " + messages[i])
+              } else {
+                // logger.atFine().log(user + " -> " + message);
+                (action as V086Action<V086Message>).performAction(messages[i]!!, this)
+              }
+            }
           }
         }
       }
@@ -296,9 +296,7 @@ constructor(
     }
   }
 
-  override val bufferSize = flags.v086BufferSize
-
-  suspend fun handleKailleraEvent(event: KailleraEvent) {
+  override fun actionPerformed(event: KailleraEvent) {
     when (event) {
       is GameEvent -> {
         val eventHandler = controller.gameEventHandlers[event::class]
@@ -338,23 +336,25 @@ constructor(
     }
   }
 
-  suspend fun resend(timeoutCounter: Int) {
-    // if ((System.currentTimeMillis() - lastResend) > (user.getPing()*3))
-    if (System.currentTimeMillis() - lastResend > controller.server.maxPing) {
-      // int numToSend = (3+timeoutCounter);
-      var numToSend = 3 * timeoutCounter
-      if (numToSend > V086Controller.MAX_BUNDLE_SIZE) numToSend = V086Controller.MAX_BUNDLE_SIZE
-      logger.atFine().log("%s: resending last %d messages", this, numToSend)
-      send(null, numToSend)
-      lastResend = System.currentTimeMillis()
-    } else {
-      logger.atFine().log("Skipping resend...")
+  fun resend(timeoutCounter: Int) {
+    synchronized(outSynch) {
+      // if ((System.currentTimeMillis() - lastResend) > (user.getPing()*3))
+      if (System.currentTimeMillis() - lastResend > controller.server.maxPing) {
+        // int numToSend = (3+timeoutCounter);
+        var numToSend = 3 * timeoutCounter
+        if (numToSend > V086Controller.MAX_BUNDLE_SIZE) numToSend = V086Controller.MAX_BUNDLE_SIZE
+        logger.atFine().log("%s: resending last %d messages", this, numToSend)
+        send(null, numToSend)
+        lastResend = System.currentTimeMillis()
+      } else {
+        logger.atFine().log("Skipping resend...")
+      }
     }
   }
 
-  suspend fun send(outMessage: V086Message?, numToSend: Int = 5) {
+  fun send(outMessage: V086Message?, numToSend: Int = 5) {
     var numToSend = numToSend
-    outMutex.withLock {
+    synchronized(outSynch) {
       if (outMessage != null) {
         lastMessageBuffer.add(outMessage)
       }
