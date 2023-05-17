@@ -12,5 +12,5 @@ object CompiledFlags {
 
   const val PROJECT_URL: String = "${project.url}"
 
-  val BUILD_DATE: Instant = Instant.parse("${build-timestamp}")
+  val BUILD_DATE: Instant = Instant.ofEpochSecond(${buildTimestampSeconds})
 }

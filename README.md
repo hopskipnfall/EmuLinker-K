@@ -19,22 +19,21 @@ EmuLinkerSF-netsma is maintained by [jonnjonn](https://twitter.com/6kRt62r2zvKp5
 
 ## Development
 
-From the emulinker/ directory, the following commands are supported:
+From the root directory, the following commands are supported:
 
-|        Command        |       Description       |
-|-----------------------|-------------------------|
-| `mvn compile`         | Compile the code.       |
-| `mvn spotless:apply`  | Run the formatter.      |
-| `mvn spotless:check`  | Run the linter.         |
-| `mvn test`            | Run tests.              |
-| `mvn assembly:single` | Build the jar.          |
-| `mvn exec:java`       | Run the server locally. |
-
-Note: You will need to have Maven installed.
+| Command                          | Description             |
+|----------------------------------|-------------------------|
+| `./gradlew clean`                | Clean build resources.  |
+| `./gradlew compileKotlin`        | Compile the code.       |
+| `./gradlew spotlessApply`        | Run the formatter.      |
+| `./gradlew spotlessCheck`        | Run the linter.         |
+| `./gradlew test`                 | Run tests.              |
+| `./gradlew jar -PprodBuild=true` | Build the jar for PROD. |
+| `./gradlew run`                  | Run the server locally. |
 
 ## Deployment
 
-```java
+```kt
 // TODO(nue): Write deployment steps here.
 ```
 
