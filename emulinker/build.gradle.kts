@@ -58,7 +58,7 @@ group = "org.emulinker"
 
 description = "EmulinkerSF-netsma"
 
-version = "0.10.0"
+version = "0.10.1"
 
 kotlin { jvmToolchain(17) }
 
