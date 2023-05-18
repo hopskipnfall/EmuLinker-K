@@ -553,6 +553,6 @@ class KailleraUser(
   companion object {
     private val logger = FluentLogger.forEnclosingClass()
 
-    private const val EMULINKER_CLIENT_NAME = "EmulinkerSF Admin Client"
+    private const val EMULINKER_CLIENT_NAME = "EmuLinker-K Admin Client"
   }
 }

@@ -19,7 +19,7 @@ class ReleaseInfo @Inject constructor() {
 
   val versionString: String = PROJECT_VERSION
 
-  val shortVersionString: String = "ESFN$versionString"
+  val shortVersionString: String = "ELK$versionString"
 
   val buildDate: Instant = BUILD_DATE
 
