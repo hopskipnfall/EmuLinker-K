@@ -252,7 +252,7 @@ class KailleraUser(
     updateLastActivity()
     if (game == null) {
       logger.atWarning().log("%s kick User %d failed: Not in a game", this, userID)
-      throw GameKickException(EmuLang.getString("KailleraUser.KickErrorNotInGame"))
+      throw GameKickException(EmuLang.getString("KailleraUserImpl.KickErrorNotInGame"))
     }
     game!!.kick(this, userID)
   }
@@ -267,10 +267,12 @@ class KailleraUser(
     }
     if (status == UserStatus.PLAYING) {
       logger.atWarning().log("%s create game failed: User status is Playing!", this)
-      throw CreateGameException(EmuLang.getString("KailleraUser.CreateGameErrorAlreadyInGame"))
+      throw CreateGameException(EmuLang.getString("KailleraUserImpl.CreateGameErrorAlreadyInGame"))
     } else if (status == UserStatus.CONNECTING) {
       logger.atWarning().log("%s create game failed: User status is Connecting!", this)
-      throw CreateGameException(EmuLang.getString("KailleraUser.CreateGameErrorNotFullyConnected"))
+      throw CreateGameException(
+        EmuLang.getString("KailleraUserImpl.CreateGameErrorNotFullyConnected")
+      )
     }
     val game = server.createGame(this, romName)
     lastCreateGameTime = System.currentTimeMillis()
@@ -296,19 +298,19 @@ class KailleraUser(
     updateLastActivity()
     if (game != null) {
       logger.atWarning().log("%s join game failed: Already in: %s", this, game)
-      throw JoinGameException(EmuLang.getString("KailleraUser.JoinGameErrorAlreadyInGame"))
+      throw JoinGameException(EmuLang.getString("KailleraUserImpl.JoinGameErrorAlreadyInGame"))
     }
     if (status == UserStatus.PLAYING) {
       logger.atWarning().log("%s join game failed: User status is Playing!", this)
-      throw JoinGameException(EmuLang.getString("KailleraUser.JoinGameErrorAnotherGameRunning"))
+      throw JoinGameException(EmuLang.getString("KailleraUserImpl.JoinGameErrorAnotherGameRunning"))
     } else if (status == UserStatus.CONNECTING) {
       logger.atWarning().log("%s join game failed: User status is Connecting!", this)
-      throw JoinGameException(EmuLang.getString("KailleraUser.JoinGameErrorNotFullConnected"))
+      throw JoinGameException(EmuLang.getString("KailleraUserImpl.JoinGameErrorNotFullConnected"))
     }
     val game = server.getGame(gameID)
     if (game == null) {
       logger.atWarning().log("%s join game failed: Game %d does not exist!", this, gameID)
-      throw JoinGameException(EmuLang.getString("KailleraUser.JoinGameErrorDoesNotExist"))
+      throw JoinGameException(EmuLang.getString("KailleraUserImpl.JoinGameErrorDoesNotExist"))
     }
 
     // if (connectionType != game.getOwner().getConnectionType())
@@ -333,7 +335,7 @@ class KailleraUser(
     updateLastActivity()
     if (game == null) {
       logger.atWarning().log("%s game chat failed: Not in a game", this)
-      throw GameChatException(EmuLang.getString("KailleraUser.GameChatErrorNotInGame"))
+      throw GameChatException(EmuLang.getString("KailleraUserImpl.GameChatErrorNotInGame"))
     }
     if (isMuted) {
       logger.atWarning().log("%s gamechat denied: Muted: %s", this, message)
@@ -398,7 +400,7 @@ class KailleraUser(
     updateLastActivity()
     if (game == null) {
       logger.atWarning().log("%s start game failed: Not in a game", this)
-      throw StartGameException(EmuLang.getString("KailleraUser.StartGameErrorNotInGame"))
+      throw StartGameException(EmuLang.getString("KailleraUserImpl.StartGameErrorNotInGame"))
     }
     game!!.start(this)
   }
@@ -409,7 +411,7 @@ class KailleraUser(
     updateLastActivity()
     if (game == null) {
       logger.atWarning().log("%s player ready failed: Not in a game", this)
-      throw UserReadyException(EmuLang.getString("KailleraUser.PlayerReadyErrorNotInGame"))
+      throw UserReadyException(EmuLang.getString("KailleraUserImpl.PlayerReadyErrorNotInGame"))
     }
     if (
       playerNumber > game!!.playerActionQueue!!.size ||
@@ -449,7 +451,7 @@ class KailleraUser(
     try {
       if (game == null)
         throw GameDataException(
-          EmuLang.getString("KailleraUser.GameDataErrorNotInGame"),
+          EmuLang.getString("KailleraUserImpl.GameDataErrorNotInGame"),
           data,
           connectionType.byteValue.toInt(),
           1,
