@@ -9,6 +9,7 @@ import java.util.Locale
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ThreadPoolExecutor
 import javax.inject.Inject
+import javax.inject.Singleton
 import kotlin.Throws
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.access.AccessManager
@@ -34,6 +35,7 @@ import org.emulinker.util.EmuLang
 import org.emulinker.util.EmuUtil
 import org.emulinker.util.Executable
 
+@Singleton
 class KailleraServer
 @Inject
 internal constructor(
@@ -485,23 +487,16 @@ internal constructor(
       userImpl.addEvent(
         InfoMessageEvent(user, EmuLang.getString("KailleraServer.AdminWelcomeMessage"))
       )
-    try {
-      Thread.sleep(20)
-    } catch (e: Exception) {}
-    // TODO(nue): Localize this welcome message?
-    // userImpl.addEvent(
-    //     new InfoMessageEvent(
-    //         user,
-    //         getReleaseInfo().getProductName()
-    //             + " v"
-    //             + getReleaseInfo().getVersionString()
-    //             + ": "
-    //             + getReleaseInfo().getReleaseDate()
-    //             + " - Visit: www.EmuLinker.org"));
-    try {
-      Thread.sleep(20)
-    } catch (e: Exception) {}
     addEvent(UserJoinedEvent(this, user))
+    try {
+      Thread.sleep(20)
+    } catch (e: Exception) {}
+    userImpl.addEvent(
+      InfoMessageEvent(
+        user,
+        "${releaseInfo.productName} v${releaseInfo.versionString}: ${releaseInfo.websiteString}"
+      )
+    )
     try {
       Thread.sleep(20)
     } catch (e: Exception) {}
