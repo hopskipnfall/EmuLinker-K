@@ -49,8 +49,6 @@ dependencies {
 
   api("io.reactivex.rxjava3:rxjava:3.1.1")
 
-  api("com.google.guava:guava:30.1.1-jre")
-
   testImplementation("com.google.truth:truth:1.1.3")
   testImplementation("junit:junit:4.13.2")
   testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.6.4")
@@ -116,7 +114,7 @@ tasks.withType<Test> {
 // Formatting/linting.
 spotless {
   kotlin {
-    target("*.kt", "*.kts")
+    target("**/*.kt", "**/*.kts")
     targetExclude("build/", ".git/", ".idea/", ".mvn", "src/main/java-templates/")
     ktfmt().googleStyle()
   }

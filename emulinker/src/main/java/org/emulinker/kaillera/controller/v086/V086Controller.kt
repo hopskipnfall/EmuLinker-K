@@ -191,11 +191,14 @@ internal constructor(
           boundPort = port
           break
         } catch (e: BindException) {
-          logger.atSevere().withCause(e).log("Failed to bind to port $port for: $user")
+          logger.atSevere().withCause(e).log("Failed to bind to port %d for: %s", port, user)
           logger
             .atFine()
             .log(
-              "${toString()} returning port $port to available port queue: ${portRangeQueue.size + 1} available"
+              "%s returning port %d to available port queue: %d available",
+              this,
+              port,
+              portRangeQueue.size + 1
             )
           portRangeQueue.add(port)
         }
