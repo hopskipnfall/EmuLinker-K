@@ -80,7 +80,7 @@ class EmuLinkerMasterUpdateTask(
     //   String latestVersion = props.getProperty("latest");
     //   String notes = props.getProperty("notes");
     //   StringBuilder sb = new StringBuilder();
-    //   sb.append("A updated version of EmuLinkerSF is available: ");
+    //   sb.append("A updated version of EmuLinker-K is available: ");
     //   sb.append(latestVersion);
     //   if (notes != null) {
     //     sb.append(" (");

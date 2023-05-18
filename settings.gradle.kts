@@ -4,5 +4,5 @@
  * This project uses @Incubating APIs which are subject to change.
  */
 
-rootProject.name = "emulinkersf-netsma"
+rootProject.name = "emulinker-k"
 include("emulinker")

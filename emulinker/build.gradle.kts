@@ -56,7 +56,7 @@ dependencies {
 
 group = "org.emulinker"
 
-description = "EmulinkerSF-netsma"
+description = "EmuLinker-K"
 
 version = "0.10.1"
 
@@ -135,7 +135,7 @@ tasks.jar {
   from(configurations.runtimeClasspath.get().map { zipTree(it) })
   duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 
-  archiveBaseName.set("emulinkersf-netsma")
+  archiveBaseName.set("emulinker-k")
 }
 
 // kdoc generation support.
