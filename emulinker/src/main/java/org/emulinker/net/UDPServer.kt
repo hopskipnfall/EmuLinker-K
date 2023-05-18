@@ -60,9 +60,9 @@ abstract class UDPServer(
 
   @Synchronized
   open fun start() {
-    logger.atFine().log(toString() + " received start request!")
+    logger.atFine().log("%s received start request!", this)
     if (threadIsActive) {
-      logger.atFine().log(toString() + " start request ignored: already running!")
+      logger.atFine().log("%s start request ignored: already running!", this)
       return
     }
     stopFlag = false
@@ -116,9 +116,8 @@ abstract class UDPServer(
       logger
         .atWarning()
         .log(
-          "Failed to send to " +
-            formatSocketAddress(toSocketAddress!!) +
-            ": UDPServer is not bound!"
+          "Failed to send to %s: UDPServer is not bound!",
+          formatSocketAddress(toSocketAddress!!)
         )
       return
     }
@@ -137,13 +136,13 @@ abstract class UDPServer(
 
   override fun run() {
     threadIsActive = true
-    logger.atFine().log(toString() + ": thread running...")
+    logger.atFine().log("%s: thread running...", this)
     try {
-      listeningOnPortsCounter!!.inc()
+      listeningOnPortsCounter.inc()
       while (!stopFlag) {
         try {
           val buffer = buffer
-          val fromSocketAddress = channel!!.receive(buffer) as InetSocketAddress
+          val fromSocketAddress = channel!!.receive(buffer)
           if (stopFlag) break
           if (fromSocketAddress == null)
             throw IOException("Failed to receive from DatagramChannel: fromSocketAddress == null")
@@ -168,7 +167,7 @@ abstract class UDPServer(
           (buffer as Buffer).flip()
           //					logger.atFine().log("receive("+EmuUtil.INSTANCE.dumpBuffer(buffer, false)+")");
           // TODO(nue): time this
-          handleReceived(buffer, fromSocketAddress)
+          handleReceived(buffer, fromSocketAddress as InetSocketAddress)
           releaseBuffer(buffer)
         } catch (e: SocketException) {
           if (stopFlag) break
@@ -187,7 +186,7 @@ abstract class UDPServer(
     } finally {
       listeningOnPortsCounter.dec()
       threadIsActive = false
-      logger.atFine().log(toString() + ": thread exiting...")
+      logger.atFine().log("%s: thread exiting...", this)
     }
   }
 

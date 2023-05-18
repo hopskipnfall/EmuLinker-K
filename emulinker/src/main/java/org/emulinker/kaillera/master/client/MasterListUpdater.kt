@@ -48,11 +48,9 @@ internal constructor(
       logger
         .atFine()
         .log(
-          "MasterListUpdater thread starting (ThreadPool:" +
-            threadPool.activeCount +
-            "/" +
-            threadPool.poolSize +
-            ")"
+          "MasterListUpdater thread starting (ThreadPool:%d/%d)",
+          threadPool.activeCount,
+          threadPool.poolSize
         )
       threadPool.execute(this)
       Thread.yield()

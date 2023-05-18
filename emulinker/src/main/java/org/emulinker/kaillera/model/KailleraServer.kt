@@ -2,8 +2,6 @@ package org.emulinker.kaillera.model
 
 import com.codahale.metrics.Gauge
 import com.codahale.metrics.MetricRegistry
-import com.google.common.base.Strings
-import com.google.common.collect.ImmutableList
 import com.google.common.flogger.FluentLogger
 import java.net.InetSocketAddress
 import java.time.Instant
@@ -50,7 +48,7 @@ internal constructor(
 ) : Executable {
 
   private var allowedConnectionTypes = BooleanArray(7)
-  private val loginMessages: ImmutableList<String>
+  private val loginMessages: List<String>
   private var stopFlag = false
   override var threadIsActive = false
     private set
@@ -161,7 +159,8 @@ internal constructor(
     logger
       .atFine()
       .log(
-        "Processing connection request from " + EmuUtil.formatSocketAddress(clientSocketAddress!!)
+        "Processing connection request from %s",
+        EmuUtil.formatSocketAddress(clientSocketAddress!!)
       )
     val access = accessManager.getAccess(clientSocketAddress.address)
 
@@ -170,7 +169,8 @@ internal constructor(
       logger
         .atWarning()
         .log(
-          "Connection from ${EmuUtil.formatSocketAddress(clientSocketAddress)} denied: Server is full!"
+          "Connection from %s denied: Server is full!",
+          EmuUtil.formatSocketAddress(clientSocketAddress)
         )
       throw ServerFullException(EmuLang.getString("KailleraServer.LoginDeniedServerFull"))
     }
@@ -180,16 +180,29 @@ internal constructor(
     logger
       .atInfo()
       .log(
-        "$user attempting new connection using protocol $protocol from ${EmuUtil.formatSocketAddress(clientSocketAddress)}"
+        "%s attempting new connection using protocol %s from %s",
+        user,
+        protocol,
+        EmuUtil.formatSocketAddress(clientSocketAddress)
       )
     logger
       .atFine()
-      .log("$user Thread starting (ThreadPool:${threadPool.activeCount}/${threadPool.poolSize})")
+      .log(
+        "%s Thread starting (ThreadPool:%d/%d)",
+        user,
+        threadPool.activeCount,
+        threadPool.poolSize
+      )
     threadPool.execute(user)
     Thread.yield()
     logger
       .atFine()
-      .log("$user Thread started (ThreadPool:${threadPool.activeCount}/${threadPool.poolSize})")
+      .log(
+        "%s Thread started (ThreadPool:%d/%d)",
+        user,
+        threadPool.activeCount,
+        threadPool.poolSize
+      )
     usersMap[userID] = user
     return user
   }
@@ -266,8 +279,7 @@ internal constructor(
       throw PingTimeException(EmuLang.getString("KailleraServer.LoginErrorInvalidPing", user.ping))
     }
     if (
-      access == AccessManager.ACCESS_NORMAL && Strings.isNullOrEmpty(user.name) ||
-        user.name!!.isBlank()
+      access == AccessManager.ACCESS_NORMAL && user.name.isNullOrEmpty() || user.name!!.isBlank()
     ) {
       logger.atInfo().log("$user login denied: Empty UserName")
       usersMap.remove(userListKey)
@@ -944,13 +956,13 @@ internal constructor(
   }
 
   init {
-    val loginMessagesBuilder = ImmutableList.builder<String>()
+    val loginMessagesBuilder = mutableListOf<String>()
     var i = 1
     while (EmuLang.hasString("KailleraServer.LoginMessage.$i")) {
       loginMessagesBuilder.add(EmuLang.getString("KailleraServer.LoginMessage.$i"))
       i++
     }
-    loginMessages = loginMessagesBuilder.build()
+    loginMessages = loginMessagesBuilder
     flags.connectionTypes.forEach { type ->
       val ct = type.toInt()
       allowedConnectionTypes[ct] = true

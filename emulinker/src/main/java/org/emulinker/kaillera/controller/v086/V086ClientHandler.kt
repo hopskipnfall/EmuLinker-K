@@ -154,10 +154,12 @@ constructor(
     logger.atSevere().log("V086ClientHandler failed to start for client from " + getRemoteInetAddress().getHostAddress());
     return;
     }
-    */ logger
+    */
+    logger
       .atFine()
       .log(
-        toString() + " thread started (ThreadPool:%d/%d)",
+        "%s thread started (ThreadPool:%d/%d)",
+        this,
         controller.threadPool.activeCount,
         controller.threadPool.poolSize
       )
@@ -250,7 +252,9 @@ constructor(
           lastMessageNumber = messages[0]!!.messageNumber
           val action = controller.actions[messages[0]!!.messageTypeId.toInt()]
           if (action == null) {
-            logger.atSevere().log("No action defined to handle client message: " + messages[0])
+            logger
+              .atSevere()
+              .log("No action defined to handle client message: %s", messages.firstOrNull())
           }
           (action as V086Action<V086Message>).performAction(messages[0]!!, this)
         } else {
@@ -281,7 +285,7 @@ constructor(
               }
               val action = controller.actions[messages[i]!!.messageTypeId.toInt()]
               if (action == null) {
-                logger.atSevere().log("No action defined to handle client message: " + messages[i])
+                logger.atSevere().log("No action defined to handle client message: %s", messages[i])
               } else {
                 // logger.atFine().log(user + " -> " + message);
                 (action as V086Action<V086Message>).performAction(messages[i]!!, this)
