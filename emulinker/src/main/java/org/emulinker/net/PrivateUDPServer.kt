@@ -45,7 +45,7 @@ abstract class PrivateUDPServer(
   }
 
   init {
-    clientRequestTimer = metrics.timer(MetricRegistry.name(this.javaClass, "clientRequests"))
+    clientRequestTimer = metrics.timer(MetricRegistry.name(this.javaClass, "UdpClientRequests"))
   }
 
   companion object {

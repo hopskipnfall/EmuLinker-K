@@ -72,7 +72,7 @@ constructor(
   private var lastResend = 0L
 
   private val clientRequestTimer =
-    metrics.timer(MetricRegistry.name(this.javaClass, "clientRequests"))
+    metrics.timer(MetricRegistry.name(this.javaClass, "V086ClientRequests"))
 
   @AssistedFactory
   interface Factory {

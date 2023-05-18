@@ -73,7 +73,7 @@ tasks.processResources {
         "buildTimestampSeconds" to Instant.now().epochSecond,
         "project" to
           object {
-            val name = description
+            val name = project.description
             val version = project.version
             val url = properties["url"]
           },
