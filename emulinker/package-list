@@ -1373,6 +1373,7 @@ $dokka.location:org.emulinker.kaillera.pico/AppModule.Companion/provideRuntimeFl
 $dokka.location:org.emulinker.kaillera.pico/AppModule.Companion/provideThreadPoolExecutor/#org.emulinker.config.RuntimeFlags/PointingToDeclaration/emulinker/org.emulinker.kaillera.pico/-app-module/-companion/provide-thread-pool-executor.html
 $dokka.location:org.emulinker.kaillera.pico/AppModule.Companion/provideTwitter/#twitter4j.TwitterFactory/PointingToDeclaration/emulinker/org.emulinker.kaillera.pico/-app-module/-companion/provide-twitter.html
 $dokka.location:org.emulinker.kaillera.pico/AppModule.Companion/provideTwitterFactory/#org.emulinker.config.RuntimeFlags/PointingToDeclaration/emulinker/org.emulinker.kaillera.pico/-app-module/-companion/provide-twitter-factory.html
+$dokka.location:org.emulinker.kaillera.pico/AppModule.Companion/updateMessageForMods/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.pico/-app-module/-companion/update-message-for-mods.html
 $dokka.location:org.emulinker.kaillera.pico/AppModule///PointingToDeclaration/emulinker/org.emulinker.kaillera.pico/-app-module/index.html
 $dokka.location:org.emulinker.kaillera.pico/AppModule/AppModule/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.pico/-app-module/-app-module.html
 $dokka.location:org.emulinker.kaillera.pico/AppModule/bindAccessManager/#org.emulinker.kaillera.access.AccessManager2?/PointingToDeclaration/emulinker/org.emulinker.kaillera.pico/-app-module/bind-access-manager.html
@@ -1380,6 +1381,15 @@ $dokka.location:org.emulinker.kaillera.pico/AppModule/bindAutoFireDetectorFactor
 $dokka.location:org.emulinker.kaillera.pico/AppModule/bindKailleraServerController/#org.emulinker.kaillera.controller.v086.V086Controller?/PointingToDeclaration/emulinker/org.emulinker.kaillera.pico/-app-module/bind-kaillera-server-controller.html
 $dokka.location:org.emulinker.kaillera.pico/AppModule/bindKailleraServerControllerToSet/#org.emulinker.kaillera.controller.v086.V086Controller?/PointingToDeclaration/emulinker/org.emulinker.kaillera.pico/-app-module/bind-kaillera-server-controller-to-set.html
 $dokka.location:org.emulinker.kaillera.pico/AppModule/bindStatsCollector/#org.emulinker.kaillera.master.MasterListStatsCollector?/PointingToDeclaration/emulinker/org.emulinker.kaillera.pico/-app-module/bind-stats-collector.html
+$dokka.location:org.emulinker.kaillera.pico/UpdateChecker///PointingToDeclaration/emulinker/org.emulinker.kaillera.pico/-update-checker/index.html
+$dokka.location:org.emulinker.kaillera.pico/UpdateChecker/fetchUpdateConfig/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.pico/-update-checker/fetch-update-config.html
+$dokka.location:org.emulinker.kaillera.pico/VersionConfig///PointingToDeclaration/emulinker/org.emulinker.kaillera.pico/-version-config/index.html
+$dokka.location:org.emulinker.kaillera.pico/VersionConfig/VersionConfig/#kotlin.String#kotlin.String/PointingToDeclaration/emulinker/org.emulinker.kaillera.pico/-version-config/-version-config.html
+$dokka.location:org.emulinker.kaillera.pico/VersionConfig/message/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.pico/-version-config/message.html
+$dokka.location:org.emulinker.kaillera.pico/VersionConfig/version/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.pico/-version-config/version.html
+$dokka.location:org.emulinker.kaillera.pico/VersionUpdatePromptConfig///PointingToDeclaration/emulinker/org.emulinker.kaillera.pico/-version-update-prompt-config/index.html
+$dokka.location:org.emulinker.kaillera.pico/VersionUpdatePromptConfig/VersionUpdatePromptConfig/#kotlin.Array[org.emulinker.kaillera.pico.VersionConfig]/PointingToDeclaration/emulinker/org.emulinker.kaillera.pico/-version-update-prompt-config/-version-update-prompt-config.html
+$dokka.location:org.emulinker.kaillera.pico/VersionUpdatePromptConfig/versionConfigs/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.pico/-version-update-prompt-config/version-configs.html
 $dokka.location:org.emulinker.kaillera.relay////PointingToDeclaration/emulinker/org.emulinker.kaillera.relay/index.html
 $dokka.location:org.emulinker.kaillera.relay/V086Relay.Companion///PointingToDeclaration/emulinker/org.emulinker.kaillera.relay/-v086-relay/-companion/index.html
 $dokka.location:org.emulinker.kaillera.relay/V086Relay.Factory///PointingToDeclaration/emulinker/org.emulinker.kaillera.relay/-v086-relay/-factory/index.html
