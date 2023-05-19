@@ -2,7 +2,6 @@ import java.time.Instant
 import org.jetbrains.kotlin.gradle.tasks.KaptGenerateStubs
 
 plugins {
-  //  id("org.jetbrains.kotlin.jvm") version "1.8.21"
   id("com.diffplug.spotless") version "6.18.0"
   id("org.jetbrains.dokka") version "1.8.10"
   application
