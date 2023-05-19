@@ -31,6 +31,7 @@ import org.emulinker.kaillera.model.impl.AutoFireDetector
 import org.emulinker.kaillera.model.impl.AutoFireDetectorFactory
 import org.emulinker.kaillera.model.impl.KailleraGameImpl
 import org.emulinker.kaillera.model.impl.Trivia
+import org.emulinker.kaillera.pico.AppModule
 import org.emulinker.kaillera.release.ReleaseInfo
 import org.emulinker.util.EmuLang
 import org.emulinker.util.EmuUtil
@@ -477,10 +478,20 @@ internal constructor(
       }
     }
     threadSleep(20.milliseconds)
-    if (access >= AccessManager.ACCESS_ADMIN)
+    if (access >= AccessManager.ACCESS_ADMIN) {
       userImpl.addEvent(
         InfoMessageEvent(user, EmuLang.getString("KailleraServerImpl.AdminWelcomeMessage"))
       )
+      // Display the update prompt if there is one.
+      AppModule.updateMessageForMods?.let { message ->
+        threadSleep(20.milliseconds)
+        userImpl.addEvent(InfoMessageEvent(user, "===================================="))
+        threadSleep(20.milliseconds)
+        userImpl.addEvent(InfoMessageEvent(user, message))
+        threadSleep(20.milliseconds)
+        userImpl.addEvent(InfoMessageEvent(user, "===================================="))
+      }
+    }
     addEvent(UserJoinedEvent(this, user))
     threadSleep(20.milliseconds)
     val announcement = accessManager.getAnnouncement(user.socketAddress!!.address)

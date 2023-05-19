@@ -59,6 +59,14 @@ abstract class AppModule {
     // instead!
     lateinit var charsetDoNotUse: Charset
 
+    // TODO(nue): Clean this up.
+    /**
+     * A message to be shown to admins as they log in.
+     *
+     * Usually used for update messages.
+     */
+    var updateMessageForMods: String? = null
+
     @Provides
     @Singleton
     @Named("listeningOnPortsCounter")
