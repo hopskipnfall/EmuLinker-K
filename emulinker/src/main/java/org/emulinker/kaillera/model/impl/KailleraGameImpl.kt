@@ -449,7 +449,7 @@ class KailleraGameImpl(
   @Throws(UserReadyException::class)
   override fun ready(user: KailleraUser?, playerNumber: Int) {
     if (!players.contains(user)) {
-      logger.atWarning().log(user.toString() + " ready game failed: not in " + this)
+      logger.atWarning().log("%s ready game failed: not in %s", user, this)
       throw UserReadyException(EmuLang.getString("KailleraGameImpl.ReadyGameErrorNotInGame"))
     }
     if (status != GameStatus.SYNCHRONIZING) {
