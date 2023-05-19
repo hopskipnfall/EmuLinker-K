@@ -18,7 +18,7 @@ Feel free to file bugs and feature requests on this repository, or find our chan
 
 ## Getting Started
 
-If you want to start a new server, see our [Releases](https://github.com/hopskipnfall/EmuLinker-K/releases) page for the latest stable release.
+If you want to start a new server, see our [Releases](https://github.com/hopskipnfall/EmuLinker-K/releases/latest) page for the latest stable release.
 
 ```kt
 // TODO(nue): Write better instructions, including how to work with charsets.
