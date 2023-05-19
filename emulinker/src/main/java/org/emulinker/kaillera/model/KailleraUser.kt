@@ -1,7 +1,6 @@
 package org.emulinker.kaillera.model
 
 import com.google.common.flogger.FluentLogger
-import java.lang.Exception
 import java.net.InetSocketAddress
 import java.time.Duration
 import java.time.Instant
@@ -10,6 +9,7 @@ import java.util.concurrent.BlockingQueue
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit
 import kotlin.Throws
+import kotlin.time.Duration.Companion.milliseconds
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.access.AccessManager
 import org.emulinker.kaillera.model.event.GameDataEvent
@@ -23,6 +23,7 @@ import org.emulinker.kaillera.model.exception.*
 import org.emulinker.kaillera.model.impl.KailleraGameImpl
 import org.emulinker.util.EmuLang
 import org.emulinker.util.EmuUtil
+import org.emulinker.util.EmuUtil.threadSleep
 import org.emulinker.util.Executable
 
 class KailleraUser(
@@ -207,9 +208,7 @@ class KailleraUser(
         return
       }
       stopFlag = true
-      try {
-        Thread.sleep(500)
-      } catch (e: Exception) {}
+      threadSleep(500.milliseconds)
       addEvent(StopFlagEvent())
     }
     listener.stop()

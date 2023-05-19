@@ -71,7 +71,7 @@ internal constructor(
   val controllers: Collection<KailleraServerController>
     get() = controllersMap.values
   override val buffer: ByteBuffer
-    protected get() = getBuffer(bufferSize)
+    get() = getBuffer(bufferSize)
 
   override fun releaseBuffer(buffer: ByteBuffer) {}
 
@@ -111,8 +111,7 @@ internal constructor(
   override fun handleReceived(buffer: ByteBuffer, remoteSocketAddress: InetSocketAddress) {
     requestCount++
     val formattedSocketAddress = formatSocketAddress(remoteSocketAddress)
-    var inMessage: ConnectMessage? = null
-    inMessage =
+    val inMessage: ConnectMessage? =
       try {
         parse(buffer)
       } catch (e: Exception) {
@@ -245,7 +244,7 @@ internal constructor(
     for (controller in kailleraServerControllers) {
       val clientTypes = controller.clientTypes
       for (j in clientTypes.indices) {
-        logger.atFine().log("Mapping client type " + clientTypes[j] + " to " + controller)
+        logger.atFine().log("Mapping client type %s to %s", clientTypes[j], controller)
         controllersMap[clientTypes[j]] = controller
       }
     }

@@ -12,6 +12,7 @@ import java.time.Instant
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import java.util.Properties
+import kotlin.time.Duration
 import org.emulinker.kaillera.pico.AppModule
 
 object EmuUtil {
@@ -246,5 +247,13 @@ object EmuUtil {
 
   fun toSimpleUtcDatetime(instant: Instant): String {
     return DateTimeFormatter.RFC_1123_DATE_TIME.withZone(ZoneOffset.UTC).format(instant)
+  }
+
+  // TODO(nue): Get rid of this.
+  /** Calls [Thread.sleep] in a try/catch. */
+  fun threadSleep(d: Duration) {
+    try {
+      Thread.sleep(d.inWholeMilliseconds)
+    } catch (e: Exception) {}
   }
 }

@@ -4,12 +4,14 @@ import com.google.common.flogger.FluentLogger
 import java.util.concurrent.ThreadPoolExecutor
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.time.Duration.Companion.minutes
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.controller.connectcontroller.ConnectController
 import org.emulinker.kaillera.master.PublicServerInformation
 import org.emulinker.kaillera.master.StatsCollector
 import org.emulinker.kaillera.model.KailleraServer
 import org.emulinker.kaillera.release.ReleaseInfo
+import org.emulinker.util.EmuUtil.threadSleep
 import org.emulinker.util.Executable
 
 @Singleton
@@ -81,9 +83,7 @@ internal constructor(
     logger.atFine().log("MasterListUpdater thread running...")
     try {
       while (!stopFlag) {
-        try {
-          Thread.sleep(60000)
-        } catch (e: Exception) {}
+        threadSleep(1.minutes)
         if (stopFlag) break
         logger.atInfo().log("MasterListUpdater touching masters...")
         if (emulinkerMasterTask != null) emulinkerMasterTask!!.touchMaster()

@@ -7,6 +7,7 @@ import java.util.*
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.Throws
+import kotlin.time.Duration.Companion.milliseconds
 import org.emulinker.kaillera.access.AccessManager
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086ClientHandler
@@ -16,6 +17,7 @@ import org.emulinker.kaillera.model.event.ChatEvent
 import org.emulinker.kaillera.model.exception.ActionException
 import org.emulinker.util.EmuLang
 import org.emulinker.util.EmuUtil
+import org.emulinker.util.EmuUtil.threadSleep
 
 private const val ADMIN_COMMAND_ESCAPE_STRING = "/"
 
@@ -567,9 +569,7 @@ class ChatAction @Inject internal constructor(private val adminCommandAction: Ad
             )
           )
         } catch (e: Exception) {}
-        try {
-          Thread.sleep(20)
-        } catch (e: Exception) {}
+        threadSleep(20.milliseconds)
         try {
           clientHandler.send(
             InformationMessage(
@@ -579,9 +579,7 @@ class ChatAction @Inject internal constructor(private val adminCommandAction: Ad
             )
           )
         } catch (e: Exception) {}
-        try {
-          Thread.sleep(20)
-        } catch (e: Exception) {}
+        threadSleep(20.milliseconds)
         try {
           clientHandler.send(
             InformationMessage(
@@ -591,9 +589,7 @@ class ChatAction @Inject internal constructor(private val adminCommandAction: Ad
             )
           )
         } catch (e: Exception) {}
-        try {
-          Thread.sleep(20)
-        } catch (e: Exception) {}
+        threadSleep(20.milliseconds)
         try {
           clientHandler.send(
             InformationMessage(
@@ -603,9 +599,7 @@ class ChatAction @Inject internal constructor(private val adminCommandAction: Ad
             )
           )
         } catch (e: Exception) {}
-        try {
-          Thread.sleep(20)
-        } catch (e: Exception) {}
+        threadSleep(20.milliseconds)
         if (clientHandler.user.accessLevel == AccessManager.ACCESS_MODERATOR) {
           try {
             clientHandler.send(
@@ -616,9 +610,7 @@ class ChatAction @Inject internal constructor(private val adminCommandAction: Ad
               )
             )
           } catch (e: Exception) {}
-          try {
-            Thread.sleep(20)
-          } catch (e: Exception) {}
+          threadSleep(20.milliseconds)
           try {
             clientHandler.send(
               InformationMessage(
@@ -628,9 +620,7 @@ class ChatAction @Inject internal constructor(private val adminCommandAction: Ad
               )
             )
           } catch (e: Exception) {}
-          try {
-            Thread.sleep(20)
-          } catch (e: Exception) {}
+          threadSleep(20.milliseconds)
         }
         if (clientHandler.user.accessLevel < AccessManager.ACCESS_ADMIN) {
           try {
@@ -642,9 +632,7 @@ class ChatAction @Inject internal constructor(private val adminCommandAction: Ad
               )
             )
           } catch (e: Exception) {}
-          try {
-            Thread.sleep(20)
-          } catch (e: Exception) {}
+          threadSleep(20.milliseconds)
           try {
             clientHandler.send(
               InformationMessage(
@@ -654,9 +642,7 @@ class ChatAction @Inject internal constructor(private val adminCommandAction: Ad
               )
             )
           } catch (e: Exception) {}
-          try {
-            Thread.sleep(20)
-          } catch (e: Exception) {}
+          threadSleep(20.milliseconds)
           return
         }
       } else if (
@@ -679,8 +665,8 @@ class ChatAction @Inject internal constructor(private val adminCommandAction: Ad
         var foundCount = 0
         val str = chatMessage.message.substring(space + 1)
         // WildcardStringPattern pattern = new WildcardStringPattern
-        for (user in clientHandler.user.users!!) {
-          if (!user!!.loggedIn) continue
+        for (user in clientHandler.user.users) {
+          if (!user.loggedIn) continue
           if (
             user.name!!.lowercase(Locale.getDefault()).contains(str.lowercase(Locale.getDefault()))
           ) {

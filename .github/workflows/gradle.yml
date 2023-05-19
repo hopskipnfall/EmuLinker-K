@@ -29,8 +29,12 @@ jobs:
       - name: Build with Gradle
         uses: gradle/gradle-build-action@v2
         with:
-          arguments: build
+          arguments: compileKotlin
       - name: Run tests
         uses: gradle/gradle-build-action@v2
         with:
           arguments: test
+      - name: Check formatting
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: spotlessCheck
