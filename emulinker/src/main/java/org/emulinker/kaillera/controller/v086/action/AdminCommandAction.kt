@@ -9,7 +9,6 @@ import java.util.*
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.Throws
-import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
 import org.emulinker.kaillera.access.AccessManager
@@ -24,6 +23,7 @@ import org.emulinker.kaillera.model.impl.KailleraGameImpl
 import org.emulinker.kaillera.model.impl.Trivia
 import org.emulinker.util.EmuLang
 import org.emulinker.util.EmuUtil
+import org.emulinker.util.EmuUtil.threadSleep
 import org.emulinker.util.WildcardStringPattern
 
 @Singleton
@@ -173,7 +173,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
         EmuLang.getString("AdminCommandAction.HelpVersion")
       )
     )
-    sleep(20.milliseconds)
+    threadSleep(20.milliseconds)
     clientHandler.send(
       InformationMessage(
         clientHandler.nextMessageNumber,
@@ -181,7 +181,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
         EmuLang.getString("AdminCommandAction.HelpKick")
       )
     )
-    sleep(20.milliseconds)
+    threadSleep(20.milliseconds)
     clientHandler.send(
       InformationMessage(
         clientHandler.nextMessageNumber,
@@ -189,7 +189,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
         EmuLang.getString("AdminCommandAction.HelpSilence")
       )
     )
-    sleep(20.milliseconds)
+    threadSleep(20.milliseconds)
     clientHandler.send(
       InformationMessage(
         clientHandler.nextMessageNumber,
@@ -197,7 +197,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
         EmuLang.getString("AdminCommandAction.HelpBan")
       )
     )
-    sleep(20.milliseconds)
+    threadSleep(20.milliseconds)
     if (admin.accessLevel == AccessManager.ACCESS_ADMIN) {
       clientHandler.send(
         InformationMessage(
@@ -206,7 +206,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
           EmuLang.getString("AdminCommandAction.HelpClear")
         )
       )
-      sleep(20.milliseconds)
+      threadSleep(20.milliseconds)
     }
     clientHandler.send(
       InformationMessage(
@@ -215,7 +215,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
         EmuLang.getString("AdminCommandAction.HelpCloseGame")
       )
     )
-    sleep(20.milliseconds)
+    threadSleep(20.milliseconds)
     clientHandler.send(
       InformationMessage(
         clientHandler.nextMessageNumber,
@@ -223,7 +223,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
         EmuLang.getString("AdminCommandAction.HelpAnnounce")
       )
     )
-    sleep(20.milliseconds)
+    threadSleep(20.milliseconds)
     clientHandler.send(
       InformationMessage(
         clientHandler.nextMessageNumber,
@@ -231,7 +231,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
         EmuLang.getString("AdminCommandAction.HelpAnnounceAll")
       )
     )
-    sleep(20.milliseconds)
+    threadSleep(20.milliseconds)
     clientHandler.send(
       InformationMessage(
         clientHandler.nextMessageNumber,
@@ -239,7 +239,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
         EmuLang.getString("AdminCommandAction.HelpAnnounceGame")
       )
     )
-    sleep(20.milliseconds)
+    threadSleep(20.milliseconds)
     clientHandler.send(
       InformationMessage(
         clientHandler.nextMessageNumber,
@@ -247,7 +247,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
         EmuLang.getString("AdminCommandAction.HelpFindUser")
       )
     )
-    sleep(20.milliseconds)
+    threadSleep(20.milliseconds)
     clientHandler.send(
       InformationMessage(
         clientHandler.nextMessageNumber,
@@ -255,7 +255,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
         EmuLang.getString("AdminCommandAction.HelpFindGame")
       )
     )
-    sleep(20.milliseconds)
+    threadSleep(20.milliseconds)
     clientHandler.send(
       InformationMessage(
         clientHandler.nextMessageNumber,
@@ -263,7 +263,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
         "/triviaon to start the trivia bot- /triviapause to pause the bot- /triviaresume to resume the bot after pause- /triviasave to save the bot's scores- /triviatime <#> to change the question delay"
       )
     )
-    sleep(20.milliseconds)
+    threadSleep(20.milliseconds)
     clientHandler.send(
       InformationMessage(
         clientHandler.nextMessageNumber,
@@ -271,7 +271,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
         "/triviaoff to stop the bot- /triviascores to show top 3 scores- /triviawin to show a winner- /triviaupdate <IP Address> <New IP Address> to update ip address"
       )
     )
-    sleep(20.milliseconds)
+    threadSleep(20.milliseconds)
     clientHandler.send(
       InformationMessage(
         clientHandler.nextMessageNumber,
@@ -279,7 +279,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
         "/stealthon /stealthoff to join a room invisibly."
       )
     )
-    sleep(20.milliseconds)
+    threadSleep(20.milliseconds)
     if (admin.accessLevel == AccessManager.ACCESS_SUPERADMIN) {
       clientHandler.send(
         InformationMessage(
@@ -288,7 +288,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
           "/tempelevated <UserID> <min> to give a user temporary elevated access."
         )
       )
-      sleep(20.milliseconds)
+      threadSleep(20.milliseconds)
       clientHandler.send(
         InformationMessage(
           clientHandler.nextMessageNumber,
@@ -296,7 +296,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
           "/tempmoderator <UserID> <min> to give a user temporary moderator access."
         )
       )
-      sleep(20.milliseconds)
+      threadSleep(20.milliseconds)
       clientHandler.send(
         InformationMessage(
           clientHandler.nextMessageNumber,
@@ -304,7 +304,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
           EmuLang.getString("AdminCommandAction.HelpTempAdmin")
         )
       )
-      sleep(20.milliseconds)
+      threadSleep(20.milliseconds)
       clientHandler.send(
         InformationMessage(
           clientHandler.nextMessageNumber,
@@ -312,7 +312,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
           "/clear <IP Address> to remove any temp ban, silence, elevated, moderator or admin."
         )
       )
-      sleep(20.milliseconds)
+      threadSleep(20.milliseconds)
     }
   }
 
@@ -888,7 +888,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
             EmuUtil.toSimpleUtcDatetime(releaseInfo.buildDate)
         )
       )
-      sleep(20.milliseconds)
+      threadSleep(20.milliseconds)
       if (admin.accessLevel >= AccessManager.ACCESS_ADMIN) {
         val props = System.getProperties()
         clientHandler.send(
@@ -898,7 +898,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
             "JAVAVER: " + props.getProperty("java.version")
           )
         )
-        sleep(20.milliseconds)
+        threadSleep(20.milliseconds)
         clientHandler.send(
           InformationMessage(
             clientHandler.nextMessageNumber,
@@ -906,7 +906,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
             "JAVAVEND: " + props.getProperty("java.vendor")
           )
         )
-        sleep(20.milliseconds)
+        threadSleep(20.milliseconds)
         clientHandler.send(
           InformationMessage(
             clientHandler.nextMessageNumber,
@@ -914,7 +914,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
             "OSNAME: " + props.getProperty("os.name")
           )
         )
-        sleep(20.milliseconds)
+        threadSleep(20.milliseconds)
         clientHandler.send(
           InformationMessage(
             clientHandler.nextMessageNumber,
@@ -922,7 +922,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
             "OSARCH: " + props.getProperty("os.arch")
           )
         )
-        sleep(20.milliseconds)
+        threadSleep(20.milliseconds)
         clientHandler.send(
           InformationMessage(
             clientHandler.nextMessageNumber,
@@ -930,7 +930,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
             "OSVER: " + props.getProperty("os.version")
           )
         )
-        sleep(20.milliseconds)
+        threadSleep(20.milliseconds)
         val runtime = Runtime.getRuntime()
         clientHandler.send(
           InformationMessage(
@@ -939,7 +939,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
             "NUMPROCS: " + runtime.availableProcessors()
           )
         )
-        sleep(20.milliseconds)
+        threadSleep(20.milliseconds)
         clientHandler.send(
           InformationMessage(
             clientHandler.nextMessageNumber,
@@ -947,7 +947,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
             "FREEMEM: " + runtime.freeMemory()
           )
         )
-        sleep(20.milliseconds)
+        threadSleep(20.milliseconds)
         clientHandler.send(
           InformationMessage(
             clientHandler.nextMessageNumber,
@@ -955,7 +955,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
             "MAXMEM: " + runtime.maxMemory()
           )
         )
-        sleep(20.milliseconds)
+        threadSleep(20.milliseconds)
         clientHandler.send(
           InformationMessage(
             clientHandler.nextMessageNumber,
@@ -963,7 +963,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
             "TOTMEM: " + runtime.totalMemory()
           )
         )
-        sleep(20.milliseconds)
+        threadSleep(20.milliseconds)
         val env = System.getenv()
         if (EmuUtil.systemIsWindows()) {
           clientHandler.send(
@@ -973,7 +973,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
               "COMPNAME: " + env["COMPUTERNAME"]
             )
           )
-          sleep(20.milliseconds)
+          threadSleep(20.milliseconds)
           clientHandler.send(
             InformationMessage(
               clientHandler.nextMessageNumber,
@@ -981,7 +981,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
               "USER: " + env["USERNAME"]
             )
           )
-          sleep(20.milliseconds)
+          threadSleep(20.milliseconds)
         } else {
           clientHandler.send(
             InformationMessage(
@@ -990,7 +990,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
               "COMPNAME: " + env["HOSTNAME"]
             )
           )
-          sleep(20.milliseconds)
+          threadSleep(20.milliseconds)
           clientHandler.send(
             InformationMessage(
               clientHandler.nextMessageNumber,
@@ -998,18 +998,12 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
               "USER: " + env["USERNAME"]
             )
           )
-          sleep(20.milliseconds)
+          threadSleep(20.milliseconds)
         }
       }
     } catch (e: NoSuchElementException) {
       throw ActionException(EmuLang.getString("AdminCommandAction.VersionError"))
     }
-  }
-
-  private fun sleep(d: Duration) {
-    try {
-      Thread.sleep(d.inWholeMilliseconds)
-    } catch (e: Exception) {}
   }
 
   companion object {

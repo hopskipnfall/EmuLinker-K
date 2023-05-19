@@ -38,7 +38,7 @@ abstract class UDPRelay(
   ): ByteBuffer?
 
   override fun run() {
-    logger.atInfo().log("Main port $listenPort thread running...")
+    logger.atInfo().log("Main port %d thread running...", listenPort)
     try {
       listeningOnPortsCounter.inc()
       while (true) {
@@ -53,7 +53,7 @@ abstract class UDPRelay(
               logger
                 .atSevere()
                 .withCause(e)
-                .log("Failed to start new ClientHandler for " + formatSocketAddress(clientAddress))
+                .log("Failed to start new ClientHandler for %s", formatSocketAddress(clientAddress))
               continue
             }
           clients[clientAddress] = clientHandler
@@ -66,7 +66,7 @@ abstract class UDPRelay(
         clientHandler?.send(buffer)
       }
     } catch (e: Exception) {
-      logger.atSevere().withCause(e).log("Main port $listenPort thread caught exception")
+      logger.atSevere().withCause(e).log("Main port %d thread caught exception", listenPort)
     } finally {
       listeningOnPortsCounter.dec()
       try {
@@ -74,7 +74,7 @@ abstract class UDPRelay(
       } catch (e: Exception) {}
       threadPool.shutdownNow()
     }
-    logger.atInfo().log("Main port $listenPort thread exiting...")
+    logger.atInfo().log("Main port %d thread exiting...", listenPort)
   }
 
   protected inner class ClientHandler(protected var clientSocketAddress: InetSocketAddress) :
@@ -91,9 +91,7 @@ abstract class UDPRelay(
     override fun run() {
       logger
         .atInfo()
-        .log(
-          "ClientHandler thread for " + formatSocketAddress(clientSocketAddress) + " runnning..."
-        )
+        .log("ClientHandler thread for %s runnning...", formatSocketAddress(clientSocketAddress))
       try {
         listeningOnPortsCounter.inc()
         while (true) {
@@ -128,7 +126,7 @@ abstract class UDPRelay(
       }
       logger
         .atInfo()
-        .log("ClientHandler thread for " + formatSocketAddress(clientSocketAddress) + " exiting...")
+        .log("ClientHandler thread for %s exiting...", formatSocketAddress(clientSocketAddress))
     }
 
     init {
@@ -137,10 +135,9 @@ abstract class UDPRelay(
       logger
         .atInfo()
         .log(
-          "ClientHandler for " +
-            formatSocketAddress(clientSocketAddress) +
-            " bound to port " +
-            clientChannel.socket().port
+          "ClientHandler for %s bound to port %d",
+          formatSocketAddress(clientSocketAddress),
+          clientChannel.socket().port
         )
     }
   }
@@ -159,7 +156,7 @@ abstract class UDPRelay(
       logger.atSevere().withCause(e).log("Failed to bind to channel")
       throw IllegalStateException(e)
     }
-    logger.atInfo().log("Bound to port $listenPort")
+    logger.atInfo().log("Bound to port %d", listenPort)
     threadPool.execute(this)
   }
 }

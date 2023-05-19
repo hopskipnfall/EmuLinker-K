@@ -1,7 +1,6 @@
 package org.emulinker.kaillera.relay
 
 import com.codahale.metrics.Counter
-import com.codahale.metrics.MetricRegistry
 import com.google.common.flogger.FluentLogger
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -18,6 +17,7 @@ import org.emulinker.kaillera.controller.connectcontroller.protocol.RequestPriva
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.net.UDPRelay
 import org.emulinker.util.EmuUtil.formatSocketAddress
+import org.emulinker.util.LoggingUtils.debugLog
 
 @Deprecated("This doesn't seem to be used anywhere! Maybe we can get rid of it. ")
 internal class KailleraRelay
@@ -25,7 +25,6 @@ internal class KailleraRelay
 constructor(
   @Assisted listenPort: Int,
   @Assisted serverSocketAddress: InetSocketAddress?,
-  metrics: MetricRegistry?,
   private val v086RelayFactory: V086Relay.Factory,
   @Named("listeningOnPortsCounter") listeningOnPortsCounter: Counter
 ) : UDPRelay(listenPort, serverSocketAddress!!, listeningOnPortsCounter) {
@@ -51,27 +50,27 @@ constructor(
     fromAddress: InetSocketAddress,
     toAddress: InetSocketAddress
   ): ByteBuffer? {
-    var inMessage: ConnectMessage? = null
-    inMessage =
+    val inMessage: ConnectMessage? =
       try {
         parse(receiveBuffer)
       } catch (e: MessageFormatException) {
         logger.atWarning().withCause(e).log("Unrecognized message format!")
         return null
       }
-    logger
-      .atFine()
-      .log(
-        formatSocketAddress(fromAddress) +
-          " -> " +
-          formatSocketAddress(toAddress) +
-          ": " +
+    debugLog {
+      logger
+        .atFine()
+        .log(
+          "%s -> %s: %s",
+          formatSocketAddress(fromAddress),
+          formatSocketAddress(toAddress),
           inMessage
-      )
+        )
+    }
     if (inMessage is RequestPrivateKailleraPortRequest) {
-      logger.atInfo().log("Client version is " + inMessage.protocol)
+      logger.atInfo().log("Client version is %s", inMessage.protocol)
     } else {
-      logger.atWarning().log("Client sent an invalid message: $inMessage")
+      logger.atWarning().log("Client sent an invalid message: %s", inMessage)
       return null
     }
     val sendBuffer = ByteBuffer.allocate(receiveBuffer.limit())
@@ -88,8 +87,7 @@ constructor(
     fromAddress: InetSocketAddress,
     toAddress: InetSocketAddress
   ): ByteBuffer? {
-    var inMessage: ConnectMessage? = null
-    inMessage =
+    val inMessage: ConnectMessage? =
       try {
         parse(receiveBuffer)
       } catch (e: MessageFormatException) {
@@ -107,7 +105,7 @@ constructor(
       )
     if (inMessage is RequestPrivateKailleraPortResponse) {
       val portMsg = inMessage
-      logger.atInfo().log("Starting client relay on port " + (portMsg.port - 1))
+      logger.atInfo().log("Starting client relay on port %d", portMsg.port - 1)
       try {
         v086RelayFactory.create(
           portMsg.port,
@@ -120,7 +118,7 @@ constructor(
     } else if (inMessage is ConnectMessage_TOO) {
       logger.atWarning().log("Failed to connect: Server is FULL!")
     } else {
-      logger.atWarning().log("Server sent an invalid message: $inMessage")
+      logger.atWarning().log("Server sent an invalid message: %s", inMessage)
       return null
     }
     val sendBuffer = ByteBuffer.allocate(receiveBuffer.limit())

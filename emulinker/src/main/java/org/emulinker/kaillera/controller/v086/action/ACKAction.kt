@@ -3,6 +3,7 @@ package org.emulinker.kaillera.controller.v086.action
 import com.google.common.flogger.FluentLogger
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.time.Duration.Companion.milliseconds
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086ClientHandler
 import org.emulinker.kaillera.controller.v086.protocol.Ack
@@ -12,6 +13,7 @@ import org.emulinker.kaillera.model.UserStatus
 import org.emulinker.kaillera.model.event.ConnectedEvent
 import org.emulinker.kaillera.model.event.UserEvent
 import org.emulinker.kaillera.model.exception.*
+import org.emulinker.util.EmuUtil.threadSleep
 
 @Singleton
 class ACKAction @Inject internal constructor() :
@@ -140,9 +142,7 @@ class ACKAction @Inject internal constructor() :
         gamesSubList = ArrayList()
         counter = 0
         sent = true
-        try {
-          Thread.sleep(100)
-        } catch (e: Exception) {} // SF MOD
+        threadSleep(100.milliseconds)
       }
       counter += user.numBytes
       usersSubList.add(user)
@@ -156,9 +156,7 @@ class ACKAction @Inject internal constructor() :
         gamesSubList = ArrayList()
         counter = 0
         sent = true
-        try {
-          Thread.sleep(100)
-        } catch (e: Exception) {} // SF MOD
+        threadSleep(100.milliseconds)
       }
       counter += game.numBytes
       gamesSubList.add(game)

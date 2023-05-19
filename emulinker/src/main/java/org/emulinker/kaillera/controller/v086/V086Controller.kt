@@ -9,6 +9,7 @@ import java.util.concurrent.ThreadPoolExecutor
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.reflect.KClass
+import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.plus
 import org.apache.commons.configuration.Configuration
 import org.emulinker.config.RuntimeFlags
@@ -80,6 +81,7 @@ import org.emulinker.kaillera.model.event.UserQuitGameEvent
 import org.emulinker.kaillera.model.exception.NewConnectionException
 import org.emulinker.kaillera.model.exception.ServerFullException
 import org.emulinker.net.BindException
+import org.emulinker.util.EmuUtil.threadSleep
 
 /** High level logic for handling messages on a port. Not tied to an individual user. */
 @Singleton
@@ -203,10 +205,8 @@ internal constructor(
           portRangeQueue.add(port)
         }
       }
-      try {
-        // pause very briefly to give the OS a chance to free a port
-        Thread.sleep(5)
-      } catch (e: InterruptedException) {}
+      // pause very briefly to give the OS a chance to free a port
+      threadSleep(5.milliseconds)
     }
     if (boundPort < 0) {
       clientHandler.stop()

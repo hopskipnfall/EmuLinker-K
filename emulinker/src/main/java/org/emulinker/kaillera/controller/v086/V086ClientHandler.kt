@@ -128,7 +128,8 @@ constructor(
     logger
       .atFine()
       .log(
-        toString() + " thread starting (ThreadPool:%d/%d)",
+        "%s thread starting (ThreadPool:%d/%d)",
+        this,
         controller.threadPool.activeCount,
         controller.threadPool.poolSize
       )
@@ -151,7 +152,7 @@ constructor(
 
     if (!isBound())
     {
-    logger.atSevere().log("V086ClientHandler failed to start for client from " + getRemoteInetAddress().getHostAddress());
+    logger.atSevere().log("V086ClientHandler failed to start for client from %s", getRemoteInetAddress().getHostAddress());
     return;
     }
     */

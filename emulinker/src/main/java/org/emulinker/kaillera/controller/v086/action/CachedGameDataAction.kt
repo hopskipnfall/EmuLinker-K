@@ -40,9 +40,7 @@ class CachedGameDataAction @Inject internal constructor() : V086Action<CachedGam
       logger
         .atSevere()
         .withCause(e)
-        .log(
-          "Game data error!  The client cached key " + message.key + " was not found in the cache!"
-        )
+        .log("Game data error!  The client cached key %s was not found in the cache!", message.key)
 
       // This may not always be the best thing to do...
       try {

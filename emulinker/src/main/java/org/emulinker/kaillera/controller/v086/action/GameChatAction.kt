@@ -4,6 +4,7 @@ import com.google.common.flogger.FluentLogger
 import java.util.*
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.time.Duration.Companion.milliseconds
 import org.emulinker.kaillera.access.AccessManager
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086ClientHandler
@@ -12,6 +13,7 @@ import org.emulinker.kaillera.lookingforgame.TwitterBroadcaster
 import org.emulinker.kaillera.model.event.GameChatEvent
 import org.emulinker.kaillera.model.exception.ActionException
 import org.emulinker.kaillera.model.exception.GameChatException
+import org.emulinker.util.EmuUtil.threadSleep
 
 @Singleton
 class GameChatAction
@@ -453,30 +455,22 @@ internal constructor(
           "/me <message> to make personal message eg. /me is bored ...SupraFast is bored.",
           clientHandler.user
         )
-        try {
-          Thread.sleep(20)
-        } catch (e: Exception) {}
+        threadSleep(20.milliseconds)
         clientHandler.user.game!!.announce(
           "/msg <UserID> <msg> to PM somebody. /msgoff or /msgon to turn pm off | on.",
           clientHandler.user
         )
-        try {
-          Thread.sleep(20)
-        } catch (e: Exception) {}
+        threadSleep(20.milliseconds)
         clientHandler.user.game!!.announce(
           "/ignore <UserID> or /unignore <UserID> or /ignoreall or /unignoreall to ignore users.",
           clientHandler.user
         )
-        try {
-          Thread.sleep(20)
-        } catch (e: Exception) {}
+        threadSleep(20.milliseconds)
         clientHandler.user.game!!.announce(
           "/p2pon or /p2poff this option ignores all server activity during gameplay.",
           clientHandler.user
         )
-        try {
-          Thread.sleep(20)
-        } catch (e: Exception) {}
+        threadSleep(20.milliseconds)
       } else if (message.message == "/stop") {
         if (lookingForGameReporter.cancelActionsForUser(clientHandler.user.id)) {
           clientHandler.user.game!!.announce("Canceled pending tweet.", clientHandler.user)

@@ -103,7 +103,7 @@ constructor(
     }
 
     override fun run() {
-      logger.atFine().log("$toStringRepresentation Running")
+      logger.atFine().log("%s Running", toStringRepresentation)
       try {
         listeningOnPortsCounter.inc()
         val receiveBuffer = ByteBuffer.allocate(DEFAULT_BUFFER_SIZE)
@@ -118,8 +118,7 @@ constructor(
           // https://stackoverflow.com/a/61267496/2875073
           (receiveBuffer as Buffer).flip()
           lastActivity = System.currentTimeMillis()
-          var sendBuffer: ByteBuffer? = null
-          sendBuffer =
+          val sendBuffer: ByteBuffer? =
             if (fromAddress == serverSocketAddress) {
               // logger.atFine().log("Server at " +
               // EmuUtil.formatSocketAddress(fromAddress) + " sent " +
@@ -147,9 +146,8 @@ constructor(
             logger
               .atFine()
               .log(
-                "No RelayThread is registered to forward to " +
-                  formatSocketAddress(fromAddress) +
-                  "... creating new RelayThread"
+                "No RelayThread is registered to forward to %s... creating new RelayThread",
+                formatSocketAddress(fromAddress)
               )
             responseThread = RelayThread(fromAddress)
             relayThreads[fromAddress] = responseThread
@@ -157,17 +155,17 @@ constructor(
           responseThread.send(sendBuffer, forwardAddress)
         }
       } catch (e: IOException) {
-        logger.atWarning().withCause(e).log("$toStringRepresentation caught IOException")
+        logger.atWarning().withCause(e).log("%s caught IOException", toStringRepresentation)
         if (exception != null) exception = e
       } catch (e: Exception) {
-        logger.atSevere().withCause(e).log("$toStringRepresentation caught unexpected exception")
+        logger.atSevere().withCause(e).log("%s caught unexpected exception", toStringRepresentation)
         if (exception != null) exception = e
       } finally {
         listeningOnPortsCounter.dec()
         this@UDPRelay2.stop()
         running = false
       }
-      logger.atFine().log("$toStringRepresentation Exiting")
+      logger.atFine().log("%s Exiting", toStringRepresentation)
     }
 
     init {
@@ -189,10 +187,9 @@ constructor(
           logger
             .atFine()
             .log(
-              "Using previously created DatagramChannel bound to port " +
-                channel!!.socket().localPort +
-                " that will forward to " +
-                formatSocketAddress(forwardAddress!!)
+              "Using previously created DatagramChannel bound to port %d that will forward to %s",
+              channel!!.socket().localPort,
+              formatSocketAddress(forwardAddress!!)
             )
         }
       } else {
@@ -201,21 +198,15 @@ constructor(
         logger
           .atFine()
           .log(
-            "Creating new DatagramChannel bound to arbitrary port " +
-              channel!!.socket().localPort +
-              " that will forward to " +
-              formatSocketAddress(forwardAddress!!)
+            "Creating new DatagramChannel bound to arbitrary port %d that will forward to %s",
+            channel!!.socket().localPort,
+            formatSocketAddress(forwardAddress!!)
           )
       }
       lastActivity = System.currentTimeMillis()
       this.forwardAddress = forwardAddress
       this.toStringRepresentation =
-        ("RelayThread." +
-          threadCounter++ +
-          ": " +
-          channel!!.socket().localPort +
-          "->" +
-          formatSocketAddress(forwardAddress))
+        "RelayThread.${threadCounter++}: ${channel!!.socket().localPort}->${formatSocketAddress(forwardAddress)}"
       this.start()
       while (!running) {
         try {

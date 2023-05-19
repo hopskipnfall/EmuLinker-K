@@ -47,21 +47,21 @@ internal constructor(
         parse(receiveBuffer, -1)
       } catch (e: ParseException) {
         receiveBuffer.rewind()
-        logger.atWarning().withCause(e).log("Failed to parse: " + dumpBuffer(receiveBuffer))
+        logger.atWarning().withCause(e).log("Failed to parse: %s", dumpBuffer(receiveBuffer))
         return null
       } catch (e: V086BundleFormatException) {
         receiveBuffer.rewind()
         logger
           .atWarning()
           .withCause(e)
-          .log("Invalid message bundle format: " + dumpBuffer(receiveBuffer))
+          .log("Invalid message bundle format: %s", dumpBuffer(receiveBuffer))
         return null
       } catch (e: MessageFormatException) {
         receiveBuffer.rewind()
-        logger.atWarning().withCause(e).log("Invalid message format: " + dumpBuffer(receiveBuffer))
+        logger.atWarning().withCause(e).log("Invalid message format: %s", dumpBuffer(receiveBuffer))
         return null
       }
-    //    logger.atInfo().log("-> $inBundle")
+    //    logger.atInfo().log("-> %s", $inBundle)
     val inMessages = inBundle.messages
     for (i in 0 until inBundle.numMessages) {
       if (inMessages[i]!!.messageNumber > lastClientMessageNumber)
@@ -87,21 +87,21 @@ internal constructor(
         parse(receiveBuffer, -1)
       } catch (e: ParseException) {
         receiveBuffer.rewind()
-        logger.atWarning().withCause(e).log("Failed to parse: " + dumpBuffer(receiveBuffer))
+        logger.atWarning().withCause(e).log("Failed to parse: %s", dumpBuffer(receiveBuffer))
         return null
       } catch (e: V086BundleFormatException) {
         receiveBuffer.rewind()
         logger
           .atWarning()
           .withCause(e)
-          .log("Invalid message bundle format: " + dumpBuffer(receiveBuffer))
+          .log("Invalid message bundle format: %s", dumpBuffer(receiveBuffer))
         return null
       } catch (e: MessageFormatException) {
         receiveBuffer.rewind()
-        logger.atWarning().withCause(e).log("Invalid message format: " + dumpBuffer(receiveBuffer))
+        logger.atWarning().withCause(e).log("Invalid message format: %s", dumpBuffer(receiveBuffer))
         return null
       }
-    //    logger.atInfo().log("<- $inBundle")
+    //    logger.atInfo().log("<- %s", $inBundle)
     val inMessages = inBundle.messages
     for (i in 0 until inBundle.numMessages) {
       if (inMessages[i]!!.messageNumber > lastServerMessageNumber)
