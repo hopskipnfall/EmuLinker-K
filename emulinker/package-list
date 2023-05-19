@@ -1482,6 +1482,7 @@ $dokka.location:org.emulinker.util/EmuUtil/hexToByteArray/#kotlin.String/Pointin
 $dokka.location:org.emulinker.util/EmuUtil/loadProperties/#kotlin.String/PointingToDeclaration/emulinker/org.emulinker.util/-emu-util/load-properties.html
 $dokka.location:org.emulinker.util/EmuUtil/readString/#java.nio.ByteBuffer#kotlin.Int#java.nio.charset.Charset/PointingToDeclaration/emulinker/org.emulinker.util/-emu-util/read-string.html
 $dokka.location:org.emulinker.util/EmuUtil/systemIsWindows/#/PointingToDeclaration/emulinker/org.emulinker.util/-emu-util/system-is-windows.html
+$dokka.location:org.emulinker.util/EmuUtil/threadSleep/#kotlin.time.Duration/PointingToDeclaration/emulinker/org.emulinker.util/-emu-util/thread-sleep.html
 $dokka.location:org.emulinker.util/EmuUtil/toHexString/kotlin.Byte#/PointingToDeclaration/emulinker/org.emulinker.util/-emu-util/to-hex-string.html
 $dokka.location:org.emulinker.util/EmuUtil/toHexString/kotlin.ByteArray#/PointingToDeclaration/emulinker/org.emulinker.util/-emu-util/to-hex-string.html
 $dokka.location:org.emulinker.util/EmuUtil/toSimpleUtcDatetime/#java.time.Instant/PointingToDeclaration/emulinker/org.emulinker.util/-emu-util/to-simple-utc-datetime.html
