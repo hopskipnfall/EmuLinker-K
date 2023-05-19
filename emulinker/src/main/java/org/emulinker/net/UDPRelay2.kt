@@ -99,7 +99,7 @@ constructor(
     fun close() {
       try {
         channel!!.close()
-      } catch (e: Exception) {}
+      } catch (_: Exception) {}
     }
 
     override fun run() {

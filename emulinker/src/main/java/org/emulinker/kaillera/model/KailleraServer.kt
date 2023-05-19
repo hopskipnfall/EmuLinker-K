@@ -31,6 +31,7 @@ import org.emulinker.kaillera.model.impl.AutoFireDetector
 import org.emulinker.kaillera.model.impl.AutoFireDetectorFactory
 import org.emulinker.kaillera.model.impl.KailleraGameImpl
 import org.emulinker.kaillera.model.impl.Trivia
+import org.emulinker.kaillera.pico.AppModule
 import org.emulinker.kaillera.release.ReleaseInfo
 import org.emulinker.util.EmuLang
 import org.emulinker.util.EmuUtil
@@ -251,7 +252,7 @@ internal constructor(
       throw LoginException(EmuLang.getString("KailleraServerImpl.LoginDeniedAccessDenied"))
     }
     if (access == AccessManager.ACCESS_NORMAL && maxPing > 0 && user.ping > maxPing) {
-      logger.atInfo().log(user.toString() + " login denied: Ping " + user.ping + " > " + maxPing)
+      logger.atInfo().log("%s login denied: Ping %d > %d", user, user.ping, maxPing)
       usersMap.remove(userListKey)
       throw PingTimeException(
         EmuLang.getString(
@@ -365,7 +366,7 @@ internal constructor(
     ) {
       logger
         .atInfo()
-        .log(user.toString() + " login denied: AccessManager denied emulator: " + user.clientType)
+        .log("%s login denied: AccessManager denied emulator: %s", user, user.clientType)
       usersMap.remove(userListKey)
       throw LoginException(
         EmuLang.getString("KailleraServerImpl.LoginDeniedEmulatorRestricted", user.clientType)
@@ -420,19 +421,23 @@ internal constructor(
     userImpl.addEvent(ConnectedEvent(this, user))
     threadSleep(20.milliseconds)
     for (loginMessage in loginMessages) {
-      userImpl.addEvent(InfoMessageEvent(user, loginMessage!!))
+      userImpl.addEvent(InfoMessageEvent(user, loginMessage))
       threadSleep(20.milliseconds)
     }
-    if (access > AccessManager.ACCESS_NORMAL)
+    userImpl.addEvent(
+      InfoMessageEvent(
+        user,
+        "${releaseInfo.productName} v${releaseInfo.versionString}: ${releaseInfo.websiteString}"
+      )
+    )
+    threadSleep(20.milliseconds)
+    if (access > AccessManager.ACCESS_NORMAL) {
       logger
         .atInfo()
-        .log(
-          user.toString() +
-            " logged in successfully with " +
-            AccessManager.ACCESS_NAMES[access] +
-            " access!"
-        )
-    else logger.atInfo().log("%s logged in successfully", user)
+        .log("%s logged in successfully with %s access!", user, AccessManager.ACCESS_NAMES[access])
+    } else {
+      logger.atInfo().log("%s logged in successfully", user)
+    }
 
     // this is fairly ugly
     if (user.isEmuLinkerClient) {
@@ -473,18 +478,21 @@ internal constructor(
       }
     }
     threadSleep(20.milliseconds)
-    if (access >= AccessManager.ACCESS_ADMIN)
+    if (access >= AccessManager.ACCESS_ADMIN) {
       userImpl.addEvent(
         InfoMessageEvent(user, EmuLang.getString("KailleraServerImpl.AdminWelcomeMessage"))
       )
+      // Display the update prompt if there is one.
+      AppModule.updateMessageForMods?.let { message ->
+        threadSleep(20.milliseconds)
+        userImpl.addEvent(InfoMessageEvent(user, "===================================="))
+        threadSleep(20.milliseconds)
+        userImpl.addEvent(InfoMessageEvent(user, message))
+        threadSleep(20.milliseconds)
+        userImpl.addEvent(InfoMessageEvent(user, "===================================="))
+      }
+    }
     addEvent(UserJoinedEvent(this, user))
-    threadSleep(20.milliseconds)
-    userImpl.addEvent(
-      InfoMessageEvent(
-        user,
-        "${releaseInfo.productName} v${releaseInfo.versionString}: ${releaseInfo.websiteString}"
-      )
-    )
     threadSleep(20.milliseconds)
     val announcement = accessManager.getAnnouncement(user.socketAddress!!.address)
     if (announcement != null)
@@ -585,7 +593,7 @@ internal constructor(
 
   @Synchronized
   @Throws(CreateGameException::class, FloodException::class)
-  fun createGame(user: KailleraUser?, romName: String?): KailleraGame? {
+  fun createGame(user: KailleraUser?, romName: String?): KailleraGame {
     if (!user!!.loggedIn) {
       logger.atSevere().log("%s create game failed: Not logged in", user)
       throw CreateGameException(EmuLang.getString("KailleraServerImpl.NotLoggedIn"))
@@ -593,11 +601,7 @@ internal constructor(
     if ((user as KailleraUser?)!!.game != null) {
       logger
         .atSevere()
-        .log(
-          user.toString() +
-            " create game failed: already in game: " +
-            (user as KailleraUser?)!!.game
-        )
+        .log("%s create game failed: already in game: %s", user, (user as KailleraUser?)!!.game)
       throw CreateGameException(
         EmuLang.getString("KailleraServerImpl.CreateGameErrorAlreadyInGame")
       )
@@ -629,12 +633,7 @@ internal constructor(
       if (flags.maxGames > 0 && games.size >= flags.maxGames) {
         logger
           .atWarning()
-          .log(
-            user.toString() +
-              " create game denied: Over maximum of " +
-              flags.maxGames +
-              " current games!"
-          )
+          .log("%s create game denied: Over maximum of %d current games!", user, flags.maxGames)
         throw CreateGameException(
           EmuLang.getString("KailleraServerImpl.CreateGameDeniedMaxGames", flags.maxGames)
         )

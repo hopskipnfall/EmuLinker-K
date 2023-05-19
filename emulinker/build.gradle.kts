@@ -2,10 +2,14 @@ import java.time.Instant
 import org.jetbrains.kotlin.gradle.tasks.KaptGenerateStubs
 
 plugins {
-  id("org.jetbrains.kotlin.jvm") version "1.8.10"
   id("com.diffplug.spotless") version "6.18.0"
   id("org.jetbrains.dokka") version "1.8.10"
   application
+
+  // Serialization.
+  kotlin("jvm") version "1.8.21"
+  kotlin("plugin.serialization") version "1.8.21"
+
   kotlin("kapt") version "1.8.21"
 }
 
@@ -15,8 +19,10 @@ repositories {
 }
 
 dependencies {
-  api("org.jetbrains.kotlin:kotlin-stdlib:1.8.20")
-  api("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
+  api("org.jetbrains.kotlin:kotlin-stdlib:1.8.21")
+  api("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.1")
+
+  implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.1")
 
   api("org.twitter4j:twitter4j-core:4.0.7")
 
@@ -41,16 +47,20 @@ dependencies {
 
   api("commons-pool:commons-pool:1.2")
 
-  api("io.ktor:ktor-network-jvm:2.3.0")
-  api("io.ktor:ktor-server-core-jvm:2.3.0")
-  api("io.ktor:ktor-server-netty-jvm:2.3.0")
-  api("io.ktor:ktor-server-status-pages-jvm:2.3.0")
-  api("io.ktor:ktor-server-default-headers-jvm:2.3.0")
+  val ktorVersion = "2.3.0"
+  api("io.ktor:ktor-network-jvm:$ktorVersion")
+  api("io.ktor:ktor-server-core-jvm:$ktorVersion")
+  api("io.ktor:ktor-server-netty-jvm:$ktorVersion")
+  api("io.ktor:ktor-server-status-pages-jvm:$ktorVersion")
+  api("io.ktor:ktor-server-default-headers-jvm:$ktorVersion")
+  api("io.ktor:ktor-client-core:$ktorVersion")
+  api("io.ktor:ktor-client-cio:$ktorVersion")
 
   api("io.reactivex.rxjava3:rxjava:3.1.1")
 
-  testImplementation("com.google.truth:truth:1.1.3")
   testImplementation("junit:junit:4.13.2")
+  testImplementation("com.google.truth:truth:1.1.3")
+  testImplementation(kotlin("test"))
   testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.6.4")
 }
 
