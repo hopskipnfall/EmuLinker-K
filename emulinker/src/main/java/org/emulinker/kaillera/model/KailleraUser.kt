@@ -430,8 +430,7 @@ class KailleraUser(
       Duration.ofSeconds(1)
         .dividedBy(connectionType.updatesPerSecond.toLong())
         .multipliedBy(frameDelay.toLong())
-        // Effectively this is the delay that is allowed before calling it a lag spike.
-        .plusMillis(70)
+        .plusMillis(50)
     game!!.ready(this, playerNumber)
   }
 
