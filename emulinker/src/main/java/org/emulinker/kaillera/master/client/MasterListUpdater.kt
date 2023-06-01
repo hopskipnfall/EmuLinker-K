@@ -1,17 +1,15 @@
 package org.emulinker.kaillera.master.client
 
 import com.google.common.flogger.FluentLogger
+import java.util.Timer
 import java.util.concurrent.ThreadPoolExecutor
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.concurrent.schedule
 import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
 import org.emulinker.config.RuntimeFlags
-import org.emulinker.kaillera.controller.connectcontroller.ConnectController
-import org.emulinker.kaillera.master.PublicServerInformation
 import org.emulinker.kaillera.master.StatsCollector
-import org.emulinker.kaillera.model.KailleraServer
-import org.emulinker.kaillera.release.ReleaseInfo
-import org.emulinker.util.EmuUtil.threadSleep
 import org.emulinker.util.Executable
 
 @Singleton
@@ -20,108 +18,70 @@ class MasterListUpdater
 internal constructor(
   private val flags: RuntimeFlags,
   private val threadPool: ThreadPoolExecutor,
-  connectController: ConnectController?,
-  kailleraServer: KailleraServer?,
   private val statsCollector: StatsCollector,
-  releaseInfo: ReleaseInfo?
+  private val serverCheckinTask: ServerCheckinTask,
+  private val emuLinkerMasterUpdateTask: EmuLinkerMasterUpdateTask,
+  private val kailleraMasterUpdateTask: KailleraMasterUpdateTask,
 ) : Executable {
-  private var publicInfo: PublicServerInformation? = null
-  private var emulinkerMasterTask: EmuLinkerMasterUpdateTask? = null
-  private var kailleraMasterTask: KailleraMasterUpdateTask? = null
   private var stopFlag = false
 
   @get:Synchronized
   override var threadIsActive = false
     private set
 
-  @Synchronized
-  override fun toString(): String {
-    return ("MasterListUpdater[touchKaillera=" +
-      flags.touchKaillera +
-      " touchEmulinker=" +
-      flags.touchEmulinker +
-      "]")
-  }
+  private val timer = Timer()
 
   @Synchronized
   fun start() {
-    if (publicInfo != null) {
-      logger.atFine().log("MasterListUpdater thread received start request!")
-      logger
-        .atFine()
-        .log(
-          "MasterListUpdater thread starting (ThreadPool:%d/%d)",
-          threadPool.activeCount,
-          threadPool.poolSize
-        )
-      threadPool.execute(this)
-      Thread.yield()
-      logger
-        .atFine()
-        .log(
-          "MasterListUpdater thread started (ThreadPool:%d/%d)",
-          threadPool.activeCount,
-          threadPool.poolSize
-        )
-    }
+    logger.atFine().log("MasterListUpdater thread received start request!")
+    logger
+      .atFine()
+      .log(
+        "MasterListUpdater thread starting (ThreadPool:%d/%d)",
+        threadPool.activeCount,
+        threadPool.poolSize
+      )
+    threadPool.execute(this)
+    Thread.yield()
+    logger
+      .atFine()
+      .log(
+        "MasterListUpdater thread started (ThreadPool:%d/%d)",
+        threadPool.activeCount,
+        threadPool.poolSize
+      )
   }
 
   @Synchronized
   override fun stop() {
-    if (publicInfo != null) {
-      logger.atFine().log("MasterListUpdater thread received stop request!")
-      if (!threadIsActive) {
-        logger.atFine().log("MasterListUpdater thread stop request ignored: not running!")
-        return
-      }
-      stopFlag = true
+    logger.atFine().log("MasterListUpdater thread received stop request!")
+    if (!threadIsActive) {
+      logger.atFine().log("MasterListUpdater thread stop request ignored: not running!")
+      return
     }
+    timer.cancel()
+    stopFlag = true
   }
 
   override fun run() {
     threadIsActive = true
-    logger.atFine().log("MasterListUpdater thread running...")
-    try {
-      while (!stopFlag) {
-        threadSleep(1.minutes)
-        if (stopFlag) break
-        logger.atInfo().log("MasterListUpdater touching masters...")
-        if (emulinkerMasterTask != null) emulinkerMasterTask!!.touchMaster()
-        if (kailleraMasterTask != null) kailleraMasterTask!!.touchMaster()
-        statsCollector.clearStartedGamesList()
-      }
-    } finally {
-      threadIsActive = false
-      logger.atFine().log("MasterListUpdater thread exiting...")
+    timer.schedule(
+      // Give a few seconds to allow the server to bind ports etc.
+      delay = 10.seconds.inWholeMilliseconds,
+      period = REPORTING_INTERVAL.inWholeMilliseconds
+    ) {
+      logger.atInfo().log("MasterListUpdater touching masters...")
+      serverCheckinTask.touchMaster()
+      if (flags.touchEmulinker) emuLinkerMasterUpdateTask.touchMaster()
+      if (flags.touchKaillera) kailleraMasterUpdateTask.touchMaster()
+
+      statsCollector.clearStartedGamesList()
     }
   }
 
-  init {
-    if (flags.touchKaillera || flags.touchEmulinker) {
-      publicInfo = PublicServerInformation(flags)
-    }
-    if (flags.touchKaillera) {
-      kailleraMasterTask =
-        KailleraMasterUpdateTask(
-          publicInfo!!,
-          connectController!!,
-          kailleraServer!!,
-          statsCollector,
-          releaseInfo!!
-        )
-    }
-    if (flags.touchEmulinker) {
-      emulinkerMasterTask =
-        EmuLinkerMasterUpdateTask(
-          publicInfo!!,
-          connectController!!,
-          kailleraServer!!,
-          releaseInfo!!
-        )
-    }
-  }
+  private companion object {
+    val logger = FluentLogger.forEnclosingClass()
 
-  companion object {
-    private val logger = FluentLogger.forEnclosingClass()
+    val REPORTING_INTERVAL = 1.minutes
   }
 }

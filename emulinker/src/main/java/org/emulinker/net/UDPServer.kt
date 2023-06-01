@@ -40,7 +40,8 @@ abstract class UDPServer(
   			logger.atWarning().log("Introducing " + artificalDelay + "ms artifical delay!");
   	}
   */
-  var boundPort: Int? = null
+  // Open for testing.
+  open var boundPort: Int? = null
   private var channel: DatagramChannel? = null
 
   final override var threadIsActive = false

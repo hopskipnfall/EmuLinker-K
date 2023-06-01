@@ -10,7 +10,6 @@ import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.concurrent.TimeUnit.*
-import kotlinx.coroutines.runBlocking
 
 private val logger = FluentLogger.forEnclosingClass()
 
@@ -30,25 +29,6 @@ fun main() {
     }
     else -> {
       logger.atInfo().log("Detected installed Java version: %f", javaVersion)
-    }
-  }
-
-  runBlocking {
-    val config: VersionUpdatePromptConfig? = UpdateChecker.fetchUpdateConfig()
-    if (config == null) {
-      logger
-        .atWarning()
-        .log(
-          "Failed to look up a new version of the server. Try visiting %s to see if a new version is available.",
-          CompiledFlags.PROJECT_URL
-        )
-    } else {
-      val message =
-        config.versionConfigs.find { it.version == CompiledFlags.PROJECT_VERSION }?.message
-      if (message != null) {
-        AppModule.updateMessageForMods = message
-        logger.atSevere().log("%s", message)
-      }
     }
   }
 

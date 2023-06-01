@@ -6,6 +6,9 @@ import dagger.Binds
 import dagger.Module
 import dagger.Provides
 import dagger.multibindings.IntoSet
+import io.ktor.client.HttpClient
+import io.ktor.client.engine.cio.CIO
+import io.ktor.client.plugins.HttpTimeout
 import java.nio.charset.Charset
 import java.util.concurrent.SynchronousQueue
 import java.util.concurrent.ThreadPoolExecutor
@@ -61,11 +64,11 @@ abstract class AppModule {
 
     // TODO(nue): Clean this up.
     /**
-     * A message to be shown to admins as they log in.
+     * Messages to be shown to admins as they log in.
      *
      * Usually used for update messages.
      */
-    var updateMessageForMods: String? = null
+    var messagesToAdmins: List<String> = emptyList()
 
     @Provides
     @Singleton
@@ -118,5 +121,7 @@ abstract class AppModule {
     fun provideMetricRegistry(): MetricRegistry {
       return MetricRegistry()
     }
+
+    @Provides fun provideHttpClient(): HttpClient = HttpClient(CIO) { install(HttpTimeout) }
   }
 }
