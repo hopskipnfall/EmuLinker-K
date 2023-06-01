@@ -41,6 +41,9 @@ fun main() {
 
   logger.atInfo().log("EmuLinker server Starting...")
   logger.atInfo().log(component.releaseInfo.welcome)
+  if (CompiledFlags.DEBUG_BUILD) {
+    logger.atSevere().log("DEBUG BUILD -- This should not be used for production servers!")
+  }
   logger
     .atInfo()
     .log(

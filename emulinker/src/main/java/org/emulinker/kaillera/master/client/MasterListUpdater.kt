@@ -70,7 +70,7 @@ internal constructor(
       delay = 10.seconds.inWholeMilliseconds,
       period = REPORTING_INTERVAL.inWholeMilliseconds
     ) {
-      logger.atInfo().log("MasterListUpdater touching masters...")
+      logger.atFine().log("MasterListUpdater touching masters...")
       serverCheckinTask.touchMaster()
       if (flags.touchEmulinker) emuLinkerMasterUpdateTask.touchMaster()
       if (flags.touchKaillera) kailleraMasterUpdateTask.touchMaster()
