@@ -88,34 +88,32 @@ constructor(
         )
       )
 
-    httpClient.use { client ->
-      val response: HttpResponse =
-        try {
-          client.request(url) {
-            this.method = HttpMethod.Post
+    val response: HttpResponse =
+      try {
+        httpClient.request(url) {
+          this.method = HttpMethod.Post
 
-            this.setBody(Json.encodeToString(request))
-            this.timeout { requestTimeoutMillis = 5.seconds.inWholeMilliseconds }
-          }
-        } catch (e: Exception) {
-          logger
-            .atFine()
-            .withCause(e)
-            .log("Failed to check in with EmuLinker-K master API at URL %s", url)
-          return null
+          this.setBody(Json.encodeToString(request))
+          this.timeout { requestTimeoutMillis = 5.seconds.inWholeMilliseconds }
         }
-      if (response.status != HttpStatusCode.OK) return null
-
-      return try {
-        lenientJson.decodeFromString(response.bodyAsText())
       } catch (e: Exception) {
         logger
-          .atWarning()
+          .atFine()
           .withCause(e)
-          .atMostEvery(6, HOURS)
-          .log("Failed to parse to CheckinResponse: %s", response.bodyAsText())
-        null
+          .log("Failed to check in with EmuLinker-K master API at URL %s", url)
+        return null
       }
+    if (response.status != HttpStatusCode.OK) return null
+
+    return try {
+      lenientJson.decodeFromString(response.bodyAsText())
+    } catch (e: Exception) {
+      logger
+        .atWarning()
+        .withCause(e)
+        .atMostEvery(6, HOURS)
+        .log("Failed to parse to CheckinResponse: %s", response.bodyAsText())
+      null
     }
   }
 
