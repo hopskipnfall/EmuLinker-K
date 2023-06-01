@@ -83,7 +83,10 @@ constructor(
             this.timeout { requestTimeoutMillis = 5.seconds.inWholeMilliseconds }
           }
         } catch (e: Exception) {
-          logger.atFine().withCause(e).log("Failed to check in with EmuLinker-K master API at URL %s", url)
+          logger
+            .atFine()
+            .withCause(e)
+            .log("Failed to check in with EmuLinker-K master API at URL %s", url)
           return false
         }
 
