@@ -482,14 +482,10 @@ internal constructor(
       userImpl.addEvent(
         InfoMessageEvent(user, EmuLang.getString("KailleraServerImpl.AdminWelcomeMessage"))
       )
-      // Display the update prompt if there is one.
-      AppModule.updateMessageForMods?.let { message ->
-        threadSleep(20.milliseconds)
-        userImpl.addEvent(InfoMessageEvent(user, "===================================="))
+      // Display messages to admins if they exist.
+      AppModule.messagesToAdmins.forEach { message ->
         threadSleep(20.milliseconds)
         userImpl.addEvent(InfoMessageEvent(user, message))
-        threadSleep(20.milliseconds)
-        userImpl.addEvent(InfoMessageEvent(user, "===================================="))
       }
     }
     addEvent(UserJoinedEvent(this, user))

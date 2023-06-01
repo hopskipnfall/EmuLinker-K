@@ -32,7 +32,8 @@ import org.emulinker.util.LoggingUtils.debugLog
  * This is the main server for new connections (usually on 27888).
  */
 @Singleton
-class ConnectController
+// Open for testing.
+open class ConnectController
 @Inject
 internal constructor(
   private val threadPool: ThreadPoolExecutor,

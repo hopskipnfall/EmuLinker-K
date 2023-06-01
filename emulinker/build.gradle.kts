@@ -62,6 +62,8 @@ dependencies {
   testImplementation("com.google.truth:truth:1.1.3")
   testImplementation(kotlin("test"))
   testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.6.4")
+  testImplementation("org.mockito.kotlin:mockito-kotlin:4.1.0")
+  testImplementation("io.ktor:ktor-client-mock:$ktorVersion")
 }
 
 group = "org.emulinker"
