@@ -1,6 +1,7 @@
 package org.emulinker.kaillera.master.client
 
 import com.google.common.flogger.FluentLogger
+import javax.inject.Inject
 import org.apache.commons.httpclient.HttpClient
 import org.apache.commons.httpclient.HttpMethod
 import org.apache.commons.httpclient.HttpStatus
@@ -13,7 +14,9 @@ import org.emulinker.kaillera.model.GameStatus
 import org.emulinker.kaillera.model.KailleraServer
 import org.emulinker.kaillera.release.ReleaseInfo
 
-class KailleraMasterUpdateTask(
+class KailleraMasterUpdateTask
+@Inject
+constructor(
   private val publicInfo: PublicServerInformation,
   private val connectController: ConnectController,
   private val kailleraServer: KailleraServer,

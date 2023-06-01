@@ -2,6 +2,7 @@ package org.emulinker.kaillera.master.client
 
 import com.google.common.flogger.FluentLogger
 import java.util.*
+import javax.inject.Inject
 import org.apache.commons.httpclient.HttpClient
 import org.apache.commons.httpclient.HttpStatus
 import org.apache.commons.httpclient.NameValuePair
@@ -12,7 +13,9 @@ import org.emulinker.kaillera.model.GameStatus
 import org.emulinker.kaillera.model.KailleraServer
 import org.emulinker.kaillera.release.ReleaseInfo
 
-class EmuLinkerMasterUpdateTask(
+class EmuLinkerMasterUpdateTask
+@Inject
+constructor(
   private val publicInfo: PublicServerInformation,
   private val connectController: ConnectController,
   private val kailleraServer: KailleraServer,
