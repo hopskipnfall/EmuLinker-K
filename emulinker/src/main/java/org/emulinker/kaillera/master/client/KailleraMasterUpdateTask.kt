@@ -57,7 +57,7 @@ constructor(
         NameValuePair("ip", publicInfo.connectAddress),
         NameValuePair("url", publicInfo.website),
       )
-    val kailleraTouch: HttpMethod = GetMethod("http://kaillerareborn.2manygames.fr/touch_list.php")
+    val kailleraTouch: HttpMethod = GetMethod("http://www.kaillera.com/touch_server.php")
     kailleraTouch.setQueryString(params)
     kailleraTouch.setRequestHeader("Kaillera-games", createdGames.toString())
     kailleraTouch.setRequestHeader("Kaillera-wgames", waitingGames.toString())
