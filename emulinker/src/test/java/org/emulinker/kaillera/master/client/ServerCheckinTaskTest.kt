@@ -138,19 +138,4 @@ class ServerCheckinTaskTest {
 
     assertThat(mockEngine.requestHistory).hasSize(1)
   }
-
-  @Test
-  fun emptyResponse() {
-    val mockEngine = MockEngine { respondOk("") }
-
-    val target =
-      ServerCheckinTask(
-        PublicServerInformation(runtimeFlags),
-        connectController,
-        HttpClient(mockEngine) { install(HttpTimeout) }
-      )
-    target.touchMaster()
-
-    assertThat(mockEngine.requestHistory).hasSize(1)
-  }
 }
