@@ -51,13 +51,13 @@ constructor(
         NameValuePair("port", connectController.boundPort.toString()),
         NameValuePair("nbusers", kailleraServer.users.size.toString()),
         NameValuePair("maxconn", kailleraServer.maxUsers.toString()),
-        NameValuePair("version", "ESF" + releaseInfo.versionString),
+        NameValuePair("version", "ELK" + releaseInfo.versionString),
         NameValuePair("nbgames", kailleraServer.games.size.toString()),
         NameValuePair("location", publicInfo.location),
         NameValuePair("ip", publicInfo.connectAddress),
         NameValuePair("url", publicInfo.website),
       )
-    val kailleraTouch: HttpMethod = GetMethod("http://www.kaillera.com/touch_server.php")
+    val kailleraTouch: HttpMethod = GetMethod("http://kaillerareborn.2manygames.fr/touch_list.php")
     kailleraTouch.setQueryString(params)
     kailleraTouch.setRequestHeader("Kaillera-games", createdGames.toString())
     kailleraTouch.setRequestHeader("Kaillera-wgames", waitingGames.toString())

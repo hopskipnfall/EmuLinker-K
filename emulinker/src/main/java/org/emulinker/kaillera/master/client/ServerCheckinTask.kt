@@ -31,6 +31,7 @@ data class ServerInfo(
   val location: String,
   val charset: String,
   val version: String,
+  val isDevBuild: Boolean,
 )
 
 @Serializable data class CheckinRequest(val serverInfo: ServerInfo)
@@ -83,6 +84,7 @@ constructor(
           location = publicServerInfo.location,
           charset = AppModule.charsetDoNotUse.name,
           version = CompiledFlags.PROJECT_VERSION,
+          isDevBuild = CompiledFlags.DEBUG_BUILD
         )
       )
 

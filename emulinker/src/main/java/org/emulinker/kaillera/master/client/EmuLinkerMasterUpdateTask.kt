@@ -52,7 +52,7 @@ constructor(
           "maxUsers" to kailleraServer.maxUsers.toString(),
           "numGames" to kailleraServer.games.size.toString(),
           "maxGames" to kailleraServer.maxGames.toString(),
-          "version" to releaseInfo.shortVersionString,
+          "version" to "ELK" + releaseInfo.shortVersionString,
         )
         .map { NameValuePair(it.first, it.second) }
         .toTypedArray()
