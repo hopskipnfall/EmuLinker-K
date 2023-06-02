@@ -6,6 +6,7 @@ import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respondOk
 import io.ktor.client.plugins.HttpTimeout
 import kotlin.time.Duration.Companion.seconds
+import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.emulinker.config.RuntimeFlags
@@ -71,7 +72,7 @@ class ServerCheckinTaskTest {
   }
 
   @Test
-  fun goldenCase() {
+  fun goldenCase(): Unit = runTest {
     val mockEngine = MockEngine { respondOk(Json.encodeToString(CheckinResponse())) }
 
     ServerCheckinTask(
@@ -85,7 +86,7 @@ class ServerCheckinTaskTest {
   }
 
   @Test
-  fun messagesAvailable() {
+  fun messagesAvailable(): Unit = runTest {
     val mockEngine = MockEngine {
       respondOk(Json.encodeToString(CheckinResponse(messagesToAdmins = listOf("hello", "world"))))
     }
@@ -105,7 +106,7 @@ class ServerCheckinTaskTest {
   }
 
   @Test
-  fun responseContainsUnknownFields() {
+  fun responseContainsUnknownFields(): Unit = runTest {
     val mockEngine = MockEngine {
       respondOk("""{"messagesToAdmins":["hello","world"],"strangeField":"42"}""")
     }
@@ -125,7 +126,7 @@ class ServerCheckinTaskTest {
   }
 
   @Test
-  fun missingAllFields() {
+  fun missingAllFields(): Unit = runTest {
     val mockEngine = MockEngine { respondOk("{}") }
 
     val target =

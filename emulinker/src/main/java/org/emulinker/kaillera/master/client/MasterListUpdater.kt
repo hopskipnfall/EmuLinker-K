@@ -8,6 +8,7 @@ import javax.inject.Singleton
 import kotlin.concurrent.schedule
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
+import kotlinx.coroutines.runBlocking
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.master.StatsCollector
 import org.emulinker.util.Executable
@@ -70,11 +71,11 @@ internal constructor(
       delay = 10.seconds.inWholeMilliseconds,
       period = REPORTING_INTERVAL.inWholeMilliseconds
     ) {
-      logger.atFine().log("MasterListUpdater touching masters...")
-      serverCheckinTask.touchMaster()
-      if (flags.touchEmulinker) emuLinkerMasterUpdateTask.touchMaster()
-      if (flags.touchKaillera) kailleraMasterUpdateTask.touchMaster()
-
+      runBlocking {
+        serverCheckinTask.touchMaster()
+        if (flags.touchEmulinker) emuLinkerMasterUpdateTask.touchMaster()
+        if (flags.touchKaillera) kailleraMasterUpdateTask.touchMaster()
+      }
       statsCollector.clearStartedGamesList()
     }
   }

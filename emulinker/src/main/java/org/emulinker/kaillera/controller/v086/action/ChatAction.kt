@@ -104,7 +104,7 @@ class ChatAction @Inject internal constructor(private val adminCommandAction: Ad
             InformationMessage(
               clientHandler.nextMessageNumber,
               "server",
-              "VERSION: ${releaseInfo.productName}: ${releaseInfo.versionString}: ${EmuUtil.toSimpleUtcDatetime(releaseInfo.buildDate)}"
+              "VERSION: ${releaseInfo.productName}: ${releaseInfo.version}: ${EmuUtil.toSimpleUtcDatetime(releaseInfo.buildDate)}"
             )
           )
         } catch (e: Exception) {}
