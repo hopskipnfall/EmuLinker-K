@@ -2,7 +2,6 @@ package org.emulinker.kaillera.release
 
 import java.time.Instant
 import javax.inject.Inject
-import javax.inject.Singleton
 import org.emulinker.kaillera.pico.CompiledFlags.BUILD_DATE
 import org.emulinker.kaillera.pico.CompiledFlags.PROJECT_NAME
 import org.emulinker.kaillera.pico.CompiledFlags.PROJECT_URL
@@ -13,13 +12,12 @@ import org.emulinker.util.EmuUtil
  * Provides release and build information for the EmuLinker project. This class also formats a
  * welcome message for printing at server startup.
  */
-@Singleton
 class ReleaseInfo @Inject constructor() {
   val productName: String = PROJECT_NAME
 
-  val versionString: String = PROJECT_VERSION
+  val version: String = PROJECT_VERSION
 
-  val shortVersionString: String = "ELK$versionString"
+  val versionWithElkPrefix: String = "ELK$version"
 
   val buildDate: Instant = BUILD_DATE
 
@@ -32,7 +30,7 @@ class ReleaseInfo @Inject constructor() {
    * server startup.
    */
   val welcome =
-    """// $productName version $versionString (${EmuUtil.toSimpleUtcDatetime(buildDate)}) 
+    """// $productName version $version (${EmuUtil.toSimpleUtcDatetime(buildDate)}) 
 // $licenseInfo
 // For the most up-to-date information please visit: $websiteString"""
 }

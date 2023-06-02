@@ -1,18 +1,20 @@
 package org.emulinker.kaillera.master.client
 
 import com.google.common.flogger.FluentLogger
+import io.ktor.client.HttpClient
+import io.ktor.client.plugins.timeout
+import io.ktor.client.request.header
+import io.ktor.client.request.parameter
+import io.ktor.client.request.request
+import io.ktor.http.HttpStatusCode
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
-import org.apache.commons.httpclient.HttpClient
-import org.apache.commons.httpclient.HttpMethod
-import org.apache.commons.httpclient.HttpStatus
-import org.apache.commons.httpclient.NameValuePair
-import org.apache.commons.httpclient.methods.GetMethod
+import kotlin.time.Duration.Companion.seconds
 import org.emulinker.kaillera.controller.connectcontroller.ConnectController
 import org.emulinker.kaillera.master.PublicServerInformation
 import org.emulinker.kaillera.master.StatsCollector
 import org.emulinker.kaillera.model.GameStatus
 import org.emulinker.kaillera.model.KailleraServer
-import org.emulinker.kaillera.release.ReleaseInfo
 
 class KailleraMasterUpdateTask
 @Inject
@@ -21,12 +23,10 @@ constructor(
   private val connectController: ConnectController,
   private val kailleraServer: KailleraServer,
   private val statsCollector: StatsCollector,
-  private val releaseInfo: ReleaseInfo
+  private val httpClient: HttpClient,
 ) : MasterListUpdateTask {
 
-  private val httpClient: HttpClient = HttpClient()
-
-  override fun touchMaster() {
+  override suspend fun touchMaster() {
     val createdGamesList = statsCollector.getStartedGamesList()
 
     val createdGames = StringBuilder()
@@ -38,53 +38,61 @@ constructor(
       }
       createdGamesList.clear()
     }
-    val waitingGames = StringBuilder()
-    for (game in kailleraServer.games) {
-      if (game.status != GameStatus.WAITING) continue
-      waitingGames.append(
-        "${game.id}|${game.romName}|${game.owner.name}|${game.owner.clientType}|${game.players.size}|"
-      )
-    }
-    val params =
-      arrayOf(
-        NameValuePair("servername", publicInfo.serverName),
-        NameValuePair("port", connectController.boundPort.toString()),
-        NameValuePair("nbusers", kailleraServer.users.size.toString()),
-        NameValuePair("maxconn", kailleraServer.maxUsers.toString()),
-        NameValuePair("version", "ELK" + releaseInfo.versionString),
-        NameValuePair("nbgames", kailleraServer.games.size.toString()),
-        NameValuePair("location", publicInfo.location),
-        NameValuePair("ip", publicInfo.connectAddress),
-        NameValuePair("url", publicInfo.website),
-      )
-    val kailleraTouch: HttpMethod = GetMethod("http://www.kaillera.com/touch_server.php")
-    kailleraTouch.setQueryString(params)
-    kailleraTouch.setRequestHeader("Kaillera-games", createdGames.toString())
-    kailleraTouch.setRequestHeader("Kaillera-wgames", waitingGames.toString())
+
     try {
-      val statusCode = httpClient.executeMethod(kailleraTouch)
-      if (statusCode != HttpStatus.SC_OK) {
-        logger.atSevere().log("Failed to touch Kaillera Master: %s", kailleraTouch.statusLine)
+      val response =
+        httpClient.request(TOUCH_LIST_URL) {
+          this.method = io.ktor.http.HttpMethod.Get
+
+          this.timeout {
+            this.connectTimeoutMillis = 5.seconds.inWholeMilliseconds
+            this.requestTimeoutMillis = 5.seconds.inWholeMilliseconds
+          }
+
+          this.parameter("servername", publicInfo.serverName)
+          this.parameter("port", connectController.boundPort)
+          this.parameter("nbusers", kailleraServer.users.size)
+          this.parameter("maxconn", kailleraServer.maxUsers)
+          // I want to use `releaseInfo.versionWithElkPrefix` here, but for some reason this RPC
+          // fails to write to the db. So we just write elk (lowercase in protest :P ).
+          this.parameter("version", "elk")
+          this.parameter("nbgames", kailleraServer.games.size)
+          this.parameter("location", publicInfo.location)
+          // If this doesn't "look right" to the server it will silently not show up in the server
+          // list.
+          this.parameter("ip", publicInfo.connectAddress)
+          this.parameter("url", publicInfo.website)
+
+          this.header("Kaillera-games", createdGames.toString())
+          this.header(
+            "Kaillera-wgames",
+            kailleraServer.games
+              .filter { it.status == GameStatus.WAITING }
+              .joinToString(separator = "") {
+                "${it.id}|${it.romName}|${it.owner.name}|${it.owner.clientType}|${it.players.size}|"
+              }
+          )
+        }
+      if (response.status != HttpStatusCode.OK) {
+        logger
+          .atWarning()
+          .atMostEvery(6, TimeUnit.HOURS)
+          .log("Failed to touch Kaillera Master: %s", response)
       } else {
-        logger.atFine().log("Touching Kaillera Master done")
+        logger.atFine().log("Touching Kaillera Master done: %s", response)
       }
     } catch (e: Exception) {
-      logger.atSevere().withCause(e).log("Failed to touch Kaillera Master")
-    } finally {
-      try {
-        kailleraTouch.releaseConnection()
-      } catch (e: Exception) {
-        logger.atSevere().withCause(e).log("Failed to release connection")
-      }
+      logger
+        .atWarning()
+        .atMostEvery(6, TimeUnit.HOURS)
+        .withCause(e)
+        .log("Failed to touch Kaillera Master")
     }
-  }
-
-  init {
-    httpClient.setConnectionTimeout(5000)
-    httpClient.setTimeout(5000)
   }
 
   companion object {
     private val logger = FluentLogger.forEnclosingClass()
+
+    private const val TOUCH_LIST_URL = "http://www.kaillera.com/touch_server.php"
   }
 }

@@ -427,7 +427,7 @@ internal constructor(
     userImpl.addEvent(
       InfoMessageEvent(
         user,
-        "${releaseInfo.productName} v${releaseInfo.versionString}: ${releaseInfo.websiteString}"
+        "${releaseInfo.productName} v${releaseInfo.version}: ${releaseInfo.websiteString}"
       )
     )
     threadSleep(20.milliseconds)

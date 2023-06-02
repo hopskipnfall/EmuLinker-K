@@ -41,10 +41,7 @@ dependencies {
   api("org.apache.logging.log4j:log4j-api:2.20.0")
 
   api("org.mortbay.jetty:jetty:4.2.12")
-
   api("commons-configuration:commons-configuration:1.1")
-  api("commons-httpclient:commons-httpclient:3.0-rc3")
-
   api("commons-pool:commons-pool:1.2")
 
   val ktorVersion = "2.3.0"

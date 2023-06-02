@@ -883,7 +883,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
           "VERSION: " +
             releaseInfo.productName +
             ": " +
-            releaseInfo.versionString +
+            releaseInfo.version +
             ": " +
             EmuUtil.toSimpleUtcDatetime(releaseInfo.buildDate)
         )

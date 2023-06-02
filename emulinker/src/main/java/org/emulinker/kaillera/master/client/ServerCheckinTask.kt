@@ -13,7 +13,6 @@ import io.ktor.utils.io.charsets.name
 import java.util.concurrent.TimeUnit.HOURS
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.seconds
-import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -25,7 +24,7 @@ import org.emulinker.kaillera.pico.CompiledFlags
 @Serializable
 data class ServerInfo(
   val name: String,
-  val ip: String,
+  val connectAddress: String,
   val connectPort: Int,
   val website: String,
   val location: String,
@@ -51,8 +50,7 @@ constructor(
   private val httpClient: HttpClient
 ) : MasterListUpdateTask {
 
-  // TODO(nue): This should be a suspend method.
-  override fun touchMaster() = runBlocking {
+  override suspend fun touchMaster() {
     // The RPC is hosted using AWS Lambda, and there's no way to attach it to a custom URL without
     // using API Gateway, which costs money. By using the lambda URL directly and a placeholder URL
     // as a backup I save ~12-30 USD per year.
@@ -65,7 +63,7 @@ constructor(
         .log(
           "Failed to touch EmuLinker-K central server. Check DEBUG-level logs for more info. Likely your server does not have outgoing HTTP permissions."
         )
-      return@runBlocking
+      return
     }
 
     logger.atFine().log("CheckinResponse: %s", response)
@@ -78,7 +76,7 @@ constructor(
       CheckinRequest(
         ServerInfo(
           name = publicServerInfo.serverName,
-          ip = publicServerInfo.connectAddress,
+          connectAddress = publicServerInfo.connectAddress,
           connectPort = connectController.boundPort!!,
           website = publicServerInfo.website,
           location = publicServerInfo.location,
@@ -94,7 +92,11 @@ constructor(
           this.method = HttpMethod.Post
 
           this.setBody(Json.encodeToString(request))
-          this.timeout { requestTimeoutMillis = 5.seconds.inWholeMilliseconds }
+
+          this.timeout {
+            this.connectTimeoutMillis = 5.seconds.inWholeMilliseconds
+            this.requestTimeoutMillis = 5.seconds.inWholeMilliseconds
+          }
         }
       } catch (e: Exception) {
         logger
