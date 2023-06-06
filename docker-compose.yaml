@@ -1,24 +1,39 @@
----
-version: "3.7"
 services:
+  develop:
+    container_name: hopskipnfall-emulinker-k_develop
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: develop
+      args:
+        GRADLE_VERSION: 8.1.1
+        JDK_VERSION: 17
+        KOTLIN_DEBUG_ADAPTER: https://github.com/fwcd/kotlin-debug-adapter.git
+        KOTLIN_LANGUAGE_SERVER: https://github.com/fwcd/kotlin-language-server.git
+    ports:
+      - "27888-27999:27888-27999/udp"
+    tty: true
+    volumes:
+      - ./:/app
+
   kaillera_server:
     image: "maven:3.8-jdk-11"
     command: "sh -c \"mvn -f /home/app/emulinker/pom.xml compile exec:java\""
     working_dir: "/emulinker"
     ports:
-    - "27888-27999:27888-27999/udp"
+      - "27888-27999:27888-27999/udp"
     volumes:
-    - "./:/home/app/"
+      - "./:/home/app/"
   graphite:
     profiles:
-    - "debug"
+      - "debug"
     image: "graphiteapp/graphite-statsd"
     ports:
-    - "80:80"
-    - "2003-2004:2003-2004"
-    - "2023-2024:2023-2024"
-    - "8125:8125/udp"
-    - "8126:8126"
+      - "80:80"
+      - "2003-2004:2003-2004"
+      - "2023-2024:2023-2024"
+      - "8125:8125/udp"
+      - "8126:8126"
     deploy:
       restart_policy:
         condition: "any"

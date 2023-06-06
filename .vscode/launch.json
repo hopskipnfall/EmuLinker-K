@@ -1,0 +1,14 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "kotlin",
+            "request": "launch",
+            "name": "Build & Debug",
+            "projectRoot": "${workspaceFolder}/emulinker",
+            "mainClass": "org.emulinker.kaillera.pico.ServerMainKt",
+            "vmArguments": "-DLOG_DIRECTORY=/tmp",
+            "preLaunchTask": "gradle: emulinker:build",
+        }
+    ]
+}

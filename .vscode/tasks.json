@@ -1,0 +1,47 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "type": "gradle",
+            "id": "emulinker:buildemulinker",
+            "script": "emulinker:build",
+            "description": "Assembles and tests this project.",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "project": "emulinker",
+            "buildFile": "${workspaceFolder}/emulinker/build.gradle.kts",
+            "rootProject": "emulinker-k",
+            "projectFolder": "${workspaceFolder}",
+            "workspaceFolder": "${workspaceFolder}",
+            "args": "",
+            "javaDebug": false,
+            "problemMatcher": [
+                "$gradle"
+            ],
+            "label": "gradle: emulinker:build"
+        },
+        {
+            "type": "gradle",
+            "id": "emulinker:testemulinker",
+            "script": "emulinker:test",
+            "description": "Runs the test suite.",
+            "group": {
+                "kind": "test",
+                "isDefault": true
+            },
+            "project": "emulinker",
+            "buildFile": "${workspaceFolder}/emulinker/build.gradle.kts",
+            "rootProject": "emulinker-k",
+            "projectFolder": "${workspaceFolder}",
+            "workspaceFolder": "${workspaceFolder}",
+            "args": "",
+            "javaDebug": false,
+            "problemMatcher": [
+                "$gradle"
+            ],
+            "label": "gradle: emulinker:test"
+        },
+    ]
+}

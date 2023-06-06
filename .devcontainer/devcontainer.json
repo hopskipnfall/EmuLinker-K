@@ -1,0 +1,22 @@
+{
+    "name": "hopskipnfall-emulinker-k",
+    "dockerComposeFile": "../docker-compose.yaml",
+    "service": "develop",
+    "workspaceFolder": "/app",
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "fwcd.kotlin",
+                "ms-azuretools.vscode-docker",
+                "vscjava.vscode-gradle",
+                "EditorConfig.EditorConfig"
+            ],
+            "settings": {
+                "kotlin.debugAdapter.enabled": true,
+                "kotlin.debugAdapter.path": "/home/gradle/bin/kotlin-debug-adapter",
+                "kotlin.languageServer.enabled": true,
+                "kotlin.languageServer.path": "/home/gradle/bin/kotlin-language-server"
+            }
+        }
+    }
+}
