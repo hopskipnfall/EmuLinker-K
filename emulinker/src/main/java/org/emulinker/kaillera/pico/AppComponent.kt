@@ -11,6 +11,7 @@ import org.emulinker.kaillera.controller.connectcontroller.ConnectController
 import org.emulinker.kaillera.master.client.MasterListUpdater
 import org.emulinker.kaillera.model.KailleraServer
 import org.emulinker.kaillera.release.ReleaseInfo
+import org.emulinker.net.UdpSocketProvider
 
 @Singleton
 @Component(modules = [AppModule::class])
@@ -24,4 +25,5 @@ abstract class AppComponent {
   abstract val masterListUpdater: MasterListUpdater
   abstract val metricRegistry: MetricRegistry
   abstract val runtimeFlags: RuntimeFlags
+  abstract val udpSocketProvider: UdpSocketProvider
 }

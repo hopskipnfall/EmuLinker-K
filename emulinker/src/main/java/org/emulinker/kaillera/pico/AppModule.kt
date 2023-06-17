@@ -91,11 +91,7 @@ abstract class AppModule {
           .build()
       )
 
-    @Provides
-    @Singleton
-    fun provideConfiguration(): Configuration {
-      return EmuLinkerPropertiesConfig()
-    }
+    @Provides @Singleton fun provideConfiguration(): Configuration = EmuLinkerPropertiesConfig()
 
     @Provides
     @Singleton

@@ -26,6 +26,7 @@ class ServerCheckinTaskTest {
       allowSinglePlayer = true,
       charset = Charsets.ISO_8859_1,
       chatFloodTime = 42,
+      connectControllerBufferSize = 42,
       connectionTypes = emptyList(),
       coreThreadPoolSize = 5,
       createGameFloodTime = 42,
@@ -47,6 +48,7 @@ class ServerCheckinTaskTest {
       maxUsers = 30,
       metricsEnabled = false,
       metricsLoggingFrequency = 30.seconds,
+      requestTimeout = 2.seconds,
       serverAddress = "",
       serverLocation = "Unknown",
       serverName = "Emulinker Server",
@@ -61,6 +63,7 @@ class ServerCheckinTaskTest {
       twitterOAuthConsumerSecret = "",
       twitterPreventBroadcastNameSuffixes = emptyList(),
       v086BufferSize = 4096,
+      numIoDispatchers = 42,
     )
   private val connectController = mock<ConnectController>()
 

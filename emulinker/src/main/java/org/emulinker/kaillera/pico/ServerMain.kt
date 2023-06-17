@@ -10,6 +10,7 @@ import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.concurrent.TimeUnit.*
+import kotlinx.coroutines.IO_PARALLELISM_PROPERTY_NAME
 
 private val logger = FluentLogger.forEnclosingClass()
 
@@ -33,6 +34,9 @@ fun main() {
   }
 
   val component = DaggerAppComponent.create()
+  val flags = component.runtimeFlags
+  // Change number of Dispatchers.IO coroutines.
+  System.setProperty(IO_PARALLELISM_PROPERTY_NAME, flags.numIoDispatchers.toString())
   // Use log4j as the flogger backend.
   System.setProperty(
     "flogger.backend_factory",
@@ -51,13 +55,12 @@ fun main() {
       DateTimeFormatter.ISO_ZONED_DATE_TIME.withZone(ZoneId.systemDefault()).format(Instant.now())
     )
   component.kailleraServerController.start()
-  component.server.start()
+  component.server.start(component.udpSocketProvider)
   component.kailleraServer.start()
   component.masterListUpdater.start()
   val metrics = component.metricRegistry
   metrics.registerAll(ThreadStatesGaugeSet())
   //  metrics.registerAll(MemoryUsageGaugeSet())
-  val flags = component.runtimeFlags
   if (flags.metricsEnabled) {
     ConsoleReporter.forRegistry(metrics)
       .convertRatesTo(SECONDS)

@@ -15,22 +15,22 @@ abstract class PrivateUDPServer(
   val remoteInetAddress: InetAddress,
   metrics: MetricRegistry,
   @Named("listeningOnPortsCounter") listeningOnPortsCounter: Counter
-) : UDPServer(shutdownOnExit, metrics, listeningOnPortsCounter) {
+) : UDPServer(listeningOnPortsCounter) {
 
   private val clientRequestTimer: Timer
 
-  var remoteSocketAddress: InetSocketAddress? = null
-    private set
+  private lateinit var remoteSocketAddress: InetSocketAddress
 
   override fun handleReceived(buffer: ByteBuffer, remoteSocketAddress: InetSocketAddress) {
-    if (this.remoteSocketAddress == null) this.remoteSocketAddress = remoteSocketAddress
-    else if (remoteSocketAddress != this.remoteSocketAddress) {
+    if (!this::remoteSocketAddress.isInitialized) {
+      this.remoteSocketAddress = remoteSocketAddress
+    } else if (remoteSocketAddress != this.remoteSocketAddress) {
       logger
         .atWarning()
         .log(
           "Rejecting packet received from wrong address: %s != %s",
           formatSocketAddress(remoteSocketAddress),
-          formatSocketAddress(this.remoteSocketAddress!!)
+          formatSocketAddress(this.remoteSocketAddress)
         )
       return
     }
@@ -39,7 +39,7 @@ abstract class PrivateUDPServer(
 
   protected abstract fun handleReceived(buffer: ByteBuffer)
 
-  protected fun send(buffer: ByteBuffer?) {
+  protected fun send(buffer: ByteBuffer) {
     super.send(buffer, remoteSocketAddress)
   }
 

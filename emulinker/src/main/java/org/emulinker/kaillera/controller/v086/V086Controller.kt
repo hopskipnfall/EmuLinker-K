@@ -81,6 +81,7 @@ import org.emulinker.kaillera.model.event.UserQuitGameEvent
 import org.emulinker.kaillera.model.exception.NewConnectionException
 import org.emulinker.kaillera.model.exception.ServerFullException
 import org.emulinker.net.BindException
+import org.emulinker.net.UdpSocketProvider
 import org.emulinker.util.EmuUtil.threadSleep
 
 /** High level logic for handling messages on a port. Not tied to an individual user. */
@@ -175,7 +176,11 @@ internal constructor(
    * over a separate port.
    */
   @Throws(ServerFullException::class, NewConnectionException::class)
-  override fun newConnection(clientSocketAddress: InetSocketAddress, protocol: String): Int {
+  override fun newConnection(
+    udpSocketProvider: UdpSocketProvider,
+    clientSocketAddress: InetSocketAddress,
+    protocol: String
+  ): Int {
     if (!isRunning) throw NewConnectionException("Controller is not running")
     val clientHandler = v086ClientHandlerFactory.create(clientSocketAddress, this)
     val user = server.newConnection(clientSocketAddress, protocol, clientHandler)
@@ -189,7 +194,7 @@ internal constructor(
         val port = portInteger.toInt()
         logger.atInfo().log("Allocating private port %d for: %s", port, user)
         try {
-          clientHandler.bind(port)
+          clientHandler.bind(udpSocketProvider, port)
           boundPort = port
           break
         } catch (e: BindException) {
@@ -212,7 +217,7 @@ internal constructor(
       clientHandler.stop()
       throw NewConnectionException("Failed to bind!")
     }
-    clientHandler.start(user!!)
+    clientHandler.start(user)
     return boundPort
   }
 
