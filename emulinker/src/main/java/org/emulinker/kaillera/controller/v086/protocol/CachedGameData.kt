@@ -6,6 +6,14 @@ import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.util.UnsignedUtil.getUnsignedByte
 import org.emulinker.util.UnsignedUtil.putUnsignedByte
 
+/**
+ * Fills the same function as [GameData] but encodes a 0-based cache index ([key]) corresponding to
+ * game data that has already been sent.
+ *
+ * This message is sent by both the server and client.
+ *
+ * Message type ID: `0x13`.
+ */
 data class CachedGameData
 @Throws(MessageFormatException::class)
 constructor(override val messageNumber: Int, val key: Int) : V086Message() {

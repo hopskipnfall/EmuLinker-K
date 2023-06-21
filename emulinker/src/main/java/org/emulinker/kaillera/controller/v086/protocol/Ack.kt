@@ -15,6 +15,14 @@ sealed class Ack : V086Message() {
       V086Utils.Bytes.INTEGER +
       V086Utils.Bytes.INTEGER
 
+  /**
+   * This is effectively a ping response sent by the client when it receives a [ServerAck].
+   *
+   * This back and forth is used to establish a client's "ping" (millisecond delay) at login and to
+   * confirm that the client is still listening on the port.
+   *
+   * Message type ID: `0x06`.
+   */
   data class ClientAck(override val messageNumber: Int) : Ack() {
     override val messageTypeId = ID
 
@@ -27,6 +35,14 @@ sealed class Ack : V086Message() {
     }
   }
 
+  /**
+   * A message the server sends to the client, from which it expects a [ClientAck] in response.
+   *
+   * This back and forth is used to establish a client's "ping" (millisecond delay) at login and to
+   * confirm that the client is still listening on the port.
+   *
+   * Message type ID: `0x05`.
+   */
   data class ServerAck(override val messageNumber: Int) : Ack() {
     override val messageTypeId = ID
 

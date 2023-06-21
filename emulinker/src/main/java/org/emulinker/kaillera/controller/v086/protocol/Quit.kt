@@ -23,6 +23,7 @@ sealed class Quit : V086Message() {
     QuitSerializer.write(buffer, this)
   }
 
+  /** Message sent by the server to notify all clients that the user left the server. */
   data class QuitNotification(
     override val messageNumber: Int,
     val username: String,
