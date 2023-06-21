@@ -10,6 +10,11 @@ import org.emulinker.util.UnsignedUtil.putUnsignedShort
 sealed class CreateGame : V086Message() {
   abstract val romName: String
 
+  /**
+   * Server message indicating that a new game has been created.
+   *
+   * This message shares a message type with [CreateGameRequest]: `0x0A`.
+   */
   data class CreateGameNotification(
     override val messageNumber: Int,
     val username: String,
@@ -40,8 +45,13 @@ sealed class CreateGame : V086Message() {
     }
   }
 
-  data class CreateGameRequest
-  constructor(override val messageNumber: Int, override val romName: String) : CreateGame() {
+  /**
+   * Client message requesting to create a new game.
+   *
+   * This message shares a message type with [CreateGameRequest]: `0x0A`.
+   */
+  data class CreateGameRequest(override val messageNumber: Int, override val romName: String) :
+    CreateGame() {
     override val messageTypeId = ID
 
     private val username = ""

@@ -6,6 +6,16 @@ import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.util.UnsignedUtil.getUnsignedShort
 import org.emulinker.util.UnsignedUtil.putUnsignedShort
 
+/**
+ * A message sent by both the client and server, which contains game input data as a [ByteArray].
+ *
+ * After receiving a [GameData] message from all clients, the server concatenates the game data into
+ * a single array which is returned back to all clients. If an exact copy of the array has already
+ * been sent in the same direction (server to client or client to server), [CachedGameData] may be
+ * sent instead.
+ *
+ * Message type ID: `0x12`.
+ */
 data class GameData
 @Throws(MessageFormatException::class)
 constructor(override val messageNumber: Int, val gameData: ByteArray) : V086Message() {
