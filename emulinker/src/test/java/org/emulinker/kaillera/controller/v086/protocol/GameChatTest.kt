@@ -66,12 +66,12 @@ class GameChatTest : ProtocolBaseTest() {
       "00, 48, 65, 6C, 6C, 6F, 2C, 20, 77, 6F, 72, 6C, 64, 21, 00"
 
     private val GAME_CHAT_NOTIFICATION =
-      GameChat.GameChatNotification(
+      GameChatNotification(
         messageNumber = MESSAGE_NUMBER,
         username = "nue",
         message = "Hello, world!"
       )
     private val GAME_CHAT_REQUEST =
-      GameChat.GameChatRequest(messageNumber = MESSAGE_NUMBER, message = "Hello, world!")
+      GameChatRequest(messageNumber = MESSAGE_NUMBER, message = "Hello, world!")
   }
 }

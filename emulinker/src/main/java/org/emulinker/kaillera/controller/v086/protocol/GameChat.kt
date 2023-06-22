@@ -20,15 +20,6 @@ sealed class GameChat : V086Message() {
     GameChatSerializer.write(buffer, this)
   }
 
-  data class GameChatNotification
-  @Throws(MessageFormatException::class)
-  constructor(override val messageNumber: Int, val username: String, override val message: String) :
-    GameChat()
-
-  data class GameChatRequest
-  @Throws(MessageFormatException::class)
-  constructor(override val messageNumber: Int, override val message: String) : GameChat()
-
   companion object {
     const val ID: Byte = 0x08
 
@@ -68,3 +59,23 @@ sealed class GameChat : V086Message() {
     }
   }
 }
+
+/**
+ * Message sent by the server containing a game chat message.
+ *
+ * This shares a message type ID with [GameChatRequest]: `0x08`.
+ */
+data class GameChatNotification
+@Throws(MessageFormatException::class)
+constructor(override val messageNumber: Int, val username: String, override val message: String) :
+  GameChat(), ServerMessage
+
+/**
+ * Message sent by the client containing a game chat message.
+ *
+ * This shares a message type ID with [GameChatNotification]: `0x08`.
+ */
+data class GameChatRequest
+@Throws(MessageFormatException::class)
+constructor(override val messageNumber: Int, override val message: String) :
+  GameChat(), ClientMessage

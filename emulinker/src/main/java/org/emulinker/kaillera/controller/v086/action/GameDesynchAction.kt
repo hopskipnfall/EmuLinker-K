@@ -5,7 +5,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086ClientHandler
-import org.emulinker.kaillera.controller.v086.protocol.GameChat
+import org.emulinker.kaillera.controller.v086.protocol.GameChatNotification
 import org.emulinker.kaillera.model.event.GameDesynchEvent
 import org.emulinker.util.EmuLang
 
@@ -20,7 +20,7 @@ class GameDesynchAction @Inject internal constructor() : V086GameEventHandler<Ga
     handledEventCount++
     try {
       clientHandler.send(
-        GameChat.GameChatNotification(
+        GameChatNotification(
           clientHandler.nextMessageNumber,
           EmuLang.getString("GameDesynchAction.DesynchDetected"),
           event.message

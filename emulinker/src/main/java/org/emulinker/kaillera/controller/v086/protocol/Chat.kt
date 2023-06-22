@@ -4,7 +4,7 @@ import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.v086.V086Utils.getNumBytesPlusStopByte
 import org.emulinker.util.EmuUtil
 
-/** Message ID `0x07`. */
+/** Message type ID: `0x07`. */
 sealed class Chat : V086Message() {
   abstract val message: String
   override val messageTypeId = ID
@@ -19,13 +19,6 @@ sealed class Chat : V086Message() {
   public override fun writeBodyTo(buffer: ByteBuffer) {
     ChatSerializer.write(buffer, this)
   }
-
-  data class ChatNotification
-  constructor(override val messageNumber: Int, val username: String, override val message: String) :
-    Chat()
-
-  data class ChatRequest
-  constructor(override val messageNumber: Int, override val message: String) : Chat()
 
   companion object {
     const val ID: Byte = 0x07
@@ -64,3 +57,22 @@ sealed class Chat : V086Message() {
     }
   }
 }
+
+/**
+ * Message sent by the server containing a server chat message.
+ *
+ * This shares a message type ID with [ChatRequest]: `0x07`.
+ */
+data class ChatNotification(
+  override val messageNumber: Int,
+  val username: String,
+  override val message: String
+) : Chat(), ServerMessage
+
+/**
+ * Message sent by the client containing a server chat message.
+ *
+ * This shares a message type ID with [ChatNotification]: `0x07`.
+ */
+data class ChatRequest(override val messageNumber: Int, override val message: String) :
+  Chat(), ClientMessage

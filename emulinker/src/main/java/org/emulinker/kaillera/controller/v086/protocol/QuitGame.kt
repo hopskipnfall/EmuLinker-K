@@ -21,19 +21,6 @@ sealed class QuitGame : V086Message() {
         is QuitGameNotification -> this.username
       }.getNumBytesPlusStopByte() + V086Utils.Bytes.SHORT
 
-  data class QuitGameRequest(override val messageNumber: Int) : QuitGame()
-
-  data class QuitGameNotification(
-    override val messageNumber: Int,
-    val username: String,
-    val userId: Int
-  ) : QuitGame() {
-
-    init {
-      require(userId in 0..0xFFFF) { "UserID out of acceptable range: $userId" }
-    }
-  }
-
   companion object {
     const val ID: Byte = 0x0B
 
@@ -77,5 +64,28 @@ sealed class QuitGame : V086Message() {
         }
       )
     }
+  }
+}
+
+/**
+ * Message sent by the client to request to leave a game.
+ *
+ * Shares a message type ID with [QuitGameNotification]: `0x0B`.
+ */
+data class QuitGameRequest(override val messageNumber: Int) : QuitGame(), ClientMessage
+
+/**
+ * Message sent by the server to notify that a user has left the game.
+ *
+ * Shares a message type ID with [QuitGameRequest]: `0x0B`.
+ */
+data class QuitGameNotification(
+  override val messageNumber: Int,
+  val username: String,
+  val userId: Int
+) : QuitGame(), ServerMessage {
+
+  init {
+    require(userId in 0..0xFFFF) { "UserID out of acceptable range: $userId" }
   }
 }

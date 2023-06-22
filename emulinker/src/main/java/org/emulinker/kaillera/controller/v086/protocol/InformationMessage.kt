@@ -5,10 +5,15 @@ import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086Utils.getNumBytesPlusStopByte
 import org.emulinker.util.EmuUtil
 
+/**
+ * A message from the server containing text to be displayed to the user, including a source.
+ *
+ * Message type ID: `0x17`.
+ */
 data class InformationMessage
 @Throws(MessageFormatException::class)
 constructor(override val messageNumber: Int, val source: String, val message: String) :
-  V086Message() {
+  V086Message(), ServerMessage {
 
   override val messageTypeId = ID
 

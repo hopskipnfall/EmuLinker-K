@@ -6,7 +6,8 @@ import javax.inject.Singleton
 import kotlin.time.Duration.Companion.milliseconds
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086ClientHandler
-import org.emulinker.kaillera.controller.v086.protocol.QuitGame
+import org.emulinker.kaillera.controller.v086.protocol.QuitGameNotification
+import org.emulinker.kaillera.controller.v086.protocol.QuitGameRequest
 import org.emulinker.kaillera.lookingforgame.TwitterBroadcaster
 import org.emulinker.kaillera.model.event.UserQuitGameEvent
 import org.emulinker.kaillera.model.exception.CloseGameException
@@ -16,7 +17,7 @@ import org.emulinker.util.EmuUtil.threadSleep
 
 @Singleton
 class QuitGameAction @Inject constructor(private val lookingForGameReporter: TwitterBroadcaster) :
-  V086Action<QuitGame.QuitGameRequest>, V086GameEventHandler<UserQuitGameEvent> {
+  V086Action<QuitGameRequest>, V086GameEventHandler<UserQuitGameEvent> {
   override var actionPerformedCount = 0
     private set
   override var handledEventCount = 0
@@ -25,7 +26,7 @@ class QuitGameAction @Inject constructor(private val lookingForGameReporter: Twi
   override fun toString() = "QuitGameAction"
 
   @Throws(FatalActionException::class)
-  override fun performAction(message: QuitGame.QuitGameRequest, clientHandler: V086ClientHandler) {
+  override fun performAction(message: QuitGameRequest, clientHandler: V086ClientHandler) {
     actionPerformedCount++
     try {
       clientHandler.user.quitGame()
@@ -47,13 +48,13 @@ class QuitGameAction @Inject constructor(private val lookingForGameReporter: Twi
       val user = event.user
       if (!user.inStealthMode) {
         clientHandler.send(
-          QuitGame.QuitGameNotification(clientHandler.nextMessageNumber, user.name!!, user.id)
+          QuitGameNotification(clientHandler.nextMessageNumber, user.name!!, user.id)
         )
       }
       if (thisUser === user) {
         if (user.inStealthMode)
           clientHandler.send(
-            QuitGame.QuitGameNotification(clientHandler.nextMessageNumber, user.name!!, user.id)
+            QuitGameNotification(clientHandler.nextMessageNumber, user.name!!, user.id)
           )
       }
     } catch (e: MessageFormatException) {

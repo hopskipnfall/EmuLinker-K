@@ -7,6 +7,11 @@ import org.emulinker.util.EmuUtil
 import org.emulinker.util.UnsignedUtil.getUnsignedShort
 import org.emulinker.util.UnsignedUtil.putUnsignedShort
 
+/**
+ * Message sent by the server to notify all clients that a game's status has changed.
+ *
+ * Message type ID: `0x0E`.
+ */
 data class GameStatus
 @Throws(MessageFormatException::class)
 constructor(
@@ -16,7 +21,7 @@ constructor(
   val gameStatus: org.emulinker.kaillera.model.GameStatus,
   val numPlayers: Byte,
   val maxPlayers: Byte
-) : V086Message() {
+) : V086Message(), ServerMessage {
   override val messageTypeId = ID
 
   override val bodyBytes =

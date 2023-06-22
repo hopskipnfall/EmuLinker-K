@@ -5,13 +5,14 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086ClientHandler
-import org.emulinker.kaillera.controller.v086.protocol.PlayerDrop
+import org.emulinker.kaillera.controller.v086.protocol.PlayerDropNotification
+import org.emulinker.kaillera.controller.v086.protocol.PlayerDropRequest
 import org.emulinker.kaillera.model.event.UserDroppedGameEvent
 import org.emulinker.kaillera.model.exception.DropGameException
 
 @Singleton
 class DropGameAction @Inject internal constructor() :
-  V086Action<PlayerDrop.PlayerDropRequest>, V086GameEventHandler<UserDroppedGameEvent> {
+  V086Action<PlayerDropRequest>, V086GameEventHandler<UserDroppedGameEvent> {
   override var actionPerformedCount = 0
     private set
   override var handledEventCount = 0
@@ -20,10 +21,7 @@ class DropGameAction @Inject internal constructor() :
   override fun toString() = "DropGameAction"
 
   @Throws(FatalActionException::class)
-  override fun performAction(
-    message: PlayerDrop.PlayerDropRequest,
-    clientHandler: V086ClientHandler
-  ) {
+  override fun performAction(message: PlayerDropRequest, clientHandler: V086ClientHandler) {
     actionPerformedCount++
     try {
       clientHandler.user.dropGame()
@@ -41,7 +39,7 @@ class DropGameAction @Inject internal constructor() :
       // user.getName(), (byte) game.getPlayerNumber(user)));
       if (!user.inStealthMode)
         clientHandler.send(
-          PlayerDrop.PlayerDropNotification(
+          PlayerDropNotification(
             clientHandler.nextMessageNumber,
             user.name!!,
             playerNumber.toByte()

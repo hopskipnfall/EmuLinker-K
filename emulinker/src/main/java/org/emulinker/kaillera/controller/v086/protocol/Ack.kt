@@ -15,34 +15,10 @@ sealed class Ack : V086Message() {
       V086Utils.Bytes.INTEGER +
       V086Utils.Bytes.INTEGER
 
-  data class ClientAck(override val messageNumber: Int) : Ack() {
-    override val messageTypeId = ID
-
-    public override fun writeBodyTo(buffer: ByteBuffer) {
-      ClientAckSerializer.write(buffer, this)
-    }
-
-    companion object {
-      const val ID: Byte = 0x06
-    }
-  }
-
-  data class ServerAck(override val messageNumber: Int) : Ack() {
-    override val messageTypeId = ID
-
-    public override fun writeBodyTo(buffer: ByteBuffer) {
-      ServerAckSerializer.write(buffer, this)
-    }
-
-    companion object {
-      const val ID: Byte = 0x05
-    }
-  }
-
-  object ClientAckSerializer : MessageSerializer<Ack.ClientAck> {
+  object ClientAckSerializer : MessageSerializer<ClientAck> {
     override val messageTypeId: Byte = ClientAck.ID
 
-    override fun read(buffer: ByteBuffer, messageNumber: Int): MessageParseResult<Ack.ClientAck> {
+    override fun read(buffer: ByteBuffer, messageNumber: Int): MessageParseResult<ClientAck> {
       if (buffer.remaining() < 17) {
         return MessageParseResult.Failure("Failed byte count validation!")
       }
@@ -55,7 +31,7 @@ sealed class Ack : V086Message() {
       return MessageParseResult.Success(ClientAck(messageNumber))
     }
 
-    override fun write(buffer: ByteBuffer, message: Ack.ClientAck) {
+    override fun write(buffer: ByteBuffer, message: ClientAck) {
       buffer.put(0x00.toByte())
       buffer.putUnsignedInt(0L)
       buffer.putUnsignedInt(1L)
@@ -64,10 +40,10 @@ sealed class Ack : V086Message() {
     }
   }
 
-  object ServerAckSerializer : MessageSerializer<Ack.ServerAck> {
+  object ServerAckSerializer : MessageSerializer<ServerAck> {
     override val messageTypeId: Byte = ServerAck.ID
 
-    override fun read(buffer: ByteBuffer, messageNumber: Int): MessageParseResult<Ack.ServerAck> {
+    override fun read(buffer: ByteBuffer, messageNumber: Int): MessageParseResult<ServerAck> {
       if (buffer.remaining() < 17) {
         return MessageParseResult.Failure("Failed byte count validation!")
       }
@@ -86,12 +62,52 @@ sealed class Ack : V086Message() {
       return MessageParseResult.Success(ServerAck(messageNumber))
     }
 
-    override fun write(buffer: ByteBuffer, message: Ack.ServerAck) {
+    override fun write(buffer: ByteBuffer, message: ServerAck) {
       buffer.put(0x00.toByte())
       buffer.putUnsignedInt(0L)
       buffer.putUnsignedInt(1L)
       buffer.putUnsignedInt(2L)
       buffer.putUnsignedInt(3L)
     }
+  }
+}
+
+/**
+ * This is effectively a ping response sent by the client when it receives a [ServerAck].
+ *
+ * This back and forth is used to establish a client's "ping" (millisecond delay) at login and to
+ * confirm that the client is still listening on the port.
+ *
+ * Message type ID: `0x06`.
+ */
+data class ClientAck(override val messageNumber: Int) : Ack(), ClientMessage {
+  override val messageTypeId = ID
+
+  public override fun writeBodyTo(buffer: ByteBuffer) {
+    ClientAckSerializer.write(buffer, this)
+  }
+
+  companion object {
+    const val ID: Byte = 0x06
+  }
+}
+
+/**
+ * A message the server sends to the client, from which it expects a [ClientAck] in response.
+ *
+ * This back and forth is used to establish a client's "ping" (millisecond delay) at login and to
+ * confirm that the client is still listening on the port.
+ *
+ * Message type ID: `0x05`.
+ */
+data class ServerAck(override val messageNumber: Int) : Ack(), ServerMessage {
+  override val messageTypeId = ID
+
+  public override fun writeBodyTo(buffer: ByteBuffer) {
+    ServerAckSerializer.write(buffer, this)
+  }
+
+  companion object {
+    const val ID: Byte = 0x05
   }
 }

@@ -40,10 +40,10 @@ import org.emulinker.kaillera.controller.v086.action.V086Action
 import org.emulinker.kaillera.controller.v086.action.V086GameEventHandler
 import org.emulinker.kaillera.controller.v086.action.V086ServerEventHandler
 import org.emulinker.kaillera.controller.v086.action.V086UserEventHandler
-import org.emulinker.kaillera.controller.v086.protocol.Ack
 import org.emulinker.kaillera.controller.v086.protocol.AllReady
 import org.emulinker.kaillera.controller.v086.protocol.CachedGameData
 import org.emulinker.kaillera.controller.v086.protocol.Chat
+import org.emulinker.kaillera.controller.v086.protocol.ClientAck
 import org.emulinker.kaillera.controller.v086.protocol.CreateGame
 import org.emulinker.kaillera.controller.v086.protocol.GameChat
 import org.emulinker.kaillera.controller.v086.protocol.GameData
@@ -245,7 +245,7 @@ internal constructor(
     // array access should be faster than a hash and we won't have to create
     // a new Integer each time
     actions[UserInformation.ID.toInt()] = loginAction
-    actions[Ack.ClientAck.ID.toInt()] = ackAction
+    actions[ClientAck.ID.toInt()] = ackAction
     actions[Chat.ID.toInt()] = chatAction
     actions[CreateGame.ID.toInt()] = createGameAction
     actions[JoinGame.ID.toInt()] = joinGameAction

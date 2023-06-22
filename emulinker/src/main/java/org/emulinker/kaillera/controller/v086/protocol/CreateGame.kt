@@ -10,56 +10,6 @@ import org.emulinker.util.UnsignedUtil.putUnsignedShort
 sealed class CreateGame : V086Message() {
   abstract val romName: String
 
-  data class CreateGameNotification(
-    override val messageNumber: Int,
-    val username: String,
-    override val romName: String,
-    val clientType: String,
-    val gameId: Int,
-    val val1: Int
-  ) : CreateGame() {
-
-    override val messageTypeId = ID
-
-    init {
-      require(romName.isNotBlank()) { "romName cannot be blank" }
-      require(gameId in 0..0xFFFF) { "gameID out of acceptable range: $gameId" }
-      require(val1 in 0..0xFFFF) { "val1 out of acceptable range: $val1" }
-    }
-
-    override val bodyBytes: Int
-      get() =
-        username.getNumBytesPlusStopByte() +
-          romName.getNumBytesPlusStopByte() +
-          clientType.getNumBytesPlusStopByte() +
-          V086Utils.Bytes.SHORT +
-          V086Utils.Bytes.SHORT
-
-    public override fun writeBodyTo(buffer: ByteBuffer) {
-      CreateGameSerializer.write(buffer, this)
-    }
-  }
-
-  data class CreateGameRequest
-  constructor(override val messageNumber: Int, override val romName: String) : CreateGame() {
-    override val messageTypeId = ID
-
-    private val username = ""
-    private val clientType = ""
-
-    override val bodyBytes: Int
-      get() =
-        username.getNumBytesPlusStopByte() +
-          romName.getNumBytesPlusStopByte() +
-          clientType.getNumBytesPlusStopByte() +
-          V086Utils.Bytes.SHORT +
-          V086Utils.Bytes.SHORT
-
-    public override fun writeBodyTo(buffer: ByteBuffer) {
-      CreateGameSerializer.write(buffer, this)
-    }
-  }
-
   companion object {
     const val ID: Byte = 0x0A
 
@@ -126,5 +76,65 @@ sealed class CreateGame : V086Message() {
         }
       )
     }
+  }
+}
+
+/**
+ * Server message indicating that a new game has been created.
+ *
+ * This message shares a message type with [CreateGameRequest]: `0x0A`.
+ */
+data class CreateGameNotification(
+  override val messageNumber: Int,
+  val username: String,
+  override val romName: String,
+  val clientType: String,
+  val gameId: Int,
+  val val1: Int
+) : CreateGame(), ServerMessage {
+
+  override val messageTypeId = ID
+
+  init {
+    require(romName.isNotBlank()) { "romName cannot be blank" }
+    require(gameId in 0..0xFFFF) { "gameID out of acceptable range: $gameId" }
+    require(val1 in 0..0xFFFF) { "val1 out of acceptable range: $val1" }
+  }
+
+  override val bodyBytes: Int
+    get() =
+      username.getNumBytesPlusStopByte() +
+        romName.getNumBytesPlusStopByte() +
+        clientType.getNumBytesPlusStopByte() +
+        V086Utils.Bytes.SHORT +
+        V086Utils.Bytes.SHORT
+
+  public override fun writeBodyTo(buffer: ByteBuffer) {
+    CreateGameSerializer.write(buffer, this)
+  }
+}
+
+/**
+ * Client message requesting to create a new game.
+ *
+ * This message shares a message type with [CreateGameRequest]: `0x0A`.
+ */
+data class CreateGameRequest(override val messageNumber: Int, override val romName: String) :
+  CreateGame(), ClientMessage {
+  override val messageTypeId = ID
+
+  private val username = ""
+  private val clientType = ""
+
+  override val bodyBytes: Int
+    get() =
+      username.getNumBytesPlusStopByte() +
+        romName.getNumBytesPlusStopByte() +
+        clientType.getNumBytesPlusStopByte() +
+        V086Utils.Bytes.SHORT +
+        V086Utils.Bytes.SHORT
+
+  public override fun writeBodyTo(buffer: ByteBuffer) {
+    CreateGameSerializer.write(buffer, this)
   }
 }

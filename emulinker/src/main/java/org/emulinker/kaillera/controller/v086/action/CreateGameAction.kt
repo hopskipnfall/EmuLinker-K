@@ -6,8 +6,9 @@ import javax.inject.Singleton
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086ClientHandler
 import org.emulinker.kaillera.controller.v086.protocol.CreateGame
+import org.emulinker.kaillera.controller.v086.protocol.CreateGameNotification
 import org.emulinker.kaillera.controller.v086.protocol.InformationMessage
-import org.emulinker.kaillera.controller.v086.protocol.QuitGame
+import org.emulinker.kaillera.controller.v086.protocol.QuitGameNotification
 import org.emulinker.kaillera.model.event.GameCreatedEvent
 import org.emulinker.kaillera.model.exception.CreateGameException
 import org.emulinker.kaillera.model.exception.FloodException
@@ -42,7 +43,7 @@ class CreateGameAction @Inject internal constructor() :
           )
         )
         clientHandler.send(
-          QuitGame.QuitGameNotification(
+          QuitGameNotification(
             clientHandler.nextMessageNumber,
             clientHandler.user.name!!,
             clientHandler.user.id
@@ -65,7 +66,7 @@ class CreateGameAction @Inject internal constructor() :
           )
         )
         clientHandler.send(
-          QuitGame.QuitGameNotification(
+          QuitGameNotification(
             clientHandler.nextMessageNumber,
             clientHandler.user.name!!,
             clientHandler.user.id
@@ -83,7 +84,7 @@ class CreateGameAction @Inject internal constructor() :
       val game = event.game
       val owner = game.owner
       clientHandler.send(
-        CreateGame.CreateGameNotification(
+        CreateGameNotification(
           clientHandler.nextMessageNumber,
           owner!!.name!!,
           game.romName,

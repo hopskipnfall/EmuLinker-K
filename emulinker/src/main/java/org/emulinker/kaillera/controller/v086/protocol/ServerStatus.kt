@@ -14,11 +14,18 @@ import org.emulinker.util.UnsignedUtil.getUnsignedShort
 import org.emulinker.util.UnsignedUtil.putUnsignedInt
 import org.emulinker.util.UnsignedUtil.putUnsignedShort
 
+/**
+ * Message sent by the server when the user joins, listing all of the users and games.
+ *
+ * It's possible this is meant to be sent more often than that.
+ *
+ * Message type ID: `0x04`.
+ */
 data class ServerStatus(
   override val messageNumber: Int,
   val users: List<User>,
   val games: List<Game>
-) : V086Message() {
+) : V086Message(), ServerMessage {
 
   override val messageTypeId = ID
 

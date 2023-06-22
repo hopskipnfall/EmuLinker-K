@@ -8,6 +8,12 @@ import org.emulinker.util.EmuUtil
 import org.emulinker.util.UnsignedUtil.getUnsignedShort
 import org.emulinker.util.UnsignedUtil.putUnsignedShort
 
+/**
+ * Message sent from the server to indicate that the client is not allowed to join the server,
+ * including a [message] to be displayed to the user.
+ *
+ * Message type ID: `0x16`.
+ */
 data class ConnectionRejected
 @Throws(MessageFormatException::class)
 constructor(
@@ -15,7 +21,7 @@ constructor(
   val username: String,
   val userId: Int,
   val message: String
-) : V086Message() {
+) : V086Message(), ServerMessage {
 
   override val messageTypeId = ID
 

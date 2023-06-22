@@ -6,9 +6,14 @@ import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.util.UnsignedUtil.getUnsignedByte
 import org.emulinker.util.UnsignedUtil.putUnsignedByte
 
+/**
+ * Message periodically sent by the client so the server knows it is still connected on that port.
+ *
+ * Message type ID: `0x09`.
+ */
 data class KeepAlive
 @Throws(MessageFormatException::class)
-constructor(override val messageNumber: Int, val value: Short) : V086Message() {
+constructor(override val messageNumber: Int, val value: Short) : V086Message(), ClientMessage {
   override val messageTypeId = ID
 
   override val bodyBytes = V086Utils.Bytes.SINGLE_BYTE

@@ -34,35 +34,6 @@ sealed class JoinGame : V086Message() {
     JoinGameSerializer.write(buffer, this)
   }
 
-  data class JoinGameNotification(
-    override val messageNumber: Int,
-    override val gameId: Int,
-    val val1: Int,
-    val username: String,
-    val ping: Long,
-    val userId: Int,
-    override val connectionType: ConnectionType
-  ) : JoinGame() {
-
-    init {
-      require(gameId in 0..0xFFFF) { "gameID out of acceptable range: $gameId" }
-      require(ping in 0..0xFFFF) { "ping out of acceptable range: $ping" }
-      require(userId in 0..0xFFFF) { "UserID out of acceptable range: $userId" }
-      require(username.isNotBlank()) { "Username cannot be empty" }
-    }
-  }
-
-  data class JoinGameRequest(
-    override val messageNumber: Int,
-    override val gameId: Int,
-    override val connectionType: ConnectionType
-  ) : JoinGame() {
-
-    init {
-      require(gameId in 0..0xFFFF) { "gameID out of acceptable range: $gameId" }
-    }
-  }
-
   companion object {
     const val ID: Byte = 0x0C
 
@@ -137,5 +108,44 @@ sealed class JoinGame : V086Message() {
       )
       buffer.put(message.connectionType.byteValue)
     }
+  }
+}
+
+/**
+ * Server message indiciating a user successfully joined a game.
+ *
+ * This shares a message type ID with [JoinGameRequest]: `0x0C`.
+ */
+data class JoinGameNotification(
+  override val messageNumber: Int,
+  override val gameId: Int,
+  val val1: Int,
+  val username: String,
+  val ping: Long,
+  val userId: Int,
+  override val connectionType: ConnectionType
+) : JoinGame(), ServerMessage {
+
+  init {
+    require(gameId in 0..0xFFFF) { "gameID out of acceptable range: $gameId" }
+    require(ping in 0..0xFFFF) { "ping out of acceptable range: $ping" }
+    require(userId in 0..0xFFFF) { "UserID out of acceptable range: $userId" }
+    require(username.isNotBlank()) { "Username cannot be empty" }
+  }
+}
+
+/**
+ * Client message from a user requesting to join a game.
+ *
+ * This shares a message type ID with [JoinGameNotification]: `0x0C`.
+ */
+data class JoinGameRequest(
+  override val messageNumber: Int,
+  override val gameId: Int,
+  override val connectionType: ConnectionType
+) : JoinGame(), ClientMessage {
+
+  init {
+    require(gameId in 0..0xFFFF) { "gameID out of acceptable range: $gameId" }
   }
 }

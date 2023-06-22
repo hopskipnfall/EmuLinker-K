@@ -4,7 +4,15 @@ import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.util.EmuUtil
 
-data class AllReady(override val messageNumber: Int) : V086Message() {
+/**
+ * Message sent by both client and server to indicate that they are ready for the game to start.
+ *
+ * When the server receives [AllReady] from all clients in a room, the server responds back with
+ * [AllReady] to all clients which signals the game should start.
+ *
+ * Message type ID: `0x15`.
+ */
+data class AllReady(override val messageNumber: Int) : V086Message(), ServerMessage, ClientMessage {
   override val messageTypeId = ID
 
   override val bodyBytes = V086Utils.Bytes.SINGLE_BYTE

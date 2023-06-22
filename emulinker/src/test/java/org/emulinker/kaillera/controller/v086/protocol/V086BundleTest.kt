@@ -51,7 +51,7 @@ class V086BundleTest {
     val parsedBundle =
       V086Bundle.parse(V086Utils.hexStringToByteBuffer(hexInput), lastMessageNumber)
     assertThat(parsedBundle.messages).hasLength(1)
-    assertThat(parsedBundle.messages[0]).isEqualTo(Ack.ClientAck(messageNumber = 1))
+    assertThat(parsedBundle.messages[0]).isEqualTo(ClientAck(messageNumber = 1))
   }
 
   @Test
@@ -64,10 +64,9 @@ class V086BundleTest {
     val parsedBundle =
       V086Bundle.parse(V086Utils.hexStringToByteBuffer(hexInput), lastMessageNumber)
     assertThat(parsedBundle.messages).hasLength(1)
-    assertThat(parsedBundle.messages[0]).isInstanceOf(CreateGame.CreateGameRequest::class.java)
-    val message = parsedBundle.messages[0] as CreateGame.CreateGameRequest
-    assertThat(message)
-      .isEqualTo(CreateGame.CreateGameRequest(messageNumber = 10, "SmashRemix0.9.7"))
+    assertThat(parsedBundle.messages[0]).isInstanceOf(CreateGameRequest::class.java)
+    val message = parsedBundle.messages[0] as CreateGameRequest
+    assertThat(message).isEqualTo(CreateGameRequest(messageNumber = 10, "SmashRemix0.9.7"))
   }
 
   @Test

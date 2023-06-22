@@ -11,6 +11,12 @@ import org.emulinker.util.UnsignedUtil.getUnsignedShort
 import org.emulinker.util.UnsignedUtil.putUnsignedInt
 import org.emulinker.util.UnsignedUtil.putUnsignedShort
 
+/**
+ * Message sent from the server to all clients to give information about a new client that has
+ * joined the server.
+ *
+ * Message type ID: `0x02`.
+ */
 data class UserJoined(
   override val messageNumber: Int,
   val username: String,

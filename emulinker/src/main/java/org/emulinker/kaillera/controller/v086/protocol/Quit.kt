@@ -23,21 +23,6 @@ sealed class Quit : V086Message() {
     QuitSerializer.write(buffer, this)
   }
 
-  data class QuitNotification(
-    override val messageNumber: Int,
-    val username: String,
-    val userId: Int,
-    override val message: String
-  ) : Quit() {
-
-    init {
-      require(userId in 0..0xFFFF) { "UserID out of acceptable range: $userId" }
-      require(username.isNotBlank()) { "Username cannot be empty" }
-    }
-  }
-
-  data class QuitRequest(override val messageNumber: Int, override val message: String) : Quit()
-
   companion object {
     const val ID: Byte = 0x01
 
@@ -85,3 +70,28 @@ sealed class Quit : V086Message() {
     }
   }
 }
+
+/**
+ * Message sent by the server to notify all clients that the user left the server.
+ *
+ * Shares a message type ID with [QuitRequest]: `0x01`.
+ */
+data class QuitNotification(
+  override val messageNumber: Int,
+  val username: String,
+  val userId: Int,
+  override val message: String
+) : Quit() {
+
+  init {
+    require(userId in 0..0xFFFF) { "UserID out of acceptable range: $userId" }
+    require(username.isNotBlank()) { "Username cannot be empty" }
+  }
+}
+
+/**
+ * Message sent by the client before leaving the server.
+ *
+ * Shares a message type ID with [QuitNotification]: `0x01`.
+ */
+data class QuitRequest(override val messageNumber: Int, override val message: String) : Quit()

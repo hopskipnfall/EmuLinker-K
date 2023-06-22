@@ -66,7 +66,7 @@ class JoinGameTest : ProtocolBaseTest() {
     private const val REQUEST_BYTES = "00, 00, 87, 00, 00, 00, 00, 00, 00, 00, FF, FF, 06"
 
     private val JOIN_GAME_NOTIFICATION =
-      JoinGame.JoinGameNotification(
+      JoinGameNotification(
         messageNumber = MESSAGE_NUMBER,
         gameId = 135,
         val1 = 1234,
@@ -76,7 +76,7 @@ class JoinGameTest : ProtocolBaseTest() {
         connectionType = ConnectionType.BAD
       )
     private val JOIN_GAME_REQUEST =
-      JoinGame.JoinGameRequest(
+      JoinGameRequest(
         messageNumber = MESSAGE_NUMBER,
         gameId = 135,
         connectionType = ConnectionType.BAD

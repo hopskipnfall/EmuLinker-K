@@ -8,7 +8,7 @@ import kotlin.Throws
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086ClientHandler
 import org.emulinker.kaillera.controller.v086.protocol.CachedGameData
-import org.emulinker.kaillera.controller.v086.protocol.GameChat
+import org.emulinker.kaillera.controller.v086.protocol.GameChatNotification
 import org.emulinker.kaillera.controller.v086.protocol.GameData.Companion.create
 import org.emulinker.kaillera.model.exception.GameDataException
 
@@ -45,7 +45,7 @@ class CachedGameDataAction @Inject internal constructor() : V086Action<CachedGam
       // This may not always be the best thing to do...
       try {
         clientHandler.send(
-          GameChat.GameChatNotification(
+          GameChatNotification(
             clientHandler.nextMessageNumber,
             "Error",
             "Game Data Error!  Game state will be inconsistent!"
