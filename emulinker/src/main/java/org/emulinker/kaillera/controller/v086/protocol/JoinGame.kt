@@ -34,6 +34,11 @@ sealed class JoinGame : V086Message() {
     JoinGameSerializer.write(buffer, this)
   }
 
+  /**
+   * Server message indiciating a user successfully joined a game.
+   *
+   * This shares a message type ID with [JoinGameRequest]: `0x0C`.
+   */
   data class JoinGameNotification(
     override val messageNumber: Int,
     override val gameId: Int,
@@ -42,7 +47,7 @@ sealed class JoinGame : V086Message() {
     val ping: Long,
     val userId: Int,
     override val connectionType: ConnectionType
-  ) : JoinGame() {
+  ) : JoinGame(), ServerMessage {
 
     init {
       require(gameId in 0..0xFFFF) { "gameID out of acceptable range: $gameId" }
@@ -52,11 +57,16 @@ sealed class JoinGame : V086Message() {
     }
   }
 
+  /**
+   * Client message from a user requesting to join a game.
+   *
+   * This shares a message type ID with [JoinGameNotification]: `0x0C`.
+   */
   data class JoinGameRequest(
     override val messageNumber: Int,
     override val gameId: Int,
     override val connectionType: ConnectionType
-  ) : JoinGame() {
+  ) : JoinGame(), ClientMessage {
 
     init {
       require(gameId in 0..0xFFFF) { "gameID out of acceptable range: $gameId" }

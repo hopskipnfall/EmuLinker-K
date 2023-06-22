@@ -11,8 +11,13 @@ import org.emulinker.util.UnsignedUtil.getUnsignedShort
 import org.emulinker.util.UnsignedUtil.putUnsignedInt
 import org.emulinker.util.UnsignedUtil.putUnsignedShort
 
+/**
+ * Message sent by the server when a user joins a game, which lists all of the players in that game.
+ *
+ * Message type ID: `0x0D`.
+ */
 data class PlayerInformation(override val messageNumber: Int, val players: List<Player>) :
-  V086Message() {
+  V086Message(), ServerMessage {
   override val messageTypeId = ID
 
   val numPlayers: Int = players.size

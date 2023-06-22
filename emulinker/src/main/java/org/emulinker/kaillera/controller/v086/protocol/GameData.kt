@@ -18,7 +18,8 @@ import org.emulinker.util.UnsignedUtil.putUnsignedShort
  */
 data class GameData
 @Throws(MessageFormatException::class)
-constructor(override val messageNumber: Int, val gameData: ByteArray) : V086Message() {
+constructor(override val messageNumber: Int, val gameData: ByteArray) :
+  V086Message(), ClientMessage, ServerMessage {
   override val messageTypeId = ID
 
   override val bodyBytes = V086Utils.Bytes.SINGLE_BYTE + V086Utils.Bytes.SHORT + gameData.size

@@ -23,7 +23,11 @@ sealed class Quit : V086Message() {
     QuitSerializer.write(buffer, this)
   }
 
-  /** Message sent by the server to notify all clients that the user left the server. */
+  /**
+   * Message sent by the server to notify all clients that the user left the server.
+   *
+   * Shares a message type ID with [QuitRequest]: `0x01`.
+   */
   data class QuitNotification(
     override val messageNumber: Int,
     val username: String,
@@ -37,6 +41,11 @@ sealed class Quit : V086Message() {
     }
   }
 
+  /**
+   * Message sent by the client before leaving the server.
+   *
+   * Shares a message type ID with [QuitNotification]: `0x01`.
+   */
   data class QuitRequest(override val messageNumber: Int, override val message: String) : Quit()
 
   companion object {

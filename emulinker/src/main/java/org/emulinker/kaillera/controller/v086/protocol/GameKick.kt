@@ -6,9 +6,14 @@ import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.util.UnsignedUtil.getUnsignedShort
 import org.emulinker.util.UnsignedUtil.putUnsignedShort
 
+/**
+ * Message sent to kick a user by [userId] from a game.
+ *
+ * Message type ID: `0x0F`.
+ */
 data class GameKick
 @Throws(MessageFormatException::class)
-constructor(override val messageNumber: Int, val userId: Int) : V086Message() {
+constructor(override val messageNumber: Int, val userId: Int) : V086Message(), ClientMessage {
   override val messageTypeId = ID
 
   override val bodyBytes = V086Utils.Bytes.SINGLE_BYTE + V086Utils.Bytes.SHORT

@@ -24,7 +24,7 @@ sealed class PlayerDrop : V086Message() {
     val username: String,
     /** The port number, not the player ID. */
     val playerNumber: Byte
-  ) : PlayerDrop() {
+  ) : PlayerDrop(), ServerMessage {
 
     init {
       require(playerNumber in 0..255) { "playerNumber out of acceptable range: $playerNumber" }
@@ -32,7 +32,7 @@ sealed class PlayerDrop : V086Message() {
     }
   }
 
-  data class PlayerDropRequest(override val messageNumber: Int) : PlayerDrop()
+  data class PlayerDropRequest(override val messageNumber: Int) : PlayerDrop(), ClientMessage
 
   companion object {
     const val ID: Byte = 0x14

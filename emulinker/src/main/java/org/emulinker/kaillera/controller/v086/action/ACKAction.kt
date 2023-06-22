@@ -76,8 +76,8 @@ class ACKAction @Inject internal constructor() :
     val connectedEvent = event as ConnectedEvent
     val server = connectedEvent.server
     val thisUser = connectedEvent.user
-    val users: MutableList<ServerStatus.User> = ArrayList()
-    val games: MutableList<ServerStatus.Game> = ArrayList()
+    val users = mutableListOf<ServerStatus.User>()
+    val games = mutableListOf<ServerStatus.Game>()
     try {
       for (user in server.users) {
         if (user.status != UserStatus.CONNECTING && user != thisUser)
@@ -131,15 +131,15 @@ class ACKAction @Inject internal constructor() :
     // single message should be 500
     var counter = 0
     var sent = false
-    var usersSubList: MutableList<ServerStatus.User> = ArrayList()
-    var gamesSubList: MutableList<ServerStatus.Game> = ArrayList()
+    var usersSubList = mutableListOf<ServerStatus.User>()
+    var gamesSubList = mutableListOf<ServerStatus.Game>()
     while (users.isNotEmpty()) {
       val user = users[0]
       users.removeAt(0)
       if (counter + user.numBytes >= 300) {
         sendServerStatus(clientHandler, usersSubList, gamesSubList, counter)
-        usersSubList = ArrayList()
-        gamesSubList = ArrayList()
+        usersSubList = mutableListOf()
+        gamesSubList = mutableListOf()
         counter = 0
         sent = true
         threadSleep(100.milliseconds)
@@ -152,8 +152,8 @@ class ACKAction @Inject internal constructor() :
       games.removeAt(0)
       if (counter + game.numBytes >= 300) {
         sendServerStatus(clientHandler, usersSubList, gamesSubList, counter)
-        usersSubList = ArrayList()
-        gamesSubList = ArrayList()
+        usersSubList = mutableListOf()
+        gamesSubList = mutableListOf()
         counter = 0
         sent = true
         threadSleep(100.milliseconds)

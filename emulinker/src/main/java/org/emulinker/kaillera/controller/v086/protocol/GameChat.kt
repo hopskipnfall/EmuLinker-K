@@ -28,7 +28,7 @@ sealed class GameChat : V086Message() {
   data class GameChatNotification
   @Throws(MessageFormatException::class)
   constructor(override val messageNumber: Int, val username: String, override val message: String) :
-    GameChat()
+    GameChat(), ServerMessage
 
   /**
    * Message sent by the client containing a game chat message.
@@ -37,7 +37,8 @@ sealed class GameChat : V086Message() {
    */
   data class GameChatRequest
   @Throws(MessageFormatException::class)
-  constructor(override val messageNumber: Int, override val message: String) : GameChat()
+  constructor(override val messageNumber: Int, override val message: String) :
+    GameChat(), ClientMessage
 
   companion object {
     const val ID: Byte = 0x08

@@ -12,7 +12,7 @@ data class CloseGame(
   val gameId: Int,
   // TODO(nue): Figure out what [val1] represents..
   val val1: Int
-) : V086Message() {
+) : V086Message(), ServerMessage {
 
   override val messageTypeId = ID
 

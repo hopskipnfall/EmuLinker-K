@@ -21,7 +21,7 @@ constructor(
   val username: String,
   val userId: Int,
   val message: String
-) : V086Message() {
+) : V086Message(), ServerMessage {
 
   override val messageTypeId = ID
 

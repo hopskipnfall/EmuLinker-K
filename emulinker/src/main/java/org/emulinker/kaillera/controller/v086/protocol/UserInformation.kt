@@ -7,6 +7,12 @@ import org.emulinker.kaillera.controller.v086.V086Utils.getNumBytesPlusStopByte
 import org.emulinker.kaillera.model.ConnectionType
 import org.emulinker.util.EmuUtil
 
+/**
+ * Message sent from the client when a user joins the server to indicate [username], [clientType],
+ * and [connectionType].
+ *
+ * Message type ID: `0x03`.
+ */
 data class UserInformation
 @Throws(MessageFormatException::class)
 constructor(
@@ -14,7 +20,7 @@ constructor(
   val username: String,
   val clientType: String,
   val connectionType: ConnectionType
-) : V086Message() {
+) : V086Message(), ClientMessage {
   override val messageTypeId = ID
 
   override val bodyBytes: Int =

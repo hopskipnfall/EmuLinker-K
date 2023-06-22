@@ -21,12 +21,19 @@ sealed class StartGame : V086Message() {
     StartGameSerializer.write(buffer, this)
   }
 
+  /**
+   * Message sent from the server to all clients, informing that a game has started.
+   *
+   * Shares a message type ID with [StartGameRequest]: `0x11`.
+   *
+   * @param playerNumber The player that triggered the game to start.
+   */
   data class StartGameNotification(
     override val messageNumber: Int,
     val val1: Int,
     val playerNumber: Short,
     val numPlayers: Short
-  ) : StartGame() {
+  ) : StartGame(), ServerMessage {
 
     init {
       require(val1 in 0..0xFFFF) { "val1 out of acceptable range: $val1" }
@@ -35,7 +42,12 @@ sealed class StartGame : V086Message() {
     }
   }
 
-  data class StartGameRequest(override val messageNumber: Int) : StartGame()
+  /**
+   * Message sent from the client to request that a game starts.
+   *
+   * Shares a message type ID with [StartGameNotification]: `0x11`.
+   */
+  data class StartGameRequest(override val messageNumber: Int) : StartGame(), ClientMessage
 
   companion object {
     const val ID: Byte = 0x11

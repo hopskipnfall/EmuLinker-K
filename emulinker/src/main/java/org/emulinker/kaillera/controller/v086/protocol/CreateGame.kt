@@ -22,7 +22,7 @@ sealed class CreateGame : V086Message() {
     val clientType: String,
     val gameId: Int,
     val val1: Int
-  ) : CreateGame() {
+  ) : CreateGame(), ServerMessage {
 
     override val messageTypeId = ID
 
@@ -51,7 +51,7 @@ sealed class CreateGame : V086Message() {
    * This message shares a message type with [CreateGameRequest]: `0x0A`.
    */
   data class CreateGameRequest(override val messageNumber: Int, override val romName: String) :
-    CreateGame() {
+    CreateGame(), ClientMessage {
     override val messageTypeId = ID
 
     private val username = ""

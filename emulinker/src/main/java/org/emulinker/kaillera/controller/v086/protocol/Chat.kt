@@ -29,14 +29,15 @@ sealed class Chat : V086Message() {
     override val messageNumber: Int,
     val username: String,
     override val message: String
-  ) : Chat()
+  ) : Chat(), ServerMessage
 
   /**
    * Message sent by the client containing a server chat message.
    *
    * This shares a message type ID with [ChatNotification]: `0x07`.
    */
-  data class ChatRequest(override val messageNumber: Int, override val message: String) : Chat()
+  data class ChatRequest(override val messageNumber: Int, override val message: String) :
+    Chat(), ClientMessage
 
   companion object {
     const val ID: Byte = 0x07

@@ -23,7 +23,7 @@ sealed class Ack : V086Message() {
    *
    * Message type ID: `0x06`.
    */
-  data class ClientAck(override val messageNumber: Int) : Ack() {
+  data class ClientAck(override val messageNumber: Int) : Ack(), ClientMessage {
     override val messageTypeId = ID
 
     public override fun writeBodyTo(buffer: ByteBuffer) {
@@ -43,7 +43,7 @@ sealed class Ack : V086Message() {
    *
    * Message type ID: `0x05`.
    */
-  data class ServerAck(override val messageNumber: Int) : Ack() {
+  data class ServerAck(override val messageNumber: Int) : Ack(), ServerMessage {
     override val messageTypeId = ID
 
     public override fun writeBodyTo(buffer: ByteBuffer) {
