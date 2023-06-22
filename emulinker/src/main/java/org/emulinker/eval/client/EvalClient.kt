@@ -28,23 +28,24 @@ import org.emulinker.kaillera.controller.connectcontroller.protocol.RequestPriva
 import org.emulinker.kaillera.controller.messaging.ParseException
 import org.emulinker.kaillera.controller.v086.LastMessageBuffer
 import org.emulinker.kaillera.controller.v086.V086Controller
-import org.emulinker.kaillera.controller.v086.protocol.Ack
 import org.emulinker.kaillera.controller.v086.protocol.AllReady
 import org.emulinker.kaillera.controller.v086.protocol.CachedGameData
-import org.emulinker.kaillera.controller.v086.protocol.CreateGame.CreateGameNotification
-import org.emulinker.kaillera.controller.v086.protocol.CreateGame.CreateGameRequest
+import org.emulinker.kaillera.controller.v086.protocol.ClientAck
+import org.emulinker.kaillera.controller.v086.protocol.CreateGameNotification
+import org.emulinker.kaillera.controller.v086.protocol.CreateGameRequest
 import org.emulinker.kaillera.controller.v086.protocol.GameData
 import org.emulinker.kaillera.controller.v086.protocol.GameStatus
 import org.emulinker.kaillera.controller.v086.protocol.InformationMessage
-import org.emulinker.kaillera.controller.v086.protocol.JoinGame.JoinGameNotification
-import org.emulinker.kaillera.controller.v086.protocol.JoinGame.JoinGameRequest
-import org.emulinker.kaillera.controller.v086.protocol.PlayerDrop.PlayerDropRequest
+import org.emulinker.kaillera.controller.v086.protocol.JoinGameNotification
+import org.emulinker.kaillera.controller.v086.protocol.JoinGameRequest
+import org.emulinker.kaillera.controller.v086.protocol.PlayerDropRequest
 import org.emulinker.kaillera.controller.v086.protocol.PlayerInformation
-import org.emulinker.kaillera.controller.v086.protocol.Quit.QuitRequest
-import org.emulinker.kaillera.controller.v086.protocol.QuitGame.QuitGameRequest
+import org.emulinker.kaillera.controller.v086.protocol.QuitGameRequest
+import org.emulinker.kaillera.controller.v086.protocol.QuitRequest
+import org.emulinker.kaillera.controller.v086.protocol.ServerAck
 import org.emulinker.kaillera.controller.v086.protocol.ServerStatus
-import org.emulinker.kaillera.controller.v086.protocol.StartGame.StartGameNotification
-import org.emulinker.kaillera.controller.v086.protocol.StartGame.StartGameRequest
+import org.emulinker.kaillera.controller.v086.protocol.StartGameNotification
+import org.emulinker.kaillera.controller.v086.protocol.StartGameRequest
 import org.emulinker.kaillera.controller.v086.protocol.UserInformation
 import org.emulinker.kaillera.controller.v086.protocol.UserJoined
 import org.emulinker.kaillera.controller.v086.protocol.V086Bundle
@@ -168,8 +169,8 @@ class EvalClient(
     logger.atInfo().log("<<<<<<<< Received message: %s", message)
 
     when (message) {
-      is Ack.ServerAck -> {
-        sendWithMessageId { Ack.ClientAck(messageNumber = it) }
+      is ServerAck -> {
+        sendWithMessageId { ClientAck(messageNumber = it) }
       }
       is ServerStatus -> {
         latestServerStatus = message

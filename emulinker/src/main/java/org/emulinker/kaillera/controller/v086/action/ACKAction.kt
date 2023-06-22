@@ -6,8 +6,9 @@ import javax.inject.Singleton
 import kotlin.time.Duration.Companion.milliseconds
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086ClientHandler
-import org.emulinker.kaillera.controller.v086.protocol.Ack
+import org.emulinker.kaillera.controller.v086.protocol.ClientAck
 import org.emulinker.kaillera.controller.v086.protocol.ConnectionRejected
+import org.emulinker.kaillera.controller.v086.protocol.ServerAck
 import org.emulinker.kaillera.controller.v086.protocol.ServerStatus
 import org.emulinker.kaillera.model.UserStatus
 import org.emulinker.kaillera.model.event.ConnectedEvent
@@ -17,7 +18,7 @@ import org.emulinker.util.EmuUtil.threadSleep
 
 @Singleton
 class ACKAction @Inject internal constructor() :
-  V086Action<Ack.ClientAck>, V086UserEventHandler<UserEvent> {
+  V086Action<ClientAck>, V086UserEventHandler<UserEvent> {
   override var actionPerformedCount = 0
     private set
   override var handledEventCount = 0
@@ -26,7 +27,7 @@ class ACKAction @Inject internal constructor() :
   override fun toString() = "ACKAction"
 
   @Throws(FatalActionException::class)
-  override fun performAction(message: Ack.ClientAck, clientHandler: V086ClientHandler) {
+  override fun performAction(message: ClientAck, clientHandler: V086ClientHandler) {
     actionPerformedCount++
     val user = clientHandler.user
     if (user.loggedIn) {
@@ -63,7 +64,7 @@ class ACKAction @Inject internal constructor() :
       }
     } else {
       try {
-        clientHandler.send(Ack.ServerAck(clientHandler.nextMessageNumber))
+        clientHandler.send(ServerAck(clientHandler.nextMessageNumber))
       } catch (e: MessageFormatException) {
         logger.atSevere().withCause(e).log("Failed to construct new ACK.ServerACK")
         return

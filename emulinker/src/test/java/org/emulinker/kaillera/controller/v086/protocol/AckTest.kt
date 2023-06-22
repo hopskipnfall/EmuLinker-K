@@ -65,7 +65,7 @@ class AckTest : ProtocolBaseTest() {
     // are different.
     private const val ACK_BODY_BYTES = "00,00,00,00,00,00,00,00,01,00,00,00,02,00,00,00,03"
 
-    private val CLIENT_ACK = Ack.ClientAck(MESSAGE_NUMBER)
-    private val SERVER_ACK = Ack.ServerAck(MESSAGE_NUMBER)
+    private val CLIENT_ACK = ClientAck(MESSAGE_NUMBER)
+    private val SERVER_ACK = ServerAck(MESSAGE_NUMBER)
   }
 }

@@ -20,25 +20,6 @@ sealed class Chat : V086Message() {
     ChatSerializer.write(buffer, this)
   }
 
-  /**
-   * Message sent by the server containing a server chat message.
-   *
-   * This shares a message type ID with [ChatRequest]: `0x07`.
-   */
-  data class ChatNotification(
-    override val messageNumber: Int,
-    val username: String,
-    override val message: String
-  ) : Chat(), ServerMessage
-
-  /**
-   * Message sent by the client containing a server chat message.
-   *
-   * This shares a message type ID with [ChatNotification]: `0x07`.
-   */
-  data class ChatRequest(override val messageNumber: Int, override val message: String) :
-    Chat(), ClientMessage
-
   companion object {
     const val ID: Byte = 0x07
   }
@@ -76,3 +57,22 @@ sealed class Chat : V086Message() {
     }
   }
 }
+
+/**
+ * Message sent by the server containing a server chat message.
+ *
+ * This shares a message type ID with [ChatRequest]: `0x07`.
+ */
+data class ChatNotification(
+  override val messageNumber: Int,
+  val username: String,
+  override val message: String
+) : Chat(), ServerMessage
+
+/**
+ * Message sent by the client containing a server chat message.
+ *
+ * This shares a message type ID with [ChatNotification]: `0x07`.
+ */
+data class ChatRequest(override val messageNumber: Int, override val message: String) :
+  Chat(), ClientMessage

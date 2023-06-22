@@ -4,8 +4,6 @@ import com.google.common.truth.Truth.assertThat
 import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.kaillera.controller.v086.protocol.MessageTestUtils.assertBufferContainsExactly
-import org.emulinker.kaillera.controller.v086.protocol.PlayerDrop.PlayerDropNotification
-import org.emulinker.kaillera.controller.v086.protocol.PlayerDrop.PlayerDropRequest
 import org.junit.Test
 
 class PlayerDropTest {

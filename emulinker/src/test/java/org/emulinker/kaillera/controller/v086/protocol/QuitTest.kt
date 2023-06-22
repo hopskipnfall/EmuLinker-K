@@ -4,8 +4,6 @@ import com.google.common.truth.Truth.assertThat
 import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.kaillera.controller.v086.protocol.MessageTestUtils.assertBufferContainsExactly
-import org.emulinker.kaillera.controller.v086.protocol.Quit.QuitNotification
-import org.emulinker.kaillera.controller.v086.protocol.Quit.QuitRequest
 import org.junit.Test
 
 class QuitTest : ProtocolBaseTest() {

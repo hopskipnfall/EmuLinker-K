@@ -3,8 +3,6 @@ package org.emulinker.kaillera.controller.v086.protocol
 import com.google.common.truth.Truth.assertThat
 import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.v086.V086Utils
-import org.emulinker.kaillera.controller.v086.protocol.Chat.ChatNotification
-import org.emulinker.kaillera.controller.v086.protocol.Chat.ChatRequest
 import org.emulinker.kaillera.controller.v086.protocol.MessageTestUtils.assertBufferContainsExactly
 import org.junit.Test
 
