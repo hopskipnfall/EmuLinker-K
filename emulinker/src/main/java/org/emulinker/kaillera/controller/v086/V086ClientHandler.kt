@@ -8,6 +8,7 @@ import dagger.assisted.AssistedInject
 import java.net.InetSocketAddress
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
+import kotlinx.coroutines.sync.Mutex
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.controller.CombinedKailleraController
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
@@ -38,6 +39,7 @@ constructor(
   /** The [CombinedKailleraController] that created this instance. */
   @param:Assisted val combinedKailleraController: CombinedKailleraController,
 ) : KailleraEventListener {
+  val mutex = Mutex()
 
   var remoteSocketAddress: InetSocketAddress? = null
     private set
@@ -142,6 +144,7 @@ constructor(
   override fun stop() {
     controller.clientHandlers.remove(user.id)
     user.stop()
+    combinedKailleraController.clientHandlers.remove(remoteSocketAddress)
   }
 
   private fun handleReceivedInternal(buffer: ByteBuffer) {

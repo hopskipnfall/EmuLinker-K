@@ -14,6 +14,7 @@ import javax.inject.Named
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.withLock
 import org.apache.commons.configuration.Configuration
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.access.AccessManager
@@ -42,18 +43,13 @@ constructor(
   /** Map of protocol name (e.g. "0.86") to [KailleraServerController]. */
   private val controllersMap = ConcurrentHashMap<String, KailleraServerController>()
 
-  private val clientHandlers = ConcurrentHashMap<InetSocketAddress, V086ClientHandler>()
+  val clientHandlers = ConcurrentHashMap<InetSocketAddress, V086ClientHandler>()
 
   private val inBuffer: ByteBuffer = ByteBuffer.allocateDirect(flags.v086BufferSize)
   private val outBuffer: ByteBuffer = ByteBuffer.allocateDirect(flags.v086BufferSize)
 
   override fun handleReceived(buffer: ByteBuffer, remoteSocketAddress: InetSocketAddress) {
     scope.launch {
-      logger
-        .atSevere()
-        .log(
-          "RECEIVED STARTED AND THE POSITION IS ${buffer.position()}----------------------------------"
-        )
       var handler = clientHandlers[remoteSocketAddress]
       if (handler == null) {
         // User is new.
@@ -94,8 +90,7 @@ constructor(
         clientHandlers[remoteSocketAddress] = handler!!
       }
 
-      synchronized(handler) { handler.handleReceived(buffer, remoteSocketAddress) }
-      logger.atSevere().log("RECEIVED FINISHED----------------------------------")
+      handler.mutex.withLock { handler.handleReceived(buffer, remoteSocketAddress) }
     }
   }
 
@@ -124,7 +119,6 @@ constructor(
   }
 
   override fun releaseBuffer(buffer: ByteBuffer) {
-    logger.atSevere().log("RELEASING BUFFER")
     // ByteBufferMessage.releaseBuffer(buffer);
     // buffer.clear();
   }
