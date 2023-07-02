@@ -54,16 +54,18 @@ class V086Bundle(val messages: Array<V086Message?>, numToWrite: Int = Int.MAX_VA
     fun parse(buffer: ByteBuffer, lastMessageID: Int = -1): V086Bundle {
       buffer.order(ByteOrder.LITTLE_ENDIAN)
       if (buffer.limit() < 5) {
-        throw V086BundleFormatException("Invalid buffer length: " + buffer.limit(), cause = null)
+        throw V086BundleFormatException("Invalid buffer length: " + buffer.limit())
       }
 
       // again no real need for unsigned
       // int messageCount = UnsignedUtil.getUnsignedByte(buffer);
       var messageCount = buffer.get().toInt()
-      if (messageCount <= 0 || messageCount > 32)
-        throw V086BundleFormatException("Invalid message count: $messageCount", cause = null)
-      if (buffer.limit() < 1 + messageCount * 6)
-        throw V086BundleFormatException("Invalid bundle length: " + buffer.limit(), cause = null)
+      if (messageCount <= 0 || messageCount > 32) {
+        throw V086BundleFormatException("Invalid message count: $messageCount")
+      }
+      if (buffer.limit() < 1 + messageCount * 6) {
+        throw V086BundleFormatException("Invalid bundle length: " + buffer.limit())
+      }
       var parsedCount = 0
       val messages: Array<V086Message?>
       // buffer.getShort(1); - mistake. max value of short is 0x7FFF but we need 0xFFFF

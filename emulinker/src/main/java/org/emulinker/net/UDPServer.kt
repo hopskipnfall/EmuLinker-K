@@ -1,24 +1,19 @@
 package org.emulinker.net
 
 import com.codahale.metrics.Counter
-import com.codahale.metrics.MetricRegistry
 import com.google.common.flogger.FluentLogger
 import java.io.IOException
 import java.lang.Exception
 import java.net.InetSocketAddress
 import java.net.SocketException
-import java.nio.Buffer
 import java.nio.ByteBuffer
 import java.nio.channels.DatagramChannel
 import kotlin.Throws
 import org.emulinker.util.EmuUtil.formatSocketAddress
 import org.emulinker.util.Executable
 
-abstract class UDPServer(
-  shutdownOnExit: Boolean,
-  metrics: MetricRegistry?,
-  private val listeningOnPortsCounter: Counter
-) : Executable {
+abstract class UDPServer(shutdownOnExit: Boolean, private val listeningOnPortsCounter: Counter) :
+  Executable {
   /*
   	private static int		artificalPacketLossPercentage = 0;
   	private static int		artificalDelay = 0;
@@ -95,7 +90,7 @@ abstract class UDPServer(
       if (port > 0) channel!!.socket().bind(InetSocketAddress(port))
       else channel!!.socket().bind(null)
       boundPort = channel!!.socket().localPort
-      val tempBuffer = buffer
+      val tempBuffer = allocateIncomingBuffer()
       val bufferSize = tempBuffer.capacity() * 2
       releaseBuffer(tempBuffer)
       channel!!.socket().receiveBufferSize = bufferSize
@@ -106,13 +101,13 @@ abstract class UDPServer(
     start()
   }
 
-  protected abstract val buffer: ByteBuffer
+  protected abstract fun allocateIncomingBuffer(): ByteBuffer
 
   protected abstract fun releaseBuffer(buffer: ByteBuffer)
 
   protected abstract fun handleReceived(buffer: ByteBuffer, remoteSocketAddress: InetSocketAddress)
 
-  protected fun send(buffer: ByteBuffer?, toSocketAddress: InetSocketAddress?) {
+  fun send(buffer: ByteBuffer, toSocketAddress: InetSocketAddress?) {
     if (!isBound) {
       logger
         .atWarning()
@@ -142,11 +137,12 @@ abstract class UDPServer(
       listeningOnPortsCounter.inc()
       while (!stopFlag) {
         try {
-          val buffer = buffer
+          val buffer = allocateIncomingBuffer()
           val fromSocketAddress = channel!!.receive(buffer)
           if (stopFlag) break
-          if (fromSocketAddress == null)
+          if (fromSocketAddress == null) {
             throw IOException("Failed to receive from DatagramChannel: fromSocketAddress == null")
+          }
           /*
           if(artificalPacketLossPercentage > 0 && Math.abs(random.nextInt()%100) < artificalPacketLossPercentage)
           {
@@ -163,9 +159,7 @@ abstract class UDPServer(
           	catch(Exception e) {}
           }
           */
-          // Cast to avoid issue with java version mismatch:
-          // https://stackoverflow.com/a/61267496/2875073
-          (buffer as Buffer).flip()
+          buffer.flip()
           //					logger.atFine().log("receive("+EmuUtil.INSTANCE.dumpBuffer(buffer, false)+")");
           // TODO(nue): time this
           handleReceived(buffer, fromSocketAddress as InetSocketAddress)
