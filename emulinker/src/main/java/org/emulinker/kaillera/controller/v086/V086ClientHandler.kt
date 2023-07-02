@@ -21,8 +21,9 @@ import org.emulinker.kaillera.controller.v086.protocol.V086Message
 import org.emulinker.kaillera.model.KailleraUser
 import org.emulinker.kaillera.model.event.*
 import org.emulinker.net.BindException
-import org.emulinker.net.PrivateUDPServer
+import org.emulinker.net.UDPServer
 import org.emulinker.util.ClientGameDataCache
+import org.emulinker.util.EmuUtil
 import org.emulinker.util.EmuUtil.dumpBuffer
 import org.emulinker.util.GameDataCache
 import org.emulinker.util.LoggingUtils.debugLog
@@ -33,12 +34,31 @@ class V086ClientHandler
 constructor(
   metrics: MetricRegistry,
   flags: RuntimeFlags,
-  @Assisted remoteSocketAddress: InetSocketAddress,
+  // TODO(nue): Try to replace this with remoteSocketAddress.
+  /** I think this is the address from when the user called the connect controller. */
+  @Assisted val connectRemoteSocketAddress: InetSocketAddress,
   @param:Assisted val controller: V086Controller,
   @Named("listeningOnPortsCounter") listeningOnPortsCounter: Counter
-) :
-  PrivateUDPServer(false, remoteSocketAddress.address, metrics, listeningOnPortsCounter),
-  KailleraEventListener {
+) : UDPServer(shutdownOnExit = false, metrics, listeningOnPortsCounter), KailleraEventListener {
+
+  var remoteSocketAddress: InetSocketAddress? = null
+    private set
+
+  override fun handleReceived(buffer: ByteBuffer, remoteSocketAddress: InetSocketAddress) {
+    if (this.remoteSocketAddress == null) this.remoteSocketAddress = remoteSocketAddress
+    else if (remoteSocketAddress != this.remoteSocketAddress) {
+      logger
+        .atWarning()
+        .log(
+          "Rejecting packet received from wrong address: %s != %s",
+          EmuUtil.formatSocketAddress(remoteSocketAddress),
+          EmuUtil.formatSocketAddress(this.remoteSocketAddress!!)
+        )
+      return
+    }
+    clientRequestTimer.time().use { handleReceivedInternal(buffer) }
+  }
+
   lateinit var user: KailleraUser
     private set
 
@@ -49,7 +69,7 @@ constructor(
 
   private var prevMessageNumber = -1
     private set
-  var lastMessageNumber = -1
+  private var lastMessageNumber = -1
     private set
   var clientGameDataCache: GameDataCache = ClientGameDataCache(256)
     private set
@@ -136,26 +156,6 @@ constructor(
     controller.threadPool.execute(this)
     Thread.yield()
 
-    /*
-    long s = System.currentTimeMillis();
-    while (!isBound() && (System.currentTimeMillis() - s) < 1000)
-    {
-    try
-    {
-    Thread.sleep(100);
-    }
-    catch (Exception e)
-    {
-    logger.atSevere().withCause(e).log("Sleep Interrupted!");
-    }
-    }
-
-    if (!isBound())
-    {
-    logger.atSevere().log("V086ClientHandler failed to start for client from %s", getRemoteInetAddress().getHostAddress());
-    return;
-    }
-    */
     logger
       .atFine()
       .log(
@@ -202,10 +202,6 @@ constructor(
   override fun releaseBuffer(buffer: ByteBuffer) {
     // ByteBufferMessage.releaseBuffer(buffer);
     // buffer.clear();
-  }
-
-  override fun handleReceived(buffer: ByteBuffer) {
-    clientRequestTimer.time().use { handleReceivedInternal(buffer) }
   }
 
   private fun handleReceivedInternal(buffer: ByteBuffer) {
@@ -368,7 +364,7 @@ constructor(
       debugLog { logger.atFinest().log("<- TO P%d: %s", user.playerNumber, outMessage) }
       outBundle.writeTo(outBuffer)
       outBuffer.flip()
-      send(outBuffer)
+      send(outBuffer, remoteSocketAddress)
       outBuffer.clear()
     }
   }
