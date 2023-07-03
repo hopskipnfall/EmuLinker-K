@@ -26,6 +26,11 @@ import org.emulinker.util.EmuUtil
 import org.emulinker.util.EmuUtil.threadSleep
 import org.emulinker.util.Executable
 
+/**
+ * Represents a user in the server.
+ *
+ * A thread is dedicated to each user and we can probably clean this up.
+ */
 class KailleraUser(
   val id: Int,
   val protocol: String,

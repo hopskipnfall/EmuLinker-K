@@ -2,7 +2,6 @@ package org.emulinker.kaillera.controller.v086
 
 import java.net.InetSocketAddress
 import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.ThreadPoolExecutor
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.reflect.KClass
@@ -85,7 +84,6 @@ class V086Controller
 @Inject
 internal constructor(
   override var server: KailleraServer,
-  var threadPool: ThreadPoolExecutor,
   config: Configuration,
   loginAction: LoginAction,
   ackAction: ACKAction,

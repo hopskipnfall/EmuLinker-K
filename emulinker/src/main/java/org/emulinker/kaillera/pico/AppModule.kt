@@ -10,6 +10,7 @@ import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.HttpTimeout
 import java.nio.charset.Charset
+import java.util.Timer
 import java.util.concurrent.SynchronousQueue
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
@@ -115,6 +116,8 @@ abstract class AppModule {
         SynchronousQueue()
       )
     }
+
+    @Provides @Singleton fun provideTimer(): Timer = Timer()
 
     @Provides
     @Singleton

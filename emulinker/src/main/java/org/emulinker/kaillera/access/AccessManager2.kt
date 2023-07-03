@@ -16,7 +16,9 @@ import org.emulinker.config.RuntimeFlags
 import org.emulinker.util.WildcardStringPattern
 
 @Singleton
-class AccessManager2 @Inject internal constructor(private val flags: RuntimeFlags) : AccessManager {
+class AccessManager2
+@Inject
+internal constructor(private val flags: RuntimeFlags, private val timer: Timer) : AccessManager {
   companion object {
     init {
       Security.setProperty("networkaddress.cache.ttl", "60")
@@ -37,7 +39,8 @@ class AccessManager2 @Inject internal constructor(private val flags: RuntimeFlag
   private val tempModeratorList: MutableList<TempModerator> = CopyOnWriteArrayList()
   private val tempElevatedList: MutableList<TempElevated> = CopyOnWriteArrayList()
   private val silenceList: MutableList<Silence> = CopyOnWriteArrayList()
-  private val timer = Timer()
+
+  private val timerTasks = mutableSetOf<TimerTask>()
 
   @Synchronized
   private fun checkReload() {
@@ -445,14 +448,19 @@ class AccessManager2 @Inject internal constructor(private val flags: RuntimeFlag
     }
     loadAccess()
 
-    timer.schedule(delay = 1.minutes.inWholeMilliseconds, period = 1.minutes.inWholeMilliseconds) {
-      logger.atFine().log("Refreshing DNS for all users and addresses")
-      userList.forEach { it.refreshDNS() }
-      addressList.forEach { it.refreshDNS() }
-    }
+    timerTasks.add(
+      timer.schedule(
+        delay = 1.minutes.inWholeMilliseconds,
+        period = 1.minutes.inWholeMilliseconds
+      ) {
+        logger.atFine().log("Refreshing DNS for all users and addresses")
+        userList.forEach { it.refreshDNS() }
+        addressList.forEach { it.refreshDNS() }
+      }
+    )
   }
 
   override fun close() {
-    timer.cancel()
+    timerTasks.forEach { it.cancel() }
   }
 }

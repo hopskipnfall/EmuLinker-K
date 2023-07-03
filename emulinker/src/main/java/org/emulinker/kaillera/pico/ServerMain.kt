@@ -50,11 +50,18 @@ fun main() {
       "EmuLinker server is running @ %s",
       DateTimeFormatter.ISO_ZONED_DATE_TIME.withZone(ZoneId.systemDefault()).format(Instant.now())
     )
+  // Essentially does nothing.
   component.kailleraServerController.start()
-  //  component.connectController.start()
+
+  // Starts listening on the port.
   component.combinedKaillerController.start()
+
+  // Keeps iterating over users to look for people who should be kicked.
   component.kailleraServer.start()
-  component.masterListUpdater.start()
+
+  // Reports data to various servers.
+  component.masterListUpdater.run()
+
   val metrics = component.metricRegistry
   metrics.registerAll(ThreadStatesGaugeSet())
   //  metrics.registerAll(MemoryUsageGaugeSet())

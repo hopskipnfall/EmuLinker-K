@@ -17,7 +17,6 @@ import org.emulinker.kaillera.release.ReleaseInfo
 abstract class AppComponent {
   abstract val configuration: Configuration
   abstract val releaseInfo: ReleaseInfo
-  //  abstract val connectController: ConnectController
   abstract val kailleraServerController: KailleraServerController
   abstract val combinedKaillerController: CombinedKailleraController
   abstract val accessManager: AccessManager2

@@ -38,6 +38,9 @@ import org.emulinker.util.EmuUtil
 import org.emulinker.util.EmuUtil.threadSleep
 import org.emulinker.util.Executable
 
+/** Holds server-wide state. */
+// TODO(nue): This looks like this file contains a ton of unnecessary processing and runs basically
+// continuously.
 @Singleton
 class KailleraServer
 @Inject
@@ -844,7 +847,7 @@ internal constructor(
         for (user in users) {
           synchronized(user) {
             val access = accessManager.getAccess(user.connectSocketAddress.address)
-            (user as KailleraUser?)!!.accessLevel = access
+            user.accessLevel = access
 
             // LagStat
             if (user.loggedIn) {

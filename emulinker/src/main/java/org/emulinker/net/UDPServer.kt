@@ -51,8 +51,6 @@ abstract class UDPServer(shutdownOnExit: Boolean, private val listeningOnPortsCo
       if (channel == null) return false
       return if (channel!!.socket() == null) false else !channel!!.socket().isClosed
     }
-  val isConnected: Boolean
-    get() = channel!!.isConnected
 
   @Synchronized
   open fun start() {
@@ -74,12 +72,6 @@ abstract class UDPServer(shutdownOnExit: Boolean, private val listeningOnPortsCo
         logger.atSevere().withCause(e).log("Failed to close DatagramChannel")
       }
     }
-  }
-
-  @Synchronized
-  @Throws(BindException::class)
-  protected fun bind() {
-    bind(-1)
   }
 
   @Synchronized
