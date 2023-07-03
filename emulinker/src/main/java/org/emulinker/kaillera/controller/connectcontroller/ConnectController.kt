@@ -13,7 +13,6 @@ import org.emulinker.kaillera.controller.connectcontroller.protocol.*
 import org.emulinker.kaillera.controller.connectcontroller.protocol.ConnectMessage.Companion.parse
 import org.emulinker.kaillera.controller.messaging.ByteBufferMessage.Companion.getBuffer
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
-import org.emulinker.net.BindException
 import org.emulinker.net.UDPServer
 import org.emulinker.util.EmuUtil.dumpBuffer
 import org.emulinker.util.EmuUtil.formatSocketAddress
@@ -139,16 +138,16 @@ internal constructor(
   }
 
   init {
-    // TODO(nue): RuntimeFlags.
-    val port = config.getInt("controllers.connect.port")
-    bufferSize = config.getInt("controllers.connect.bufferSize")
-    require(bufferSize > 0) { "controllers.connect.bufferSize must be > 0" }
-    try {
-      super.bind(port)
-    } catch (e: BindException) {
-      throw IllegalStateException(e)
-    }
-    logger.atInfo().log("Ready to accept connections on port %d", port)
+    //    // TODO(nue): RuntimeFlags.
+    //    val port = config.getInt("controllers.connect.port")
+    //    bufferSize = config.getInt("controllers.connect.bufferSize")
+    //    require(bufferSize > 0) { "controllers.connect.bufferSize must be > 0" }
+    //    try {
+    //      super.bind(port)
+    //    } catch (e: BindException) {
+    //      throw IllegalStateException(e)
+    //    }
+    //    logger.atInfo().log("Ready to accept connections on port %d", port)
   }
 
   companion object {

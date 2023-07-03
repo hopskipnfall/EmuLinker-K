@@ -51,7 +51,7 @@ fun main() {
       DateTimeFormatter.ISO_ZONED_DATE_TIME.withZone(ZoneId.systemDefault()).format(Instant.now())
     )
   component.kailleraServerController.start()
-  component.connectController.start()
+  //  component.connectController.start()
   component.combinedKaillerController.start()
   component.kailleraServer.start()
   component.masterListUpdater.start()

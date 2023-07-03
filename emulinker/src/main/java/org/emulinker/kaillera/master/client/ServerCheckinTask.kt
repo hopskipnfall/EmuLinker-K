@@ -16,7 +16,7 @@ import kotlin.time.Duration.Companion.seconds
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import org.emulinker.kaillera.controller.connectcontroller.ConnectController
+import org.apache.commons.configuration.Configuration
 import org.emulinker.kaillera.master.PublicServerInformation
 import org.emulinker.kaillera.pico.AppModule
 import org.emulinker.kaillera.pico.CompiledFlags
@@ -46,7 +46,7 @@ class ServerCheckinTask
 @Inject
 constructor(
   private val publicServerInfo: PublicServerInformation,
-  private val connectController: ConnectController,
+  private val config: Configuration,
   private val httpClient: HttpClient
 ) : MasterListUpdateTask {
 
@@ -77,7 +77,7 @@ constructor(
         ServerInfo(
           name = publicServerInfo.serverName,
           connectAddress = publicServerInfo.connectAddress,
-          connectPort = connectController.boundPort!!,
+          connectPort = config.getInt("controllers.connect.port"),
           website = publicServerInfo.website,
           location = publicServerInfo.location,
           charset = AppModule.charsetDoNotUse.name,

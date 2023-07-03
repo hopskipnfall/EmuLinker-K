@@ -8,7 +8,6 @@ import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.access.AccessManager2
 import org.emulinker.kaillera.controller.CombinedKailleraController
 import org.emulinker.kaillera.controller.KailleraServerController
-import org.emulinker.kaillera.controller.connectcontroller.ConnectController
 import org.emulinker.kaillera.master.client.MasterListUpdater
 import org.emulinker.kaillera.model.KailleraServer
 import org.emulinker.kaillera.release.ReleaseInfo
@@ -18,7 +17,7 @@ import org.emulinker.kaillera.release.ReleaseInfo
 abstract class AppComponent {
   abstract val configuration: Configuration
   abstract val releaseInfo: ReleaseInfo
-  abstract val connectController: ConnectController
+  //  abstract val connectController: ConnectController
   abstract val kailleraServerController: KailleraServerController
   abstract val combinedKaillerController: CombinedKailleraController
   abstract val accessManager: AccessManager2

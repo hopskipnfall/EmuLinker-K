@@ -171,9 +171,7 @@ constructor(
         null
       } ?: return
 
-    debugLog {
-      logger.atSevere().log("<- FROM P%d: %s", user.playerNumber, inBundle.messages.firstOrNull())
-    }
+    debugLog { logger.atSevere().log("<- FROM P%d: %s", user.id, inBundle.messages.firstOrNull()) }
     clientRetryCount =
       if (inBundle.numMessages == 0) {
         logger
@@ -304,7 +302,7 @@ constructor(
       }
       numToSend = lastMessageBuffer.fill(outMessages, numToSend)
       val outBundle = V086Bundle(outMessages, numToSend)
-      debugLog { logger.atFinest().log("<- TO P%d: %s", user.playerNumber, outMessage) }
+      debugLog { logger.atSevere().log("<- TO P%d: %s", user.id, outMessage) }
       outBundle.writeTo(outBuffer)
       outBuffer.flip()
       combinedKailleraController.send(outBuffer, remoteSocketAddress)
