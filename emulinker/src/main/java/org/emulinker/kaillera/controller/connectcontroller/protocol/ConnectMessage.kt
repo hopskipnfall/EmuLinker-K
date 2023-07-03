@@ -6,6 +6,7 @@ import java.nio.charset.CharacterCodingException
 import kotlin.Throws
 import org.emulinker.kaillera.controller.messaging.ByteBufferMessage
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
+import org.emulinker.kaillera.pico.AppModule
 import org.emulinker.util.EmuUtil
 
 /**
@@ -24,14 +25,12 @@ sealed class ConnectMessage : ByteBufferMessage() {
   protected abstract val iD: String?
 
   companion object {
-    // TODO(nue): Check if this can be made a constant.
-    var charset = Charsets.ISO_8859_1
 
     @Throws(MessageFormatException::class)
     fun parse(buffer: ByteBuffer): ConnectMessage {
       val messageStr =
         try {
-          val stringDecoder = charset.newDecoder()
+          val stringDecoder = AppModule.charsetDoNotUse.newDecoder()
           stringDecoder.decode(buffer).toString()
         } catch (e: CharacterCodingException) {
           throw MessageFormatException("Invalid bytes received: failed to decode to a string!", e)
@@ -67,7 +66,7 @@ sealed class ConnectMessage : ByteBufferMessage() {
       val messageStr =
         try {
           //            val stringDecoder = charset.newDecoder()
-          byteReadPacket.readText(charset)
+          byteReadPacket.readText(AppModule.charsetDoNotUse)
           //            stringDecoder.decode(byteReadPacket).toString()
         } catch (e: CharacterCodingException) {
           throw MessageFormatException("Invalid bytes received: failed to decode to a string!", e)

@@ -4,6 +4,7 @@ import java.net.InetSocketAddress
 import java.nio.ByteBuffer
 import kotlin.Throws
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
+import org.emulinker.kaillera.pico.AppModule
 import org.emulinker.util.EmuUtil
 
 /**
@@ -20,8 +21,8 @@ data class RequestPrivateKailleraPortRequest(val protocol: String) : ConnectMess
   var clientSocketAddress: InetSocketAddress? = null
 
   override fun writeTo(buffer: ByteBuffer) {
-    buffer.put(charset.encode(iD))
-    EmuUtil.writeString(buffer, protocol, 0x00, charset)
+    buffer.put(AppModule.charsetDoNotUse.encode(iD))
+    EmuUtil.writeString(buffer, protocol, 0x00, AppModule.charsetDoNotUse)
   }
 
   companion object {
