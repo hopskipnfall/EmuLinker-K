@@ -59,20 +59,15 @@ constructor(
       if (handler == null) {
         // User is new. It's either a ConnectMessage or it's the user's first message after
         // reconnecting to the server via the dictated port.
-        val inMessage: ConnectMessage? =
-          try {
-            ConnectMessage.parse(buffer)
-          } catch (e: Exception) {
-            null
-          }
-        if (inMessage != null) {
-          when (inMessage) {
+        val connectMessageResult: Result<ConnectMessage> = ConnectMessage.parse(buffer)
+        if (connectMessageResult.isSuccess) {
+          when (val connectMessage = connectMessageResult.getOrThrow()) {
             is ConnectMessage_PING -> {
               send(ConnectMessage_PONG().toBuffer(), remoteSocketAddress)
             }
             is RequestPrivateKailleraPortRequest -> {
-              check(inMessage.protocol == "0.83") {
-                "Client listed unsupported protocol! $inMessage"
+              check(connectMessage.protocol == "0.83") {
+                "Client listed unsupported protocol! $connectMessage"
               }
 
               send(RequestPrivateKailleraPortResponse(boundPort!!).toBuffer(), remoteSocketAddress)
@@ -83,7 +78,7 @@ constructor(
                 .log(
                   "Received unexpected message type from %s: %s",
                   EmuUtil.formatSocketAddress(remoteSocketAddress),
-                  inMessage
+                  connectMessageResult
                 )
             }
           }

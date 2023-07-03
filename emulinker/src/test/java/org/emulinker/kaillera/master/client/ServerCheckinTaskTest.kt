@@ -9,13 +9,14 @@ import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import org.apache.commons.configuration.Configuration
 import org.emulinker.config.RuntimeFlags
-import org.emulinker.kaillera.controller.connectcontroller.ConnectController
 import org.emulinker.kaillera.master.PublicServerInformation
 import org.emulinker.kaillera.pico.AppModule
 import org.junit.Before
 import org.junit.Test
 import org.mockito.kotlin.doReturn
+import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
 
@@ -62,13 +63,13 @@ class ServerCheckinTaskTest {
       twitterPreventBroadcastNameSuffixes = emptyList(),
       v086BufferSize = 4096,
     )
-  private val connectController = mock<ConnectController>()
+  private val connectController = mock<Configuration>()
 
   @Before
   fun setUp() {
     AppModule.charsetDoNotUse = Charsets.ISO_8859_1
 
-    whenever(connectController.boundPort) doReturn 42
+    whenever(connectController.getInt(eq("controllers.connect.port"))) doReturn 42
   }
 
   @Test

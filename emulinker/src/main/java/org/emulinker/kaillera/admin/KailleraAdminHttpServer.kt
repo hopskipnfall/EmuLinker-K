@@ -4,7 +4,6 @@ import com.google.common.flogger.FluentLogger
 import java.io.IOException
 import java.util.concurrent.ThreadPoolExecutor
 import org.apache.commons.configuration.Configuration
-import org.emulinker.kaillera.controller.connectcontroller.ConnectController
 import org.emulinker.kaillera.model.KailleraServer
 import org.mortbay.http.HashUserRealm
 import org.mortbay.http.SecurityConstraint
@@ -19,7 +18,7 @@ import org.mortbay.util.InetAddrPort
 class KailleraAdminHttpServer(
   config: Configuration,
   threadPool: ThreadPoolExecutor?,
-  connectController: ConnectController?,
+  //  connectController: ConnectController?,
   kailleraServer: KailleraServer?
 ) : AdminServer {
   private var appServer = Server()
@@ -97,7 +96,7 @@ class KailleraAdminHttpServer(
     appServer.addListener(InetAddrPort(port))
     val context = appServer.getContext(jspDir) as ServletHttpContext
     context.setAttribute("threadPool", threadPool)
-    context.setAttribute("connectController", connectController)
+    //    context.setAttribute("connectController", connectController)
     context.setAttribute("kailleraServer", kailleraServer)
     setupSecurity(context, config)
     context.addHandler(ServletHandler())
