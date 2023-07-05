@@ -1,18 +1,18 @@
 package org.emulinker.kaillera.controller
 
 import com.codahale.metrics.Counter
-import com.codahale.metrics.MetricRegistry
 import com.google.common.flogger.FluentLogger
 import java.net.InetSocketAddress
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
-import java.util.Set
+import java.util.Set as JavaSet
+import com.codahale.metrics.MetricRegistry
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ThreadPoolExecutor
 import javax.inject.Inject
 import javax.inject.Named
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.withLock
 import org.apache.commons.configuration.Configuration
@@ -33,13 +33,13 @@ import org.emulinker.util.EmuUtil
 class CombinedKailleraController
 @Inject
 constructor(
-  metrics: MetricRegistry,
+  private val metrics: MetricRegistry,
   private val flags: RuntimeFlags,
   private val accessManager: AccessManager,
   private val threadPool: ThreadPoolExecutor,
   // One for each version (which is only one).
-  kailleraServerControllers: Set<KailleraServerController>,
-  private val config: Configuration,
+  kailleraServerControllers: JavaSet<KailleraServerController>,
+  config: Configuration,
   // TODO(nue): Try to replace this with remoteSocketAddress.
   /** I think this is the address from when the user called the connect controller. */
   @Named("listeningOnPortsCounter") listeningOnPortsCounter: Counter,
@@ -126,7 +126,14 @@ constructor(
         clientHandlers[remoteSocketAddress] = handler!!
       }
 
-      handler.mutex.withLock { handler.handleReceived(buffer, remoteSocketAddress) }
+      if (handler.user.game == null) {
+        // While logging in we need a mutex.
+        handler.mutex.withLock { handler.handleReceived(buffer, remoteSocketAddress) }
+      } else {
+        // When in the game it's unlikely we'll be processing multiple messages from the same user at the same time.
+        // Bypassing the mutex might save some speed by removing a suspension point.
+        handler.handleReceived(buffer, remoteSocketAddress)
+      }
     }
   }
 
@@ -192,7 +199,7 @@ constructor(
     logger.atInfo().log("Ready to accept connections on port %d", port)
   }
 
-  private val scope = CoroutineScope(Dispatchers.IO)
+  private val scope = CoroutineScope(threadPool.asCoroutineDispatcher())
 
   companion object {
     private val logger = FluentLogger.forEnclosingClass()
