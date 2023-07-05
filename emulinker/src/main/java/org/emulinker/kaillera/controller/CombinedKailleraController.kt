@@ -1,12 +1,12 @@
 package org.emulinker.kaillera.controller
 
 import com.codahale.metrics.Counter
+import com.codahale.metrics.MetricRegistry
 import com.google.common.flogger.FluentLogger
 import java.net.InetSocketAddress
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.util.Set as JavaSet
-import com.codahale.metrics.MetricRegistry
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ThreadPoolExecutor
 import javax.inject.Inject
@@ -130,7 +130,8 @@ constructor(
         // While logging in we need a mutex.
         handler.mutex.withLock { handler.handleReceived(buffer, remoteSocketAddress) }
       } else {
-        // When in the game it's unlikely we'll be processing multiple messages from the same user at the same time.
+        // When in the game it's unlikely we'll be processing multiple messages from the same user
+        // at the same time.
         // Bypassing the mutex might save some speed by removing a suspension point.
         handler.handleReceived(buffer, remoteSocketAddress)
       }

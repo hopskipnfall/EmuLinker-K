@@ -12,6 +12,9 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.Throws
 import kotlin.time.Duration.Companion.milliseconds
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.cancel
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.access.AccessManager
 import org.emulinker.kaillera.lookingforgame.LookingForGameEvent
@@ -102,6 +105,9 @@ internal constructor(
   val maxGameChatLength = flags.maxGameChatLength
   private val maxClientNameLength: Int = flags.maxClientNameLength
 
+  /** Basically the [CoroutineScope] to be used for all asynchronous actions. */
+  val coroutineScope = CoroutineScope(threadPool.asCoroutineDispatcher())
+
   override fun toString(): String {
     return String.format(
       "KailleraServer[numUsers=%d numGames=%d isRunning=%b]",
@@ -134,7 +140,7 @@ internal constructor(
       return
     }
     stopFlag = true
-    for (user in usersMap.values) user.stop()
+    coroutineScope.cancel()
     usersMap.clear()
     gamesMap.clear()
   }
@@ -192,24 +198,6 @@ internal constructor(
         user,
         protocol,
         EmuUtil.formatSocketAddress(clientSocketAddress)
-      )
-    logger
-      .atFine()
-      .log(
-        "%s Thread starting (ThreadPool:%d/%d)",
-        user,
-        threadPool.activeCount,
-        threadPool.poolSize
-      )
-    threadPool.execute(user)
-    Thread.yield()
-    logger
-      .atFine()
-      .log(
-        "%s Thread started (ThreadPool:%d/%d)",
-        user,
-        threadPool.activeCount,
-        threadPool.poolSize
       )
     usersMap[userID] = user
     return user
@@ -865,7 +853,6 @@ internal constructor(
               !user.loggedIn && System.currentTimeMillis() - user.connectTime > flags.maxPing * 15
             ) {
               logger.atInfo().log("%s connection timeout!", user)
-              user.stop()
               usersMap.remove(user.id)
             } else if (
               user.loggedIn &&

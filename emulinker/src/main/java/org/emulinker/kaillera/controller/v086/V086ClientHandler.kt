@@ -143,7 +143,6 @@ constructor(
 
   override fun stop() {
     controller.clientHandlers.remove(user.id)
-    user.stop()
     combinedKailleraController.clientHandlers.remove(remoteSocketAddress)
   }
 
