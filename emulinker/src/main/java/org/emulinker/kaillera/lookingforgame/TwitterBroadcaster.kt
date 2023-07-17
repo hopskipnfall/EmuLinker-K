@@ -1,20 +1,22 @@
 package org.emulinker.kaillera.lookingforgame
 
 import com.google.common.flogger.FluentLogger
-import io.reactivex.rxjava3.core.Completable
+import io.github.redouane59.twitter.TwitterClient
+import io.github.redouane59.twitter.dto.tweet.Tweet
+import io.github.redouane59.twitter.dto.tweet.TweetParameters
 import io.reactivex.rxjava3.core.Observable
-import io.reactivex.rxjava3.disposables.Disposable
 import io.reactivex.rxjava3.schedulers.Schedulers
+import java.util.Timer
+import java.util.TimerTask
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentMap
-import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.concurrent.schedule
+import kotlin.time.Duration.Companion.seconds
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.model.KailleraUser
-import twitter4j.Status
-import twitter4j.StatusUpdate
-import twitter4j.Twitter
+import org.emulinker.util.EmuLang
 
 /**
  * Observes when a user is looking for a game opponent and publishes a report to one or more
@@ -23,10 +25,16 @@ import twitter4j.Twitter
 @Singleton
 class TwitterBroadcaster
 @Inject
-internal constructor(private val flags: RuntimeFlags, private val twitter: Twitter) {
+internal constructor(
+  private val flags: RuntimeFlags,
+  private val twitter: TwitterClient,
+  private val timer: Timer,
+) {
 
-  private val pendingReports: ConcurrentMap<LookingForGameEvent, Disposable> = ConcurrentHashMap()
-  private val postedTweets: ConcurrentMap<LookingForGameEvent, Long> = ConcurrentHashMap()
+  private val pendingReports: ConcurrentMap<LookingForGameEvent, TimerTask> = ConcurrentHashMap()
+  private val postedTweets: ConcurrentMap<LookingForGameEvent, String> = ConcurrentHashMap()
+
+  private val userId = twitter.userIdFromAccessToken
 
   /**
    * After the number of seconds defined in the config, it will report.
@@ -38,46 +46,32 @@ internal constructor(private val flags: RuntimeFlags, private val twitter: Twitt
       return false
     }
     val username: String = lookingForGameEvent.user.name!!
-    // TODO(nue): Abstract the @ into a status field instead of keeping it in the name.
-    // Note: This isn't the normal @ character..
-    if (username.contains("＠")) {
-      val afterAt = username.substring(username.indexOf("＠"))
-      if (
-        flags.twitterPreventBroadcastNameSuffixes.stream().anyMatch { suffix: String? ->
-          afterAt.contains(suffix!!)
-        }
-      ) {
+    if (username.contains("＠") || username.contains("@")) {
+      val afterAt = username.removePrefix("＠").removePrefix("@")
+      if (flags.twitterPreventBroadcastNameSuffixes.any { afterAt.contains(it) }) {
         return false
       }
     }
 
-    // *Chat or *Away "games".
+    // Discard *Chat or *Away "games".
     if (lookingForGameEvent.gameTitle.startsWith("*")) {
       return false
     }
-    val disposable =
-      Completable.timer(
-          flags.twitterBroadcastDelay.inWholeSeconds,
-          TimeUnit.SECONDS,
-          Schedulers.io()
-        )
-        .subscribe {
-          pendingReports.remove(lookingForGameEvent)
-          val user: KailleraUser = lookingForGameEvent.user
-          val message =
-            java.lang.String.format(
-              "User: %s\nGame: %s\nServer: %s (%s)",
-              user.name,
-              lookingForGameEvent.gameTitle,
-              flags.serverName,
-              flags.serverAddress
-            )
-          val tweet = twitter.updateStatus(message)
-          user.game!!.announce(getUrl(tweet), user)
-          logger.atInfo().log("Posted tweet: %s", getUrl(tweet))
-          postedTweets[lookingForGameEvent] = tweet.id
-        }
-    pendingReports[lookingForGameEvent] = disposable
+
+    val timerTask =
+      timer.schedule(
+        delay = flags.twitterBroadcastDelay.inWholeSeconds.seconds.inWholeMilliseconds
+      ) {
+        pendingReports.remove(lookingForGameEvent)
+        val user: KailleraUser = lookingForGameEvent.user
+        val message =
+          "User: ${user.name}\nGame: ${lookingForGameEvent.gameTitle}\nServer: ${flags.serverName} (${flags.serverAddress})"
+        val tweet = twitter.postTweet(message)
+        user.game!!.announce(getUrl(tweet, userId), user)
+        logger.atFine().log("Posted tweet: %s", getUrl(tweet, userId))
+        postedTweets[lookingForGameEvent] = tweet.id
+      }
+    pendingReports[lookingForGameEvent] = timerTask
     return true
   }
 
@@ -91,50 +85,48 @@ internal constructor(private val flags: RuntimeFlags, private val twitter: Twitt
 
   private fun cancelMatchingEvents(predicate: (LookingForGameEvent) -> Boolean): Boolean {
     val anyModified =
-      pendingReports.keys
-        .stream()
-        .filter(predicate) // Use map instead of foreach because it lets us return whether or not
-        // something was
-        // modified.
-        .map { event: LookingForGameEvent ->
-          val disposable = pendingReports[event]
-          if (disposable != null) {
-            disposable.dispose()
-            pendingReports.remove(event)
-            logger.atInfo().log("Prevented pending tweet")
+      pendingReports.keys.asSequence().filter(predicate).any { event: LookingForGameEvent ->
+        val timerTask = pendingReports[event]
+        if (timerTask != null) {
+          try {
+            timerTask.cancel()
+          } catch (e: Exception) {
+            // Throws exceptions if already closed and there's no way to check if it's already been
+            // closed..
           }
-          event
+          pendingReports.remove(event)
         }
-        .findAny()
-        .isPresent
+        true
+      }
     val tweetsClosed =
-      postedTweets.keys
-        .stream()
-        .filter(predicate) // Use map instead of foreach because it lets us return whether or not
-        // something was
-        // modified.
-        .map { event: LookingForGameEvent ->
-          val tweetId = postedTweets[event]
-          if (tweetId != null) {
-            postedTweets.remove(event)
-            Observable.just(tweetId).subscribeOn(Schedulers.io()).subscribe { id: Long? ->
-              val reply = StatusUpdate("〆")
-              reply.inReplyToStatusId = id!!
-              val tweet = twitter.updateStatus(reply)
-              logger.atInfo().log("Posted tweet canceling LFG: %s", getUrl(tweet))
+      postedTweets.keys.asSequence().filter(predicate).any { event: LookingForGameEvent ->
+        val tweetId = postedTweets[event]
+        if (tweetId != null) {
+          postedTweets.remove(event)
+          Observable.just(tweetId).subscribeOn(Schedulers.io()).subscribe { id: String ->
+            if (flags.twitterDeletePostOnClose) {
+              twitter.deleteTweet(id)
+              logger.atFine().log("Deleted tweet %s", id)
+            } else {
+              val tweet =
+                twitter.postTweet(
+                  TweetParameters.builder()
+                    .reply(TweetParameters.Reply.builder().inReplyToTweetId(id).build())
+                    .text(EmuLang.getStringOrDefault("KailleraServerImpl.TweetCloseMessage", "〆"))
+                    .build()
+                )
+              logger.atFine().log("Posted tweet canceling LFG: %s", getUrl(tweet, userId))
             }
           }
-          event
         }
-        .findAny()
-        .isPresent
+        true
+      }
     return anyModified || tweetsClosed
   }
 
-  companion object {
-    private val logger = FluentLogger.forEnclosingClass()
+  private companion object {
+    val logger = FluentLogger.forEnclosingClass()
 
-    private fun getUrl(tweet: Status) =
-      "https://twitter.com/${tweet.user.screenName}/status/${tweet.id}"
+    fun getUrl(tweet: Tweet, userId: String) = "https://twitter.com/$userId/status/${tweet.id}"
   }
 }

@@ -24,7 +24,7 @@ dependencies {
 
   implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.1")
 
-  api("org.twitter4j:twitter4j-core:4.0.7")
+  implementation("io.github.redouane59.twitter:twittered:2.22")
 
   api("io.dropwizard.metrics:metrics-core:4.2.3")
   api("io.dropwizard.metrics:metrics-jvm:4.2.3")

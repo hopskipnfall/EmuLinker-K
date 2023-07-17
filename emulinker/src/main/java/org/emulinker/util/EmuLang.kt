@@ -45,6 +45,14 @@ object EmuLang {
     return false
   }
 
+  fun getStringOrDefault(key: String, default: String): String {
+    return try {
+      RESOURCE_BUNDLE.getString(key)
+    } catch (e: MissingResourceException) {
+      default
+    }
+  }
+
   fun getString(key: String): String {
     return try {
       RESOURCE_BUNDLE.getString(key)
