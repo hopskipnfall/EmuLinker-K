@@ -42,6 +42,7 @@ data class RuntimeFlags(
   val touchEmulinker: Boolean,
   val touchKaillera: Boolean,
   val twitterBroadcastDelay: Duration,
+  val twitterDeletePostOnClose: Boolean,
   val twitterEnabled: Boolean,
   val twitterOAuthAccessToken: String,
   val twitterOAuthAccessTokenSecret: String,
@@ -113,20 +114,16 @@ data class RuntimeFlags(
         touchEmulinker = config.getBoolean("masterList.touchEmulinker", false),
         touchKaillera = config.getBoolean("masterList.touchKaillera", false),
         twitterBroadcastDelay = config.getInt("twitter.broadcastDelaySeconds", 15).seconds,
+        twitterDeletePostOnClose = config.getBoolean("twitter.deletePostOnClose", false),
         twitterEnabled = config.getBoolean("twitter.enabled", false),
         twitterOAuthAccessToken = config.getString("twitter.auth.oAuthAccessToken", ""),
         twitterOAuthAccessTokenSecret = config.getString("twitter.auth.oAuthAccessTokenSecret", ""),
         twitterOAuthConsumerKey = config.getString("twitter.auth.oAuthConsumerKey", ""),
-        twitterOAuthConsumerSecret =
-          config.getString(
-            "twitter.auth.oAuthConsumerSecret",
-            ""
-          ), // TODO(nue): Read these from a file
-        twitterPreventBroadcastNameSuffixes = listOf("待", "街", "町", "再起", "侍ち"),
+        twitterOAuthConsumerSecret = config.getString("twitter.auth.oAuthConsumerSecret", ""),
+        twitterPreventBroadcastNameSuffixes =
+          config.getStringArray("twitter.preventBroadcastNameSuffixes").toList(),
         v086BufferSize = config.getInt("controllers.v086.bufferSize", 4096),
       )
-      // ImmutableList.copyOf(config.getString("twitter.preventBroadcastNameSuffixes",
-      // "").split(",")))
     }
   }
 }
