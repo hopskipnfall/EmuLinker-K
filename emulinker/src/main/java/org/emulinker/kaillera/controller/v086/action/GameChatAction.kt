@@ -13,6 +13,7 @@ import org.emulinker.kaillera.lookingforgame.TwitterBroadcaster
 import org.emulinker.kaillera.model.event.GameChatEvent
 import org.emulinker.kaillera.model.exception.ActionException
 import org.emulinker.kaillera.model.exception.GameChatException
+import org.emulinker.util.EmuLang
 import org.emulinker.util.EmuUtil.threadSleep
 
 @Singleton
@@ -473,7 +474,13 @@ internal constructor(
         threadSleep(20.milliseconds)
       } else if (message.message == "/stop") {
         if (lookingForGameReporter.cancelActionsForUser(clientHandler.user.id)) {
-          clientHandler.user.game!!.announce("Canceled pending tweet.", clientHandler.user)
+          clientHandler.user.game!!.announce(
+            EmuLang.getStringOrDefault(
+              "KailleraServerImpl.CanceledPendingTweet",
+              default = "Canceled pending tweet."
+            ),
+            clientHandler.user
+          )
         } else {
           clientHandler.user.game!!.announce("No pending tweets.", clientHandler.user)
         }

@@ -24,6 +24,52 @@ If you want to start a new server, see our [Releases](https://github.com/hopskip
 // TODO(nue): Write better instructions, including how to work with charsets.
 ```
 
+## Features
+
+### Experimental/beta features
+
+These features may be removed or changed without warning.
+
+#### Twitter integration
+
+You can have the server make a Twitter post when a user opens a game, and either delete it or reply marking it as "closed" when the game starts. At the time of writing this, both options are supported by the Twitter API free tier.
+
+![image](https://user-images.githubusercontent.com/5498859/142763676-eaa6afdb-d521-4860-966d-a5c02246b561.png)
+
+To set it up, configure the following values in `config/emulinker.cfg`:
+
+```
+# Twitter reporting integration switch. When enabled it will
+# broadcast new open games.
+twitter.enabled=true
+
+# Delay (in seconds) before sending a tweet.
+twitter.broadcastDelaySeconds=20
+
+# Comma-separated list of phrases that, if found in the name
+# after a "@", will prevent tweet posting.
+# Example username: nue@waiting
+twitter.preventBroadcastNameSuffixes=waiting,restart
+# If true, will simply delete the tweet when the game starts.
+twitter.deletePostOnClose=false
+
+# You will need to make a new Twitter API app and fill in these values.
+twitter.auth.oAuthAccessToken=
+twitter.auth.oAuthAccessTokenSecret=
+twitter.auth.oAuthConsumerKey=
+twitter.auth.oAuthConsumerSecret=
+```
+
+You will also need to configure some messages in `config/language.properties`:
+
+```
+KailleraServerImpl.TweetPendingAnnouncement=Posting a tweet in {0} seconds. Type \"/stop\" to disable.
+KailleraServerImpl.TweetCloseMessage=(opponent found)
+KailleraServerImpl.CanceledPendingTweet=Canceled pending tweet.
+```
+
+With these settings, users whose name ends in @waiting (meaning they are waiting for a specific person to join their game) or @restart (meaning they are restarting the game and are waiting for the same person to join) will not have tweets sent. Similarly, users will be notified and given 20 seconds to type `/stop` to stop the tweet from sending.  After the game starts, the account will respond to the original tweet with the text "(opponent found)".
+
 ## Development
 
 From the root directory, you can perform common tasks with the following commands:

@@ -54,6 +54,7 @@ class ServerCheckinTaskTest {
       touchEmulinker = false,
       touchKaillera = false,
       twitterBroadcastDelay = 15.seconds,
+      twitterDeletePostOnClose = false,
       twitterEnabled = false,
       twitterOAuthAccessToken = "",
       twitterOAuthAccessTokenSecret = "",
