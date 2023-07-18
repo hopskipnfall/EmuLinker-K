@@ -11,6 +11,7 @@ import java.util.TimerTask
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentMap
 import javax.inject.Inject
+import javax.inject.Provider
 import javax.inject.Singleton
 import kotlin.concurrent.schedule
 import kotlin.time.Duration.Companion.seconds
@@ -27,14 +28,13 @@ class TwitterBroadcaster
 @Inject
 internal constructor(
   private val flags: RuntimeFlags,
-  private val twitter: TwitterClient,
+  twitterProvider: Provider<TwitterClient>,
   private val timer: Timer,
 ) {
+  private val twitter: TwitterClient? = if (flags.twitterEnabled) twitterProvider.get() else null
 
   private val pendingReports: ConcurrentMap<LookingForGameEvent, TimerTask> = ConcurrentHashMap()
   private val postedTweets: ConcurrentMap<LookingForGameEvent, String> = ConcurrentHashMap()
-
-  private val userId = twitter.userIdFromAccessToken
 
   /**
    * After the number of seconds defined in the config, it will report.
@@ -42,7 +42,7 @@ internal constructor(
    * @return Whether or not the timer was started.
    */
   fun reportAndStartTimer(lookingForGameEvent: LookingForGameEvent): Boolean {
-    if (!flags.twitterEnabled) {
+    if (twitter == null) {
       return false
     }
     val username: String = lookingForGameEvent.user.name!!
@@ -67,8 +67,8 @@ internal constructor(
         val message =
           "User: ${user.name}\nGame: ${lookingForGameEvent.gameTitle}\nServer: ${flags.serverName} (${flags.serverAddress})"
         val tweet = twitter.postTweet(message)
-        user.game!!.announce(getUrl(tweet, userId), user)
-        logger.atFine().log("Posted tweet: %s", getUrl(tweet, userId))
+        user.game!!.announce(getUrl(tweet, twitter.userIdFromAccessToken), user)
+        logger.atFine().log("Posted tweet: %s", getUrl(tweet, twitter.userIdFromAccessToken))
         postedTweets[lookingForGameEvent] = tweet.id
       }
     pendingReports[lookingForGameEvent] = timerTask
@@ -84,6 +84,9 @@ internal constructor(
   }
 
   private fun cancelMatchingEvents(predicate: (LookingForGameEvent) -> Boolean): Boolean {
+    if (twitter == null) {
+      return false
+    }
     val anyModified =
       pendingReports.keys.asSequence().filter(predicate).any { event: LookingForGameEvent ->
         val timerTask = pendingReports[event]
@@ -115,7 +118,9 @@ internal constructor(
                     .text(EmuLang.getStringOrDefault("KailleraServerImpl.TweetCloseMessage", "〆"))
                     .build()
                 )
-              logger.atFine().log("Posted tweet canceling LFG: %s", getUrl(tweet, userId))
+              logger
+                .atFine()
+                .log("Posted tweet canceling LFG: %s", getUrl(tweet, twitter.userIdFromAccessToken))
             }
           }
         }
