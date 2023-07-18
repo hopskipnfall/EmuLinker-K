@@ -12,10 +12,10 @@ import kotlin.Throws
 import kotlin.time.Duration.Companion.milliseconds
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.access.AccessManager
+import org.emulinker.kaillera.controller.v086.V086ClientHandler
 import org.emulinker.kaillera.model.event.GameDataEvent
 import org.emulinker.kaillera.model.event.GameStartedEvent
 import org.emulinker.kaillera.model.event.KailleraEvent
-import org.emulinker.kaillera.model.event.KailleraEventListener
 import org.emulinker.kaillera.model.event.StopFlagEvent
 import org.emulinker.kaillera.model.event.UserQuitEvent
 import org.emulinker.kaillera.model.event.UserQuitGameEvent
@@ -30,7 +30,7 @@ class KailleraUser(
   val id: Int,
   val protocol: String,
   val connectSocketAddress: InetSocketAddress,
-  val listener: KailleraEventListener,
+  private val listener: V086ClientHandler,
   val server: KailleraServer,
   flags: RuntimeFlags
 ) : Executable {
@@ -528,7 +528,7 @@ class KailleraUser(
       while (!stopFlag) {
         val event = eventQueue.poll(200, TimeUnit.SECONDS)
         if (event == null) continue else if (event is StopFlagEvent) break
-        listener.actionPerformed(event)
+        listener.handleKailleraEvent(event)
         if (event is GameStartedEvent) {
           status = UserStatus.PLAYING
           if (improvedLagstat) {

@@ -4,6 +4,7 @@ import java.net.InetSocketAddress
 import org.emulinker.kaillera.model.KailleraServer
 import org.emulinker.kaillera.model.exception.NewConnectionException
 import org.emulinker.kaillera.model.exception.ServerFullException
+import org.emulinker.net.UdpSocketProvider
 
 interface KailleraServerController {
   val server: KailleraServer
@@ -13,7 +14,11 @@ interface KailleraServerController {
   val clientTypes: Array<String>
 
   @Throws(ServerFullException::class, NewConnectionException::class)
-  fun newConnection(clientSocketAddress: InetSocketAddress, protocol: String): Int
+  fun newConnection(
+    udpSocketProvider: UdpSocketProvider,
+    clientSocketAddress: InetSocketAddress,
+    protocol: String
+  ): Int
 
   fun start()
 

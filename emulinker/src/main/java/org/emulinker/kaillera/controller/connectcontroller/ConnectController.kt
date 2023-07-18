@@ -1,7 +1,6 @@
 package org.emulinker.kaillera.controller.connectcontroller
 
 import com.codahale.metrics.Counter
-import com.codahale.metrics.MetricRegistry
 import com.google.common.flogger.FluentLogger
 import java.net.InetSocketAddress
 import java.nio.ByteBuffer
@@ -12,6 +11,7 @@ import javax.inject.Named
 import javax.inject.Singleton
 import kotlin.time.Duration.Companion.minutes
 import org.apache.commons.configuration.Configuration
+import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.access.AccessManager
 import org.emulinker.kaillera.controller.KailleraServerController
 import org.emulinker.kaillera.controller.connectcontroller.protocol.*
@@ -20,8 +20,8 @@ import org.emulinker.kaillera.controller.messaging.ByteBufferMessage.Companion.g
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.model.exception.NewConnectionException
 import org.emulinker.kaillera.model.exception.ServerFullException
-import org.emulinker.net.BindException
 import org.emulinker.net.UDPServer
+import org.emulinker.net.UdpSocketProvider
 import org.emulinker.util.EmuUtil.dumpBuffer
 import org.emulinker.util.EmuUtil.formatSocketAddress
 import org.emulinker.util.LoggingUtils.debugLog
@@ -37,33 +37,32 @@ open class ConnectController
 @Inject
 internal constructor(
   private val threadPool: ThreadPoolExecutor,
+  // TODO(nue): This makes no sense because KailleraServerController is a singleton...
   kailleraServerControllers: JavaSet<KailleraServerController>,
   private val accessManager: AccessManager,
-  config: Configuration,
-  metrics: MetricRegistry?,
-  @Named("listeningOnPortsCounter") listeningOnPortsCounter: Counter
-) : UDPServer(/* shutdownOnExit= */ true, metrics, listeningOnPortsCounter) {
+  private val config: Configuration,
+  flags: RuntimeFlags,
+  @Named("listeningOnPortsCounter") listeningOnPortsCounter: Counter,
+) : UDPServer(listeningOnPortsCounter) {
 
   private val controllersMap: MutableMap<String?, KailleraServerController>
 
-  var bufferSize = 0
-  var startTime: Long = 0
-    private set
-  var requestCount = 0
-    private set
-  var messageFormatErrorCount = 0
-    private set
-  var protocolErrorCount = 0
-    private set
-  var deniedServerFullCount = 0
-    private set
-  var deniedOtherCount = 0
-    private set
+  override val bufferSize = flags.connectControllerBufferSize
+
+  private var internalBufferSize = 0
+  private var startTime: Long = 0
+  private var requestCount = 0
+  private var messageFormatErrorCount = 0
+  private var protocolErrorCount = 0
+  private var deniedServerFullCount = 0
+  private var deniedOtherCount = 0
   private var lastAddress: String? = null
   private var lastAddressCount = 0
   private var failedToStartCount = 0
   private var connectCount = 0
   private var pingCount = 0
+
+  private lateinit var udpSocketProvider: UdpSocketProvider
 
   fun getController(clientType: String?): KailleraServerController? {
     return controllersMap[clientType]
@@ -71,16 +70,17 @@ internal constructor(
 
   val controllers: Collection<KailleraServerController>
     get() = controllersMap.values
-  override val buffer: ByteBuffer
-    get() = getBuffer(bufferSize)
 
-  override fun releaseBuffer(buffer: ByteBuffer) {}
+  override fun allocateBuffer(): ByteBuffer {
+    return getBuffer(internalBufferSize)
+  }
 
   override fun toString(): String =
     if (boundPort != null) "ConnectController($boundPort)" else "ConnectController(unbound)"
 
   @Synchronized
-  override fun start() {
+  override fun start(udpSocketProvider: UdpSocketProvider) {
+    this.udpSocketProvider = udpSocketProvider
     startTime = System.currentTimeMillis()
     logger
       .atFine()
@@ -90,6 +90,9 @@ internal constructor(
         threadPool.activeCount,
         threadPool.poolSize
       )
+    val port = config.getInt("controllers.connect.port")
+    super.bind(udpSocketProvider, port)
+    logger.atInfo().log("Ready to accept connections on port %d", port)
     threadPool.execute(this)
     Thread.yield()
     logger
@@ -192,7 +195,12 @@ internal constructor(
             lastAddressCount = 0
           }
         } else lastAddress = remoteSocketAddress.address.hostAddress
-        privatePort = protocolController.newConnection(remoteSocketAddress, inMessage.protocol)
+        privatePort =
+          protocolController.newConnection(
+            udpSocketProvider,
+            remoteSocketAddress,
+            inMessage.protocol
+          )
         if (privatePort <= 0) {
           failedToStartCount++
           logger
@@ -238,8 +246,6 @@ internal constructor(
   }
 
   init {
-    val port = config.getInt("controllers.connect.port")
-    bufferSize = config.getInt("controllers.connect.bufferSize")
     require(bufferSize > 0) { "controllers.connect.bufferSize must be > 0" }
     controllersMap = HashMap()
     for (controller in kailleraServerControllers) {
@@ -249,12 +255,6 @@ internal constructor(
         controllersMap[clientTypes[j]] = controller
       }
     }
-    try {
-      super.bind(port)
-    } catch (e: BindException) {
-      throw IllegalStateException(e)
-    }
-    logger.atInfo().log("Ready to accept connections on port %d", port)
   }
 
   companion object {

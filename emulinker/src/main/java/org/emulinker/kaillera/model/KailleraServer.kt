@@ -14,6 +14,7 @@ import kotlin.Throws
 import kotlin.time.Duration.Companion.milliseconds
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.access.AccessManager
+import org.emulinker.kaillera.controller.v086.V086ClientHandler
 import org.emulinker.kaillera.lookingforgame.LookingForGameEvent
 import org.emulinker.kaillera.lookingforgame.TwitterBroadcaster
 import org.emulinker.kaillera.master.StatsCollector
@@ -22,7 +23,6 @@ import org.emulinker.kaillera.model.event.ConnectedEvent
 import org.emulinker.kaillera.model.event.GameClosedEvent
 import org.emulinker.kaillera.model.event.GameCreatedEvent
 import org.emulinker.kaillera.model.event.InfoMessageEvent
-import org.emulinker.kaillera.model.event.KailleraEventListener
 import org.emulinker.kaillera.model.event.ServerEvent
 import org.emulinker.kaillera.model.event.UserJoinedEvent
 import org.emulinker.kaillera.model.event.UserQuitEvent
@@ -82,17 +82,9 @@ internal constructor(
     return gamesMap[gameID]
   }
 
-  fun getNumGamesPlaying(): Int {
-    var count = 0
-    for (game in games) {
-      if (game.status != GameStatus.WAITING) count++
-    }
-    return count
-  }
-
-  val maxPing: Int = flags.maxPing
-  val maxUsers: Int = flags.maxUsers
-  val maxGames: Int = flags.maxGames
+  val maxPing = flags.maxPing
+  val maxUsers = flags.maxUsers
+  val maxGames = flags.maxGames
 
   val allowSinglePlayer = flags.allowSinglePlayer
   private val maxUserNameLength: Int = flags.maxUserNameLength
@@ -138,7 +130,9 @@ internal constructor(
 
   // not synchronized because I know the caller will be thread safe
   private fun getNextUserID(): Int {
-    if (connectionCounter > 0xFFFF) connectionCounter = 1
+    if (connectionCounter > 0xFFFF) {
+      connectionCounter = 1
+    }
     return connectionCounter++
   }
 
@@ -155,9 +149,10 @@ internal constructor(
   @Synchronized
   @Throws(ServerFullException::class, NewConnectionException::class)
   fun newConnection(
-    clientSocketAddress: InetSocketAddress?,
-    protocol: String?,
-    listener: KailleraEventListener?
+    clientSocketAddress: InetSocketAddress,
+    protocol: String,
+    // For acting on Kaillera events.
+    v086ClientHandler: V086ClientHandler
   ): KailleraUser {
     // we'll assume at this point that ConnectController has already asked AccessManager if this IP
     // is banned, so no need to do it again here
@@ -165,7 +160,7 @@ internal constructor(
       .atFine()
       .log(
         "Processing connection request from %s",
-        EmuUtil.formatSocketAddress(clientSocketAddress!!)
+        EmuUtil.formatSocketAddress(clientSocketAddress)
       )
     val access = accessManager.getAccess(clientSocketAddress.address)
 
@@ -180,7 +175,7 @@ internal constructor(
       throw ServerFullException(EmuLang.getString("KailleraServerImpl.LoginDeniedServerFull"))
     }
     val userID = getNextUserID()
-    val user = KailleraUser(userID, protocol!!, clientSocketAddress, listener!!, this, flags)
+    val user = KailleraUser(userID, protocol, clientSocketAddress, v086ClientHandler, this, flags)
     user.status = UserStatus.CONNECTING
     logger
       .atInfo()
@@ -221,7 +216,6 @@ internal constructor(
     LoginException::class
   )
   fun login(user: KailleraUser?) {
-    val userImpl = user
     val loginDelay = System.currentTimeMillis() - user!!.connectTime
     logger
       .atInfo()
@@ -255,10 +249,7 @@ internal constructor(
       logger.atInfo().log("%s login denied: Ping %d > %d", user, user.ping, maxPing)
       usersMap.remove(userListKey)
       throw PingTimeException(
-        EmuLang.getString(
-          "KailleraServerImpl.LoginDeniedPingTooHigh",
-          user.ping.toString() + " > " + maxPing
-        )
+        EmuLang.getString("KailleraServerImpl.LoginDeniedPingTooHigh", "${user.ping} > $maxPing")
       )
     }
     if (
@@ -414,17 +405,17 @@ internal constructor(
     }
 
     // passed all checks
-    userImpl!!.accessLevel = access
-    userImpl.status = UserStatus.IDLE
-    userImpl.loggedIn = true
-    usersMap[userListKey] = userImpl
-    userImpl.addEvent(ConnectedEvent(this, user))
+    user.accessLevel = access
+    user.status = UserStatus.IDLE
+    user.loggedIn = true
+    usersMap[userListKey] = user
+    user.addEvent(ConnectedEvent(this, user))
     threadSleep(20.milliseconds)
     for (loginMessage in loginMessages) {
-      userImpl.addEvent(InfoMessageEvent(user, loginMessage))
+      user.addEvent(InfoMessageEvent(user, loginMessage))
       threadSleep(20.milliseconds)
     }
-    userImpl.addEvent(
+    user.addEvent(
       InfoMessageEvent(
         user,
         "${releaseInfo.productName} v${releaseInfo.version}: ${releaseInfo.websiteString}"
@@ -441,7 +432,7 @@ internal constructor(
 
     // this is fairly ugly
     if (user.isEmuLinkerClient) {
-      userImpl.addEvent(InfoMessageEvent(user, ":ACCESS=" + userImpl.accessStr))
+      user.addEvent(InfoMessageEvent(user, ":ACCESS=" + user.accessStr))
       if (access >= AccessManager.ACCESS_SUPERADMIN) {
         var sb = StringBuilder()
         sb.append(":USERINFO=")
@@ -479,13 +470,13 @@ internal constructor(
     }
     threadSleep(20.milliseconds)
     if (access >= AccessManager.ACCESS_ADMIN) {
-      userImpl.addEvent(
+      user.addEvent(
         InfoMessageEvent(user, EmuLang.getString("KailleraServerImpl.AdminWelcomeMessage"))
       )
       // Display messages to admins if they exist.
       AppModule.messagesToAdmins.forEach { message ->
         threadSleep(20.milliseconds)
-        userImpl.addEvent(InfoMessageEvent(user, message))
+        user.addEvent(InfoMessageEvent(user, message))
       }
     }
     addEvent(UserJoinedEvent(this, user))
@@ -656,7 +647,7 @@ internal constructor(
         )
       }
     }
-    var game: KailleraGameImpl? = null
+    val game: KailleraGameImpl?
     val gameID = getNextGameID()
     game = KailleraGameImpl(gameID, romName, (user as KailleraUser?)!!, this, flags.gameBufferSize)
     gamesMap[gameID] = game

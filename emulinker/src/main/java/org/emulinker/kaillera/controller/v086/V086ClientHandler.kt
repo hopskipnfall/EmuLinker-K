@@ -6,10 +6,16 @@ import com.google.common.flogger.FluentLogger
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
+import java.net.InetAddress
 import java.net.InetSocketAddress
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
+import java.util.concurrent.TimeUnit
 import javax.inject.Named
+import kotlin.time.Duration.Companion.seconds
+import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeout
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.messaging.ParseException
@@ -20,10 +26,11 @@ import org.emulinker.kaillera.controller.v086.protocol.V086BundleFormatException
 import org.emulinker.kaillera.controller.v086.protocol.V086Message
 import org.emulinker.kaillera.model.KailleraUser
 import org.emulinker.kaillera.model.event.*
-import org.emulinker.net.BindException
-import org.emulinker.net.PrivateUDPServer
+import org.emulinker.net.UDPServer
+import org.emulinker.net.UdpSocketProvider
 import org.emulinker.util.ClientGameDataCache
 import org.emulinker.util.EmuUtil.dumpBuffer
+import org.emulinker.util.EmuUtil.formatSocketAddress
 import org.emulinker.util.GameDataCache
 import org.emulinker.util.LoggingUtils.debugLog
 
@@ -32,13 +39,12 @@ class V086ClientHandler
 @AssistedInject
 constructor(
   metrics: MetricRegistry,
-  flags: RuntimeFlags,
+  private val flags: RuntimeFlags,
   @Assisted remoteSocketAddress: InetSocketAddress,
+  /** The V086Controller that started this client handler. */
   @param:Assisted val controller: V086Controller,
-  @Named("listeningOnPortsCounter") listeningOnPortsCounter: Counter
-) :
-  PrivateUDPServer(false, remoteSocketAddress.address, metrics, listeningOnPortsCounter),
-  KailleraEventListener {
+  @Named("listeningOnPortsCounter") listeningOnPortsCounter: Counter,
+) : UDPServer(listeningOnPortsCounter) {
   lateinit var user: KailleraUser
     private set
 
@@ -74,6 +80,11 @@ constructor(
   private val clientRequestTimer =
     metrics.timer(MetricRegistry.name(this.javaClass, "V086ClientRequests"))
 
+  lateinit var remoteSocketAddress: InetSocketAddress
+    private set
+
+  val remoteInetAddress: InetAddress = remoteSocketAddress.address
+
   @AssistedFactory
   interface Factory {
     fun create(
@@ -82,7 +93,34 @@ constructor(
     ): V086ClientHandler
   }
 
-  override fun toString(): String =
+  override fun handleReceived(buffer: ByteBuffer, remoteSocketAddress: InetSocketAddress) {
+    if (!this::remoteSocketAddress.isInitialized) {
+      this.remoteSocketAddress = remoteSocketAddress
+    } else if (remoteSocketAddress != this.remoteSocketAddress) {
+      logger
+        .atSevere()
+        .atMostEvery(10, TimeUnit.SECONDS)
+        .log(
+          "Rejecting packet received from wrong address. Expected=%s but was %s",
+          formatSocketAddress(this.remoteSocketAddress),
+          formatSocketAddress(remoteSocketAddress)
+        )
+      return
+    }
+    clientRequestTimer.time().use {
+      try {
+        runBlocking { withTimeout(2.seconds) { handleReceived(buffer) } }
+      } catch (e: TimeoutCancellationException) {
+        logger.atSevere().withCause(e).log("Request timed out")
+      }
+    }
+  }
+
+  private fun send(buffer: ByteBuffer) {
+    super.send(buffer, remoteSocketAddress)
+  }
+
+  override fun toString() =
     if (boundPort != null) "V086Controller($boundPort)" else "V086Controller(unbound)"
 
   @get:Synchronized
@@ -118,9 +156,8 @@ constructor(
   val averageNetworkSpeed: Int
     get() = ((lastMeasurement - testStart) / speedMeasurementCount).toInt()
 
-  @Throws(BindException::class)
-  public override fun bind(port: Int) {
-    super.bind(port)
+  public override fun bind(udpSocketProvider: UdpSocketProvider, port: Int) {
+    super.bind(udpSocketProvider, port)
   }
 
   fun start(user: KailleraUser) {
@@ -136,26 +173,6 @@ constructor(
     controller.threadPool.execute(this)
     Thread.yield()
 
-    /*
-    long s = System.currentTimeMillis();
-    while (!isBound() && (System.currentTimeMillis() - s) < 1000)
-    {
-    try
-    {
-    Thread.sleep(100);
-    }
-    catch (Exception e)
-    {
-    logger.atSevere().withCause(e).log("Sleep Interrupted!");
-    }
-    }
-
-    if (!isBound())
-    {
-    logger.atSevere().log("V086ClientHandler failed to start for client from %s", getRemoteInetAddress().getHostAddress());
-    return;
-    }
-    */
     logger
       .atFine()
       .log(
@@ -189,26 +206,14 @@ constructor(
     user.stop()
   }
 
-  // return ByteBufferMessage.getBuffer(bufferSize);
-  // Cast to avoid issue with java version mismatch:
-  // https://stackoverflow.com/a/61267496/2875073
-  override val buffer: ByteBuffer
-    get() {
-      // return ByteBufferMessage.getBuffer(bufferSize);
-      inBuffer.clear()
-      return inBuffer
-    }
-
-  override fun releaseBuffer(buffer: ByteBuffer) {
-    // ByteBufferMessage.releaseBuffer(buffer);
-    // buffer.clear();
+  override fun allocateBuffer(): ByteBuffer {
+    // return ByteBufferMessage.getBuffer(bufferSize);
+    inBuffer.clear()
+    return inBuffer
   }
 
-  override fun handleReceived(buffer: ByteBuffer) {
-    clientRequestTimer.time().use { handleReceivedInternal(buffer) }
-  }
-
-  private fun handleReceivedInternal(buffer: ByteBuffer) {
+  private fun handleReceived(buffer: ByteBuffer) {
+    val lastMessageNumberUsed = lastMessageNumber
     val inBundle =
       try {
         parse(buffer, lastMessageNumber)
@@ -233,8 +238,9 @@ constructor(
       } ?: return
 
     debugLog {
-      logger.atFinest().log("<- FROM P%d: %s", user.playerNumber, inBundle.messages.firstOrNull())
+      logger.atFinest().log("-> FROM user %d: %s", user.id, inBundle.messages.firstOrNull())
     }
+
     clientRetryCount =
       if (inBundle.numMessages == 0) {
         logger
@@ -246,6 +252,7 @@ constructor(
       } else {
         0
       }
+
     try {
       synchronized(inSynch) {
         val messages = inBundle.messages
@@ -301,7 +308,9 @@ constructor(
     }
   }
 
-  override fun actionPerformed(event: KailleraEvent) {
+  override val bufferSize = flags.v086BufferSize
+
+  fun handleKailleraEvent(event: KailleraEvent) {
     when (event) {
       is GameEvent -> {
         val eventHandler = controller.gameEventHandlers[event::class]
