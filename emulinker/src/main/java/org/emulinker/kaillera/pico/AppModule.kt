@@ -107,15 +107,14 @@ abstract class AppModule {
     }
 
     @Provides
-    fun provideThreadPoolExecutor(flags: RuntimeFlags): ThreadPoolExecutor {
-      return ThreadPoolExecutor(
+    fun provideThreadPoolExecutor(flags: RuntimeFlags) =
+      ThreadPoolExecutor(
         flags.coreThreadPoolSize,
         Int.MAX_VALUE,
         60L,
         TimeUnit.SECONDS,
         SynchronousQueue()
       )
-    }
 
     @Provides @Singleton fun provideTimer(): Timer = Timer()
 
