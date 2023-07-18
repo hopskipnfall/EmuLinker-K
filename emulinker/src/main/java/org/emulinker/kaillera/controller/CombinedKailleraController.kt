@@ -1,12 +1,10 @@
 package org.emulinker.kaillera.controller
 
 import com.codahale.metrics.Counter
-import com.codahale.metrics.MetricRegistry
 import com.google.common.flogger.FluentLogger
 import java.net.InetSocketAddress
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
-import java.util.Set as JavaSet
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ThreadPoolExecutor
 import javax.inject.Inject
@@ -26,20 +24,20 @@ import org.emulinker.kaillera.controller.connectcontroller.protocol.RequestPriva
 import org.emulinker.kaillera.controller.v086.V086ClientHandler
 import org.emulinker.kaillera.model.exception.NewConnectionException
 import org.emulinker.kaillera.model.exception.ServerFullException
-import org.emulinker.net.BindException
 import org.emulinker.net.UDPServer
+import org.emulinker.net.UdpSocketProvider
 import org.emulinker.util.EmuUtil
 
 class CombinedKailleraController
 @Inject
 constructor(
-  private val metrics: MetricRegistry,
   private val flags: RuntimeFlags,
   private val accessManager: AccessManager,
   private val threadPool: ThreadPoolExecutor,
   // One for each version (which is only one).
-  kailleraServerControllers: JavaSet<KailleraServerController>,
+  kailleraServerControllers: @JvmSuppressWildcards Set<KailleraServerController>,
   config: Configuration,
+  udpSocketProvider: UdpSocketProvider,
   // TODO(nue): Try to replace this with remoteSocketAddress.
   /** I think this is the address from when the user called the connect controller. */
   @Named("listeningOnPortsCounter") listeningOnPortsCounter: Counter,
@@ -53,8 +51,15 @@ constructor(
   private val inBuffer: ByteBuffer = ByteBuffer.allocateDirect(flags.v086BufferSize)
   private val outBuffer: ByteBuffer = ByteBuffer.allocateDirect(flags.v086BufferSize)
 
+  override val bufferSize: Int = flags.v086BufferSize
+
+  override val dispatcher = threadPool.asCoroutineDispatcher()
+  private val context = CoroutineScope(dispatcher)
+  //  val portListenerThread = Executors.newSingleThreadExecutor()
+
   override fun handleReceived(buffer: ByteBuffer, remoteSocketAddress: InetSocketAddress) {
-    scope.launch {
+    // TRY YIELDING??
+    context.launch {
       var handler = clientHandlers[remoteSocketAddress]
       if (handler == null) {
         // User is new. It's either a ConnectMessage or it's the user's first message after
@@ -125,22 +130,8 @@ constructor(
 
         clientHandlers[remoteSocketAddress] = handler!!
       }
-
-      if (handler.user.game == null) {
-        // While logging in we need a mutex.
-        handler.mutex.withLock { handler.handleReceived(buffer, remoteSocketAddress) }
-      } else {
-        // When in the game it's unlikely we'll be processing multiple messages from the same user
-        // at the same time.
-        // Bypassing the mutex might save some speed by removing a suspension point.
-        handler.handleReceived(buffer, remoteSocketAddress)
-      }
+      handler.mutex.withLock { handler.handleReceived(buffer, remoteSocketAddress) }
     }
-  }
-
-  @Throws(BindException::class)
-  public override fun bind(port: Int) {
-    super.bind(port)
   }
 
   override fun stop() {
@@ -169,14 +160,6 @@ constructor(
 
   @Synchronized
   override fun start() {
-    logger
-      .atFine()
-      .log(
-        "%s Thread starting (ThreadPool:%d/%d)",
-        this,
-        threadPool.activeCount,
-        threadPool.poolSize
-      )
     threadPool.execute(this)
     Thread.yield()
   }
@@ -196,11 +179,9 @@ constructor(
     //    private val extraPorts: Int = config.getInt("controllers.v086.extraPorts", 0)
     //    val port = config.getInt("controllers.v086.portRangeStart")
     val port = config.getInt("controllers.connect.port")
-    super.bind(port)
+    super.bind(port, udpSocketProvider)
     logger.atInfo().log("Ready to accept connections on port %d", port)
   }
-
-  private val scope = CoroutineScope(threadPool.asCoroutineDispatcher())
 
   companion object {
     private val logger = FluentLogger.forEnclosingClass()

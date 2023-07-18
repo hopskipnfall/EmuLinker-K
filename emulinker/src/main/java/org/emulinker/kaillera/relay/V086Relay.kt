@@ -17,6 +17,7 @@ import org.emulinker.kaillera.controller.v086.protocol.V086BundleFormatException
 import org.emulinker.net.UDPRelay
 import org.emulinker.util.EmuUtil.dumpBuffer
 
+// TODO(jonnjonn): I think this can be deleted??
 class V086Relay
 @AssistedInject
 internal constructor(

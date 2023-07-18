@@ -490,6 +490,7 @@ class KailleraUser(
       }
     }
     server.coroutineScope.launch {
+      // Removing this for now.
       mutex.withLock {
         try {
           listener.actionPerformed(event)

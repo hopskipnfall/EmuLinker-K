@@ -202,31 +202,29 @@ constructor(
              * checked and this causes an error if messageNumber is 0 and lastMessageNumber is
              * 0xFFFF if (messages [i].getNumber() > lastMessageNumber)
              */
-            run {
-              prevMessageNumber = lastMessageNumber
-              lastMessageNumber = messages[i]!!.messageNumber
-              if (prevMessageNumber + 1 != lastMessageNumber) {
-                if (prevMessageNumber == 0xFFFF && lastMessageNumber == 0) {
-                  // exception; do nothing
-                } else {
-                  logger
-                    .atWarning()
-                    .log(
-                      "%s dropped a packet! (%d to %d)",
-                      user,
-                      prevMessageNumber,
-                      lastMessageNumber
-                    )
-                  user.droppedPacket()
-                }
-              }
-              val action = controller.actions[messages[i]!!.messageTypeId.toInt()]
-              if (action == null) {
-                logger.atSevere().log("No action defined to handle client message: %s", messages[i])
+            prevMessageNumber = lastMessageNumber
+            lastMessageNumber = messages[i]!!.messageNumber
+            if (prevMessageNumber + 1 != lastMessageNumber) {
+              if (prevMessageNumber == 0xFFFF && lastMessageNumber == 0) {
+                // exception; do nothing
               } else {
-                // logger.atFine().log(user + " -> " + message);
-                (action as V086Action<V086Message>).performAction(messages[i]!!, this)
+                logger
+                  .atWarning()
+                  .log(
+                    "%s dropped a packet! (%d to %d)",
+                    user,
+                    prevMessageNumber,
+                    lastMessageNumber
+                  )
+                user.droppedPacket()
               }
+            }
+            val action = controller.actions[messages[i]!!.messageTypeId.toInt()]
+            if (action == null) {
+              logger.atSevere().log("No action defined to handle client message: %s", messages[i])
+            } else {
+              // logger.atFine().log(user + " -> " + message);
+              (action as V086Action<V086Message>).performAction(messages[i]!!, this)
             }
           }
         }
@@ -304,7 +302,7 @@ constructor(
       debugLog { logger.atFinest().log("<- TO P%d: %s", user.id, outMessage) }
       outBundle.writeTo(outBuffer)
       outBuffer.flip()
-      combinedKailleraController.send(outBuffer, remoteSocketAddress)
+      combinedKailleraController.send(outBuffer, remoteSocketAddress!!)
       outBuffer.clear()
     }
   }
