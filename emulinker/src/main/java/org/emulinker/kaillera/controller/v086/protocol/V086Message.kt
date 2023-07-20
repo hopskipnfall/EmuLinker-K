@@ -148,7 +148,7 @@ abstract class V086Message : ByteBufferMessage() {
 }
 
 /** [V086Message] that is sent from the server to clients. */
-interface ServerMessage
+sealed interface ServerMessage
 
 /** [V086Message] that is sent from clients to the server. */
-interface ClientMessage
+sealed interface ClientMessage
