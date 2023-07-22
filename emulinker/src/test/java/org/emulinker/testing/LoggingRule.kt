@@ -23,8 +23,8 @@ class LoggingRule : TestRule {
    * Starts a fluent Truth assertion about [WARNING] and [SEVERE]-level logs that happened during
    * the test.
    */
-  fun assertThatLogs(): LogLogSubject =
-    assertAbout(LogLogSubject.logLog()).that(TestLoggingBackend.logs)
+  fun assertThat(): LogCollectionSubject =
+    assertAbout(LogCollectionSubject.logCollection()).that(TestLoggingBackend.logs)
 
   override fun apply(test: Statement, desc: Description) =
     object : Statement() {
@@ -43,26 +43,8 @@ class LoggingRule : TestRule {
 }
 
 /** Stores information about logs that occurred during test execution. */
-class LogLog {
+class LogCollection {
   val loggerToMessage = mutableListOf<Pair<String, String>>()
-}
-
-class LogLogSubject(failureMetadata: FailureMetadata, private val subject: LogLog) :
-  Subject(failureMetadata, subject) {
-
-  fun contrainsEntryMatching(regex: Regex) {
-    val matched = subject.loggerToMessage.filter { it.second.matches(regex) }
-    if (matched.isNotEmpty()) {
-      subject.loggerToMessage.remove(matched.first())
-    } else {
-      failWithActual(simpleFact("Regex did not match any logs."))
-    }
-  }
-
-  companion object {
-    /** Start a Truth assertion with `assertAbout(logLog())`. */
-    fun logLog() = ::LogLogSubject
-  }
 }
 
 // Note: This is invoked by Flogger via reflection.
@@ -72,7 +54,7 @@ class TestLoggingBackendFactory : BackendFactory() {
 
 /** Singleton Flogger logging backend that listens to new logs during the test. */
 object TestLoggingBackend : LoggerBackend() {
-  val logs = LogLog()
+  val logs = LogCollection()
 
   override fun getLoggerName(): String = "TestLoggingBackend"
 
@@ -84,5 +66,23 @@ object TestLoggingBackend : LoggerBackend() {
 
   override fun handleError(e: RuntimeException?, logData: LogData) {
     logs.loggerToMessage.add(logData.loggerName to logData.literalArgument.toString())
+  }
+}
+
+class LogCollectionSubject(failureMetadata: FailureMetadata, private val subject: LogCollection) :
+  Subject(failureMetadata, subject) {
+
+  fun messageWasLoggedMatching(regex: Regex) {
+    val matched = subject.loggerToMessage.filter { it.second.matches(regex) }
+    if (matched.isNotEmpty()) {
+      subject.loggerToMessage.remove(matched.first())
+    } else {
+      failWithActual(simpleFact("Regex did not match any logs."))
+    }
+  }
+
+  companion object {
+    /** Start a Truth assertion with `assertAbout(logCollection())`. */
+    fun logCollection() = ::LogCollectionSubject
   }
 }
