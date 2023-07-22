@@ -118,6 +118,11 @@ tasks.named("compileTestKotlin") { dependsOn(":emulinker:processTestResources") 
 tasks.withType<Test> {
   useJUnitPlatform()
   useJUnit()
+
+  systemProperty(
+    "flogger.backend_factory",
+    "org.emulinker.testing.TestLoggingBackendFactory#getInstance"
+  )
 }
 
 // Formatting/linting.

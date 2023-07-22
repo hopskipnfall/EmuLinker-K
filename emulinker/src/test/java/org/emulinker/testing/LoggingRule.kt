@@ -1,68 +1,53 @@
 package org.emulinker.testing
 
+import com.google.common.flogger.backend.LogData
+import com.google.common.flogger.backend.LoggerBackend
+import com.google.common.flogger.backend.system.BackendFactory
 import com.google.common.truth.Fact.simpleFact
 import com.google.common.truth.FailureMetadata
 import com.google.common.truth.Subject
 import com.google.common.truth.Truth.assertAbout
 import com.google.common.truth.Truth.assertWithMessage
-import kotlin.reflect.KClass
-import org.apache.logging.log4j.Level.ERROR
-import org.apache.logging.log4j.Level.FATAL
-import org.apache.logging.log4j.Level.WARN
-import org.apache.logging.log4j.LogManager
-import org.apache.logging.log4j.core.LogEvent
-import org.apache.logging.log4j.core.Logger
-import org.apache.logging.log4j.core.appender.AbstractAppender
-import org.apache.logging.log4j.core.config.Property
+import java.lang.RuntimeException
+import java.util.logging.Level
+import java.util.logging.Level.SEVERE
+import java.util.logging.Level.WARNING
 import org.junit.rules.TestRule
 import org.junit.runner.Description
 import org.junit.runners.model.Statement
 
-/** Enforces that logs of level [WARN], [ERROR], and [FATAL] are explicitly expected in tests. */
-class LoggingRule(private val clazz: KClass<*>, private vararg val moreClazzez: KClass<*>) :
-  TestRule {
-  private val appender = ListAppender()
+/** Enforces that logs of levels [WARNING] and [SEVERE] are explicitly expected in tests. */
+class LoggingRule : TestRule {
 
-  fun assertThatLogs(): LogSubject = assertAbout(LogSubject.logCollection()).that(appender)
+  /**
+   * Starts a fluent Truth assertion about [WARNING] and [SEVERE]-level logs that happened during
+   * the test.
+   */
+  fun assertThatLogs(): LogLogSubject =
+    assertAbout(LogLogSubject.logLog()).that(TestLoggingBackend.logs)
 
-  override fun apply(statement: Statement, desc: Description) =
+  override fun apply(test: Statement, desc: Description) =
     object : Statement() {
       override fun evaluate() {
-        for (c in listOf(clazz, *moreClazzez)) {
-          // Cast it as the implementation type so we have access to the addAppender() method.
-          val logger = LogManager.getLogger(c.java) as Logger
-          logger.addAppender(appender)
-        }
+        TestLoggingBackend.logs.loggerToMessage.clear()
 
-        statement.evaluate()
+        // Execute the test.
+        test.evaluate()
 
-        assertWithMessage("Found unexpected log messages").that(appender.loggerToMessage).isEmpty()
+        // Fluent assertions in LogLogSubject subtract from the list of logs as they match.
+        assertWithMessage("Found unexpected log messages")
+          .that(TestLoggingBackend.logs.loggerToMessage)
+          .isEmpty()
       }
     }
 }
 
-class ListAppender :
-  AbstractAppender(
-    "TestAppender",
-    /* filter= */ null,
-    /* layout= */ null,
-    /* ignoreExceptions= */ true,
-    Property.EMPTY_ARRAY
-  ) {
+/** Stores information about logs that occurred during test execution. */
+class LogLog {
   val loggerToMessage = mutableListOf<Pair<String, String>>()
-
-  override fun append(event: LogEvent) {
-    if (event.level in ENFORCED_LOGGING_LEVELS) {
-      loggerToMessage.add(event.loggerName to event.message.formattedMessage)
-    }
-  }
-
-  private companion object {
-    val ENFORCED_LOGGING_LEVELS = setOf(WARN, ERROR, FATAL)
-  }
 }
 
-class LogSubject(failureMetadata: FailureMetadata, private val subject: ListAppender) :
+class LogLogSubject(failureMetadata: FailureMetadata, private val subject: LogLog) :
   Subject(failureMetadata, subject) {
 
   fun contrainsEntryMatching(regex: Regex) {
@@ -75,10 +60,29 @@ class LogSubject(failureMetadata: FailureMetadata, private val subject: ListAppe
   }
 
   companion object {
-    @JvmStatic
-    fun logCollection() =
-      Factory<LogSubject, ListAppender> { failureMetadata, subject ->
-        LogSubject(failureMetadata, subject)
-      }
+    /** Start a Truth assertion with `assertAbout(logLog())`. */
+    fun logLog() = ::LogLogSubject
+  }
+}
+
+// Note: This is invoked by Flogger via reflection.
+class TestLoggingBackendFactory : BackendFactory() {
+  override fun create(p0: String?) = TestLoggingBackend
+}
+
+/** Singleton Flogger logging backend that listens to new logs during the test. */
+object TestLoggingBackend : LoggerBackend() {
+  val logs = LogLog()
+
+  override fun getLoggerName(): String = "TestLoggingBackend"
+
+  override fun isLoggable(level: Level): Boolean = level in setOf(SEVERE, WARNING)
+
+  override fun log(logData: LogData) {
+    handleError(e = null, logData)
+  }
+
+  override fun handleError(e: RuntimeException?, logData: LogData) {
+    logs.loggerToMessage.add(logData.loggerName to logData.literalArgument.toString())
   }
 }

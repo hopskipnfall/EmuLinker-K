@@ -18,14 +18,7 @@ import org.junit.Rule
 import org.junit.Test
 
 class V086BundleTest {
-  @get:Rule
-  val logging =
-    LoggingRule(
-      V086Bundle::class,
-      V086Utils::class,
-      *ServerMessage::class.sealedSubclasses.toTypedArray(),
-      *ClientMessage::class.sealedSubclasses.toTypedArray(),
-    )
+  @get:Rule val logging = LoggingRule()
 
   @Test
   fun hexStringToByteBuffer() {

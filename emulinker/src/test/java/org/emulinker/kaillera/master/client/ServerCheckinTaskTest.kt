@@ -22,7 +22,7 @@ import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
 
 class ServerCheckinTaskTest {
-  @get:Rule val logging = LoggingRule(ServerCheckinTask::class)
+  @get:Rule val logging = LoggingRule()
 
   private val runtimeFlags =
     RuntimeFlags(
