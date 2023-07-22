@@ -13,9 +13,12 @@ import org.emulinker.kaillera.model.ConnectionType
 import org.emulinker.kaillera.model.GameStatus
 import org.emulinker.kaillera.model.UserStatus
 import org.emulinker.kaillera.pico.AppModule
+import org.emulinker.testing.LoggingRule
+import org.junit.Rule
 import org.junit.Test
 
 class V086BundleTest {
+  @get:Rule val logging = LoggingRule()
 
   @Test
   fun hexStringToByteBuffer() {
