@@ -17,7 +17,7 @@ import org.emulinker.kaillera.controller.connectcontroller.protocol.RequestPriva
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.net.UDPRelay
 import org.emulinker.util.EmuUtil.formatSocketAddress
-import org.emulinker.util.LoggingUtils.debugLog
+import org.emulinker.util.stripFromProdBinary
 
 @Deprecated("This doesn't seem to be used anywhere! Maybe we can get rid of it. ")
 internal class KailleraRelay
@@ -57,7 +57,7 @@ constructor(
         logger.atWarning().withCause(e).log("Unrecognized message format!")
         return null
       }
-    debugLog {
+    stripFromProdBinary {
       logger
         .atFine()
         .log(

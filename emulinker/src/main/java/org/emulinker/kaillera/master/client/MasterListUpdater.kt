@@ -1,17 +1,16 @@
 package org.emulinker.kaillera.master.client
 
 import com.google.common.flogger.FluentLogger
-import java.util.Timer
 import java.util.concurrent.ThreadPoolExecutor
 import javax.inject.Inject
 import javax.inject.Singleton
-import kotlin.concurrent.schedule
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.runBlocking
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.master.StatsCollector
 import org.emulinker.util.Executable
+import org.emulinker.util.TaskScheduler
 
 @Singleton
 class MasterListUpdater
@@ -23,14 +22,13 @@ internal constructor(
   private val serverCheckinTask: ServerCheckinTask,
   private val emuLinkerMasterUpdateTask: EmuLinkerMasterUpdateTask,
   private val kailleraMasterUpdateTask: KailleraMasterUpdateTask,
+  private val taskScheduler: TaskScheduler,
 ) : Executable {
   private var stopFlag = false
 
   @get:Synchronized
   override var threadIsActive = false
     private set
-
-  private val timer = Timer()
 
   @Synchronized
   fun start() {
@@ -60,16 +58,15 @@ internal constructor(
       logger.atFine().log("MasterListUpdater thread stop request ignored: not running!")
       return
     }
-    timer.cancel()
     stopFlag = true
   }
 
   override fun run() {
     threadIsActive = true
-    timer.schedule(
+    taskScheduler.scheduleRepeating(
       // Give a few seconds to allow the server to bind ports etc.
-      delay = 10.seconds.inWholeMilliseconds,
-      period = REPORTING_INTERVAL.inWholeMilliseconds
+      initialDelay = 10.seconds,
+      period = REPORTING_INTERVAL
     ) {
       runBlocking {
         serverCheckinTask.touchMaster()

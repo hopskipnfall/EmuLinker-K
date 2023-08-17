@@ -6,7 +6,6 @@ import io.github.redouane59.twitter.dto.tweet.Tweet
 import io.github.redouane59.twitter.dto.tweet.TweetParameters
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.schedulers.Schedulers
-import java.util.Timer
 import java.util.TimerTask
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentMap
@@ -14,10 +13,10 @@ import javax.inject.Inject
 import javax.inject.Provider
 import javax.inject.Singleton
 import kotlin.concurrent.schedule
-import kotlin.time.Duration.Companion.seconds
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.model.KailleraUser
 import org.emulinker.util.EmuLang
+import org.emulinker.util.TaskScheduler
 
 /**
  * Observes when a user is looking for a game opponent and publishes a report to one or more
@@ -29,7 +28,7 @@ class TwitterBroadcaster
 internal constructor(
   private val flags: RuntimeFlags,
   twitterProvider: Provider<TwitterClient>,
-  private val timer: Timer,
+  private val taskScheduler: TaskScheduler,
 ) {
   private val twitter: TwitterClient? = if (flags.twitterEnabled) twitterProvider.get() else null
 
@@ -59,9 +58,7 @@ internal constructor(
     }
 
     val timerTask =
-      timer.schedule(
-        delay = flags.twitterBroadcastDelay.inWholeSeconds.seconds.inWholeMilliseconds
-      ) {
+      taskScheduler.schedule(delay = flags.twitterBroadcastDelay) {
         pendingReports.remove(lookingForGameEvent)
         val user: KailleraUser = lookingForGameEvent.user
         val message =

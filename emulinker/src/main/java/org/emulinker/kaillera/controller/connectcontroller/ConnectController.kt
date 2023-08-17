@@ -24,7 +24,7 @@ import org.emulinker.net.BindException
 import org.emulinker.net.UDPServer
 import org.emulinker.util.EmuUtil.dumpBuffer
 import org.emulinker.util.EmuUtil.formatSocketAddress
-import org.emulinker.util.LoggingUtils.debugLog
+import org.emulinker.util.stripFromProdBinary
 
 /**
  * The UDP Server implementation.
@@ -134,7 +134,9 @@ internal constructor(
         }
       }
 
-    debugLog { logger.atFinest().log("-> FROM %s: %s", formattedSocketAddress, inMessage) }
+    stripFromProdBinary {
+      logger.atFinest().log("-> FROM %s: %s", formattedSocketAddress, inMessage)
+    }
 
     // the message set of the ConnectController isn't really complex enough to warrant a complicated
     // request/action class
@@ -230,7 +232,7 @@ internal constructor(
   }
 
   private fun send(outMessage: ConnectMessage, toSocketAddress: InetSocketAddress) {
-    debugLog {
+    stripFromProdBinary {
       logger.atFinest().log("<- TO %s: %s", formatSocketAddress(toSocketAddress), outMessage)
     }
 
