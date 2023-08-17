@@ -10,6 +10,7 @@ import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.concurrent.TimeUnit.*
+import org.emulinker.util.stripFromProdBinary
 
 private val logger = FluentLogger.forEnclosingClass()
 
@@ -41,8 +42,8 @@ fun main() {
 
   logger.atInfo().log("EmuLinker server Starting...")
   logger.atInfo().log(component.releaseInfo.welcome)
-  if (CompiledFlags.DEBUG_BUILD) {
-    logger.atSevere().log("DEBUG BUILD -- This should not be used for production servers!")
+  stripFromProdBinary {
+    logger.atWarning().log("DEBUG BUILD -- This should not be used for production servers!")
   }
   logger
     .atInfo()

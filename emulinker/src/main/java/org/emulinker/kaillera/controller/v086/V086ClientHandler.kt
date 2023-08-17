@@ -25,7 +25,7 @@ import org.emulinker.net.PrivateUDPServer
 import org.emulinker.util.ClientGameDataCache
 import org.emulinker.util.EmuUtil.dumpBuffer
 import org.emulinker.util.GameDataCache
-import org.emulinker.util.LoggingUtils.debugLog
+import org.emulinker.util.stripFromProdBinary
 
 /** A private UDP server allocated for communication with a single client. */
 class V086ClientHandler
@@ -232,7 +232,7 @@ constructor(
         null
       } ?: return
 
-    debugLog {
+    stripFromProdBinary {
       logger.atFinest().log("<- FROM P%d: %s", user.playerNumber, inBundle.messages.firstOrNull())
     }
     clientRetryCount =
@@ -365,7 +365,7 @@ constructor(
       }
       numToSend = lastMessageBuffer.fill(outMessages, numToSend)
       val outBundle = V086Bundle(outMessages, numToSend)
-      debugLog { logger.atFinest().log("<- TO P%d: %s", user.playerNumber, outMessage) }
+      stripFromProdBinary { logger.atFinest().log("<- TO P%d: %s", user.playerNumber, outMessage) }
       outBundle.writeTo(outBuffer)
       outBuffer.flip()
       send(outBuffer)
