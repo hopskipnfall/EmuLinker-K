@@ -1392,7 +1392,6 @@ $dokka.location:org.emulinker.kaillera.pico/AppModule.Companion/provideHttpClien
 $dokka.location:org.emulinker.kaillera.pico/AppModule.Companion/provideMetricRegistry/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.pico/-app-module/-companion/provide-metric-registry.html
 $dokka.location:org.emulinker.kaillera.pico/AppModule.Companion/provideRuntimeFlags/#org.apache.commons.configuration.Configuration?/PointingToDeclaration/emulinker/org.emulinker.kaillera.pico/-app-module/-companion/provide-runtime-flags.html
 $dokka.location:org.emulinker.kaillera.pico/AppModule.Companion/provideThreadPoolExecutor/#org.emulinker.config.RuntimeFlags/PointingToDeclaration/emulinker/org.emulinker.kaillera.pico/-app-module/-companion/provide-thread-pool-executor.html
-$dokka.location:org.emulinker.kaillera.pico/AppModule.Companion/provideTimer/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.pico/-app-module/-companion/provide-timer.html
 $dokka.location:org.emulinker.kaillera.pico/AppModule.Companion/provideTwitterClient/#org.emulinker.config.RuntimeFlags/PointingToDeclaration/emulinker/org.emulinker.kaillera.pico/-app-module/-companion/provide-twitter-client.html
 $dokka.location:org.emulinker.kaillera.pico/AppModule///PointingToDeclaration/emulinker/org.emulinker.kaillera.pico/-app-module/index.html
 $dokka.location:org.emulinker.kaillera.pico/AppModule/AppModule/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.pico/-app-module/-app-module.html
@@ -1454,6 +1453,7 @@ $dokka.location:org.emulinker.net/UDPServer/start/#/PointingToDeclaration/emuli
 $dokka.location:org.emulinker.net/UDPServer/stop/#/PointingToDeclaration/emulinker/org.emulinker.net/-u-d-p-server/stop.html
 $dokka.location:org.emulinker.net/UDPServer/threadIsActive/#/PointingToDeclaration/emulinker/org.emulinker.net/-u-d-p-server/thread-is-active.html
 $dokka.location:org.emulinker.util////PointingToDeclaration/emulinker/org.emulinker.util/index.html
+$dokka.location:org.emulinker.util//stripFromProdBinary/#kotlin.Function0[kotlin.Unit]/PointingToDeclaration/emulinker/org.emulinker.util/strip-from-prod-binary.html
 $dokka.location:org.emulinker.util/CircularBlockingByteQueue.Companion///PointingToDeclaration/emulinker/org.emulinker.util/-circular-blocking-byte-queue/-companion/index.html
 $dokka.location:org.emulinker.util/CircularBlockingByteQueue///PointingToDeclaration/emulinker/org.emulinker.util/-circular-blocking-byte-queue/index.html
 $dokka.location:org.emulinker.util/CircularBlockingByteQueue/CircularBlockingByteQueue/#kotlin.Int/PointingToDeclaration/emulinker/org.emulinker.util/-circular-blocking-byte-queue/-circular-blocking-byte-queue.html
@@ -1538,8 +1538,6 @@ $dokka.location:org.emulinker.util/GameDataQueue/setGameDesynched/#/PointingToDe
 $dokka.location:org.emulinker.util/GameDataQueue/timeoutMillis/#/PointingToDeclaration/emulinker/org.emulinker.util/-game-data-queue/timeout-millis.html
 $dokka.location:org.emulinker.util/HexConverter///PointingToDeclaration/emulinker/org.emulinker.util/-hex-converter/index.html
 $dokka.location:org.emulinker.util/HexConverter/main/#kotlin.Array[kotlin.String]/PointingToDeclaration/emulinker/org.emulinker.util/-hex-converter/main.html
-$dokka.location:org.emulinker.util/LoggingUtils///PointingToDeclaration/emulinker/org.emulinker.util/-logging-utils/index.html
-$dokka.location:org.emulinker.util/LoggingUtils/debugLog/#kotlin.Function0[kotlin.Unit]/PointingToDeclaration/emulinker/org.emulinker.util/-logging-utils/debug-log.html
 $dokka.location:org.emulinker.util/ServerGameDataCache///PointingToDeclaration/emulinker/org.emulinker.util/-server-game-data-cache/index.html
 $dokka.location:org.emulinker.util/ServerGameDataCache/ServerGameDataCache/#kotlin.Int/PointingToDeclaration/emulinker/org.emulinker.util/-server-game-data-cache/-server-game-data-cache.html
 $dokka.location:org.emulinker.util/ServerGameDataCache/add/#kotlin.ByteArray?/PointingToDeclaration/emulinker/org.emulinker.util/-server-game-data-cache/add.html
@@ -1554,6 +1552,10 @@ $dokka.location:org.emulinker.util/ServerGameDataCache/remove/#kotlin.Int/Pointi
 $dokka.location:org.emulinker.util/ServerGameDataCache/set/#kotlin.Int#kotlin.ByteArray?/PointingToDeclaration/emulinker/org.emulinker.util/-server-game-data-cache/set.html
 $dokka.location:org.emulinker.util/ServerGameDataCache/size/#/PointingToDeclaration/emulinker/org.emulinker.util/-server-game-data-cache/size.html
 $dokka.location:org.emulinker.util/ServerGameDataCache/toString/#/PointingToDeclaration/emulinker/org.emulinker.util/-server-game-data-cache/to-string.html
+$dokka.location:org.emulinker.util/TaskScheduler///PointingToDeclaration/emulinker/org.emulinker.util/-task-scheduler/index.html
+$dokka.location:org.emulinker.util/TaskScheduler/TaskScheduler/#/PointingToDeclaration/emulinker/org.emulinker.util/-task-scheduler/-task-scheduler.html
+$dokka.location:org.emulinker.util/TaskScheduler/schedule/#kotlin.time.Duration#kotlin.Function1[java.util.TimerTask,kotlin.Unit]/PointingToDeclaration/emulinker/org.emulinker.util/-task-scheduler/schedule.html
+$dokka.location:org.emulinker.util/TaskScheduler/scheduleRepeating/#kotlin.time.Duration#kotlin.time.Duration#kotlin.Function1[java.util.TimerTask,kotlin.Unit]/PointingToDeclaration/emulinker/org.emulinker.util/-task-scheduler/schedule-repeating.html
 $dokka.location:org.emulinker.util/UnsignedUtil///PointingToDeclaration/emulinker/org.emulinker.util/-unsigned-util/index.html
 $dokka.location:org.emulinker.util/UnsignedUtil/getUnsignedByte/java.nio.ByteBuffer#/PointingToDeclaration/emulinker/org.emulinker.util/-unsigned-util/get-unsigned-byte.html
 $dokka.location:org.emulinker.util/UnsignedUtil/getUnsignedByte/java.nio.ByteBuffer#kotlin.Int/PointingToDeclaration/emulinker/org.emulinker.util/-unsigned-util/get-unsigned-byte.html
