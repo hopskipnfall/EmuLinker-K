@@ -6,6 +6,8 @@ import dagger.Binds
 import dagger.Module
 import dagger.Provides
 import dagger.multibindings.IntoSet
+import io.github.redouane59.twitter.TwitterClient
+import io.github.redouane59.twitter.signature.TwitterCredentials
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.HttpTimeout
@@ -28,9 +30,6 @@ import org.emulinker.kaillera.master.StatsCollector
 import org.emulinker.kaillera.model.impl.AutoFireDetectorFactory
 import org.emulinker.kaillera.model.impl.AutoFireDetectorFactoryImpl
 import org.emulinker.util.EmuLinkerPropertiesConfig
-import twitter4j.Twitter
-import twitter4j.TwitterFactory
-import twitter4j.conf.ConfigurationBuilder
 
 @Module
 abstract class AppModule {
@@ -77,18 +76,15 @@ abstract class AppModule {
     fun bindPortListenerCounter(metrics: MetricRegistry): Counter =
       metrics.counter("listeningOnPorts")
 
-    @Provides fun provideTwitter(twitterFactory: TwitterFactory): Twitter = twitterFactory.instance
-
     @Provides
     @Singleton
-    fun provideTwitterFactory(flags: RuntimeFlags) =
-      TwitterFactory(
-        ConfigurationBuilder()
-          .setDebugEnabled(true)
-          .setOAuthAccessToken(flags.twitterOAuthAccessToken)
-          .setOAuthAccessTokenSecret(flags.twitterOAuthAccessTokenSecret)
-          .setOAuthConsumerKey(flags.twitterOAuthConsumerKey)
-          .setOAuthConsumerSecret(flags.twitterOAuthConsumerSecret)
+    fun provideTwitterClient(flags: RuntimeFlags) =
+      TwitterClient(
+        TwitterCredentials.builder()
+          .accessToken(flags.twitterOAuthAccessToken)
+          .accessTokenSecret(flags.twitterOAuthAccessTokenSecret)
+          .apiKey(flags.twitterOAuthConsumerKey)
+          .apiSecretKey(flags.twitterOAuthConsumerSecret)
           .build()
       )
 

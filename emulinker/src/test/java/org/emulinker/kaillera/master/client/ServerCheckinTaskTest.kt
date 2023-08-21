@@ -13,7 +13,9 @@ import org.apache.commons.configuration.Configuration
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.master.PublicServerInformation
 import org.emulinker.kaillera.pico.AppModule
+import org.emulinker.testing.LoggingRule
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.eq
@@ -21,6 +23,8 @@ import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
 
 class ServerCheckinTaskTest {
+  @get:Rule val logging = LoggingRule()
+
   private val runtimeFlags =
     RuntimeFlags(
       allowMultipleConnections = true,
@@ -55,6 +59,7 @@ class ServerCheckinTaskTest {
       touchEmulinker = false,
       touchKaillera = false,
       twitterBroadcastDelay = 15.seconds,
+      twitterDeletePostOnClose = false,
       twitterEnabled = false,
       twitterOAuthAccessToken = "",
       twitterOAuthAccessTokenSecret = "",

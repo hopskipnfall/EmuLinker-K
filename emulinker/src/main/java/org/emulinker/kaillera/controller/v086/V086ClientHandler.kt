@@ -30,7 +30,7 @@ import org.emulinker.util.ClientGameDataCache
 import org.emulinker.util.EmuUtil
 import org.emulinker.util.EmuUtil.dumpBuffer
 import org.emulinker.util.GameDataCache
-import org.emulinker.util.LoggingUtils.debugLog
+import org.emulinker.util.stripFromProdBinary
 
 /** A private UDP server allocated for communication with a single client. */
 class V086ClientHandler
@@ -176,7 +176,7 @@ constructor(
         null
       } ?: return
 
-    debugLog { logger.atFinest().log("<- FROM P%d: %s", user.id, inBundle.messages.firstOrNull()) }
+    stripFromProdBinary { logger.atFinest().log("<- FROM P%d: %s", user.id, inBundle.messages.firstOrNull()) }
     clientRetryCount =
       if (inBundle.numMessages == 0) {
         logger
@@ -305,7 +305,7 @@ constructor(
       }
       numToSend = lastMessageBuffer.fill(outMessages, numToSend)
       val outBundle = V086Bundle(outMessages, numToSend)
-      debugLog { logger.atFinest().log("<- TO P%d: %s", user.id, outMessage) }
+      stripFromProdBinary { logger.atFinest().log("<- TO P%d: %s", user.id, outMessage) }
       outBundle.writeTo(outBuffer)
       outBuffer.flip()
       combinedKailleraController.outChannel

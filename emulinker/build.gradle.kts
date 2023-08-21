@@ -24,7 +24,7 @@ dependencies {
 
   implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.1")
 
-  api("org.twitter4j:twitter4j-core:4.0.7")
+  implementation("io.github.redouane59.twitter:twittered:2.22")
 
   api("io.dropwizard.metrics:metrics-core:4.2.3")
   api("io.dropwizard.metrics:metrics-jvm:4.2.3")
@@ -67,7 +67,7 @@ group = "org.emulinker"
 
 description = "EmuLinker-K"
 
-version = "0.10.7"
+version = "0.11.2"
 
 kotlin { jvmToolchain(17) }
 
@@ -118,6 +118,11 @@ tasks.named("compileTestKotlin") { dependsOn(":emulinker:processTestResources") 
 tasks.withType<Test> {
   useJUnitPlatform()
   useJUnit()
+
+  systemProperty(
+    "flogger.backend_factory",
+    "org.emulinker.testing.TestLoggingBackendFactory#getInstance"
+  )
 }
 
 // Formatting/linting.
