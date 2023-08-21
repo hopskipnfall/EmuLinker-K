@@ -9,7 +9,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.master.StatsCollector
-import org.emulinker.util.Executable
 import org.emulinker.util.TaskScheduler
 
 @Singleton
@@ -31,18 +30,19 @@ internal constructor(
   }
 
   fun run() {
-    timerJob = taskScheduler.scheduleRepeating(
-      // Give a few seconds to allow the server to bind ports etc.
-      initialDelay = 10.seconds,
-      period = REPORTING_INTERVAL
-    ) {
-      runBlocking(Dispatchers.IO) {
-        serverCheckinTask.touchMaster()
-        if (flags.touchEmulinker) emuLinkerMasterUpdateTask.touchMaster()
-        if (flags.touchKaillera) kailleraMasterUpdateTask.touchMaster()
+    timerJob =
+      taskScheduler.scheduleRepeating(
+        // Give a few seconds to allow the server to bind ports etc.
+        initialDelay = 10.seconds,
+        period = REPORTING_INTERVAL
+      ) {
+        runBlocking(Dispatchers.IO) {
+          serverCheckinTask.touchMaster()
+          if (flags.touchEmulinker) emuLinkerMasterUpdateTask.touchMaster()
+          if (flags.touchKaillera) kailleraMasterUpdateTask.touchMaster()
+        }
+        statsCollector.clearStartedGamesList()
       }
-      statsCollector.clearStartedGamesList()
-    }
   }
 
   private companion object {

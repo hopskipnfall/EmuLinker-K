@@ -176,7 +176,9 @@ constructor(
         null
       } ?: return
 
-    stripFromProdBinary { logger.atFinest().log("<- FROM P%d: %s", user.id, inBundle.messages.firstOrNull()) }
+    stripFromProdBinary {
+      logger.atFinest().log("<- FROM P%d: %s", user.id, inBundle.messages.firstOrNull())
+    }
     clientRetryCount =
       if (inBundle.numMessages == 0) {
         logger
