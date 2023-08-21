@@ -55,7 +55,7 @@ fun main() {
   component.kailleraServerController.start()
 
   // Starts listening on the port.
-  component.combinedKaillerController.run()
+  component.combinedKaillerController.start()
 
   // Keeps iterating over users to look for people who should be kicked.
   component.kailleraServer.start()

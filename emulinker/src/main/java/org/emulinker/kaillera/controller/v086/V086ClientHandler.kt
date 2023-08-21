@@ -5,20 +5,14 @@ import com.google.common.flogger.FluentLogger
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
-import io.ktor.network.sockets.Datagram
-import io.ktor.utils.io.core.ByteReadPacket
 import java.net.InetSocketAddress
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
-import kotlinx.coroutines.channels.onFailure
-import kotlinx.coroutines.channels.onSuccess
-import kotlinx.coroutines.channels.trySendBlocking
 import kotlinx.coroutines.sync.Mutex
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.controller.CombinedKailleraController
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.messaging.ParseException
-import org.emulinker.kaillera.controller.v086.V086Utils.toKtorAddress
 import org.emulinker.kaillera.controller.v086.action.*
 import org.emulinker.kaillera.controller.v086.protocol.V086Bundle
 import org.emulinker.kaillera.controller.v086.protocol.V086Bundle.Companion.parse
@@ -310,13 +304,8 @@ constructor(
       stripFromProdBinary { logger.atFinest().log("<- TO P%d: %s", user.id, outMessage) }
       outBundle.writeTo(outBuffer)
       outBuffer.flip()
-      combinedKailleraController.outChannel
-        .trySendBlocking(Datagram(ByteReadPacket(outBuffer), remoteSocketAddress!!.toKtorAddress()))
-        .onSuccess {
-          // TODO(nue): We don't need this do we??
-          outBuffer.clear()
-        }
-        .onFailure { logger.atWarning().withCause(it).log("Failed to add to outBuffer: %s") }
+      combinedKailleraController.send(outBuffer, remoteSocketAddress!!)
+      outBuffer.clear()
     }
   }
 

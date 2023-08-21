@@ -1,5 +1,6 @@
 package org.emulinker.kaillera.controller
 
+import com.codahale.metrics.Counter
 import com.google.common.flogger.FluentLogger
 import io.ktor.network.sockets.BoundDatagramSocket
 import io.ktor.network.sockets.Datagram
@@ -12,18 +13,16 @@ import java.lang.Exception
 import java.net.InetSocketAddress
 import java.net.SocketException
 import java.nio.ByteBuffer
+import java.nio.ByteOrder
 import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.Executors
-import java.util.concurrent.SynchronousQueue
 import java.util.concurrent.ThreadPoolExecutor
-import java.util.concurrent.TimeUnit
 import javax.inject.Inject
-import kotlinx.coroutines.CoroutineName
+import javax.inject.Named
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.asCoroutineDispatcher
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.plus
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.withLock
 import org.apache.commons.configuration.Configuration
 import org.emulinker.config.RuntimeFlags
@@ -40,54 +39,36 @@ import org.emulinker.kaillera.model.exception.NewConnectionException
 import org.emulinker.kaillera.model.exception.ServerFullException
 import org.emulinker.net.BindException
 import org.emulinker.net.UdpSocketProvider
-import org.emulinker.util.EmuUtil
+import org.emulinker.util.EmuUtil.formatSocketAddress
+import org.emulinker.util.Executable
 
 class CombinedKailleraController
 @Inject
 constructor(
   private val flags: RuntimeFlags,
   private val accessManager: AccessManager,
+  private val threadPool: ThreadPoolExecutor,
   // One for each version (which is only one).
   kailleraServerControllers: @JvmSuppressWildcards Set<KailleraServerController>,
   config: Configuration,
   udpSocketProvider: UdpSocketProvider,
-) {
-
-  private val handlerDispatcher =
-    ThreadPoolExecutor(
-        flags.coreThreadPoolSize,
-        Int.MAX_VALUE,
-        60L,
-        TimeUnit.SECONDS,
-        SynchronousQueue()
-      )
-      .asCoroutineDispatcher()
-  private val handlerCoroutineScope =
-    CoroutineScope(handlerDispatcher) + CoroutineName("requestHandler")
+  // TODO(nue): Try to replace this with remoteSocketAddress.
+  /** I think this is the address from when the user called the connect controller. */
+  @param:Named("listeningOnPortsCounter") private val listeningOnPortsCounter: Counter,
+) : Executable {
 
   var boundPort: Int? = null
 
-  var threadIsActive = false
+  override var threadIsActive = false
     private set
 
-  protected var stopFlag = false
-    private set
+  private var stopFlag = false
 
   private lateinit var serverSocket: BoundDatagramSocket
 
   @get:Synchronized
   val isBound: Boolean
     get() = !serverSocket.isClosed
-
-  @Synchronized
-  fun stop() {
-    if (stopFlag) return
-    for (controller in controllersMap.values) {
-      controller.stop()
-    }
-    stopFlag = true
-    serverSocket.close()
-  }
 
   @Synchronized
   @Throws(BindException::class)
@@ -100,16 +81,11 @@ constructor(
     boundPort = port
   }
 
-  val outChannel = Channel<Datagram>(capacity = 1_000)
-
-  private suspend fun send(datagram: Datagram) {
+  fun send(buffer: ByteBuffer, toSocketAddress: InetSocketAddress) {
     if (!isBound) {
       logger
         .atWarning()
-        .log(
-          "Failed to send to %s: UDPServer is not bound!",
-          EmuUtil.formatSocketAddress(datagram.address.toJavaAddress())
-        )
+        .log("Failed to send to %s: UDPServer is not bound!", formatSocketAddress(toSocketAddress))
       return
     }
     /*
@@ -120,17 +96,21 @@ constructor(
     */ try {
       //			logger.atFine().log("send("+EmuUtil.INSTANCE.dumpBuffer(buffer, false)+")");
       // This shouldn't be runblocking probably!
-      serverSocket.send(datagram)
+      // I THINK THIS IS THE PROBLEM!!!
+      runBlocking {
+        serverSocket.send(Datagram(ByteReadPacket(buffer), toSocketAddress.toKtorAddress()))
+      }
     } catch (e: Exception) {
       logger.atSevere().withCause(e).log("Failed to send on port %s", boundPort)
     }
   }
 
-  fun run() {
-    sendAndReceiveCoroutineScope.launch {
+  override fun run() =
+    runBlocking(dispatcher) {
       threadIsActive = true
       logger.atFine().log("%s: thread running...", this)
       try {
+        listeningOnPortsCounter.inc()
         while (!stopFlag) {
           try {
             val datagram = serverSocket.receive()
@@ -138,7 +118,9 @@ constructor(
             val fromSocketAddress =
               V086Utils.toJavaAddress(datagram.address as io.ktor.network.sockets.InetSocketAddress)
             if (stopFlag) break
+            //          buffer.flip()
             handleReceived(buffer, fromSocketAddress)
+            releaseBuffer(buffer)
           } catch (e: SocketException) {
             if (stopFlag) break
             logger.atSevere().withCause(e).log("Failed to receive on port %d", boundPort)
@@ -154,31 +136,29 @@ constructor(
           .log("UDPServer on port %d caught unexpected exception!", boundPort)
         stop()
       } finally {
+        listeningOnPortsCounter.dec()
         threadIsActive = false
         logger.atFine().log("%s: thread exiting...", this)
       }
     }
-
-    sendAndReceiveCoroutineScope.launch {
-      for (datagram in outChannel) {
-        send(datagram)
-      }
-    }
-  }
 
   /** Map of protocol name (e.g. "0.86") to [KailleraServerController]. */
   private val controllersMap = ConcurrentHashMap<String, KailleraServerController>()
 
   val clientHandlers = ConcurrentHashMap<InetSocketAddress, V086ClientHandler>()
 
+  private val inBuffer: ByteBuffer = ByteBuffer.allocateDirect(flags.v086BufferSize)
+  private val outBuffer: ByteBuffer = ByteBuffer.allocateDirect(flags.v086BufferSize)
+
   val bufferSize: Int = flags.v086BufferSize
 
-  private val sendAndReceiveThreadpool = Executors.newCachedThreadPool()
-  val sendAndReceiveDispatcher = sendAndReceiveThreadpool.asCoroutineDispatcher()
-  private val sendAndReceiveCoroutineScope = CoroutineScope(sendAndReceiveDispatcher)
+  val dispatcher = threadPool.asCoroutineDispatcher()
+  private val context = CoroutineScope(dispatcher)
+  //  val portListenerThread = Executors.newSingleThreadExecutor()
 
   fun handleReceived(buffer: ByteBuffer, remoteSocketAddress: InetSocketAddress) {
-    handlerCoroutineScope.launch {
+    // TRY YIELDING??
+    context.launch {
       var handler = clientHandlers[remoteSocketAddress]
       if (handler == null) {
         // User is new. It's either a ConnectMessage or it's the user's first message after
@@ -187,31 +167,21 @@ constructor(
         if (connectMessageResult.isSuccess) {
           when (val connectMessage = connectMessageResult.getOrThrow()) {
             is ConnectMessage_PING -> {
-              outChannel.send(
-                Datagram(
-                  ByteReadPacket(ConnectMessage_PONG().toBuffer()),
-                  remoteSocketAddress.toKtorAddress()
-                )
-              )
+              send(ConnectMessage_PONG().toBuffer(), remoteSocketAddress)
             }
             is RequestPrivateKailleraPortRequest -> {
               check(connectMessage.protocol == "0.83") {
                 "Client listed unsupported protocol! $connectMessage"
               }
 
-              outChannel.send(
-                Datagram(
-                  ByteReadPacket(RequestPrivateKailleraPortResponse(boundPort!!).toBuffer()),
-                  remoteSocketAddress.toKtorAddress()
-                )
-              )
+              send(RequestPrivateKailleraPortResponse(boundPort!!).toBuffer(), remoteSocketAddress)
             }
             else -> {
               logger
                 .atWarning()
                 .log(
                   "Received unexpected message type from %s: %s",
-                  EmuUtil.formatSocketAddress(remoteSocketAddress),
+                  formatSocketAddress(remoteSocketAddress),
                   connectMessageResult
                 )
             }
@@ -228,7 +198,7 @@ constructor(
             .atWarning()
             .log(
               "AccessManager denied connection from %s",
-              EmuUtil.formatSocketAddress(remoteSocketAddress)
+              formatSocketAddress(remoteSocketAddress)
             )
           return@launch
         }
@@ -247,10 +217,7 @@ constructor(
             logger
               .atFine()
               .withCause(e)
-              .log(
-                "Sending server full response to %s",
-                EmuUtil.formatSocketAddress(remoteSocketAddress)
-              )
+              .log("Sending server full response to %s", formatSocketAddress(remoteSocketAddress))
             return@launch
           } catch (e: NewConnectionException) {
             logger.atSevere().withCause(e).log("LALALALA")
@@ -263,6 +230,38 @@ constructor(
     }
   }
 
+  override fun stop() {
+    if (stopFlag) return
+    for (controller in controllersMap.values) {
+      controller.stop()
+    }
+
+    stopFlag = true
+    serverSocket.close()
+  }
+
+  fun allocateIncomingBuffer(): ByteBuffer {
+    // return ByteBufferMessage.getBuffer(bufferSize);
+    //    logger.atSevere().log("NEW IN BUFFER")
+    //    inBuffer.clear()
+    //    return inBuffer
+
+    return ByteBuffer.allocateDirect(flags.v086BufferSize).also {
+      it.order(ByteOrder.LITTLE_ENDIAN)
+    }
+  }
+
+  fun releaseBuffer(buffer: ByteBuffer) {
+    // ByteBufferMessage.releaseBuffer(buffer);
+    // buffer.clear();
+  }
+
+  @Synchronized
+  fun start() {
+    threadPool.execute(this)
+    Thread.yield()
+  }
+
   init {
     for (controller in kailleraServerControllers) {
       val clientTypes = controller.clientTypes
@@ -270,6 +269,9 @@ constructor(
         controllersMap[clientTypes[j]] = controller
       }
     }
+
+    inBuffer.order(ByteOrder.LITTLE_ENDIAN)
+    outBuffer.order(ByteOrder.LITTLE_ENDIAN)
 
     // TODO(nue): RuntimeFlags.
     //    private val extraPorts: Int = config.getInt("controllers.v086.extraPorts", 0)
