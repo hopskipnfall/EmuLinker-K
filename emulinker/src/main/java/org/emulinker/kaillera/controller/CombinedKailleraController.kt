@@ -1,6 +1,5 @@
 package org.emulinker.kaillera.controller
 
-import com.codahale.metrics.Counter
 import com.google.common.flogger.FluentLogger
 import io.ktor.network.sockets.BoundDatagramSocket
 import io.ktor.network.sockets.Datagram
@@ -15,9 +14,11 @@ import java.net.SocketException
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.SynchronousQueue
 import java.util.concurrent.ThreadPoolExecutor
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
-import javax.inject.Named
+import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.launch
@@ -52,10 +53,18 @@ constructor(
   kailleraServerControllers: @JvmSuppressWildcards Set<KailleraServerController>,
   config: Configuration,
   udpSocketProvider: UdpSocketProvider,
-  // TODO(nue): Try to replace this with remoteSocketAddress.
-  /** I think this is the address from when the user called the connect controller. */
-  @param:Named("listeningOnPortsCounter") private val listeningOnPortsCounter: Counter,
 ) : Executable {
+  private val handlerDispatcher =
+    ThreadPoolExecutor(
+        flags.coreThreadPoolSize,
+        Int.MAX_VALUE,
+        60L,
+        TimeUnit.SECONDS,
+        SynchronousQueue()
+      )
+      .asCoroutineDispatcher()
+  private val handlerCoroutineScope =
+    CoroutineScope(handlerDispatcher) + CoroutineName("requestHandler")
 
   var boundPort: Int? = null
 
@@ -69,6 +78,22 @@ constructor(
   @get:Synchronized
   val isBound: Boolean
     get() = !serverSocket.isClosed
+
+  override fun stop() {
+    if (stopFlag) return
+    for (controller in controllersMap.values) {
+      controller.stop()
+    }
+
+    stopFlag = true
+    serverSocket.close()
+  }
+
+  @Synchronized
+  fun start() {
+    threadPool.execute(this)
+    Thread.yield()
+  }
 
   @Synchronized
   @Throws(BindException::class)
@@ -110,7 +135,6 @@ constructor(
       threadIsActive = true
       logger.atFine().log("%s: thread running...", this)
       try {
-        listeningOnPortsCounter.inc()
         while (!stopFlag) {
           try {
             val datagram = serverSocket.receive()
@@ -118,9 +142,7 @@ constructor(
             val fromSocketAddress =
               V086Utils.toJavaAddress(datagram.address as io.ktor.network.sockets.InetSocketAddress)
             if (stopFlag) break
-            //          buffer.flip()
             handleReceived(buffer, fromSocketAddress)
-            releaseBuffer(buffer)
           } catch (e: SocketException) {
             if (stopFlag) break
             logger.atSevere().withCause(e).log("Failed to receive on port %d", boundPort)
@@ -136,7 +158,6 @@ constructor(
           .log("UDPServer on port %d caught unexpected exception!", boundPort)
         stop()
       } finally {
-        listeningOnPortsCounter.dec()
         threadIsActive = false
         logger.atFine().log("%s: thread exiting...", this)
       }
@@ -228,38 +249,6 @@ constructor(
       }
       handler.mutex.withLock { handler.handleReceived(buffer, remoteSocketAddress) }
     }
-  }
-
-  override fun stop() {
-    if (stopFlag) return
-    for (controller in controllersMap.values) {
-      controller.stop()
-    }
-
-    stopFlag = true
-    serverSocket.close()
-  }
-
-  fun allocateIncomingBuffer(): ByteBuffer {
-    // return ByteBufferMessage.getBuffer(bufferSize);
-    //    logger.atSevere().log("NEW IN BUFFER")
-    //    inBuffer.clear()
-    //    return inBuffer
-
-    return ByteBuffer.allocateDirect(flags.v086BufferSize).also {
-      it.order(ByteOrder.LITTLE_ENDIAN)
-    }
-  }
-
-  fun releaseBuffer(buffer: ByteBuffer) {
-    // ByteBufferMessage.releaseBuffer(buffer);
-    // buffer.clear();
-  }
-
-  @Synchronized
-  fun start() {
-    threadPool.execute(this)
-    Thread.yield()
   }
 
   init {
