@@ -5,14 +5,20 @@ import com.google.common.flogger.FluentLogger
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
+import io.ktor.network.sockets.Datagram
+import io.ktor.utils.io.core.ByteReadPacket
 import java.net.InetSocketAddress
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
+import kotlinx.coroutines.channels.onFailure
+import kotlinx.coroutines.channels.onSuccess
+import kotlinx.coroutines.channels.trySendBlocking
 import kotlinx.coroutines.sync.Mutex
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.controller.CombinedKailleraController
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.messaging.ParseException
+import org.emulinker.kaillera.controller.v086.V086Utils.toKtorAddress
 import org.emulinker.kaillera.controller.v086.action.*
 import org.emulinker.kaillera.controller.v086.protocol.V086Bundle
 import org.emulinker.kaillera.controller.v086.protocol.V086Bundle.Companion.parse
@@ -31,7 +37,7 @@ class V086ClientHandler
 @AssistedInject
 constructor(
   metrics: MetricRegistry,
-  flags: RuntimeFlags,
+  private val flags: RuntimeFlags,
   // TODO(nue): Try to replace this with remoteSocketAddress.
   /** I think this is the address from when the user called the connect controller. */
   @Assisted val connectRemoteSocketAddress: InetSocketAddress,
@@ -79,7 +85,7 @@ constructor(
 
   private val lastMessageBuffer = LastMessageBuffer(V086Controller.MAX_BUNDLE_SIZE)
   private val outMessages = arrayOfNulls<V086Message>(V086Controller.MAX_BUNDLE_SIZE)
-  private val outBuffer: ByteBuffer = ByteBuffer.allocateDirect(flags.v086BufferSize)
+  private var outBuffer: ByteBuffer = ByteBuffer.allocateDirect(flags.v086BufferSize)
   private val inSynch = Any()
   private val outSynch = Any()
   private var testStart: Long = 0
@@ -304,8 +310,16 @@ constructor(
       stripFromProdBinary { logger.atFinest().log("<- TO P%d: %s", user.id, outMessage) }
       outBundle.writeTo(outBuffer)
       outBuffer.flip()
-      combinedKailleraController.send(outBuffer, remoteSocketAddress!!)
-      outBuffer.clear()
+      combinedKailleraController.outChannel
+        .trySendBlocking(Datagram(ByteReadPacket(outBuffer), remoteSocketAddress!!.toKtorAddress()))
+        .onSuccess {
+          // TODO(nue): This is inefficient! Try to use a set number of buffers and rotate between
+          // them. Or use 1 like the original code does. We will need to call `.clear()` on it
+          // before using it again.
+          outBuffer = ByteBuffer.allocateDirect(flags.v086BufferSize)
+          outBuffer.order(ByteOrder.LITTLE_ENDIAN)
+        }
+        .onFailure { logger.atWarning().withCause(it).log("Failed to add to outBuffer: %s") }
     }
   }
 
