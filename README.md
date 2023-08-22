@@ -8,7 +8,7 @@
 
 # EmuLinker-K
 
-EmuLinker-K is a server that uses the Kaillera protocol to facilitate online multiplayer for emulators.
+EmuLinker-K (ELK) is a server that uses the Kaillera protocol to facilitate online multiplayer for emulators.
 
 EmuLinker-K is a Kotlin rewrite of [EmulinkerSF](https://github.com/God-Weapon/EmuLinkerSF), with an emphasis on measuring and improving performance, patching security and privacy vulnerabilities, and adding useful features for both server owners and users.  EmuLinker-K is maintained by [nue](https://twitter.com/6kRt62r2zvKp5Rh).
 
@@ -16,7 +16,7 @@ Feel free to file bugs and feature requests on this repository, or find our chan
 
 [![Discord](https://img.shields.io/badge/Discord-%235865F2.svg?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/MqZEph388c)
 
-## Getting Started
+## Setting up a new server
 
 If you want to start a new server, see our [Releases](https://github.com/hopskipnfall/EmuLinker-K/releases/latest) page for the latest stable release.
 
@@ -70,26 +70,9 @@ KailleraServerImpl.CanceledPendingTweet=Canceled pending tweet.
 
 With these settings, users whose name ends in @waiting (meaning they are waiting for a specific person to join their game) or @restart (meaning they are restarting the game and are waiting for the same person to join) will not have tweets sent. Similarly, users will be notified and given 20 seconds to type `/stop` to stop the tweet from sending.  After the game starts, the account will respond to the original tweet with the text "(opponent found)".
 
-## Development
+## Contributing
 
-From the root directory, you can perform common tasks with the following commands:
-
-| Command                          | Description                            |
-|----------------------------------|----------------------------------------|
-| `./gradlew clean`                | Clean build resources.                 |
-| `./gradlew compileKotlin`        | Compile the code.                      |
-| `./gradlew test`                 | Run unit tests.                        |
-| `./gradlew run`                  | Run the server locally.                |
-| `./gradlew jar -PprodBuild=true` | Build the jar used for PROD.           |
-| `./gradlew spotlessCheck`        | Run the linter.                        |
-| `./gradlew spotlessApply`        | Run the formatter.                     |
-| `./gradlew tasks`                | See a full list of available commands. |
-
-[Intellij IDEA](https://www.jetbrains.com/idea/download) is recommended for writing code for this repository. 
-
-### Documentation
-
-KDoc documentation is automatically published to https://hopskipnfall.github.io/EmuLinker-K.
+If you're interested in contributing to this project, please read [Contributing.md](CONTRIBUTING.md).
 
 [prs-badge]: https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square
 [prs]: http://makeapullrequest.com
