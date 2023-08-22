@@ -8,7 +8,7 @@ Please consider joining our Discord server:
 
 ## Getting Started
 
-We recommend using [Intellij IDEA](https://www.jetbrains.com/idea/) for development (the free Community Edition works fine). We would like to adopt VSCode as another option but have so far been unsuccessful getting it working.
+We recommend using [Intellij IDEA](https://www.jetbrains.com/idea/) for development (the free Community Edition works fine). We would like to adopt VSCode as another option but have so far been unsuccessful getting it working (#108).
 
 ## Development
 
