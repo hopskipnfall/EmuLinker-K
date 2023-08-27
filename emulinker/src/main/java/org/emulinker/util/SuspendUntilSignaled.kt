@@ -1,23 +1,29 @@
 package org.emulinker.util
 
-import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.locks.Condition
 import javax.inject.Inject
-import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.CompletableJob
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
-// TODO(nue): Make this not terrible.
+/** Intended as a coroutines-friendly implementation of [Condition]. */
 class SuspendUntilSignaled @Inject constructor() {
-  private val signalThing = Channel<Int>(1_000)
+  private val jobs = mutableListOf<CompletableJob>()
 
-  val numListeners = AtomicInteger(/* initialValue= */ 0)
+  private val mutex = Mutex()
 
-  suspend fun signalAll() {
-    if (numListeners.get() > 0) {
-      signalThing.trySend(1)
+  suspend fun signalAll() =
+    mutex.withLock {
+      jobs.forEach { it.complete() }
+      jobs.clear()
     }
-  }
 
   suspend fun suspendUntilSignaled() {
-    numListeners.incrementAndGet()
-    signalThing.receive()
+    val job = Job()
+    job.start()
+    mutex.withLock { jobs.add(job) }
+
+    job.join()
   }
 }

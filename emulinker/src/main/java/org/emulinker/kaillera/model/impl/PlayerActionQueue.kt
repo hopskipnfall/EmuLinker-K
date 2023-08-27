@@ -1,14 +1,14 @@
 package org.emulinker.kaillera.model.impl
 
 import com.google.common.flogger.FluentLogger
+import java.util.concurrent.TimeUnit
 import kotlin.Throws
-import kotlin.concurrent.withLock
 import kotlin.time.Duration.Companion.milliseconds
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withTimeoutOrNull
 import org.emulinker.kaillera.model.KailleraUser
+import org.emulinker.util.SuspendUntilSignaled
 
 class PlayerActionQueue(
   val playerNumber: Int,
@@ -24,19 +24,15 @@ class PlayerActionQueue(
   private var tail = 0
 
   private val mutex = Mutex()
-  private val syncedEventChannel = Channel<Boolean>(1_000)
+  private val suspendUntilSignaled = SuspendUntilSignaled()
 
   var synched = false
     private set
 
   suspend fun setSynched(value: Boolean) {
     synched = value
-    // TODO(nue): Why is this negated??
     if (!value) {
-      // This doesn't work! We should use some better signaling logic.
-      //      mutex.withLock {
-      //        syncedEventChannel.send(true)
-      //      }
+      suspendUntilSignaled.signalAll()
     }
   }
 
@@ -49,9 +45,7 @@ class PlayerActionQueue(
       if (tail == gameBufferSize) tail = 0
     }
     // This doesn't work! We should use some better signaling logic.
-    //    mutex.withLock {
-    //      syncedEventChannel.send(true)
-    //    }
+    suspendUntilSignaled.signalAll()
     lastTimeout = null
   }
 
@@ -59,9 +53,13 @@ class PlayerActionQueue(
   suspend fun getAction(playerNumber: Int, actions: ByteArray, location: Int, actionLength: Int) {
     mutex.withLock {
       if (getSize(playerNumber) < actionLength && synched) {
-        // Wait for the game to be synced.
-        withTimeoutOrNull(gameTimeoutMillis.milliseconds) { syncedEventChannel.receive() }
-          ?: logger.atSevere().log("Timed out while waiting to be synced.")
+        withTimeoutOrNull(gameTimeoutMillis.milliseconds) {
+          suspendUntilSignaled.suspendUntilSignaled()
+        }
+          ?: logger
+            .atSevere()
+            .atMostEvery(1, TimeUnit.SECONDS)
+            .log("Timed out while waiting to be synced.")
       }
     }
     if (getSize(playerNumber) >= actionLength) {
