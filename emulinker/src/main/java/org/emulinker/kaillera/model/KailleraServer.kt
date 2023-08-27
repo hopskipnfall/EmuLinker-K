@@ -98,6 +98,8 @@ internal constructor(
 
   private var timerTask: TimerTask? = null
 
+  private val mutex = Mutex()
+
   /** Basically the [CoroutineScope] to be used for all asynchronous actions. */
   val coroutineScope = CoroutineScope(threadPool.asCoroutineDispatcher())
 
@@ -663,8 +665,6 @@ internal constructor(
     return game
   }
 
-  private val mutex = Mutex()
-
   @Throws(CloseGameException::class)
   suspend fun closeGame(game: KailleraGame, user: KailleraUser) = withLock {
     if (!user.loggedIn) {
@@ -804,7 +804,8 @@ internal constructor(
     }
   }
 
-  suspend fun run() {
+  // TODO(nue): This method is never used..
+  private suspend fun run() {
     try {
       if (usersMap.isEmpty()) return
       for (user in users) {

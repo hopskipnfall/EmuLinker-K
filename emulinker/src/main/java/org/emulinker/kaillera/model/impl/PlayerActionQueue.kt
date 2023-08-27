@@ -1,5 +1,6 @@
 package org.emulinker.kaillera.model.impl
 
+import com.google.common.flogger.FluentLogger
 import kotlin.Throws
 import kotlin.concurrent.withLock
 import kotlin.time.Duration.Companion.milliseconds
@@ -28,13 +29,14 @@ class PlayerActionQueue(
   var synched = false
     private set
 
-  suspend fun setSynched(newval: Boolean) {
-    mutex.withLock {
-      synched = newval
-      // TODO(nue): Why is this negated??
-      if (!newval) {
-        syncedEventChannel.send(true)
-      }
+  suspend fun setSynched(value: Boolean) {
+    synched = value
+    // TODO(nue): Why is this negated??
+    if (!value) {
+      // This doesn't work! We should use some better signaling logic.
+      //      mutex.withLock {
+      //        syncedEventChannel.send(true)
+      //      }
     }
   }
 
@@ -46,17 +48,20 @@ class PlayerActionQueue(
       tail++
       if (tail == gameBufferSize) tail = 0
     }
-    mutex.withLock { syncedEventChannel.send(true) }
+    // This doesn't work! We should use some better signaling logic.
+    //    mutex.withLock {
+    //      syncedEventChannel.send(true)
+    //    }
     lastTimeout = null
   }
 
   @Throws(PlayerTimeoutException::class)
   suspend fun getAction(playerNumber: Int, actions: ByteArray, location: Int, actionLength: Int) {
-    // TODO(nue): We definitely shouldn't be locking here. Maybe we should use a mutex.
     mutex.withLock {
       if (getSize(playerNumber) < actionLength && synched) {
         // Wait for the game to be synced.
         withTimeoutOrNull(gameTimeoutMillis.milliseconds) { syncedEventChannel.receive() }
+          ?: logger.atSevere().log("Timed out while waiting to be synced.")
       }
     }
     if (getSize(playerNumber) >= actionLength) {
@@ -74,5 +79,9 @@ class PlayerActionQueue(
 
   private fun getSize(playerNumber: Int): Int {
     return (tail + gameBufferSize - heads[playerNumber - 1]) % gameBufferSize
+  }
+
+  private companion object {
+    val logger = FluentLogger.forEnclosingClass()
   }
 }
