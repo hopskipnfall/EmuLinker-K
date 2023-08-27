@@ -20,7 +20,7 @@ class UserReadyAction @Inject internal constructor() :
   override fun toString() = "UserReadyAction"
 
   @Throws(FatalActionException::class)
-  override fun performAction(message: AllReady, clientHandler: V086ClientHandler) {
+  override suspend fun performAction(message: AllReady, clientHandler: V086ClientHandler) {
     actionPerformedCount++
     try {
       clientHandler.user.playerReady()

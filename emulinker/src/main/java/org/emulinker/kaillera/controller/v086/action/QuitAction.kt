@@ -21,7 +21,7 @@ class QuitAction @Inject internal constructor() :
   override fun toString() = "QuitAction"
 
   @Throws(FatalActionException::class)
-  override fun performAction(message: QuitRequest, clientHandler: V086ClientHandler) {
+  override suspend fun performAction(message: QuitRequest, clientHandler: V086ClientHandler) {
     actionPerformedCount++
     try {
       clientHandler.user.quit(message.message)

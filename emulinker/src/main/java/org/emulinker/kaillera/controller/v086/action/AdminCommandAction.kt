@@ -54,7 +54,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
   }
 
   @Throws(FatalActionException::class)
-  override fun performAction(chatMessage: Chat, clientHandler: V086ClientHandler) {
+  override suspend fun performAction(chatMessage: Chat, clientHandler: V086ClientHandler) {
     val chat: String = chatMessage.message
     val server = clientHandler.controller.server
     val accessManager = server.accessManager
@@ -438,7 +438,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
   }
 
   @Throws(ActionException::class, MessageFormatException::class)
-  private fun processKick(
+  private suspend fun processKick(
     message: String,
     server: KailleraServer,
     admin: KailleraUser,
@@ -470,7 +470,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
   }
 
   @Throws(ActionException::class, MessageFormatException::class)
-  private fun processCloseGame(
+  private suspend fun processCloseGame(
     message: String,
     server: KailleraServer,
     admin: KailleraUser,
@@ -498,7 +498,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
   }
 
   @Throws(ActionException::class, MessageFormatException::class)
-  private fun processBan(
+  private suspend fun processBan(
     message: String,
     server: KailleraServer,
     admin: KailleraUser,

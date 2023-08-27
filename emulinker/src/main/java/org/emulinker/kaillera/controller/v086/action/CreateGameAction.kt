@@ -25,7 +25,7 @@ class CreateGameAction @Inject internal constructor() :
   override fun toString() = "CreateGameAction"
 
   @Throws(FatalActionException::class)
-  override fun performAction(message: CreateGame, clientHandler: V086ClientHandler) {
+  override suspend fun performAction(message: CreateGame, clientHandler: V086ClientHandler) {
     actionPerformedCount++
     try {
       clientHandler.user.createGame(message.romName)

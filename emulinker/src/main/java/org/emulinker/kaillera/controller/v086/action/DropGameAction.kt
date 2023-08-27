@@ -21,7 +21,7 @@ class DropGameAction @Inject internal constructor() :
   override fun toString() = "DropGameAction"
 
   @Throws(FatalActionException::class)
-  override fun performAction(message: PlayerDropRequest, clientHandler: V086ClientHandler) {
+  override suspend fun performAction(message: PlayerDropRequest, clientHandler: V086ClientHandler) {
     actionPerformedCount++
     try {
       clientHandler.user.dropGame()

@@ -22,7 +22,7 @@ class JoinGameAction @Inject internal constructor() :
   override fun toString() = "JoinGameAction"
 
   @Throws(FatalActionException::class)
-  override fun performAction(message: JoinGameRequest, clientHandler: V086ClientHandler) {
+  override suspend fun performAction(message: JoinGameRequest, clientHandler: V086ClientHandler) {
     actionPerformedCount++
     try {
       clientHandler.user.joinGame(message.gameId)

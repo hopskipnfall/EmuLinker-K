@@ -26,7 +26,7 @@ class QuitGameAction @Inject constructor(private val lookingForGameReporter: Twi
   override fun toString() = "QuitGameAction"
 
   @Throws(FatalActionException::class)
-  override fun performAction(message: QuitGameRequest, clientHandler: V086ClientHandler) {
+  override suspend fun performAction(message: QuitGameRequest, clientHandler: V086ClientHandler) {
     actionPerformedCount++
     try {
       clientHandler.user.quitGame()

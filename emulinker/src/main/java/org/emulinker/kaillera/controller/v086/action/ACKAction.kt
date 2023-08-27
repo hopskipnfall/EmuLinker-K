@@ -27,7 +27,7 @@ class ACKAction @Inject internal constructor() :
   override fun toString() = "ACKAction"
 
   @Throws(FatalActionException::class)
-  override fun performAction(message: ClientAck, clientHandler: V086ClientHandler) {
+  override suspend fun performAction(message: ClientAck, clientHandler: V086ClientHandler) {
     actionPerformedCount++
     val user = clientHandler.user
     if (user.loggedIn) {

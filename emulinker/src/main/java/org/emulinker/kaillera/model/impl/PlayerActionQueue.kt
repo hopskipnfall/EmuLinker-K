@@ -1,10 +1,12 @@
 package org.emulinker.kaillera.model.impl
 
-import java.lang.InterruptedException
-import java.util.concurrent.TimeUnit
-import java.util.concurrent.locks.ReentrantLock
 import kotlin.Throws
 import kotlin.concurrent.withLock
+import kotlin.time.Duration.Companion.milliseconds
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withTimeoutOrNull
 import org.emulinker.kaillera.model.KailleraUser
 
 class PlayerActionQueue(
@@ -20,18 +22,23 @@ class PlayerActionQueue(
   private val heads = IntArray(numPlayers)
   private var tail = 0
 
-  private val lock = ReentrantLock()
-  private val condition = lock.newCondition()
+  private val mutex = Mutex()
+  private val syncedEventChannel = Channel<Boolean>(1_000)
 
   var synched = false
-    set(value) {
-      field = value
-      if (!value) {
-        lock.withLock { condition.signalAll() }
+    private set
+
+  suspend fun setSynched(newval: Boolean) {
+    mutex.withLock {
+      synched = newval
+      // TODO(nue): Why is this negated??
+      if (!newval) {
+        syncedEventChannel.send(true)
       }
     }
+  }
 
-  fun addActions(actions: ByteArray) {
+  suspend fun addActions(actions: ByteArray) {
     if (!synched) return
     for (i in actions.indices) {
       array[tail] = actions[i]
@@ -39,17 +46,17 @@ class PlayerActionQueue(
       tail++
       if (tail == gameBufferSize) tail = 0
     }
-    lock.withLock { condition.signalAll() }
+    mutex.withLock { syncedEventChannel.send(true) }
     lastTimeout = null
   }
 
   @Throws(PlayerTimeoutException::class)
-  fun getAction(playerNumber: Int, actions: ByteArray, location: Int, actionLength: Int) {
-    lock.withLock {
+  suspend fun getAction(playerNumber: Int, actions: ByteArray, location: Int, actionLength: Int) {
+    // TODO(nue): We definitely shouldn't be locking here. Maybe we should use a mutex.
+    mutex.withLock {
       if (getSize(playerNumber) < actionLength && synched) {
-        try {
-          condition.await(gameTimeoutMillis.toLong(), TimeUnit.MILLISECONDS)
-        } catch (e: InterruptedException) {}
+        // Wait for the game to be synced.
+        withTimeoutOrNull(gameTimeoutMillis.milliseconds) { syncedEventChannel.receive() }
       }
     }
     if (getSize(playerNumber) >= actionLength) {

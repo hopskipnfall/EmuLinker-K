@@ -19,14 +19,14 @@ class GameDataAction @Inject internal constructor() :
   override fun toString() = "GameDataAction"
 
   @Throws(FatalActionException::class)
-  override fun performAction(message: GameData, clientHandler: V086ClientHandler) {
+  override suspend fun performAction(message: GameData, clientHandler: V086ClientHandler) {
     try {
       val user = clientHandler.user
       val data = message.gameData
       clientHandler.clientGameDataCache.add(data)
       user.addGameData(data)
     } catch (e: GameDataException) {
-      logger.atFine().withCause(e).log("Game data error")
+      logger.atWarning().withCause(e).log("Game data error")
       if (e.response != null) {
         try {
           clientHandler.send(GameData.create(clientHandler.nextMessageNumber, e.response!!))

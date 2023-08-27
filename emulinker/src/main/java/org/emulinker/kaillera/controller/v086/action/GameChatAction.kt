@@ -31,7 +31,7 @@ internal constructor(
   override fun toString() = "GameChatAction"
 
   @Throws(FatalActionException::class)
-  override fun performAction(message: GameChatRequest, clientHandler: V086ClientHandler) {
+  override suspend fun performAction(message: GameChatRequest, clientHandler: V086ClientHandler) {
     if (clientHandler.user.game == null) return
     if (message.message.startsWith(ADMIN_COMMAND_ESCAPE_STRING)) {
       // if(clientHandler.getUser().getAccess() >= AccessManager.ACCESS_ADMIN ||

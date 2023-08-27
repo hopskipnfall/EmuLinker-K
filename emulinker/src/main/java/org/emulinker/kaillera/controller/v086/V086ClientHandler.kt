@@ -14,6 +14,7 @@ import kotlinx.coroutines.channels.onFailure
 import kotlinx.coroutines.channels.onSuccess
 import kotlinx.coroutines.channels.trySendBlocking
 import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.controller.CombinedKailleraController
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
@@ -50,7 +51,7 @@ constructor(
   var remoteSocketAddress: InetSocketAddress? = null
     private set
 
-  fun handleReceived(buffer: ByteBuffer, remoteSocketAddress: InetSocketAddress) {
+  suspend fun handleReceived(buffer: ByteBuffer, remoteSocketAddress: InetSocketAddress) {
     if (this.remoteSocketAddress == null) {
       this.remoteSocketAddress = remoteSocketAddress
     } else if (remoteSocketAddress != this.remoteSocketAddress) {
@@ -86,7 +87,7 @@ constructor(
   private val lastMessageBuffer = LastMessageBuffer(V086Controller.MAX_BUNDLE_SIZE)
   private val outMessages = arrayOfNulls<V086Message>(V086Controller.MAX_BUNDLE_SIZE)
   private var outBuffer: ByteBuffer = ByteBuffer.allocateDirect(flags.v086BufferSize)
-  private val inSynch = Any()
+  private val inSynchMutex = Mutex()
   private val outSynch = Any()
   private var testStart: Long = 0
   private var lastMeasurement: Long = 0
@@ -152,7 +153,7 @@ constructor(
     combinedKailleraController.clientHandlers.remove(remoteSocketAddress)
   }
 
-  private fun handleReceivedInternal(buffer: ByteBuffer) {
+  private suspend fun handleReceivedInternal(buffer: ByteBuffer) {
     val inBundle =
       try {
         parse(buffer, lastMessageNumber)
@@ -191,7 +192,7 @@ constructor(
         0
       }
     try {
-      synchronized(inSynch) {
+      inSynchMutex.withLock {
         val messages = inBundle.messages
         if (inBundle.numMessages == 1) {
           lastMessageNumber = messages[0]!!.messageNumber
