@@ -1,6 +1,5 @@
 package org.emulinker.kaillera.pico
 
-import com.codahale.metrics.Counter
 import com.codahale.metrics.MetricRegistry
 import dagger.Binds
 import dagger.Module
@@ -12,10 +11,10 @@ import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.HttpTimeout
 import java.nio.charset.Charset
+import java.util.Timer
 import java.util.concurrent.SynchronousQueue
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
-import javax.inject.Named
 import javax.inject.Singleton
 import org.apache.commons.configuration.Configuration
 import org.emulinker.config.RuntimeFlags
@@ -71,12 +70,6 @@ abstract class AppModule {
 
     @Provides
     @Singleton
-    @Named("listeningOnPortsCounter")
-    fun bindPortListenerCounter(metrics: MetricRegistry): Counter =
-      metrics.counter("listeningOnPorts")
-
-    @Provides
-    @Singleton
     fun provideTwitterClient(flags: RuntimeFlags) =
       TwitterClient(
         TwitterCredentials.builder()
@@ -102,15 +95,16 @@ abstract class AppModule {
     }
 
     @Provides
-    fun provideThreadPoolExecutor(flags: RuntimeFlags): ThreadPoolExecutor {
-      return ThreadPoolExecutor(
+    fun provideThreadPoolExecutor(flags: RuntimeFlags) =
+      ThreadPoolExecutor(
         flags.coreThreadPoolSize,
         Int.MAX_VALUE,
         60L,
         TimeUnit.SECONDS,
         SynchronousQueue()
       )
-    }
+
+    @Provides @Singleton fun provideTimer(): Timer = Timer()
 
     @Provides
     @Singleton

@@ -11,7 +11,7 @@ import io.ktor.http.HttpStatusCode
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.seconds
-import org.emulinker.kaillera.controller.connectcontroller.ConnectController
+import org.apache.commons.configuration.Configuration
 import org.emulinker.kaillera.master.PublicServerInformation
 import org.emulinker.kaillera.model.GameStatus
 import org.emulinker.kaillera.model.KailleraServer
@@ -21,7 +21,7 @@ class EmuLinkerMasterUpdateTask
 @Inject
 constructor(
   private val publicInfo: PublicServerInformation,
-  private val connectController: ConnectController,
+  private val config: Configuration,
   private val kailleraServer: KailleraServer,
   private val releaseInfo: ReleaseInfo,
   private val httpClient: HttpClient,
@@ -42,7 +42,7 @@ constructor(
           this.parameter("ipAddress", publicInfo.connectAddress)
           this.parameter("location", publicInfo.location)
           this.parameter("website", publicInfo.website)
-          this.parameter("port", connectController.boundPort)
+          this.parameter("port", config.getInt("controllers.connect.port"))
           this.parameter("numUsers", kailleraServer.users.size)
           this.parameter("maxUsers", kailleraServer.maxUsers)
           this.parameter("numGames", kailleraServer.games.size)

@@ -59,14 +59,17 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
     val server = clientHandler.controller.server
     val accessManager = server.accessManager
     val user = clientHandler.user
-    if (accessManager.getAccess(clientHandler.remoteInetAddress) < AccessManager.ACCESS_ADMIN) {
+    if (
+      accessManager.getAccess(clientHandler.connectRemoteSocketAddress.address) <
+        AccessManager.ACCESS_ADMIN
+    ) {
       if (
         chat.startsWith(COMMAND_SILENCE) ||
           chat.startsWith(COMMAND_KICK) ||
           chat.startsWith(COMMAND_HELP) ||
           chat.startsWith(COMMAND_FINDUSER) ||
           (chat.startsWith(COMMAND_VERSION) &&
-            accessManager.getAccess(clientHandler.remoteInetAddress) >
+            accessManager.getAccess(clientHandler.connectRemoteSocketAddress.address) >
               AccessManager.ACCESS_ELEVATED)
       ) {
         // SF MOD - Moderators can silence and Kick

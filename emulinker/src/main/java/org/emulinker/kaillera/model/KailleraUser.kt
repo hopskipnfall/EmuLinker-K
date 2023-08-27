@@ -5,27 +5,26 @@ import java.net.InetSocketAddress
 import java.time.Duration
 import java.time.Instant
 import java.util.ArrayList
-import java.util.concurrent.BlockingQueue
-import java.util.concurrent.LinkedBlockingQueue
-import java.util.concurrent.TimeUnit
 import kotlin.Throws
-import kotlin.time.Duration.Companion.milliseconds
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.access.AccessManager
 import org.emulinker.kaillera.model.event.GameDataEvent
 import org.emulinker.kaillera.model.event.GameStartedEvent
 import org.emulinker.kaillera.model.event.KailleraEvent
 import org.emulinker.kaillera.model.event.KailleraEventListener
-import org.emulinker.kaillera.model.event.StopFlagEvent
-import org.emulinker.kaillera.model.event.UserQuitEvent
 import org.emulinker.kaillera.model.event.UserQuitGameEvent
 import org.emulinker.kaillera.model.exception.*
 import org.emulinker.kaillera.model.impl.KailleraGameImpl
 import org.emulinker.util.EmuLang
-import org.emulinker.util.EmuUtil
-import org.emulinker.util.EmuUtil.threadSleep
-import org.emulinker.util.Executable
 
+/**
+ * Represents a user in the server.
+ *
+ * A thread is dedicated to each user and we can probably clean this up.
+ */
 class KailleraUser(
   val id: Int,
   val protocol: String,
@@ -33,7 +32,7 @@ class KailleraUser(
   val listener: KailleraEventListener,
   val server: KailleraServer,
   flags: RuntimeFlags
-) : Executable {
+) {
   var inStealthMode = false
 
   /** Example: "Project 64k 0.13 (01 Aug 2003)" */
@@ -118,12 +117,6 @@ class KailleraUser(
   private val ignoredUsers: MutableList<String> = ArrayList()
   private var gameDataErrorTime: Long = -1
 
-  override var threadIsActive = false
-    private set
-
-  private var stopFlag = false
-  private val eventQueue: BlockingQueue<KailleraEvent> = LinkedBlockingQueue()
-
   var tempDelay = 0
 
   val users: Collection<KailleraUser>
@@ -188,30 +181,6 @@ class KailleraUser(
 
   override fun equals(other: Any?): Boolean {
     return other is KailleraUser && other.id == id
-  }
-
-  fun toDetailedString(): String {
-    return ("KailleraUser[id=$id protocol=$protocol status=$status name=$name clientType=$clientType ping=$ping connectionType=$connectionType remoteAddress=" +
-      (if (socketAddress == null) EmuUtil.formatSocketAddress(connectSocketAddress)
-      else EmuUtil.formatSocketAddress(socketAddress!!)) +
-      "]")
-  }
-
-  override fun stop() {
-    synchronized(this) {
-      if (!threadIsActive) {
-        logger.atFine().log("%s  thread stop request ignored: not running!", this)
-        return
-      }
-      if (stopFlag) {
-        logger.atFine().log("%s  thread stop request ignored: already stopping!", this)
-        return
-      }
-      stopFlag = true
-      threadSleep(500.milliseconds)
-      addEvent(StopFlagEvent())
-    }
-    listener.stop()
   }
 
   @Synchronized
@@ -508,6 +477,8 @@ class KailleraUser(
     }
   }
 
+  private val mutex = Mutex()
+
   fun addEvent(event: KailleraEvent?) {
     if (event == null) {
       logger.atSevere().log("%s: ignoring null event!", this)
@@ -518,33 +489,23 @@ class KailleraUser(
         if (event.toString() == "InfoMessageEvent") return
       }
     }
-    eventQueue.offer(event)
-  }
-
-  override fun run() {
-    threadIsActive = true
-    logger.atFine().log("%s thread running...", this)
-    try {
-      while (!stopFlag) {
-        val event = eventQueue.poll(200, TimeUnit.SECONDS)
-        if (event == null) continue else if (event is StopFlagEvent) break
-        listener.actionPerformed(event)
-        if (event is GameStartedEvent) {
-          status = UserStatus.PLAYING
-          if (improvedLagstat) {
-            lastUpdate = Instant.now()
+    server.coroutineScope.launch {
+      // Removing this for now.
+      mutex.withLock {
+        try {
+          listener.actionPerformed(event)
+          if (event is GameStartedEvent) {
+            status = UserStatus.PLAYING
+            if (improvedLagstat) {
+              lastUpdate = Instant.now()
+            }
           }
-        } else if (event is UserQuitEvent && event.user == this) {
-          stop()
+        } catch (e: InterruptedException) {
+          logger.atSevere().withCause(e).log("%s thread interrupted!", this)
+        } catch (e: Throwable) {
+          logger.atSevere().withCause(e).log("%s thread caught unexpected exception!", this)
         }
       }
-    } catch (e: InterruptedException) {
-      logger.atSevere().withCause(e).log("%s thread interrupted!", this)
-    } catch (e: Throwable) {
-      logger.atSevere().withCause(e).log("%s thread caught unexpected exception!", this)
-    } finally {
-      threadIsActive = false
-      logger.atFine().log("%s thread exiting...", this)
     }
   }
 

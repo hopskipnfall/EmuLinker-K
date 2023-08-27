@@ -6,12 +6,17 @@ import com.google.common.flogger.FluentLogger
 import java.net.InetSocketAddress
 import java.time.Instant
 import java.util.Locale
+import java.util.Timer
+import java.util.TimerTask
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ThreadPoolExecutor
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.Throws
 import kotlin.time.Duration.Companion.milliseconds
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.cancel
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.access.AccessManager
 import org.emulinker.kaillera.lookingforgame.LookingForGameEvent
@@ -36,27 +41,27 @@ import org.emulinker.kaillera.release.ReleaseInfo
 import org.emulinker.util.EmuLang
 import org.emulinker.util.EmuUtil
 import org.emulinker.util.EmuUtil.threadSleep
-import org.emulinker.util.Executable
 
+/** Holds server-wide state. */
+// TODO(nue): This looks like this file contains a ton of unnecessary processing and runs basically
+// continuously.
 @Singleton
 class KailleraServer
 @Inject
 internal constructor(
-  private val threadPool: ThreadPoolExecutor,
+  threadPool: ThreadPoolExecutor,
   val accessManager: AccessManager,
   private val flags: RuntimeFlags,
   statsCollector: StatsCollector?,
   val releaseInfo: ReleaseInfo,
   private val autoFireDetectorFactory: AutoFireDetectorFactory,
   private val lookingForGameReporter: TwitterBroadcaster,
-  metrics: MetricRegistry
-) : Executable {
+  metrics: MetricRegistry,
+  private val timer: Timer,
+) {
 
   private var allowedConnectionTypes = BooleanArray(7)
   private val loginMessages: List<String>
-  private var stopFlag = false
-  override var threadIsActive = false
-    private set
   private var connectionCounter = 1
   private var gameCounter = 1
 
@@ -82,14 +87,6 @@ internal constructor(
     return gamesMap[gameID]
   }
 
-  fun getNumGamesPlaying(): Int {
-    var count = 0
-    for (game in games) {
-      if (game.status != GameStatus.WAITING) count++
-    }
-    return count
-  }
-
   val maxPing: Int = flags.maxPing
   val maxUsers: Int = flags.maxUsers
   val maxGames: Int = flags.maxGames
@@ -99,41 +96,37 @@ internal constructor(
   val maxGameChatLength = flags.maxGameChatLength
   private val maxClientNameLength: Int = flags.maxClientNameLength
 
+  private var timerTask: TimerTask? = null
+
+  /** Basically the [CoroutineScope] to be used for all asynchronous actions. */
+  val coroutineScope = CoroutineScope(threadPool.asCoroutineDispatcher())
+
   override fun toString(): String {
     return String.format(
-      "KailleraServer[numUsers=%d numGames=%d isRunning=%b]",
+      "KailleraServer[numUsers=%d numGames=%d]",
       users.size,
       games.size,
-      threadIsActive
     )
   }
 
   @Synchronized
   fun start() {
-    logger.atFine().log("KailleraServer thread received start request!")
-    logger
-      .atFine()
-      .log(
-        "KailleraServer thread starting (ThreadPool:%d/%d)",
-        threadPool.activeCount,
-        threadPool.poolSize
-      )
-    stopFlag = false
-    threadPool.execute(this)
-    Thread.yield()
+    //    timerTask =
+    //      timer.schedule(
+    //        delay = (flags.maxPing * 3).milliseconds.inWholeMilliseconds,
+    //        period = (flags.maxPing * 3).milliseconds.inWholeMilliseconds
+    //      ) {
+    //        run()
+    //      }
   }
 
   @Synchronized
-  override fun stop() {
-    logger.atFine().log("KailleraServer thread received stop request!")
-    if (!threadIsActive) {
-      logger.atFine().log("KailleraServer thread stop request ignored: not running!")
-      return
-    }
-    stopFlag = true
-    for (user in usersMap.values) user.stop()
+  fun stop() {
+    coroutineScope.cancel()
     usersMap.clear()
     gamesMap.clear()
+    timerTask?.cancel()
+    timerTask = null
   }
 
   // not synchronized because I know the caller will be thread safe
@@ -189,24 +182,6 @@ internal constructor(
         user,
         protocol,
         EmuUtil.formatSocketAddress(clientSocketAddress)
-      )
-    logger
-      .atFine()
-      .log(
-        "%s Thread starting (ThreadPool:%d/%d)",
-        user,
-        threadPool.activeCount,
-        threadPool.poolSize
-      )
-    threadPool.execute(user)
-    Thread.yield()
-    logger
-      .atFine()
-      .log(
-        "%s Thread started (ThreadPool:%d/%d)",
-        user,
-        threadPool.activeCount,
-        threadPool.poolSize
       )
     usersMap[userID] = user
     return user
@@ -831,101 +806,87 @@ internal constructor(
     }
   }
 
-  override fun run() {
-    threadIsActive = true
-    logger.atFine().log("KailleraServer thread running...")
+  fun run() {
     try {
-      while (!stopFlag) {
-        threadSleep((flags.maxPing * 3).milliseconds)
+      if (usersMap.isEmpty()) return
+      for (user in users) {
+        synchronized(user) {
+          val access = accessManager.getAccess(user.connectSocketAddress.address)
+          user.accessLevel = access
 
-        //				logger.atFine().log(this + " running maintenance...");
-        if (stopFlag) break
-        if (usersMap.isEmpty()) continue
-        for (user in users) {
-          synchronized(user) {
-            val access = accessManager.getAccess(user.connectSocketAddress.address)
-            (user as KailleraUser?)!!.accessLevel = access
-
-            // LagStat
-            if (user.loggedIn) {
-              if (
-                user.game != null &&
-                  user.game!!.status == GameStatus.PLAYING &&
-                  !user.game!!.startTimeout
-              ) {
-                if (System.currentTimeMillis() - user.game!!.startTimeoutTime > 15000) {
-                  user.game!!.startTimeout = true
-                }
+          // LagStat
+          if (user.loggedIn) {
+            if (
+              user.game != null &&
+                user.game!!.status == GameStatus.PLAYING &&
+                !user.game!!.startTimeout
+            ) {
+              if (System.currentTimeMillis() - user.game!!.startTimeoutTime > 15000) {
+                user.game!!.startTimeout = true
               }
             }
-            if (
-              !user.loggedIn && System.currentTimeMillis() - user.connectTime > flags.maxPing * 15
-            ) {
-              logger.atInfo().log("%s connection timeout!", user)
-              user.stop()
-              usersMap.remove(user.id)
-            } else if (
-              user.loggedIn &&
-                System.currentTimeMillis() - user.lastKeepAlive >
-                  flags.keepAliveTimeout.inWholeMilliseconds
-            ) {
-              logger.atInfo().log("%s keepalive timeout!", user)
-              try {
-                quit(user, EmuLang.getString("KailleraServerImpl.ForcedQuitPingTimeout"))
-              } catch (e: Exception) {
-                logger
-                  .atSevere()
-                  .withCause(e)
-                  .log("Error forcing %s quit for keepalive timeout!", user)
-              }
-            } else if (
-              flags.idleTimeout.isPositive() &&
-                access == AccessManager.ACCESS_NORMAL &&
-                user.loggedIn &&
-                (Instant.now().toEpochMilli() - user.lastActivity >
-                  flags.idleTimeout.inWholeMilliseconds)
-            ) {
-              logger.atInfo().log("%s inactivity timeout!", user)
-              try {
-                quit(user, EmuLang.getString("KailleraServerImpl.ForcedQuitInactivityTimeout"))
-              } catch (e: Exception) {
-                logger
-                  .atSevere()
-                  .withCause(e)
-                  .log("Error forcing %s quit for inactivity timeout!", user)
-              }
-            } else if (user.loggedIn && access < AccessManager.ACCESS_NORMAL) {
-              logger.atInfo().log("%s banned!", user)
-              try {
-                quit(user, EmuLang.getString("KailleraServerImpl.ForcedQuitBanned"))
-              } catch (e: Exception) {
-                logger.atSevere().withCause(e).log("Error forcing %s quit because banned!", user)
-              }
-            } else if (
-              user.loggedIn &&
-                access == AccessManager.ACCESS_NORMAL &&
-                !accessManager.isEmulatorAllowed(user.clientType)
-            ) {
-              logger.atInfo().log("%s: emulator restricted!", user)
-              try {
-                quit(user, EmuLang.getString("KailleraServerImpl.ForcedQuitEmulatorRestricted"))
-              } catch (e: Exception) {
-                logger
-                  .atSevere()
-                  .withCause(e)
-                  .log("Error forcing %s quit because emulator restricted!", user)
-              }
-            } else {}
           }
+          if (
+            !user.loggedIn && System.currentTimeMillis() - user.connectTime > flags.maxPing * 15
+          ) {
+            logger.atInfo().log("%s connection timeout!", user)
+            usersMap.remove(user.id)
+          } else if (
+            user.loggedIn &&
+              System.currentTimeMillis() - user.lastKeepAlive >
+                flags.keepAliveTimeout.inWholeMilliseconds
+          ) {
+            logger.atInfo().log("%s keepalive timeout!", user)
+            try {
+              quit(user, EmuLang.getString("KailleraServerImpl.ForcedQuitPingTimeout"))
+            } catch (e: Exception) {
+              logger
+                .atSevere()
+                .withCause(e)
+                .log("Error forcing %s quit for keepalive timeout!", user)
+            }
+          } else if (
+            flags.idleTimeout.isPositive() &&
+              access == AccessManager.ACCESS_NORMAL &&
+              user.loggedIn &&
+              (Instant.now().toEpochMilli() - user.lastActivity >
+                flags.idleTimeout.inWholeMilliseconds)
+          ) {
+            logger.atInfo().log("%s inactivity timeout!", user)
+            try {
+              quit(user, EmuLang.getString("KailleraServerImpl.ForcedQuitInactivityTimeout"))
+            } catch (e: Exception) {
+              logger
+                .atSevere()
+                .withCause(e)
+                .log("Error forcing %s quit for inactivity timeout!", user)
+            }
+          } else if (user.loggedIn && access < AccessManager.ACCESS_NORMAL) {
+            logger.atInfo().log("%s banned!", user)
+            try {
+              quit(user, EmuLang.getString("KailleraServerImpl.ForcedQuitBanned"))
+            } catch (e: Exception) {
+              logger.atSevere().withCause(e).log("Error forcing %s quit because banned!", user)
+            }
+          } else if (
+            user.loggedIn &&
+              access == AccessManager.ACCESS_NORMAL &&
+              !accessManager.isEmulatorAllowed(user.clientType)
+          ) {
+            logger.atInfo().log("%s: emulator restricted!", user)
+            try {
+              quit(user, EmuLang.getString("KailleraServerImpl.ForcedQuitEmulatorRestricted"))
+            } catch (e: Exception) {
+              logger
+                .atSevere()
+                .withCause(e)
+                .log("Error forcing %s quit because emulator restricted!", user)
+            }
+          } else {}
         }
       }
     } catch (e: Throwable) {
-      if (!stopFlag) {
-        logger.atSevere().withCause(e).log("KailleraServer thread caught unexpected exception")
-      }
-    } finally {
-      threadIsActive = false
-      logger.atFine().log("KailleraServer thread exiting...")
+      logger.atWarning().withCause(e).log("Failure during KailleraServer.run()")
     }
   }
 

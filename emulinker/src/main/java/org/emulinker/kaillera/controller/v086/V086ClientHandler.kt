@@ -1,18 +1,24 @@
 package org.emulinker.kaillera.controller.v086
 
-import com.codahale.metrics.Counter
 import com.codahale.metrics.MetricRegistry
 import com.google.common.flogger.FluentLogger
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
+import io.ktor.network.sockets.Datagram
+import io.ktor.utils.io.core.ByteReadPacket
 import java.net.InetSocketAddress
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
-import javax.inject.Named
+import kotlinx.coroutines.channels.onFailure
+import kotlinx.coroutines.channels.onSuccess
+import kotlinx.coroutines.channels.trySendBlocking
+import kotlinx.coroutines.sync.Mutex
 import org.emulinker.config.RuntimeFlags
+import org.emulinker.kaillera.controller.CombinedKailleraController
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.messaging.ParseException
+import org.emulinker.kaillera.controller.v086.V086Utils.toKtorAddress
 import org.emulinker.kaillera.controller.v086.action.*
 import org.emulinker.kaillera.controller.v086.protocol.V086Bundle
 import org.emulinker.kaillera.controller.v086.protocol.V086Bundle.Companion.parse
@@ -20,9 +26,8 @@ import org.emulinker.kaillera.controller.v086.protocol.V086BundleFormatException
 import org.emulinker.kaillera.controller.v086.protocol.V086Message
 import org.emulinker.kaillera.model.KailleraUser
 import org.emulinker.kaillera.model.event.*
-import org.emulinker.net.BindException
-import org.emulinker.net.PrivateUDPServer
 import org.emulinker.util.ClientGameDataCache
+import org.emulinker.util.EmuUtil
 import org.emulinker.util.EmuUtil.dumpBuffer
 import org.emulinker.util.GameDataCache
 import org.emulinker.util.stripFromProdBinary
@@ -32,13 +37,35 @@ class V086ClientHandler
 @AssistedInject
 constructor(
   metrics: MetricRegistry,
-  flags: RuntimeFlags,
-  @Assisted remoteSocketAddress: InetSocketAddress,
+  private val flags: RuntimeFlags,
+  // TODO(nue): Try to replace this with remoteSocketAddress.
+  /** I think this is the address from when the user called the connect controller. */
+  @Assisted val connectRemoteSocketAddress: InetSocketAddress,
   @param:Assisted val controller: V086Controller,
-  @Named("listeningOnPortsCounter") listeningOnPortsCounter: Counter
-) :
-  PrivateUDPServer(false, remoteSocketAddress.address, metrics, listeningOnPortsCounter),
-  KailleraEventListener {
+  /** The [CombinedKailleraController] that created this instance. */
+  @param:Assisted val combinedKailleraController: CombinedKailleraController,
+) : KailleraEventListener {
+  val mutex = Mutex()
+
+  var remoteSocketAddress: InetSocketAddress? = null
+    private set
+
+  fun handleReceived(buffer: ByteBuffer, remoteSocketAddress: InetSocketAddress) {
+    if (this.remoteSocketAddress == null) {
+      this.remoteSocketAddress = remoteSocketAddress
+    } else if (remoteSocketAddress != this.remoteSocketAddress) {
+      logger
+        .atWarning()
+        .log(
+          "Rejecting packet received from wrong address: %s != %s",
+          EmuUtil.formatSocketAddress(remoteSocketAddress),
+          EmuUtil.formatSocketAddress(this.remoteSocketAddress!!)
+        )
+      return
+    }
+    clientRequestTimer.time().use { handleReceivedInternal(buffer) }
+  }
+
   lateinit var user: KailleraUser
     private set
 
@@ -49,7 +76,7 @@ constructor(
 
   private var prevMessageNumber = -1
     private set
-  var lastMessageNumber = -1
+  private var lastMessageNumber = -1
     private set
   var clientGameDataCache: GameDataCache = ClientGameDataCache(256)
     private set
@@ -58,8 +85,7 @@ constructor(
 
   private val lastMessageBuffer = LastMessageBuffer(V086Controller.MAX_BUNDLE_SIZE)
   private val outMessages = arrayOfNulls<V086Message>(V086Controller.MAX_BUNDLE_SIZE)
-  private val inBuffer: ByteBuffer = ByteBuffer.allocateDirect(flags.v086BufferSize)
-  private val outBuffer: ByteBuffer = ByteBuffer.allocateDirect(flags.v086BufferSize)
+  private var outBuffer: ByteBuffer = ByteBuffer.allocateDirect(flags.v086BufferSize)
   private val inSynch = Any()
   private val outSynch = Any()
   private var testStart: Long = 0
@@ -78,12 +104,10 @@ constructor(
   interface Factory {
     fun create(
       remoteSocketAddress: InetSocketAddress,
-      v086Controller: V086Controller
+      v086Controller: V086Controller,
+      combinedKailleraController: CombinedKailleraController,
     ): V086ClientHandler
   }
-
-  override fun toString(): String =
-    if (boundPort != null) "V086Controller($boundPort)" else "V086Controller(unbound)"
 
   @get:Synchronized
   val nextMessageNumber: Int
@@ -118,94 +142,14 @@ constructor(
   val averageNetworkSpeed: Int
     get() = ((lastMeasurement - testStart) / speedMeasurementCount).toInt()
 
-  @Throws(BindException::class)
-  public override fun bind(port: Int) {
-    super.bind(port)
-  }
-
   fun start(user: KailleraUser) {
     this.user = user
-    logger
-      .atFine()
-      .log(
-        "%s thread starting (ThreadPool:%d/%d)",
-        this,
-        controller.threadPool.activeCount,
-        controller.threadPool.poolSize
-      )
-    controller.threadPool.execute(this)
-    Thread.yield()
-
-    /*
-    long s = System.currentTimeMillis();
-    while (!isBound() && (System.currentTimeMillis() - s) < 1000)
-    {
-    try
-    {
-    Thread.sleep(100);
-    }
-    catch (Exception e)
-    {
-    logger.atSevere().withCause(e).log("Sleep Interrupted!");
-    }
-    }
-
-    if (!isBound())
-    {
-    logger.atSevere().log("V086ClientHandler failed to start for client from %s", getRemoteInetAddress().getHostAddress());
-    return;
-    }
-    */
-    logger
-      .atFine()
-      .log(
-        "%s thread started (ThreadPool:%d/%d)",
-        this,
-        controller.threadPool.activeCount,
-        controller.threadPool.poolSize
-      )
     controller.clientHandlers[user.id] = this
   }
 
   override fun stop() {
-    synchronized(this) {
-      if (stopFlag) return
-      var port: Int? = null
-      if (isBound) port = boundPort
-      super.stop()
-      if (port != null) {
-        logger
-          .atFine()
-          .log(
-            "%s returning port %d to available port queue: %d available",
-            this,
-            port,
-            controller.portRangeQueue.size + 1
-          )
-        controller.portRangeQueue.add(port)
-      }
-    }
     controller.clientHandlers.remove(user.id)
-    user.stop()
-  }
-
-  // return ByteBufferMessage.getBuffer(bufferSize);
-  // Cast to avoid issue with java version mismatch:
-  // https://stackoverflow.com/a/61267496/2875073
-  override val buffer: ByteBuffer
-    get() {
-      // return ByteBufferMessage.getBuffer(bufferSize);
-      inBuffer.clear()
-      return inBuffer
-    }
-
-  override fun releaseBuffer(buffer: ByteBuffer) {
-    // ByteBufferMessage.releaseBuffer(buffer);
-    // buffer.clear();
-  }
-
-  override fun handleReceived(buffer: ByteBuffer) {
-    clientRequestTimer.time().use { handleReceivedInternal(buffer) }
+    combinedKailleraController.clientHandlers.remove(remoteSocketAddress)
   }
 
   private fun handleReceivedInternal(buffer: ByteBuffer) {
@@ -233,7 +177,7 @@ constructor(
       } ?: return
 
     stripFromProdBinary {
-      logger.atFinest().log("<- FROM P%d: %s", user.playerNumber, inBundle.messages.firstOrNull())
+      logger.atFinest().log("<- FROM P%d: %s", user.id, inBundle.messages.firstOrNull())
     }
     clientRetryCount =
       if (inBundle.numMessages == 0) {
@@ -266,31 +210,29 @@ constructor(
              * checked and this causes an error if messageNumber is 0 and lastMessageNumber is
              * 0xFFFF if (messages [i].getNumber() > lastMessageNumber)
              */
-            run {
-              prevMessageNumber = lastMessageNumber
-              lastMessageNumber = messages[i]!!.messageNumber
-              if (prevMessageNumber + 1 != lastMessageNumber) {
-                if (prevMessageNumber == 0xFFFF && lastMessageNumber == 0) {
-                  // exception; do nothing
-                } else {
-                  logger
-                    .atWarning()
-                    .log(
-                      "%s dropped a packet! (%d to %d)",
-                      user,
-                      prevMessageNumber,
-                      lastMessageNumber
-                    )
-                  user.droppedPacket()
-                }
-              }
-              val action = controller.actions[messages[i]!!.messageTypeId.toInt()]
-              if (action == null) {
-                logger.atSevere().log("No action defined to handle client message: %s", messages[i])
+            prevMessageNumber = lastMessageNumber
+            lastMessageNumber = messages[i]!!.messageNumber
+            if (prevMessageNumber + 1 != lastMessageNumber) {
+              if (prevMessageNumber == 0xFFFF && lastMessageNumber == 0) {
+                // exception; do nothing
               } else {
-                // logger.atFine().log(user + " -> " + message);
-                (action as V086Action<V086Message>).performAction(messages[i]!!, this)
+                logger
+                  .atWarning()
+                  .log(
+                    "%s dropped a packet! (%d to %d)",
+                    user,
+                    prevMessageNumber,
+                    lastMessageNumber
+                  )
+                user.droppedPacket()
               }
+            }
+            val action = controller.actions[messages[i]!!.messageTypeId.toInt()]
+            if (action == null) {
+              logger.atSevere().log("No action defined to handle client message: %s", messages[i])
+            } else {
+              // logger.atFine().log(user + " -> " + message);
+              (action as V086Action<V086Message>).performAction(messages[i]!!, this)
             }
           }
         }
@@ -365,16 +307,23 @@ constructor(
       }
       numToSend = lastMessageBuffer.fill(outMessages, numToSend)
       val outBundle = V086Bundle(outMessages, numToSend)
-      stripFromProdBinary { logger.atFinest().log("<- TO P%d: %s", user.playerNumber, outMessage) }
+      stripFromProdBinary { logger.atFinest().log("<- TO P%d: %s", user.id, outMessage) }
       outBundle.writeTo(outBuffer)
       outBuffer.flip()
-      send(outBuffer)
-      outBuffer.clear()
+      combinedKailleraController.outChannel
+        .trySendBlocking(Datagram(ByteReadPacket(outBuffer), remoteSocketAddress!!.toKtorAddress()))
+        .onSuccess {
+          // TODO(nue): This is inefficient! Try to use a set number of buffers and rotate between
+          // them. Or use 1 like the original code does. We will need to call `.clear()` on it
+          // before using it again.
+          outBuffer = ByteBuffer.allocateDirect(flags.v086BufferSize)
+          outBuffer.order(ByteOrder.LITTLE_ENDIAN)
+        }
+        .onFailure { logger.atWarning().withCause(it).log("Failed to add to outBuffer: %s") }
     }
   }
 
   init {
-    inBuffer.order(ByteOrder.LITTLE_ENDIAN)
     outBuffer.order(ByteOrder.LITTLE_ENDIAN)
     resetGameDataCache()
   }

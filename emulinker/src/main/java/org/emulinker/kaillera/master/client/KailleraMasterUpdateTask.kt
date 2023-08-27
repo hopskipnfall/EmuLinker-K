@@ -10,7 +10,7 @@ import io.ktor.http.HttpStatusCode
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.seconds
-import org.emulinker.kaillera.controller.connectcontroller.ConnectController
+import org.apache.commons.configuration.Configuration
 import org.emulinker.kaillera.master.PublicServerInformation
 import org.emulinker.kaillera.master.StatsCollector
 import org.emulinker.kaillera.model.GameStatus
@@ -20,7 +20,7 @@ class KailleraMasterUpdateTask
 @Inject
 constructor(
   private val publicInfo: PublicServerInformation,
-  private val connectController: ConnectController,
+  private val config: Configuration,
   private val kailleraServer: KailleraServer,
   private val statsCollector: StatsCollector,
   private val httpClient: HttpClient,
@@ -50,7 +50,7 @@ constructor(
           }
 
           this.parameter("servername", publicInfo.serverName)
-          this.parameter("port", connectController.boundPort)
+          this.parameter("port", config.getInt("controllers.connect.port"))
           this.parameter("nbusers", kailleraServer.users.size)
           this.parameter("maxconn", kailleraServer.maxUsers)
           // I want to use `releaseInfo.versionWithElkPrefix` here, but for some reason this RPC

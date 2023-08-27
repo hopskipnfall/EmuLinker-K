@@ -4,6 +4,7 @@ import java.net.InetSocketAddress
 import java.nio.ByteBuffer
 import kotlin.Throws
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
+import org.emulinker.kaillera.pico.AppModule
 
 // TODO(nue): Turn into a data class?
 class ConnectMessage_PING : ConnectMessage() {
@@ -15,7 +16,7 @@ class ConnectMessage_PING : ConnectMessage() {
   override val bodyBytesPlusMessageIdType = ID.length + 1
 
   override fun writeTo(buffer: ByteBuffer) {
-    buffer.put(charset.encode(ID))
+    buffer.put(AppModule.charsetDoNotUse.encode(ID))
     buffer.put(0x00.toByte())
   }
 
