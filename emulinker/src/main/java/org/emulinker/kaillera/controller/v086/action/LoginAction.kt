@@ -39,7 +39,7 @@ class LoginAction @Inject internal constructor() :
     }
   }
 
-  override fun handleEvent(event: UserJoinedEvent, clientHandler: V086ClientHandler) {
+  override suspend fun handleEvent(event: UserJoinedEvent, clientHandler: V086ClientHandler) {
     handledEventCount++
     try {
       val user = event.user

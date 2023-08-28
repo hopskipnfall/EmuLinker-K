@@ -40,7 +40,7 @@ internal constructor(private val lookingForGameReporter: TwitterBroadcaster) :
     }
   }
 
-  override fun handleEvent(event: GameStartedEvent, clientHandler: V086ClientHandler) {
+  override suspend fun handleEvent(event: GameStartedEvent, clientHandler: V086ClientHandler) {
     handledEventCount++
     try {
       val game = event.game

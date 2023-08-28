@@ -8,13 +8,12 @@ import java.time.Instant
 import java.util.Locale
 import java.util.TimerTask
 import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.ThreadPoolExecutor
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.Throws
 import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -50,7 +49,6 @@ import org.emulinker.util.EmuUtil.threadSleep
 class KailleraServer
 @Inject
 internal constructor(
-  threadPool: ThreadPoolExecutor,
   val accessManager: AccessManager,
   private val flags: RuntimeFlags,
   statsCollector: StatsCollector?,
@@ -101,7 +99,7 @@ internal constructor(
   private val mutex = Mutex()
 
   /** Basically the [CoroutineScope] to be used for all asynchronous actions. */
-  val coroutineScope = CoroutineScope(threadPool.asCoroutineDispatcher())
+  val coroutineScope = CoroutineScope(Dispatchers.IO.limitedParallelism(10))
 
   override fun toString(): String {
     return String.format(

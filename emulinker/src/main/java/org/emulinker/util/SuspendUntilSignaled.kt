@@ -10,20 +10,19 @@ import kotlinx.coroutines.sync.withLock
 /** Intended as a coroutines-friendly implementation of [Condition]. */
 class SuspendUntilSignaled @Inject constructor() {
   private val jobs = mutableListOf<CompletableJob>()
-
   private val mutex = Mutex()
 
+  /** Resumes execution for all coroutines suspended by calling [suspendUntilSignaled]. */
   suspend fun signalAll() =
     mutex.withLock {
       jobs.forEach { it.complete() }
       jobs.clear()
     }
 
+  /** Suspends execution of the current coroutine until [signalAll] is invoked. */
   suspend fun suspendUntilSignaled() {
     val job = Job()
-    job.start()
     mutex.withLock { jobs.add(job) }
-
     job.join()
   }
 }

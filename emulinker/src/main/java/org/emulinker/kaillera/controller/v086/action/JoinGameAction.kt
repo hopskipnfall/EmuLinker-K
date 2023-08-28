@@ -49,7 +49,7 @@ class JoinGameAction @Inject internal constructor() :
     }
   }
 
-  override fun handleEvent(event: UserJoinedGameEvent, clientHandler: V086ClientHandler) {
+  override suspend fun handleEvent(event: UserJoinedGameEvent, clientHandler: V086ClientHandler) {
     handledEventCount++
     val thisUser = clientHandler.user
     try {

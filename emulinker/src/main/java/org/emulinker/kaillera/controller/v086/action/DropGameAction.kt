@@ -30,7 +30,7 @@ class DropGameAction @Inject internal constructor() :
     }
   }
 
-  override fun handleEvent(event: UserDroppedGameEvent, clientHandler: V086ClientHandler) {
+  override suspend fun handleEvent(event: UserDroppedGameEvent, clientHandler: V086ClientHandler) {
     handledEventCount++
     try {
       val user = event.user

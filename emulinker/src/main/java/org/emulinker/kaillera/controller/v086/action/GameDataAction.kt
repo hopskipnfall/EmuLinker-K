@@ -37,7 +37,7 @@ class GameDataAction @Inject internal constructor() :
     }
   }
 
-  override fun handleEvent(event: GameDataEvent, clientHandler: V086ClientHandler) {
+  override suspend fun handleEvent(event: GameDataEvent, clientHandler: V086ClientHandler) {
     val data = event.data
     val key = clientHandler.serverGameDataCache.indexOf(data)
     if (key < 0) {

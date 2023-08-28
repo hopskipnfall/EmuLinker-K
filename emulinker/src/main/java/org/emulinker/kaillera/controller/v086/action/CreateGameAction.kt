@@ -78,7 +78,7 @@ class CreateGameAction @Inject internal constructor() :
     }
   }
 
-  override fun handleEvent(event: GameCreatedEvent, clientHandler: V086ClientHandler) {
+  override suspend fun handleEvent(event: GameCreatedEvent, clientHandler: V086ClientHandler) {
     handledEventCount++
     try {
       val game = event.game

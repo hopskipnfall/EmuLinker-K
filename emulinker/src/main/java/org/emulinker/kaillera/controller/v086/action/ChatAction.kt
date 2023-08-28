@@ -73,7 +73,7 @@ class ChatAction @Inject internal constructor(private val adminCommandAction: Ad
   }
 
   @Throws(FatalActionException::class)
-  private fun checkCommands(chatMessage: ChatRequest, clientHandler: V086ClientHandler) {
+  private suspend fun checkCommands(chatMessage: ChatRequest, clientHandler: V086ClientHandler) {
     var doCommand = true
     val userN = clientHandler.user
     if (userN.accessLevel < AccessManager.ACCESS_ELEVATED) {
@@ -709,7 +709,7 @@ class ChatAction @Inject internal constructor(private val adminCommandAction: Ad
     }
   }
 
-  override fun handleEvent(event: ChatEvent, clientHandler: V086ClientHandler) {
+  override suspend fun handleEvent(event: ChatEvent, clientHandler: V086ClientHandler) {
     handledEventCount++
     try {
       if (

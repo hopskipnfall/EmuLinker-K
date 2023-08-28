@@ -13,7 +13,7 @@ class GameTimeoutAction @Inject internal constructor() : V086GameEventHandler<Ga
 
   override fun toString() = "GameTimeoutAction"
 
-  override fun handleEvent(event: GameTimeoutEvent, clientHandler: V086ClientHandler) {
+  override suspend fun handleEvent(event: GameTimeoutEvent, clientHandler: V086ClientHandler) {
     handledEventCount++
     val player = event.user
     val user = clientHandler.user

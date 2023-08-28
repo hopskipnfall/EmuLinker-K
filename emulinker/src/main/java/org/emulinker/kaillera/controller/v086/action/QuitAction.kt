@@ -30,7 +30,7 @@ class QuitAction @Inject internal constructor() :
     }
   }
 
-  override fun handleEvent(event: UserQuitEvent, clientHandler: V086ClientHandler) {
+  override suspend fun handleEvent(event: UserQuitEvent, clientHandler: V086ClientHandler) {
     handledEventCount++
     try {
       val user = event.user

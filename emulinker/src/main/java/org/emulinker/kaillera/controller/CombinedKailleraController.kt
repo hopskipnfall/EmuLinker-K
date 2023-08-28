@@ -4,7 +4,6 @@ import com.google.common.flogger.FluentLogger
 import io.ktor.network.sockets.BoundDatagramSocket
 import io.ktor.network.sockets.Datagram
 import io.ktor.network.sockets.isClosed
-import io.ktor.network.sockets.toJavaAddress
 import io.ktor.utils.io.core.ByteReadPacket
 import io.ktor.utils.io.core.readByteBuffer
 import java.io.IOException
@@ -14,12 +13,10 @@ import java.net.SocketException
 import java.nio.ByteBuffer
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Executors
-import java.util.concurrent.SynchronousQueue
-import java.util.concurrent.ThreadPoolExecutor
-import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
@@ -52,17 +49,17 @@ constructor(
   config: Configuration,
   udpSocketProvider: UdpSocketProvider,
 ) {
-  private val handlerDispatcher =
-    ThreadPoolExecutor(
-        flags.coreThreadPoolSize,
-        Int.MAX_VALUE,
-        60L,
-        TimeUnit.SECONDS,
-        SynchronousQueue()
-      )
-      .asCoroutineDispatcher()
+  //  private val handlerDispatcher =
+  //    ThreadPoolExecutor(
+  //        flags.coreThreadPoolSize,
+  //        Int.MAX_VALUE,
+  //        60L,
+  //        TimeUnit.SECONDS,
+  //        SynchronousQueue()
+  //      )
+  //      .asCoroutineDispatcher()
   private val handlerCoroutineScope =
-    CoroutineScope(handlerDispatcher) + CoroutineName("requestHandler")
+    CoroutineScope(Dispatchers.IO.limitedParallelism(10)) + CoroutineName("requestHandler")
 
   var boundPort: Int? = null
 
@@ -141,6 +138,7 @@ constructor(
       }
     }
 
+    // TODO: Maybe put this on the handler one?
     sendAndReceiveCoroutineScope.launch {
       for (datagram in outChannel) {
         send(datagram)
@@ -155,7 +153,8 @@ constructor(
 
   val bufferSize: Int = flags.v086BufferSize
 
-  private val sendAndReceiveThreadpool = Executors.newCachedThreadPool()
+  // Size of 2 doesn't work, maybe needs number of active coroutines + 1?
+  private val sendAndReceiveThreadpool = Executors.newFixedThreadPool(3)
   val sendAndReceiveDispatcher = sendAndReceiveThreadpool.asCoroutineDispatcher()
   private val sendAndReceiveCoroutineScope = CoroutineScope(sendAndReceiveDispatcher)
 

@@ -154,3 +154,5 @@ tasks.jar {
 
 // kdoc generation support.
 subprojects { apply(plugin = "org.jetbrains.dokka") }
+
+tasks.withType<JavaExec> { jvmArgs = listOf("-Xms512m", "-Xmx512m") }

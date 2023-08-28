@@ -72,7 +72,7 @@ class ACKAction @Inject internal constructor() :
     }
   }
 
-  override fun handleEvent(event: UserEvent, clientHandler: V086ClientHandler) {
+  override suspend fun handleEvent(event: UserEvent, clientHandler: V086ClientHandler) {
     handledEventCount++
     val connectedEvent = event as ConnectedEvent
     val server = connectedEvent.server
@@ -166,7 +166,7 @@ class ACKAction @Inject internal constructor() :
       sendServerStatus(clientHandler, usersSubList, gamesSubList, counter)
   }
 
-  private fun sendServerStatus(
+  private suspend fun sendServerStatus(
     clientHandler: V086ClientHandler,
     users: List<ServerStatus.User>,
     games: List<ServerStatus.Game>,

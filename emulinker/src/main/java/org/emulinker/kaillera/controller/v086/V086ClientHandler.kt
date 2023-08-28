@@ -10,8 +10,6 @@ import io.ktor.utils.io.core.ByteReadPacket
 import java.net.InetSocketAddress
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
-import kotlinx.coroutines.channels.onFailure
-import kotlinx.coroutines.channels.onSuccess
 import kotlinx.coroutines.channels.trySendBlocking
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -47,6 +45,8 @@ constructor(
   @param:Assisted val combinedKailleraController: CombinedKailleraController,
 ) : KailleraEventListener {
   val mutex = Mutex()
+  private val inSynchMutex = Mutex()
+  private val sendMutex = Mutex()
 
   var remoteSocketAddress: InetSocketAddress? = null
     private set
@@ -86,9 +86,6 @@ constructor(
 
   private val lastMessageBuffer = LastMessageBuffer(V086Controller.MAX_BUNDLE_SIZE)
   private val outMessages = arrayOfNulls<V086Message>(V086Controller.MAX_BUNDLE_SIZE)
-  private var outBuffer: ByteBuffer = ByteBuffer.allocateDirect(flags.v086BufferSize)
-  private val inSynchMutex = Mutex()
-  private val outSynch = Any()
   private var testStart: Long = 0
   private var lastMeasurement: Long = 0
   var speedMeasurementCount = 0
@@ -244,7 +241,7 @@ constructor(
     }
   }
 
-  override fun actionPerformed(event: KailleraEvent) {
+  override suspend fun actionPerformed(event: KailleraEvent) {
     when (event) {
       is GameEvent -> {
         val eventHandler = controller.gameEventHandlers[event::class]
@@ -284,52 +281,57 @@ constructor(
     }
   }
 
-  fun resend(timeoutCounter: Int) {
-    synchronized(outSynch) {
-      // if ((System.currentTimeMillis() - lastResend) > (user.getPing()*3))
-      if (System.currentTimeMillis() - lastResend > controller.server.maxPing) {
-        // int numToSend = (3+timeoutCounter);
-        var numToSend = 3 * timeoutCounter
-        if (numToSend > V086Controller.MAX_BUNDLE_SIZE) numToSend = V086Controller.MAX_BUNDLE_SIZE
-        logger.atFine().log("%s: resending last %d messages", this, numToSend)
-        send(null, numToSend)
-        lastResend = System.currentTimeMillis()
-      } else {
-        logger.atFine().log("Skipping resend...")
-      }
+  suspend fun resend(timeoutCounter: Int) {
+    // if ((System.currentTimeMillis() - lastResend) > (user.getPing()*3))
+    if (System.currentTimeMillis() - lastResend > controller.server.maxPing) {
+      // int numToSend = (3+timeoutCounter);
+      var numToSend = 3 * timeoutCounter
+      if (numToSend > V086Controller.MAX_BUNDLE_SIZE) numToSend = V086Controller.MAX_BUNDLE_SIZE
+      logger.atFine().log("%s: resending last %d messages", this, numToSend)
+      send(null, numToSend)
+      lastResend = System.currentTimeMillis()
+    } else {
+      logger.atFine().log("Skipping resend...")
     }
   }
 
-  fun send(outMessage: V086Message?, numToSend: Int = 5) {
-    var numToSend = numToSend
-    synchronized(outSynch) {
+  suspend fun send(outMessage: V086Message?, numToSend: Int = 5) =
+    sendMutex.withLock {
+      var numToSend = numToSend
+
+      val buffer = getOutBuffer()
       if (outMessage != null) {
         lastMessageBuffer.add(outMessage)
       }
       numToSend = lastMessageBuffer.fill(outMessages, numToSend)
       val outBundle = V086Bundle(outMessages, numToSend)
       stripFromProdBinary { logger.atFinest().log("<- TO P%d: %s", user.id, outMessage) }
-      outBundle.writeTo(outBuffer)
-      outBuffer.flip()
-      combinedKailleraController.outChannel
-        .trySendBlocking(Datagram(ByteReadPacket(outBuffer), remoteSocketAddress!!.toKtorAddress()))
-        .onSuccess {
-          // TODO(nue): This is inefficient! Try to use a set number of buffers and rotate between
-          // them. Or use 1 like the original code does. We will need to call `.clear()` on it
-          // before using it again.
-          outBuffer = ByteBuffer.allocateDirect(flags.v086BufferSize)
-          outBuffer.order(ByteOrder.LITTLE_ENDIAN)
-        }
-        .onFailure { logger.atWarning().withCause(it).log("Failed to add to outBuffer: %s") }
+      outBundle.writeTo(buffer)
+      buffer.flip()
+      combinedKailleraController.outChannel.trySendBlocking(
+        Datagram(ByteReadPacket(buffer), remoteSocketAddress!!.toKtorAddress())
+      )
     }
+
+  //  private val reusableBuffers =
+  //    listOf(1..10)
+  //      .map { ByteBuffer.allocateDirect(flags.v086BufferSize).order(ByteOrder.LITTLE_ENDIAN) }
+  //      .toTypedArray()
+  //  private var reusableBufferIndex = 0
+
+  private fun getOutBuffer(): ByteBuffer {
+    return ByteBuffer.allocateDirect(flags.v086BufferSize).order(ByteOrder.LITTLE_ENDIAN)
+
+    //    reusableBufferIndex = (reusableBufferIndex+1) % reusableBuffers.size
+    //    reusableBuffers[reusableBufferIndex] = ByteBuffer.allocateDirect(flags.v086BufferSize)
+    //    return reusableBuffers[reusableBufferIndex].clear()
   }
 
   init {
-    outBuffer.order(ByteOrder.LITTLE_ENDIAN)
     resetGameDataCache()
   }
 
-  companion object {
-    private val logger = FluentLogger.forEnclosingClass()
+  private companion object {
+    val logger = FluentLogger.forEnclosingClass()
   }
 }
