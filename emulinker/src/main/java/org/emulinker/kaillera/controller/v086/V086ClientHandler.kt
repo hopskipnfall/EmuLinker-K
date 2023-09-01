@@ -2,6 +2,7 @@ package org.emulinker.kaillera.controller.v086
 
 import com.codahale.metrics.MetricRegistry
 import com.google.common.flogger.FluentLogger
+import com.google.common.flogger.StackSize
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -10,7 +11,6 @@ import io.ktor.utils.io.core.ByteReadPacket
 import java.net.InetSocketAddress
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
-import kotlinx.coroutines.channels.trySendBlocking
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import org.emulinker.config.RuntimeFlags
@@ -28,6 +28,8 @@ import org.emulinker.kaillera.model.event.*
 import org.emulinker.util.ClientGameDataCache
 import org.emulinker.util.EmuUtil
 import org.emulinker.util.EmuUtil.dumpBuffer
+import org.emulinker.util.EmuUtil.dumpBufferFromBeginning
+import org.emulinker.util.EmuUtil.toHexString
 import org.emulinker.util.GameDataCache
 import org.emulinker.util.stripFromProdBinary
 
@@ -287,13 +289,14 @@ constructor(
       // int numToSend = (3+timeoutCounter);
       var numToSend = 3 * timeoutCounter
       if (numToSend > V086Controller.MAX_BUNDLE_SIZE) numToSend = V086Controller.MAX_BUNDLE_SIZE
-      logger.atFine().log("%s: resending last %d messages", this, numToSend)
+      logger.atSevere().withStackTrace(StackSize.MEDIUM).log("%s: resending last %d messages", this, numToSend)
       send(null, numToSend)
       lastResend = System.currentTimeMillis()
     } else {
-      logger.atFine().log("Skipping resend...")
+      logger.atSevere().log("Skipping resend...")
     }
   }
+
 
   suspend fun send(outMessage: V086Message?, numToSend: Int = 5) =
     sendMutex.withLock {
@@ -308,23 +311,39 @@ constructor(
       stripFromProdBinary { logger.atFinest().log("<- TO P%d: %s", user.id, outMessage) }
       outBundle.writeTo(buffer)
       buffer.flip()
-      combinedKailleraController.outChannel.trySendBlocking(
+      combinedKailleraController.outChannel.send(
         Datagram(ByteReadPacket(buffer), remoteSocketAddress!!.toKtorAddress())
       )
     }
 
-  //  private val reusableBuffers =
-  //    listOf(1..10)
-  //      .map { ByteBuffer.allocateDirect(flags.v086BufferSize).order(ByteOrder.LITTLE_ENDIAN) }
-  //      .toTypedArray()
-  //  private var reusableBufferIndex = 0
+  private val reusableBuffers =
+    listOf(1..10)
+      .map { ByteBuffer.allocateDirect(flags.v086BufferSize).order(ByteOrder.LITTLE_ENDIAN) }
+      .toTypedArray()
+  private var reusableBufferIndex = 0
 
   private fun getOutBuffer(): ByteBuffer {
-    return ByteBuffer.allocateDirect(flags.v086BufferSize).order(ByteOrder.LITTLE_ENDIAN)
+    //    return ByteBuffer.allocateDirect(flags.v086BufferSize).order(ByteOrder.LITTLE_ENDIAN)
 
-    //    reusableBufferIndex = (reusableBufferIndex+1) % reusableBuffers.size
-    //    reusableBuffers[reusableBufferIndex] = ByteBuffer.allocateDirect(flags.v086BufferSize)
-    //    return reusableBuffers[reusableBufferIndex].clear()
+    reusableBufferIndex = (reusableBufferIndex + 1) % reusableBuffers.size
+    val a = reusableBuffers[reusableBufferIndex]
+    a.clear()
+
+//    Thread.sleep(1)
+//    dumpBufferFromBeginning2(a)
+    return a
+  }
+
+  fun dumpBufferFromBeginning2(buf: ByteBuffer): String {
+    val pos = buf.position()
+    buf.position(0)
+    val byteList = mutableListOf<Byte>()
+    while (buf.hasRemaining()) {
+      val b = buf.get()
+      byteList.add(b)
+    }
+    buf.position(pos)
+    return byteList.toByteArray().toHexString()
   }
 
   init {
