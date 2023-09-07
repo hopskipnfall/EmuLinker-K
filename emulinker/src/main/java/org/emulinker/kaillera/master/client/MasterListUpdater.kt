@@ -20,7 +20,6 @@ internal constructor(
   private val threadPool: ThreadPoolExecutor,
   private val statsCollector: StatsCollector,
   private val serverCheckinTask: ServerCheckinTask,
-  private val emuLinkerMasterUpdateTask: EmuLinkerMasterUpdateTask,
   private val kailleraMasterUpdateTask: KailleraMasterUpdateTask,
   private val taskScheduler: TaskScheduler,
 ) : Executable {
@@ -70,7 +69,6 @@ internal constructor(
     ) {
       runBlocking {
         serverCheckinTask.touchMaster()
-        if (flags.touchEmulinker) emuLinkerMasterUpdateTask.touchMaster()
         if (flags.touchKaillera) kailleraMasterUpdateTask.touchMaster()
       }
       statsCollector.clearStartedGamesList()
