@@ -353,7 +353,7 @@ class KailleraUser(
     }
     isMuted = false
     game = null
-    addEvent(UserQuitGameEvent(game, this))
+    handleEvent(UserQuitGameEvent(game, this))
   }
 
   @Synchronized
@@ -429,7 +429,7 @@ class KailleraUser(
           response[i] = 0
         }
         lostInput.add(data)
-        addEvent(GameDataEvent(game as KailleraGameImpl, response))
+        handleEvent(GameDataEvent(game as KailleraGameImpl, response))
         frameCount++
       } else {
         // lostInput.add(data);
@@ -471,35 +471,38 @@ class KailleraUser(
     }
   }
 
-  fun addEvent(event: KailleraEvent?) {
-    if (event == null) {
-      logger.atSevere().log("%s: ignoring null event!", this)
-      return
-    }
+  suspend fun handleEvent(event: KailleraEvent) {
     if (status != UserStatus.IDLE) {
       if (ignoringUnnecessaryServerActivity) {
         if (event.toString() == "InfoMessageEvent") return
       }
     }
-    server.coroutineScope.launch {
-      // Removing this for now.
-      // Not sure if we need this?
-      //      mutex.withLock {
-      try {
-        listener.actionPerformed(event)
-        if (event is GameStartedEvent) {
-          status = UserStatus.PLAYING
-          if (improvedLagstat) {
-            lastUpdate = Instant.now()
-          }
+    // Removing this for now.
+    // Not sure if we need this?
+    //      mutex.withLock {
+    try {
+      listener.actionPerformed(event)
+      if (event is GameStartedEvent) {
+        status = UserStatus.PLAYING
+        if (improvedLagstat) {
+          lastUpdate = Instant.now()
         }
-      } catch (e: InterruptedException) {
-        logger.atSevere().withCause(e).log("%s thread interrupted!", this)
-      } catch (e: Throwable) {
-        logger.atSevere().withCause(e).log("%s thread caught unexpected exception!", this)
       }
-      //      }
+    } catch (e: InterruptedException) {
+      logger.atSevere().withCause(e).log("%s thread interrupted!", this)
+    } catch (e: Throwable) {
+      logger.atSevere().withCause(e).log("%s thread caught unexpected exception!", this)
     }
+    //      }
+  }
+
+  fun handleEventAsync(event: KailleraEvent) {
+    if (status != UserStatus.IDLE) {
+      if (ignoringUnnecessaryServerActivity) {
+        if (event.toString() == "InfoMessageEvent") return
+      }
+    }
+    server.coroutineScope.launch { handleEvent(event) }
   }
 
   /** Helper function to avoid one level of indentation. */

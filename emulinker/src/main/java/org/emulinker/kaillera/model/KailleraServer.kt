@@ -392,13 +392,13 @@ internal constructor(
     userImpl.status = UserStatus.IDLE
     userImpl.loggedIn = true
     usersMap[userListKey] = userImpl
-    userImpl.addEvent(ConnectedEvent(this, user))
+    userImpl.handleEventAsync(ConnectedEvent(this, user))
     threadSleep(20.milliseconds)
     for (loginMessage in loginMessages) {
-      userImpl.addEvent(InfoMessageEvent(user, loginMessage))
+      userImpl.handleEventAsync(InfoMessageEvent(user, loginMessage))
       threadSleep(20.milliseconds)
     }
-    userImpl.addEvent(
+    userImpl.handleEventAsync(
       InfoMessageEvent(
         user,
         "${releaseInfo.productName} v${releaseInfo.version}: ${releaseInfo.websiteString}"
@@ -415,7 +415,7 @@ internal constructor(
 
     // this is fairly ugly
     if (user.isEmuLinkerClient) {
-      userImpl.addEvent(InfoMessageEvent(user, ":ACCESS=" + userImpl.accessStr))
+      userImpl.handleEventAsync(InfoMessageEvent(user, ":ACCESS=" + userImpl.accessStr))
       if (access >= AccessManager.ACCESS_SUPERADMIN) {
         var sb = StringBuilder()
         sb.append(":USERINFO=")
@@ -440,26 +440,27 @@ internal constructor(
           sb.append(0x03.toChar())
           sbCount++
           if (sb.length > 300) {
-            (user as KailleraUser?)!!.addEvent(InfoMessageEvent(user, sb.toString()))
+            (user as KailleraUser?)!!.handleEventAsync(InfoMessageEvent(user, sb.toString()))
             sb = StringBuilder()
             sb.append(":USERINFO=")
             sbCount = 0
             threadSleep(100.milliseconds)
           }
         }
-        if (sbCount > 0) (user as KailleraUser?)!!.addEvent(InfoMessageEvent(user, sb.toString()))
+        if (sbCount > 0)
+          (user as KailleraUser?)!!.handleEventAsync(InfoMessageEvent(user, sb.toString()))
         threadSleep(100.milliseconds)
       }
     }
     threadSleep(20.milliseconds)
     if (access >= AccessManager.ACCESS_ADMIN) {
-      userImpl.addEvent(
+      userImpl.handleEventAsync(
         InfoMessageEvent(user, EmuLang.getString("KailleraServerImpl.AdminWelcomeMessage"))
       )
       // Display messages to admins if they exist.
       AppModule.messagesToAdmins.forEach { message ->
         threadSleep(20.milliseconds)
-        userImpl.addEvent(InfoMessageEvent(user, message))
+        userImpl.handleEventAsync(InfoMessageEvent(user, message))
       }
     }
     addEvent(UserJoinedEvent(this, user))
@@ -505,7 +506,7 @@ internal constructor(
     logger.atInfo().log("%s quit: %s", user, quitMsg)
     val quitEvent = UserQuitEvent(this, user, quitMsg)
     addEvent(quitEvent)
-    (user as KailleraUser?)!!.addEvent(quitEvent)
+    (user as KailleraUser?)!!.handleEventAsync(quitEvent)
   }
 
   @Synchronized
@@ -737,7 +738,7 @@ internal constructor(
         .asSequence()
         .filter { it.loggedIn }
         .forEach { kailleraUser ->
-          kailleraUser.addEvent(InfoMessageEvent(kailleraUser, message))
+          kailleraUser.handleEventAsync(InfoMessageEvent(kailleraUser, message))
 
           if (gamesAlso && kailleraUser.game != null) {
             kailleraUser.game!!.announce(message, kailleraUser)
@@ -757,9 +758,9 @@ internal constructor(
                   targetUser.connectSocketAddress.address.hostAddress
                 )
               )
-                kailleraUser.addEvent(InfoMessageEvent(kailleraUser, message))
+                kailleraUser.handleEventAsync(InfoMessageEvent(kailleraUser, message))
             } else {
-              kailleraUser.addEvent(InfoMessageEvent(kailleraUser, message))
+              kailleraUser.handleEventAsync(InfoMessageEvent(kailleraUser, message))
             }
 
             /*//SF MOD
@@ -772,7 +773,7 @@ internal constructor(
             */
           }
       } else {
-        targetUser.addEvent(InfoMessageEvent(targetUser, message))
+        targetUser.handleEventAsync(InfoMessageEvent(targetUser, message))
       }
     }
   }
@@ -783,18 +784,21 @@ internal constructor(
         if (user.status != UserStatus.IDLE) {
           if (user.ignoringUnnecessaryServerActivity) {
             // TODO(nue): Get rid of this bad use of toString.
-            if (event.toString() == "GameDataEvent") user.addEvent(event)
-            else if (event.toString() == "ChatEvent") continue
-            else if (event.toString() == "UserJoinedEvent") continue
-            else if (event.toString() == "UserQuitEvent") continue
-            else if (event.toString() == "GameStatusChangedEvent") continue
-            else if (event.toString() == "GameClosedEvent") continue
-            else if (event.toString() == "GameCreatedEvent") continue else user.addEvent(event)
+            when (event.toString()) {
+              "GameDataEvent" -> user.handleEventAsync(event)
+              "ChatEvent",
+              "UserJoinedEvent",
+              "UserQuitEvent",
+              "GameStatusChangedEvent",
+              "GameClosedEvent",
+              "GameCreatedEvent" -> continue
+              else -> user.handleEventAsync(event)
+            }
           } else {
-            user.addEvent(event)
+            user.handleEventAsync(event)
           }
         } else {
-          user.addEvent(event)
+          user.handleEventAsync(event)
         }
       } else {
         logger.atFine().log("%s: not adding event, not logged in: %s", user, event)

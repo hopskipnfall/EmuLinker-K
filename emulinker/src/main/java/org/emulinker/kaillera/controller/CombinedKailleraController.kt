@@ -14,13 +14,10 @@ import java.nio.ByteBuffer
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Executors
 import javax.inject.Inject
-import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.plus
 import kotlinx.coroutines.sync.withLock
 import org.apache.commons.configuration.Configuration
 import org.emulinker.config.RuntimeFlags
@@ -49,18 +46,6 @@ constructor(
   config: Configuration,
   udpSocketProvider: UdpSocketProvider,
 ) {
-  //  private val handlerDispatcher =
-  //    ThreadPoolExecutor(
-  //        flags.coreThreadPoolSize,
-  //        Int.MAX_VALUE,
-  //        60L,
-  //        TimeUnit.SECONDS,
-  //        SynchronousQueue()
-  //      )
-  //      .asCoroutineDispatcher()
-  private val handlerCoroutineScope =
-    CoroutineScope(Dispatchers.IO.limitedParallelism(10)) + CoroutineName("requestHandler")
-
   var boundPort: Int? = null
 
   var threadIsActive = false
@@ -106,7 +91,7 @@ constructor(
   }
 
   fun run() {
-    sendAndReceiveCoroutineScope.launch {
+    requestScope.launch {
       threadIsActive = true
       logger.atFine().log("%s: thread running...", this)
       try {
@@ -138,8 +123,7 @@ constructor(
       }
     }
 
-    // TODO: Maybe put this on the handler one?
-    sendAndReceiveCoroutineScope.launch {
+    requestScope.launch {
       for (datagram in outChannel) {
         send(datagram)
       }
@@ -153,13 +137,22 @@ constructor(
 
   val bufferSize: Int = flags.v086BufferSize
 
-  // Size of 2 doesn't work, maybe needs number of active coroutines + 1?
-  private val sendAndReceiveThreadpool = Executors.newFixedThreadPool(3)
-  val sendAndReceiveDispatcher = sendAndReceiveThreadpool.asCoroutineDispatcher()
-  private val sendAndReceiveCoroutineScope = CoroutineScope(sendAndReceiveDispatcher)
+  //  private val handlerDispatcher =
+  //    ThreadPoolExecutor(
+  //        flags.coreThreadPoolSize,
+  //        Int.MAX_VALUE,
+  //        60L,
+  //        TimeUnit.SECONDS,
+  //        SynchronousQueue()
+  //      )
+  //      .asCoroutineDispatcher()
+  // TODO(nue): Tune this and/or make it configurable.
+  private val requestThreadpool = Executors.newFixedThreadPool(10)
+  val requestDispatcher = requestThreadpool.asCoroutineDispatcher()
+  private val requestScope = CoroutineScope(requestDispatcher)
 
   fun handleReceived(buffer: ByteBuffer, remoteSocketAddress: InetSocketAddress) {
-    handlerCoroutineScope.launch {
+    requestScope.launch {
       var handler = clientHandlers[remoteSocketAddress]
       if (handler == null) {
         // User is new. It's either a ConnectMessage or it's the user's first message after
