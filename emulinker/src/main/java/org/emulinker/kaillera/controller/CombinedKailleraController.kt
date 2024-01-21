@@ -14,11 +14,13 @@ import java.nio.ByteBuffer
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Executors
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withTimeout
 import org.apache.commons.configuration.Configuration
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.access.AccessManager
@@ -84,7 +86,11 @@ constructor(
 
   private suspend fun send(datagram: Datagram) {
     try {
-      serverSocket.send(datagram)
+      withTimeout(500.milliseconds) {
+        // TODO(nue): This will fail if you ping the server 2 or 3 times before joining and I don't
+        // know why...
+        serverSocket.send(datagram)
+      }
     } catch (e: Exception) {
       logger.atSevere().withCause(e).log("Failed to send on port %s", boundPort)
     }
