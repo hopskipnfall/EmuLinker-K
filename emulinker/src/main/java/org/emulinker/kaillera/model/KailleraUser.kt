@@ -376,7 +376,7 @@ class KailleraUser(
     }
     if (
       playerNumber > game!!.playerActionQueue!!.size ||
-        game!!.playerActionQueue!![playerNumber - 1].synched
+        game!!.playerActionQueue!![playerNumber - 1].synced
     ) {
       return
     }

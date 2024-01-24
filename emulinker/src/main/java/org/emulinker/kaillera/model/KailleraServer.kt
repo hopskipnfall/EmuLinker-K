@@ -650,7 +650,7 @@ internal constructor(
     )
     if (
       lookingForGameReporter.reportAndStartTimer(
-        LookingForGameEvent(/* gameId= */ game.id, /* gameTitle= */ game.romName, /* user= */ user)
+        LookingForGameEvent(gameId = game.id, gameTitle = game.romName, user)
       )
     ) {
       user.game!!.announce(
