@@ -1,6 +1,7 @@
 package org.emulinker.kaillera.controller.v086.protocol
 
 import com.google.common.truth.Truth.assertThat
+import io.ktor.utils.io.core.ByteReadPacket
 import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.kaillera.controller.v086.protocol.MessageTestUtils.assertBufferContainsExactly
@@ -14,14 +15,27 @@ class GameChatTest : ProtocolBaseTest() {
   }
 
   @Test
+  fun gameChatNotification_byteReadPacket_deserializeBody() {
+    assertThat(
+        GameChat.GameChatSerializer.read(
+            ByteReadPacket(V086Utils.hexStringToByteBuffer(NOTIFICATION_BODY_BYTES)),
+            MESSAGE_NUMBER
+          )
+          .getOrThrow()
+      )
+      .isEqualTo(GAME_CHAT_NOTIFICATION)
+  }
+
+  @Test
   fun gameChatNotification_deserializeBody() {
     assertThat(
         GameChat.GameChatSerializer.read(
-          V086Utils.hexStringToByteBuffer(NOTIFICATION_BODY_BYTES),
-          MESSAGE_NUMBER
-        )
+            V086Utils.hexStringToByteBuffer(NOTIFICATION_BODY_BYTES),
+            MESSAGE_NUMBER
+          )
+          .getOrThrow()
       )
-      .isEqualTo(MessageParseResult.Success(GAME_CHAT_NOTIFICATION))
+      .isEqualTo(GAME_CHAT_NOTIFICATION)
   }
 
   @Test
@@ -39,14 +53,27 @@ class GameChatTest : ProtocolBaseTest() {
   }
 
   @Test
+  fun gameChatRequest_byteReadPacket_deserializeBody() {
+    assertThat(
+        GameChat.GameChatSerializer.read(
+            ByteReadPacket(V086Utils.hexStringToByteBuffer(REQUEST_BODY_BYTES)),
+            MESSAGE_NUMBER
+          )
+          .getOrThrow()
+      )
+      .isEqualTo(GAME_CHAT_REQUEST)
+  }
+
+  @Test
   fun gameChatRequest_deserializeBody() {
     assertThat(
         GameChat.GameChatSerializer.read(
-          V086Utils.hexStringToByteBuffer(REQUEST_BODY_BYTES),
-          MESSAGE_NUMBER
-        )
+            V086Utils.hexStringToByteBuffer(REQUEST_BODY_BYTES),
+            MESSAGE_NUMBER
+          )
+          .getOrThrow()
       )
-      .isEqualTo(MessageParseResult.Success(GAME_CHAT_REQUEST))
+      .isEqualTo(GAME_CHAT_REQUEST)
   }
 
   @Test

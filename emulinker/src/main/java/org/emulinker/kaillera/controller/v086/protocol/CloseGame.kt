@@ -1,11 +1,13 @@
 package org.emulinker.kaillera.controller.v086.protocol
 
+import io.ktor.utils.io.core.ByteReadPacket
 import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.util.EmuUtil
 import org.emulinker.util.UnsignedUtil.getUnsignedShort
 import org.emulinker.util.UnsignedUtil.putUnsignedShort
+import org.emulinker.util.UnsignedUtil.readUnsignedShort
 
 data class CloseGame(
   override val messageNumber: Int,
@@ -35,16 +37,28 @@ data class CloseGame(
   object CloseGameSerializer : MessageSerializer<CloseGame> {
     override val messageTypeId: Byte = ID
 
-    override fun read(buffer: ByteBuffer, messageNumber: Int): MessageParseResult<CloseGame> {
+    override fun read(buffer: ByteBuffer, messageNumber: Int): Result<CloseGame> {
       if (buffer.remaining() < 5) {
-        return MessageParseResult.Failure("Failed byte count validation!")
+        return parseFailure("Failed byte count validation!")
       }
       val b = buffer.get()
       if (b.toInt() != 0x00)
         throw MessageFormatException("Invalid Close Game format: byte 0 = " + EmuUtil.byteToHex(b))
       val gameID = buffer.getUnsignedShort()
       val val1 = buffer.getUnsignedShort()
-      return MessageParseResult.Success(CloseGame(messageNumber, gameID, val1))
+      return Result.success(CloseGame(messageNumber, gameID, val1))
+    }
+
+    override fun read(packet: ByteReadPacket, messageNumber: Int): Result<CloseGame> {
+      if (packet.remaining < 5) {
+        return parseFailure("Failed byte count validation!")
+      }
+      val b = packet.readByte()
+      if (b.toInt() != 0x00)
+        throw MessageFormatException("Invalid Close Game format: byte 0 = " + EmuUtil.byteToHex(b))
+      val gameID = packet.readUnsignedShort()
+      val val1 = packet.readUnsignedShort()
+      return Result.success(CloseGame(messageNumber, gameID, val1))
     }
 
     override fun write(buffer: ByteBuffer, message: CloseGame) {

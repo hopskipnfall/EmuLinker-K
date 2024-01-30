@@ -1,12 +1,15 @@
 package org.emulinker.kaillera.controller.v086.protocol
 
+import io.ktor.utils.io.core.ByteReadPacket
 import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.kaillera.controller.v086.V086Utils.getNumBytesPlusStopByte
 import org.emulinker.util.EmuUtil
+import org.emulinker.util.EmuUtil.readString
 import org.emulinker.util.UnsignedUtil.getUnsignedShort
 import org.emulinker.util.UnsignedUtil.putUnsignedShort
+import org.emulinker.util.UnsignedUtil.readUnsignedShort
 
 /**
  * Message sent from the server to indicate that the client is not allowed to join the server,
@@ -45,26 +48,38 @@ constructor(
   object ConnectionRejectedSerializer : MessageSerializer<ConnectionRejected> {
     override val messageTypeId: Byte = ID
 
-    override fun read(
-      buffer: ByteBuffer,
-      messageNumber: Int
-    ): MessageParseResult<ConnectionRejected> {
+    override fun read(buffer: ByteBuffer, messageNumber: Int): Result<ConnectionRejected> {
       if (buffer.remaining() < 6) {
-        return MessageParseResult.Failure("Failed byte count validation!")
+        return parseFailure("Failed byte count validation!")
       }
-      val userName = EmuUtil.readString(buffer)
+      val userName = buffer.readString()
       if (buffer.remaining() < 4) {
-        return MessageParseResult.Failure("Failed byte count validation!")
+        return parseFailure("Failed byte count validation!")
       }
       val userID = buffer.getUnsignedShort()
       if (buffer.remaining() < 2) {
-        return MessageParseResult.Failure("Failed byte count validation!")
+        return parseFailure("Failed byte count validation!")
       }
 
-      val message = EmuUtil.readString(buffer)
-      return MessageParseResult.Success(
-        ConnectionRejected(messageNumber, userName, userID, message)
-      )
+      val message = buffer.readString()
+      return Result.success(ConnectionRejected(messageNumber, userName, userID, message))
+    }
+
+    override fun read(packet: ByteReadPacket, messageNumber: Int): Result<ConnectionRejected> {
+      if (packet.remaining < 6) {
+        return parseFailure("Failed byte count validation!")
+      }
+      val userName = packet.readString()
+      if (packet.remaining < 4) {
+        return parseFailure("Failed byte count validation!")
+      }
+      val userID = packet.readUnsignedShort()
+      if (packet.remaining < 2) {
+        return parseFailure("Failed byte count validation!")
+      }
+
+      val message = packet.readString()
+      return Result.success(ConnectionRejected(messageNumber, userName, userID, message))
     }
 
     override fun write(buffer: ByteBuffer, message: ConnectionRejected) {

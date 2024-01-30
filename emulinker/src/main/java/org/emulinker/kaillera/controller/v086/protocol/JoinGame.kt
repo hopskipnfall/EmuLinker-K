@@ -1,15 +1,19 @@
 package org.emulinker.kaillera.controller.v086.protocol
 
+import io.ktor.utils.io.core.ByteReadPacket
 import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.kaillera.controller.v086.V086Utils.getNumBytesPlusStopByte
 import org.emulinker.kaillera.model.ConnectionType
 import org.emulinker.util.EmuUtil
+import org.emulinker.util.EmuUtil.readString
 import org.emulinker.util.UnsignedUtil.getUnsignedInt
 import org.emulinker.util.UnsignedUtil.getUnsignedShort
 import org.emulinker.util.UnsignedUtil.putUnsignedInt
 import org.emulinker.util.UnsignedUtil.putUnsignedShort
+import org.emulinker.util.UnsignedUtil.readUnsignedInt
+import org.emulinker.util.UnsignedUtil.readUnsignedShort
 
 sealed class JoinGame : V086Message() {
   override val messageTypeId = ID
@@ -46,23 +50,55 @@ sealed class JoinGame : V086Message() {
   object JoinGameSerializer : MessageSerializer<JoinGame> {
     override val messageTypeId: Byte = ID
 
-    override fun read(buffer: ByteBuffer, messageNumber: Int): MessageParseResult<JoinGame> {
+    override fun read(buffer: ByteBuffer, messageNumber: Int): Result<JoinGame> {
       if (buffer.remaining() < 13) {
-        return MessageParseResult.Failure("Failed byte count validation!")
+        return parseFailure("Failed byte count validation!")
       }
       val b = buffer.get()
       if (b.toInt() != 0x00)
         throw MessageFormatException("Invalid format: byte 0 = " + EmuUtil.byteToHex(b))
       val gameID = buffer.getUnsignedShort()
       val val1 = buffer.getUnsignedShort()
-      val userName = EmuUtil.readString(buffer)
+      val userName = buffer.readString()
       if (buffer.remaining() < 7) {
-        return MessageParseResult.Failure("Failed byte count validation!")
+        return parseFailure("Failed byte count validation!")
       }
       val ping = buffer.getUnsignedInt()
       val userID = buffer.getUnsignedShort()
       val connectionType = buffer.get()
-      return MessageParseResult.Success(
+      return Result.success(
+        if (userName.isBlank() && ping == 0L && userID == 0xFFFF)
+          JoinGameRequest(messageNumber, gameID, ConnectionType.fromByteValue(connectionType))
+        else
+          JoinGameNotification(
+            messageNumber,
+            gameID,
+            val1,
+            userName,
+            ping,
+            userID,
+            ConnectionType.fromByteValue(connectionType)
+          )
+      )
+    }
+
+    override fun read(packet: ByteReadPacket, messageNumber: Int): Result<JoinGame> {
+      if (packet.remaining < 13) {
+        return parseFailure("Failed byte count validation!")
+      }
+      val b = packet.readByte()
+      if (b.toInt() != 0x00)
+        throw MessageFormatException("Invalid format: byte 0 = " + EmuUtil.byteToHex(b))
+      val gameID = packet.readUnsignedShort()
+      val val1 = packet.readUnsignedShort()
+      val userName = packet.readString()
+      if (packet.remaining < 7) {
+        return parseFailure("Failed byte count validation!")
+      }
+      val ping = packet.readUnsignedInt()
+      val userID = packet.readUnsignedShort()
+      val connectionType = packet.readByte()
+      return Result.success(
         if (userName.isBlank() && ping == 0L && userID == 0xFFFF)
           JoinGameRequest(messageNumber, gameID, ConnectionType.fromByteValue(connectionType))
         else

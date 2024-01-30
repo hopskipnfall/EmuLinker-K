@@ -1,6 +1,7 @@
 package org.emulinker.kaillera.controller.v086.protocol
 
 import com.google.common.truth.Truth.assertThat
+import io.ktor.utils.io.core.ByteReadPacket
 import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.kaillera.controller.v086.protocol.MessageTestUtils.assertBufferContainsExactly
@@ -14,14 +15,27 @@ class QuitTest : ProtocolBaseTest() {
   }
 
   @Test
+  fun quitNotification_byteReadPacket_deserializeBody() {
+    assertThat(
+        Quit.QuitSerializer.read(
+            ByteReadPacket(V086Utils.hexStringToByteBuffer(NOTIFICATION_BODY_BYTES)),
+            MESSAGE_NUMBER
+          )
+          .getOrThrow()
+      )
+      .isEqualTo(QUIT_NOTIFICATION)
+  }
+
+  @Test
   fun quitNotification_deserializeBody() {
     assertThat(
         Quit.QuitSerializer.read(
-          V086Utils.hexStringToByteBuffer(NOTIFICATION_BODY_BYTES),
-          MESSAGE_NUMBER
-        )
+            V086Utils.hexStringToByteBuffer(NOTIFICATION_BODY_BYTES),
+            MESSAGE_NUMBER
+          )
+          .getOrThrow()
       )
-      .isEqualTo(MessageParseResult.Success(QUIT_NOTIFICATION))
+      .isEqualTo(QUIT_NOTIFICATION)
   }
 
   @Test
@@ -39,14 +53,27 @@ class QuitTest : ProtocolBaseTest() {
   }
 
   @Test
+  fun quitRequest_byteReadPacket_deserializeBody() {
+    assertThat(
+        Quit.QuitSerializer.read(
+            ByteReadPacket(V086Utils.hexStringToByteBuffer(REQUEST_BODY_BYTES)),
+            MESSAGE_NUMBER
+          )
+          .getOrThrow()
+      )
+      .isEqualTo(QUIT_REQUEST)
+  }
+
+  @Test
   fun quitRequest_deserializeBody() {
     assertThat(
         Quit.QuitSerializer.read(
-          V086Utils.hexStringToByteBuffer(REQUEST_BODY_BYTES),
-          MESSAGE_NUMBER
-        )
+            V086Utils.hexStringToByteBuffer(REQUEST_BODY_BYTES),
+            MESSAGE_NUMBER
+          )
+          .getOrThrow()
       )
-      .isEqualTo(MessageParseResult.Success(QUIT_REQUEST))
+      .isEqualTo(QUIT_REQUEST)
   }
 
   @Test

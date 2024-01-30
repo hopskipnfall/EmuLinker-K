@@ -1,8 +1,9 @@
 package org.emulinker.kaillera.controller.v086.protocol
 
 import com.google.common.truth.Truth.assertThat
+import io.ktor.utils.io.core.ByteReadPacket
 import java.nio.ByteBuffer
-import org.emulinker.kaillera.controller.v086.V086Utils
+import org.emulinker.kaillera.controller.v086.V086Utils.hexStringToByteBuffer
 import org.emulinker.kaillera.controller.v086.protocol.MessageTestUtils.assertBufferContainsExactly
 import org.junit.Test
 
@@ -17,11 +18,24 @@ class ChatTest : ProtocolBaseTest() {
   fun chatNotification_deserializeBody() {
     assertThat(
         Chat.ChatSerializer.read(
-          V086Utils.hexStringToByteBuffer(CHAT_NOTIFICATION_BODY_BYTES),
-          MESSAGE_NUMBER
-        )
+            hexStringToByteBuffer(CHAT_NOTIFICATION_BODY_BYTES),
+            MESSAGE_NUMBER
+          )
+          .getOrThrow()
       )
-      .isEqualTo(MessageParseResult.Success(CHAT_NOTIFICATION))
+      .isEqualTo(CHAT_NOTIFICATION)
+  }
+
+  @Test
+  fun chatNotification_byteReadPacket_deserializeBody() {
+    assertThat(
+        Chat.ChatSerializer.read(
+            ByteReadPacket(hexStringToByteBuffer(CHAT_NOTIFICATION_BODY_BYTES)),
+            MESSAGE_NUMBER
+          )
+          .getOrThrow()
+      )
+      .isEqualTo(CHAT_NOTIFICATION)
   }
 
   @Test
@@ -41,12 +55,22 @@ class ChatTest : ProtocolBaseTest() {
   @Test
   fun deserializeBody() {
     assertThat(
-        Chat.ChatSerializer.read(
-          V086Utils.hexStringToByteBuffer(CHAT_REQUEST_BODY_BYTES),
-          MESSAGE_NUMBER
-        )
+        Chat.ChatSerializer.read(hexStringToByteBuffer(CHAT_REQUEST_BODY_BYTES), MESSAGE_NUMBER)
+          .getOrThrow()
       )
-      .isEqualTo(MessageParseResult.Success(CHAT_REQUEST))
+      .isEqualTo(CHAT_REQUEST)
+  }
+
+  @Test
+  fun byteReadPacket_deserializeBody() {
+    assertThat(
+        Chat.ChatSerializer.read(
+            ByteReadPacket(hexStringToByteBuffer(CHAT_REQUEST_BODY_BYTES)),
+            MESSAGE_NUMBER
+          )
+          .getOrThrow()
+      )
+      .isEqualTo(CHAT_REQUEST)
   }
 
   @Test

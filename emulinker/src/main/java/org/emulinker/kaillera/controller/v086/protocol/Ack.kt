@@ -1,11 +1,13 @@
 package org.emulinker.kaillera.controller.v086.protocol
 
+import io.ktor.utils.io.core.ByteReadPacket
 import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.util.EmuUtil
 import org.emulinker.util.UnsignedUtil.getUnsignedInt
 import org.emulinker.util.UnsignedUtil.putUnsignedInt
+import org.emulinker.util.UnsignedUtil.readUnsignedInt
 
 sealed class Ack : V086Message() {
   override val bodyBytes =
@@ -18,9 +20,22 @@ sealed class Ack : V086Message() {
   object ClientAckSerializer : MessageSerializer<ClientAck> {
     override val messageTypeId: Byte = ClientAck.ID
 
-    override fun read(buffer: ByteBuffer, messageNumber: Int): MessageParseResult<ClientAck> {
+    override fun read(packet: ByteReadPacket, messageNumber: Int): Result<ClientAck> {
+      if (packet.remaining < 17) {
+        return parseFailure("Failed byte count validation!")
+      }
+      val b = packet.readByte()
+      if (b.toInt() != 0x00) {
+        throw MessageFormatException(
+          "Invalid Client to Server ACK format: byte 0 = ${EmuUtil.byteToHex(b)}"
+        )
+      }
+      return Result.success(ClientAck(messageNumber))
+    }
+
+    override fun read(buffer: ByteBuffer, messageNumber: Int): Result<ClientAck> {
       if (buffer.remaining() < 17) {
-        return MessageParseResult.Failure("Failed byte count validation!")
+        return parseFailure("Failed byte count validation!")
       }
       val b = buffer.get()
       if (b.toInt() != 0x00) {
@@ -28,7 +43,7 @@ sealed class Ack : V086Message() {
           "Invalid Client to Server ACK format: byte 0 = ${EmuUtil.byteToHex(b)}"
         )
       }
-      return MessageParseResult.Success(ClientAck(messageNumber))
+      return Result.success(ClientAck(messageNumber))
     }
 
     override fun write(buffer: ByteBuffer, message: ClientAck) {
@@ -43,9 +58,28 @@ sealed class Ack : V086Message() {
   object ServerAckSerializer : MessageSerializer<ServerAck> {
     override val messageTypeId: Byte = ServerAck.ID
 
-    override fun read(buffer: ByteBuffer, messageNumber: Int): MessageParseResult<ServerAck> {
+    override fun read(packet: ByteReadPacket, messageNumber: Int): Result<ServerAck> {
+      if (packet.remaining < 17) {
+        return parseFailure("Failed byte count validation!")
+      }
+      val b = packet.readByte()
+      if (b.toInt() != 0x00) {
+        throw MessageFormatException("byte 0 = " + EmuUtil.byteToHex(b))
+      }
+      val val1 = packet.readUnsignedInt()
+      val val2 = packet.readUnsignedInt()
+      val val3 = packet.readUnsignedInt()
+      val val4 = packet.readUnsignedInt()
+      if (val1 != 0L || val2 != 1L || val3 != 2L || val4 != 3L)
+        throw MessageFormatException(
+          "Invalid Server to Client ACK format: bytes do not match acceptable format!"
+        )
+      return Result.success(ServerAck(messageNumber))
+    }
+
+    override fun read(buffer: ByteBuffer, messageNumber: Int): Result<ServerAck> {
       if (buffer.remaining() < 17) {
-        return MessageParseResult.Failure("Failed byte count validation!")
+        return parseFailure("Failed byte count validation!")
       }
       val b = buffer.get()
       if (b.toInt() != 0x00) {
@@ -59,7 +93,7 @@ sealed class Ack : V086Message() {
         throw MessageFormatException(
           "Invalid Server to Client ACK format: bytes do not match acceptable format!"
         )
-      return MessageParseResult.Success(ServerAck(messageNumber))
+      return Result.success(ServerAck(messageNumber))
     }
 
     override fun write(buffer: ByteBuffer, message: ServerAck) {

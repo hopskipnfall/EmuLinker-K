@@ -1,11 +1,14 @@
 package org.emulinker.kaillera.controller.v086.protocol
 
+import io.ktor.utils.io.core.ByteReadPacket
 import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.kaillera.controller.v086.V086Utils.getNumBytesPlusStopByte
 import org.emulinker.util.EmuUtil
+import org.emulinker.util.EmuUtil.readString
 import org.emulinker.util.UnsignedUtil.getUnsignedShort
 import org.emulinker.util.UnsignedUtil.putUnsignedShort
+import org.emulinker.util.UnsignedUtil.readUnsignedShort
 
 sealed class CreateGame : V086Message() {
   abstract val romName: String
@@ -21,26 +24,50 @@ sealed class CreateGame : V086Message() {
 
   object CreateGameSerializer : MessageSerializer<CreateGame> {
     override val messageTypeId: Byte = ID
+    override fun read(packet: ByteReadPacket, messageNumber: Int): Result<CreateGame> {
+      if (packet.remaining < 8) {
+        return parseFailure("Failed byte count validation!")
+      }
+      val userName = packet.readString()
+      if (packet.remaining < 6) {
+        return parseFailure("Failed byte count validation!")
+      }
+      val romName = packet.readString()
+      if (packet.remaining < 5) {
+        return parseFailure("Failed byte count validation!")
+      }
+      val clientType = packet.readString()
+      if (packet.remaining < 4) {
+        return parseFailure("Failed byte count validation!")
+      }
+      val gameID = packet.readUnsignedShort()
+      val val1 = packet.readUnsignedShort()
+      return Result.success(
+        if (userName == REQUEST_USERNAME && gameID == REQUEST_GAME_ID && val1 == REQUEST_VAL1)
+          CreateGameRequest(messageNumber, romName)
+        else CreateGameNotification(messageNumber, userName, romName, clientType, gameID, val1)
+      )
+    }
 
-    override fun read(buffer: ByteBuffer, messageNumber: Int): MessageParseResult<CreateGame> {
+    override fun read(buffer: ByteBuffer, messageNumber: Int): Result<CreateGame> {
       if (buffer.remaining() < 8) {
-        return MessageParseResult.Failure("Failed byte count validation!")
+        return parseFailure("Failed byte count validation!")
       }
-      val userName = EmuUtil.readString(buffer)
+      val userName = buffer.readString()
       if (buffer.remaining() < 6) {
-        return MessageParseResult.Failure("Failed byte count validation!")
+        return parseFailure("Failed byte count validation!")
       }
-      val romName = EmuUtil.readString(buffer)
+      val romName = buffer.readString()
       if (buffer.remaining() < 5) {
-        return MessageParseResult.Failure("Failed byte count validation!")
+        return parseFailure("Failed byte count validation!")
       }
-      val clientType = EmuUtil.readString(buffer)
+      val clientType = buffer.readString()
       if (buffer.remaining() < 4) {
-        return MessageParseResult.Failure("Failed byte count validation!")
+        return parseFailure("Failed byte count validation!")
       }
       val gameID = buffer.getUnsignedShort()
       val val1 = buffer.getUnsignedShort()
-      return MessageParseResult.Success(
+      return Result.success(
         if (userName == REQUEST_USERNAME && gameID == REQUEST_GAME_ID && val1 == REQUEST_VAL1)
           CreateGameRequest(messageNumber, romName)
         else CreateGameNotification(messageNumber, userName, romName, clientType, gameID, val1)

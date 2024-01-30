@@ -1,11 +1,14 @@
 package org.emulinker.kaillera.controller.v086.protocol
 
+import io.ktor.utils.io.core.ByteReadPacket
 import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.kaillera.controller.v086.V086Utils.getNumBytesPlusStopByte
 import org.emulinker.util.EmuUtil
+import org.emulinker.util.EmuUtil.readString
 import org.emulinker.util.UnsignedUtil.getUnsignedShort
 import org.emulinker.util.UnsignedUtil.putUnsignedShort
+import org.emulinker.util.UnsignedUtil.readUnsignedShort
 
 sealed class Quit : V086Message() {
   override val messageTypeId = ID
@@ -33,17 +36,36 @@ sealed class Quit : V086Message() {
   object QuitSerializer : MessageSerializer<Quit> {
     override val messageTypeId: Byte = ID
 
-    override fun read(buffer: ByteBuffer, messageNumber: Int): MessageParseResult<Quit> {
+    override fun read(buffer: ByteBuffer, messageNumber: Int): Result<Quit> {
       if (buffer.remaining() < 5) {
-        return MessageParseResult.Failure("Failed byte count validation!")
+        return parseFailure("Failed byte count validation!")
       }
-      val userName = EmuUtil.readString(buffer)
+      val userName = buffer.readString()
       if (buffer.remaining() < 3) {
-        return MessageParseResult.Failure("Failed byte count validation!")
+        return parseFailure("Failed byte count validation!")
       }
       val userID = buffer.getUnsignedShort()
-      val message = EmuUtil.readString(buffer)
-      return MessageParseResult.Success(
+      val message = buffer.readString()
+      return Result.success(
+        if (userName.isBlank() && userID == REQUEST_USER_ID) {
+          QuitRequest(messageNumber, message)
+        } else {
+          QuitNotification(messageNumber, userName, userID, message)
+        }
+      )
+    }
+
+    override fun read(packet: ByteReadPacket, messageNumber: Int): Result<Quit> {
+      if (packet.remaining < 5) {
+        return parseFailure("Failed byte count validation!")
+      }
+      val userName = packet.readString()
+      if (packet.remaining < 3) {
+        return parseFailure("Failed byte count validation!")
+      }
+      val userID = packet.readUnsignedShort()
+      val message = packet.readString()
+      return Result.success(
         if (userName.isBlank() && userID == REQUEST_USER_ID) {
           QuitRequest(messageNumber, message)
         } else {

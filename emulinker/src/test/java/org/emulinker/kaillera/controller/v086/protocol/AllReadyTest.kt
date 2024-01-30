@@ -1,6 +1,7 @@
 package org.emulinker.kaillera.controller.v086.protocol
 
 import com.google.common.truth.Truth.assertThat
+import io.ktor.utils.io.core.ByteReadPacket
 import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.kaillera.controller.v086.protocol.MessageTestUtils.assertBufferContainsExactly
@@ -17,11 +18,24 @@ class AllReadyTest : ProtocolBaseTest() {
   fun allReady_deserializeBody() {
     assertThat(
         AllReady.AllReadySerializer.read(
-          V086Utils.hexStringToByteBuffer(BODY_BYTES),
-          MESSAGE_NUMBER
-        )
+            V086Utils.hexStringToByteBuffer(BODY_BYTES),
+            MESSAGE_NUMBER
+          )
+          .getOrThrow()
       )
-      .isEqualTo(MessageParseResult.Success(ALL_READY))
+      .isEqualTo(ALL_READY)
+  }
+
+  @Test
+  fun allReady_byteReadPacket_deserializeBody() {
+    assertThat(
+        AllReady.AllReadySerializer.read(
+            ByteReadPacket(V086Utils.hexStringToByteBuffer(BODY_BYTES)),
+            MESSAGE_NUMBER
+          )
+          .getOrThrow()
+      )
+      .isEqualTo(ALL_READY)
   }
 
   @Test

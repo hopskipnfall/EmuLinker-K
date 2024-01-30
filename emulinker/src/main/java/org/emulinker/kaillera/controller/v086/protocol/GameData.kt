@@ -1,10 +1,13 @@
 package org.emulinker.kaillera.controller.v086.protocol
 
+import io.ktor.utils.io.core.ByteReadPacket
+import io.ktor.utils.io.core.readAvailable
 import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.util.UnsignedUtil.getUnsignedShort
 import org.emulinker.util.UnsignedUtil.putUnsignedShort
+import org.emulinker.util.UnsignedUtil.readUnsignedShort
 
 /**
  * A message sent by both the client and server, which contains game input data as a [ByteArray].
@@ -84,18 +87,32 @@ constructor(override val messageNumber: Int, val gameData: ByteArray) :
   object GameDataSerializer : MessageSerializer<GameData> {
     override val messageTypeId: Byte = ID
 
-    override fun read(buffer: ByteBuffer, messageNumber: Int): MessageParseResult<GameData> {
+    override fun read(buffer: ByteBuffer, messageNumber: Int): Result<GameData> {
       if (buffer.remaining() < 4) {
-        return MessageParseResult.Failure("Failed byte count validation!")
+        return parseFailure("Failed byte count validation!")
       }
       buffer.get() // This is always 0x00.
       val dataSize = buffer.getUnsignedShort()
       if (dataSize <= 0 || dataSize > buffer.remaining()) {
-        return MessageParseResult.Failure("Invalid Game Data format: dataSize = $dataSize")
+        return parseFailure("Invalid Game Data format: dataSize = $dataSize")
       }
       val gameData = ByteArray(dataSize)
-      buffer[gameData]
-      return MessageParseResult.Success(create(messageNumber, gameData))
+      buffer.get(gameData)
+      return Result.success(create(messageNumber, gameData))
+    }
+
+    override fun read(packet: ByteReadPacket, messageNumber: Int): Result<GameData> {
+      if (packet.remaining < 4) {
+        return parseFailure("Failed byte count validation!")
+      }
+      packet.readByte() // This is always 0x00.
+      val dataSize = packet.readUnsignedShort()
+      if (dataSize <= 0 || dataSize > packet.remaining) {
+        return parseFailure("Invalid Game Data format: dataSize = $dataSize")
+      }
+      val gameData = ByteArray(dataSize)
+      packet.readAvailable(gameData) // TODO(nue): This might not work?
+      return Result.success(create(messageNumber, gameData))
     }
 
     override fun write(buffer: ByteBuffer, message: GameData) {

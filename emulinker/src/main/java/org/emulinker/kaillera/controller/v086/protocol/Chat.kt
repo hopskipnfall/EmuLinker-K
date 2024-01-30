@@ -1,8 +1,10 @@
 package org.emulinker.kaillera.controller.v086.protocol
 
+import io.ktor.utils.io.core.ByteReadPacket
 import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.v086.V086Utils.getNumBytesPlusStopByte
 import org.emulinker.util.EmuUtil
+import org.emulinker.util.EmuUtil.readString
 
 /** Message type ID: `0x07`. */
 sealed class Chat : V086Message() {
@@ -26,17 +28,34 @@ sealed class Chat : V086Message() {
 
   object ChatSerializer : MessageSerializer<Chat> {
     override val messageTypeId: Byte = ID
+    override fun read(packet: ByteReadPacket, messageNumber: Int): Result<Chat> {
+      if (packet.remaining < 3) {
+        return parseFailure("Failed byte count validation!")
+      }
+      val username = packet.readString()
+      if (packet.remaining < 2) {
+        return parseFailure("Failed byte count validation!")
+      }
+      val message = packet.readString()
+      return Result.success(
+        if (username.isBlank()) {
+          ChatRequest(messageNumber = messageNumber, message = message)
+        } else {
+          ChatNotification(messageNumber = messageNumber, username = username, message = message)
+        }
+      )
+    }
 
-    override fun read(buffer: ByteBuffer, messageNumber: Int): MessageParseResult<Chat> {
+    override fun read(buffer: ByteBuffer, messageNumber: Int): Result<Chat> {
       if (buffer.remaining() < 3) {
-        return MessageParseResult.Failure("Failed byte count validation!")
+        return parseFailure("Failed byte count validation!")
       }
-      val username = EmuUtil.readString(buffer)
+      val username = buffer.readString()
       if (buffer.remaining() < 2) {
-        return MessageParseResult.Failure("Failed byte count validation!")
+        return parseFailure("Failed byte count validation!")
       }
-      val message = EmuUtil.readString(buffer)
-      return MessageParseResult.Success(
+      val message = buffer.readString()
+      return Result.success(
         if (username.isBlank()) {
           ChatRequest(messageNumber = messageNumber, message = message)
         } else {

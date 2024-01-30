@@ -1,6 +1,7 @@
 package org.emulinker.kaillera.controller.v086.protocol
 
 import com.google.common.truth.Truth.assertThat
+import io.ktor.utils.io.core.ByteReadPacket
 import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.kaillera.controller.v086.protocol.MessageTestUtils.assertBufferContainsExactly
@@ -14,14 +15,27 @@ class StartGameTest : ProtocolBaseTest() {
   }
 
   @Test
+  fun startGameNotification_byteReadPacket_deserializeBody() {
+    assertThat(
+        StartGame.StartGameSerializer.read(
+            ByteReadPacket(V086Utils.hexStringToByteBuffer(NOTIFICATION_BODY_BYTES)),
+            MESSAGE_NUMBER
+          )
+          .getOrThrow()
+      )
+      .isEqualTo(START_GAME_NOTIFICATION)
+  }
+
+  @Test
   fun startGameNotification_deserializeBody() {
     assertThat(
         StartGame.StartGameSerializer.read(
-          V086Utils.hexStringToByteBuffer(NOTIFICATION_BODY_BYTES),
-          MESSAGE_NUMBER
-        )
+            V086Utils.hexStringToByteBuffer(NOTIFICATION_BODY_BYTES),
+            MESSAGE_NUMBER
+          )
+          .getOrThrow()
       )
-      .isEqualTo(MessageParseResult.Success(START_GAME_NOTIFICATION))
+      .isEqualTo(START_GAME_NOTIFICATION)
   }
 
   @Test
@@ -39,14 +53,27 @@ class StartGameTest : ProtocolBaseTest() {
   }
 
   @Test
+  fun startGameRequest_byteReadPacket_deserializeBody() {
+    assertThat(
+        StartGame.StartGameSerializer.read(
+            ByteReadPacket(V086Utils.hexStringToByteBuffer(REQUEST_BODY_BYTES)),
+            MESSAGE_NUMBER
+          )
+          .getOrThrow()
+      )
+      .isEqualTo(START_GAME_REQUEST)
+  }
+
+  @Test
   fun startGameRequest_deserializeBody() {
     assertThat(
         StartGame.StartGameSerializer.read(
-          V086Utils.hexStringToByteBuffer(REQUEST_BODY_BYTES),
-          MESSAGE_NUMBER
-        )
+            V086Utils.hexStringToByteBuffer(REQUEST_BODY_BYTES),
+            MESSAGE_NUMBER
+          )
+          .getOrThrow()
       )
-      .isEqualTo(MessageParseResult.Success(START_GAME_REQUEST))
+      .isEqualTo(START_GAME_REQUEST)
   }
 
   @Test

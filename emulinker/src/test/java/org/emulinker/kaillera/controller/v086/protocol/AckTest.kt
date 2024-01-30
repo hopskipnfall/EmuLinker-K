@@ -1,6 +1,7 @@
 package org.emulinker.kaillera.controller.v086.protocol
 
 import com.google.common.truth.Truth.assertThat
+import io.ktor.utils.io.core.ByteReadPacket
 import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.kaillera.controller.v086.protocol.MessageTestUtils.assertBufferContainsExactly
@@ -17,11 +18,24 @@ class AckTest : ProtocolBaseTest() {
   fun clientAck_deserializeBody() {
     assertThat(
         Ack.ClientAckSerializer.read(
-          V086Utils.hexStringToByteBuffer(ACK_BODY_BYTES),
-          MESSAGE_NUMBER
-        )
+            V086Utils.hexStringToByteBuffer(ACK_BODY_BYTES),
+            MESSAGE_NUMBER
+          )
+          .getOrThrow()
       )
-      .isEqualTo(MessageParseResult.Success(CLIENT_ACK))
+      .isEqualTo(CLIENT_ACK)
+  }
+
+  @Test
+  fun clientAck_byteReadPacket_deserializeBody() {
+    assertThat(
+        Ack.ClientAckSerializer.read(
+            ByteReadPacket(V086Utils.hexStringToByteBuffer(ACK_BODY_BYTES)),
+            MESSAGE_NUMBER
+          )
+          .getOrThrow()
+      )
+      .isEqualTo(CLIENT_ACK)
   }
 
   @Test
@@ -42,11 +56,24 @@ class AckTest : ProtocolBaseTest() {
   fun serverAck_deserializeBody() {
     assertThat(
         Ack.ServerAckSerializer.read(
-          V086Utils.hexStringToByteBuffer(ACK_BODY_BYTES),
-          MESSAGE_NUMBER
-        )
+            V086Utils.hexStringToByteBuffer(ACK_BODY_BYTES),
+            MESSAGE_NUMBER
+          )
+          .getOrThrow()
       )
-      .isEqualTo(MessageParseResult.Success(SERVER_ACK))
+      .isEqualTo(SERVER_ACK)
+  }
+
+  @Test
+  fun serverAck_byteReadPacket_deserializeBody() {
+    assertThat(
+        Ack.ServerAckSerializer.read(
+            ByteReadPacket(V086Utils.hexStringToByteBuffer(ACK_BODY_BYTES)),
+            MESSAGE_NUMBER
+          )
+          .getOrThrow()
+      )
+      .isEqualTo(SERVER_ACK)
   }
 
   @Test

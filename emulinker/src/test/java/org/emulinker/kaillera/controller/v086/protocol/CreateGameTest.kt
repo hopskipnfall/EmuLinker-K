@@ -1,6 +1,7 @@
 package org.emulinker.kaillera.controller.v086.protocol
 
 import com.google.common.truth.Truth.assertThat
+import io.ktor.utils.io.core.ByteReadPacket
 import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.kaillera.controller.v086.protocol.MessageTestUtils.assertBufferContainsExactly
@@ -14,14 +15,27 @@ class CreateGameTest : ProtocolBaseTest() {
   }
 
   @Test
+  fun createGameNotification_byteReadPacket_deserializeBody() {
+    assertThat(
+        CreateGame.CreateGameSerializer.read(
+            ByteReadPacket(V086Utils.hexStringToByteBuffer(NOTIFICATION_BODY_BYTES)),
+            MESSAGE_NUMBER
+          )
+          .getOrThrow()
+      )
+      .isEqualTo(CREATE_GAME_NOTIFICATION)
+  }
+
+  @Test
   fun createGameNotification_deserializeBody() {
     assertThat(
         CreateGame.CreateGameSerializer.read(
-          V086Utils.hexStringToByteBuffer(NOTIFICATION_BODY_BYTES),
-          MESSAGE_NUMBER
-        )
+            V086Utils.hexStringToByteBuffer(NOTIFICATION_BODY_BYTES),
+            MESSAGE_NUMBER
+          )
+          .getOrThrow()
       )
-      .isEqualTo(MessageParseResult.Success(CREATE_GAME_NOTIFICATION))
+      .isEqualTo(CREATE_GAME_NOTIFICATION)
   }
 
   @Test
@@ -39,14 +53,27 @@ class CreateGameTest : ProtocolBaseTest() {
   }
 
   @Test
+  fun createGameRequest_byteReadPacket_deserializeBody() {
+    assertThat(
+        CreateGame.CreateGameSerializer.read(
+            ByteReadPacket(V086Utils.hexStringToByteBuffer(REQUEST_BODY_BYTES)),
+            MESSAGE_NUMBER
+          )
+          .getOrThrow()
+      )
+      .isEqualTo(CREATE_GAME_REQUEST)
+  }
+
+  @Test
   fun createGameRequest_deserializeBody() {
     assertThat(
         CreateGame.CreateGameSerializer.read(
-          V086Utils.hexStringToByteBuffer(REQUEST_BODY_BYTES),
-          MESSAGE_NUMBER
-        )
+            V086Utils.hexStringToByteBuffer(REQUEST_BODY_BYTES),
+            MESSAGE_NUMBER
+          )
+          .getOrThrow()
       )
-      .isEqualTo(MessageParseResult.Success(CREATE_GAME_REQUEST))
+      .isEqualTo(CREATE_GAME_REQUEST)
   }
 
   @Test

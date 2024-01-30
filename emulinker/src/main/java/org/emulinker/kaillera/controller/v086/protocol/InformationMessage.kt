@@ -1,9 +1,11 @@
 package org.emulinker.kaillera.controller.v086.protocol
 
+import io.ktor.utils.io.core.ByteReadPacket
 import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086Utils.getNumBytesPlusStopByte
 import org.emulinker.util.EmuUtil
+import org.emulinker.util.EmuUtil.readString
 
 /**
  * A message from the server containing text to be displayed to the user, including a source.
@@ -35,19 +37,28 @@ constructor(override val messageNumber: Int, val source: String, val message: St
   object InformationMessageSerializer : MessageSerializer<InformationMessage> {
     override val messageTypeId: Byte = ID
 
-    override fun read(
-      buffer: ByteBuffer,
-      messageNumber: Int
-    ): MessageParseResult<InformationMessage> {
+    override fun read(buffer: ByteBuffer, messageNumber: Int): Result<InformationMessage> {
       if (buffer.remaining() < 4) {
-        return MessageParseResult.Failure("Failed byte count validation!")
+        return parseFailure("Failed byte count validation!")
       }
-      val source = EmuUtil.readString(buffer)
+      val source = buffer.readString()
       if (buffer.remaining() < 2) {
-        return MessageParseResult.Failure("Failed byte count validation!")
+        return parseFailure("Failed byte count validation!")
       }
-      val message = EmuUtil.readString(buffer)
-      return MessageParseResult.Success(InformationMessage(messageNumber, source, message))
+      val message = buffer.readString()
+      return Result.success(InformationMessage(messageNumber, source, message))
+    }
+
+    override fun read(packet: ByteReadPacket, messageNumber: Int): Result<InformationMessage> {
+      if (packet.remaining < 4) {
+        return parseFailure("Failed byte count validation!")
+      }
+      val source = packet.readString()
+      if (packet.remaining < 2) {
+        return parseFailure("Failed byte count validation!")
+      }
+      val message = packet.readString()
+      return Result.success(InformationMessage(messageNumber, source, message))
     }
 
     override fun write(buffer: ByteBuffer, message: InformationMessage) {

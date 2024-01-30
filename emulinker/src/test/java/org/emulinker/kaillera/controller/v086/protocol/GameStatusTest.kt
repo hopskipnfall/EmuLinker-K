@@ -1,6 +1,7 @@
 package org.emulinker.kaillera.controller.v086.protocol
 
 import com.google.common.truth.Truth.assertThat
+import io.ktor.utils.io.core.ByteReadPacket
 import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.kaillera.controller.v086.protocol.MessageTestUtils.assertBufferContainsExactly
@@ -15,14 +16,27 @@ class GameStatusTest : ProtocolBaseTest() {
   }
 
   @Test
+  fun byteReadPacket_deserializeBody() {
+    assertThat(
+        GameStatus.GameStatusSerializer.read(
+            ByteReadPacket(V086Utils.hexStringToByteBuffer(BODY_BYTES)),
+            MESSAGE_NUMBER
+          )
+          .getOrThrow()
+      )
+      .isEqualTo(GAME_STATUS)
+  }
+
+  @Test
   fun deserializeBody() {
     assertThat(
         GameStatus.GameStatusSerializer.read(
-          V086Utils.hexStringToByteBuffer(BODY_BYTES),
-          MESSAGE_NUMBER
-        )
+            V086Utils.hexStringToByteBuffer(BODY_BYTES),
+            MESSAGE_NUMBER
+          )
+          .getOrThrow()
       )
-      .isEqualTo(MessageParseResult.Success(GAME_STATUS))
+      .isEqualTo(GAME_STATUS)
   }
 
   @Test

@@ -1,8 +1,10 @@
 package org.emulinker.kaillera.controller.v086.protocol
 
+import io.ktor.utils.io.core.ByteReadPacket
 import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.util.EmuUtil
+import org.emulinker.util.EmuUtil.toHexString
 
 /**
  * Message sent by both client and server to indicate that they are ready for the game to start.
@@ -28,18 +30,28 @@ data class AllReady(override val messageNumber: Int) : V086Message(), ServerMess
   object AllReadySerializer : MessageSerializer<AllReady> {
     override val messageTypeId: Byte = ID
 
-    override fun read(buffer: ByteBuffer, messageNumber: Int): MessageParseResult<AllReady> {
+    override fun read(buffer: ByteBuffer, messageNumber: Int): Result<AllReady> {
       if (buffer.remaining() < 1) {
-        return MessageParseResult.Failure("Failed byte count validation!")
+        return parseFailure("Failed byte count validation!")
       }
 
       val b = buffer.get()
       if (b.toInt() != 0x00) {
-        return MessageParseResult.Failure(
-          "Invalid All Ready Signal format: byte 0 = " + EmuUtil.byteToHex(b)
-        )
+        return parseFailure("Invalid All Ready Signal format: byte 0 = " + EmuUtil.byteToHex(b))
       }
-      return MessageParseResult.Success(AllReady(messageNumber))
+      return Result.success(AllReady(messageNumber))
+    }
+
+    override fun read(packet: ByteReadPacket, messageNumber: Int): Result<AllReady> {
+      if (packet.remaining < 1) {
+        return parseFailure("Failed byte count validation!")
+      }
+
+      val b = packet.readByte()
+      if (b.toInt() != 0x00) {
+        return parseFailure("Invalid All Ready Signal format: byte 0 = " + b.toHexString())
+      }
+      return Result.success(AllReady(messageNumber))
     }
 
     override fun write(buffer: ByteBuffer, message: AllReady) {

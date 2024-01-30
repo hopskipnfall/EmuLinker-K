@@ -1,11 +1,13 @@
 package org.emulinker.kaillera.controller.v086.protocol
 
+import io.ktor.utils.io.core.ByteReadPacket
 import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.util.EmuUtil
 import org.emulinker.util.UnsignedUtil.getUnsignedShort
 import org.emulinker.util.UnsignedUtil.putUnsignedShort
+import org.emulinker.util.UnsignedUtil.readUnsignedShort
 
 /**
  * Message sent by the server to notify all clients that a game's status has changed.
@@ -50,9 +52,9 @@ constructor(
   object GameStatusSerializer : MessageSerializer<GameStatus> {
     override val messageTypeId: Byte = ID
 
-    override fun read(buffer: ByteBuffer, messageNumber: Int): MessageParseResult<GameStatus> {
+    override fun read(buffer: ByteBuffer, messageNumber: Int): Result<GameStatus> {
       if (buffer.remaining() < 8) {
-        return MessageParseResult.Failure("Failed byte count validation!")
+        return parseFailure("Failed byte count validation!")
       }
       val b = buffer.get()
       require(b.toInt() == 0x00) { "Invalid Game Status format: byte 0 = " + EmuUtil.byteToHex(b) }
@@ -61,7 +63,30 @@ constructor(
       val gameStatus = buffer.get()
       val numPlayers = buffer.get()
       val maxPlayers = buffer.get()
-      return MessageParseResult.Success(
+      return Result.success(
+        GameStatus(
+          messageNumber,
+          gameID,
+          val1,
+          org.emulinker.kaillera.model.GameStatus.fromByteValue(gameStatus),
+          numPlayers,
+          maxPlayers
+        )
+      )
+    }
+
+    override fun read(packet: ByteReadPacket, messageNumber: Int): Result<GameStatus> {
+      if (packet.remaining < 8) {
+        return parseFailure("Failed byte count validation!")
+      }
+      val b = packet.readByte()
+      require(b.toInt() == 0x00) { "Invalid Game Status format: byte 0 = " + EmuUtil.byteToHex(b) }
+      val gameID = packet.readUnsignedShort()
+      val val1 = packet.readUnsignedShort()
+      val gameStatus = packet.readByte()
+      val numPlayers = packet.readByte()
+      val maxPlayers = packet.readByte()
+      return Result.success(
         GameStatus(
           messageNumber,
           gameID,

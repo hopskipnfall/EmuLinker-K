@@ -1,6 +1,7 @@
 package org.emulinker.kaillera.controller.v086.protocol
 
 import com.google.common.truth.Truth.assertThat
+import io.ktor.utils.io.core.ByteReadPacket
 import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.kaillera.controller.v086.protocol.MessageTestUtils.assertBufferContainsExactly
@@ -14,14 +15,27 @@ class PlayerDropTest {
   }
 
   @Test
+  fun playerDropNotification_byteReadPacket_deserializeBody() {
+    assertThat(
+        PlayerDrop.PlayerDropSerializer.read(
+            ByteReadPacket(V086Utils.hexStringToByteBuffer(NOTIFICATION_BODY_BYTES)),
+            MESSAGE_NUMBER
+          )
+          .getOrThrow()
+      )
+      .isEqualTo(PLAYER_DROP_NOTIFICATION)
+  }
+
+  @Test
   fun playerDropNotification_deserializeBody() {
     assertThat(
         PlayerDrop.PlayerDropSerializer.read(
-          V086Utils.hexStringToByteBuffer(NOTIFICATION_BODY_BYTES),
-          MESSAGE_NUMBER
-        )
+            V086Utils.hexStringToByteBuffer(NOTIFICATION_BODY_BYTES),
+            MESSAGE_NUMBER
+          )
+          .getOrThrow()
       )
-      .isEqualTo(MessageParseResult.Success(PLAYER_DROP_NOTIFICATION))
+      .isEqualTo(PLAYER_DROP_NOTIFICATION)
   }
 
   @Test
@@ -39,14 +53,27 @@ class PlayerDropTest {
   }
 
   @Test
+  fun playerDropRequest_byteReadPacket_deserializeBody() {
+    assertThat(
+        PlayerDrop.PlayerDropSerializer.read(
+            ByteReadPacket(V086Utils.hexStringToByteBuffer(REQUEST_BODY_BYTES)),
+            MESSAGE_NUMBER
+          )
+          .getOrThrow()
+      )
+      .isEqualTo(PLAYER_DROP_REQUEST)
+  }
+
+  @Test
   fun playerDropRequest_deserializeBody() {
     assertThat(
         PlayerDrop.PlayerDropSerializer.read(
-          V086Utils.hexStringToByteBuffer(REQUEST_BODY_BYTES),
-          MESSAGE_NUMBER
-        )
+            V086Utils.hexStringToByteBuffer(REQUEST_BODY_BYTES),
+            MESSAGE_NUMBER
+          )
+          .getOrThrow()
       )
-      .isEqualTo(MessageParseResult.Success(PLAYER_DROP_REQUEST))
+      .isEqualTo(PLAYER_DROP_REQUEST)
   }
 
   @Test
