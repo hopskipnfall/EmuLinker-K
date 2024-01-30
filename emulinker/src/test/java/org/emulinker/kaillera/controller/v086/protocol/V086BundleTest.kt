@@ -3,6 +3,7 @@ package org.emulinker.kaillera.controller.v086.protocol
 import com.google.common.truth.Truth.assertThat
 import io.ktor.network.sockets.*
 import io.ktor.util.network.*
+import io.ktor.utils.io.core.ByteReadPacket
 import java.net.InetSocketAddress
 import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets
@@ -53,6 +54,19 @@ class V086BundleTest {
     val lastMessageNumber = 0
     val parsedBundle =
       V086Bundle.parse(V086Utils.hexStringToByteBuffer(hexInput), lastMessageNumber)
+    assertThat(parsedBundle.messages).hasLength(1)
+    assertThat(parsedBundle.messages[0]).isEqualTo(ClientAck(messageNumber = 1))
+  }
+
+  @Test
+  fun parseClientACK2() {
+    // TODO(nue): We should dagger-ize this and use the RuntimeFlags class.
+    AppModule.charsetDoNotUse = StandardCharsets.UTF_8
+    val hexInput =
+      "02 01 00 12 00 06 00 00 00 00 00 01 00 00 00 02 00 00 00 03 00 00 00 00 00 24 00 03 EA 4B 00 50 72 6F 6A 65 63 74 20 36 34 6B 20 30 2E 31 33 20 28 30 31 20 41 75 67 20 32 30 30 33 29 00 01"
+    val lastMessageNumber = 0
+    val parsedBundle =
+      V086Bundle.parse(ByteReadPacket( V086Utils.hexStringToByteBuffer(hexInput)), lastMessageNumber)
     assertThat(parsedBundle.messages).hasLength(1)
     assertThat(parsedBundle.messages[0]).isEqualTo(ClientAck(messageNumber = 1))
   }
