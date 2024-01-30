@@ -10,7 +10,6 @@ import java.io.IOException
 import java.lang.Exception
 import java.net.InetSocketAddress
 import java.net.SocketException
-import java.nio.ByteBuffer
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Executors
 import javax.inject.Inject
@@ -84,7 +83,7 @@ constructor(
 
   val outChannel = Channel<Datagram>(capacity = 1_000)
 
-  private suspend fun send(datagram: Datagram) {
+  suspend fun send(datagram: Datagram) {
     try {
       withTimeout(500.milliseconds) {
         // TODO(nue): This will fail if you ping the server 2 or 3 times before joining and I don't
@@ -104,11 +103,10 @@ constructor(
         while (!stopFlag) {
           try {
             val datagram = serverSocket.receive()
-            val buffer = datagram.packet.readByteBuffer()
             val fromSocketAddress =
               V086Utils.toJavaAddress(datagram.address as io.ktor.network.sockets.InetSocketAddress)
             if (stopFlag) break
-            handleReceived(buffer, fromSocketAddress)
+            handleReceived(datagram, fromSocketAddress)
           } catch (e: SocketException) {
             if (stopFlag) break
             logger.atSevere().withCause(e).log("Failed to receive on port %d", boundPort)
@@ -157,12 +155,14 @@ constructor(
   val requestDispatcher = requestThreadpool.asCoroutineDispatcher()
   private val requestScope = CoroutineScope(requestDispatcher)
 
-  fun handleReceived(buffer: ByteBuffer, remoteSocketAddress: InetSocketAddress) {
+  private fun handleReceived(datagram: Datagram, remoteSocketAddress: InetSocketAddress) {
     requestScope.launch {
       var handler = clientHandlers[remoteSocketAddress]
       if (handler == null) {
         // User is new. It's either a ConnectMessage or it's the user's first message after
         // reconnecting to the server via the dictated port.
+        val packetCopy = datagram.packet.copy()
+        val buffer = packetCopy.readByteBuffer()
         val connectMessageResult: Result<ConnectMessage> = ConnectMessage.parse(buffer)
         if (connectMessageResult.isSuccess) {
           when (val connectMessage = connectMessageResult.getOrThrow()) {
@@ -196,7 +196,9 @@ constructor(
           // We successfully parsed a connection message and handled it so return.
           return@launch
         }
+        packetCopy.release()
 
+        // TODO(nue): I'm almost certain this can be removed.
         // The message should be parsed as a V086Message. Reset it.
         buffer.position(0)
 
@@ -233,7 +235,7 @@ constructor(
 
         clientHandlers[remoteSocketAddress] = handler!!
       }
-      handler.mutex.withLock { handler.handleReceived(buffer, remoteSocketAddress) }
+      handler.requestHandlerMutex.withLock { handler.handleReceived(datagram, remoteSocketAddress) }
     }
   }
 

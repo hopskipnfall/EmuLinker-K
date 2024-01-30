@@ -631,37 +631,54 @@ class KailleraGameImpl(
     }
     playerActionQueueCopy[playerNumber - 1].addActions(data)
     autoFireDetector?.addData(playerNumber, data, user.bytesPerAction)
-    val response = ByteArray(user.arraySize)
-    for (actionCounter in 0 until actionsPerMessage) {
-      for (playerActionQueueIndex in playerActionQueueCopy.indices) {
-        // TODO(nue): Consider removing this loop, I'm fairly certain it isn't needed.
-        while (isSynched) {
-          try {
-            playerActionQueueCopy[playerActionQueueIndex].getActionAndWriteToArray(
-              playerIndex = playerNumber - 1,
-              writeToArray = response,
-              writeAtIndex =
-                actionCounter * (playerActionQueueCopy.size * user.bytesPerAction) +
-                  playerActionQueueIndex * user.bytesPerAction,
-              actionLength = user.bytesPerAction,
-            )
-            break
-          } catch (e: PlayerTimeoutException) {
-            e.timeoutNumber = ++timeoutCounter
-            handleTimeout(e)
+
+    // TODO(nue): This works for 2P but what about more? This probably results in unnecessary
+    // messages.
+    for (player in players) {
+      val playerNumber = player.playerNumber
+
+      if (
+        playerActionQueueCopy.all {
+          it.containsNewDataForPlayer(
+            playerIndex = playerNumber - 1,
+            actionLength = actionsPerMessage * user.bytesPerAction,
+          )
+        }
+      ) {
+        val response = ByteArray(user.arraySize)
+        for (actionCounter in 0 until actionsPerMessage) {
+          for (playerActionQueueIndex in playerActionQueueCopy.indices) {
+            // TODO(nue): Consider removing this loop, I'm fairly certain it isn't needed.
+            while (isSynched) {
+              try {
+                playerActionQueueCopy[playerActionQueueIndex].getActionAndWriteToArray(
+                  playerIndex = playerNumber - 1,
+                  writeToArray = response,
+                  writeAtIndex =
+                    actionCounter * (playerActionQueueCopy.size * user.bytesPerAction) +
+                      playerActionQueueIndex * user.bytesPerAction,
+                  actionLength = user.bytesPerAction,
+                )
+                break
+              } catch (e: PlayerTimeoutException) {
+                e.timeoutNumber = ++timeoutCounter
+                handleTimeout(e)
+              }
+            }
           }
         }
+        if (!isSynched) {
+          throw GameDataException(
+            EmuLang.getString("KailleraGameImpl.DesynchedWarning"),
+            data,
+            user.bytesPerAction,
+            playerNumber,
+            playerActionQueueCopy.size,
+          )
+        }
+        player.handleEvent(GameDataEvent(this, response))
       }
     }
-    if (!isSynched)
-      throw GameDataException(
-        EmuLang.getString("KailleraGameImpl.DesynchedWarning"),
-        data,
-        user.bytesPerAction,
-        playerNumber,
-        playerActionQueueCopy.size,
-      )
-    user.handleEvent(GameDataEvent(this, response))
   }
 
   // it's very important this method is synchronized

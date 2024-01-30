@@ -7,10 +7,10 @@ import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import io.ktor.network.sockets.Datagram
 import io.ktor.utils.io.core.ByteReadPacket
+import io.ktor.utils.io.core.readAvailable
 import java.net.InetSocketAddress
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
-import kotlinx.coroutines.channels.trySendBlocking
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import org.emulinker.config.RuntimeFlags
@@ -18,25 +18,33 @@ import org.emulinker.kaillera.controller.CombinedKailleraController
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.messaging.ParseException
 import org.emulinker.kaillera.controller.v086.V086Utils.toKtorAddress
-import org.emulinker.kaillera.controller.v086.action.*
+import org.emulinker.kaillera.controller.v086.action.FatalActionException
+import org.emulinker.kaillera.controller.v086.action.V086Action
+import org.emulinker.kaillera.controller.v086.action.V086GameEventHandler
+import org.emulinker.kaillera.controller.v086.action.V086ServerEventHandler
+import org.emulinker.kaillera.controller.v086.action.V086UserEventHandler
 import org.emulinker.kaillera.controller.v086.protocol.V086Bundle
 import org.emulinker.kaillera.controller.v086.protocol.V086Bundle.Companion.parse
 import org.emulinker.kaillera.controller.v086.protocol.V086BundleFormatException
 import org.emulinker.kaillera.controller.v086.protocol.V086Message
 import org.emulinker.kaillera.model.KailleraUser
-import org.emulinker.kaillera.model.event.*
+import org.emulinker.kaillera.model.event.GameEvent
+import org.emulinker.kaillera.model.event.KailleraEvent
+import org.emulinker.kaillera.model.event.KailleraEventListener
+import org.emulinker.kaillera.model.event.ServerEvent
+import org.emulinker.kaillera.model.event.StopFlagEvent
+import org.emulinker.kaillera.model.event.UserEvent
 import org.emulinker.util.ClientGameDataCache
 import org.emulinker.util.EmuUtil
 import org.emulinker.util.EmuUtil.dumpBuffer
 import org.emulinker.util.GameDataCache
 import org.emulinker.util.stripFromProdBinary
 
-/** A private UDP server allocated for communication with a single client. */
 class V086ClientHandler
 @AssistedInject
 constructor(
   metrics: MetricRegistry,
-  private val flags: RuntimeFlags,
+  flags: RuntimeFlags,
   // TODO(nue): Try to replace this with remoteSocketAddress.
   /** I think this is the address from when the user called the connect controller. */
   @Assisted val connectRemoteSocketAddress: InetSocketAddress,
@@ -44,14 +52,14 @@ constructor(
   /** The [CombinedKailleraController] that created this instance. */
   @param:Assisted val combinedKailleraController: CombinedKailleraController,
 ) : KailleraEventListener {
-  val mutex = Mutex()
-  private val inSynchMutex = Mutex()
+  /** Mutex ensuring that only one packet is processed at a time for this [V086ClientHandler]. */
+  val requestHandlerMutex = Mutex()
   private val sendMutex = Mutex()
 
   var remoteSocketAddress: InetSocketAddress? = null
     private set
 
-  suspend fun handleReceived(buffer: ByteBuffer, remoteSocketAddress: InetSocketAddress) {
+  suspend fun handleReceived(datagram: Datagram, remoteSocketAddress: InetSocketAddress) {
     if (this.remoteSocketAddress == null) {
       this.remoteSocketAddress = remoteSocketAddress
     } else if (remoteSocketAddress != this.remoteSocketAddress) {
@@ -64,7 +72,7 @@ constructor(
         )
       return
     }
-    clientRequestTimer.time().use { handleReceivedInternal(buffer) }
+    clientRequestTimer.time().use { handleReceivedInternal(datagram) }
   }
 
   lateinit var user: KailleraUser
@@ -150,7 +158,12 @@ constructor(
     combinedKailleraController.clientHandlers.remove(remoteSocketAddress)
   }
 
-  private suspend fun handleReceivedInternal(buffer: ByteBuffer) {
+  private suspend fun handleReceivedInternal(datagram: Datagram) {
+    val buffer = getInBuffer()
+    datagram.packet.readAvailable(buffer)
+    datagram.packet.release()
+    buffer.flip()
+
     val inBundle =
       try {
         parse(buffer, lastMessageNumber)
@@ -189,49 +202,42 @@ constructor(
         0
       }
     try {
-      inSynchMutex.withLock {
-        val messages = inBundle.messages
-        if (inBundle.numMessages == 1) {
-          lastMessageNumber = messages[0]!!.messageNumber
-          val action = controller.actions[messages[0]!!.messageTypeId.toInt()]
-          if (action == null) {
-            logger
-              .atSevere()
-              .log("No action defined to handle client message: %s", messages.firstOrNull())
-          }
-          (action as V086Action<V086Message>).performAction(messages[0]!!, this)
-        } else {
-          // read the bundle from back to front to process the oldest messages first
-          for (i in inBundle.numMessages - 1 downTo 0) {
-            /**
-             * already extracts messages with higher numbers when parsing, it does not need to be
-             * checked and this causes an error if messageNumber is 0 and lastMessageNumber is
-             * 0xFFFF if (messages [i].getNumber() > lastMessageNumber)
-             */
-            prevMessageNumber = lastMessageNumber
-            lastMessageNumber = messages[i]!!.messageNumber
-            if (prevMessageNumber + 1 != lastMessageNumber) {
-              if (prevMessageNumber == 0xFFFF && lastMessageNumber == 0) {
-                // exception; do nothing
-              } else {
-                logger
-                  .atWarning()
-                  .log(
-                    "%s dropped a packet! (%d to %d)",
-                    user,
-                    prevMessageNumber,
-                    lastMessageNumber
-                  )
-                user.droppedPacket()
-              }
-            }
-            val action = controller.actions[messages[i]!!.messageTypeId.toInt()]
-            if (action == null) {
-              logger.atSevere().log("No action defined to handle client message: %s", messages[i])
+      val messages = inBundle.messages
+      if (inBundle.numMessages == 1) {
+        lastMessageNumber = messages[0]!!.messageNumber
+        val action = controller.actions[messages[0]!!.messageTypeId.toInt()]
+        if (action == null) {
+          logger
+            .atSevere()
+            .log("No action defined to handle client message: %s", messages.firstOrNull())
+        }
+        (action as V086Action<V086Message>).performAction(messages[0]!!, this)
+      } else {
+        // read the bundle from back to front to process the oldest messages first
+        for (i in inBundle.numMessages - 1 downTo 0) {
+          /**
+           * already extracts messages with higher numbers when parsing, it does not need to be
+           * checked and this causes an error if messageNumber is 0 and lastMessageNumber is 0xFFFF
+           * if (messages [i].getNumber() > lastMessageNumber)
+           */
+          prevMessageNumber = lastMessageNumber
+          lastMessageNumber = messages[i]!!.messageNumber
+          if (prevMessageNumber + 1 != lastMessageNumber) {
+            if (prevMessageNumber == 0xFFFF && lastMessageNumber == 0) {
+              // exception; do nothing
             } else {
-              // logger.atFine().log(user + " -> " + message);
-              (action as V086Action<V086Message>).performAction(messages[i]!!, this)
+              logger
+                .atWarning()
+                .log("%s dropped a packet! (%d to %d)", user, prevMessageNumber, lastMessageNumber)
+              user.droppedPacket()
             }
+          }
+          val action = controller.actions[messages[i]!!.messageTypeId.toInt()]
+          if (action == null) {
+            logger.atSevere().log("No action defined to handle client message: %s", messages[i])
+          } else {
+            // logger.atFine().log(user + " -> " + message);
+            (action as V086Action<V086Message>).performAction(messages[i]!!, this)
           }
         }
       }
@@ -308,24 +314,19 @@ constructor(
       stripFromProdBinary { logger.atFinest().log("<- TO P%d: %s", user.id, outMessage) }
       outBundle.writeTo(buffer)
       buffer.flip()
-      combinedKailleraController.outChannel.trySendBlocking(
+      combinedKailleraController.send(
         Datagram(ByteReadPacket(buffer), remoteSocketAddress!!.toKtorAddress())
       )
     }
 
-  //  private val reusableBuffers =
-  //    listOf(1..10)
-  //      .map { ByteBuffer.allocateDirect(flags.v086BufferSize).order(ByteOrder.LITTLE_ENDIAN) }
-  //      .toTypedArray()
-  //  private var reusableBufferIndex = 0
+  private val outBuffer =
+    ByteBuffer.allocateDirect(flags.v086BufferSize).order(ByteOrder.LITTLE_ENDIAN)
+  private val inBuffer =
+    ByteBuffer.allocateDirect(flags.v086BufferSize).order(ByteOrder.LITTLE_ENDIAN)
 
-  private fun getOutBuffer(): ByteBuffer {
-    return ByteBuffer.allocateDirect(flags.v086BufferSize).order(ByteOrder.LITTLE_ENDIAN)
+  private fun getOutBuffer(): ByteBuffer = outBuffer.clear()
 
-    //    reusableBufferIndex = (reusableBufferIndex+1) % reusableBuffers.size
-    //    reusableBuffers[reusableBufferIndex] = ByteBuffer.allocateDirect(flags.v086BufferSize)
-    //    return reusableBuffers[reusableBufferIndex].clear()
-  }
+  private fun getInBuffer(): ByteBuffer = inBuffer.clear()
 
   init {
     resetGameDataCache()

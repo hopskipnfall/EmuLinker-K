@@ -347,7 +347,7 @@ class KailleraUser(
       status = UserStatus.IDLE
       game!!.drop(this, playerNumber)
     }
-    game!!.quit(this, playerNumber)
+    game?.quit(this, playerNumber)
     if (status != UserStatus.IDLE) {
       status = UserStatus.IDLE
     }
