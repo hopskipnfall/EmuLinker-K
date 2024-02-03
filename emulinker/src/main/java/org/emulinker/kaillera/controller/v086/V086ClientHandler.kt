@@ -7,7 +7,6 @@ import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import io.ktor.network.sockets.Datagram
 import io.ktor.utils.io.core.ByteReadPacket
-import io.ktor.utils.io.core.readAvailable
 import java.net.InetSocketAddress
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
@@ -36,7 +35,6 @@ import org.emulinker.kaillera.model.event.StopFlagEvent
 import org.emulinker.kaillera.model.event.UserEvent
 import org.emulinker.util.ClientGameDataCache
 import org.emulinker.util.EmuUtil
-import org.emulinker.util.EmuUtil.dumpBuffer
 import org.emulinker.util.GameDataCache
 import org.emulinker.util.stripFromProdBinary
 
@@ -159,32 +157,27 @@ constructor(
   }
 
   private suspend fun handleReceivedInternal(datagram: Datagram) {
-    val buffer = getInBuffer()
-    datagram.packet.readAvailable(buffer)
-    datagram.packet.release()
-    buffer.flip()
-
     val inBundle =
       try {
-        parse(buffer, lastMessageNumber)
+        parse(datagram.packet, lastMessageNumber)
       } catch (e: ParseException) {
-        buffer.rewind()
-        logger.atWarning().withCause(e).log("%s failed to parse: %s", this, dumpBuffer(buffer))
+        // TODO(nue): datagram.packet.toString() doesn't provide any useful information.
+        logger.atWarning().withCause(e).log("%s failed to parse: %s", this, datagram.packet)
         null
       } catch (e: V086BundleFormatException) {
-        buffer.rewind()
         logger
           .atWarning()
           .withCause(e)
-          .log("%s received invalid message bundle: %s", this, dumpBuffer(buffer))
+          .log("%s received invalid message bundle: %s", this, datagram.packet)
         null
       } catch (e: MessageFormatException) {
-        buffer.rewind()
         logger
           .atWarning()
           .withCause(e)
-          .log("%s received invalid message: %s}", this, dumpBuffer(buffer))
+          .log("%s received invalid message: %s}", this, datagram.packet)
         null
+      } finally {
+        datagram.packet.release()
       } ?: return
 
     stripFromProdBinary {
@@ -321,12 +314,8 @@ constructor(
 
   private val outBuffer =
     ByteBuffer.allocateDirect(flags.v086BufferSize).order(ByteOrder.LITTLE_ENDIAN)
-  private val inBuffer =
-    ByteBuffer.allocateDirect(flags.v086BufferSize).order(ByteOrder.LITTLE_ENDIAN)
 
   private fun getOutBuffer(): ByteBuffer = outBuffer.clear()
-
-  private fun getInBuffer(): ByteBuffer = inBuffer.clear()
 
   init {
     resetGameDataCache()

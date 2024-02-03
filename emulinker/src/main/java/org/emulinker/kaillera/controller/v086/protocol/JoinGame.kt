@@ -14,6 +14,7 @@ import org.emulinker.util.UnsignedUtil.putUnsignedInt
 import org.emulinker.util.UnsignedUtil.putUnsignedShort
 import org.emulinker.util.UnsignedUtil.readUnsignedInt
 import org.emulinker.util.UnsignedUtil.readUnsignedShort
+import org.emulinker.util.UnsignedUtil.readUnsignedShortLittleEndian
 
 sealed class JoinGame : V086Message() {
   override val messageTypeId = ID
@@ -89,8 +90,8 @@ sealed class JoinGame : V086Message() {
       val b = packet.readByte()
       if (b.toInt() != 0x00)
         throw MessageFormatException("Invalid format: byte 0 = " + EmuUtil.byteToHex(b))
-      val gameID = packet.readUnsignedShort()
-      val val1 = packet.readUnsignedShort()
+      val gameID = packet.readUnsignedShortLittleEndian()
+      val val1 = packet.readUnsignedShortLittleEndian()
       val userName = packet.readString()
       if (packet.remaining < 7) {
         return parseFailure("Failed byte count validation!")

@@ -7,7 +7,7 @@ import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.util.UnsignedUtil.getUnsignedShort
 import org.emulinker.util.UnsignedUtil.putUnsignedShort
-import org.emulinker.util.UnsignedUtil.readUnsignedShort
+import org.emulinker.util.UnsignedUtil.readUnsignedShortLittleEndian
 
 /**
  * A message sent by both the client and server, which contains game input data as a [ByteArray].
@@ -106,7 +106,7 @@ constructor(override val messageNumber: Int, val gameData: ByteArray) :
         return parseFailure("Failed byte count validation!")
       }
       packet.readByte() // This is always 0x00.
-      val dataSize = packet.readUnsignedShort()
+      val dataSize = packet.readUnsignedShortLittleEndian()
       if (dataSize <= 0 || dataSize > packet.remaining) {
         return parseFailure("Invalid Game Data format: dataSize = $dataSize")
       }

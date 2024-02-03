@@ -3,6 +3,7 @@ package org.emulinker.util
 import io.ktor.utils.io.core.ByteReadPacket
 import io.ktor.utils.io.core.readInt
 import io.ktor.utils.io.core.readShort
+import io.ktor.utils.io.core.readShortLittleEndian
 import java.nio.ByteBuffer
 
 object UnsignedUtil {
@@ -23,6 +24,8 @@ object UnsignedUtil {
   fun ByteBuffer.getUnsignedShort(): Int = this.short.toInt() and 0xffff
 
   fun ByteReadPacket.readUnsignedShort(): Int = this.readShort().toInt() and 0xffff
+  fun ByteReadPacket.readUnsignedShortLittleEndian(): Int =
+    this.readShortLittleEndian().toInt() and 0xffff
 
   fun ByteBuffer.putUnsignedShort(value: Int) {
     this.putShort((value and 0xffff).toShort())
