@@ -7,6 +7,7 @@ import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import io.ktor.network.sockets.Datagram
 import io.ktor.utils.io.core.ByteReadPacket
+import io.ktor.utils.io.core.readAvailable
 import java.net.InetSocketAddress
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
@@ -33,6 +34,7 @@ import org.emulinker.kaillera.model.event.KailleraEventListener
 import org.emulinker.kaillera.model.event.ServerEvent
 import org.emulinker.kaillera.model.event.StopFlagEvent
 import org.emulinker.kaillera.model.event.UserEvent
+import org.emulinker.kaillera.pico.CompiledFlags
 import org.emulinker.util.ClientGameDataCache
 import org.emulinker.util.EmuUtil
 import org.emulinker.util.GameDataCache
@@ -157,28 +159,61 @@ constructor(
   }
 
   private suspend fun handleReceivedInternal(datagram: Datagram) {
-    val inBundle =
-      try {
-        parse(datagram.packet, lastMessageNumber)
-      } catch (e: ParseException) {
-        // TODO(nue): datagram.packet.toString() doesn't provide any useful information.
-        logger.atWarning().withCause(e).log("%s failed to parse: %s", this, datagram.packet)
-        null
-      } catch (e: V086BundleFormatException) {
-        logger
-          .atWarning()
-          .withCause(e)
-          .log("%s received invalid message bundle: %s", this, datagram.packet)
-        null
-      } catch (e: MessageFormatException) {
-        logger
-          .atWarning()
-          .withCause(e)
-          .log("%s received invalid message: %s}", this, datagram.packet)
-        null
-      } finally {
+    val inBundle: V086Bundle =
+      if (CompiledFlags.USE_BYTEREADPACKET_INSTEAD_OF_BYTEBUFFER) {
+        try {
+          parse(datagram.packet, lastMessageNumber)
+        } catch (e: ParseException) {
+          // TODO(nue): datagram.packet.toString() doesn't provide any useful information.
+          logger.atWarning().withCause(e).log("%s failed to parse: %s", this, datagram.packet)
+          null
+        } catch (e: V086BundleFormatException) {
+          logger
+            .atWarning()
+            .withCause(e)
+            .log("%s received invalid message bundle: %s", this, datagram.packet)
+          null
+        } catch (e: MessageFormatException) {
+          logger
+            .atWarning()
+            .withCause(e)
+            .log("%s received invalid message: %s}", this, datagram.packet)
+          null
+        } finally {
+          datagram.packet.release()
+        }
+      } else {
+        val buffer = getInBuffer()
+        datagram.packet.readAvailable(buffer)
         datagram.packet.release()
-      } ?: return
+        buffer.flip()
+
+        try {
+          parse(buffer, lastMessageNumber)
+        } catch (e: ParseException) {
+          buffer.rewind()
+          logger
+            .atWarning()
+            .withCause(e)
+            .log("%s failed to parse: %s", this, EmuUtil.dumpBuffer(buffer))
+          null
+        } catch (e: V086BundleFormatException) {
+          buffer.rewind()
+          logger
+            .atWarning()
+            .withCause(e)
+            .log("%s received invalid message bundle: %s", this, EmuUtil.dumpBuffer(buffer))
+          null
+        } catch (e: MessageFormatException) {
+          buffer.rewind()
+          logger
+            .atWarning()
+            .withCause(e)
+            .log("%s received invalid message: %s}", this, EmuUtil.dumpBuffer(buffer))
+          null
+        }
+      }
+        ?: return
 
     stripFromProdBinary {
       logger.atFinest().log("<- FROM P%d: %s", user.id, inBundle.messages.firstOrNull())
@@ -314,8 +349,12 @@ constructor(
 
   private val outBuffer =
     ByteBuffer.allocateDirect(flags.v086BufferSize).order(ByteOrder.LITTLE_ENDIAN)
+  private val inBuffer =
+    ByteBuffer.allocateDirect(flags.v086BufferSize).order(ByteOrder.LITTLE_ENDIAN)
 
   private fun getOutBuffer(): ByteBuffer = outBuffer.clear()
+
+  private fun getInBuffer(): ByteBuffer = inBuffer.clear()
 
   init {
     resetGameDataCache()

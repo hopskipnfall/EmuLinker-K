@@ -86,6 +86,7 @@ tasks.processResources {
             val version = project.version
             val url = properties["url"]
           },
+        "useBytereadpacketInsteadOfBytebuffer" to false,
       )
     )
   }
