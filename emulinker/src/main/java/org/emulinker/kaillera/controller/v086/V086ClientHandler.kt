@@ -5,9 +5,8 @@ import com.google.common.flogger.FluentLogger
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
-import io.ktor.network.sockets.Datagram
-import io.ktor.utils.io.core.ByteReadPacket
-import io.ktor.utils.io.core.readAvailable
+import io.netty.buffer.Unpooled
+import io.netty.channel.socket.DatagramPacket
 import java.net.InetSocketAddress
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
@@ -17,7 +16,6 @@ import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.controller.CombinedKailleraController
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.messaging.ParseException
-import org.emulinker.kaillera.controller.v086.V086Utils.toKtorAddress
 import org.emulinker.kaillera.controller.v086.action.FatalActionException
 import org.emulinker.kaillera.controller.v086.action.V086Action
 import org.emulinker.kaillera.controller.v086.action.V086GameEventHandler
@@ -37,6 +35,7 @@ import org.emulinker.kaillera.model.event.UserEvent
 import org.emulinker.kaillera.pico.CompiledFlags
 import org.emulinker.util.ClientGameDataCache
 import org.emulinker.util.EmuUtil
+import org.emulinker.util.EmuUtil.dumpBufferFromBeginning
 import org.emulinker.util.GameDataCache
 import org.emulinker.util.stripFromProdBinary
 
@@ -59,7 +58,7 @@ constructor(
   var remoteSocketAddress: InetSocketAddress? = null
     private set
 
-  suspend fun handleReceived(datagram: Datagram, remoteSocketAddress: InetSocketAddress) {
+  suspend fun handleReceived(buffer: ByteBuffer, remoteSocketAddress: InetSocketAddress) {
     if (this.remoteSocketAddress == null) {
       this.remoteSocketAddress = remoteSocketAddress
     } else if (remoteSocketAddress != this.remoteSocketAddress) {
@@ -72,7 +71,7 @@ constructor(
         )
       return
     }
-    clientRequestTimer.time().use { handleReceivedInternal(datagram) }
+    clientRequestTimer.time().use { handleReceivedInternal(buffer) }
   }
 
   lateinit var user: KailleraUser
@@ -158,36 +157,34 @@ constructor(
     combinedKailleraController.clientHandlers.remove(remoteSocketAddress)
   }
 
-  private suspend fun handleReceivedInternal(datagram: Datagram) {
+  private suspend fun handleReceivedInternal(buffer: ByteBuffer) {
     val inBundle: V086Bundle =
       if (CompiledFlags.USE_BYTEREADPACKET_INSTEAD_OF_BYTEBUFFER) {
         try {
-          parse(datagram.packet, lastMessageNumber)
+          parse(buffer, lastMessageNumber)
         } catch (e: ParseException) {
           // TODO(nue): datagram.packet.toString() doesn't provide any useful information.
-          logger.atWarning().withCause(e).log("%s failed to parse: %s", this, datagram.packet)
+          logger
+            .atWarning()
+            .withCause(e)
+            .log("%s failed to parse: %s", this, buffer.dumpBufferFromBeginning())
           null
         } catch (e: V086BundleFormatException) {
           logger
             .atWarning()
             .withCause(e)
-            .log("%s received invalid message bundle: %s", this, datagram.packet)
+            .log("%s received invalid message bundle: %s", this, buffer.dumpBufferFromBeginning())
           null
         } catch (e: MessageFormatException) {
           logger
             .atWarning()
             .withCause(e)
-            .log("%s received invalid message: %s}", this, datagram.packet)
+            .log("%s received invalid message: %s}", this, buffer.dumpBufferFromBeginning())
           null
         } finally {
-          datagram.packet.release()
+          //             TODO:   datagram.packet.release()
         }
       } else {
-        val buffer = getInBuffer()
-        datagram.packet.readAvailable(buffer)
-        datagram.packet.release()
-        buffer.flip()
-
         try {
           parse(buffer, lastMessageNumber)
         } catch (e: ParseException) {
@@ -343,18 +340,14 @@ constructor(
       outBundle.writeTo(buffer)
       buffer.flip()
       combinedKailleraController.send(
-        Datagram(ByteReadPacket(buffer), remoteSocketAddress!!.toKtorAddress())
+        DatagramPacket(Unpooled.wrappedBuffer(buffer), remoteSocketAddress!!)
       )
     }
 
   private val outBuffer =
     ByteBuffer.allocateDirect(flags.v086BufferSize).order(ByteOrder.LITTLE_ENDIAN)
-  private val inBuffer =
-    ByteBuffer.allocateDirect(flags.v086BufferSize).order(ByteOrder.LITTLE_ENDIAN)
 
   private fun getOutBuffer(): ByteBuffer = outBuffer.clear()
-
-  private fun getInBuffer(): ByteBuffer = inBuffer.clear()
 
   init {
     resetGameDataCache()

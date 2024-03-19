@@ -44,7 +44,7 @@ dependencies {
   api("commons-configuration:commons-configuration:1.1")
   api("commons-pool:commons-pool:1.2")
 
-  val ktorVersion = "2.3.0"
+  val ktorVersion = "2.3.9"
   api("io.ktor:ktor-network-jvm:$ktorVersion")
   api("io.ktor:ktor-server-core-jvm:$ktorVersion")
   api("io.ktor:ktor-server-netty-jvm:$ktorVersion")

@@ -1,40 +1,39 @@
 package org.emulinker.kaillera.controller
 
 import com.google.common.flogger.FluentLogger
-import io.ktor.network.sockets.BoundDatagramSocket
-import io.ktor.network.sockets.Datagram
-import io.ktor.network.sockets.isClosed
-import io.ktor.utils.io.core.ByteReadPacket
-import io.ktor.utils.io.core.readByteBuffer
-import java.io.IOException
-import java.lang.Exception
+import io.ktor.network.sockets.*
+import io.ktor.server.application.*
+import io.ktor.server.engine.*
+import io.ktor.server.netty.*
+import io.ktor.util.network.*
+import io.ktor.utils.io.core.*
+import io.netty.bootstrap.Bootstrap
+import io.netty.buffer.PooledByteBufAllocator
+import io.netty.buffer.Unpooled
+import io.netty.channel.ChannelHandlerContext
+import io.netty.channel.ChannelOption
+import io.netty.channel.SimpleChannelInboundHandler
+import io.netty.channel.nio.NioEventLoopGroup
+import io.netty.channel.socket.DatagramPacket
+import io.netty.channel.socket.nio.NioDatagramChannel
 import java.net.InetSocketAddress
-import java.net.SocketException
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Executors
 import javax.inject.Inject
-import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.asCoroutineDispatcher
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.withLock
-import kotlinx.coroutines.withTimeout
 import org.apache.commons.configuration.Configuration
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.access.AccessManager
-import org.emulinker.kaillera.controller.connectcontroller.protocol.ConnectMessage
-import org.emulinker.kaillera.controller.connectcontroller.protocol.ConnectMessage_PING
-import org.emulinker.kaillera.controller.connectcontroller.protocol.ConnectMessage_PONG
-import org.emulinker.kaillera.controller.connectcontroller.protocol.RequestPrivateKailleraPortRequest
-import org.emulinker.kaillera.controller.connectcontroller.protocol.RequestPrivateKailleraPortResponse
+import org.emulinker.kaillera.controller.connectcontroller.protocol.*
 import org.emulinker.kaillera.controller.v086.V086ClientHandler
-import org.emulinker.kaillera.controller.v086.V086Utils
-import org.emulinker.kaillera.controller.v086.V086Utils.toKtorAddress
 import org.emulinker.kaillera.model.exception.NewConnectionException
 import org.emulinker.kaillera.model.exception.ServerFullException
 import org.emulinker.net.BindException
-import org.emulinker.net.UdpSocketProvider
 import org.emulinker.util.EmuUtil.formatSocketAddress
 
 class CombinedKailleraController
@@ -44,21 +43,15 @@ constructor(
   private val accessManager: AccessManager,
   // One for each version (which is only one).
   kailleraServerControllers: @JvmSuppressWildcards Set<KailleraServerController>,
-  config: Configuration,
-  udpSocketProvider: UdpSocketProvider,
+  private val config: Configuration,
 ) {
   var boundPort: Int? = null
-
-  var threadIsActive = false
-    private set
 
   private var stopFlag = false
 
   private lateinit var serverSocket: BoundDatagramSocket
 
-  @get:Synchronized
-  val isBound: Boolean
-    get() = !serverSocket.isClosed
+  private lateinit var nettyChannel: io.netty.channel.Channel
 
   @Synchronized
   fun stop() {
@@ -72,24 +65,13 @@ constructor(
 
   @Synchronized
   @Throws(BindException::class)
-  private fun bind(port: Int, udpSocketProvider: UdpSocketProvider) {
-    serverSocket =
-      udpSocketProvider.bindSocket(
-        io.ktor.network.sockets.InetSocketAddress("0.0.0.0", port),
-        bufferSize
-      )
-    boundPort = port
+  private fun bind(port: Int) {
+    // TODO: Put bind logic here.
   }
 
-  val outChannel = Channel<Datagram>(capacity = 1_000)
-
-  suspend fun send(datagram: Datagram) {
+  fun send(datagram: DatagramPacket) {
     try {
-      withTimeout(500.milliseconds) {
-        // TODO(nue): This will fail if you ping the server 2 or 3 times before joining and I don't
-        // know why...
-        serverSocket.send(datagram)
-      }
+      nettyChannel.writeAndFlush(datagram)
     } catch (e: Exception) {
       logger.atSevere().withCause(e).log("Failed to send on port %s", boundPort)
     }
@@ -97,40 +79,64 @@ constructor(
 
   fun run() {
     requestScope.launch {
-      threadIsActive = true
-      logger.atFine().log("%s: thread running...", this)
-      try {
-        while (!stopFlag) {
+      //
+      //      val channel = DatagramChannel.open()
+      //      channel.socket().bind(InetSocketAddress(config.getInt("controllers.connect.port")))
+      //// TODO?      channel.configureBlocking(false)
+      //
+      //      channel.socket().receiveBufferSize = bufferSize * 2
+      //// TODO     channel.socket().send = bufferSize * 2
+      //
+      //      logger.atSevere().log("Listening on port")
+      //
+      //      while (!stopFlag) {
+      //        val buffer = ByteBuffer
+      //                .allocate(flags.v086BufferSize) //TODO:
+      // .allocateDirect(flags.v086BufferSize)
+      //                .order(LITTLE_ENDIAN)
+      ////        val packet = DatagramPacket(buffer.array(), flags.v086BufferSize)
+      //        val address = channel.receive(buffer)
+      //
+      //        buffer.flip()
+      //
+      //        handleReceived(buffer, address as InetSocketAddress)
+      //      }
+
+      embeddedServer(Netty, port = config.getInt("controllers.connect.port")) {
+          val group = NioEventLoopGroup()
           try {
-            val datagram = serverSocket.receive()
-            val fromSocketAddress =
-              V086Utils.toJavaAddress(datagram.address as io.ktor.network.sockets.InetSocketAddress)
-            if (stopFlag) break
-            handleReceived(datagram, fromSocketAddress)
-          } catch (e: SocketException) {
-            if (stopFlag) break
-            logger.atSevere().withCause(e).log("Failed to receive on port %d", boundPort)
-          } catch (e: IOException) {
-            if (stopFlag) break
-            logger.atSevere().withCause(e).log("Failed to receive on port %d", boundPort)
+            Bootstrap().apply {
+              group(group)
+              channel(NioDatagramChannel::class.java)
+              option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
+              //            option(ChannelOption.SO_BROADCAST, true)
+              handler(
+                object : SimpleChannelInboundHandler<DatagramPacket>() {
+                  override fun channelRead0(ctx: ChannelHandlerContext, packet: DatagramPacket) {
+                    logger
+                      .atSevere()
+                      .log("Received message: ${packet.content().isDirect} %s, %s", ctx, packet)
+                    handleReceived(
+                      packet.content().order(ByteOrder.LITTLE_ENDIAN).nioBuffer(),
+                      packet.sender(),
+                      ctx
+                    )
+                  }
+                }
+              )
+
+              nettyChannel = bind(config.getInt("controllers.connect.port")).sync().channel()
+              nettyChannel.closeFuture().sync()
+              boundPort = config.getInt("controllers.connect.port")
+            }
+          } finally {
+            logger.atSevere().log("IT IS GRACEFULLY SHUTTING DOWN!!!!!!!!!!!!!!")
+            group.shutdownGracefully()
           }
         }
-      } catch (e: Throwable) {
-        logger
-          .atSevere()
-          .withCause(e)
-          .log("UDPServer on port %d caught unexpected exception!", boundPort)
-        stop()
-      } finally {
-        threadIsActive = false
-        logger.atFine().log("%s: thread exiting...", this)
-      }
-    }
+        .start(true)
 
-    requestScope.launch {
-      for (datagram in outChannel) {
-        send(datagram)
-      }
+      if (1 + 1 == 2) throw RuntimeException("It's time to end")
     }
   }
 
@@ -155,31 +161,39 @@ constructor(
   val requestDispatcher = requestThreadpool.asCoroutineDispatcher()
   private val requestScope = CoroutineScope(requestDispatcher)
 
-  private fun handleReceived(datagram: Datagram, remoteSocketAddress: InetSocketAddress) {
+  private fun handleReceived(
+    buffer: ByteBuffer,
+    remoteSocketAddress: InetSocketAddress,
+    ctx: ChannelHandlerContext
+  ) {
     requestScope.launch {
       var handler = clientHandlers[remoteSocketAddress]
       if (handler == null) {
         // User is new. It's either a ConnectMessage or it's the user's first message after
         // reconnecting to the server via the dictated port.
-        val packetCopy = datagram.packet.copy()
-        val buffer = packetCopy.readByteBuffer()
         val connectMessageResult: Result<ConnectMessage> = ConnectMessage.parse(buffer)
         if (connectMessageResult.isSuccess) {
           when (val connectMessage = connectMessageResult.getOrThrow()) {
             is ConnectMessage_PING -> {
-              outChannel.send(
-                Datagram(ConnectMessage_PONG.BYTE_READ_PACKET, remoteSocketAddress.toKtorAddress())
+              ctx.writeAndFlush(
+                DatagramPacket(
+                  Unpooled.wrappedBuffer(ConnectMessage_PONG().toBuffer()),
+                  remoteSocketAddress
+                )
               )
             }
             is RequestPrivateKailleraPortRequest -> {
               check(connectMessage.protocol == "0.83") {
-                "Client listed unsupported protocol! $connectMessage"
+                "Client listed unsupported protocol! $connectMessage."
               }
 
-              outChannel.send(
-                Datagram(
-                  ByteReadPacket(RequestPrivateKailleraPortResponse(boundPort!!).toBuffer()),
-                  remoteSocketAddress.toKtorAddress()
+              ctx.writeAndFlush(
+                DatagramPacket(
+                  Unpooled.wrappedBuffer(
+                    RequestPrivateKailleraPortResponse(config.getInt("controllers.connect.port"))
+                      .toBuffer()
+                  ),
+                  remoteSocketAddress
                 )
               )
             }
@@ -196,7 +210,6 @@ constructor(
           // We successfully parsed a connection message and handled it so return.
           return@launch
         }
-        packetCopy.release()
 
         // TODO(nue): I'm almost certain this can be removed.
         // The message should be parsed as a V086Message. Reset it.
@@ -235,7 +248,7 @@ constructor(
 
         clientHandlers[remoteSocketAddress] = handler!!
       }
-      handler.requestHandlerMutex.withLock { handler.handleReceived(datagram, remoteSocketAddress) }
+      handler.requestHandlerMutex.withLock { handler.handleReceived(buffer, remoteSocketAddress) }
     }
   }
 
@@ -251,7 +264,7 @@ constructor(
     //    private val extraPorts: Int = config.getInt("controllers.v086.extraPorts", 0)
     //    val port = config.getInt("controllers.v086.portRangeStart")
     val port = config.getInt("controllers.connect.port")
-    bind(port, udpSocketProvider)
+    bind(port)
     logger.atInfo().log("Ready to accept connections on port %d", port)
   }
 
