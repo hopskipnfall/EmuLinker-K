@@ -22,7 +22,7 @@ class JoinGameAction @Inject internal constructor() :
   override fun toString() = "JoinGameAction"
 
   @Throws(FatalActionException::class)
-  override suspend fun performAction(message: JoinGameRequest, clientHandler: V086ClientHandler) {
+  override fun performAction(message: JoinGameRequest, clientHandler: V086ClientHandler) {
     actionPerformedCount++
     try {
       clientHandler.user.joinGame(message.gameId)
@@ -49,7 +49,7 @@ class JoinGameAction @Inject internal constructor() :
     }
   }
 
-  override suspend fun handleEvent(event: UserJoinedGameEvent, clientHandler: V086ClientHandler) {
+  override fun handleEvent(event: UserJoinedGameEvent, clientHandler: V086ClientHandler) {
     handledEventCount++
     val thisUser = clientHandler.user
     try {

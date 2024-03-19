@@ -54,9 +54,6 @@ fun main() {
   // Essentially does nothing.
   component.kailleraServerController.start()
 
-  // Starts listening on the port.
-  component.combinedKaillerController.run()
-
   // Keeps iterating over users to look for people who should be kicked.
   component.kailleraServer.start()
 
@@ -85,6 +82,9 @@ fun main() {
       .start(flags.metricsLoggingFrequency.inWholeSeconds, SECONDS)
   }
 
+  component.combinedKaillerController.bind(
+    component.configuration.getInt("controllers.connect.port")
+  )
   //  // Hacky code but it works! Tests that two users can make and play a game.
   //  // TODO(nue): Move this into a test file in a subsequent PR.
   //  runBlocking {

@@ -24,7 +24,7 @@ internal constructor(private val lookingForGameReporter: TwitterBroadcaster) :
 
   override fun toString() = "StartGameAction"
 
-  override suspend fun performAction(message: StartGameRequest, clientHandler: V086ClientHandler) {
+  override fun performAction(message: StartGameRequest, clientHandler: V086ClientHandler) {
     actionPerformedCount++
     try {
       clientHandler.user.startGame()
@@ -40,7 +40,7 @@ internal constructor(private val lookingForGameReporter: TwitterBroadcaster) :
     }
   }
 
-  override suspend fun handleEvent(event: GameStartedEvent, clientHandler: V086ClientHandler) {
+  override fun handleEvent(event: GameStartedEvent, clientHandler: V086ClientHandler) {
     handledEventCount++
     try {
       val game = event.game

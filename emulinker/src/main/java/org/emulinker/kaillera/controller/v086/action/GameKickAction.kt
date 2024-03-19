@@ -17,7 +17,7 @@ class GameKickAction @Inject internal constructor() : V086Action<GameKick> {
   override fun toString() = "GameKickAction"
 
   @Throws(FatalActionException::class)
-  override suspend fun performAction(message: GameKick, clientHandler: V086ClientHandler) {
+  override fun performAction(message: GameKick, clientHandler: V086ClientHandler) {
     actionPerformedCount++
     try {
       clientHandler.user.gameKick(message.userId)

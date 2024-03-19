@@ -194,7 +194,7 @@ internal constructor(
     UserNameException::class,
     LoginException::class
   )
-  suspend fun login(user: KailleraUser?) = withLock {
+  fun login(user: KailleraUser?) = withLock {
     val userImpl = user
     val loginDelay = System.currentTimeMillis() - user!!.connectTime
     logger
@@ -479,7 +479,7 @@ internal constructor(
     QuitGameException::class,
     CloseGameException::class
   )
-  suspend fun quit(user: KailleraUser?, message: String?) = withLock {
+  fun quit(user: KailleraUser?, message: String?) = withLock {
     lookingForGameReporter.cancelActionsForUser(user!!.id)
     if (!user.loggedIn) {
       usersMap.remove(user.id)
@@ -562,7 +562,7 @@ internal constructor(
   }
 
   @Throws(CreateGameException::class, FloodException::class)
-  suspend fun createGame(user: KailleraUser?, romName: String?): KailleraGame = withLock {
+  fun createGame(user: KailleraUser?, romName: String?): KailleraGame = withLock {
     if (!user!!.loggedIn) {
       logger.atSevere().log("%s create game failed: Not logged in", user)
       throw CreateGameException(EmuLang.getString("KailleraServerImpl.NotLoggedIn"))
@@ -665,7 +665,7 @@ internal constructor(
   }
 
   @Throws(CloseGameException::class)
-  suspend fun closeGame(game: KailleraGame, user: KailleraUser) = withLock {
+  fun closeGame(game: KailleraGame, user: KailleraUser) = withLock {
     if (!user.loggedIn) {
       logger.atSevere().log("%s close %s failed: Not logged in", user, game)
       throw CloseGameException(EmuLang.getString("KailleraServerImpl.NotLoggedIn"))
@@ -807,7 +807,7 @@ internal constructor(
   }
 
   // TODO(nue): This method is never used..
-  private suspend fun run() {
+  private fun run() {
     try {
       if (usersMap.isEmpty()) return
       for (user in users) {
@@ -917,8 +917,12 @@ internal constructor(
     )
   }
 
+  val o = Object()
   /** Helper function to avoid one level of indentation. */
-  private suspend inline fun <T> withLock(action: () -> T): T = mutex.withLock { action() }
+  private inline fun <T> withLock(action: () -> T): T =
+    synchronized(o) {
+      action() // = mutex.withLock { action() }
+    }
 
   companion object {
     private val logger = FluentLogger.forEnclosingClass()

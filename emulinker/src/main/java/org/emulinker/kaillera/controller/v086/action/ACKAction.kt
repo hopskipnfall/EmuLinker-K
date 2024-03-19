@@ -27,7 +27,7 @@ class ACKAction @Inject internal constructor() :
   override fun toString() = "ACKAction"
 
   @Throws(FatalActionException::class)
-  override suspend fun performAction(message: ClientAck, clientHandler: V086ClientHandler) {
+  override fun performAction(message: ClientAck, clientHandler: V086ClientHandler) {
     actionPerformedCount++
     val user = clientHandler.user
     if (user.loggedIn) {
@@ -72,7 +72,7 @@ class ACKAction @Inject internal constructor() :
     }
   }
 
-  override suspend fun handleEvent(event: UserEvent, clientHandler: V086ClientHandler) {
+  override fun handleEvent(event: UserEvent, clientHandler: V086ClientHandler) {
     handledEventCount++
     val connectedEvent = event as ConnectedEvent
     val server = connectedEvent.server
@@ -166,7 +166,7 @@ class ACKAction @Inject internal constructor() :
       sendServerStatus(clientHandler, usersSubList, gamesSubList, counter)
   }
 
-  private suspend fun sendServerStatus(
+  private fun sendServerStatus(
     clientHandler: V086ClientHandler,
     users: List<ServerStatus.User>,
     games: List<ServerStatus.Game>,

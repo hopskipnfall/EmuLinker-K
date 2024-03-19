@@ -24,8 +24,6 @@ import java.util.concurrent.Executors
 import javax.inject.Inject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.asCoroutineDispatcher
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.sync.withLock
 import org.apache.commons.configuration.Configuration
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.access.AccessManager
@@ -65,8 +63,65 @@ constructor(
 
   @Synchronized
   @Throws(BindException::class)
-  private fun bind(port: Int) {
-    // TODO: Put bind logic here.
+  fun bind(port: Int) {
+    //
+    //      val channel = DatagramChannel.open()
+    //      channel.socket().bind(InetSocketAddress(config.getInt("controllers.connect.port")))
+    //// TODO?      channel.configureBlocking(false)
+    //
+    //      channel.socket().receiveBufferSize = bufferSize * 2
+    //// TODO     channel.socket().send = bufferSize * 2
+    //
+    //      logger.atSevere().log("Listening on port")
+    //
+    //      while (!stopFlag) {
+    //        val buffer = ByteBuffer
+    //                .allocate(flags.v086BufferSize) //TODO:
+    // .allocateDirect(flags.v086BufferSize)
+    //                .order(LITTLE_ENDIAN)
+    ////        val packet = DatagramPacket(buffer.array(), flags.v086BufferSize)
+    //        val address = channel.receive(buffer)
+    //
+    //        buffer.flip()
+    //
+    //        handleReceived(buffer, address as InetSocketAddress)
+    //      }
+
+    embeddedServer(Netty, port = port) {
+        val group = NioEventLoopGroup()
+        try {
+          Bootstrap().apply {
+            group(group)
+            channel(NioDatagramChannel::class.java)
+            option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
+            option(ChannelOption.SO_BROADCAST, true)
+            handler(
+              object : SimpleChannelInboundHandler<DatagramPacket>() {
+                override fun channelRead0(ctx: ChannelHandlerContext, packet: DatagramPacket) {
+                  handleReceived(
+                    packet.content().order(ByteOrder.LITTLE_ENDIAN).nioBuffer(),
+                    packet.sender(),
+                    ctx
+                  )
+                }
+
+                override fun channelRegistered(ctx: ChannelHandlerContext?) {
+                  logger.atInfo().log("Ready to accept connections on port %d", port)
+                  super.channelRegistered(ctx)
+                }
+              }
+            )
+
+            nettyChannel = bind(port).sync().channel()
+            nettyChannel.closeFuture().sync()
+            boundPort = port
+          }
+        } finally {
+          group.shutdownGracefully()
+        }
+      }
+      .start(true)
+    logger.atInfo().log("Stopped listening on port")
   }
 
   fun send(datagram: DatagramPacket) {
@@ -74,69 +129,6 @@ constructor(
       nettyChannel.writeAndFlush(datagram)
     } catch (e: Exception) {
       logger.atSevere().withCause(e).log("Failed to send on port %s", boundPort)
-    }
-  }
-
-  fun run() {
-    requestScope.launch {
-      //
-      //      val channel = DatagramChannel.open()
-      //      channel.socket().bind(InetSocketAddress(config.getInt("controllers.connect.port")))
-      //// TODO?      channel.configureBlocking(false)
-      //
-      //      channel.socket().receiveBufferSize = bufferSize * 2
-      //// TODO     channel.socket().send = bufferSize * 2
-      //
-      //      logger.atSevere().log("Listening on port")
-      //
-      //      while (!stopFlag) {
-      //        val buffer = ByteBuffer
-      //                .allocate(flags.v086BufferSize) //TODO:
-      // .allocateDirect(flags.v086BufferSize)
-      //                .order(LITTLE_ENDIAN)
-      ////        val packet = DatagramPacket(buffer.array(), flags.v086BufferSize)
-      //        val address = channel.receive(buffer)
-      //
-      //        buffer.flip()
-      //
-      //        handleReceived(buffer, address as InetSocketAddress)
-      //      }
-
-      embeddedServer(Netty, port = config.getInt("controllers.connect.port")) {
-          val group = NioEventLoopGroup()
-          try {
-            Bootstrap().apply {
-              group(group)
-              channel(NioDatagramChannel::class.java)
-              option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
-              //            option(ChannelOption.SO_BROADCAST, true)
-              handler(
-                object : SimpleChannelInboundHandler<DatagramPacket>() {
-                  override fun channelRead0(ctx: ChannelHandlerContext, packet: DatagramPacket) {
-                    logger
-                      .atSevere()
-                      .log("Received message: ${packet.content().isDirect} %s, %s", ctx, packet)
-                    handleReceived(
-                      packet.content().order(ByteOrder.LITTLE_ENDIAN).nioBuffer(),
-                      packet.sender(),
-                      ctx
-                    )
-                  }
-                }
-              )
-
-              nettyChannel = bind(config.getInt("controllers.connect.port")).sync().channel()
-              nettyChannel.closeFuture().sync()
-              boundPort = config.getInt("controllers.connect.port")
-            }
-          } finally {
-            logger.atSevere().log("IT IS GRACEFULLY SHUTTING DOWN!!!!!!!!!!!!!!")
-            group.shutdownGracefully()
-          }
-        }
-        .start(true)
-
-      if (1 + 1 == 2) throw RuntimeException("It's time to end")
     }
   }
 
@@ -166,89 +158,85 @@ constructor(
     remoteSocketAddress: InetSocketAddress,
     ctx: ChannelHandlerContext
   ) {
-    requestScope.launch {
-      var handler = clientHandlers[remoteSocketAddress]
-      if (handler == null) {
-        // User is new. It's either a ConnectMessage or it's the user's first message after
-        // reconnecting to the server via the dictated port.
-        val connectMessageResult: Result<ConnectMessage> = ConnectMessage.parse(buffer)
-        if (connectMessageResult.isSuccess) {
-          when (val connectMessage = connectMessageResult.getOrThrow()) {
-            is ConnectMessage_PING -> {
-              ctx.writeAndFlush(
-                DatagramPacket(
-                  Unpooled.wrappedBuffer(ConnectMessage_PONG().toBuffer()),
-                  remoteSocketAddress
-                )
+    var handler = clientHandlers[remoteSocketAddress]
+    if (handler == null) {
+      // User is new. It's either a ConnectMessage or it's the user's first message after
+      // reconnecting to the server via the dictated port.
+      val connectMessageResult: Result<ConnectMessage> = ConnectMessage.parse(buffer)
+      if (connectMessageResult.isSuccess) {
+        when (val connectMessage = connectMessageResult.getOrThrow()) {
+          is ConnectMessage_PING -> {
+            ctx.writeAndFlush(
+              DatagramPacket(
+                Unpooled.wrappedBuffer(ConnectMessage_PONG().toBuffer()),
+                remoteSocketAddress
               )
-            }
-            is RequestPrivateKailleraPortRequest -> {
-              check(connectMessage.protocol == "0.83") {
-                "Client listed unsupported protocol! $connectMessage."
-              }
-
-              ctx.writeAndFlush(
-                DatagramPacket(
-                  Unpooled.wrappedBuffer(
-                    RequestPrivateKailleraPortResponse(config.getInt("controllers.connect.port"))
-                      .toBuffer()
-                  ),
-                  remoteSocketAddress
-                )
-              )
-            }
-            else -> {
-              logger
-                .atWarning()
-                .log(
-                  "Received unexpected message type from %s: %s",
-                  formatSocketAddress(remoteSocketAddress),
-                  connectMessageResult
-                )
-            }
+            )
           }
-          // We successfully parsed a connection message and handled it so return.
-          return@launch
-        }
+          is RequestPrivateKailleraPortRequest -> {
+            check(connectMessage.protocol == "0.83") {
+              "Client listed unsupported protocol! $connectMessage."
+            }
 
-        // TODO(nue): I'm almost certain this can be removed.
-        // The message should be parsed as a V086Message. Reset it.
-        buffer.position(0)
-
-        if (!accessManager.isAddressAllowed(remoteSocketAddress.address)) {
-          logger
-            .atWarning()
-            .log(
-              "AccessManager denied connection from %s",
-              formatSocketAddress(remoteSocketAddress)
+            ctx.writeAndFlush(
+              DatagramPacket(
+                Unpooled.wrappedBuffer(
+                  RequestPrivateKailleraPortResponse(config.getInt("controllers.connect.port"))
+                    .toBuffer()
+                ),
+                remoteSocketAddress
+              )
             )
-          return@launch
-        }
-
-        handler =
-          try {
-            val protocolController: KailleraServerController =
-              controllersMap.elements().nextElement()
-            // TODO(nue): Don't hardcode this.
-            protocolController.newConnection(
-              remoteSocketAddress,
-              "v086",
-              this@CombinedKailleraController
-            )
-          } catch (e: ServerFullException) {
+          }
+          else -> {
             logger
-              .atFine()
-              .withCause(e)
-              .log("Sending server full response to %s", formatSocketAddress(remoteSocketAddress))
-            return@launch
-          } catch (e: NewConnectionException) {
-            logger.atSevere().withCause(e).log("LALALALA")
-            return@launch
+              .atWarning()
+              .log(
+                "Received unexpected message type from %s: %s",
+                formatSocketAddress(remoteSocketAddress),
+                connectMessageResult
+              )
           }
-
-        clientHandlers[remoteSocketAddress] = handler!!
+        }
+        // We successfully parsed a connection message and handled it so return.
+        return
       }
-      handler.requestHandlerMutex.withLock { handler.handleReceived(buffer, remoteSocketAddress) }
+
+      // TODO(nue): I'm almost certain this can be removed.
+      // The message should be parsed as a V086Message. Reset it.
+      buffer.position(0)
+
+      if (!accessManager.isAddressAllowed(remoteSocketAddress.address)) {
+        logger
+          .atWarning()
+          .log("AccessManager denied connection from %s", formatSocketAddress(remoteSocketAddress))
+        return
+      }
+
+      handler =
+        try {
+          val protocolController: KailleraServerController = controllersMap.elements().nextElement()
+          // TODO(nue): Don't hardcode this.
+          protocolController.newConnection(
+            remoteSocketAddress,
+            "v086",
+            this@CombinedKailleraController
+          )
+        } catch (e: ServerFullException) {
+          logger
+            .atFine()
+            .withCause(e)
+            .log("Sending server full response to %s", formatSocketAddress(remoteSocketAddress))
+          return
+        } catch (e: NewConnectionException) {
+          logger.atSevere().withCause(e).log("Couldn't create connection")
+          return
+        }
+
+      clientHandlers[remoteSocketAddress] = handler!!
+    }
+    synchronized(handler.requestHandlerMutex) {
+      handler.handleReceived(buffer, remoteSocketAddress)
     }
   }
 
@@ -259,13 +247,6 @@ constructor(
         controllersMap[clientTypes[j]] = controller
       }
     }
-
-    // TODO(nue): RuntimeFlags.
-    //    private val extraPorts: Int = config.getInt("controllers.v086.extraPorts", 0)
-    //    val port = config.getInt("controllers.v086.portRangeStart")
-    val port = config.getInt("controllers.connect.port")
-    bind(port)
-    logger.atInfo().log("Ready to accept connections on port %d", port)
   }
 
   private companion object {

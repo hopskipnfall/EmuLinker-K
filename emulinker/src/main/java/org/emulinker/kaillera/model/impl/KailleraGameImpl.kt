@@ -166,7 +166,7 @@ class KailleraGameImpl(
   }
 
   @Throws(GameKickException::class)
-  override suspend fun kick(requester: KailleraUser, userID: Int) = withLock {
+  override fun kick(requester: KailleraUser, userID: Int) = withLock {
     if (requester.accessLevel < AccessManager.ACCESS_ADMIN) {
       if (requester != owner) {
         logger.atWarning().log("%s kick denied: not the owner of %s", requester, this)
@@ -204,7 +204,7 @@ class KailleraGameImpl(
   }
 
   @Throws(JoinGameException::class)
-  override suspend fun join(user: KailleraUser): Int = withLock {
+  override fun join(user: KailleraUser): Int = withLock {
     val access = server.accessManager.getAccess(user.socketAddress!!.address)
 
     // SF MOD - Join room spam protection
@@ -453,7 +453,7 @@ class KailleraGameImpl(
   }
 
   @Throws(UserReadyException::class)
-  override suspend fun ready(user: KailleraUser?, playerNumber: Int) = withLock {
+  override fun ready(user: KailleraUser?, playerNumber: Int) = withLock {
     if (!players.contains(user)) {
       logger.atWarning().log("%s ready game failed: not in %s", user, this)
       throw UserReadyException(EmuLang.getString("KailleraGameImpl.ReadyGameErrorNotInGame"))
@@ -493,7 +493,7 @@ class KailleraGameImpl(
   }
 
   @Throws(DropGameException::class)
-  override suspend fun drop(user: KailleraUser, playerNumber: Int) = withLock {
+  override fun drop(user: KailleraUser, playerNumber: Int) = withLock {
     if (!players.contains(user)) {
       logger.atWarning().log("%s drop game failed: not in %s", user, this)
       throw DropGameException(EmuLang.getString("KailleraGameImpl.DropGameErrorNotInGame"))
@@ -533,7 +533,7 @@ class KailleraGameImpl(
   }
 
   @Throws(DropGameException::class, QuitGameException::class, CloseGameException::class)
-  override suspend fun quit(user: KailleraUser, playerNumber: Int) {
+  override fun quit(user: KailleraUser, playerNumber: Int) {
     synchronized(this) {
       if (!players.remove(user)) {
         logger.atWarning().log("%s quit game failed: not in %s", user, this)
@@ -555,7 +555,7 @@ class KailleraGameImpl(
   }
 
   @Throws(CloseGameException::class)
-  suspend fun close(user: KailleraUser) = withLock {
+  fun close(user: KailleraUser) = withLock {
     if (user != owner) {
       logger.atWarning().log("%s close game denied: not the owner of %s", user, this)
       throw CloseGameException(EmuLang.getString("KailleraGameImpl.CloseGameErrorNotGameOwner"))
@@ -579,7 +579,7 @@ class KailleraGameImpl(
     players.clear()
   }
 
-  override suspend fun droppedPacket(user: KailleraUser) = withLock {
+  override fun droppedPacket(user: KailleraUser) = withLock {
     if (!isSynched) return
     val playerNumber = user.playerNumber
     if (user.playerNumber > playerActionQueue!!.size) {
@@ -614,7 +614,7 @@ class KailleraGameImpl(
    * back to the client.
    */
   @Throws(GameDataException::class)
-  override suspend fun addData(user: KailleraUser, playerNumber: Int, data: ByteArray) {
+  override fun addData(user: KailleraUser, playerNumber: Int, data: ByteArray) {
     val playerActionQueueCopy = playerActionQueue ?: return
 
     // int bytesPerAction = (data.length / actionsPerMessage);
@@ -682,7 +682,7 @@ class KailleraGameImpl(
   }
 
   // it's very important this method is synchronized
-  private suspend fun handleTimeout(e: PlayerTimeoutException) = withLock {
+  private fun handleTimeout(e: PlayerTimeoutException) = withLock {
     if (!isSynched) return
     val playerNumber = e.playerNumber
     val timeoutNumber = e.timeoutNumber
@@ -717,8 +717,10 @@ class KailleraGameImpl(
     }
   }
 
+  private val lock = Object()
+
   /** Helper function to avoid one level of indentation. */
-  private suspend inline fun <T> withLock(action: () -> T): T = mutex.withLock { action() }
+  private inline fun <T> withLock(action: () -> T): T = synchronized(lock) { action() }
 
   init {
     autoFireDetector = server.getAutoFireDetector(this)

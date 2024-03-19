@@ -7,6 +7,6 @@ interface V086UserEventHandler<in T : UserEvent?> {
   // TODO(nue): @Deprecated("Structure this in a different way")
   override fun toString(): String
 
-  suspend fun handleEvent(event: T, clientHandler: V086ClientHandler)
+  fun handleEvent(event: T, clientHandler: V086ClientHandler)
   val handledEventCount: Int
 }

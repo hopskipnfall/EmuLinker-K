@@ -45,7 +45,7 @@ class GameOwnerCommandAction @Inject internal constructor(private val flags: Run
   }
 
   @Throws(FatalActionException::class)
-  override suspend fun performAction(message: GameChat, clientHandler: V086ClientHandler) {
+  override fun performAction(message: GameChat, clientHandler: V086ClientHandler) {
     val chat = message.message
     val user = clientHandler.user
     val game =
@@ -464,7 +464,7 @@ class GameOwnerCommandAction @Inject internal constructor(private val flags: Run
   }
 
   @Throws(ActionException::class, MessageFormatException::class)
-  private suspend fun processKick(
+  private fun processKick(
     message: String,
     game: KailleraGameImpl,
     admin: KailleraUser,

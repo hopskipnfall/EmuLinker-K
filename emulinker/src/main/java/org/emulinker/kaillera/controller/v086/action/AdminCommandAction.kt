@@ -54,7 +54,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
   }
 
   @Throws(FatalActionException::class)
-  override suspend fun performAction(chatMessage: Chat, clientHandler: V086ClientHandler) {
+  override fun performAction(chatMessage: Chat, clientHandler: V086ClientHandler) {
     val chat: String = chatMessage.message
     val server = clientHandler.controller.server
     val accessManager = server.accessManager
@@ -159,7 +159,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
   }
 
   @Throws(ActionException::class, MessageFormatException::class)
-  private suspend fun processHelp(
+  private fun processHelp(
     message: String?,
     server: KailleraServer,
     admin: KailleraUser,
@@ -320,7 +320,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
   }
 
   @Throws(ActionException::class, MessageFormatException::class)
-  private suspend fun processFindUser(
+  private fun processFindUser(
     message: String?,
     server: KailleraServer,
     admin: KailleraUser,
@@ -354,7 +354,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
   }
 
   @Throws(ActionException::class, MessageFormatException::class)
-  private suspend fun processFindGame(
+  private fun processFindGame(
     message: String?,
     server: KailleraServer,
     admin: KailleraUser,
@@ -438,7 +438,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
   }
 
   @Throws(ActionException::class, MessageFormatException::class)
-  private suspend fun processKick(
+  private fun processKick(
     message: String,
     server: KailleraServer,
     admin: KailleraUser,
@@ -470,7 +470,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
   }
 
   @Throws(ActionException::class, MessageFormatException::class)
-  private suspend fun processCloseGame(
+  private fun processCloseGame(
     message: String,
     server: KailleraServer,
     admin: KailleraUser,
@@ -498,7 +498,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
   }
 
   @Throws(ActionException::class, MessageFormatException::class)
-  private suspend fun processBan(
+  private fun processBan(
     message: String,
     server: KailleraServer,
     admin: KailleraUser,
@@ -657,7 +657,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
   }
 
   @Throws(ActionException::class, MessageFormatException::class)
-  private suspend fun processStealth(
+  private fun processStealth(
     message: String,
     server: KailleraServer,
     admin: KailleraUser,
@@ -832,7 +832,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
   }
 
   @Throws(ActionException::class, MessageFormatException::class)
-  private suspend fun processClear(
+  private fun processClear(
     message: String,
     server: KailleraServer,
     admin: KailleraUser,
@@ -871,7 +871,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
   }
 
   @Throws(ActionException::class, MessageFormatException::class)
-  private suspend fun processVersion(
+  private fun processVersion(
     message: String?,
     server: KailleraServer,
     admin: KailleraUser,

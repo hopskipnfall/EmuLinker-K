@@ -1,29 +1,24 @@
 package org.emulinker.kaillera.model.impl
 
-import com.google.common.flogger.FluentLogger
+import java.lang.InterruptedException
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.locks.ReentrantLock
 import kotlin.Throws
+import kotlin.concurrent.withLock
 import kotlin.time.Duration
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
-import kotlinx.coroutines.withTimeoutOrNull
 import org.emulinker.kaillera.model.KailleraUser
-import org.emulinker.util.SuspendUntilSignaled
 
 class PlayerActionQueue(
   val playerNumber: Int,
   val player: KailleraUser,
   numPlayers: Int,
   private val gameBufferSize: Int,
-  private val gameTimeout: Duration
+  private val gameTimeout: Duration,
 ) {
   var lastTimeout: PlayerTimeoutException? = null
   private val array = ByteArray(gameBufferSize)
   private val heads = IntArray(numPlayers)
   private var tail = 0
-
-  private val mutex = Mutex()
-  private val suspender = SuspendUntilSignaled()
 
   /**
    * Synced starts as `true` at the beginning of a game, and if it ever is set to false there is no
@@ -32,44 +27,44 @@ class PlayerActionQueue(
   var synced = false
     private set
 
+  private val lock = ReentrantLock()
+  private val condition = lock.newCondition()
+
   fun markSynced() {
     synced = true
   }
 
-  suspend fun markDesynced() {
+  fun markDesynced() {
     synced = false
     // The game is in a broken state, so we should wake up all coroutines blocked waiting for new
     // data.
-    suspender.signalAll()
+    lock.withLock { condition.signalAll() }
   }
 
-  suspend fun addActions(actions: ByteArray) {
+  fun addActions(actions: ByteArray) {
     if (!synced) return
-    for (actionByte in actions) {
-      array[tail] = actionByte
+    for (i in actions.indices) {
+      array[tail] = actions[i]
       // tail = ((tail + 1) % gameBufferSize);
       tail++
       if (tail == gameBufferSize) tail = 0
     }
-    suspender.signalAll()
+    lock.withLock { condition.signalAll() }
     lastTimeout = null
   }
 
-  /** Writes data to the array [writeToArray] starting at index [writeAtIndex]. */
-  @Throws(PlayerTimeoutException::class) // TODO(nue): Return Result<Unit>.
-  suspend fun getActionAndWriteToArray(
+  @Throws(PlayerTimeoutException::class)
+  fun getActionAndWriteToArray(
     playerIndex: Int,
     writeToArray: ByteArray,
     writeAtIndex: Int,
     actionLength: Int
   ) {
-    mutex.withLock {
+    lock.withLock {
       if (synced && !containsNewDataForPlayer(playerIndex, actionLength)) {
-        withTimeoutOrNull(gameTimeout) { suspender.suspendUntilSignaled() }
-          ?: logger
-            .atSevere()
-            .atMostEvery(10, TimeUnit.SECONDS)
-            .log("Timed out while waiting to be synced.")
+        try {
+          condition.await(gameTimeout.inWholeMilliseconds, TimeUnit.MILLISECONDS)
+        } catch (e: InterruptedException) {}
       }
     }
     if (getSize(playerIndex) >= actionLength) {
@@ -90,8 +85,4 @@ class PlayerActionQueue(
 
   private fun getSize(playerIndex: Int): Int =
     (tail + gameBufferSize - heads[playerIndex]) % gameBufferSize
-
-  private companion object {
-    val logger = FluentLogger.forEnclosingClass()
-  }
 }

@@ -24,7 +24,7 @@ class LoginAction @Inject internal constructor() :
   override fun toString() = "LoginAction"
 
   @Throws(FatalActionException::class)
-  override suspend fun performAction(message: UserInformation, clientHandler: V086ClientHandler) {
+  override fun performAction(message: UserInformation, clientHandler: V086ClientHandler) {
     actionPerformedCount++
     val user: KailleraUser = clientHandler.user
     user.name = message.username
@@ -39,7 +39,7 @@ class LoginAction @Inject internal constructor() :
     }
   }
 
-  override suspend fun handleEvent(event: UserJoinedEvent, clientHandler: V086ClientHandler) {
+  override fun handleEvent(event: UserJoinedEvent, clientHandler: V086ClientHandler) {
     handledEventCount++
     try {
       val user = event.user

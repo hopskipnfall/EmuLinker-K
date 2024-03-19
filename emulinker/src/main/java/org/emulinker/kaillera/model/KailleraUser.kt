@@ -185,7 +185,7 @@ class KailleraUser(
     return other is KailleraUser && other.id == id
   }
 
-  suspend fun droppedPacket() = withLock {
+  fun droppedPacket() = withLock {
     if (game != null) {
       // if(game.getStatus() == KailleraGame.STATUS_PLAYING){
       game!!.droppedPacket(this)
@@ -201,7 +201,7 @@ class KailleraUser(
     UserNameException::class,
     LoginException::class
   )
-  suspend fun login() = withLock {
+  fun login() = withLock {
     updateLastActivity()
     server.login(this)
   }
@@ -215,7 +215,7 @@ class KailleraUser(
   }
 
   @Throws(GameKickException::class)
-  suspend fun gameKick(userID: Int) = withLock {
+  fun gameKick(userID: Int) = withLock {
     updateLastActivity()
     if (game == null) {
       logger.atWarning().log("%s kick User %d failed: Not in a game", this, userID)
@@ -225,7 +225,7 @@ class KailleraUser(
   }
 
   @Throws(CreateGameException::class, FloodException::class)
-  suspend fun createGame(romName: String?): KailleraGame? {
+  fun createGame(romName: String?): KailleraGame? {
     updateLastActivity()
     if (server.getUser(id) == null) {
       logger.atSevere().log("%s create game failed: User don't exist!", this)
@@ -251,14 +251,14 @@ class KailleraUser(
     QuitGameException::class,
     CloseGameException::class
   )
-  suspend fun quit(message: String?) = withLock {
+  fun quit(message: String?) = withLock {
     updateLastActivity()
     server.quit(this, message)
     loggedIn = false
   }
 
   @Throws(JoinGameException::class)
-  suspend fun joinGame(gameID: Int): KailleraGame = withLock {
+  fun joinGame(gameID: Int): KailleraGame = withLock {
     updateLastActivity()
     if (game != null) {
       logger.atWarning().log("%s join game failed: Already in: %s", this, game)
@@ -318,7 +318,7 @@ class KailleraUser(
   }
 
   @Throws(DropGameException::class)
-  suspend fun dropGame() = withLock {
+  fun dropGame() = withLock {
     updateLastActivity()
     if (status == UserStatus.IDLE) {
       return
@@ -334,7 +334,7 @@ class KailleraUser(
   }
 
   @Throws(DropGameException::class, QuitGameException::class, CloseGameException::class)
-  suspend fun quitGame() = withLock {
+  fun quitGame() = withLock {
     updateLastActivity()
     if (game == null) {
       logger.atFine().log("%s quit game failed: Not in a game", this)
@@ -368,7 +368,7 @@ class KailleraUser(
   }
 
   @Throws(UserReadyException::class)
-  suspend fun playerReady() = withLock {
+  fun playerReady() = withLock {
     updateLastActivity()
     if (game == null) {
       logger.atWarning().log("%s player ready failed: Not in a game", this)
@@ -397,7 +397,7 @@ class KailleraUser(
   }
 
   @Throws(GameDataException::class)
-  suspend fun addGameData(data: ByteArray) {
+  fun addGameData(data: ByteArray) {
     if (improvedLagstat) {
       val delaySinceLastResponse = Duration.between(lastUpdate, Instant.now())
       if (delaySinceLastResponse.nano in smallLagThreshold.nano..bigSpikeThreshold.nano) {
@@ -471,7 +471,8 @@ class KailleraUser(
     }
   }
 
-  suspend fun handleEvent(event: KailleraEvent) {
+  val a = Object()
+  fun handleEvent(event: KailleraEvent) {
     if (status != UserStatus.IDLE) {
       if (ignoringUnnecessaryServerActivity) {
         if (event.toString() == "InfoMessageEvent") return
@@ -480,18 +481,20 @@ class KailleraUser(
     // Removing this for now.
     // Not sure if we need this?
     //      mutex.withLock {
-    try {
-      listener.actionPerformed(event)
-      if (event is GameStartedEvent) {
-        status = UserStatus.PLAYING
-        if (improvedLagstat) {
-          lastUpdate = Instant.now()
+    synchronized(a) { // Needs to be synchronized so that the outgoing message ids stay the same!!
+      try {
+        listener.actionPerformed(event)
+        if (event is GameStartedEvent) {
+          status = UserStatus.PLAYING
+          if (improvedLagstat) {
+            lastUpdate = Instant.now()
+          }
         }
+      } catch (e: InterruptedException) {
+        logger.atSevere().withCause(e).log("%s thread interrupted!", this)
+      } catch (e: Throwable) {
+        logger.atSevere().withCause(e).log("%s thread caught unexpected exception!", this)
       }
-    } catch (e: InterruptedException) {
-      logger.atSevere().withCause(e).log("%s thread interrupted!", this)
-    } catch (e: Throwable) {
-      logger.atSevere().withCause(e).log("%s thread caught unexpected exception!", this)
     }
     //      }
   }
@@ -505,8 +508,9 @@ class KailleraUser(
     server.coroutineScope.launch { handleEvent(event) }
   }
 
+  private val o = Object()
   /** Helper function to avoid one level of indentation. */
-  private suspend inline fun <T> withLock(action: () -> T): T = mutex.withLock { action() }
+  private inline fun <T> withLock(action: () -> T): T = synchronized(o) { action() }
 
   companion object {
     private val logger = FluentLogger.forEnclosingClass()

@@ -11,7 +11,6 @@ import java.net.InetSocketAddress
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.controller.CombinedKailleraController
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
@@ -43,7 +42,7 @@ class V086ClientHandler
 @AssistedInject
 constructor(
   metrics: MetricRegistry,
-  flags: RuntimeFlags,
+  private val flags: RuntimeFlags,
   // TODO(nue): Try to replace this with remoteSocketAddress.
   /** I think this is the address from when the user called the connect controller. */
   @Assisted val connectRemoteSocketAddress: InetSocketAddress,
@@ -58,7 +57,7 @@ constructor(
   var remoteSocketAddress: InetSocketAddress? = null
     private set
 
-  suspend fun handleReceived(buffer: ByteBuffer, remoteSocketAddress: InetSocketAddress) {
+  fun handleReceived(buffer: ByteBuffer, remoteSocketAddress: InetSocketAddress) {
     if (this.remoteSocketAddress == null) {
       this.remoteSocketAddress = remoteSocketAddress
     } else if (remoteSocketAddress != this.remoteSocketAddress) {
@@ -157,7 +156,7 @@ constructor(
     combinedKailleraController.clientHandlers.remove(remoteSocketAddress)
   }
 
-  private suspend fun handleReceivedInternal(buffer: ByteBuffer) {
+  private fun handleReceivedInternal(buffer: ByteBuffer) {
     val inBundle: V086Bundle =
       if (CompiledFlags.USE_BYTEREADPACKET_INSTEAD_OF_BYTEBUFFER) {
         try {
@@ -272,7 +271,7 @@ constructor(
     }
   }
 
-  override suspend fun actionPerformed(event: KailleraEvent) {
+  override fun actionPerformed(event: KailleraEvent) {
     when (event) {
       is GameEvent -> {
         val eventHandler = controller.gameEventHandlers[event::class]
@@ -312,7 +311,7 @@ constructor(
     }
   }
 
-  suspend fun resend(timeoutCounter: Int) {
+  fun resend(timeoutCounter: Int) {
     // if ((System.currentTimeMillis() - lastResend) > (user.getPing()*3))
     if (System.currentTimeMillis() - lastResend > controller.server.maxPing) {
       // int numToSend = (3+timeoutCounter);
@@ -326,8 +325,8 @@ constructor(
     }
   }
 
-  suspend fun send(outMessage: V086Message?, numToSend: Int = 5) =
-    sendMutex.withLock {
+  fun send(outMessage: V086Message?, numToSend: Int = 5) {
+    synchronized(sendMutex) {
       var numToSend = numToSend
 
       val buffer = getOutBuffer()
@@ -343,11 +342,14 @@ constructor(
         DatagramPacket(Unpooled.wrappedBuffer(buffer), remoteSocketAddress!!)
       )
     }
+  }
 
   private val outBuffer =
     ByteBuffer.allocateDirect(flags.v086BufferSize).order(ByteOrder.LITTLE_ENDIAN)
 
-  private fun getOutBuffer(): ByteBuffer = outBuffer.clear()
+  private fun getOutBuffer(): ByteBuffer =
+    ByteBuffer.allocateDirect(flags.v086BufferSize)
+      .order(ByteOrder.LITTLE_ENDIAN) // outBuffer.clear()
 
   init {
     resetGameDataCache()

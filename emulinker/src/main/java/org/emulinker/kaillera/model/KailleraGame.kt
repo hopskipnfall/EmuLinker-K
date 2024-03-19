@@ -36,23 +36,23 @@ interface KailleraGame {
 
   fun getPlayer(playerNumber: Int): KailleraUser?
 
-  suspend fun droppedPacket(user: KailleraUser)
+  fun droppedPacket(user: KailleraUser)
 
-  @Throws(JoinGameException::class) suspend fun join(user: KailleraUser): Int
+  @Throws(JoinGameException::class) fun join(user: KailleraUser): Int
 
   @Throws(GameChatException::class) fun chat(user: KailleraUser, message: String?)
 
-  @Throws(GameKickException::class) suspend fun kick(requester: KailleraUser, userID: Int)
+  @Throws(GameKickException::class) fun kick(requester: KailleraUser, userID: Int)
 
   @Throws(StartGameException::class) fun start(user: KailleraUser)
 
-  @Throws(UserReadyException::class) suspend fun ready(user: KailleraUser?, playerNumber: Int)
+  @Throws(UserReadyException::class) fun ready(user: KailleraUser?, playerNumber: Int)
 
   @Throws(GameDataException::class)
-  suspend fun addData(user: KailleraUser, playerNumber: Int, data: ByteArray)
+  fun addData(user: KailleraUser, playerNumber: Int, data: ByteArray)
 
-  @Throws(DropGameException::class) suspend fun drop(user: KailleraUser, playerNumber: Int)
+  @Throws(DropGameException::class) fun drop(user: KailleraUser, playerNumber: Int)
 
   @Throws(DropGameException::class, QuitGameException::class, CloseGameException::class)
-  suspend fun quit(user: KailleraUser, playerNumber: Int)
+  fun quit(user: KailleraUser, playerNumber: Int)
 }

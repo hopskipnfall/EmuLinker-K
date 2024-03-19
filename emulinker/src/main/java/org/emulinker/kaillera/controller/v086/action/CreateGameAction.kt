@@ -25,7 +25,7 @@ class CreateGameAction @Inject internal constructor() :
   override fun toString() = "CreateGameAction"
 
   @Throws(FatalActionException::class)
-  override suspend fun performAction(message: CreateGame, clientHandler: V086ClientHandler) {
+  override fun performAction(message: CreateGame, clientHandler: V086ClientHandler) {
     actionPerformedCount++
     try {
       clientHandler.user.createGame(message.romName)
@@ -78,7 +78,7 @@ class CreateGameAction @Inject internal constructor() :
     }
   }
 
-  override suspend fun handleEvent(event: GameCreatedEvent, clientHandler: V086ClientHandler) {
+  override fun handleEvent(event: GameCreatedEvent, clientHandler: V086ClientHandler) {
     handledEventCount++
     try {
       val game = event.game

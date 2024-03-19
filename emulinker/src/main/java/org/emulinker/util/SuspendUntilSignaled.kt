@@ -8,6 +8,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
 /** Intended as a coroutines-friendly implementation of [Condition]. */
+@Deprecated("Avoid coroutines for overhead", level = DeprecationLevel.ERROR)
 class SuspendUntilSignaled @Inject constructor() {
   private val jobs = mutableListOf<CompletableJob>()
   private val mutex = Mutex()

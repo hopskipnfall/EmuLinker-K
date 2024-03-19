@@ -31,7 +31,7 @@ internal constructor(
   override fun toString() = "GameChatAction"
 
   @Throws(FatalActionException::class)
-  override suspend fun performAction(message: GameChatRequest, clientHandler: V086ClientHandler) {
+  override fun performAction(message: GameChatRequest, clientHandler: V086ClientHandler) {
     if (clientHandler.user.game == null) return
     if (message.message.startsWith(ADMIN_COMMAND_ESCAPE_STRING)) {
       // if(clientHandler.getUser().getAccess() >= AccessManager.ACCESS_ADMIN ||
@@ -57,7 +57,7 @@ internal constructor(
   }
 
   @Throws(FatalActionException::class)
-  private suspend fun checkCommands(message: V086Message, clientHandler: V086ClientHandler?) {
+  private fun checkCommands(message: V086Message, clientHandler: V086ClientHandler?) {
     var doCommand = true
     if (clientHandler!!.user.accessLevel < AccessManager.ACCESS_ELEVATED) {
       try {
@@ -494,7 +494,7 @@ internal constructor(
     }
   }
 
-  override suspend fun handleEvent(gameChatEvent: GameChatEvent, clientHandler: V086ClientHandler) {
+  override fun handleEvent(gameChatEvent: GameChatEvent, clientHandler: V086ClientHandler) {
     handledEventCount++
     try {
       if (
