@@ -8,15 +8,11 @@ import java.time.Instant
 import java.util.Locale
 import java.util.TimerTask
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.ThreadPoolExecutor
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.Throws
 import kotlin.time.Duration.Companion.milliseconds
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.access.AccessManager
 import org.emulinker.kaillera.lookingforgame.LookingForGameEvent
@@ -56,6 +52,7 @@ internal constructor(
   private val autoFireDetectorFactory: AutoFireDetectorFactory,
   private val lookingForGameReporter: TwitterBroadcaster,
   metrics: MetricRegistry,
+  private val threadpoolExecutor: ThreadPoolExecutor,
 ) {
 
   private var allowedConnectionTypes = BooleanArray(7)
@@ -96,11 +93,6 @@ internal constructor(
 
   private var timerTask: TimerTask? = null
 
-  private val mutex = Mutex()
-
-  /** Basically the [CoroutineScope] to be used for all asynchronous actions. */
-  val coroutineScope = CoroutineScope(Dispatchers.IO.limitedParallelism(10))
-
   override fun toString(): String {
     return String.format(
       "KailleraServer[numUsers=%d numGames=%d]",
@@ -122,7 +114,6 @@ internal constructor(
 
   @Synchronized
   fun stop() {
-    coroutineScope.cancel()
     usersMap.clear()
     gamesMap.clear()
     timerTask?.cancel()
@@ -173,7 +164,16 @@ internal constructor(
       throw ServerFullException(EmuLang.getString("KailleraServerImpl.LoginDeniedServerFull"))
     }
     val userID = getNextUserID()
-    val user = KailleraUser(userID, protocol!!, clientSocketAddress, listener!!, this, flags)
+    val user =
+      KailleraUser(
+        userID,
+        protocol!!,
+        clientSocketAddress,
+        listener!!,
+        this,
+        flags,
+        threadpoolExecutor
+      )
     user.status = UserStatus.CONNECTING
     logger
       .atInfo()

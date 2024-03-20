@@ -10,7 +10,6 @@ import io.netty.channel.socket.DatagramPacket
 import java.net.InetSocketAddress
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
-import kotlinx.coroutines.sync.Mutex
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.controller.CombinedKailleraController
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
@@ -51,8 +50,8 @@ constructor(
   @param:Assisted val combinedKailleraController: CombinedKailleraController,
 ) : KailleraEventListener {
   /** Mutex ensuring that only one packet is processed at a time for this [V086ClientHandler]. */
-  val requestHandlerMutex = Mutex()
-  private val sendMutex = Mutex()
+  val requestHandlerMutex = Object()
+  private val sendMutex = Object()
 
   var remoteSocketAddress: InetSocketAddress? = null
     private set
@@ -352,12 +351,9 @@ constructor(
     }
   }
 
-  private val outBuffer =
-    ByteBuffer.allocateDirect(flags.v086BufferSize).order(ByteOrder.LITTLE_ENDIAN)
-
   private var lastBuffer = 0
   private val buffers =
-    Array(50) { ByteBuffer.allocateDirect(flags.v086BufferSize).order(ByteOrder.LITTLE_ENDIAN) }
+    Array(10) { ByteBuffer.allocateDirect(flags.v086BufferSize).order(ByteOrder.LITTLE_ENDIAN) }
 
   @Deprecated("TODO: Use ByteBuf instead.")
   private fun getOutBuffer(): ByteBuffer {

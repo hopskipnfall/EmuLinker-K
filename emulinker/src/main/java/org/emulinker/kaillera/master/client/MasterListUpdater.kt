@@ -5,8 +5,6 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.runBlocking
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.master.StatsCollector
 import org.emulinker.util.TaskScheduler
@@ -36,11 +34,9 @@ internal constructor(
         initialDelay = 10.seconds,
         period = REPORTING_INTERVAL
       ) {
-        runBlocking(Dispatchers.IO) {
-          serverCheckinTask.touchMaster()
-          if (flags.touchEmulinker) emuLinkerMasterUpdateTask.touchMaster()
-          if (flags.touchKaillera) kailleraMasterUpdateTask.touchMaster()
-        }
+        serverCheckinTask.touchMaster()
+        if (flags.touchEmulinker) emuLinkerMasterUpdateTask.touchMaster()
+        if (flags.touchKaillera) kailleraMasterUpdateTask.touchMaster()
         statsCollector.clearStartedGamesList()
       }
   }

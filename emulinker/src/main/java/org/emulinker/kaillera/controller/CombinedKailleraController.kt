@@ -1,12 +1,8 @@
 package org.emulinker.kaillera.controller
 
 import com.google.common.flogger.FluentLogger
-import io.ktor.network.sockets.*
-import io.ktor.server.application.*
-import io.ktor.server.engine.*
-import io.ktor.server.netty.*
-import io.ktor.util.network.*
-import io.ktor.utils.io.core.*
+import io.ktor.server.engine.embeddedServer
+import io.ktor.server.netty.Netty
 import io.netty.bootstrap.Bootstrap
 import io.netty.buffer.PooledByteBufAllocator
 import io.netty.buffer.Unpooled
@@ -20,10 +16,7 @@ import java.net.InetSocketAddress
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.Executors
 import javax.inject.Inject
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.asCoroutineDispatcher
 import org.apache.commons.configuration.Configuration
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.access.AccessManager
@@ -47,8 +40,6 @@ constructor(
 
   private var stopFlag = false
 
-  private lateinit var serverSocket: BoundDatagramSocket
-
   private lateinit var nettyChannel: io.netty.channel.Channel
 
   @Synchronized
@@ -58,7 +49,6 @@ constructor(
       controller.stop()
     }
     stopFlag = true
-    serverSocket.close()
   }
 
   @Synchronized
@@ -148,10 +138,6 @@ constructor(
   //        SynchronousQueue()
   //      )
   //      .asCoroutineDispatcher()
-  // TODO(nue): Tune this and/or make it configurable.
-  private val requestThreadpool = Executors.newFixedThreadPool(10)
-  val requestDispatcher = requestThreadpool.asCoroutineDispatcher()
-  private val requestScope = CoroutineScope(requestDispatcher)
 
   private fun handleReceived(
     buffer: ByteBuffer,

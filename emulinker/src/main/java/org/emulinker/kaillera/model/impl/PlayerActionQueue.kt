@@ -36,8 +36,7 @@ class PlayerActionQueue(
 
   fun markDesynced() {
     synced = false
-    // The game is in a broken state, so we should wake up all coroutines blocked waiting for new
-    // data.
+    // The game is in a broken state, so we should wake up all threads blocked waiting for new data.
     lock.withLock { condition.signalAll() }
   }
 

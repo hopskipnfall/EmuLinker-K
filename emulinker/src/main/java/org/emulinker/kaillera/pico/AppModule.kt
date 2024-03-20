@@ -7,9 +7,6 @@ import dagger.Provides
 import dagger.multibindings.IntoSet
 import io.github.redouane59.twitter.TwitterClient
 import io.github.redouane59.twitter.signature.TwitterCredentials
-import io.ktor.client.HttpClient
-import io.ktor.client.engine.cio.CIO
-import io.ktor.client.plugins.HttpTimeout
 import java.nio.charset.Charset
 import java.util.Timer
 import java.util.concurrent.SynchronousQueue
@@ -95,17 +92,21 @@ abstract class AppModule {
     }
 
     @Provides
+    @Singleton
     fun provideThreadPoolExecutor(flags: RuntimeFlags) =
       ThreadPoolExecutor(flags.coreThreadPoolSize, 15, 60L, TimeUnit.SECONDS, SynchronousQueue())
 
-    @Provides @Singleton fun provideTimer(): Timer = Timer()
+    // TODO(nue): We should probably be using TaskScheduler instead?
+    @Provides
+    @Singleton
+    fun provideTimer(): Timer {
+      return Timer(/* isDaemon= */ true)
+    }
 
     @Provides
     @Singleton
     fun provideMetricRegistry(): MetricRegistry {
       return MetricRegistry()
     }
-
-    @Provides fun provideHttpClient(): HttpClient = HttpClient(CIO) { install(HttpTimeout) }
   }
 }

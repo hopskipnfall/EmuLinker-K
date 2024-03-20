@@ -2,13 +2,11 @@ package org.emulinker.kaillera.model.impl
 
 import com.google.common.flogger.FluentLogger
 import java.lang.Exception
-import java.util.*
+import java.util.Date
 import java.util.concurrent.CopyOnWriteArrayList
 import kotlin.Throws
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 import org.emulinker.kaillera.access.AccessManager
 import org.emulinker.kaillera.master.StatsCollector
 import org.emulinker.kaillera.model.GameStatus
@@ -98,8 +96,6 @@ class KailleraGameImpl(
     get() = owner.clientType
 
   val autoFireDetector: AutoFireDetector?
-
-  private val mutex = Mutex()
 
   override fun getPlayerNumber(user: KailleraUser): Int {
     return players.indexOf(user) + 1

@@ -50,8 +50,6 @@ dependencies {
   api("io.ktor:ktor-server-netty-jvm:$ktorVersion")
   api("io.ktor:ktor-server-status-pages-jvm:$ktorVersion")
   api("io.ktor:ktor-server-default-headers-jvm:$ktorVersion")
-  api("io.ktor:ktor-client-core:$ktorVersion")
-  api("io.ktor:ktor-client-cio:$ktorVersion")
 
   api("io.reactivex.rxjava3:rxjava:3.1.1")
 
@@ -60,7 +58,6 @@ dependencies {
   testImplementation(kotlin("test"))
   testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.6.4")
   testImplementation("org.mockito.kotlin:mockito-kotlin:4.1.0")
-  testImplementation("io.ktor:ktor-client-mock:$ktorVersion")
 }
 
 group = "org.emulinker"

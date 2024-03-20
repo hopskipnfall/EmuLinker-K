@@ -5,10 +5,8 @@ import java.net.InetSocketAddress
 import java.time.Duration
 import java.time.Instant
 import java.util.ArrayList
+import java.util.concurrent.ThreadPoolExecutor
 import kotlin.Throws
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.access.AccessManager
 import org.emulinker.kaillera.model.event.GameDataEvent
@@ -31,7 +29,8 @@ class KailleraUser(
   val connectSocketAddress: InetSocketAddress,
   val listener: KailleraEventListener,
   val server: KailleraServer,
-  flags: RuntimeFlags
+  flags: RuntimeFlags,
+  private val threadpoolExecutor: ThreadPoolExecutor,
 ) {
   var inStealthMode = false
 
@@ -73,8 +72,6 @@ class KailleraUser(
 
   // Saved to a variable because I think this might give a speed boost.
   private val improvedLagstat = flags.improvedLagstatEnabled
-
-  private val mutex = Mutex()
 
   fun updateLastActivity() {
     lastKeepAlive = System.currentTimeMillis()
@@ -505,7 +502,7 @@ class KailleraUser(
         if (event.toString() == "InfoMessageEvent") return
       }
     }
-    server.coroutineScope.launch { handleEvent(event) }
+    threadpoolExecutor.submit { handleEvent(event) }
   }
 
   private val o = Object()
