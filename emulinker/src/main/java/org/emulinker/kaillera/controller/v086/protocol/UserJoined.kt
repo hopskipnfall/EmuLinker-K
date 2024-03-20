@@ -1,6 +1,7 @@
 package org.emulinker.kaillera.controller.v086.protocol
 
 import io.ktor.utils.io.core.ByteReadPacket
+import io.netty.buffer.ByteBuf
 import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086Utils
@@ -42,7 +43,11 @@ data class UserJoined(
       V086Utils.Bytes.INTEGER +
       V086Utils.Bytes.SINGLE_BYTE
 
-  public override fun writeBodyTo(buffer: ByteBuffer) {
+  override fun writeBodyTo(buffer: ByteBuffer) {
+    UserJoinedSerializer.write(buffer, this)
+  }
+
+  override fun writeBodyTo(buffer: ByteBuf) {
     UserJoinedSerializer.write(buffer, this)
   }
 
@@ -95,6 +100,13 @@ data class UserJoined(
           ConnectionType.fromByteValue(connectionType)
         )
       )
+    }
+
+    override fun write(buffer: ByteBuf, message: UserJoined) {
+      EmuUtil.writeString(buffer, message.username)
+      buffer.putUnsignedShort(message.userId)
+      buffer.putUnsignedInt(message.ping)
+      buffer.writeByte(message.connectionType.byteValue.toInt())
     }
 
     override fun write(buffer: ByteBuffer, message: UserJoined) {

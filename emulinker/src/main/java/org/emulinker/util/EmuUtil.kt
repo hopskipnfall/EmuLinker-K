@@ -1,6 +1,7 @@
 package org.emulinker.util
 
 import io.ktor.utils.io.core.ByteReadPacket
+import io.netty.buffer.ByteBuf
 import java.io.File
 import java.io.FileInputStream
 import java.net.InetSocketAddress
@@ -243,6 +244,19 @@ object EmuUtil {
     //		for(int i=0; i<tempArray.length; i++)
     //			buffer.put((byte) tempArray[i]);
     buffer.put(stopByte.toByte())
+  }
+
+  fun writeString(
+    buffer: ByteBuf,
+    s: String,
+    stopByte: Int = 0x00,
+    charset: Charset = AppModule.charsetDoNotUse
+  ) {
+    buffer.writeBytes(charset.encode(s))
+    //		char[] tempArray = s.toCharArray();
+    //		for(int i=0; i<tempArray.length; i++)
+    //			buffer.put((byte) tempArray[i]);
+    buffer.writeByte(stopByte)
   }
 
   @Throws(InstantiationException::class)

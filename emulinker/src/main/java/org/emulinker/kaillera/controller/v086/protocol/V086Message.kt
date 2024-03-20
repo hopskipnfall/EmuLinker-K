@@ -2,6 +2,7 @@ package org.emulinker.kaillera.controller.v086.protocol
 
 import com.google.common.flogger.FluentLogger
 import io.ktor.utils.io.core.ByteReadPacket
+import io.netty.buffer.ByteBuf
 import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.messaging.ByteBufferMessage
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
@@ -50,6 +51,23 @@ abstract class V086Message : ByteBufferMessage() {
   /** Number of bytes the body of the message takes up (excluding the message ID byte). */
   abstract val bodyBytes: Int
 
+  override fun writeTo(buffer: ByteBuf) {
+    val len = bodyBytesPlusMessageIdType
+    if (len > buffer.writableBytes()) {
+      logger
+        .atWarning()
+        .log(
+          "Ran out of output buffer space, consider increasing the controllers.v086.bufferSize setting!"
+        )
+    } else {
+      buffer.putUnsignedShort(messageNumber)
+      // there no realistic reason to use unsigned here since a single packet can't be that large
+      buffer.putUnsignedShort(len)
+      buffer.writeByte(messageTypeId.toInt())
+      writeBodyTo(buffer)
+    }
+  }
+
   override fun writeTo(buffer: ByteBuffer) {
     val len = bodyBytesPlusMessageIdType
     if (len > buffer.remaining()) {
@@ -69,7 +87,9 @@ abstract class V086Message : ByteBufferMessage() {
     }
   }
 
-  protected abstract fun writeBodyTo(buffer: ByteBuffer)
+  abstract fun writeBodyTo(buffer: ByteBuffer)
+
+  abstract fun writeBodyTo(buffer: ByteBuf)
 
   companion object {
     val SERIALIZERS: Map<Byte, MessageSerializer<out V086Message>> =
@@ -117,6 +137,41 @@ abstract class V086Message : ByteBufferMessage() {
         checkNotNull(SERIALIZERS[messageType]) { "Unrecognized message ID: $messageType" }
 
       var parseResult: Result<V086Message> = serializer.read(buffer, messageNumber)
+      parseResult.onSuccess { parseResult = it.validateMessageNumber() }
+
+      val message =
+        when {
+          // TODO(nue): Return this up the stack instead of throwing an exception.
+          parseResult.isSuccess -> parseResult.getOrThrow()
+          else -> throw MessageFormatException(parseResult.toString())
+        }
+
+      // removed to improve speed
+      if (message.bodyBytesPlusMessageIdType != messageLength) {
+        //			throw new ParseException("Bundle contained length " + messageLength + " !=  parsed
+        // lengthy
+        // " + message.getLength());
+        logger
+          .atFine()
+          .log(
+            "Bundle contained length %d != parsed length %d",
+            messageLength,
+            message.bodyBytesPlusMessageIdType
+          )
+      }
+      return message
+    }
+
+    @Throws(ParseException::class, MessageFormatException::class)
+    fun parse(messageNumber: Int, messageLength: Int, buf: ByteBuf): V086Message {
+
+      val messageType = buf.readByte()
+
+      val serializer =
+        checkNotNull(SERIALIZERS[messageType]) { "Unrecognized message ID: $messageType" }
+
+      var parseResult: Result<V086Message> =
+        serializer.read(buf.nioBuffer(), messageNumber) // TODO: read it directly
       parseResult.onSuccess { parseResult = it.validateMessageNumber() }
 
       val message =

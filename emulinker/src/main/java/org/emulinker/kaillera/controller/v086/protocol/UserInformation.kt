@@ -1,6 +1,7 @@
 package org.emulinker.kaillera.controller.v086.protocol
 
 import io.ktor.utils.io.core.ByteReadPacket
+import io.netty.buffer.ByteBuf
 import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086Utils
@@ -30,7 +31,11 @@ constructor(
       clientType.getNumBytesPlusStopByte() +
       V086Utils.Bytes.SINGLE_BYTE
 
-  public override fun writeBodyTo(buffer: ByteBuffer) {
+  override fun writeBodyTo(buffer: ByteBuffer) {
+    UserInformationSerializer.write(buffer, this)
+  }
+
+  override fun writeBodyTo(buffer: ByteBuf) {
     UserInformationSerializer.write(buffer, this)
   }
 
@@ -85,6 +90,12 @@ constructor(
           ConnectionType.fromByteValue(connectionType)
         )
       )
+    }
+
+    override fun write(buffer: ByteBuf, message: UserInformation) {
+      EmuUtil.writeString(buffer, message.username)
+      EmuUtil.writeString(buffer, message.clientType)
+      buffer.writeByte(message.connectionType.byteValue.toInt())
     }
 
     override fun write(buffer: ByteBuffer, message: UserInformation) {

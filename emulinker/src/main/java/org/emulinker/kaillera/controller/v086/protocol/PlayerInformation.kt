@@ -2,6 +2,7 @@ package org.emulinker.kaillera.controller.v086.protocol
 
 import io.ktor.utils.io.core.ByteReadPacket
 import io.ktor.utils.io.core.readInt
+import io.netty.buffer.ByteBuf
 import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086Utils
@@ -30,7 +31,11 @@ data class PlayerInformation(override val messageNumber: Int, val players: List<
   override val bodyBytes =
     V086Utils.Bytes.SINGLE_BYTE + V086Utils.Bytes.INTEGER + players.sumOf { it.numBytes }
 
-  public override fun writeBodyTo(buffer: ByteBuffer) {
+  override fun writeBodyTo(buffer: ByteBuffer) {
+    PlayerInformationSerializer.write(buffer, this)
+  }
+
+  override fun writeBodyTo(buffer: ByteBuf) {
     PlayerInformationSerializer.write(buffer, this)
   }
 
@@ -45,6 +50,13 @@ data class PlayerInformation(override val messageNumber: Int, val players: List<
         V086Utils.Bytes.INTEGER +
         V086Utils.Bytes.SHORT +
         V086Utils.Bytes.SINGLE_BYTE
+
+    fun writeTo(buffer: ByteBuf) {
+      EmuUtil.writeString(buffer, username)
+      buffer.putUnsignedInt(ping)
+      buffer.putUnsignedShort(userId)
+      buffer.writeByte(connectionType.byteValue.toInt())
+    }
 
     fun writeTo(buffer: ByteBuffer) {
       EmuUtil.writeString(buffer, username)
@@ -136,6 +148,12 @@ data class PlayerInformation(override val messageNumber: Int, val players: List<
           Player(userName, ping, userID, ConnectionType.fromByteValue(connectionType))
         }
       return Result.success(PlayerInformation(messageNumber, players))
+    }
+
+    override fun write(buffer: ByteBuf, message: PlayerInformation) {
+      buffer.writeByte(0x00)
+      buffer.writeInt(message.players.size)
+      message.players.forEach { it.writeTo(buffer) }
     }
 
     override fun write(buffer: ByteBuffer, message: PlayerInformation) {

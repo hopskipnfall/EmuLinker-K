@@ -2,6 +2,7 @@ package org.emulinker.kaillera.controller.v086.protocol
 
 import io.ktor.utils.io.core.ByteReadPacket
 import io.ktor.utils.io.core.readShortLittleEndian
+import io.netty.buffer.ByteBuf
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import org.emulinker.kaillera.controller.messaging.ByteBufferMessage
@@ -40,6 +41,15 @@ class V086Bundle(val messages: Array<V086Message?>, numToWrite: Int = Int.MAX_VA
       sb.append("\tMessage ${i + 1}: ${messages[i]}${EmuUtil.LB}")
     }
     return sb.toString()
+  }
+
+  override fun writeTo(buffer: ByteBuf) {
+    buffer.order(ByteOrder.LITTLE_ENDIAN)
+    buffer.writeByte(numMessages)
+    for (i in 0 until numMessages) {
+      val message = messages[i] ?: break
+      message.writeTo(buffer)
+    }
   }
 
   override fun writeTo(buffer: ByteBuffer) {
@@ -107,6 +117,66 @@ class V086Bundle(val messages: Array<V086Message?>, numToWrite: Int = Int.MAX_VA
             throw ParseException("Invalid message length: $messageLength")
           }
           messages[parsedCount] = parse(messageNumber, messageLength.toInt(), buffer)
+          parsedCount++
+        }
+      }
+      return V086Bundle(messages, parsedCount)
+    }
+
+    @Throws(ParseException::class, V086BundleFormatException::class, MessageFormatException::class)
+    fun parse(buf: ByteBuf, lastMessageID: Int = -1): V086Bundle {
+      buf.order(ByteOrder.LITTLE_ENDIAN)
+      if (buf.readableBytes() < 5) {
+        throw V086BundleFormatException("Invalid buffer length: " + buf.readableBytes())
+      }
+
+      // again no real need for unsigned
+      // int messageCount = UnsignedUtil.getUnsignedByte(buffer);
+      var messageCount = buf.readByte().toInt()
+      if (messageCount <= 0 || messageCount > 32) {
+        throw V086BundleFormatException("Invalid message count: $messageCount")
+      }
+      if (buf.readableBytes() < 1 + messageCount * 6) {
+        throw V086BundleFormatException("Invalid bundle length: " + buf.readableBytes())
+      }
+      var parsedCount = 0
+      val messages: Array<V086Message?>
+      // buffer.getShort(1); - mistake. max value of short is 0x7FFF but we need 0xFFFF
+      val msgNum = buf.getChar(1).code
+      //      if (1 + 1 == 2) throw ParseException("The answer is $msgNum, message length =
+      // $messageCount")
+      if (
+        msgNum - 1 == lastMessageID || msgNum == 0 && lastMessageID == 0xFFFF
+      ) { // exception for 0 and 0xFFFF
+        messageCount = 1
+        messages = arrayOfNulls(messageCount)
+        val messageNumber = buf.readShort().toInt() and 0xffff
+        val messageLength = buf.readShort()
+        if (messageLength !in 2..buf.readableBytes()) {
+          throw ParseException("Invalid message length: $messageLength")
+        }
+        messages[parsedCount] = parse(messageNumber, messageLength.toInt(), buf)
+        parsedCount++
+      } else {
+        messages = arrayOfNulls(messageCount)
+        parsedCount = 0
+        while (parsedCount < messageCount) {
+          val messageNumber = buf.readUnsignedShort()
+          if (messageNumber <= lastMessageID) {
+            if (messageNumber < 0x20 && lastMessageID > 0xFFDF) {
+              // exception when messageNumber with lower value is greater do nothing
+            } else {
+              break
+            }
+          } else if (messageNumber > 0xFFBF && lastMessageID < 0x40) {
+            // exception when disorder messageNumber greater that lastMessageID
+            break
+          }
+          val messageLength = buf.readShort()
+          if (messageLength < 2 || messageLength > buf.readableBytes()) {
+            throw ParseException("Invalid message length: $messageLength")
+          }
+          messages[parsedCount] = parse(messageNumber, messageLength.toInt(), buf)
           parsedCount++
         }
       }

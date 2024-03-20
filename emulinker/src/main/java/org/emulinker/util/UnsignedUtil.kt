@@ -4,6 +4,7 @@ import io.ktor.utils.io.core.ByteReadPacket
 import io.ktor.utils.io.core.readInt
 import io.ktor.utils.io.core.readShort
 import io.ktor.utils.io.core.readShortLittleEndian
+import io.netty.buffer.ByteBuf
 import java.nio.ByteBuffer
 
 object UnsignedUtil {
@@ -12,6 +13,10 @@ object UnsignedUtil {
 
   fun ByteBuffer.putUnsignedByte(value: Int) {
     this.put((value and 0xff).toByte())
+  }
+
+  fun ByteBuf.putUnsignedByte(value: Int) {
+    this.writeByte(value and 0xff)
   }
 
   fun ByteBuffer.getUnsignedByte(position: Int) = (this[position].toInt() and 0xff).toShort()
@@ -31,6 +36,10 @@ object UnsignedUtil {
     this.putShort((value and 0xffff).toShort())
   }
 
+  fun ByteBuf.putUnsignedShort(value: Int) {
+    this.writeShort((value and 0xffff))
+  }
+
   fun ByteBuffer.getUnsignedShort(position: Int): Int = this.getShort(position).toInt() and 0xffff
 
   fun ByteBuffer.putUnsignedShort(position: Int, value: Int) {
@@ -44,6 +53,10 @@ object UnsignedUtil {
 
   fun ByteBuffer.putUnsignedInt(value: Long) {
     this.putInt((value and 0xffffffffL).toInt())
+  }
+
+  fun ByteBuf.putUnsignedInt(value: Long) {
+    this.writeInt((value and 0xffffffffL).toInt())
   }
 
   fun ByteBuffer.getUnsignedInt(position: Int): Long =

@@ -4,8 +4,8 @@ import com.google.common.flogger.FluentLogger
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import io.netty.bootstrap.Bootstrap
+import io.netty.buffer.ByteBuf
 import io.netty.buffer.PooledByteBufAllocator
-import io.netty.buffer.Unpooled
 import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.ChannelOption
 import io.netty.channel.SimpleChannelInboundHandler
@@ -13,7 +13,6 @@ import io.netty.channel.nio.NioEventLoopGroup
 import io.netty.channel.socket.DatagramPacket
 import io.netty.channel.socket.nio.NioDatagramChannel
 import java.net.InetSocketAddress
-import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
@@ -40,7 +39,8 @@ constructor(
 
   private var stopFlag = false
 
-  private lateinit var nettyChannel: io.netty.channel.Channel
+  lateinit var nettyChannel: io.netty.channel.Channel
+    private set
 
   @Synchronized
   fun stop() {
@@ -89,7 +89,7 @@ constructor(
               object : SimpleChannelInboundHandler<DatagramPacket>() {
                 override fun channelRead0(ctx: ChannelHandlerContext, packet: DatagramPacket) {
                   handleReceived(
-                    packet.content().order(ByteOrder.LITTLE_ENDIAN).nioBuffer(),
+                    packet.content().order(ByteOrder.LITTLE_ENDIAN),
                     packet.sender(),
                     ctx
                   )
@@ -140,7 +140,7 @@ constructor(
   //      .asCoroutineDispatcher()
 
   private fun handleReceived(
-    buffer: ByteBuffer,
+    buffer: ByteBuf,
     remoteSocketAddress: InetSocketAddress,
     ctx: ChannelHandlerContext
   ) {
@@ -148,31 +148,23 @@ constructor(
     if (handler == null) {
       // User is new. It's either a ConnectMessage or it's the user's first message after
       // reconnecting to the server via the dictated port.
-      val connectMessageResult: Result<ConnectMessage> = ConnectMessage.parse(buffer)
+      val connectMessageResult: Result<ConnectMessage> = ConnectMessage.parse(buffer.nioBuffer())
       if (connectMessageResult.isSuccess) {
         when (val connectMessage = connectMessageResult.getOrThrow()) {
           is ConnectMessage_PING -> {
-            ctx.writeAndFlush(
-              DatagramPacket(
-                Unpooled.wrappedBuffer(ConnectMessage_PONG().toBuffer()),
-                remoteSocketAddress
-              )
-            )
+            val buf = nettyChannel.alloc().buffer(bufferSize)
+            ConnectMessage_PONG().writeTo(buf)
+            ctx.writeAndFlush(DatagramPacket(buf, remoteSocketAddress))
           }
           is RequestPrivateKailleraPortRequest -> {
             check(connectMessage.protocol == "0.83") {
               "Client listed unsupported protocol! $connectMessage."
             }
 
-            ctx.writeAndFlush(
-              DatagramPacket(
-                Unpooled.wrappedBuffer(
-                  RequestPrivateKailleraPortResponse(config.getInt("controllers.connect.port"))
-                    .toBuffer()
-                ),
-                remoteSocketAddress
-              )
-            )
+            val buf = nettyChannel.alloc().buffer(bufferSize)
+            RequestPrivateKailleraPortResponse(config.getInt("controllers.connect.port"))
+              .writeTo(buf)
+            ctx.writeAndFlush(DatagramPacket(buf, remoteSocketAddress))
           }
           else -> {
             logger
@@ -188,9 +180,9 @@ constructor(
         return
       }
 
-      // TODO(nue): I'm almost certain this can be removed.
+      // TODO(nue): I'm almost certain this can be removed?
       // The message should be parsed as a V086Message. Reset it.
-      buffer.position(0)
+      buffer.resetReaderIndex()
 
       if (!accessManager.isAddressAllowed(remoteSocketAddress.address)) {
         logger

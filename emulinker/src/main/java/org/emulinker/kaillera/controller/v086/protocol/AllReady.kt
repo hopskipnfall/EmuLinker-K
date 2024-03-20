@@ -1,6 +1,7 @@
 package org.emulinker.kaillera.controller.v086.protocol
 
 import io.ktor.utils.io.core.ByteReadPacket
+import io.netty.buffer.ByteBuf
 import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.util.EmuUtil
@@ -19,7 +20,11 @@ data class AllReady(override val messageNumber: Int) : V086Message(), ServerMess
 
   override val bodyBytes = V086Utils.Bytes.SINGLE_BYTE
 
-  public override fun writeBodyTo(buffer: ByteBuffer) {
+  override fun writeBodyTo(buffer: ByteBuffer) {
+    AllReadySerializer.write(buffer, this)
+  }
+
+  override fun writeBodyTo(buffer: ByteBuf) {
     AllReadySerializer.write(buffer, this)
   }
 
@@ -52,6 +57,10 @@ data class AllReady(override val messageNumber: Int) : V086Message(), ServerMess
         return parseFailure("Invalid All Ready Signal format: byte 0 = " + b.toHexString())
       }
       return Result.success(AllReady(messageNumber))
+    }
+
+    override fun write(buffer: ByteBuf, message: AllReady) {
+      buffer.writeByte(0x00)
     }
 
     override fun write(buffer: ByteBuffer, message: AllReady) {

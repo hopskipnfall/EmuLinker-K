@@ -1,6 +1,7 @@
 package org.emulinker.kaillera.controller.v086.protocol
 
 import io.ktor.utils.io.core.ByteReadPacket
+import io.netty.buffer.ByteBuf
 import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086Utils
@@ -31,6 +32,14 @@ sealed class Ack : V086Message() {
         )
       }
       return Result.success(ClientAck(messageNumber))
+    }
+
+    override fun write(buffer: ByteBuf, message: ClientAck) {
+      buffer.writeByte(0x00)
+      buffer.putUnsignedInt(0L)
+      buffer.putUnsignedInt(1L)
+      buffer.putUnsignedInt(2L)
+      buffer.putUnsignedInt(3L)
     }
 
     override fun read(buffer: ByteBuffer, messageNumber: Int): Result<ClientAck> {
@@ -77,6 +86,14 @@ sealed class Ack : V086Message() {
       return Result.success(ServerAck(messageNumber))
     }
 
+    override fun write(buffer: ByteBuf, message: ServerAck) {
+      buffer.writeByte(0x00)
+      buffer.putUnsignedInt(0L)
+      buffer.putUnsignedInt(1L)
+      buffer.putUnsignedInt(2L)
+      buffer.putUnsignedInt(3L)
+    }
+
     override fun read(buffer: ByteBuffer, messageNumber: Int): Result<ServerAck> {
       if (buffer.remaining() < 17) {
         return parseFailure("Failed byte count validation!")
@@ -117,7 +134,11 @@ sealed class Ack : V086Message() {
 data class ClientAck(override val messageNumber: Int) : Ack(), ClientMessage {
   override val messageTypeId = ID
 
-  public override fun writeBodyTo(buffer: ByteBuffer) {
+  override fun writeBodyTo(buffer: ByteBuffer) {
+    ClientAckSerializer.write(buffer, this)
+  }
+
+  override fun writeBodyTo(buffer: ByteBuf) {
     ClientAckSerializer.write(buffer, this)
   }
 
@@ -137,7 +158,11 @@ data class ClientAck(override val messageNumber: Int) : Ack(), ClientMessage {
 data class ServerAck(override val messageNumber: Int) : Ack(), ServerMessage {
   override val messageTypeId = ID
 
-  public override fun writeBodyTo(buffer: ByteBuffer) {
+  override fun writeBodyTo(buffer: ByteBuffer) {
+    ServerAckSerializer.write(buffer, this)
+  }
+
+  override fun writeBodyTo(buffer: ByteBuf) {
     ServerAckSerializer.write(buffer, this)
   }
 

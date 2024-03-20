@@ -1,6 +1,7 @@
 package org.emulinker.kaillera.controller.v086.protocol
 
 import io.ktor.utils.io.core.ByteReadPacket
+import io.netty.buffer.ByteBuf
 import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.v086.V086Utils.getNumBytesPlusStopByte
 import org.emulinker.util.EmuUtil
@@ -18,7 +19,11 @@ sealed class Chat : V086Message() {
         is ChatNotification -> username
       }.getNumBytesPlusStopByte() + message.getNumBytesPlusStopByte()
 
-  public override fun writeBodyTo(buffer: ByteBuffer) {
+  override fun writeBodyTo(buffer: ByteBuffer) {
+    ChatSerializer.write(buffer, this)
+  }
+
+  override fun writeBodyTo(buffer: ByteBuf) {
     ChatSerializer.write(buffer, this)
   }
 
@@ -44,6 +49,17 @@ sealed class Chat : V086Message() {
           ChatNotification(messageNumber = messageNumber, username = username, message = message)
         }
       )
+    }
+
+    override fun write(buffer: ByteBuf, message: Chat) {
+      EmuUtil.writeString(
+        buffer,
+        when (message) {
+          is ChatRequest -> ""
+          is ChatNotification -> message.username
+        }
+      )
+      EmuUtil.writeString(buffer, message.message)
     }
 
     override fun read(buffer: ByteBuffer, messageNumber: Int): Result<Chat> {

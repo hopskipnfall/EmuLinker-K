@@ -1,6 +1,7 @@
 package org.emulinker.kaillera.controller.v086.protocol
 
 import io.ktor.utils.io.core.ByteReadPacket
+import io.netty.buffer.ByteBuf
 import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086Utils
@@ -41,7 +42,11 @@ constructor(
     require(maxPlayers in 0..0xFF) { "maxPlayers out of acceptable range: $maxPlayers" }
   }
 
-  public override fun writeBodyTo(buffer: ByteBuffer) {
+  override fun writeBodyTo(buffer: ByteBuffer) {
+    GameStatusSerializer.write(buffer, this)
+  }
+
+  override fun writeBodyTo(buffer: ByteBuf) {
     GameStatusSerializer.write(buffer, this)
   }
 
@@ -96,6 +101,15 @@ constructor(
           maxPlayers
         )
       )
+    }
+
+    override fun write(buffer: ByteBuf, message: GameStatus) {
+      buffer.writeByte(0x00)
+      buffer.putUnsignedShort(message.gameId)
+      buffer.putUnsignedShort(message.val1)
+      buffer.writeByte(message.gameStatus.byteValue.toInt())
+      buffer.writeByte(message.numPlayers.toInt())
+      buffer.writeByte(message.maxPlayers.toInt())
     }
 
     override fun write(buffer: ByteBuffer, message: GameStatus) {

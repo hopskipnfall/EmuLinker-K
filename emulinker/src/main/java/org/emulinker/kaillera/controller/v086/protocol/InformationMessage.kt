@@ -1,6 +1,7 @@
 package org.emulinker.kaillera.controller.v086.protocol
 
 import io.ktor.utils.io.core.ByteReadPacket
+import io.netty.buffer.ByteBuf
 import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086Utils.getNumBytesPlusStopByte
@@ -26,7 +27,11 @@ constructor(override val messageNumber: Int, val source: String, val message: St
 
   override val bodyBytes = source.getNumBytesPlusStopByte() + message.getNumBytesPlusStopByte()
 
-  public override fun writeBodyTo(buffer: ByteBuffer) {
+  override fun writeBodyTo(buffer: ByteBuffer) {
+    InformationMessageSerializer.write(buffer, this)
+  }
+
+  override fun writeBodyTo(buffer: ByteBuf) {
     InformationMessageSerializer.write(buffer, this)
   }
 
@@ -59,6 +64,11 @@ constructor(override val messageNumber: Int, val source: String, val message: St
       }
       val message = packet.readString()
       return Result.success(InformationMessage(messageNumber, source, message))
+    }
+
+    override fun write(buffer: ByteBuf, message: InformationMessage) {
+      EmuUtil.writeString(buffer, message.source)
+      EmuUtil.writeString(buffer, message.message)
     }
 
     override fun write(buffer: ByteBuffer, message: InformationMessage) {

@@ -1,6 +1,7 @@
 package org.emulinker.kaillera.controller.v086.protocol
 
 import io.ktor.utils.io.core.ByteReadPacket
+import io.netty.buffer.ByteBuf
 import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.kaillera.controller.v086.V086Utils.getNumBytesPlusStopByte
@@ -13,7 +14,11 @@ import org.emulinker.util.UnsignedUtil.readUnsignedShort
 sealed class QuitGame : V086Message() {
   override val messageTypeId = ID
 
-  public override fun writeBodyTo(buffer: ByteBuffer) {
+  override fun writeBodyTo(buffer: ByteBuffer) {
+    QuitGameSerializer.write(buffer, this)
+  }
+
+  override fun writeBodyTo(buffer: ByteBuf) {
     QuitGameSerializer.write(buffer, this)
   }
 
@@ -66,6 +71,22 @@ sealed class QuitGame : V086Message() {
           QuitGameRequest(messageNumber)
         } else {
           QuitGameNotification(messageNumber, userName, userID)
+        }
+      )
+    }
+
+    override fun write(buffer: ByteBuf, message: QuitGame) {
+      EmuUtil.writeString(
+        buffer,
+        when (message) {
+          is QuitGameRequest -> REQUEST_USERNAME
+          is QuitGameNotification -> message.username
+        }
+      )
+      buffer.putUnsignedShort(
+        when (message) {
+          is QuitGameRequest -> REQUEST_USER_ID
+          is QuitGameNotification -> message.userId
         }
       )
     }

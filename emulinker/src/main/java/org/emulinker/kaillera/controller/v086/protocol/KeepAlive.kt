@@ -1,6 +1,7 @@
 package org.emulinker.kaillera.controller.v086.protocol
 
 import io.ktor.utils.io.core.ByteReadPacket
+import io.netty.buffer.ByteBuf
 import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086Utils
@@ -24,7 +25,11 @@ constructor(override val messageNumber: Int, val value: Short) : V086Message(), 
     require(value in 0..0xFF) { "val out of acceptable range: $value" }
   }
 
-  public override fun writeBodyTo(buffer: ByteBuffer) {
+  override fun writeBodyTo(buffer: ByteBuffer) {
+    KeepAliveSerializer.write(buffer, this)
+  }
+
+  override fun writeBodyTo(buffer: ByteBuf) {
     KeepAliveSerializer.write(buffer, this)
   }
 
@@ -47,6 +52,10 @@ constructor(override val messageNumber: Int, val value: Short) : V086Message(), 
         return parseFailure("Failed byte count validation!")
       }
       return Result.success(KeepAlive(messageNumber, packet.readUnsignedByte()))
+    }
+
+    override fun write(buffer: ByteBuf, message: KeepAlive) {
+      buffer.putUnsignedByte(message.value.toInt())
     }
 
     override fun write(buffer: ByteBuffer, message: KeepAlive) {

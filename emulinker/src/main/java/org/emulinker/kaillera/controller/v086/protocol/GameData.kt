@@ -2,6 +2,7 @@ package org.emulinker.kaillera.controller.v086.protocol
 
 import io.ktor.utils.io.core.ByteReadPacket
 import io.ktor.utils.io.core.readAvailable
+import io.netty.buffer.ByteBuf
 import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086Utils
@@ -27,7 +28,11 @@ constructor(override val messageNumber: Int, val gameData: ByteArray) :
 
   override val bodyBytes = V086Utils.Bytes.SINGLE_BYTE + V086Utils.Bytes.SHORT + gameData.size
 
-  public override fun writeBodyTo(buffer: ByteBuffer) {
+  override fun writeBodyTo(buffer: ByteBuffer) {
+    GameDataSerializer.write(buffer, this)
+  }
+
+  override fun writeBodyTo(buffer: ByteBuf) {
     GameDataSerializer.write(buffer, this)
   }
 
@@ -113,6 +118,12 @@ constructor(override val messageNumber: Int, val gameData: ByteArray) :
       val gameData = ByteArray(dataSize)
       packet.readAvailable(gameData) // TODO(nue): This might not work?
       return Result.success(create(messageNumber, gameData))
+    }
+
+    override fun write(buffer: ByteBuf, message: GameData) {
+      buffer.writeByte(0x00)
+      buffer.putUnsignedShort(message.gameData.size)
+      buffer.writeBytes(message.gameData)
     }
 
     override fun write(buffer: ByteBuffer, message: GameData) {

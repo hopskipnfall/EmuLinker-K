@@ -1,6 +1,7 @@
 package org.emulinker.kaillera.controller.v086.protocol
 
 import io.ktor.utils.io.core.ByteReadPacket
+import io.netty.buffer.ByteBuf
 import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.kaillera.controller.v086.V086Utils.getNumBytesPlusStopByte
@@ -74,6 +75,36 @@ sealed class CreateGame : V086Message() {
       )
     }
 
+    override fun write(buffer: ByteBuf, message: CreateGame) {
+      EmuUtil.writeString(
+        buffer,
+        when (message) {
+          is CreateGameRequest -> REQUEST_USERNAME
+          is CreateGameNotification -> message.username
+        }
+      )
+      EmuUtil.writeString(buffer, message.romName)
+      EmuUtil.writeString(
+        buffer,
+        when (message) {
+          is CreateGameRequest -> REQUEST_CLIENT_TYPE
+          is CreateGameNotification -> message.clientType
+        }
+      )
+      buffer.putUnsignedShort(
+        when (message) {
+          is CreateGameRequest -> REQUEST_GAME_ID
+          is CreateGameNotification -> message.gameId
+        }
+      )
+      buffer.putUnsignedShort(
+        when (message) {
+          is CreateGameRequest -> REQUEST_VAL1
+          is CreateGameNotification -> message.val1
+        }
+      )
+    }
+
     override fun write(buffer: ByteBuffer, message: CreateGame) {
       EmuUtil.writeString(
         buffer,
@@ -136,7 +167,11 @@ data class CreateGameNotification(
         V086Utils.Bytes.SHORT +
         V086Utils.Bytes.SHORT
 
-  public override fun writeBodyTo(buffer: ByteBuffer) {
+  override fun writeBodyTo(buffer: ByteBuffer) {
+    CreateGameSerializer.write(buffer, this)
+  }
+
+  override fun writeBodyTo(buffer: ByteBuf) {
     CreateGameSerializer.write(buffer, this)
   }
 }
@@ -161,7 +196,11 @@ data class CreateGameRequest(override val messageNumber: Int, override val romNa
         V086Utils.Bytes.SHORT +
         V086Utils.Bytes.SHORT
 
-  public override fun writeBodyTo(buffer: ByteBuffer) {
+  override fun writeBodyTo(buffer: ByteBuffer) {
+    CreateGameSerializer.write(buffer, this)
+  }
+
+  override fun writeBodyTo(buffer: ByteBuf) {
     CreateGameSerializer.write(buffer, this)
   }
 }

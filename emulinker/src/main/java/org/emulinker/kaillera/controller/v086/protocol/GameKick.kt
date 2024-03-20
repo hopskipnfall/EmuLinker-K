@@ -1,6 +1,7 @@
 package org.emulinker.kaillera.controller.v086.protocol
 
 import io.ktor.utils.io.core.ByteReadPacket
+import io.netty.buffer.ByteBuf
 import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086Utils
@@ -24,7 +25,11 @@ constructor(override val messageNumber: Int, val userId: Int) : V086Message(), C
     require(userId in 0..0xFFFF) { "UserID out of acceptable range: $userId" }
   }
 
-  public override fun writeBodyTo(buffer: ByteBuffer) {
+  override fun writeBodyTo(buffer: ByteBuffer) {
+    GameKickSerializer.write(buffer, this)
+  }
+
+  override fun writeBodyTo(buffer: ByteBuf) {
     GameKickSerializer.write(buffer, this)
   }
 
@@ -49,6 +54,11 @@ constructor(override val messageNumber: Int, val userId: Int) : V086Message(), C
       }
       packet.readByte() // This is always 0x00.
       return Result.success(GameKick(messageNumber, packet.readUnsignedShort()))
+    }
+
+    override fun write(buffer: ByteBuf, message: GameKick) {
+      buffer.writeByte(0x00)
+      buffer.putUnsignedShort(message.userId)
     }
 
     override fun write(buffer: ByteBuffer, message: GameKick) {

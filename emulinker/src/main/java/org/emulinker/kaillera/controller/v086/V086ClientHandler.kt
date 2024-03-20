@@ -5,10 +5,9 @@ import com.google.common.flogger.FluentLogger
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
-import io.netty.buffer.Unpooled
+import io.netty.buffer.ByteBuf
 import io.netty.channel.socket.DatagramPacket
 import java.net.InetSocketAddress
-import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.controller.CombinedKailleraController
@@ -56,7 +55,7 @@ constructor(
   var remoteSocketAddress: InetSocketAddress? = null
     private set
 
-  fun handleReceived(buffer: ByteBuffer, remoteSocketAddress: InetSocketAddress) {
+  fun handleReceived(buf: ByteBuf, remoteSocketAddress: InetSocketAddress) {
     if (this.remoteSocketAddress == null) {
       this.remoteSocketAddress = remoteSocketAddress
     } else if (remoteSocketAddress != this.remoteSocketAddress) {
@@ -69,7 +68,7 @@ constructor(
         )
       return
     }
-    clientRequestTimer.time().use { handleReceivedInternal(buffer) }
+    clientRequestTimer.time().use { handleReceivedInternal(buf) }
   }
 
   lateinit var user: KailleraUser
@@ -155,7 +154,7 @@ constructor(
     combinedKailleraController.clientHandlers.remove(remoteSocketAddress)
   }
 
-  private fun handleReceivedInternal(buffer: ByteBuffer) {
+  private fun handleReceivedInternal(buffer: ByteBuf) {
     val inBundle: V086Bundle =
       if (CompiledFlags.USE_BYTEREADPACKET_INSTEAD_OF_BYTEBUFFER) {
         try {
@@ -165,19 +164,27 @@ constructor(
           logger
             .atWarning()
             .withCause(e)
-            .log("%s failed to parse: %s", this, buffer.dumpBufferFromBeginning())
+            .log("%s failed to parse: %s", this, buffer.nioBuffer().dumpBufferFromBeginning())
           null
         } catch (e: V086BundleFormatException) {
           logger
             .atWarning()
             .withCause(e)
-            .log("%s received invalid message bundle: %s", this, buffer.dumpBufferFromBeginning())
+            .log(
+              "%s received invalid message bundle: %s",
+              this,
+              buffer.nioBuffer().dumpBufferFromBeginning()
+            )
           null
         } catch (e: MessageFormatException) {
           logger
             .atWarning()
             .withCause(e)
-            .log("%s received invalid message: %s}", this, buffer.dumpBufferFromBeginning())
+            .log(
+              "%s received invalid message: %s}",
+              this,
+              buffer.nioBuffer().dumpBufferFromBeginning()
+            )
           null
         } finally {
           //             TODO:   datagram.packet.release()
@@ -186,25 +193,29 @@ constructor(
         try {
           parse(buffer, lastMessageNumber)
         } catch (e: ParseException) {
-          buffer.rewind()
+          buffer.resetReaderIndex()
           logger
             .atWarning()
             .withCause(e)
-            .log("%s failed to parse: %s", this, EmuUtil.dumpBuffer(buffer))
+            .log("%s failed to parse: %s", this, EmuUtil.dumpBuffer(buffer.nioBuffer()))
           null
         } catch (e: V086BundleFormatException) {
-          buffer.rewind()
+          buffer.resetReaderIndex()
           logger
             .atWarning()
             .withCause(e)
-            .log("%s received invalid message bundle: %s", this, EmuUtil.dumpBuffer(buffer))
+            .log(
+              "%s received invalid message bundle: %s",
+              this,
+              EmuUtil.dumpBuffer(buffer.nioBuffer())
+            )
           null
         } catch (e: MessageFormatException) {
-          buffer.rewind()
+          buffer.resetReaderIndex()
           logger
             .atWarning()
             .withCause(e)
-            .log("%s received invalid message: %s}", this, EmuUtil.dumpBuffer(buffer))
+            .log("%s received invalid message: %s}", this, EmuUtil.dumpBuffer(buffer.nioBuffer()))
           null
         }
       }
@@ -328,39 +339,20 @@ constructor(
     synchronized(sendMutex) {
       var numToSend = numToSend
 
-      // TODO(nue): Do this instead!
-      //      val buf =
-      // combinedKailleraController.nettyChannel.alloc().directBuffer(flags.v086BufferSize)
-      //      logger.atInfo().log("buf: ${buf.writerIndex()}, ${buf.capacity()}")
-      //      buf.internalNioBuffer()
-      val buffer = getOutBuffer()
-      //      val buffer = buf.nioBuffer()
-      //      logger.atInfo().log("buffer: pos:${buffer.position()}, ${buffer.order()},
-      // ${buffer.capacity()}")
+      val buf =
+        combinedKailleraController.nettyChannel
+          .alloc()
+          .directBuffer(flags.v086BufferSize)
+          .order(ByteOrder.LITTLE_ENDIAN)
       if (outMessage != null) {
         lastMessageBuffer.add(outMessage)
       }
       numToSend = lastMessageBuffer.fill(outMessages, numToSend)
       val outBundle = V086Bundle(outMessages, numToSend)
       stripFromProdBinary { logger.atFinest().log("<- TO P%d: %s", user.id, outMessage) }
-      outBundle.writeTo(buffer)
-      buffer.flip()
-      combinedKailleraController.send(
-        DatagramPacket(Unpooled.wrappedBuffer(buffer), remoteSocketAddress!!)
-      )
+      outBundle.writeTo(buf)
+      combinedKailleraController.send(DatagramPacket(buf, remoteSocketAddress!!))
     }
-  }
-
-  private var lastBuffer = 0
-  private val buffers =
-    Array(10) { ByteBuffer.allocateDirect(flags.v086BufferSize).order(ByteOrder.LITTLE_ENDIAN) }
-
-  @Deprecated("TODO: Use ByteBuf instead.")
-  private fun getOutBuffer(): ByteBuffer {
-    lastBuffer++
-    if (lastBuffer >= buffers.size) lastBuffer = 0
-
-    return buffers[lastBuffer].clear()
   }
 
   init {

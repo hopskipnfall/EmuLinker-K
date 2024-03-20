@@ -1,6 +1,7 @@
 package org.emulinker.kaillera.controller.v086.protocol
 
 import io.ktor.utils.io.core.ByteReadPacket
+import io.netty.buffer.ByteBuf
 import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.kaillera.controller.v086.V086Utils.getNumBytesPlusStopByte
@@ -22,7 +23,11 @@ sealed class Quit : V086Message() {
         is QuitNotification -> username
       }.getNumBytesPlusStopByte() + V086Utils.Bytes.SHORT + message.getNumBytesPlusStopByte()
 
-  public override fun writeBodyTo(buffer: ByteBuffer) {
+  override fun writeBodyTo(buffer: ByteBuffer) {
+    QuitSerializer.write(buffer, this)
+  }
+
+  override fun writeBodyTo(buffer: ByteBuf) {
     QuitSerializer.write(buffer, this)
   }
 
@@ -72,6 +77,23 @@ sealed class Quit : V086Message() {
           QuitNotification(messageNumber, userName, userID, message)
         }
       )
+    }
+
+    override fun write(buffer: ByteBuf, message: Quit) {
+      EmuUtil.writeString(
+        buffer,
+        when (message) {
+          is QuitRequest -> REQUEST_USERNAME
+          is QuitNotification -> message.username
+        }
+      )
+      buffer.putUnsignedShort(
+        when (message) {
+          is QuitRequest -> REQUEST_USER_ID
+          is QuitNotification -> message.userId
+        }
+      )
+      EmuUtil.writeString(buffer, message.message)
     }
 
     override fun write(buffer: ByteBuffer, message: Quit) {

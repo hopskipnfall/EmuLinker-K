@@ -2,6 +2,7 @@ package org.emulinker.kaillera.controller.v086.protocol
 
 import com.google.common.truth.Truth.assertThat
 import io.ktor.utils.io.core.ByteReadPacket
+import io.netty.buffer.Unpooled
 import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.v086.V086Utils.hexStringToByteBuffer
 import org.emulinker.kaillera.controller.v086.protocol.MessageTestUtils.assertBufferContainsExactly
@@ -44,6 +45,15 @@ class ChatTest : ProtocolBaseTest() {
     CHAT_NOTIFICATION.writeBodyTo(buffer)
 
     assertThat(buffer.position()).isEqualTo(CHAT_NOTIFICATION.bodyBytes)
+    assertBufferContainsExactly(buffer, CHAT_NOTIFICATION_BODY_BYTES)
+  }
+
+  @Test
+  fun chatNotification_serializeBody_byteBuf() {
+    val buffer = Unpooled.buffer(4096)
+    CHAT_NOTIFICATION.writeBodyTo(buffer)
+
+    assertThat(buffer.readableBytes()).isEqualTo(CHAT_NOTIFICATION.bodyBytes)
     assertBufferContainsExactly(buffer, CHAT_NOTIFICATION_BODY_BYTES)
   }
 

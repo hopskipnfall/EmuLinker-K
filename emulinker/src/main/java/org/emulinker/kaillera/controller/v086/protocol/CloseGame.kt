@@ -1,6 +1,7 @@
 package org.emulinker.kaillera.controller.v086.protocol
 
 import io.ktor.utils.io.core.ByteReadPacket
+import io.netty.buffer.ByteBuf
 import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086Utils
@@ -21,7 +22,11 @@ data class CloseGame(
   override val bodyBytes =
     V086Utils.Bytes.SINGLE_BYTE + V086Utils.Bytes.SHORT + V086Utils.Bytes.SHORT
 
-  public override fun writeBodyTo(buffer: ByteBuffer) {
+  override fun writeBodyTo(buffer: ByteBuffer) {
+    CloseGameSerializer.write(buffer, this)
+  }
+
+  override fun writeBodyTo(buffer: ByteBuf) {
     CloseGameSerializer.write(buffer, this)
   }
 
@@ -59,6 +64,12 @@ data class CloseGame(
       val gameID = packet.readUnsignedShort()
       val val1 = packet.readUnsignedShort()
       return Result.success(CloseGame(messageNumber, gameID, val1))
+    }
+
+    override fun write(buffer: ByteBuf, message: CloseGame) {
+      buffer.writeByte(0x00)
+      buffer.putUnsignedShort(message.gameId)
+      buffer.putUnsignedShort(message.val1)
     }
 
     override fun write(buffer: ByteBuffer, message: CloseGame) {

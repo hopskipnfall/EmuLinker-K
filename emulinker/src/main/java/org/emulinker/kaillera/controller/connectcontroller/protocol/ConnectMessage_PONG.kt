@@ -1,6 +1,6 @@
 package org.emulinker.kaillera.controller.connectcontroller.protocol
 
-import io.ktor.utils.io.core.ByteReadPacket
+import io.netty.buffer.ByteBuf
 import java.nio.ByteBuffer
 import kotlin.Throws
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
@@ -13,6 +13,11 @@ class ConnectMessage_PONG : ConnectMessage() {
   override fun toString() = "Server Pong"
 
   override val bodyBytesPlusMessageIdType = ID.length + 1
+
+  override fun writeTo(buffer: ByteBuf) {
+    buffer.writeBytes(AppModule.charsetDoNotUse.encode(ID))
+    buffer.writeByte(0x00)
+  }
 
   override fun writeTo(buffer: ByteBuffer) {
     buffer.put(AppModule.charsetDoNotUse.encode(ID))
@@ -29,8 +34,5 @@ class ConnectMessage_PONG : ConnectMessage() {
       if (msg.last().code != 0x00) throw MessageFormatException("Invalid message stop byte!")
       return ConnectMessage_PONG()
     }
-
-    /** Pre-computed to save time, as it's commonly needed and the value is always the same. */
-    val BYTE_READ_PACKET = ByteReadPacket(ConnectMessage_PONG().toBuffer())
   }
 }

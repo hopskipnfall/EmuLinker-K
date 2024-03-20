@@ -1,6 +1,7 @@
 package org.emulinker.kaillera.controller.v086.protocol
 
 import io.ktor.utils.io.core.ByteReadPacket
+import io.netty.buffer.ByteBuf
 import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.kaillera.controller.v086.V086Utils.getNumBytesPlusStopByte
@@ -17,7 +18,11 @@ sealed class PlayerDrop : V086Message() {
         is PlayerDropNotification -> username
       }.getNumBytesPlusStopByte() + V086Utils.Bytes.SINGLE_BYTE
 
-  public override fun writeBodyTo(buffer: ByteBuffer) {
+  override fun writeBodyTo(buffer: ByteBuffer) {
+    PlayerDropSerializer.write(buffer, this)
+  }
+
+  override fun writeBodyTo(buffer: ByteBuf) {
     PlayerDropSerializer.write(buffer, this)
   }
 
@@ -54,6 +59,22 @@ sealed class PlayerDrop : V086Message() {
         if (userName == REQUEST_USERNAME && playerNumber == REQUEST_PLAYER_NUMBER) {
           PlayerDropRequest(messageNumber)
         } else PlayerDropNotification(messageNumber, userName, playerNumber)
+      )
+    }
+
+    override fun write(buffer: ByteBuf, message: PlayerDrop) {
+      EmuUtil.writeString(
+        buffer,
+        when (message) {
+          is PlayerDropRequest -> REQUEST_USERNAME
+          is PlayerDropNotification -> message.username
+        }
+      )
+      buffer.writeByte(
+        when (message) {
+          is PlayerDropRequest -> REQUEST_PLAYER_NUMBER
+          is PlayerDropNotification -> message.playerNumber
+        }.toInt()
       )
     }
 

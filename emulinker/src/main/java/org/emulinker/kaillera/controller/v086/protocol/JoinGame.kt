@@ -1,6 +1,7 @@
 package org.emulinker.kaillera.controller.v086.protocol
 
 import io.ktor.utils.io.core.ByteReadPacket
+import io.netty.buffer.ByteBuf
 import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086Utils
@@ -35,7 +36,11 @@ sealed class JoinGame : V086Message() {
         V086Utils.Bytes.SHORT +
         V086Utils.Bytes.SINGLE_BYTE
 
-  public override fun writeBodyTo(buffer: ByteBuffer) {
+  override fun writeBodyTo(buffer: ByteBuffer) {
+    JoinGameSerializer.write(buffer, this)
+  }
+
+  override fun writeBodyTo(buffer: ByteBuf) {
     JoinGameSerializer.write(buffer, this)
   }
 
@@ -113,6 +118,37 @@ sealed class JoinGame : V086Message() {
             ConnectionType.fromByteValue(connectionType)
           )
       )
+    }
+
+    override fun write(buffer: ByteBuf, message: JoinGame) {
+      buffer.writeByte(0x00)
+      buffer.putUnsignedShort(message.gameId)
+      buffer.putUnsignedShort(
+        when (message) {
+          is JoinGameRequest -> REQUEST_VAL1
+          is JoinGameNotification -> message.val1
+        }
+      )
+      EmuUtil.writeString(
+        buffer,
+        when (message) {
+          is JoinGameRequest -> REQUEST_USERNAME
+          is JoinGameNotification -> message.username
+        }
+      )
+      buffer.putUnsignedInt(
+        when (message) {
+          is JoinGameRequest -> REQUEST_PING
+          is JoinGameNotification -> message.ping
+        }
+      )
+      buffer.putUnsignedShort(
+        when (message) {
+          is JoinGameRequest -> REQUEST_USER_ID
+          is JoinGameNotification -> message.userId
+        }
+      )
+      buffer.writeByte(message.connectionType.byteValue.toInt())
     }
 
     override fun write(buffer: ByteBuffer, message: JoinGame) {

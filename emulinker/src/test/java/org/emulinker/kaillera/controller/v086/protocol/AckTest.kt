@@ -2,6 +2,7 @@ package org.emulinker.kaillera.controller.v086.protocol
 
 import com.google.common.truth.Truth.assertThat
 import io.ktor.utils.io.core.ByteReadPacket
+import io.netty.buffer.Unpooled
 import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.kaillera.controller.v086.protocol.MessageTestUtils.assertBufferContainsExactly
@@ -40,10 +41,20 @@ class AckTest : ProtocolBaseTest() {
 
   @Test
   fun clientAck_serializeBody() {
-    val buffer = ByteBuffer.allocateDirect(4096)
+    val buffer = ByteBuffer.allocate(4096)
     CLIENT_ACK.writeBodyTo(buffer)
 
     assertThat(buffer.position()).isEqualTo(CLIENT_ACK.bodyBytes)
+    assertBufferContainsExactly(buffer, ACK_BODY_BYTES)
+  }
+
+  @Test
+  fun clientAck_serializeBody_byteBuf() {
+    val buffer = Unpooled.buffer(4096)
+
+    Ack.ClientAckSerializer.write(buffer, CLIENT_ACK)
+
+    assertThat(buffer.readableBytes()).isEqualTo(CLIENT_ACK.bodyBytes)
     assertBufferContainsExactly(buffer, ACK_BODY_BYTES)
   }
 
@@ -82,6 +93,15 @@ class AckTest : ProtocolBaseTest() {
     SERVER_ACK.writeBodyTo(buffer)
 
     assertThat(buffer.position()).isEqualTo(SERVER_ACK.bodyBytes)
+    assertBufferContainsExactly(buffer, ACK_BODY_BYTES)
+  }
+
+  @Test
+  fun serverAck_serializeBody_byteBuf() {
+    val buffer = Unpooled.buffer(4096)
+    SERVER_ACK.writeBodyTo(buffer)
+
+    assertThat(buffer.readableBytes()).isEqualTo(SERVER_ACK.bodyBytes)
     assertBufferContainsExactly(buffer, ACK_BODY_BYTES)
   }
 

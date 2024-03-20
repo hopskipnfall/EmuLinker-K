@@ -2,6 +2,7 @@ package org.emulinker.kaillera.controller.v086.protocol
 
 import io.ktor.utils.io.core.ByteReadPacket
 import io.ktor.utils.io.core.readInt
+import io.netty.buffer.ByteBuf
 import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086Utils
@@ -41,7 +42,11 @@ data class ServerStatus(
       users.sumOf { it.numBytes } +
       games.sumOf { it.numBytes }
 
-  public override fun writeBodyTo(buffer: ByteBuffer) {
+  override fun writeBodyTo(buffer: ByteBuffer) {
+    ServerStatusSerializer.write(buffer, this)
+  }
+
+  override fun writeBodyTo(buffer: ByteBuf) {
     ServerStatusSerializer.write(buffer, this)
   }
 
@@ -75,6 +80,14 @@ data class ServerStatus(
         V086Utils.Bytes.SHORT +
         // Connection type.
         V086Utils.Bytes.SINGLE_BYTE)
+
+    fun writeTo(buffer: ByteBuf) {
+      EmuUtil.writeString(buffer, username)
+      buffer.putUnsignedInt(ping)
+      buffer.writeByte(status.byteValue.toInt())
+      buffer.putUnsignedShort(userId)
+      buffer.writeByte(connectionType.byteValue.toInt())
+    }
 
     fun writeTo(buffer: ByteBuffer) {
       EmuUtil.writeString(buffer, username)
@@ -115,6 +128,15 @@ data class ServerStatus(
           playerCountOutOfMax.getNumBytesPlusStopByte() +
           // Status.
           V086Utils.Bytes.SINGLE_BYTE)
+
+    fun writeTo(buffer: ByteBuf) {
+      EmuUtil.writeString(buffer, romName)
+      buffer.writeInt(gameId)
+      EmuUtil.writeString(buffer, clientType)
+      EmuUtil.writeString(buffer, username)
+      EmuUtil.writeString(buffer, playerCountOutOfMax)
+      buffer.writeByte(status.byteValue.toInt())
+    }
 
     fun writeTo(buffer: ByteBuffer) {
       EmuUtil.writeString(buffer, romName)
@@ -257,6 +279,14 @@ data class ServerStatus(
           Game(romName, gameID, clientType, userName, players, GameStatus.fromByteValue(status))
         }
       return Result.success(ServerStatus(messageNumber, users, games))
+    }
+
+    override fun write(buffer: ByteBuf, message: ServerStatus) {
+      buffer.writeByte(0x00)
+      buffer.writeInt(message.users.size)
+      buffer.writeInt(message.games.size)
+      message.users.forEach { it.writeTo(buffer) }
+      message.games.forEach { it.writeTo(buffer) }
     }
 
     override fun write(buffer: ByteBuffer, message: ServerStatus) {

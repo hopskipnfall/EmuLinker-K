@@ -1,6 +1,7 @@
 package org.emulinker.kaillera.controller.v086.protocol
 
 import io.ktor.utils.io.core.ByteReadPacket
+import io.netty.buffer.ByteBuf
 import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086Utils
@@ -24,7 +25,11 @@ constructor(override val messageNumber: Int, val key: Int) :
 
   override val bodyBytes = V086Utils.Bytes.SINGLE_BYTE + V086Utils.Bytes.SINGLE_BYTE
 
-  public override fun writeBodyTo(buffer: ByteBuffer) {
+  override fun writeBodyTo(buffer: ByteBuffer) {
+    CachedGameDataSerializer.write(buffer, this)
+  }
+
+  override fun writeBodyTo(buffer: ByteBuf) {
     CachedGameDataSerializer.write(buffer, this)
   }
 
@@ -57,6 +62,11 @@ constructor(override val messageNumber: Int, val key: Int) :
       // throw new MessageFormatException("Invalid " + DESC + " format: byte 0 = " +
       // EmuUtil.byteToHex(b));
       return Result.success(CachedGameData(messageNumber, packet.readUnsignedByte().toInt()))
+    }
+
+    override fun write(buffer: ByteBuf, message: CachedGameData) {
+      buffer.writeByte(0x00)
+      buffer.putUnsignedByte(message.key)
     }
 
     override fun write(buffer: ByteBuffer, message: CachedGameData) {

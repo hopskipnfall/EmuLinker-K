@@ -1,6 +1,7 @@
 package org.emulinker.kaillera.controller.v086.protocol
 
 import io.ktor.utils.io.core.ByteReadPacket
+import io.netty.buffer.ByteBuf
 import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086Utils.getNumBytesPlusStopByte
@@ -18,7 +19,11 @@ sealed class GameChat : V086Message() {
         is GameChatNotification -> this.username
       }.getNumBytesPlusStopByte() + message.getNumBytesPlusStopByte()
 
-  public override fun writeBodyTo(buffer: ByteBuffer) {
+  override fun writeBodyTo(buffer: ByteBuffer) {
+    GameChatSerializer.write(buffer, this)
+  }
+
+  override fun writeBodyTo(buffer: ByteBuf) {
     GameChatSerializer.write(buffer, this)
   }
 
@@ -65,6 +70,17 @@ sealed class GameChat : V086Message() {
           GameChatNotification(messageNumber, userName, message)
         }
       )
+    }
+
+    override fun write(buffer: ByteBuf, message: GameChat) {
+      EmuUtil.writeString(
+        buffer,
+        when (message) {
+          is GameChatRequest -> REQUEST_USERNAME
+          is GameChatNotification -> message.username
+        }
+      )
+      EmuUtil.writeString(buffer, message.message)
     }
 
     override fun write(buffer: ByteBuffer, message: GameChat) {

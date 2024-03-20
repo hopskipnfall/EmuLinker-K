@@ -1,6 +1,7 @@
 package org.emulinker.kaillera.controller.v086.protocol
 
 import io.ktor.utils.io.core.ByteReadPacket
+import io.netty.buffer.ByteBuf
 import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.util.UnsignedUtil.getUnsignedByte
@@ -20,7 +21,11 @@ sealed class StartGame : V086Message() {
         V086Utils.Bytes.SINGLE_BYTE +
         V086Utils.Bytes.SINGLE_BYTE
 
-  public override fun writeBodyTo(buffer: ByteBuffer) {
+  override fun writeBodyTo(buffer: ByteBuffer) {
+    StartGameSerializer.write(buffer, this)
+  }
+
+  override fun writeBodyTo(buffer: ByteBuf) {
     StartGameSerializer.write(buffer, this)
   }
 
@@ -76,6 +81,28 @@ sealed class StartGame : V086Message() {
         )
           StartGameRequest(messageNumber)
         else StartGameNotification(messageNumber, val1, playerNumber, numPlayers)
+      )
+    }
+
+    override fun write(buffer: ByteBuf, message: StartGame) {
+      buffer.writeByte(0x00)
+      buffer.putUnsignedShort(
+        when (message) {
+          is StartGameRequest -> REQUEST_VAL1
+          is StartGameNotification -> message.val1
+        }
+      )
+      buffer.putUnsignedByte(
+        when (message) {
+          is StartGameRequest -> REQUEST_PLAYER_NUMBER.toInt()
+          is StartGameNotification -> message.playerNumber.toInt()
+        }
+      )
+      buffer.putUnsignedByte(
+        when (message) {
+          is StartGameRequest -> REQUEST_NUM_PLAYERS.toInt()
+          is StartGameNotification -> message.numPlayers.toInt()
+        }
       )
     }
 
