@@ -329,7 +329,15 @@ constructor(
     synchronized(sendMutex) {
       var numToSend = numToSend
 
+      // TODO(nue): Do this instead!
+      //      val buf =
+      // combinedKailleraController.nettyChannel.alloc().directBuffer(flags.v086BufferSize)
+      //      logger.atInfo().log("buf: ${buf.writerIndex()}, ${buf.capacity()}")
+      //      buf.internalNioBuffer()
       val buffer = getOutBuffer()
+      //      val buffer = buf.nioBuffer()
+      //      logger.atInfo().log("buffer: pos:${buffer.position()}, ${buffer.order()},
+      // ${buffer.capacity()}")
       if (outMessage != null) {
         lastMessageBuffer.add(outMessage)
       }
@@ -347,9 +355,17 @@ constructor(
   private val outBuffer =
     ByteBuffer.allocateDirect(flags.v086BufferSize).order(ByteOrder.LITTLE_ENDIAN)
 
-  private fun getOutBuffer(): ByteBuffer =
-    ByteBuffer.allocateDirect(flags.v086BufferSize)
-      .order(ByteOrder.LITTLE_ENDIAN) // outBuffer.clear()
+  private var lastBuffer = 0
+  private val buffers =
+    Array(50) { ByteBuffer.allocateDirect(flags.v086BufferSize).order(ByteOrder.LITTLE_ENDIAN) }
+
+  @Deprecated("TODO: Use ByteBuf instead.")
+  private fun getOutBuffer(): ByteBuffer {
+    lastBuffer++
+    if (lastBuffer >= buffers.size) lastBuffer = 0
+
+    return buffers[lastBuffer].clear()
+  }
 
   init {
     resetGameDataCache()
