@@ -220,6 +220,19 @@ object EmuUtil {
     return charset.decode(tempBuffer.flip() as ByteBuffer).toString()
   }
 
+  fun ByteBuf.readString(
+    stopByte: Int = 0x00,
+    charset: Charset = AppModule.charsetDoNotUse
+  ): String {
+    val tempBuffer = ByteBuffer.allocate(this.readableBytes())
+    while (this.readableBytes() > 0) {
+      var b: Byte
+      if (this.readByte().also { b = it }.toInt() == stopByte) break
+      tempBuffer.put(b)
+    }
+    return charset.decode(tempBuffer.flip() as ByteBuffer).toString()
+  }
+
   fun ByteReadPacket.readString(
     stopByte: Int = 0x00,
     charset: Charset = AppModule.charsetDoNotUse

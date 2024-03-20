@@ -86,6 +86,38 @@ data class PlayerInformation(override val messageNumber: Int, val players: List<
   object PlayerInformationSerializer : MessageSerializer<PlayerInformation> {
     override val messageTypeId: Byte = ID
 
+    override fun read(buffer: ByteBuf, messageNumber: Int): Result<PlayerInformation> {
+      if (buffer.readableBytes() < 14) {
+        return parseFailure("Failed byte count validation!")
+      }
+      val b = buffer.readByte()
+      if (b.toInt() != 0x00) {
+        throw MessageFormatException(
+          "Invalid Player Information format: byte 0 = ${EmuUtil.byteToHex(b)}"
+        )
+      }
+      val numPlayers = buffer.readInt()
+      val minLen = numPlayers * 9
+      if (buffer.readableBytes() < minLen) {
+        return parseFailure("Failed byte count validation!")
+      }
+      val players: List<Player> =
+        (0 until numPlayers).map {
+          if (buffer.readableBytes() < 9) {
+            return parseFailure("Failed byte count validation!")
+          }
+          val userName = buffer.readString()
+          if (buffer.readableBytes() < 7) {
+            return parseFailure("Failed byte count validation!")
+          }
+          val ping = buffer.getUnsignedInt()
+          val userID = buffer.getUnsignedShort()
+          val connectionType = buffer.readByte()
+          Player(userName, ping, userID, ConnectionType.fromByteValue(connectionType))
+        }
+      return Result.success(PlayerInformation(messageNumber, players))
+    }
+
     override fun read(buffer: ByteBuffer, messageNumber: Int): Result<PlayerInformation> {
       if (buffer.remaining() < 14) {
         return parseFailure("Failed byte count validation!")

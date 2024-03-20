@@ -36,6 +36,19 @@ sealed class PlayerDrop : V086Message() {
   object PlayerDropSerializer : MessageSerializer<PlayerDrop> {
     override val messageTypeId: Byte = ID
 
+    override fun read(buffer: ByteBuf, messageNumber: Int): Result<PlayerDrop> {
+      if (buffer.readableBytes() < 2) {
+        return parseFailure("Failed byte count validation!")
+      }
+      val userName = buffer.readString()
+      val playerNumber = buffer.readByte()
+      return Result.success(
+        if (userName == REQUEST_USERNAME && playerNumber == REQUEST_PLAYER_NUMBER) {
+          PlayerDropRequest(messageNumber)
+        } else PlayerDropNotification(messageNumber, userName, playerNumber)
+      )
+    }
+
     override fun read(buffer: ByteBuffer, messageNumber: Int): Result<PlayerDrop> {
       if (buffer.remaining() < 2) {
         return parseFailure("Failed byte count validation!")

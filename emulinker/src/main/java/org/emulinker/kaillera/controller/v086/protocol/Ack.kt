@@ -42,6 +42,19 @@ sealed class Ack : V086Message() {
       buffer.putUnsignedInt(3L)
     }
 
+    override fun read(buffer: ByteBuf, messageNumber: Int): Result<ClientAck> {
+      if (buffer.readableBytes() < 17) {
+        return parseFailure("Failed byte count validation!")
+      }
+      val b = buffer.readByte()
+      if (b.toInt() != 0x00) {
+        throw MessageFormatException(
+          "Invalid Client to Server ACK format: byte 0 = ${EmuUtil.byteToHex(b)}"
+        )
+      }
+      return Result.success(ClientAck(messageNumber))
+    }
+
     override fun read(buffer: ByteBuffer, messageNumber: Int): Result<ClientAck> {
       if (buffer.remaining() < 17) {
         return parseFailure("Failed byte count validation!")
@@ -92,6 +105,25 @@ sealed class Ack : V086Message() {
       buffer.putUnsignedInt(1L)
       buffer.putUnsignedInt(2L)
       buffer.putUnsignedInt(3L)
+    }
+
+    override fun read(buffer: ByteBuf, messageNumber: Int): Result<ServerAck> {
+      if (buffer.readableBytes() < 17) {
+        return parseFailure("Failed byte count validation!")
+      }
+      val b = buffer.readByte()
+      if (b.toInt() != 0x00) {
+        throw MessageFormatException("byte 0 = " + EmuUtil.byteToHex(b))
+      }
+      val val1 = buffer.getUnsignedInt()
+      val val2 = buffer.getUnsignedInt()
+      val val3 = buffer.getUnsignedInt()
+      val val4 = buffer.getUnsignedInt()
+      if (val1 != 0L || val2 != 1L || val3 != 2L || val4 != 3L)
+        throw MessageFormatException(
+          "Invalid Server to Client ACK format: bytes do not match acceptable format!"
+        )
+      return Result.success(ServerAck(messageNumber))
     }
 
     override fun read(buffer: ByteBuffer, messageNumber: Int): Result<ServerAck> {

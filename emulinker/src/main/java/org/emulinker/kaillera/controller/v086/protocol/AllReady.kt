@@ -35,6 +35,18 @@ data class AllReady(override val messageNumber: Int) : V086Message(), ServerMess
   object AllReadySerializer : MessageSerializer<AllReady> {
     override val messageTypeId: Byte = ID
 
+    override fun read(buffer: ByteBuf, messageNumber: Int): Result<AllReady> {
+      if (buffer.readableBytes() < 1) {
+        return parseFailure("Failed byte count validation!")
+      }
+
+      val b = buffer.readByte()
+      if (b.toInt() != 0x00) {
+        return parseFailure("Invalid All Ready Signal format: byte 0 = " + EmuUtil.byteToHex(b))
+      }
+      return Result.success(AllReady(messageNumber))
+    }
+
     override fun read(buffer: ByteBuffer, messageNumber: Int): Result<AllReady> {
       if (buffer.remaining() < 1) {
         return parseFailure("Failed byte count validation!")

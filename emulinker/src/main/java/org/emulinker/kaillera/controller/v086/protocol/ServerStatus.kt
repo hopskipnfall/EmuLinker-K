@@ -155,6 +155,69 @@ data class ServerStatus(
   object ServerStatusSerializer : MessageSerializer<ServerStatus> {
     override val messageTypeId: Byte = ID
 
+    override fun read(buffer: ByteBuf, messageNumber: Int): Result<ServerStatus> {
+      if (buffer.readableBytes() < 9) {
+        return parseFailure("Failed byte count validation!")
+      }
+      val b = buffer.readByte()
+      if (b.toInt() != 0x00) {
+        throw MessageFormatException("Invalid Server Status format: byte 0 = " + b.toHexString())
+      }
+      val numUsers = buffer.readInt()
+      val numGames = buffer.readInt()
+      val minLen = numUsers * 10 + numGames * 13
+      if (buffer.readableBytes() < minLen) {
+        return parseFailure("Failed byte count validation!")
+      }
+      val users: List<User> =
+        (0 until numUsers).map {
+          if (buffer.readableBytes() < 9) {
+            return parseFailure("Failed byte count validation!")
+          }
+          val userName = buffer.readString()
+          if (buffer.readableBytes() < 8) {
+            return parseFailure("Failed byte count validation!")
+          }
+          val ping: Long = buffer.getUnsignedInt()
+          val status: Byte = buffer.readByte()
+          val userID: Int = buffer.getUnsignedShort()
+          val connectionType: Byte = buffer.readByte()
+          User(
+            userName,
+            ping,
+            UserStatus.fromByteValue(status),
+            userID,
+            ConnectionType.fromByteValue(connectionType)
+          )
+        }
+      val games: List<Game> =
+        (0 until numGames).map {
+          if (buffer.readableBytes() < 13) {
+            return parseFailure("Failed byte count validation!")
+          }
+          val romName = buffer.readString()
+          if (buffer.readableBytes() < 10) {
+            return parseFailure("Failed byte count validation!")
+          }
+          val gameID = buffer.readInt()
+          val clientType = buffer.readString()
+          if (buffer.readableBytes() < 5) {
+            return parseFailure("Failed byte count validation!")
+          }
+          val userName = buffer.readString()
+          if (buffer.readableBytes() < 3) {
+            return parseFailure("Failed byte count validation!")
+          }
+          val players = buffer.readString()
+          if (buffer.readableBytes() < 1) {
+            return parseFailure("Failed byte count validation!")
+          }
+          val status = buffer.readByte()
+          Game(romName, gameID, clientType, userName, players, GameStatus.fromByteValue(status))
+        }
+      return Result.success(ServerStatus(messageNumber, users, games))
+    }
+
     override fun read(buffer: ByteBuffer, messageNumber: Int): Result<ServerStatus> {
       if (buffer.remaining() < 9) {
         return parseFailure("Failed byte count validation!")

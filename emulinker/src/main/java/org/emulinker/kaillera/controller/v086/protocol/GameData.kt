@@ -92,6 +92,20 @@ constructor(override val messageNumber: Int, val gameData: ByteArray) :
   object GameDataSerializer : MessageSerializer<GameData> {
     override val messageTypeId: Byte = ID
 
+    override fun read(buffer: ByteBuf, messageNumber: Int): Result<GameData> {
+      if (buffer.readableBytes() < 4) {
+        return parseFailure("Failed byte count validation!")
+      }
+      buffer.readByte() // This is always 0x00.
+      val dataSize = buffer.getUnsignedShort()
+      if (dataSize <= 0 || dataSize > buffer.readableBytes()) {
+        return parseFailure("Invalid Game Data format: dataSize = $dataSize")
+      }
+      val gameData = ByteArray(dataSize)
+      buffer.readBytes(gameData) // THIS IS PROBABLY SAFE
+      return Result.success(create(messageNumber, gameData))
+    }
+
     override fun read(buffer: ByteBuffer, messageNumber: Int): Result<GameData> {
       if (buffer.remaining() < 4) {
         return parseFailure("Failed byte count validation!")

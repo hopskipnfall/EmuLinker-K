@@ -42,6 +42,18 @@ data class CloseGame(
   object CloseGameSerializer : MessageSerializer<CloseGame> {
     override val messageTypeId: Byte = ID
 
+    override fun read(buffer: ByteBuf, messageNumber: Int): Result<CloseGame> {
+      if (buffer.readableBytes() < 5) {
+        return parseFailure("Failed byte count validation!")
+      }
+      val b = buffer.readByte()
+      if (b.toInt() != 0x00)
+        throw MessageFormatException("Invalid Close Game format: byte 0 = " + EmuUtil.byteToHex(b))
+      val gameID = buffer.getUnsignedShort()
+      val val1 = buffer.getUnsignedShort()
+      return Result.success(CloseGame(messageNumber, gameID, val1))
+    }
+
     override fun read(buffer: ByteBuffer, messageNumber: Int): Result<CloseGame> {
       if (buffer.remaining() < 5) {
         return parseFailure("Failed byte count validation!")

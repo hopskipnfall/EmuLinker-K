@@ -57,6 +57,29 @@ constructor(
   object GameStatusSerializer : MessageSerializer<GameStatus> {
     override val messageTypeId: Byte = ID
 
+    override fun read(buffer: ByteBuf, messageNumber: Int): Result<GameStatus> {
+      if (buffer.readableBytes() < 8) {
+        return parseFailure("Failed byte count validation!")
+      }
+      val b = buffer.readByte()
+      require(b.toInt() == 0x00) { "Invalid Game Status format: byte 0 = " + EmuUtil.byteToHex(b) }
+      val gameID = buffer.getUnsignedShort()
+      val val1 = buffer.getUnsignedShort()
+      val gameStatus = buffer.readByte()
+      val numPlayers = buffer.readByte()
+      val maxPlayers = buffer.readByte()
+      return Result.success(
+        GameStatus(
+          messageNumber,
+          gameID,
+          val1,
+          org.emulinker.kaillera.model.GameStatus.fromByteValue(gameStatus),
+          numPlayers,
+          maxPlayers
+        )
+      )
+    }
+
     override fun read(buffer: ByteBuffer, messageNumber: Int): Result<GameStatus> {
       if (buffer.remaining() < 8) {
         return parseFailure("Failed byte count validation!")

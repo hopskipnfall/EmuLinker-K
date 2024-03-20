@@ -53,6 +53,23 @@ constructor(
   object ConnectionRejectedSerializer : MessageSerializer<ConnectionRejected> {
     override val messageTypeId: Byte = ID
 
+    override fun read(buffer: ByteBuf, messageNumber: Int): Result<ConnectionRejected> {
+      if (buffer.readableBytes() < 6) {
+        return parseFailure("Failed byte count validation!")
+      }
+      val userName = buffer.readString()
+      if (buffer.readableBytes() < 4) {
+        return parseFailure("Failed byte count validation!")
+      }
+      val userID = buffer.getUnsignedShort()
+      if (buffer.readableBytes() < 2) {
+        return parseFailure("Failed byte count validation!")
+      }
+
+      val message = buffer.readString()
+      return Result.success(ConnectionRejected(messageNumber, userName, userID, message))
+    }
+
     override fun read(buffer: ByteBuffer, messageNumber: Int): Result<ConnectionRejected> {
       if (buffer.remaining() < 6) {
         return parseFailure("Failed byte count validation!")

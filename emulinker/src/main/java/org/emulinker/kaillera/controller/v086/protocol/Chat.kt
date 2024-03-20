@@ -62,6 +62,24 @@ sealed class Chat : V086Message() {
       EmuUtil.writeString(buffer, message.message)
     }
 
+    override fun read(buffer: ByteBuf, messageNumber: Int): Result<Chat> {
+      if (buffer.readableBytes() < 3) {
+        return parseFailure("Failed byte count validation!")
+      }
+      val username = buffer.readString()
+      if (buffer.readableBytes() < 2) {
+        return parseFailure("Failed byte count validation!")
+      }
+      val message = buffer.readString()
+      return Result.success(
+        if (username.isBlank()) {
+          ChatRequest(messageNumber = messageNumber, message = message)
+        } else {
+          ChatNotification(messageNumber = messageNumber, username = username, message = message)
+        }
+      )
+    }
+
     override fun read(buffer: ByteBuffer, messageNumber: Int): Result<Chat> {
       if (buffer.remaining() < 3) {
         return parseFailure("Failed byte count validation!")

@@ -56,6 +56,38 @@ sealed class JoinGame : V086Message() {
   object JoinGameSerializer : MessageSerializer<JoinGame> {
     override val messageTypeId: Byte = ID
 
+    override fun read(buffer: ByteBuf, messageNumber: Int): Result<JoinGame> {
+      if (buffer.readableBytes() < 13) {
+        return parseFailure("Failed byte count validation!")
+      }
+      val b = buffer.readByte()
+      if (b.toInt() != 0x00)
+        throw MessageFormatException("Invalid format: byte 0 = " + EmuUtil.byteToHex(b))
+      val gameID = buffer.getUnsignedShort()
+      val val1 = buffer.getUnsignedShort()
+      val userName = buffer.readString()
+      if (buffer.readableBytes() < 7) {
+        return parseFailure("Failed byte count validation!")
+      }
+      val ping = buffer.getUnsignedInt()
+      val userID = buffer.getUnsignedShort()
+      val connectionType = buffer.readByte()
+      return Result.success(
+        if (userName.isBlank() && ping == 0L && userID == 0xFFFF)
+          JoinGameRequest(messageNumber, gameID, ConnectionType.fromByteValue(connectionType))
+        else
+          JoinGameNotification(
+            messageNumber,
+            gameID,
+            val1,
+            userName,
+            ping,
+            userID,
+            ConnectionType.fromByteValue(connectionType)
+          )
+      )
+    }
+
     override fun read(buffer: ByteBuffer, messageNumber: Int): Result<JoinGame> {
       if (buffer.remaining() < 13) {
         return parseFailure("Failed byte count validation!")

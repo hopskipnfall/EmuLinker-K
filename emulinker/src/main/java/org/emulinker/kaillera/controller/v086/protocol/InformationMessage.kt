@@ -42,6 +42,18 @@ constructor(override val messageNumber: Int, val source: String, val message: St
   object InformationMessageSerializer : MessageSerializer<InformationMessage> {
     override val messageTypeId: Byte = ID
 
+    override fun read(buffer: ByteBuf, messageNumber: Int): Result<InformationMessage> {
+      if (buffer.readableBytes() < 4) {
+        return parseFailure("Failed byte count validation!")
+      }
+      val source = buffer.readString()
+      if (buffer.readableBytes() < 2) {
+        return parseFailure("Failed byte count validation!")
+      }
+      val message = buffer.readString()
+      return Result.success(InformationMessage(messageNumber, source, message))
+    }
+
     override fun read(buffer: ByteBuffer, messageNumber: Int): Result<InformationMessage> {
       if (buffer.remaining() < 4) {
         return parseFailure("Failed byte count validation!")

@@ -40,6 +40,18 @@ constructor(override val messageNumber: Int, val key: Int) :
   object CachedGameDataSerializer : MessageSerializer<CachedGameData> {
     override val messageTypeId: Byte = ID
 
+    override fun read(buffer: ByteBuf, messageNumber: Int): Result<CachedGameData> {
+      if (buffer.readableBytes() < 2) {
+        return parseFailure("Failed byte count validation!")
+      }
+      buffer.readByte() // Move forward one position.
+      // removed to increase speed
+      // if (b != 0x00)
+      // throw new MessageFormatException("Invalid " + DESC + " format: byte 0 = " +
+      // EmuUtil.byteToHex(b));
+      return Result.success(CachedGameData(messageNumber, buffer.getUnsignedByte().toInt()))
+    }
+
     override fun read(buffer: ByteBuffer, messageNumber: Int): Result<CachedGameData> {
       if (buffer.remaining() < 2) {
         return parseFailure("Failed byte count validation!")

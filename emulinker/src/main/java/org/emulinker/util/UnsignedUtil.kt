@@ -9,6 +9,9 @@ import java.nio.ByteBuffer
 
 object UnsignedUtil {
   fun ByteBuffer.getUnsignedByte(): Short = (this.get().toInt() and 0xff).toShort()
+
+  fun ByteBuf.getUnsignedByte(): Short = (this.readByte().toInt() and 0xff).toShort()
+
   fun ByteReadPacket.readUnsignedByte(): Short = (this.readByte().toInt() and 0xff).toShort()
 
   fun ByteBuffer.putUnsignedByte(value: Int) {
@@ -27,6 +30,8 @@ object UnsignedUtil {
 
   // ---------------------------------------------------------------
   fun ByteBuffer.getUnsignedShort(): Int = this.short.toInt() and 0xffff
+
+  fun ByteBuf.getUnsignedShort(): Int = this.readShort().toInt() and 0xffff
 
   fun ByteReadPacket.readUnsignedShort(): Int = this.readShort().toInt() and 0xffff
   fun ByteReadPacket.readUnsignedShortLittleEndian(): Int =
@@ -48,6 +53,8 @@ object UnsignedUtil {
 
   // ---------------------------------------------------------------
   fun ByteBuffer.getUnsignedInt(): Long = this.int.toLong() and 0xffffffffL
+
+  fun ByteBuf.getUnsignedInt(): Long = this.readInt().toLong() and 0xffffffffL
 
   fun ByteReadPacket.readUnsignedInt(): Long = this.readInt().toLong() and 0xffffffffL
 

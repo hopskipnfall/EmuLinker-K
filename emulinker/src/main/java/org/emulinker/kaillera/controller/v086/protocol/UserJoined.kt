@@ -58,6 +58,28 @@ data class UserJoined(
   object UserJoinedSerializer : MessageSerializer<UserJoined> {
     override val messageTypeId: Byte = ID
 
+    override fun read(buffer: ByteBuf, messageNumber: Int): Result<UserJoined> {
+      if (buffer.readableBytes() < 9) {
+        return parseFailure("Failed byte count validation!")
+      }
+      val userName = buffer.readString()
+      if (buffer.readableBytes() < 7) {
+        return parseFailure("Failed byte count validation!")
+      }
+      val userID = buffer.getUnsignedShort()
+      val ping = buffer.getUnsignedInt()
+      val connectionType = buffer.readByte()
+      return Result.success(
+        UserJoined(
+          messageNumber,
+          userName,
+          userID,
+          ping,
+          ConnectionType.fromByteValue(connectionType)
+        )
+      )
+    }
+
     override fun read(buffer: ByteBuffer, messageNumber: Int): Result<UserJoined> {
       if (buffer.remaining() < 9) {
         return parseFailure("Failed byte count validation!")

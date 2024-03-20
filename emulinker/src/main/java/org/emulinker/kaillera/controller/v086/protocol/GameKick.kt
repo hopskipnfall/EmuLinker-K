@@ -40,6 +40,14 @@ constructor(override val messageNumber: Int, val userId: Int) : V086Message(), C
   object GameKickSerializer : MessageSerializer<GameKick> {
     override val messageTypeId: Byte = ID
 
+    override fun read(buffer: ByteBuf, messageNumber: Int): Result<GameKick> {
+      if (buffer.readableBytes() < 3) {
+        return parseFailure("Failed byte count validation!")
+      }
+      buffer.readByte() // Skip over 0x00 byte.
+      return Result.success(GameKick(messageNumber, buffer.getUnsignedShort()))
+    }
+
     override fun read(buffer: ByteBuffer, messageNumber: Int): Result<GameKick> {
       if (buffer.remaining() < 3) {
         return parseFailure("Failed byte count validation!")

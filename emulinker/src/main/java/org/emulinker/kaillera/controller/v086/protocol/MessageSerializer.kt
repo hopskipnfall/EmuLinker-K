@@ -10,6 +10,8 @@ sealed interface MessageSerializer<E : V086Message> {
 
   fun read(buffer: ByteBuffer, messageNumber: Int): Result<E>
 
+  fun read(buffer: ByteBuf, messageNumber: Int): Result<E>
+
   fun read(packet: ByteReadPacket, messageNumber: Int): Result<E>
 
   fun write(buffer: ByteBuffer, message: E)

@@ -50,6 +50,31 @@ sealed class CreateGame : V086Message() {
       )
     }
 
+    override fun read(buffer: ByteBuf, messageNumber: Int): Result<CreateGame> {
+      if (buffer.readableBytes() < 8) {
+        return parseFailure("Failed byte count validation!")
+      }
+      val userName = buffer.readString()
+      if (buffer.readableBytes() < 6) {
+        return parseFailure("Failed byte count validation!")
+      }
+      val romName = buffer.readString()
+      if (buffer.readableBytes() < 5) {
+        return parseFailure("Failed byte count validation!")
+      }
+      val clientType = buffer.readString()
+      if (buffer.readableBytes() < 4) {
+        return parseFailure("Failed byte count validation!")
+      }
+      val gameID = buffer.getUnsignedShort()
+      val val1 = buffer.getUnsignedShort()
+      return Result.success(
+        if (userName == REQUEST_USERNAME && gameID == REQUEST_GAME_ID && val1 == REQUEST_VAL1)
+          CreateGameRequest(messageNumber, romName)
+        else CreateGameNotification(messageNumber, userName, romName, clientType, gameID, val1)
+      )
+    }
+
     override fun read(buffer: ByteBuffer, messageNumber: Int): Result<CreateGame> {
       if (buffer.remaining() < 8) {
         return parseFailure("Failed byte count validation!")

@@ -170,8 +170,7 @@ abstract class V086Message : ByteBufferMessage() {
       val serializer =
         checkNotNull(SERIALIZERS[messageType]) { "Unrecognized message ID: $messageType" }
 
-      var parseResult: Result<V086Message> =
-        serializer.read(buf.nioBuffer(), messageNumber) // TODO: read it directly
+      var parseResult: Result<V086Message> = serializer.read(buf, messageNumber)
       parseResult.onSuccess { parseResult = it.validateMessageNumber() }
 
       val message =

@@ -36,6 +36,24 @@ sealed class GameChat : V086Message() {
   object GameChatSerializer : MessageSerializer<GameChat> {
     override val messageTypeId: Byte = ID
 
+    override fun read(buffer: ByteBuf, messageNumber: Int): Result<GameChat> {
+      if (buffer.readableBytes() < 3) {
+        return parseFailure("Failed byte count validation!")
+      }
+      val userName = buffer.readString()
+      if (buffer.readableBytes() < 2) {
+        return parseFailure("Failed byte count validation!")
+      }
+      val message = buffer.readString()
+      return Result.success(
+        if (userName == REQUEST_USERNAME) {
+          GameChatRequest(messageNumber, message)
+        } else {
+          GameChatNotification(messageNumber, userName, message)
+        }
+      )
+    }
+
     override fun read(buffer: ByteBuffer, messageNumber: Int): Result<GameChat> {
       if (buffer.remaining() < 3) {
         return parseFailure("Failed byte count validation!")

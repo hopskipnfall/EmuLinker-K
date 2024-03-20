@@ -40,6 +40,28 @@ sealed class StartGame : V086Message() {
   object StartGameSerializer : MessageSerializer<StartGame> {
     override val messageTypeId: Byte = ID
 
+    override fun read(buffer: ByteBuf, messageNumber: Int): Result<StartGame> {
+      if (buffer.readableBytes() < 5) {
+        return parseFailure("Failed byte count validation!")
+      }
+      val b = buffer.readByte()
+      if (b.toInt() != 0x00) {
+        return parseFailure("Failed byte count validation!")
+      }
+      val val1 = buffer.getUnsignedShort()
+      val playerNumber = buffer.getUnsignedByte()
+      val numPlayers = buffer.getUnsignedByte()
+      return Result.success(
+        if (
+          val1 == REQUEST_VAL1 &&
+            playerNumber == REQUEST_PLAYER_NUMBER &&
+            numPlayers == REQUEST_NUM_PLAYERS
+        )
+          StartGameRequest(messageNumber)
+        else StartGameNotification(messageNumber, val1, playerNumber, numPlayers)
+      )
+    }
+
     override fun read(buffer: ByteBuffer, messageNumber: Int): Result<StartGame> {
       if (buffer.remaining() < 5) {
         return parseFailure("Failed byte count validation!")

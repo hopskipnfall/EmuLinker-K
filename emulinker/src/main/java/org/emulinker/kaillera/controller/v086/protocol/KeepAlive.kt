@@ -40,6 +40,13 @@ constructor(override val messageNumber: Int, val value: Short) : V086Message(), 
   object KeepAliveSerializer : MessageSerializer<KeepAlive> {
     override val messageTypeId: Byte = ID
 
+    override fun read(buffer: ByteBuf, messageNumber: Int): Result<KeepAlive> {
+      if (buffer.readableBytes() < 1) {
+        return parseFailure("Failed byte count validation!")
+      }
+      return Result.success(KeepAlive(messageNumber, buffer.getUnsignedByte()))
+    }
+
     override fun read(buffer: ByteBuffer, messageNumber: Int): Result<KeepAlive> {
       if (buffer.remaining() < 1) {
         return parseFailure("Failed byte count validation!")

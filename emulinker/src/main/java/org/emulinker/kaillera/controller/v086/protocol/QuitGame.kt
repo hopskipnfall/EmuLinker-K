@@ -39,6 +39,24 @@ sealed class QuitGame : V086Message() {
   object QuitGameSerializer : MessageSerializer<QuitGame> {
     override val messageTypeId: Byte = ID
 
+    override fun read(buffer: ByteBuf, messageNumber: Int): Result<QuitGame> {
+      if (buffer.readableBytes() < 3) {
+        return parseFailure("Failed byte count validation!")
+      }
+      val userName = buffer.readString()
+      if (buffer.readableBytes() < 2) {
+        return parseFailure("Failed byte count validation!")
+      }
+      val userID = buffer.getUnsignedShort()
+      return Result.success(
+        if (userName == REQUEST_USERNAME && userID == REQUEST_USER_ID) {
+          QuitGameRequest(messageNumber)
+        } else {
+          QuitGameNotification(messageNumber, userName, userID)
+        }
+      )
+    }
+
     override fun read(buffer: ByteBuffer, messageNumber: Int): Result<QuitGame> {
       if (buffer.remaining() < 3) {
         return parseFailure("Failed byte count validation!")
