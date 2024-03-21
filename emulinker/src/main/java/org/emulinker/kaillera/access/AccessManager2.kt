@@ -42,6 +42,8 @@ internal constructor(private val flags: RuntimeFlags, private val taskScheduler:
   private val tempElevatedList: MutableList<TempElevated> = CopyOnWriteArrayList()
   private val silenceList: MutableList<Silence> = CopyOnWriteArrayList()
 
+  private val timerTasks = mutableSetOf<TimerTask>()
+
   @Synchronized
   private fun checkReload() {
     val af = accessFile
@@ -448,12 +450,16 @@ internal constructor(private val flags: RuntimeFlags, private val taskScheduler:
     }
     loadAccess()
 
-    taskScheduler.scheduleRepeating(initialDelay = 1.minutes, period = 1.minutes) {
-      logger.atFine().log("Refreshing DNS for all users and addresses")
-      userList.forEach { it.refreshDNS() }
-      addressList.forEach { it.refreshDNS() }
-    }
+    timerTasks.add(
+      taskScheduler.scheduleRepeating(initialDelay = 1.minutes, period = 1.minutes) {
+        logger.atFine().log("Refreshing DNS for all users and addresses")
+        userList.forEach { it.refreshDNS() }
+        addressList.forEach { it.refreshDNS() }
+      }
+    )
   }
 
-  override fun close() {}
+  override fun close() {
+    timerTasks.forEach { it.cancel() }
+  }
 }

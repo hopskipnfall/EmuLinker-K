@@ -1,5 +1,6 @@
 package org.emulinker.kaillera.controller.messaging
 
+import io.netty.buffer.ByteBuf
 import java.nio.ByteBuffer
 
 abstract class ByteBufferMessage {
@@ -7,14 +8,12 @@ abstract class ByteBufferMessage {
 
   abstract val bodyBytesPlusMessageIdType: Int
 
-  private fun initBuffer() {
-    initBuffer(bodyBytesPlusMessageIdType)
-  }
-
-  private fun initBuffer(size: Int) {
+  @Deprecated("Allocate a ByteBuf instead")
+  private fun initBuffer(size: Int = bodyBytesPlusMessageIdType) {
     buffer = getBuffer(size)
   }
 
+  @Deprecated("Allocate a ByteBuf instead")
   fun toBuffer(): ByteBuffer {
     initBuffer()
     writeTo(buffer)
@@ -22,11 +21,11 @@ abstract class ByteBufferMessage {
     return buffer
   }
 
+  abstract fun writeTo(buffer: ByteBuf)
+
   abstract fun writeTo(buffer: ByteBuffer)
 
   companion object {
-    fun getBuffer(size: Int): ByteBuffer {
-      return ByteBuffer.allocateDirect(size)
-    }
+    @Deprecated("Bad!") fun getBuffer(size: Int): ByteBuffer = ByteBuffer.allocateDirect(size)
   }
 }

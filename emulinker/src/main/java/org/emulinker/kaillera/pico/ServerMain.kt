@@ -51,10 +51,15 @@ fun main() {
       "EmuLinker server is running @ %s",
       DateTimeFormatter.ISO_ZONED_DATE_TIME.withZone(ZoneId.systemDefault()).format(Instant.now())
     )
+  // Essentially does nothing.
   component.kailleraServerController.start()
-  component.server.start()
+
+  // Keeps iterating over users to look for people who should be kicked.
   component.kailleraServer.start()
-  component.masterListUpdater.start()
+
+  // Reports data to various servers.
+  component.masterListUpdater.run()
+
   val metrics = component.metricRegistry
   metrics.registerAll(ThreadStatesGaugeSet())
   //  metrics.registerAll(MemoryUsageGaugeSet())
@@ -77,6 +82,9 @@ fun main() {
       .start(flags.metricsLoggingFrequency.inWholeSeconds, SECONDS)
   }
 
+  component.combinedKaillerController.bind(
+    component.configuration.getInt("controllers.connect.port")
+  )
   //  // Hacky code but it works! Tests that two users can make and play a game.
   //  // TODO(nue): Move this into a test file in a subsequent PR.
   //  runBlocking {

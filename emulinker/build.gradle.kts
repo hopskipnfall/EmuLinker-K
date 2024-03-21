@@ -44,14 +44,12 @@ dependencies {
   api("commons-configuration:commons-configuration:1.1")
   api("commons-pool:commons-pool:1.2")
 
-  val ktorVersion = "2.3.0"
+  val ktorVersion = "2.3.9"
   api("io.ktor:ktor-network-jvm:$ktorVersion")
   api("io.ktor:ktor-server-core-jvm:$ktorVersion")
   api("io.ktor:ktor-server-netty-jvm:$ktorVersion")
   api("io.ktor:ktor-server-status-pages-jvm:$ktorVersion")
   api("io.ktor:ktor-server-default-headers-jvm:$ktorVersion")
-  api("io.ktor:ktor-client-core:$ktorVersion")
-  api("io.ktor:ktor-client-cio:$ktorVersion")
 
   api("io.reactivex.rxjava3:rxjava:3.1.1")
 
@@ -60,7 +58,6 @@ dependencies {
   testImplementation(kotlin("test"))
   testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.6.4")
   testImplementation("org.mockito.kotlin:mockito-kotlin:4.1.0")
-  testImplementation("io.ktor:ktor-client-mock:$ktorVersion")
 }
 
 group = "org.emulinker"
@@ -86,6 +83,7 @@ tasks.processResources {
             val version = project.version
             val url = properties["url"]
           },
+        "useBytereadpacketInsteadOfBytebuffer" to false,
       )
     )
   }
@@ -154,3 +152,5 @@ tasks.jar {
 
 // kdoc generation support.
 subprojects { apply(plugin = "org.jetbrains.dokka") }
+
+tasks.withType<JavaExec> { jvmArgs = listOf("-Xms512m", "-Xmx512m") }

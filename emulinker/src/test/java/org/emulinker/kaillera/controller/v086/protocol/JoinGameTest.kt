@@ -1,10 +1,12 @@
 package org.emulinker.kaillera.controller.v086.protocol
 
 import com.google.common.truth.Truth.assertThat
+import io.ktor.utils.io.core.ByteReadPacket
 import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.kaillera.controller.v086.protocol.MessageTestUtils.assertBufferContainsExactly
 import org.emulinker.kaillera.model.ConnectionType
+import org.junit.Ignore
 import org.junit.Test
 
 class JoinGameTest : ProtocolBaseTest() {
@@ -15,14 +17,28 @@ class JoinGameTest : ProtocolBaseTest() {
   }
 
   @Test
+  @Ignore // Fails!
+  fun joinGameNotification_byteReadPacket_deserializeBody() {
+    assertThat(
+        JoinGame.JoinGameSerializer.read(
+            ByteReadPacket(V086Utils.hexStringToByteBuffer(NOTIFICATION_BYTES)),
+            MESSAGE_NUMBER
+          )
+          .getOrThrow()
+      )
+      .isEqualTo(JOIN_GAME_NOTIFICATION)
+  }
+
+  @Test
   fun joinGameNotification_deserializeBody() {
     assertThat(
         JoinGame.JoinGameSerializer.read(
-          V086Utils.hexStringToByteBuffer(NOTIFICATION_BYTES),
-          MESSAGE_NUMBER
-        )
+            V086Utils.hexStringToByteBuffer(NOTIFICATION_BYTES),
+            MESSAGE_NUMBER
+          )
+          .getOrThrow()
       )
-      .isEqualTo(MessageParseResult.Success(JOIN_GAME_NOTIFICATION))
+      .isEqualTo(JOIN_GAME_NOTIFICATION)
   }
 
   @Test
@@ -40,14 +56,28 @@ class JoinGameTest : ProtocolBaseTest() {
   }
 
   @Test
+  @Ignore // Fails!
+  fun joinGameRequest_byteReadPacket_deserializeBody() {
+    assertThat(
+        JoinGame.JoinGameSerializer.read(
+            ByteReadPacket(V086Utils.hexStringToByteBuffer(REQUEST_BYTES)),
+            MESSAGE_NUMBER
+          )
+          .getOrThrow()
+      )
+      .isEqualTo(JOIN_GAME_REQUEST)
+  }
+
+  @Test
   fun joinGameRequest_deserializeBody() {
     assertThat(
         JoinGame.JoinGameSerializer.read(
-          V086Utils.hexStringToByteBuffer(REQUEST_BYTES),
-          MESSAGE_NUMBER
-        )
+            V086Utils.hexStringToByteBuffer(REQUEST_BYTES),
+            MESSAGE_NUMBER
+          )
+          .getOrThrow()
       )
-      .isEqualTo(MessageParseResult.Success(JOIN_GAME_REQUEST))
+      .isEqualTo(JOIN_GAME_REQUEST)
   }
 
   @Test

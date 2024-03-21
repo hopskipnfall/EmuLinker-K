@@ -1,6 +1,5 @@
 package org.emulinker.kaillera.pico
 
-import com.codahale.metrics.Counter
 import com.codahale.metrics.MetricRegistry
 import dagger.Binds
 import dagger.Module
@@ -8,14 +7,11 @@ import dagger.Provides
 import dagger.multibindings.IntoSet
 import io.github.redouane59.twitter.TwitterClient
 import io.github.redouane59.twitter.signature.TwitterCredentials
-import io.ktor.client.HttpClient
-import io.ktor.client.engine.cio.CIO
-import io.ktor.client.plugins.HttpTimeout
 import java.nio.charset.Charset
+import java.util.Timer
 import java.util.concurrent.SynchronousQueue
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
-import javax.inject.Named
 import javax.inject.Singleton
 import org.apache.commons.configuration.Configuration
 import org.emulinker.config.RuntimeFlags
@@ -71,12 +67,6 @@ abstract class AppModule {
 
     @Provides
     @Singleton
-    @Named("listeningOnPortsCounter")
-    fun bindPortListenerCounter(metrics: MetricRegistry): Counter =
-      metrics.counter("listeningOnPorts")
-
-    @Provides
-    @Singleton
     fun provideTwitterClient(flags: RuntimeFlags) =
       TwitterClient(
         TwitterCredentials.builder()
@@ -102,14 +92,15 @@ abstract class AppModule {
     }
 
     @Provides
-    fun provideThreadPoolExecutor(flags: RuntimeFlags): ThreadPoolExecutor {
-      return ThreadPoolExecutor(
-        flags.coreThreadPoolSize,
-        Int.MAX_VALUE,
-        60L,
-        TimeUnit.SECONDS,
-        SynchronousQueue()
-      )
+    @Singleton
+    fun provideThreadPoolExecutor(flags: RuntimeFlags) =
+      ThreadPoolExecutor(flags.coreThreadPoolSize, 15, 60L, TimeUnit.SECONDS, SynchronousQueue())
+
+    // TODO(nue): We should probably be using TaskScheduler instead?
+    @Provides
+    @Singleton
+    fun provideTimer(): Timer {
+      return Timer(/* isDaemon= */ true)
     }
 
     @Provides
@@ -117,7 +108,5 @@ abstract class AppModule {
     fun provideMetricRegistry(): MetricRegistry {
       return MetricRegistry()
     }
-
-    @Provides fun provideHttpClient(): HttpClient = HttpClient(CIO) { install(HttpTimeout) }
   }
 }

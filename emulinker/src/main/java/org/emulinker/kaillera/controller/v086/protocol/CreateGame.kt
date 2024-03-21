@@ -1,11 +1,15 @@
 package org.emulinker.kaillera.controller.v086.protocol
 
+import io.ktor.utils.io.core.ByteReadPacket
+import io.netty.buffer.ByteBuf
 import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.kaillera.controller.v086.V086Utils.getNumBytesPlusStopByte
 import org.emulinker.util.EmuUtil
+import org.emulinker.util.EmuUtil.readString
 import org.emulinker.util.UnsignedUtil.getUnsignedShort
 import org.emulinker.util.UnsignedUtil.putUnsignedShort
+import org.emulinker.util.UnsignedUtil.readUnsignedShort
 
 sealed class CreateGame : V086Message() {
   abstract val romName: String
@@ -21,29 +25,108 @@ sealed class CreateGame : V086Message() {
 
   object CreateGameSerializer : MessageSerializer<CreateGame> {
     override val messageTypeId: Byte = ID
-
-    override fun read(buffer: ByteBuffer, messageNumber: Int): MessageParseResult<CreateGame> {
-      if (buffer.remaining() < 8) {
-        return MessageParseResult.Failure("Failed byte count validation!")
+    override fun read(packet: ByteReadPacket, messageNumber: Int): Result<CreateGame> {
+      if (packet.remaining < 8) {
+        return parseFailure("Failed byte count validation!")
       }
-      val userName = EmuUtil.readString(buffer)
-      if (buffer.remaining() < 6) {
-        return MessageParseResult.Failure("Failed byte count validation!")
+      val userName = packet.readString()
+      if (packet.remaining < 6) {
+        return parseFailure("Failed byte count validation!")
       }
-      val romName = EmuUtil.readString(buffer)
-      if (buffer.remaining() < 5) {
-        return MessageParseResult.Failure("Failed byte count validation!")
+      val romName = packet.readString()
+      if (packet.remaining < 5) {
+        return parseFailure("Failed byte count validation!")
       }
-      val clientType = EmuUtil.readString(buffer)
-      if (buffer.remaining() < 4) {
-        return MessageParseResult.Failure("Failed byte count validation!")
+      val clientType = packet.readString()
+      if (packet.remaining < 4) {
+        return parseFailure("Failed byte count validation!")
       }
-      val gameID = buffer.getUnsignedShort()
-      val val1 = buffer.getUnsignedShort()
-      return MessageParseResult.Success(
+      val gameID = packet.readUnsignedShort()
+      val val1 = packet.readUnsignedShort()
+      return Result.success(
         if (userName == REQUEST_USERNAME && gameID == REQUEST_GAME_ID && val1 == REQUEST_VAL1)
           CreateGameRequest(messageNumber, romName)
         else CreateGameNotification(messageNumber, userName, romName, clientType, gameID, val1)
+      )
+    }
+
+    override fun read(buffer: ByteBuf, messageNumber: Int): Result<CreateGame> {
+      if (buffer.readableBytes() < 8) {
+        return parseFailure("Failed byte count validation!")
+      }
+      val userName = buffer.readString()
+      if (buffer.readableBytes() < 6) {
+        return parseFailure("Failed byte count validation!")
+      }
+      val romName = buffer.readString()
+      if (buffer.readableBytes() < 5) {
+        return parseFailure("Failed byte count validation!")
+      }
+      val clientType = buffer.readString()
+      if (buffer.readableBytes() < 4) {
+        return parseFailure("Failed byte count validation!")
+      }
+      val gameID = buffer.getUnsignedShort()
+      val val1 = buffer.getUnsignedShort()
+      return Result.success(
+        if (userName == REQUEST_USERNAME && gameID == REQUEST_GAME_ID && val1 == REQUEST_VAL1)
+          CreateGameRequest(messageNumber, romName)
+        else CreateGameNotification(messageNumber, userName, romName, clientType, gameID, val1)
+      )
+    }
+
+    override fun read(buffer: ByteBuffer, messageNumber: Int): Result<CreateGame> {
+      if (buffer.remaining() < 8) {
+        return parseFailure("Failed byte count validation!")
+      }
+      val userName = buffer.readString()
+      if (buffer.remaining() < 6) {
+        return parseFailure("Failed byte count validation!")
+      }
+      val romName = buffer.readString()
+      if (buffer.remaining() < 5) {
+        return parseFailure("Failed byte count validation!")
+      }
+      val clientType = buffer.readString()
+      if (buffer.remaining() < 4) {
+        return parseFailure("Failed byte count validation!")
+      }
+      val gameID = buffer.getUnsignedShort()
+      val val1 = buffer.getUnsignedShort()
+      return Result.success(
+        if (userName == REQUEST_USERNAME && gameID == REQUEST_GAME_ID && val1 == REQUEST_VAL1)
+          CreateGameRequest(messageNumber, romName)
+        else CreateGameNotification(messageNumber, userName, romName, clientType, gameID, val1)
+      )
+    }
+
+    override fun write(buffer: ByteBuf, message: CreateGame) {
+      EmuUtil.writeString(
+        buffer,
+        when (message) {
+          is CreateGameRequest -> REQUEST_USERNAME
+          is CreateGameNotification -> message.username
+        }
+      )
+      EmuUtil.writeString(buffer, message.romName)
+      EmuUtil.writeString(
+        buffer,
+        when (message) {
+          is CreateGameRequest -> REQUEST_CLIENT_TYPE
+          is CreateGameNotification -> message.clientType
+        }
+      )
+      buffer.putUnsignedShort(
+        when (message) {
+          is CreateGameRequest -> REQUEST_GAME_ID
+          is CreateGameNotification -> message.gameId
+        }
+      )
+      buffer.putUnsignedShort(
+        when (message) {
+          is CreateGameRequest -> REQUEST_VAL1
+          is CreateGameNotification -> message.val1
+        }
       )
     }
 
@@ -109,7 +192,11 @@ data class CreateGameNotification(
         V086Utils.Bytes.SHORT +
         V086Utils.Bytes.SHORT
 
-  public override fun writeBodyTo(buffer: ByteBuffer) {
+  override fun writeBodyTo(buffer: ByteBuffer) {
+    CreateGameSerializer.write(buffer, this)
+  }
+
+  override fun writeBodyTo(buffer: ByteBuf) {
     CreateGameSerializer.write(buffer, this)
   }
 }
@@ -134,7 +221,11 @@ data class CreateGameRequest(override val messageNumber: Int, override val romNa
         V086Utils.Bytes.SHORT +
         V086Utils.Bytes.SHORT
 
-  public override fun writeBodyTo(buffer: ByteBuffer) {
+  override fun writeBodyTo(buffer: ByteBuffer) {
+    CreateGameSerializer.write(buffer, this)
+  }
+
+  override fun writeBodyTo(buffer: ByteBuf) {
     CreateGameSerializer.write(buffer, this)
   }
 }

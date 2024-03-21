@@ -1,9 +1,12 @@
 package org.emulinker.kaillera.controller.v086.protocol
 
+import io.ktor.utils.io.core.ByteReadPacket
+import io.netty.buffer.ByteBuf
 import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.kaillera.controller.v086.V086Utils.getNumBytesPlusStopByte
 import org.emulinker.util.EmuUtil
+import org.emulinker.util.EmuUtil.readString
 
 sealed class PlayerDrop : V086Message() {
   override val messageTypeId = ID
@@ -15,7 +18,11 @@ sealed class PlayerDrop : V086Message() {
         is PlayerDropNotification -> username
       }.getNumBytesPlusStopByte() + V086Utils.Bytes.SINGLE_BYTE
 
-  public override fun writeBodyTo(buffer: ByteBuffer) {
+  override fun writeBodyTo(buffer: ByteBuffer) {
+    PlayerDropSerializer.write(buffer, this)
+  }
+
+  override fun writeBodyTo(buffer: ByteBuf) {
     PlayerDropSerializer.write(buffer, this)
   }
 
@@ -29,16 +36,58 @@ sealed class PlayerDrop : V086Message() {
   object PlayerDropSerializer : MessageSerializer<PlayerDrop> {
     override val messageTypeId: Byte = ID
 
-    override fun read(buffer: ByteBuffer, messageNumber: Int): MessageParseResult<PlayerDrop> {
-      if (buffer.remaining() < 2) {
-        return MessageParseResult.Failure("Failed byte count validation!")
+    override fun read(buffer: ByteBuf, messageNumber: Int): Result<PlayerDrop> {
+      if (buffer.readableBytes() < 2) {
+        return parseFailure("Failed byte count validation!")
       }
-      val userName = EmuUtil.readString(buffer)
-      val playerNumber = buffer.get()
-      return MessageParseResult.Success(
+      val userName = buffer.readString()
+      val playerNumber = buffer.readByte()
+      return Result.success(
         if (userName == REQUEST_USERNAME && playerNumber == REQUEST_PLAYER_NUMBER) {
           PlayerDropRequest(messageNumber)
         } else PlayerDropNotification(messageNumber, userName, playerNumber)
+      )
+    }
+
+    override fun read(buffer: ByteBuffer, messageNumber: Int): Result<PlayerDrop> {
+      if (buffer.remaining() < 2) {
+        return parseFailure("Failed byte count validation!")
+      }
+      val userName = buffer.readString()
+      val playerNumber = buffer.get()
+      return Result.success(
+        if (userName == REQUEST_USERNAME && playerNumber == REQUEST_PLAYER_NUMBER) {
+          PlayerDropRequest(messageNumber)
+        } else PlayerDropNotification(messageNumber, userName, playerNumber)
+      )
+    }
+
+    override fun read(packet: ByteReadPacket, messageNumber: Int): Result<PlayerDrop> {
+      if (packet.remaining < 2) {
+        return parseFailure("Failed byte count validation!")
+      }
+      val userName = packet.readString()
+      val playerNumber = packet.readByte()
+      return Result.success(
+        if (userName == REQUEST_USERNAME && playerNumber == REQUEST_PLAYER_NUMBER) {
+          PlayerDropRequest(messageNumber)
+        } else PlayerDropNotification(messageNumber, userName, playerNumber)
+      )
+    }
+
+    override fun write(buffer: ByteBuf, message: PlayerDrop) {
+      EmuUtil.writeString(
+        buffer,
+        when (message) {
+          is PlayerDropRequest -> REQUEST_USERNAME
+          is PlayerDropNotification -> message.username
+        }
+      )
+      buffer.writeByte(
+        when (message) {
+          is PlayerDropRequest -> REQUEST_PLAYER_NUMBER
+          is PlayerDropNotification -> message.playerNumber
+        }.toInt()
       )
     }
 
