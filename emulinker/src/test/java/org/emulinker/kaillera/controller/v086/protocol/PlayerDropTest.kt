@@ -16,26 +16,18 @@ class PlayerDropTest {
 
   @Test
   fun playerDropNotification_byteReadPacket_deserializeBody() {
-    assertThat(
-        PlayerDrop.PlayerDropSerializer.read(
-            ByteReadPacket(V086Utils.hexStringToByteBuffer(NOTIFICATION_BODY_BYTES)),
-            MESSAGE_NUMBER
-          )
-          .getOrThrow()
-      )
+    val packet = ByteReadPacket(V086Utils.hexStringToByteBuffer(NOTIFICATION_BODY_BYTES))
+    assertThat(PlayerDrop.PlayerDropSerializer.read(packet, MESSAGE_NUMBER).getOrThrow())
       .isEqualTo(PLAYER_DROP_NOTIFICATION)
+    assertThat(packet.endOfInput).isTrue()
   }
 
   @Test
   fun playerDropNotification_deserializeBody() {
-    assertThat(
-        PlayerDrop.PlayerDropSerializer.read(
-            V086Utils.hexStringToByteBuffer(NOTIFICATION_BODY_BYTES),
-            MESSAGE_NUMBER
-          )
-          .getOrThrow()
-      )
+    val buffer = V086Utils.hexStringToByteBuffer(NOTIFICATION_BODY_BYTES)
+    assertThat(PlayerDrop.PlayerDropSerializer.read(buffer, MESSAGE_NUMBER).getOrThrow())
       .isEqualTo(PLAYER_DROP_NOTIFICATION)
+    assertThat(buffer.hasRemaining()).isFalse()
   }
 
   @Test
@@ -54,26 +46,18 @@ class PlayerDropTest {
 
   @Test
   fun playerDropRequest_byteReadPacket_deserializeBody() {
-    assertThat(
-        PlayerDrop.PlayerDropSerializer.read(
-            ByteReadPacket(V086Utils.hexStringToByteBuffer(REQUEST_BODY_BYTES)),
-            MESSAGE_NUMBER
-          )
-          .getOrThrow()
-      )
+    val packet = ByteReadPacket(V086Utils.hexStringToByteBuffer(REQUEST_BODY_BYTES))
+    assertThat(PlayerDrop.PlayerDropSerializer.read(packet, MESSAGE_NUMBER).getOrThrow())
       .isEqualTo(PLAYER_DROP_REQUEST)
+    assertThat(packet.endOfInput).isTrue()
   }
 
   @Test
   fun playerDropRequest_deserializeBody() {
-    assertThat(
-        PlayerDrop.PlayerDropSerializer.read(
-            V086Utils.hexStringToByteBuffer(REQUEST_BODY_BYTES),
-            MESSAGE_NUMBER
-          )
-          .getOrThrow()
-      )
+    val buffer = V086Utils.hexStringToByteBuffer(REQUEST_BODY_BYTES)
+    assertThat(PlayerDrop.PlayerDropSerializer.read(buffer, MESSAGE_NUMBER).getOrThrow())
       .isEqualTo(PLAYER_DROP_REQUEST)
+    assertThat(buffer.hasRemaining()).isFalse()
   }
 
   @Test

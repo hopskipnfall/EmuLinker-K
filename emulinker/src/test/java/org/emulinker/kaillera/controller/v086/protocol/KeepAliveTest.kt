@@ -16,26 +16,18 @@ class KeepAliveTest : ProtocolBaseTest() {
 
   @Test
   fun byteReadPacket_deserializeBody() {
-    assertThat(
-        KeepAlive.KeepAliveSerializer.read(
-            ByteReadPacket(V086Utils.hexStringToByteBuffer(BODY_BYTES)),
-            MESSAGE_NUMBER
-          )
-          .getOrThrow()
-      )
+    val packet = ByteReadPacket(V086Utils.hexStringToByteBuffer(BODY_BYTES))
+    assertThat(KeepAlive.KeepAliveSerializer.read(packet, MESSAGE_NUMBER).getOrThrow())
       .isEqualTo(KEEP_ALIVE)
+    assertThat(packet.endOfInput).isTrue()
   }
 
   @Test
   fun deserializeBody() {
-    assertThat(
-        KeepAlive.KeepAliveSerializer.read(
-            V086Utils.hexStringToByteBuffer(BODY_BYTES),
-            MESSAGE_NUMBER
-          )
-          .getOrThrow()
-      )
+    val buffer = V086Utils.hexStringToByteBuffer(BODY_BYTES)
+    assertThat(KeepAlive.KeepAliveSerializer.read(buffer, MESSAGE_NUMBER).getOrThrow())
       .isEqualTo(KEEP_ALIVE)
+    assertThat(buffer.hasRemaining()).isFalse()
   }
 
   @Test

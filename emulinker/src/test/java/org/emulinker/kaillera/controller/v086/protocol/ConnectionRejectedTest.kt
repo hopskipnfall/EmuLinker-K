@@ -16,26 +16,22 @@ class ConnectionRejectedTest : ProtocolBaseTest() {
 
   @Test
   fun byteReadPacket_deserializeBody() {
+    val packet = ByteReadPacket(V086Utils.hexStringToByteBuffer(BODY_BYTES))
     assertThat(
-        ConnectionRejected.ConnectionRejectedSerializer.read(
-            ByteReadPacket(V086Utils.hexStringToByteBuffer(BODY_BYTES)),
-            MESSAGE_NUMBER
-          )
-          .getOrThrow()
+        ConnectionRejected.ConnectionRejectedSerializer.read(packet, MESSAGE_NUMBER).getOrThrow()
       )
       .isEqualTo(CONNECTION_REJECTED)
+    assertThat(packet.endOfInput).isTrue()
   }
 
   @Test
   fun deserializeBody() {
+    val buffer = V086Utils.hexStringToByteBuffer(BODY_BYTES)
     assertThat(
-        ConnectionRejected.ConnectionRejectedSerializer.read(
-            V086Utils.hexStringToByteBuffer(BODY_BYTES),
-            MESSAGE_NUMBER
-          )
-          .getOrThrow()
+        ConnectionRejected.ConnectionRejectedSerializer.read(buffer, MESSAGE_NUMBER).getOrThrow()
       )
       .isEqualTo(CONNECTION_REJECTED)
+    assertThat(buffer.hasRemaining()).isFalse()
   }
 
   @Test

@@ -17,26 +17,18 @@ class CloseGameTest : ProtocolBaseTest() {
 
   @Test
   fun byteReadPacket_deserializeBody() {
-    assertThat(
-        CloseGame.CloseGameSerializer.read(
-            ByteReadPacket(V086Utils.hexStringToByteBuffer(BODY_BYTES)),
-            MESSAGE_NUMBER
-          )
-          .getOrThrow()
-      )
+    val packet = ByteReadPacket(V086Utils.hexStringToByteBuffer(BODY_BYTES))
+    assertThat(CloseGame.CloseGameSerializer.read(packet, MESSAGE_NUMBER).getOrThrow())
       .isEqualTo(CLOSE_GAME)
+    assertThat(packet.endOfInput).isTrue()
   }
 
   @Test
   fun deserializeBody() {
-    assertThat(
-        CloseGame.CloseGameSerializer.read(
-            V086Utils.hexStringToByteBuffer(BODY_BYTES),
-            MESSAGE_NUMBER
-          )
-          .getOrThrow()
-      )
+    val buffer = V086Utils.hexStringToByteBuffer(BODY_BYTES)
+    assertThat(CloseGame.CloseGameSerializer.read(buffer, MESSAGE_NUMBER).getOrThrow())
       .isEqualTo(CLOSE_GAME)
+    assertThat(buffer.hasRemaining()).isFalse()
   }
 
   @Test

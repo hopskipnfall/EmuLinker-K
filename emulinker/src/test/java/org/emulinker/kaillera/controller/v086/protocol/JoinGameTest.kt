@@ -19,26 +19,18 @@ class JoinGameTest : ProtocolBaseTest() {
   @Test
   @Ignore // Fails!
   fun joinGameNotification_byteReadPacket_deserializeBody() {
-    assertThat(
-        JoinGame.JoinGameSerializer.read(
-            ByteReadPacket(V086Utils.hexStringToByteBuffer(NOTIFICATION_BYTES)),
-            MESSAGE_NUMBER
-          )
-          .getOrThrow()
-      )
+    val packet = ByteReadPacket(V086Utils.hexStringToByteBuffer(NOTIFICATION_BYTES))
+    assertThat(JoinGame.JoinGameSerializer.read(packet, MESSAGE_NUMBER).getOrThrow())
       .isEqualTo(JOIN_GAME_NOTIFICATION)
+    assertThat(packet.endOfInput).isTrue()
   }
 
   @Test
   fun joinGameNotification_deserializeBody() {
-    assertThat(
-        JoinGame.JoinGameSerializer.read(
-            V086Utils.hexStringToByteBuffer(NOTIFICATION_BYTES),
-            MESSAGE_NUMBER
-          )
-          .getOrThrow()
-      )
+    val buffer = V086Utils.hexStringToByteBuffer(NOTIFICATION_BYTES)
+    assertThat(JoinGame.JoinGameSerializer.read(buffer, MESSAGE_NUMBER).getOrThrow())
       .isEqualTo(JOIN_GAME_NOTIFICATION)
+    assertThat(buffer.hasRemaining()).isFalse()
   }
 
   @Test
@@ -58,26 +50,18 @@ class JoinGameTest : ProtocolBaseTest() {
   @Test
   @Ignore // Fails!
   fun joinGameRequest_byteReadPacket_deserializeBody() {
-    assertThat(
-        JoinGame.JoinGameSerializer.read(
-            ByteReadPacket(V086Utils.hexStringToByteBuffer(REQUEST_BYTES)),
-            MESSAGE_NUMBER
-          )
-          .getOrThrow()
-      )
+    val packet = ByteReadPacket(V086Utils.hexStringToByteBuffer(REQUEST_BYTES))
+    assertThat(JoinGame.JoinGameSerializer.read(packet, MESSAGE_NUMBER).getOrThrow())
       .isEqualTo(JOIN_GAME_REQUEST)
+    assertThat(packet.endOfInput).isTrue()
   }
 
   @Test
   fun joinGameRequest_deserializeBody() {
-    assertThat(
-        JoinGame.JoinGameSerializer.read(
-            V086Utils.hexStringToByteBuffer(REQUEST_BYTES),
-            MESSAGE_NUMBER
-          )
-          .getOrThrow()
-      )
+    val buffer = V086Utils.hexStringToByteBuffer(REQUEST_BYTES)
+    assertThat(JoinGame.JoinGameSerializer.read(buffer, MESSAGE_NUMBER).getOrThrow())
       .isEqualTo(JOIN_GAME_REQUEST)
+    assertThat(buffer.hasRemaining()).isFalse()
   }
 
   @Test

@@ -16,26 +16,18 @@ class StartGameTest : ProtocolBaseTest() {
 
   @Test
   fun startGameNotification_byteReadPacket_deserializeBody() {
-    assertThat(
-        StartGame.StartGameSerializer.read(
-            ByteReadPacket(V086Utils.hexStringToByteBuffer(NOTIFICATION_BODY_BYTES)),
-            MESSAGE_NUMBER
-          )
-          .getOrThrow()
-      )
+    val packet = ByteReadPacket(V086Utils.hexStringToByteBuffer(NOTIFICATION_BODY_BYTES))
+    assertThat(StartGame.StartGameSerializer.read(packet, MESSAGE_NUMBER).getOrThrow())
       .isEqualTo(START_GAME_NOTIFICATION)
+    assertThat(packet.endOfInput).isTrue()
   }
 
   @Test
   fun startGameNotification_deserializeBody() {
-    assertThat(
-        StartGame.StartGameSerializer.read(
-            V086Utils.hexStringToByteBuffer(NOTIFICATION_BODY_BYTES),
-            MESSAGE_NUMBER
-          )
-          .getOrThrow()
-      )
+    val buffer = V086Utils.hexStringToByteBuffer(NOTIFICATION_BODY_BYTES)
+    assertThat(StartGame.StartGameSerializer.read(buffer, MESSAGE_NUMBER).getOrThrow())
       .isEqualTo(START_GAME_NOTIFICATION)
+    assertThat(buffer.hasRemaining()).isFalse()
   }
 
   @Test
@@ -54,26 +46,18 @@ class StartGameTest : ProtocolBaseTest() {
 
   @Test
   fun startGameRequest_byteReadPacket_deserializeBody() {
-    assertThat(
-        StartGame.StartGameSerializer.read(
-            ByteReadPacket(V086Utils.hexStringToByteBuffer(REQUEST_BODY_BYTES)),
-            MESSAGE_NUMBER
-          )
-          .getOrThrow()
-      )
+    val packet = ByteReadPacket(V086Utils.hexStringToByteBuffer(REQUEST_BODY_BYTES))
+    assertThat(StartGame.StartGameSerializer.read(packet, MESSAGE_NUMBER).getOrThrow())
       .isEqualTo(START_GAME_REQUEST)
+    assertThat(packet.endOfInput).isTrue()
   }
 
   @Test
   fun startGameRequest_deserializeBody() {
-    assertThat(
-        StartGame.StartGameSerializer.read(
-            V086Utils.hexStringToByteBuffer(REQUEST_BODY_BYTES),
-            MESSAGE_NUMBER
-          )
-          .getOrThrow()
-      )
+    val buffer = V086Utils.hexStringToByteBuffer(REQUEST_BODY_BYTES)
+    assertThat(StartGame.StartGameSerializer.read(buffer, MESSAGE_NUMBER).getOrThrow())
       .isEqualTo(START_GAME_REQUEST)
+    assertThat(buffer.hasRemaining()).isFalse()
   }
 
   @Test

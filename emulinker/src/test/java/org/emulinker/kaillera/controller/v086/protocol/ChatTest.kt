@@ -17,26 +17,18 @@ class ChatTest : ProtocolBaseTest() {
 
   @Test
   fun chatNotification_deserializeBody() {
-    assertThat(
-        Chat.ChatSerializer.read(
-            hexStringToByteBuffer(CHAT_NOTIFICATION_BODY_BYTES),
-            MESSAGE_NUMBER
-          )
-          .getOrThrow()
-      )
+    val buffer = hexStringToByteBuffer(CHAT_NOTIFICATION_BODY_BYTES)
+    assertThat(Chat.ChatSerializer.read(buffer, MESSAGE_NUMBER).getOrThrow())
       .isEqualTo(CHAT_NOTIFICATION)
+    assertThat(buffer.hasRemaining()).isFalse()
   }
 
   @Test
   fun chatNotification_byteReadPacket_deserializeBody() {
-    assertThat(
-        Chat.ChatSerializer.read(
-            ByteReadPacket(hexStringToByteBuffer(CHAT_NOTIFICATION_BODY_BYTES)),
-            MESSAGE_NUMBER
-          )
-          .getOrThrow()
-      )
+    val packet = ByteReadPacket(hexStringToByteBuffer(CHAT_NOTIFICATION_BODY_BYTES))
+    assertThat(Chat.ChatSerializer.read(packet, MESSAGE_NUMBER).getOrThrow())
       .isEqualTo(CHAT_NOTIFICATION)
+    assertThat(packet.endOfInput).isTrue()
   }
 
   @Test
@@ -64,23 +56,18 @@ class ChatTest : ProtocolBaseTest() {
 
   @Test
   fun deserializeBody() {
-    assertThat(
-        Chat.ChatSerializer.read(hexStringToByteBuffer(CHAT_REQUEST_BODY_BYTES), MESSAGE_NUMBER)
-          .getOrThrow()
-      )
+    val buffer = hexStringToByteBuffer(CHAT_REQUEST_BODY_BYTES)
+    assertThat(Chat.ChatSerializer.read(buffer, MESSAGE_NUMBER).getOrThrow())
       .isEqualTo(CHAT_REQUEST)
+    assertThat(buffer.hasRemaining()).isFalse()
   }
 
   @Test
   fun byteReadPacket_deserializeBody() {
-    assertThat(
-        Chat.ChatSerializer.read(
-            ByteReadPacket(hexStringToByteBuffer(CHAT_REQUEST_BODY_BYTES)),
-            MESSAGE_NUMBER
-          )
-          .getOrThrow()
-      )
+    val packet = ByteReadPacket(hexStringToByteBuffer(CHAT_REQUEST_BODY_BYTES))
+    assertThat(Chat.ChatSerializer.read(packet, MESSAGE_NUMBER).getOrThrow())
       .isEqualTo(CHAT_REQUEST)
+    assertThat(packet.endOfInput).isTrue()
   }
 
   @Test

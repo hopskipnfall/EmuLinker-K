@@ -19,26 +19,18 @@ class ServerStatusTest : ProtocolBaseTest() {
 
   @Test
   fun byteReadPacket_deserializeBody() {
-    assertThat(
-        ServerStatus.ServerStatusSerializer.read(
-            ByteReadPacket(V086Utils.hexStringToByteBuffer(BODY_BYTES)),
-            MESSAGE_NUMBER
-          )
-          .getOrThrow()
-      )
+    val packet = ByteReadPacket(V086Utils.hexStringToByteBuffer(BODY_BYTES))
+    assertThat(ServerStatus.ServerStatusSerializer.read(packet, MESSAGE_NUMBER).getOrThrow())
       .isEqualTo(SERVER_STATUS)
+    assertThat(packet.endOfInput).isTrue()
   }
 
   @Test
   fun deserializeBody() {
-    assertThat(
-        ServerStatus.ServerStatusSerializer.read(
-            V086Utils.hexStringToByteBuffer(BODY_BYTES),
-            MESSAGE_NUMBER
-          )
-          .getOrThrow()
-      )
+    val buffer = V086Utils.hexStringToByteBuffer(BODY_BYTES)
+    assertThat(ServerStatus.ServerStatusSerializer.read(buffer, MESSAGE_NUMBER).getOrThrow())
       .isEqualTo(SERVER_STATUS)
+    assertThat(buffer.hasRemaining()).isFalse()
   }
 
   @Test

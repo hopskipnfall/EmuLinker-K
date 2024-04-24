@@ -17,26 +17,22 @@ class PlayerInformationTest : ProtocolBaseTest() {
 
   @Test
   fun byteReadPacket_deserializeBody() {
+    val packet = ByteReadPacket(V086Utils.hexStringToByteBuffer(BODY_BYTES))
     assertThat(
-        PlayerInformation.PlayerInformationSerializer.read(
-            ByteReadPacket(V086Utils.hexStringToByteBuffer(BODY_BYTES)),
-            MESSAGE_NUMBER
-          )
-          .getOrThrow()
+        PlayerInformation.PlayerInformationSerializer.read(packet, MESSAGE_NUMBER).getOrThrow()
       )
       .isEqualTo(PLAYER_INFORMATION)
+    assertThat(packet.endOfInput).isTrue()
   }
 
   @Test
   fun deserializeBody() {
+    val buffer = V086Utils.hexStringToByteBuffer(BODY_BYTES)
     assertThat(
-        PlayerInformation.PlayerInformationSerializer.read(
-            V086Utils.hexStringToByteBuffer(BODY_BYTES),
-            MESSAGE_NUMBER
-          )
-          .getOrThrow()
+        PlayerInformation.PlayerInformationSerializer.read(buffer, MESSAGE_NUMBER).getOrThrow()
       )
       .isEqualTo(PLAYER_INFORMATION)
+    assertThat(buffer.hasRemaining()).isFalse()
   }
 
   @Test

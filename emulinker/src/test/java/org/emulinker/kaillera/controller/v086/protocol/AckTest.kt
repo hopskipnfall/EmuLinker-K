@@ -17,26 +17,18 @@ class AckTest : ProtocolBaseTest() {
 
   @Test
   fun clientAck_deserializeBody() {
-    assertThat(
-        Ack.ClientAckSerializer.read(
-            V086Utils.hexStringToByteBuffer(ACK_BODY_BYTES),
-            MESSAGE_NUMBER
-          )
-          .getOrThrow()
-      )
+    val buffer = V086Utils.hexStringToByteBuffer(ACK_BODY_BYTES)
+    assertThat(Ack.ClientAckSerializer.read(buffer, MESSAGE_NUMBER).getOrThrow())
       .isEqualTo(CLIENT_ACK)
+    assertThat(buffer.hasRemaining()).isFalse()
   }
 
   @Test
   fun clientAck_byteReadPacket_deserializeBody() {
-    assertThat(
-        Ack.ClientAckSerializer.read(
-            ByteReadPacket(V086Utils.hexStringToByteBuffer(ACK_BODY_BYTES)),
-            MESSAGE_NUMBER
-          )
-          .getOrThrow()
-      )
+    val packet = ByteReadPacket(V086Utils.hexStringToByteBuffer(ACK_BODY_BYTES))
+    assertThat(Ack.ClientAckSerializer.read(packet, MESSAGE_NUMBER).getOrThrow())
       .isEqualTo(CLIENT_ACK)
+    assertThat(packet.endOfInput).isTrue()
   }
 
   @Test
@@ -65,26 +57,18 @@ class AckTest : ProtocolBaseTest() {
 
   @Test
   fun serverAck_deserializeBody() {
-    assertThat(
-        Ack.ServerAckSerializer.read(
-            V086Utils.hexStringToByteBuffer(ACK_BODY_BYTES),
-            MESSAGE_NUMBER
-          )
-          .getOrThrow()
-      )
+    val buffer = V086Utils.hexStringToByteBuffer(ACK_BODY_BYTES)
+    assertThat(Ack.ServerAckSerializer.read(buffer, MESSAGE_NUMBER).getOrThrow())
       .isEqualTo(SERVER_ACK)
+    assertThat(buffer.hasRemaining()).isFalse()
   }
 
   @Test
   fun serverAck_byteReadPacket_deserializeBody() {
-    assertThat(
-        Ack.ServerAckSerializer.read(
-            ByteReadPacket(V086Utils.hexStringToByteBuffer(ACK_BODY_BYTES)),
-            MESSAGE_NUMBER
-          )
-          .getOrThrow()
-      )
+    val packet = ByteReadPacket(V086Utils.hexStringToByteBuffer(ACK_BODY_BYTES))
+    assertThat(Ack.ServerAckSerializer.read(packet, MESSAGE_NUMBER).getOrThrow())
       .isEqualTo(SERVER_ACK)
+    assertThat(packet.endOfInput).isTrue()
   }
 
   @Test

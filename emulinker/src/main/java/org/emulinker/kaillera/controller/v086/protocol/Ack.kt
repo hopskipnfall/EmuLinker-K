@@ -31,6 +31,10 @@ sealed class Ack : V086Message() {
           "Invalid Client to Server ACK format: byte 0 = ${EmuUtil.byteToHex(b)}"
         )
       }
+      packet.readUnsignedInt() // 0L
+      packet.readUnsignedInt() // 1L
+      packet.readUnsignedInt() // 2L
+      packet.readUnsignedInt() // 3L
       return Result.success(ClientAck(messageNumber))
     }
 
@@ -52,6 +56,11 @@ sealed class Ack : V086Message() {
           "Invalid Client to Server ACK format: byte 0 = ${EmuUtil.byteToHex(b)}"
         )
       }
+      // We skip the comparisons for time.
+      buffer.getUnsignedInt() // 0L
+      buffer.getUnsignedInt() // 1L
+      buffer.getUnsignedInt() // 2L
+      buffer.getUnsignedInt() // 3L
       return Result.success(ClientAck(messageNumber))
     }
 
@@ -65,6 +74,11 @@ sealed class Ack : V086Message() {
           "Invalid Client to Server ACK format: byte 0 = ${EmuUtil.byteToHex(b)}"
         )
       }
+      // We skip the comparisons for time.
+      buffer.getUnsignedInt() // 0L
+      buffer.getUnsignedInt() // 1L
+      buffer.getUnsignedInt() // 2L
+      buffer.getUnsignedInt() // 3L
       return Result.success(ClientAck(messageNumber))
     }
 

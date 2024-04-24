@@ -17,26 +17,18 @@ class GameStatusTest : ProtocolBaseTest() {
 
   @Test
   fun byteReadPacket_deserializeBody() {
-    assertThat(
-        GameStatus.GameStatusSerializer.read(
-            ByteReadPacket(V086Utils.hexStringToByteBuffer(BODY_BYTES)),
-            MESSAGE_NUMBER
-          )
-          .getOrThrow()
-      )
+    val packet = ByteReadPacket(V086Utils.hexStringToByteBuffer(BODY_BYTES))
+    assertThat(GameStatus.GameStatusSerializer.read(packet, MESSAGE_NUMBER).getOrThrow())
       .isEqualTo(GAME_STATUS)
+    assertThat(packet.endOfInput).isTrue()
   }
 
   @Test
   fun deserializeBody() {
-    assertThat(
-        GameStatus.GameStatusSerializer.read(
-            V086Utils.hexStringToByteBuffer(BODY_BYTES),
-            MESSAGE_NUMBER
-          )
-          .getOrThrow()
-      )
+    val buffer = V086Utils.hexStringToByteBuffer(BODY_BYTES)
+    assertThat(GameStatus.GameStatusSerializer.read(buffer, MESSAGE_NUMBER).getOrThrow())
       .isEqualTo(GAME_STATUS)
+    assertThat(buffer.hasRemaining()).isFalse()
   }
 
   @Test

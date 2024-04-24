@@ -16,26 +16,22 @@ class InformationMessageTest : ProtocolBaseTest() {
 
   @Test
   fun byteReadPacket_deserializeBody() {
+    val packet = ByteReadPacket(V086Utils.hexStringToByteBuffer(BODY_BYTES))
     assertThat(
-        InformationMessage.InformationMessageSerializer.read(
-            ByteReadPacket(V086Utils.hexStringToByteBuffer(BODY_BYTES)),
-            MESSAGE_NUMBER
-          )
-          .getOrThrow()
+        InformationMessage.InformationMessageSerializer.read(packet, MESSAGE_NUMBER).getOrThrow()
       )
       .isEqualTo(INFORMATION_MESSAGE)
+    assertThat(packet.endOfInput).isTrue()
   }
 
   @Test
   fun deserializeBody() {
+    val buffer = V086Utils.hexStringToByteBuffer(BODY_BYTES)
     assertThat(
-        InformationMessage.InformationMessageSerializer.read(
-            V086Utils.hexStringToByteBuffer(BODY_BYTES),
-            MESSAGE_NUMBER
-          )
-          .getOrThrow()
+        InformationMessage.InformationMessageSerializer.read(buffer, MESSAGE_NUMBER).getOrThrow()
       )
       .isEqualTo(INFORMATION_MESSAGE)
+    assertThat(buffer.hasRemaining()).isFalse()
   }
 
   @Test

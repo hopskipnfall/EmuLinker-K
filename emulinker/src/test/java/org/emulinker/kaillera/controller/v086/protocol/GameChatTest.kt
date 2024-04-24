@@ -16,26 +16,18 @@ class GameChatTest : ProtocolBaseTest() {
 
   @Test
   fun gameChatNotification_byteReadPacket_deserializeBody() {
-    assertThat(
-        GameChat.GameChatSerializer.read(
-            ByteReadPacket(V086Utils.hexStringToByteBuffer(NOTIFICATION_BODY_BYTES)),
-            MESSAGE_NUMBER
-          )
-          .getOrThrow()
-      )
+    val packet = ByteReadPacket(V086Utils.hexStringToByteBuffer(NOTIFICATION_BODY_BYTES))
+    assertThat(GameChat.GameChatSerializer.read(packet, MESSAGE_NUMBER).getOrThrow())
       .isEqualTo(GAME_CHAT_NOTIFICATION)
+    assertThat(packet.endOfInput).isTrue()
   }
 
   @Test
   fun gameChatNotification_deserializeBody() {
-    assertThat(
-        GameChat.GameChatSerializer.read(
-            V086Utils.hexStringToByteBuffer(NOTIFICATION_BODY_BYTES),
-            MESSAGE_NUMBER
-          )
-          .getOrThrow()
-      )
+    val buffer = V086Utils.hexStringToByteBuffer(NOTIFICATION_BODY_BYTES)
+    assertThat(GameChat.GameChatSerializer.read(buffer, MESSAGE_NUMBER).getOrThrow())
       .isEqualTo(GAME_CHAT_NOTIFICATION)
+    assertThat(buffer.hasRemaining()).isFalse()
   }
 
   @Test
@@ -54,26 +46,18 @@ class GameChatTest : ProtocolBaseTest() {
 
   @Test
   fun gameChatRequest_byteReadPacket_deserializeBody() {
-    assertThat(
-        GameChat.GameChatSerializer.read(
-            ByteReadPacket(V086Utils.hexStringToByteBuffer(REQUEST_BODY_BYTES)),
-            MESSAGE_NUMBER
-          )
-          .getOrThrow()
-      )
+    val packet = ByteReadPacket(V086Utils.hexStringToByteBuffer(REQUEST_BODY_BYTES))
+    assertThat(GameChat.GameChatSerializer.read(packet, MESSAGE_NUMBER).getOrThrow())
       .isEqualTo(GAME_CHAT_REQUEST)
+    assertThat(packet.endOfInput).isTrue()
   }
 
   @Test
   fun gameChatRequest_deserializeBody() {
-    assertThat(
-        GameChat.GameChatSerializer.read(
-            V086Utils.hexStringToByteBuffer(REQUEST_BODY_BYTES),
-            MESSAGE_NUMBER
-          )
-          .getOrThrow()
-      )
+    val buffer = V086Utils.hexStringToByteBuffer(REQUEST_BODY_BYTES)
+    assertThat(GameChat.GameChatSerializer.read(buffer, MESSAGE_NUMBER).getOrThrow())
       .isEqualTo(GAME_CHAT_REQUEST)
+    assertThat(buffer.hasRemaining()).isFalse()
   }
 
   @Test

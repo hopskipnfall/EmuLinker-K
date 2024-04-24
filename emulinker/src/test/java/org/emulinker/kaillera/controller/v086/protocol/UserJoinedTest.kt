@@ -17,26 +17,18 @@ class UserJoinedTest : ProtocolBaseTest() {
 
   @Test
   fun byteReadPacket_deserializeBody() {
-    assertThat(
-        UserJoined.UserJoinedSerializer.read(
-            ByteReadPacket(V086Utils.hexStringToByteBuffer(BODY_BYTES)),
-            MESSAGE_NUMBER
-          )
-          .getOrThrow()
-      )
+    val packet = ByteReadPacket(V086Utils.hexStringToByteBuffer(BODY_BYTES))
+    assertThat(UserJoined.UserJoinedSerializer.read(packet, MESSAGE_NUMBER).getOrThrow())
       .isEqualTo(USER_JOINED)
+    assertThat(packet.endOfInput).isTrue()
   }
 
   @Test
   fun deserializeBody() {
-    assertThat(
-        UserJoined.UserJoinedSerializer.read(
-            V086Utils.hexStringToByteBuffer(BODY_BYTES),
-            MESSAGE_NUMBER
-          )
-          .getOrThrow()
-      )
+    val buffer = V086Utils.hexStringToByteBuffer(BODY_BYTES)
+    assertThat(UserJoined.UserJoinedSerializer.read(buffer, MESSAGE_NUMBER).getOrThrow())
       .isEqualTo(USER_JOINED)
+    assertThat(buffer.hasRemaining()).isFalse()
   }
 
   @Test

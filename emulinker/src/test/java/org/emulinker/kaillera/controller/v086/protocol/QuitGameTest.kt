@@ -16,26 +16,18 @@ class QuitGameTest : ProtocolBaseTest() {
 
   @Test
   fun quitGameNotification_byteReadPacket_deserializeBody() {
-    assertThat(
-        QuitGame.QuitGameSerializer.read(
-            ByteReadPacket(V086Utils.hexStringToByteBuffer(QUIT_GAME_NOTIFICATION_BODY_BYTES)),
-            MESSAGE_NUMBER
-          )
-          .getOrThrow()
-      )
+    val packet = ByteReadPacket(V086Utils.hexStringToByteBuffer(QUIT_GAME_NOTIFICATION_BODY_BYTES))
+    assertThat(QuitGame.QuitGameSerializer.read(packet, MESSAGE_NUMBER).getOrThrow())
       .isEqualTo(QUIT_GAME_NOTIFICATION)
+    assertThat(packet.endOfInput).isTrue()
   }
 
   @Test
   fun quitGameNotification_deserializeBody() {
-    assertThat(
-        QuitGame.QuitGameSerializer.read(
-            V086Utils.hexStringToByteBuffer(QUIT_GAME_NOTIFICATION_BODY_BYTES),
-            MESSAGE_NUMBER
-          )
-          .getOrThrow()
-      )
+    val buffer = V086Utils.hexStringToByteBuffer(QUIT_GAME_NOTIFICATION_BODY_BYTES)
+    assertThat(QuitGame.QuitGameSerializer.read(buffer, MESSAGE_NUMBER).getOrThrow())
       .isEqualTo(QUIT_GAME_NOTIFICATION)
+    assertThat(buffer.hasRemaining()).isFalse()
   }
 
   @Test
@@ -54,26 +46,18 @@ class QuitGameTest : ProtocolBaseTest() {
 
   @Test
   fun quitGameRequest_byteReadPacket_deserializeBody() {
-    assertThat(
-        QuitGame.QuitGameSerializer.read(
-            ByteReadPacket(V086Utils.hexStringToByteBuffer(QUIT_GAME_REQUEST_BODY_BYTES)),
-            MESSAGE_NUMBER
-          )
-          .getOrThrow()
-      )
+    val packet = ByteReadPacket(V086Utils.hexStringToByteBuffer(QUIT_GAME_REQUEST_BODY_BYTES))
+    assertThat(QuitGame.QuitGameSerializer.read(packet, MESSAGE_NUMBER).getOrThrow())
       .isEqualTo(QUIT_GAME_REQUEST)
+    assertThat(packet.endOfInput).isTrue()
   }
 
   @Test
   fun quitGameRequest_deserializeBody() {
-    assertThat(
-        QuitGame.QuitGameSerializer.read(
-            V086Utils.hexStringToByteBuffer(QUIT_GAME_REQUEST_BODY_BYTES),
-            MESSAGE_NUMBER
-          )
-          .getOrThrow()
-      )
+    val buffer = V086Utils.hexStringToByteBuffer(QUIT_GAME_REQUEST_BODY_BYTES)
+    assertThat(QuitGame.QuitGameSerializer.read(buffer, MESSAGE_NUMBER).getOrThrow())
       .isEqualTo(QUIT_GAME_REQUEST)
+    assertThat(buffer.hasRemaining()).isFalse()
   }
 
   @Test

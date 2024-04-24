@@ -17,26 +17,18 @@ class UserInformationTest : ProtocolBaseTest() {
 
   @Test
   fun byteReadPacket_deserializeBody() {
-    assertThat(
-        UserInformation.UserInformationSerializer.read(
-            ByteReadPacket(V086Utils.hexStringToByteBuffer(BODY_BYTES)),
-            MESSAGE_NUMBER
-          )
-          .getOrThrow()
-      )
+    val packet = ByteReadPacket(V086Utils.hexStringToByteBuffer(BODY_BYTES))
+    assertThat(UserInformation.UserInformationSerializer.read(packet, MESSAGE_NUMBER).getOrThrow())
       .isEqualTo(USER_INFORMATION)
+    assertThat(packet.endOfInput).isTrue()
   }
 
   @Test
   fun deserializeBody() {
-    assertThat(
-        UserInformation.UserInformationSerializer.read(
-            V086Utils.hexStringToByteBuffer(BODY_BYTES),
-            MESSAGE_NUMBER
-          )
-          .getOrThrow()
-      )
+    val buffer = V086Utils.hexStringToByteBuffer(BODY_BYTES)
+    assertThat(UserInformation.UserInformationSerializer.read(buffer, MESSAGE_NUMBER).getOrThrow())
       .isEqualTo(USER_INFORMATION)
+    assertThat(buffer.hasRemaining()).isFalse()
   }
 
   @Test

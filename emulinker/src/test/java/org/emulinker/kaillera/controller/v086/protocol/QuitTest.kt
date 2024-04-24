@@ -16,26 +16,18 @@ class QuitTest : ProtocolBaseTest() {
 
   @Test
   fun quitNotification_byteReadPacket_deserializeBody() {
-    assertThat(
-        Quit.QuitSerializer.read(
-            ByteReadPacket(V086Utils.hexStringToByteBuffer(NOTIFICATION_BODY_BYTES)),
-            MESSAGE_NUMBER
-          )
-          .getOrThrow()
-      )
+    val packet = ByteReadPacket(V086Utils.hexStringToByteBuffer(NOTIFICATION_BODY_BYTES))
+    assertThat(Quit.QuitSerializer.read(packet, MESSAGE_NUMBER).getOrThrow())
       .isEqualTo(QUIT_NOTIFICATION)
+    assertThat(packet.endOfInput).isTrue()
   }
 
   @Test
   fun quitNotification_deserializeBody() {
-    assertThat(
-        Quit.QuitSerializer.read(
-            V086Utils.hexStringToByteBuffer(NOTIFICATION_BODY_BYTES),
-            MESSAGE_NUMBER
-          )
-          .getOrThrow()
-      )
+    val buffer = V086Utils.hexStringToByteBuffer(NOTIFICATION_BODY_BYTES)
+    assertThat(Quit.QuitSerializer.read(buffer, MESSAGE_NUMBER).getOrThrow())
       .isEqualTo(QUIT_NOTIFICATION)
+    assertThat(buffer.hasRemaining()).isFalse()
   }
 
   @Test
@@ -54,26 +46,18 @@ class QuitTest : ProtocolBaseTest() {
 
   @Test
   fun quitRequest_byteReadPacket_deserializeBody() {
-    assertThat(
-        Quit.QuitSerializer.read(
-            ByteReadPacket(V086Utils.hexStringToByteBuffer(REQUEST_BODY_BYTES)),
-            MESSAGE_NUMBER
-          )
-          .getOrThrow()
-      )
+    val packet = ByteReadPacket(V086Utils.hexStringToByteBuffer(REQUEST_BODY_BYTES))
+    assertThat(Quit.QuitSerializer.read(packet, MESSAGE_NUMBER).getOrThrow())
       .isEqualTo(QUIT_REQUEST)
+    assertThat(packet.endOfInput).isTrue()
   }
 
   @Test
   fun quitRequest_deserializeBody() {
-    assertThat(
-        Quit.QuitSerializer.read(
-            V086Utils.hexStringToByteBuffer(REQUEST_BODY_BYTES),
-            MESSAGE_NUMBER
-          )
-          .getOrThrow()
-      )
+    val buffer = V086Utils.hexStringToByteBuffer(REQUEST_BODY_BYTES)
+    assertThat(Quit.QuitSerializer.read(buffer, MESSAGE_NUMBER).getOrThrow())
       .isEqualTo(QUIT_REQUEST)
+    assertThat(buffer.hasRemaining()).isFalse()
   }
 
   @Test

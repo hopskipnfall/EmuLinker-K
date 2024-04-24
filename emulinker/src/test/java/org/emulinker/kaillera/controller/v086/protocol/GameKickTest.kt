@@ -16,26 +16,18 @@ class GameKickTest : ProtocolBaseTest() {
 
   @Test
   fun byteReadPacket_deserializeBody() {
-    assertThat(
-        GameKick.GameKickSerializer.read(
-            ByteReadPacket(V086Utils.hexStringToByteBuffer(BODY_BYTES)),
-            MESSAGE_NUMBER
-          )
-          .getOrThrow()
-      )
+    val packet = ByteReadPacket(V086Utils.hexStringToByteBuffer(BODY_BYTES))
+    assertThat(GameKick.GameKickSerializer.read(packet, MESSAGE_NUMBER).getOrThrow())
       .isEqualTo(GAME_KICK)
+    assertThat(packet.endOfInput).isTrue()
   }
 
   @Test
   fun deserializeBody() {
-    assertThat(
-        GameKick.GameKickSerializer.read(
-            V086Utils.hexStringToByteBuffer(BODY_BYTES),
-            MESSAGE_NUMBER
-          )
-          .getOrThrow()
-      )
+    val buffer = V086Utils.hexStringToByteBuffer(BODY_BYTES)
+    assertThat(GameKick.GameKickSerializer.read(buffer, MESSAGE_NUMBER).getOrThrow())
       .isEqualTo(GAME_KICK)
+    assertThat(buffer.hasRemaining()).isFalse()
   }
 
   @Test

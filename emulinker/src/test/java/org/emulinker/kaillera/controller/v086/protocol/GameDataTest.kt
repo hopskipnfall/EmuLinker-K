@@ -18,26 +18,18 @@ class GameDataTest : ProtocolBaseTest() {
   @Test
   @Ignore // Fails!
   fun byteReadPacket_deserializeBody() {
-    assertThat(
-        GameData.GameDataSerializer.read(
-            ByteReadPacket(V086Utils.hexStringToByteBuffer(BODY_BYTES)),
-            MESSAGE_NUMBER
-          )
-          .getOrThrow()
-      )
+    val packet = ByteReadPacket(V086Utils.hexStringToByteBuffer(BODY_BYTES))
+    assertThat(GameData.GameDataSerializer.read(packet, MESSAGE_NUMBER).getOrThrow())
       .isEqualTo(GAME_DATA)
+    assertThat(packet.endOfInput).isTrue()
   }
 
   @Test
   fun deserializeBody() {
-    assertThat(
-        GameData.GameDataSerializer.read(
-            V086Utils.hexStringToByteBuffer(BODY_BYTES),
-            MESSAGE_NUMBER
-          )
-          .getOrThrow()
-      )
+    val buffer = V086Utils.hexStringToByteBuffer(BODY_BYTES)
+    assertThat(GameData.GameDataSerializer.read(buffer, MESSAGE_NUMBER).getOrThrow())
       .isEqualTo(GAME_DATA)
+    assertThat(buffer.hasRemaining()).isFalse()
   }
 
   @Test

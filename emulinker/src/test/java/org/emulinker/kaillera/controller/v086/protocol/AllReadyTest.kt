@@ -16,26 +16,18 @@ class AllReadyTest : ProtocolBaseTest() {
 
   @Test
   fun allReady_deserializeBody() {
-    assertThat(
-        AllReady.AllReadySerializer.read(
-            V086Utils.hexStringToByteBuffer(BODY_BYTES),
-            MESSAGE_NUMBER
-          )
-          .getOrThrow()
-      )
+    val buffer = V086Utils.hexStringToByteBuffer(BODY_BYTES)
+    assertThat(AllReady.AllReadySerializer.read(buffer, MESSAGE_NUMBER).getOrThrow())
       .isEqualTo(ALL_READY)
+    assertThat(buffer.hasRemaining()).isFalse()
   }
 
   @Test
   fun allReady_byteReadPacket_deserializeBody() {
-    assertThat(
-        AllReady.AllReadySerializer.read(
-            ByteReadPacket(V086Utils.hexStringToByteBuffer(BODY_BYTES)),
-            MESSAGE_NUMBER
-          )
-          .getOrThrow()
-      )
+    val packet = ByteReadPacket(V086Utils.hexStringToByteBuffer(BODY_BYTES))
+    assertThat(AllReady.AllReadySerializer.read(packet, MESSAGE_NUMBER).getOrThrow())
       .isEqualTo(ALL_READY)
+    assertThat(packet.endOfInput).isTrue()
   }
 
   @Test
