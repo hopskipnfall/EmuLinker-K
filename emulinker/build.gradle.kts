@@ -1,16 +1,14 @@
 import java.time.Instant
-import org.jetbrains.kotlin.gradle.tasks.KaptGenerateStubs
 
 plugins {
   id("com.diffplug.spotless") version "6.18.0"
   id("org.jetbrains.dokka") version "1.8.10"
   application
 
-  // Serialization.
-  kotlin("jvm") version "1.8.21"
+  kotlin("jvm") version "1.9.23"
   kotlin("plugin.serialization") version "1.8.21"
 
-  kotlin("kapt") version "1.8.21"
+  id("com.google.devtools.ksp") version "1.9.23-1.0.20"
 }
 
 repositories {
@@ -33,8 +31,9 @@ dependencies {
   api("com.google.flogger:flogger-system-backend:0.7.4")
   api("com.google.flogger:flogger-log4j2-backend:0.7.4")
 
-  implementation("com.google.dagger:dagger:2.45")
-  kapt("com.google.dagger:dagger-compiler:2.45")
+  implementation("com.google.dagger:dagger:2.51.1")
+  implementation("com.google.dagger:dagger-compiler:2.51.1")
+  ksp("com.google.dagger:dagger-compiler:2.51.1")
 
   api("org.apache.logging.log4j:log4j:2.20.0")
   api("org.apache.logging.log4j:log4j-core:2.20.0")
@@ -105,8 +104,7 @@ sourceSets {
   }
 }
 
-// Dagger.
-tasks.withType<KaptGenerateStubs> {
+tasks.named("compileKotlin") {
   // Filtering the resources has to happen first.
   dependsOn(":emulinker:processResources")
 }
