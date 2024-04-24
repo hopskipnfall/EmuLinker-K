@@ -137,6 +137,15 @@ class V086Bundle(val messages: Array<V086Message?>, numToWrite: Int = Int.MAX_VA
         throw V086BundleFormatException("Invalid message count: $messageCount")
       }
       if (buf.readableBytes() < 1 + messageCount * 6) {
+        // TODO(nue): Probably delete me!!
+        //        // From whom? Full buffer dump?
+        //        data class Hey(
+        //          val fromUserId: Int,
+        //          val readerPosotion: Int,
+        //          val readableBytes: Int,
+        //          val fullDump: String,
+        //          val message: String
+        //        )
         throw V086BundleFormatException("Invalid bundle length: " + buf.readableBytes())
       }
       var parsedCount = 0

@@ -29,7 +29,7 @@ import org.emulinker.util.EmuUtil.formatSocketAddress
 class CombinedKailleraController
 @Inject
 constructor(
-  flags: RuntimeFlags,
+  private val flags: RuntimeFlags,
   private val accessManager: AccessManager,
   // One for each version (which is only one).
   kailleraServerControllers: @JvmSuppressWildcards Set<KailleraServerController>,
@@ -78,7 +78,7 @@ constructor(
     //      }
 
     embeddedServer(Netty, port = port) {
-        val group = NioEventLoopGroup()
+        val group = NioEventLoopGroup(flags.nettyFlags)
         try {
           Bootstrap().apply {
             group(group)
