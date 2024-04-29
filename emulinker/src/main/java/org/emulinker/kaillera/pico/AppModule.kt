@@ -12,6 +12,7 @@ import java.util.Timer
 import java.util.concurrent.SynchronousQueue
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
+import javax.inject.Named
 import javax.inject.Singleton
 import org.apache.commons.configuration.Configuration
 import org.emulinker.config.RuntimeFlags
@@ -28,28 +29,28 @@ import org.emulinker.util.EmuLinkerPropertiesConfig
 
 @Module
 abstract class AppModule {
-  @Binds abstract fun bindAccessManager(accessManager2: AccessManager2?): AccessManager?
+  @Binds abstract fun bindAccessManager(accessManager2: AccessManager2): AccessManager
 
   @Binds
   abstract fun bindAutoFireDetectorFactory(
-    autoFireDetectorFactoryImpl: AutoFireDetectorFactoryImpl?
-  ): AutoFireDetectorFactory?
+    autoFireDetectorFactoryImpl: AutoFireDetectorFactoryImpl
+  ): AutoFireDetectorFactory
 
   @Binds
   abstract fun bindKailleraServerController(
-    v086Controller: V086Controller?
-  ): KailleraServerController?
+    v086Controller: V086Controller
+  ): KailleraServerController
 
   @Binds
   @IntoSet
   abstract fun bindKailleraServerControllerToSet(
-    v086Controller: V086Controller?
-  ): KailleraServerController?
+    v086Controller: V086Controller
+  ): KailleraServerController
 
   @Binds
   abstract fun bindStatsCollector(
-    masterListStatsCollector: MasterListStatsCollector?
-  ): StatsCollector?
+    masterListStatsCollector: MasterListStatsCollector
+  ): StatsCollector
 
   companion object {
     // TODO(nue): Burn this with fire!!!
@@ -85,16 +86,24 @@ abstract class AppModule {
 
     @Provides
     @Singleton
-    fun provideRuntimeFlags(configuration: Configuration?): RuntimeFlags {
-      val flags = loadFromApacheConfiguration(configuration!!)
+    fun provideRuntimeFlags(configuration: Configuration): RuntimeFlags {
+      val flags = loadFromApacheConfiguration(configuration)
       charsetDoNotUse = flags.charset
       return flags
     }
 
+    // TODO(nue): Split out low-priority tasks to a threadpool with a fixed number of threads.
     @Provides
+    @Named("userActionsExecutor")
     @Singleton
     fun provideThreadPoolExecutor(flags: RuntimeFlags) =
-      ThreadPoolExecutor(flags.coreThreadPoolSize, 15, 60L, TimeUnit.SECONDS, SynchronousQueue())
+      ThreadPoolExecutor(
+        flags.coreThreadPoolSize,
+        /* maximumPoolSize= */ Integer.MAX_VALUE,
+        /* keepAliveTime= */ 60L,
+        TimeUnit.SECONDS,
+        SynchronousQueue(),
+      )
 
     // TODO(nue): We should probably be using TaskScheduler instead?
     @Provides

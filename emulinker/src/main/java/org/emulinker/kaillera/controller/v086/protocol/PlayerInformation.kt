@@ -87,7 +87,7 @@ data class PlayerInformation(override val messageNumber: Int, val players: List<
     override val messageTypeId: Byte = ID
 
     override fun read(buffer: ByteBuf, messageNumber: Int): Result<PlayerInformation> {
-      if (buffer.readableBytes() < 14) {
+      if (buffer.readableBytes() < 5) {
         return parseFailure("Failed byte count validation!")
       }
       val b = buffer.readByte()
@@ -119,7 +119,7 @@ data class PlayerInformation(override val messageNumber: Int, val players: List<
     }
 
     override fun read(buffer: ByteBuffer, messageNumber: Int): Result<PlayerInformation> {
-      if (buffer.remaining() < 14) {
+      if (buffer.remaining() < 5) {
         return parseFailure("Failed byte count validation!")
       }
       val b = buffer.get()
@@ -151,7 +151,7 @@ data class PlayerInformation(override val messageNumber: Int, val players: List<
     }
 
     override fun read(packet: ByteReadPacket, messageNumber: Int): Result<PlayerInformation> {
-      if (packet.remaining < 14) {
+      if (packet.remaining < 5) {
         return parseFailure("Failed byte count validation!")
       }
       val b = packet.readByte()

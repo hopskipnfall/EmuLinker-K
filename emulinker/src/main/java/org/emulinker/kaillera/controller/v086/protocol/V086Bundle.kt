@@ -77,7 +77,9 @@ class V086Bundle(val messages: Array<V086Message?>, numToWrite: Int = Int.MAX_VA
         throw V086BundleFormatException("Invalid message count: $messageCount")
       }
       if (buffer.limit() < 1 + messageCount * 6) {
-        throw V086BundleFormatException("Invalid bundle length: " + buffer.limit())
+        throw V086BundleFormatException(
+          "Invalid bundle length: ${buffer.limit()} pos = ${buffer.position()} messageCount=$messageCount"
+        )
       }
       var parsedCount = 0
       val messages: Array<V086Message?>

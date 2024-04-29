@@ -5,7 +5,10 @@ import java.net.InetSocketAddress
 import java.time.Duration
 import java.time.Instant
 import java.util.ArrayList
+import java.util.concurrent.BlockingQueue
+import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.ThreadPoolExecutor
+import java.util.concurrent.TimeUnit
 import kotlin.Throws
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.access.AccessManager
@@ -13,6 +16,8 @@ import org.emulinker.kaillera.model.event.GameDataEvent
 import org.emulinker.kaillera.model.event.GameStartedEvent
 import org.emulinker.kaillera.model.event.KailleraEvent
 import org.emulinker.kaillera.model.event.KailleraEventListener
+import org.emulinker.kaillera.model.event.StopFlagEvent
+import org.emulinker.kaillera.model.event.UserQuitEvent
 import org.emulinker.kaillera.model.event.UserQuitGameEvent
 import org.emulinker.kaillera.model.exception.*
 import org.emulinker.kaillera.model.impl.KailleraGameImpl
@@ -116,6 +121,11 @@ class KailleraUser(
   private val ignoredUsers: MutableList<String> = ArrayList()
   private var gameDataErrorTime: Long = -1
 
+  private var threadIsActive = false
+
+  private var stopFlag = false
+  private val eventQueue: BlockingQueue<KailleraEvent> = LinkedBlockingQueue()
+
   var tempDelay = 0
 
   val users: Collection<KailleraUser>
@@ -180,6 +190,22 @@ class KailleraUser(
 
   override fun equals(other: Any?): Boolean {
     return other is KailleraUser && other.id == id
+  }
+
+  fun stop() {
+    synchronized(this) {
+      if (!threadIsActive) {
+        logger.atFine().log("%s  thread stop request ignored: not running!", this)
+        return
+      }
+      if (stopFlag) {
+        logger.atFine().log("%s  thread stop request ignored: already stopping!", this)
+        return
+      }
+      stopFlag = true
+      queueEvent(StopFlagEvent())
+    }
+    listener.stop()
   }
 
   fun droppedPacket() = withLock {
@@ -350,7 +376,7 @@ class KailleraUser(
     }
     isMuted = false
     game = null
-    handleEvent(UserQuitGameEvent(game, this))
+    queueEvent(UserQuitGameEvent(game, this))
   }
 
   @Synchronized
@@ -426,7 +452,7 @@ class KailleraUser(
           response[i] = 0
         }
         lostInput.add(data)
-        handleEvent(GameDataEvent(game as KailleraGameImpl, response))
+        queueEvent(GameDataEvent(game as KailleraGameImpl, response))
         frameCount++
       } else {
         // lostInput.add(data);
@@ -468,41 +494,46 @@ class KailleraUser(
     }
   }
 
-  val a = Object()
-  fun handleEvent(event: KailleraEvent) {
+  fun queueEvent(event: KailleraEvent) {
     if (status != UserStatus.IDLE) {
       if (ignoringUnnecessaryServerActivity) {
         if (event.toString() == "InfoMessageEvent") return
       }
     }
-    // Removing this for now.
-    // Not sure if we need this?
-    //      mutex.withLock {
-    synchronized(a) { // Needs to be synchronized so that the outgoing message ids stay the same!!
+    eventQueue.offer(event)
+  }
+
+  init {
+    threadpoolExecutor.submit {
+      threadIsActive = true
+      logger.atFine().log("%s thread running...", this)
       try {
-        listener.actionPerformed(event)
-        if (event is GameStartedEvent) {
-          status = UserStatus.PLAYING
-          if (improvedLagstat) {
-            lastUpdate = Instant.now()
+        while (!stopFlag) {
+          val event = eventQueue.poll(200, TimeUnit.SECONDS)
+          if (event == null) {
+            continue
+          } else if (event is StopFlagEvent) {
+            break
+          }
+          listener.actionPerformed(event)
+          if (event is GameStartedEvent) {
+            status = UserStatus.PLAYING
+            if (improvedLagstat) {
+              lastUpdate = Instant.now()
+            }
+          } else if (event is UserQuitEvent && event.user == this) {
+            stop()
           }
         }
       } catch (e: InterruptedException) {
         logger.atSevere().withCause(e).log("%s thread interrupted!", this)
       } catch (e: Throwable) {
         logger.atSevere().withCause(e).log("%s thread caught unexpected exception!", this)
+      } finally {
+        threadIsActive = false
+        logger.atFine().log("%s thread exiting...", this)
       }
     }
-    //      }
-  }
-
-  fun handleEventAsync(event: KailleraEvent) {
-    if (status != UserStatus.IDLE) {
-      if (ignoringUnnecessaryServerActivity) {
-        if (event.toString() == "InfoMessageEvent") return
-      }
-    }
-    threadpoolExecutor.submit { handleEvent(event) }
   }
 
   private val o = Object()

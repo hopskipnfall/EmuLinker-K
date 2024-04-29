@@ -81,7 +81,7 @@ class KailleraGameImpl(
   private var lastAddressCount = 0
   private var isSynched = false
 
-  private val timeoutMillis = 100
+  private val timeout = 100.milliseconds
   private val desynchTimeouts = 120
 
   private val statsCollector: StatsCollector? = server.statsCollector
@@ -127,7 +127,7 @@ class KailleraGameImpl(
     }
 
   private fun addEventForAllPlayers(event: GameEvent) {
-    for (player in players) player.handleEventAsync(event)
+    for (player in players) player.queueEvent(event)
   }
 
   @Synchronized
@@ -418,7 +418,7 @@ class KailleraGameImpl(
           player,
           numPlayers = players.size,
           gameBufferSize = bufferSize,
-          timeoutMillis.milliseconds,
+          timeout,
         )
       // SF MOD - player.setPlayerNumber(playerNumber);
       // SF MOD - Delay Value = [(60/connectionType) * (ping/1000)] + 1
@@ -672,7 +672,7 @@ class KailleraGameImpl(
             playerActionQueueCopy.size,
           )
         }
-        player.handleEvent(GameDataEvent(this, response))
+        player.queueEvent(GameDataEvent(this, response))
       }
     }
   }

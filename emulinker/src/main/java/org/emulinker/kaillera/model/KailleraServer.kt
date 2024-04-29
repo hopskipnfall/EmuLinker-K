@@ -10,6 +10,7 @@ import java.util.TimerTask
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ThreadPoolExecutor
 import javax.inject.Inject
+import javax.inject.Named
 import javax.inject.Singleton
 import kotlin.Throws
 import kotlin.time.Duration.Companion.milliseconds
@@ -39,8 +40,6 @@ import org.emulinker.util.EmuUtil
 import org.emulinker.util.EmuUtil.threadSleep
 
 /** Holds server-wide state. */
-// TODO(nue): This looks like this file contains a ton of unnecessary processing and runs basically
-// continuously.
 @Singleton
 class KailleraServer
 @Inject
@@ -52,7 +51,7 @@ internal constructor(
   private val autoFireDetectorFactory: AutoFireDetectorFactory,
   private val lookingForGameReporter: TwitterBroadcaster,
   metrics: MetricRegistry,
-  private val threadpoolExecutor: ThreadPoolExecutor,
+  @param:Named("userActionsExecutor") private val userActionsExecutor: ThreadPoolExecutor,
 ) {
 
   private var allowedConnectionTypes = BooleanArray(7)
@@ -139,9 +138,9 @@ internal constructor(
   @Synchronized
   @Throws(ServerFullException::class, NewConnectionException::class)
   fun newConnection(
-    clientSocketAddress: InetSocketAddress?,
-    protocol: String?,
-    listener: KailleraEventListener?
+    clientSocketAddress: InetSocketAddress,
+    protocol: String,
+    listener: KailleraEventListener
   ): KailleraUser {
     // we'll assume at this point that ConnectController has already asked AccessManager if this IP
     // is banned, so no need to do it again here
@@ -149,7 +148,7 @@ internal constructor(
       .atFine()
       .log(
         "Processing connection request from %s",
-        EmuUtil.formatSocketAddress(clientSocketAddress!!)
+        EmuUtil.formatSocketAddress(clientSocketAddress)
       )
     val access = accessManager.getAccess(clientSocketAddress.address)
 
@@ -167,12 +166,12 @@ internal constructor(
     val user =
       KailleraUser(
         userID,
-        protocol!!,
+        protocol,
         clientSocketAddress,
-        listener!!,
+        listener,
         this,
         flags,
-        threadpoolExecutor
+        userActionsExecutor
       )
     user.status = UserStatus.CONNECTING
     logger
@@ -392,13 +391,13 @@ internal constructor(
     userImpl.status = UserStatus.IDLE
     userImpl.loggedIn = true
     usersMap[userListKey] = userImpl
-    userImpl.handleEventAsync(ConnectedEvent(this, user))
+    userImpl.queueEvent(ConnectedEvent(this, user))
     threadSleep(20.milliseconds)
     for (loginMessage in loginMessages) {
-      userImpl.handleEventAsync(InfoMessageEvent(user, loginMessage))
+      userImpl.queueEvent(InfoMessageEvent(user, loginMessage))
       threadSleep(20.milliseconds)
     }
-    userImpl.handleEventAsync(
+    userImpl.queueEvent(
       InfoMessageEvent(
         user,
         "${releaseInfo.productName} v${releaseInfo.version}: ${releaseInfo.websiteString}"
@@ -415,7 +414,7 @@ internal constructor(
 
     // this is fairly ugly
     if (user.isEmuLinkerClient) {
-      userImpl.handleEventAsync(InfoMessageEvent(user, ":ACCESS=" + userImpl.accessStr))
+      userImpl.queueEvent(InfoMessageEvent(user, ":ACCESS=" + userImpl.accessStr))
       if (access >= AccessManager.ACCESS_SUPERADMIN) {
         var sb = StringBuilder()
         sb.append(":USERINFO=")
@@ -440,27 +439,26 @@ internal constructor(
           sb.append(0x03.toChar())
           sbCount++
           if (sb.length > 300) {
-            (user as KailleraUser?)!!.handleEventAsync(InfoMessageEvent(user, sb.toString()))
+            (user as KailleraUser?)!!.queueEvent(InfoMessageEvent(user, sb.toString()))
             sb = StringBuilder()
             sb.append(":USERINFO=")
             sbCount = 0
             threadSleep(100.milliseconds)
           }
         }
-        if (sbCount > 0)
-          (user as KailleraUser?)!!.handleEventAsync(InfoMessageEvent(user, sb.toString()))
+        if (sbCount > 0) (user as KailleraUser?)!!.queueEvent(InfoMessageEvent(user, sb.toString()))
         threadSleep(100.milliseconds)
       }
     }
     threadSleep(20.milliseconds)
     if (access >= AccessManager.ACCESS_ADMIN) {
-      userImpl.handleEventAsync(
+      userImpl.queueEvent(
         InfoMessageEvent(user, EmuLang.getString("KailleraServerImpl.AdminWelcomeMessage"))
       )
       // Display messages to admins if they exist.
       AppModule.messagesToAdmins.forEach { message ->
         threadSleep(20.milliseconds)
-        userImpl.handleEventAsync(InfoMessageEvent(user, message))
+        userImpl.queueEvent(InfoMessageEvent(user, message))
       }
     }
     addEvent(UserJoinedEvent(this, user))
@@ -506,7 +504,7 @@ internal constructor(
     logger.atInfo().log("%s quit: %s", user, quitMsg)
     val quitEvent = UserQuitEvent(this, user, quitMsg)
     addEvent(quitEvent)
-    (user as KailleraUser?)!!.handleEventAsync(quitEvent)
+    (user as KailleraUser?)!!.queueEvent(quitEvent)
   }
 
   @Synchronized
@@ -629,7 +627,7 @@ internal constructor(
         )
       }
     }
-    var game: KailleraGameImpl? = null
+    var game: KailleraGameImpl?
     val gameID = getNextGameID()
     game = KailleraGameImpl(gameID, romName, (user as KailleraUser?)!!, this, flags.gameBufferSize)
     gamesMap[gameID] = game
@@ -738,7 +736,7 @@ internal constructor(
         .asSequence()
         .filter { it.loggedIn }
         .forEach { kailleraUser ->
-          kailleraUser.handleEventAsync(InfoMessageEvent(kailleraUser, message))
+          kailleraUser.queueEvent(InfoMessageEvent(kailleraUser, message))
 
           if (gamesAlso && kailleraUser.game != null) {
             kailleraUser.game!!.announce(message, kailleraUser)
@@ -758,9 +756,9 @@ internal constructor(
                   targetUser.connectSocketAddress.address.hostAddress
                 )
               )
-                kailleraUser.handleEventAsync(InfoMessageEvent(kailleraUser, message))
+                kailleraUser.queueEvent(InfoMessageEvent(kailleraUser, message))
             } else {
-              kailleraUser.handleEventAsync(InfoMessageEvent(kailleraUser, message))
+              kailleraUser.queueEvent(InfoMessageEvent(kailleraUser, message))
             }
 
             /*//SF MOD
@@ -773,7 +771,7 @@ internal constructor(
             */
           }
       } else {
-        targetUser.handleEventAsync(InfoMessageEvent(targetUser, message))
+        targetUser.queueEvent(InfoMessageEvent(targetUser, message))
       }
     }
   }
@@ -785,20 +783,20 @@ internal constructor(
           if (user.ignoringUnnecessaryServerActivity) {
             // TODO(nue): Get rid of this bad use of toString.
             when (event.toString()) {
-              "GameDataEvent" -> user.handleEventAsync(event)
+              "GameDataEvent" -> user.queueEvent(event)
               "ChatEvent",
               "UserJoinedEvent",
               "UserQuitEvent",
               "GameStatusChangedEvent",
               "GameClosedEvent",
               "GameCreatedEvent" -> continue
-              else -> user.handleEventAsync(event)
+              else -> user.queueEvent(event)
             }
           } else {
-            user.handleEventAsync(event)
+            user.queueEvent(event)
           }
         } else {
-          user.handleEventAsync(event)
+          user.queueEvent(event)
         }
       } else {
         logger.atFine().log("%s: not adding event, not logged in: %s", user, event)

@@ -190,17 +190,18 @@ constructor(
           //             TODO:   datagram.packet.release()
         }
       } else {
+        val newBuffer = buffer.nioBuffer()
         try {
-          parse(buffer, lastMessageNumber)
+          parse(newBuffer, lastMessageNumber)
         } catch (e: ParseException) {
-          buffer.resetReaderIndex()
+          newBuffer.position(0)
           logger
             .atWarning()
             .withCause(e)
             .log("%s failed to parse: %s", this, EmuUtil.dumpBuffer(buffer.nioBuffer()))
           null
         } catch (e: V086BundleFormatException) {
-          buffer.resetReaderIndex()
+          newBuffer.position(0)
           logger
             .atWarning()
             .withCause(e)
@@ -211,11 +212,11 @@ constructor(
             )
           null
         } catch (e: MessageFormatException) {
-          buffer.resetReaderIndex()
+          newBuffer.position(0)
           logger
             .atWarning()
             .withCause(e)
-            .log("%s received invalid message: %s}", this, EmuUtil.dumpBuffer(buffer.nioBuffer()))
+            .log("%s received invalid message: %s}", this, EmuUtil.dumpBuffer(newBuffer))
           null
         }
       }
@@ -237,6 +238,7 @@ constructor(
       }
     try {
       val messages = inBundle.messages
+      // TODO(nue): Combine these two cases? This seems unnecessary.
       if (inBundle.numMessages == 1) {
         lastMessageNumber = messages[0]!!.messageNumber
         val action = controller.actions[messages[0]!!.messageTypeId.toInt()]
@@ -245,7 +247,7 @@ constructor(
             .atSevere()
             .log("No action defined to handle client message: %s", messages.firstOrNull())
         }
-        (action as V086Action<V086Message>).performAction(messages[0]!!, this)
+        (action as V086Action<V086Message>?)!!.performAction(messages[0]!!, this)
       } else {
         // read the bundle from back to front to process the oldest messages first
         for (i in inBundle.numMessages - 1 downTo 0) {

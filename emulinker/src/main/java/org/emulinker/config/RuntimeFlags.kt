@@ -124,7 +124,8 @@ data class RuntimeFlags(
         twitterPreventBroadcastNameSuffixes =
           config.getStringArray("twitter.preventBroadcastNameSuffixes").toList(),
         v086BufferSize = config.getInt("controllers.v086.bufferSize", 4096),
-        nettyFlags = config.getInt("server.nettyFlags"),
+        // TODO(nue): This default works well, but maybe we can experiment further.
+        nettyFlags = config.getInt("server.nettyThreadpoolSize", 15),
       )
     }
   }
