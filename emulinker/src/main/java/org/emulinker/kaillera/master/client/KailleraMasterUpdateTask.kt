@@ -23,7 +23,7 @@ constructor(
   private val statsCollector: StatsCollector,
 ) : MasterListUpdateTask {
 
-  override fun touchMaster() {
+  override fun reportStatus() {
     val createdGamesList = statsCollector.getStartedGamesList()
 
     val createdGames = StringBuilder()

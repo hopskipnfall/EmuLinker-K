@@ -45,7 +45,7 @@ constructor(
   private val config: Configuration,
 ) : MasterListUpdateTask {
 
-  override fun touchMaster() {
+  override fun reportStatus() {
     // The RPC is hosted using AWS Lambda, and there's no way to attach it to a custom URL without
     // using API Gateway, which costs money. By using the lambda URL directly and a placeholder URL
     // as a backup I save ~12-30 USD per year.

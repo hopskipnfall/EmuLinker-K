@@ -54,29 +54,6 @@ constructor(
   @Synchronized
   @Throws(BindException::class)
   fun bind(port: Int) {
-    //
-    //      val channel = DatagramChannel.open()
-    //      channel.socket().bind(InetSocketAddress(config.getInt("controllers.connect.port")))
-    //// TODO?      channel.configureBlocking(false)
-    //
-    //      channel.socket().receiveBufferSize = bufferSize * 2
-    //// TODO     channel.socket().send = bufferSize * 2
-    //
-    //      logger.atSevere().log("Listening on port")
-    //
-    //      while (!stopFlag) {
-    //        val buffer = ByteBuffer
-    //                .allocate(flags.v086BufferSize) //TODO:
-    // .allocateDirect(flags.v086BufferSize)
-    //                .order(LITTLE_ENDIAN)
-    ////        val packet = DatagramPacket(buffer.array(), flags.v086BufferSize)
-    //        val address = channel.receive(buffer)
-    //
-    //        buffer.flip()
-    //
-    //        handleReceived(buffer, address as InetSocketAddress)
-    //      }
-
     embeddedServer(Netty, port = port) {
         val group = NioEventLoopGroup(flags.nettyFlags)
         try {
@@ -128,16 +105,6 @@ constructor(
   val clientHandlers = ConcurrentHashMap<InetSocketAddress, V086ClientHandler>()
 
   val bufferSize: Int = flags.v086BufferSize
-
-  //  private val handlerDispatcher =
-  //    ThreadPoolExecutor(
-  //        flags.coreThreadPoolSize,
-  //        Int.MAX_VALUE,
-  //        60L,
-  //        TimeUnit.SECONDS,
-  //        SynchronousQueue()
-  //      )
-  //      .asCoroutineDispatcher()
 
   private fun handleReceived(
     buffer: ByteBuf,

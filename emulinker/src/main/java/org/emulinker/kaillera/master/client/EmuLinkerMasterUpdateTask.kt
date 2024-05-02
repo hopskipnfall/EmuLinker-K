@@ -23,7 +23,7 @@ constructor(
   private val releaseInfo: ReleaseInfo,
 ) : MasterListUpdateTask {
 
-  override fun touchMaster() {
+  override fun reportStatus() {
     val url = URLBuilder(TOUCH_LIST_URL)
     with(url.parameters) {
       this.append("serverName", publicInfo.serverName)

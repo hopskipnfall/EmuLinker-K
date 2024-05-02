@@ -34,9 +34,9 @@ internal constructor(
         initialDelay = 10.seconds,
         period = REPORTING_INTERVAL
       ) {
-        serverCheckinTask.touchMaster()
-        if (flags.touchEmulinker) emuLinkerMasterUpdateTask.touchMaster()
-        if (flags.touchKaillera) kailleraMasterUpdateTask.touchMaster()
+        serverCheckinTask.reportStatus()
+        if (flags.touchEmulinker) emuLinkerMasterUpdateTask.reportStatus()
+        if (flags.touchKaillera) kailleraMasterUpdateTask.reportStatus()
         statsCollector.clearStartedGamesList()
       }
   }

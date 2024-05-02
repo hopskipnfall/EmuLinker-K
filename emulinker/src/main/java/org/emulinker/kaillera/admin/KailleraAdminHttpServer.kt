@@ -18,7 +18,6 @@ import org.mortbay.util.InetAddrPort
 class KailleraAdminHttpServer(
   config: Configuration,
   threadPool: ThreadPoolExecutor?,
-  //  connectController: ConnectController?,
   kailleraServer: KailleraServer?
 ) : AdminServer {
   private var appServer = Server()
