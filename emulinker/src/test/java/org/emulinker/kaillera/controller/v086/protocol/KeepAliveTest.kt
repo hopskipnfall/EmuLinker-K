@@ -1,6 +1,7 @@
 package org.emulinker.kaillera.controller.v086.protocol
 
 import com.google.common.truth.Truth.assertThat
+import io.ktor.utils.io.core.ByteReadPacket
 import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.kaillera.controller.v086.protocol.MessageTestUtils.assertBufferContainsExactly
@@ -14,14 +15,19 @@ class KeepAliveTest : ProtocolBaseTest() {
   }
 
   @Test
+  fun byteReadPacket_deserializeBody() {
+    val packet = ByteReadPacket(V086Utils.hexStringToByteBuffer(BODY_BYTES))
+    assertThat(KeepAlive.KeepAliveSerializer.read(packet, MESSAGE_NUMBER).getOrThrow())
+      .isEqualTo(KEEP_ALIVE)
+    assertThat(packet.endOfInput).isTrue()
+  }
+
+  @Test
   fun deserializeBody() {
-    assertThat(
-        KeepAlive.KeepAliveSerializer.read(
-          V086Utils.hexStringToByteBuffer(BODY_BYTES),
-          MESSAGE_NUMBER
-        )
-      )
-      .isEqualTo(MessageParseResult.Success(KEEP_ALIVE))
+    val buffer = V086Utils.hexStringToByteBuffer(BODY_BYTES)
+    assertThat(KeepAlive.KeepAliveSerializer.read(buffer, MESSAGE_NUMBER).getOrThrow())
+      .isEqualTo(KEEP_ALIVE)
+    assertThat(buffer.hasRemaining()).isFalse()
   }
 
   @Test

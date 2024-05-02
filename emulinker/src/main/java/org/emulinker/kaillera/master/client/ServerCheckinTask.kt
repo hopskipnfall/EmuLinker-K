@@ -1,22 +1,18 @@
 package org.emulinker.kaillera.master.client
 
 import com.google.common.flogger.FluentLogger
-import io.ktor.client.HttpClient
-import io.ktor.client.plugins.timeout
-import io.ktor.client.request.request
-import io.ktor.client.request.setBody
-import io.ktor.client.statement.HttpResponse
-import io.ktor.client.statement.bodyAsText
-import io.ktor.http.HttpMethod
-import io.ktor.http.HttpStatusCode
 import io.ktor.utils.io.charsets.name
+import java.io.BufferedReader
+import java.io.DataOutputStream
+import java.io.InputStreamReader
+import java.net.HttpURLConnection
+import java.net.URL
 import java.util.concurrent.TimeUnit.HOURS
 import javax.inject.Inject
-import kotlin.time.Duration.Companion.seconds
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import org.emulinker.kaillera.controller.connectcontroller.ConnectController
+import org.apache.commons.configuration.Configuration
 import org.emulinker.kaillera.master.PublicServerInformation
 import org.emulinker.kaillera.pico.AppModule
 import org.emulinker.kaillera.pico.CompiledFlags
@@ -46,11 +42,10 @@ class ServerCheckinTask
 @Inject
 constructor(
   private val publicServerInfo: PublicServerInformation,
-  private val connectController: ConnectController,
-  private val httpClient: HttpClient
+  private val config: Configuration,
 ) : MasterListUpdateTask {
 
-  override suspend fun touchMaster() {
+  override fun reportStatus() {
     // The RPC is hosted using AWS Lambda, and there's no way to attach it to a custom URL without
     // using API Gateway, which costs money. By using the lambda URL directly and a placeholder URL
     // as a backup I save ~12-30 USD per year.
@@ -71,13 +66,19 @@ constructor(
   }
 
   /** @return Whether or not the RPC succeeded. */
-  private suspend fun touchMasterWithUrl(url: String): CheckinResponse? {
+  private fun touchMasterWithUrl(url: URL): CheckinResponse? {
+
+    val connection: HttpURLConnection = url.openConnection() as HttpURLConnection
+    connection.setRequestMethod("POST")
+    connection.setRequestProperty("Content-Type", "application/json")
+    connection.setDoOutput(true) // idk if we need this
+
     val request =
       CheckinRequest(
         ServerInfo(
           name = publicServerInfo.serverName,
           connectAddress = publicServerInfo.connectAddress,
-          connectPort = connectController.boundPort!!,
+          connectPort = config.getInt("controllers.connect.port"),
           website = publicServerInfo.website,
           location = publicServerInfo.location,
           charset = AppModule.charsetDoNotUse.name,
@@ -86,36 +87,41 @@ constructor(
         )
       )
 
-    val response: HttpResponse =
-      try {
-        httpClient.request(url) {
-          this.method = HttpMethod.Post
+    // Write JSON data to the output stream
+    val os = DataOutputStream(connection.outputStream)
+    os.writeBytes(Json.encodeToString(request))
+    os.flush()
+    os.close()
 
-          this.setBody(Json.encodeToString(request))
+    // Get response code
+    val responseCode = connection.responseCode
 
-          this.timeout {
-            this.connectTimeoutMillis = 5.seconds.inWholeMilliseconds
-            this.requestTimeoutMillis = 5.seconds.inWholeMilliseconds
-          }
-        }
+    // Process response
+    if (responseCode == HttpURLConnection.HTTP_OK) {
+      val response = StringBuilder()
+      var line: String?
+      val br = BufferedReader(InputStreamReader(connection.inputStream))
+      while ((br.readLine().also { line = it }) != null) {
+        response.append(line)
+      }
+      br.close()
+
+      // Disconnect the connection
+      connection.disconnect()
+
+      return try {
+        lenientJson.decodeFromString<CheckinResponse?>(response.toString())
       } catch (e: Exception) {
         logger
-          .atFine()
+          .atWarning()
           .withCause(e)
-          .log("Failed to check in with EmuLinker-K master API at URL %s", url)
-        return null
+          .atMostEvery(6, HOURS)
+          .log("Failed to parse to CheckinResponse: %s", response.toString())
+        null
       }
-    if (response.status != HttpStatusCode.OK) return null
-
-    return try {
-      lenientJson.decodeFromString(response.bodyAsText())
-    } catch (e: Exception) {
-      logger
-        .atWarning()
-        .withCause(e)
-        .atMostEvery(6, HOURS)
-        .log("Failed to parse to CheckinResponse: %s", response.bodyAsText())
-      null
+    } else {
+      logger.atWarning().log("Error: HTTP Response code - %d", responseCode)
+      return null
     }
   }
 
@@ -124,10 +130,10 @@ constructor(
 
     val lenientJson = Json { ignoreUnknownKeys = true }
 
-    const val LAMBDA_PATH =
-      "https://plzmuutb32kgr7jx73ettrtwga0ryzis.lambda-url.ap-northeast-1.on.aws/checkin"
+    val LAMBDA_PATH =
+      URL("https://plzmuutb32kgr7jx73ettrtwga0ryzis.lambda-url.ap-northeast-1.on.aws/checkin")
 
     /** URL I will set up if [LAMBDA_PATH] goes bad. */
-    const val BACKUP_PATH = "https://elk-api.12cb.dev/checkin"
+    val BACKUP_PATH = URL("https://elk-api.12cb.dev/checkin")
   }
 }

@@ -78,14 +78,14 @@ class ServerGameDataCache(size: Int) : GameDataCache {
       // optimized for FIFO access, i.e. adding to back and
       // removing from front
       if (pos == head) head = (head + 1) % array.size
-      else if (pos == tail) tail = (tail - 1 + array.size) % array.size
+      else if (pos == tail) tail = Math.floorMod(tail - 1, array.size)
       else {
         if (pos > head && pos > tail) { // tail/head/pos
           System.arraycopy(array, head, array, head + 1, pos - head)
           head = (head + 1) % array.size
         } else {
           System.arraycopy(array, pos + 1, array, pos, tail - pos - 1)
-          tail = (tail - 1 + array.size) % array.size
+          tail = Math.floorMod(tail - 1, array.size)
         }
       }
       size--

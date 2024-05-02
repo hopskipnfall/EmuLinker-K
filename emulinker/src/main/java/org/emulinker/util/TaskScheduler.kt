@@ -17,7 +17,7 @@ import kotlin.time.Duration.Companion.seconds
  */
 @Singleton
 class TaskScheduler @Inject constructor() {
-  private var timer = Timer()
+  private var timer = Timer(/* isDaemon= */ true)
 
   fun schedule(delay: Duration = 0.seconds, action: TimerTask.() -> Unit): TimerTask =
     try {

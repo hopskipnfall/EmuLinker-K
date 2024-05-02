@@ -1,6 +1,8 @@
 package org.emulinker.kaillera.controller.v086.protocol
 
 import com.google.common.truth.Truth.assertThat
+import io.ktor.utils.io.core.ByteReadPacket
+import io.netty.buffer.Unpooled
 import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.kaillera.controller.v086.protocol.MessageTestUtils.assertBufferContainsExactly
@@ -14,14 +16,19 @@ class CloseGameTest : ProtocolBaseTest() {
   }
 
   @Test
+  fun byteReadPacket_deserializeBody() {
+    val packet = ByteReadPacket(V086Utils.hexStringToByteBuffer(BODY_BYTES))
+    assertThat(CloseGame.CloseGameSerializer.read(packet, MESSAGE_NUMBER).getOrThrow())
+      .isEqualTo(CLOSE_GAME)
+    assertThat(packet.endOfInput).isTrue()
+  }
+
+  @Test
   fun deserializeBody() {
-    assertThat(
-        CloseGame.CloseGameSerializer.read(
-          V086Utils.hexStringToByteBuffer(BODY_BYTES),
-          MESSAGE_NUMBER
-        )
-      )
-      .isEqualTo(MessageParseResult.Success(CLOSE_GAME))
+    val buffer = V086Utils.hexStringToByteBuffer(BODY_BYTES)
+    assertThat(CloseGame.CloseGameSerializer.read(buffer, MESSAGE_NUMBER).getOrThrow())
+      .isEqualTo(CLOSE_GAME)
+    assertThat(buffer.hasRemaining()).isFalse()
   }
 
   @Test
@@ -30,6 +37,15 @@ class CloseGameTest : ProtocolBaseTest() {
     CLOSE_GAME.writeBodyTo(buffer)
 
     assertThat(buffer.position()).isEqualTo(CLOSE_GAME.bodyBytes)
+    assertBufferContainsExactly(buffer, BODY_BYTES)
+  }
+
+  @Test
+  fun serializeBody_byteBuf() {
+    val buffer = Unpooled.buffer(4096)
+    CLOSE_GAME.writeBodyTo(buffer)
+
+    assertThat(buffer.readableBytes()).isEqualTo(CLOSE_GAME.bodyBytes)
     assertBufferContainsExactly(buffer, BODY_BYTES)
   }
 

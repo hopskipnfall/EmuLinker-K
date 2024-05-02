@@ -1,5 +1,7 @@
 package org.emulinker.util
 
+import io.ktor.utils.io.core.ByteReadPacket
+import io.netty.buffer.ByteBuf
 import java.io.File
 import java.io.FileInputStream
 import java.net.InetSocketAddress
@@ -205,15 +207,40 @@ object EmuUtil {
     return byteList.toByteArray().toHexString()
   }
 
-  fun readString(
-    buffer: ByteBuffer,
+  fun ByteBuffer.readString(
     stopByte: Int = 0x00,
     charset: Charset = AppModule.charsetDoNotUse
   ): String {
-    val tempBuffer = ByteBuffer.allocate(buffer.remaining())
-    while (buffer.hasRemaining()) {
+    val tempBuffer = ByteBuffer.allocate(this.remaining())
+    while (this.hasRemaining()) {
       var b: Byte
-      if (buffer.get().also { b = it }.toInt() == stopByte) break
+      if (this.get().also { b = it }.toInt() == stopByte) break
+      tempBuffer.put(b)
+    }
+    return charset.decode(tempBuffer.flip() as ByteBuffer).toString()
+  }
+
+  fun ByteBuf.readString(
+    stopByte: Int = 0x00,
+    charset: Charset = AppModule.charsetDoNotUse
+  ): String {
+    val tempBuffer = ByteBuffer.allocate(this.readableBytes())
+    while (this.readableBytes() > 0) {
+      var b: Byte
+      if (this.readByte().also { b = it }.toInt() == stopByte) break
+      tempBuffer.put(b)
+    }
+    return charset.decode(tempBuffer.flip() as ByteBuffer).toString()
+  }
+
+  fun ByteReadPacket.readString(
+    stopByte: Int = 0x00,
+    charset: Charset = AppModule.charsetDoNotUse
+  ): String {
+    val tempBuffer = ByteBuffer.allocate(this.remaining.toInt())
+    while (!this.endOfInput) {
+      var b: Byte
+      if (this.readByte().also { b = it }.toInt() == stopByte) break
       tempBuffer.put(b)
     }
     return charset.decode(tempBuffer.flip() as ByteBuffer).toString()
@@ -230,6 +257,19 @@ object EmuUtil {
     //		for(int i=0; i<tempArray.length; i++)
     //			buffer.put((byte) tempArray[i]);
     buffer.put(stopByte.toByte())
+  }
+
+  fun writeString(
+    buffer: ByteBuf,
+    s: String,
+    stopByte: Int = 0x00,
+    charset: Charset = AppModule.charsetDoNotUse
+  ) {
+    buffer.writeBytes(charset.encode(s))
+    //		char[] tempArray = s.toCharArray();
+    //		for(int i=0; i<tempArray.length; i++)
+    //			buffer.put((byte) tempArray[i]);
+    buffer.writeByte(stopByte)
   }
 
   @Throws(InstantiationException::class)
@@ -251,6 +291,7 @@ object EmuUtil {
 
   // TODO(nue): Get rid of this.
   /** Calls [Thread.sleep] in a try/catch. */
+  @Deprecated(message = "You should probably use delay!")
   fun threadSleep(d: Duration) {
     try {
       Thread.sleep(d.inWholeMilliseconds)

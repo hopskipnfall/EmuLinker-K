@@ -100,7 +100,8 @@ class EvalClient(
 
         sendConnectMessage(RequestPrivateKailleraPortRequest(protocol = "0.83"))
 
-        val response = ConnectMessage.parse(connectedSocket.receive().packet.readByteBuffer())
+        val response =
+          ConnectMessage.parse(connectedSocket.receive().packet.readByteBuffer()).getOrThrow()
         logger.atInfo().log("<<<<<<<< Received message: %s", response)
         require(response is RequestPrivateKailleraPortResponse)
 

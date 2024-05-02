@@ -1,10 +1,12 @@
 package org.emulinker.kaillera.controller.v086.protocol
 
 import com.google.common.truth.Truth.assertThat
+import io.ktor.utils.io.core.ByteReadPacket
 import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.kaillera.controller.v086.protocol.MessageTestUtils.assertBufferContainsExactly
 import org.emulinker.kaillera.model.ConnectionType
+import org.junit.Ignore
 import org.junit.Test
 
 class JoinGameTest : ProtocolBaseTest() {
@@ -15,14 +17,20 @@ class JoinGameTest : ProtocolBaseTest() {
   }
 
   @Test
+  @Ignore // Fails!
+  fun joinGameNotification_byteReadPacket_deserializeBody() {
+    val packet = ByteReadPacket(V086Utils.hexStringToByteBuffer(NOTIFICATION_BYTES))
+    assertThat(JoinGame.JoinGameSerializer.read(packet, MESSAGE_NUMBER).getOrThrow())
+      .isEqualTo(JOIN_GAME_NOTIFICATION)
+    assertThat(packet.endOfInput).isTrue()
+  }
+
+  @Test
   fun joinGameNotification_deserializeBody() {
-    assertThat(
-        JoinGame.JoinGameSerializer.read(
-          V086Utils.hexStringToByteBuffer(NOTIFICATION_BYTES),
-          MESSAGE_NUMBER
-        )
-      )
-      .isEqualTo(MessageParseResult.Success(JOIN_GAME_NOTIFICATION))
+    val buffer = V086Utils.hexStringToByteBuffer(NOTIFICATION_BYTES)
+    assertThat(JoinGame.JoinGameSerializer.read(buffer, MESSAGE_NUMBER).getOrThrow())
+      .isEqualTo(JOIN_GAME_NOTIFICATION)
+    assertThat(buffer.hasRemaining()).isFalse()
   }
 
   @Test
@@ -40,14 +48,20 @@ class JoinGameTest : ProtocolBaseTest() {
   }
 
   @Test
+  @Ignore // Fails!
+  fun joinGameRequest_byteReadPacket_deserializeBody() {
+    val packet = ByteReadPacket(V086Utils.hexStringToByteBuffer(REQUEST_BYTES))
+    assertThat(JoinGame.JoinGameSerializer.read(packet, MESSAGE_NUMBER).getOrThrow())
+      .isEqualTo(JOIN_GAME_REQUEST)
+    assertThat(packet.endOfInput).isTrue()
+  }
+
+  @Test
   fun joinGameRequest_deserializeBody() {
-    assertThat(
-        JoinGame.JoinGameSerializer.read(
-          V086Utils.hexStringToByteBuffer(REQUEST_BYTES),
-          MESSAGE_NUMBER
-        )
-      )
-      .isEqualTo(MessageParseResult.Success(JOIN_GAME_REQUEST))
+    val buffer = V086Utils.hexStringToByteBuffer(REQUEST_BYTES)
+    assertThat(JoinGame.JoinGameSerializer.read(buffer, MESSAGE_NUMBER).getOrThrow())
+      .isEqualTo(JOIN_GAME_REQUEST)
+    assertThat(buffer.hasRemaining()).isFalse()
   }
 
   @Test

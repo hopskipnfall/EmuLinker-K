@@ -1,16 +1,14 @@
 import java.time.Instant
-import org.jetbrains.kotlin.gradle.tasks.KaptGenerateStubs
 
 plugins {
   id("com.diffplug.spotless") version "6.18.0"
   id("org.jetbrains.dokka") version "1.8.10"
   application
 
-  // Serialization.
-  kotlin("jvm") version "1.8.21"
+  kotlin("jvm") version "1.9.23"
   kotlin("plugin.serialization") version "1.8.21"
 
-  kotlin("kapt") version "1.8.21"
+  id("com.google.devtools.ksp") version "1.9.23-1.0.20"
 }
 
 repositories {
@@ -33,8 +31,9 @@ dependencies {
   api("com.google.flogger:flogger-system-backend:0.7.4")
   api("com.google.flogger:flogger-log4j2-backend:0.7.4")
 
-  implementation("com.google.dagger:dagger:2.45")
-  kapt("com.google.dagger:dagger-compiler:2.45")
+  implementation("com.google.dagger:dagger:2.51.1")
+  implementation("com.google.dagger:dagger-compiler:2.51.1")
+  ksp("com.google.dagger:dagger-compiler:2.51.1")
 
   api("org.apache.logging.log4j:log4j:2.20.0")
   api("org.apache.logging.log4j:log4j-core:2.20.0")
@@ -44,14 +43,12 @@ dependencies {
   api("commons-configuration:commons-configuration:1.1")
   api("commons-pool:commons-pool:1.2")
 
-  val ktorVersion = "2.3.0"
+  val ktorVersion = "2.3.9"
   api("io.ktor:ktor-network-jvm:$ktorVersion")
   api("io.ktor:ktor-server-core-jvm:$ktorVersion")
   api("io.ktor:ktor-server-netty-jvm:$ktorVersion")
   api("io.ktor:ktor-server-status-pages-jvm:$ktorVersion")
   api("io.ktor:ktor-server-default-headers-jvm:$ktorVersion")
-  api("io.ktor:ktor-client-core:$ktorVersion")
-  api("io.ktor:ktor-client-cio:$ktorVersion")
 
   api("io.reactivex.rxjava3:rxjava:3.1.1")
 
@@ -60,7 +57,6 @@ dependencies {
   testImplementation(kotlin("test"))
   testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.6.4")
   testImplementation("org.mockito.kotlin:mockito-kotlin:4.1.0")
-  testImplementation("io.ktor:ktor-client-mock:$ktorVersion")
 }
 
 group = "org.emulinker"
@@ -86,6 +82,7 @@ tasks.processResources {
             val version = project.version
             val url = properties["url"]
           },
+        "useBytereadpacketInsteadOfBytebuffer" to false,
       )
     )
   }
@@ -107,8 +104,7 @@ sourceSets {
   }
 }
 
-// Dagger.
-tasks.withType<KaptGenerateStubs> {
+tasks.named("compileKotlin") {
   // Filtering the resources has to happen first.
   dependsOn(":emulinker:processResources")
 }
@@ -154,3 +150,5 @@ tasks.jar {
 
 // kdoc generation support.
 subprojects { apply(plugin = "org.jetbrains.dokka") }
+
+tasks.withType<JavaExec> { jvmArgs = listOf("-Xms512m", "-Xmx512m") }

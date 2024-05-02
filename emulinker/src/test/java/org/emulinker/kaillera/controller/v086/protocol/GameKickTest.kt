@@ -1,6 +1,7 @@
 package org.emulinker.kaillera.controller.v086.protocol
 
 import com.google.common.truth.Truth.assertThat
+import io.ktor.utils.io.core.ByteReadPacket
 import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.kaillera.controller.v086.protocol.MessageTestUtils.assertBufferContainsExactly
@@ -14,14 +15,19 @@ class GameKickTest : ProtocolBaseTest() {
   }
 
   @Test
+  fun byteReadPacket_deserializeBody() {
+    val packet = ByteReadPacket(V086Utils.hexStringToByteBuffer(BODY_BYTES))
+    assertThat(GameKick.GameKickSerializer.read(packet, MESSAGE_NUMBER).getOrThrow())
+      .isEqualTo(GAME_KICK)
+    assertThat(packet.endOfInput).isTrue()
+  }
+
+  @Test
   fun deserializeBody() {
-    assertThat(
-        GameKick.GameKickSerializer.read(
-          V086Utils.hexStringToByteBuffer(BODY_BYTES),
-          MESSAGE_NUMBER
-        )
-      )
-      .isEqualTo(MessageParseResult.Success(GAME_KICK))
+    val buffer = V086Utils.hexStringToByteBuffer(BODY_BYTES)
+    assertThat(GameKick.GameKickSerializer.read(buffer, MESSAGE_NUMBER).getOrThrow())
+      .isEqualTo(GAME_KICK)
+    assertThat(buffer.hasRemaining()).isFalse()
   }
 
   @Test

@@ -1,6 +1,5 @@
 package org.emulinker.kaillera.pico
 
-import com.codahale.metrics.Counter
 import com.codahale.metrics.MetricRegistry
 import dagger.Binds
 import dagger.Module
@@ -8,10 +7,8 @@ import dagger.Provides
 import dagger.multibindings.IntoSet
 import io.github.redouane59.twitter.TwitterClient
 import io.github.redouane59.twitter.signature.TwitterCredentials
-import io.ktor.client.HttpClient
-import io.ktor.client.engine.cio.CIO
-import io.ktor.client.plugins.HttpTimeout
 import java.nio.charset.Charset
+import java.util.Timer
 import java.util.concurrent.SynchronousQueue
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
@@ -32,28 +29,28 @@ import org.emulinker.util.EmuLinkerPropertiesConfig
 
 @Module
 abstract class AppModule {
-  @Binds abstract fun bindAccessManager(accessManager2: AccessManager2?): AccessManager?
+  @Binds abstract fun bindAccessManager(accessManager2: AccessManager2): AccessManager
 
   @Binds
   abstract fun bindAutoFireDetectorFactory(
-    autoFireDetectorFactoryImpl: AutoFireDetectorFactoryImpl?
-  ): AutoFireDetectorFactory?
+    autoFireDetectorFactoryImpl: AutoFireDetectorFactoryImpl
+  ): AutoFireDetectorFactory
 
   @Binds
   abstract fun bindKailleraServerController(
-    v086Controller: V086Controller?
-  ): KailleraServerController?
+    v086Controller: V086Controller
+  ): KailleraServerController
 
   @Binds
   @IntoSet
   abstract fun bindKailleraServerControllerToSet(
-    v086Controller: V086Controller?
-  ): KailleraServerController?
+    v086Controller: V086Controller
+  ): KailleraServerController
 
   @Binds
   abstract fun bindStatsCollector(
-    masterListStatsCollector: MasterListStatsCollector?
-  ): StatsCollector?
+    masterListStatsCollector: MasterListStatsCollector
+  ): StatsCollector
 
   companion object {
     // TODO(nue): Burn this with fire!!!
@@ -68,12 +65,6 @@ abstract class AppModule {
      * Usually used for update messages.
      */
     var messagesToAdmins: List<String> = emptyList()
-
-    @Provides
-    @Singleton
-    @Named("listeningOnPortsCounter")
-    fun bindPortListenerCounter(metrics: MetricRegistry): Counter =
-      metrics.counter("listeningOnPorts")
 
     @Provides
     @Singleton
@@ -95,21 +86,30 @@ abstract class AppModule {
 
     @Provides
     @Singleton
-    fun provideRuntimeFlags(configuration: Configuration?): RuntimeFlags {
-      val flags = loadFromApacheConfiguration(configuration!!)
+    fun provideRuntimeFlags(configuration: Configuration): RuntimeFlags {
+      val flags = loadFromApacheConfiguration(configuration)
       charsetDoNotUse = flags.charset
       return flags
     }
 
+    // TODO(nue): Split out low-priority tasks to a threadpool with a fixed number of threads.
     @Provides
-    fun provideThreadPoolExecutor(flags: RuntimeFlags): ThreadPoolExecutor {
-      return ThreadPoolExecutor(
+    @Named("userActionsExecutor")
+    @Singleton
+    fun provideThreadPoolExecutor(flags: RuntimeFlags) =
+      ThreadPoolExecutor(
         flags.coreThreadPoolSize,
-        Int.MAX_VALUE,
-        60L,
+        /* maximumPoolSize= */ Integer.MAX_VALUE,
+        /* keepAliveTime= */ 60L,
         TimeUnit.SECONDS,
-        SynchronousQueue()
+        SynchronousQueue(),
       )
+
+    // TODO(nue): We should probably be using TaskScheduler instead?
+    @Provides
+    @Singleton
+    fun provideTimer(): Timer {
+      return Timer(/* isDaemon= */ true)
     }
 
     @Provides
@@ -117,7 +117,5 @@ abstract class AppModule {
     fun provideMetricRegistry(): MetricRegistry {
       return MetricRegistry()
     }
-
-    @Provides fun provideHttpClient(): HttpClient = HttpClient(CIO) { install(HttpTimeout) }
   }
 }

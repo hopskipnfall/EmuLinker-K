@@ -1,12 +1,25 @@
 package org.emulinker.util
 
+import io.ktor.utils.io.core.ByteReadPacket
+import io.ktor.utils.io.core.readInt
+import io.ktor.utils.io.core.readShort
+import io.ktor.utils.io.core.readShortLittleEndian
+import io.netty.buffer.ByteBuf
 import java.nio.ByteBuffer
 
 object UnsignedUtil {
   fun ByteBuffer.getUnsignedByte(): Short = (this.get().toInt() and 0xff).toShort()
 
+  fun ByteBuf.getUnsignedByte(): Short = (this.readByte().toInt() and 0xff).toShort()
+
+  fun ByteReadPacket.readUnsignedByte(): Short = (this.readByte().toInt() and 0xff).toShort()
+
   fun ByteBuffer.putUnsignedByte(value: Int) {
     this.put((value and 0xff).toByte())
+  }
+
+  fun ByteBuf.putUnsignedByte(value: Int) {
+    this.writeByte(value and 0xff)
   }
 
   fun ByteBuffer.getUnsignedByte(position: Int) = (this[position].toInt() and 0xff).toShort()
@@ -18,8 +31,18 @@ object UnsignedUtil {
   // ---------------------------------------------------------------
   fun ByteBuffer.getUnsignedShort(): Int = this.short.toInt() and 0xffff
 
+  fun ByteBuf.getUnsignedShort(): Int = this.readShort().toInt() and 0xffff
+
+  fun ByteReadPacket.readUnsignedShort(): Int = this.readShort().toInt() and 0xffff
+  fun ByteReadPacket.readUnsignedShortLittleEndian(): Int =
+    this.readShortLittleEndian().toInt() and 0xffff
+
   fun ByteBuffer.putUnsignedShort(value: Int) {
     this.putShort((value and 0xffff).toShort())
+  }
+
+  fun ByteBuf.putUnsignedShort(value: Int) {
+    this.writeShort((value and 0xffff))
   }
 
   fun ByteBuffer.getUnsignedShort(position: Int): Int = this.getShort(position).toInt() and 0xffff
@@ -31,8 +54,16 @@ object UnsignedUtil {
   // ---------------------------------------------------------------
   fun ByteBuffer.getUnsignedInt(): Long = this.int.toLong() and 0xffffffffL
 
+  fun ByteBuf.getUnsignedInt(): Long = this.readInt().toLong() and 0xffffffffL
+
+  fun ByteReadPacket.readUnsignedInt(): Long = this.readInt().toLong() and 0xffffffffL
+
   fun ByteBuffer.putUnsignedInt(value: Long) {
     this.putInt((value and 0xffffffffL).toInt())
+  }
+
+  fun ByteBuf.putUnsignedInt(value: Long) {
+    this.writeInt((value and 0xffffffffL).toInt())
   }
 
   fun ByteBuffer.getUnsignedInt(position: Int): Long =

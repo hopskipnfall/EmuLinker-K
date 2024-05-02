@@ -12,7 +12,6 @@ import java.util.concurrent.ConcurrentMap
 import javax.inject.Inject
 import javax.inject.Provider
 import javax.inject.Singleton
-import kotlin.concurrent.schedule
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.model.KailleraUser
 import org.emulinker.util.EmuLang

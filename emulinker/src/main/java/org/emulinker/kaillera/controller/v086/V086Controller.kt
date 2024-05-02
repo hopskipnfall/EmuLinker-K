@@ -1,18 +1,13 @@
 package org.emulinker.kaillera.controller.v086
 
-import com.google.common.flogger.FluentLogger
 import java.net.InetSocketAddress
-import java.util.Queue
 import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.ConcurrentLinkedQueue
-import java.util.concurrent.ThreadPoolExecutor
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.reflect.KClass
-import kotlin.time.Duration.Companion.milliseconds
-import kotlinx.coroutines.plus
 import org.apache.commons.configuration.Configuration
 import org.emulinker.config.RuntimeFlags
+import org.emulinker.kaillera.controller.CombinedKailleraController
 import org.emulinker.kaillera.controller.KailleraServerController
 import org.emulinker.kaillera.controller.v086.action.ACKAction
 import org.emulinker.kaillera.controller.v086.action.CachedGameDataAction
@@ -56,6 +51,7 @@ import org.emulinker.kaillera.controller.v086.protocol.QuitGame
 import org.emulinker.kaillera.controller.v086.protocol.StartGame
 import org.emulinker.kaillera.controller.v086.protocol.UserInformation
 import org.emulinker.kaillera.model.KailleraServer
+import org.emulinker.kaillera.model.KailleraUser
 import org.emulinker.kaillera.model.event.AllReadyEvent
 import org.emulinker.kaillera.model.event.ChatEvent
 import org.emulinker.kaillera.model.event.ConnectedEvent
@@ -80,8 +76,6 @@ import org.emulinker.kaillera.model.event.UserQuitEvent
 import org.emulinker.kaillera.model.event.UserQuitGameEvent
 import org.emulinker.kaillera.model.exception.NewConnectionException
 import org.emulinker.kaillera.model.exception.ServerFullException
-import org.emulinker.net.BindException
-import org.emulinker.util.EmuUtil.threadSleep
 
 /** High level logic for handling messages on a port. Not tied to an individual user. */
 @Singleton
@@ -89,7 +83,6 @@ class V086Controller
 @Inject
 internal constructor(
   override var server: KailleraServer,
-  var threadPool: ThreadPoolExecutor,
   config: Configuration,
   loginAction: LoginAction,
   ackAction: ACKAction,
@@ -116,18 +109,12 @@ internal constructor(
   private val v086ClientHandlerFactory: V086ClientHandler.Factory,
   flags: RuntimeFlags,
 ) : KailleraServerController {
-  var isRunning = false
-    private set
+  private var isRunning = false
 
   override val clientTypes: Array<String> =
     config.getStringArray("controllers.v086.clientTypes.clientType")
 
   var clientHandlers: MutableMap<Int, V086ClientHandler> = ConcurrentHashMap()
-
-  private val portRangeStart: Int = config.getInt("controllers.v086.portRangeStart")
-  private val extraPorts: Int = config.getInt("controllers.v086.extraPorts", 0)
-
-  var portRangeQueue: Queue<Int> = ConcurrentLinkedQueue()
 
   val serverEventHandlers: Map<KClass<out ServerEvent>, V086ServerEventHandler<Nothing>> =
     mapOf(
@@ -175,45 +162,21 @@ internal constructor(
    * over a separate port.
    */
   @Throws(ServerFullException::class, NewConnectionException::class)
-  override fun newConnection(clientSocketAddress: InetSocketAddress, protocol: String): Int {
+  override fun newConnection(
+    clientSocketAddress: InetSocketAddress,
+    protocol: String,
+    combinedKailleraController: CombinedKailleraController
+  ): V086ClientHandler {
     if (!isRunning) throw NewConnectionException("Controller is not running")
-    val clientHandler = v086ClientHandlerFactory.create(clientSocketAddress, this)
-    val user = server.newConnection(clientSocketAddress, protocol, clientHandler)
-    var boundPort = -1
-    var bindAttempts = 0
-    while (bindAttempts++ < 5) {
-      val portInteger = portRangeQueue.poll()
-      if (portInteger == null) {
-        throw NewConnectionException("No ports are available to bind for $user")
-      } else {
-        val port = portInteger.toInt()
-        logger.atInfo().log("Allocating private port %d for: %s", port, user)
-        try {
-          clientHandler.bind(port)
-          boundPort = port
-          break
-        } catch (e: BindException) {
-          logger.atSevere().withCause(e).log("Failed to bind to port %d for: %s", port, user)
-          logger
-            .atFine()
-            .log(
-              "%s returning port %d to available port queue: %d available",
-              this,
-              port,
-              portRangeQueue.size + 1
-            )
-          portRangeQueue.add(port)
-        }
-      }
-      // pause very briefly to give the OS a chance to free a port
-      threadSleep(5.milliseconds)
-    }
-    if (boundPort < 0) {
-      clientHandler.stop()
-      throw NewConnectionException("Failed to bind!")
-    }
-    clientHandler.start(user!!)
-    return boundPort
+    val clientHandler =
+      v086ClientHandlerFactory.create(
+        clientSocketAddress,
+        v086Controller = this,
+        combinedKailleraController
+      )
+    val user: KailleraUser = server.newConnection(clientSocketAddress, protocol, clientHandler)
+    clientHandler.start(user)
+    return clientHandler
   }
 
   @Synchronized
@@ -229,19 +192,6 @@ internal constructor(
   }
 
   init {
-    var maxPort = 0
-    for (i in portRangeStart..portRangeStart + server.maxUsers + extraPorts) {
-      portRangeQueue.add(i)
-      maxPort = i
-    }
-    logger
-      .atWarning()
-      .log(
-        "Listening on UDP ports: %d to %d.  Make sure these ports are open in your firewall!",
-        portRangeStart,
-        maxPort
-      )
-
     // array access should be faster than a hash and we won't have to create
     // a new Integer each time
     actions[UserInformation.ID.toInt()] = loginAction
@@ -263,7 +213,5 @@ internal constructor(
 
   companion object {
     const val MAX_BUNDLE_SIZE = 9
-
-    private val logger = FluentLogger.forEnclosingClass()
   }
 }

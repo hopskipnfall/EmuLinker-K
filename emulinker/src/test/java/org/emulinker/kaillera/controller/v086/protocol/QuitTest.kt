@@ -1,6 +1,7 @@
 package org.emulinker.kaillera.controller.v086.protocol
 
 import com.google.common.truth.Truth.assertThat
+import io.ktor.utils.io.core.ByteReadPacket
 import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.kaillera.controller.v086.protocol.MessageTestUtils.assertBufferContainsExactly
@@ -14,14 +15,19 @@ class QuitTest : ProtocolBaseTest() {
   }
 
   @Test
+  fun quitNotification_byteReadPacket_deserializeBody() {
+    val packet = ByteReadPacket(V086Utils.hexStringToByteBuffer(NOTIFICATION_BODY_BYTES))
+    assertThat(Quit.QuitSerializer.read(packet, MESSAGE_NUMBER).getOrThrow())
+      .isEqualTo(QUIT_NOTIFICATION)
+    assertThat(packet.endOfInput).isTrue()
+  }
+
+  @Test
   fun quitNotification_deserializeBody() {
-    assertThat(
-        Quit.QuitSerializer.read(
-          V086Utils.hexStringToByteBuffer(NOTIFICATION_BODY_BYTES),
-          MESSAGE_NUMBER
-        )
-      )
-      .isEqualTo(MessageParseResult.Success(QUIT_NOTIFICATION))
+    val buffer = V086Utils.hexStringToByteBuffer(NOTIFICATION_BODY_BYTES)
+    assertThat(Quit.QuitSerializer.read(buffer, MESSAGE_NUMBER).getOrThrow())
+      .isEqualTo(QUIT_NOTIFICATION)
+    assertThat(buffer.hasRemaining()).isFalse()
   }
 
   @Test
@@ -39,14 +45,19 @@ class QuitTest : ProtocolBaseTest() {
   }
 
   @Test
+  fun quitRequest_byteReadPacket_deserializeBody() {
+    val packet = ByteReadPacket(V086Utils.hexStringToByteBuffer(REQUEST_BODY_BYTES))
+    assertThat(Quit.QuitSerializer.read(packet, MESSAGE_NUMBER).getOrThrow())
+      .isEqualTo(QUIT_REQUEST)
+    assertThat(packet.endOfInput).isTrue()
+  }
+
+  @Test
   fun quitRequest_deserializeBody() {
-    assertThat(
-        Quit.QuitSerializer.read(
-          V086Utils.hexStringToByteBuffer(REQUEST_BODY_BYTES),
-          MESSAGE_NUMBER
-        )
-      )
-      .isEqualTo(MessageParseResult.Success(QUIT_REQUEST))
+    val buffer = V086Utils.hexStringToByteBuffer(REQUEST_BODY_BYTES)
+    assertThat(Quit.QuitSerializer.read(buffer, MESSAGE_NUMBER).getOrThrow())
+      .isEqualTo(QUIT_REQUEST)
+    assertThat(buffer.hasRemaining()).isFalse()
   }
 
   @Test

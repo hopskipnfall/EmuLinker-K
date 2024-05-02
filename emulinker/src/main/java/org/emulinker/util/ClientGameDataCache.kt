@@ -75,7 +75,7 @@ class ClientGameDataCache(size: Int) : GameDataCache {
         head++
         if (head == array.size) head = 0
       } else if (pos == tail) {
-        tail = (tail - 1 + array.size) % array.size
+        tail = Math.floorMod(tail - 1, array.size)
       } else {
         if (pos > head && pos > tail) { // tail/head/pos
           System.arraycopy(array, head, array, head + 1, pos - head)
@@ -84,7 +84,7 @@ class ClientGameDataCache(size: Int) : GameDataCache {
           if (head == array.size) head = 0
         } else {
           System.arraycopy(array, pos + 1, array, pos, tail - pos - 1)
-          tail = (tail - 1 + array.size) % array.size
+          tail = Math.floorMod(tail - 1, array.size)
         }
       }
       size--

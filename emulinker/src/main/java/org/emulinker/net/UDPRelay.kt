@@ -1,6 +1,5 @@
 package org.emulinker.net
 
-import com.codahale.metrics.Counter
 import com.google.common.flogger.FluentLogger
 import java.io.IOException
 import java.lang.Exception
@@ -20,7 +19,6 @@ import org.emulinker.util.EmuUtil.formatSocketAddress
 abstract class UDPRelay(
   var listenPort: Int,
   var serverSocketAddress: InetSocketAddress,
-  private val listeningOnPortsCounter: Counter
 ) : Runnable {
   var listenChannel: DatagramChannel? = null
     protected set
@@ -40,7 +38,6 @@ abstract class UDPRelay(
   override fun run() {
     logger.atInfo().log("Main port %d thread running...", listenPort)
     try {
-      listeningOnPortsCounter.inc()
       while (true) {
         val buffer = ByteBuffer.allocate(2048)
         val clientAddress = listenChannel!!.receive(buffer) as InetSocketAddress
@@ -68,7 +65,6 @@ abstract class UDPRelay(
     } catch (e: Exception) {
       logger.atSevere().withCause(e).log("Main port %d thread caught exception", listenPort)
     } finally {
-      listeningOnPortsCounter.dec()
       try {
         listenChannel!!.close()
       } catch (e: Exception) {}
@@ -93,7 +89,6 @@ abstract class UDPRelay(
         .atInfo()
         .log("ClientHandler thread for %s runnning...", formatSocketAddress(clientSocketAddress))
       try {
-        listeningOnPortsCounter.inc()
         while (true) {
           val buffer = ByteBuffer.allocate(2048)
           val receiveAddress = clientChannel.receive(buffer) as InetSocketAddress
@@ -118,7 +113,6 @@ abstract class UDPRelay(
               " caught exception"
           )
       } finally {
-        listeningOnPortsCounter.dec()
         try {
           clientChannel.close()
         } catch (e: Exception) {}

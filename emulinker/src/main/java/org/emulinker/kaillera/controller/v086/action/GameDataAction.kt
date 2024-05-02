@@ -26,7 +26,7 @@ class GameDataAction @Inject internal constructor() :
       clientHandler.clientGameDataCache.add(data)
       user.addGameData(data)
     } catch (e: GameDataException) {
-      logger.atFine().withCause(e).log("Game data error")
+      logger.atWarning().withCause(e).log("Game data error")
       if (e.response != null) {
         try {
           clientHandler.send(GameData.create(clientHandler.nextMessageNumber, e.response!!))

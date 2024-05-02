@@ -1,8 +1,10 @@
 package org.emulinker.kaillera.controller.connectcontroller.protocol
 
+import io.netty.buffer.ByteBuf
 import java.nio.ByteBuffer
 import kotlin.Throws
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
+import org.emulinker.util.EmuUtil
 
 // TODO(nue): Turn into a data class?
 /** Server Full Response. */
@@ -14,9 +16,12 @@ class ConnectMessage_TOO : ConnectMessage() {
   override val bodyBytesPlusMessageIdType: Int
     get() = ID.length + 1
 
+  override fun writeTo(buffer: ByteBuf) {
+    EmuUtil.writeString(buffer, ID)
+  }
+
   override fun writeTo(buffer: ByteBuffer) {
-    buffer.put(charset.encode(ID))
-    buffer.put(0x00.toByte())
+    EmuUtil.writeString(buffer, ID)
   }
 
   companion object {

@@ -1,8 +1,10 @@
 package org.emulinker.kaillera.controller.v086.protocol
 
 import com.google.common.truth.Truth.assertThat
+import io.ktor.utils.io.core.ByteReadPacket
+import io.netty.buffer.Unpooled
 import java.nio.ByteBuffer
-import org.emulinker.kaillera.controller.v086.V086Utils
+import org.emulinker.kaillera.controller.v086.V086Utils.hexStringToByteBuffer
 import org.emulinker.kaillera.controller.v086.protocol.MessageTestUtils.assertBufferContainsExactly
 import org.junit.Test
 
@@ -15,13 +17,18 @@ class ChatTest : ProtocolBaseTest() {
 
   @Test
   fun chatNotification_deserializeBody() {
-    assertThat(
-        Chat.ChatSerializer.read(
-          V086Utils.hexStringToByteBuffer(CHAT_NOTIFICATION_BODY_BYTES),
-          MESSAGE_NUMBER
-        )
-      )
-      .isEqualTo(MessageParseResult.Success(CHAT_NOTIFICATION))
+    val buffer = hexStringToByteBuffer(CHAT_NOTIFICATION_BODY_BYTES)
+    assertThat(Chat.ChatSerializer.read(buffer, MESSAGE_NUMBER).getOrThrow())
+      .isEqualTo(CHAT_NOTIFICATION)
+    assertThat(buffer.hasRemaining()).isFalse()
+  }
+
+  @Test
+  fun chatNotification_byteReadPacket_deserializeBody() {
+    val packet = ByteReadPacket(hexStringToByteBuffer(CHAT_NOTIFICATION_BODY_BYTES))
+    assertThat(Chat.ChatSerializer.read(packet, MESSAGE_NUMBER).getOrThrow())
+      .isEqualTo(CHAT_NOTIFICATION)
+    assertThat(packet.endOfInput).isTrue()
   }
 
   @Test
@@ -34,19 +41,33 @@ class ChatTest : ProtocolBaseTest() {
   }
 
   @Test
+  fun chatNotification_serializeBody_byteBuf() {
+    val buffer = Unpooled.buffer(4096)
+    CHAT_NOTIFICATION.writeBodyTo(buffer)
+
+    assertThat(buffer.readableBytes()).isEqualTo(CHAT_NOTIFICATION.bodyBytes)
+    assertBufferContainsExactly(buffer, CHAT_NOTIFICATION_BODY_BYTES)
+  }
+
+  @Test
   fun bodyLength() {
     assertThat(CHAT_REQUEST.bodyBytes).isEqualTo(15)
   }
 
   @Test
   fun deserializeBody() {
-    assertThat(
-        Chat.ChatSerializer.read(
-          V086Utils.hexStringToByteBuffer(CHAT_REQUEST_BODY_BYTES),
-          MESSAGE_NUMBER
-        )
-      )
-      .isEqualTo(MessageParseResult.Success(CHAT_REQUEST))
+    val buffer = hexStringToByteBuffer(CHAT_REQUEST_BODY_BYTES)
+    assertThat(Chat.ChatSerializer.read(buffer, MESSAGE_NUMBER).getOrThrow())
+      .isEqualTo(CHAT_REQUEST)
+    assertThat(buffer.hasRemaining()).isFalse()
+  }
+
+  @Test
+  fun byteReadPacket_deserializeBody() {
+    val packet = ByteReadPacket(hexStringToByteBuffer(CHAT_REQUEST_BODY_BYTES))
+    assertThat(Chat.ChatSerializer.read(packet, MESSAGE_NUMBER).getOrThrow())
+      .isEqualTo(CHAT_REQUEST)
+    assertThat(packet.endOfInput).isTrue()
   }
 
   @Test
