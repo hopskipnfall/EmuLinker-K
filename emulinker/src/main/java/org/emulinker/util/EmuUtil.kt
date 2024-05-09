@@ -285,16 +285,13 @@ object EmuUtil {
     }
   }
 
-  fun toSimpleUtcDatetime(instant: Instant): String {
-    return DateTimeFormatter.RFC_1123_DATE_TIME.withZone(ZoneOffset.UTC).format(instant)
-  }
+  fun toSimpleUtcDatetime(instant: Instant): String =
+    DateTimeFormatter.RFC_1123_DATE_TIME.withZone(ZoneOffset.UTC).format(instant)
 
-  // TODO(nue): Get rid of this.
-  /** Calls [Thread.sleep] in a try/catch. */
-  @Deprecated(message = "You should probably use delay!")
+  // TODO(nue): Get rid of this after it's confirmed it can be safely removed.
+  /** NOOP placeholder for a function that _used to_ call [Thread.sleep]. */
+  @Deprecated(message = "Don't sleep!", level = DeprecationLevel.WARNING)
   fun threadSleep(d: Duration) {
-    try {
-      Thread.sleep(d.inWholeMilliseconds)
-    } catch (e: Exception) {}
+    // try { Thread.sleep(d.inWholeMilliseconds) } catch (e: Exception) {}
   }
 }
