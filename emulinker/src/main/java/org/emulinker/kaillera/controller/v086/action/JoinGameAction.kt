@@ -2,17 +2,21 @@ package org.emulinker.kaillera.controller.v086.action
 
 import com.google.common.flogger.FluentLogger
 import javax.inject.Inject
+import javax.inject.Named
 import javax.inject.Singleton
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086ClientHandler
 import org.emulinker.kaillera.controller.v086.protocol.*
 import org.emulinker.kaillera.controller.v086.protocol.PlayerInformation.Player
+import org.emulinker.kaillera.model.event.GameInfoEvent
 import org.emulinker.kaillera.model.event.UserJoinedGameEvent
 import org.emulinker.kaillera.model.exception.JoinGameException
 import org.emulinker.util.EmuLang
 
 @Singleton
-class JoinGameAction @Inject internal constructor() :
+class JoinGameAction
+@Inject
+internal constructor(@param:Named("joinGameMessages") private val joinGameMessages: List<String>) :
   V086Action<JoinGameRequest>, V086GameEventHandler<UserJoinedGameEvent> {
   override var actionPerformedCount = 0
     private set
@@ -25,7 +29,11 @@ class JoinGameAction @Inject internal constructor() :
   override fun performAction(message: JoinGameRequest, clientHandler: V086ClientHandler) {
     actionPerformedCount++
     try {
-      clientHandler.user.joinGame(message.gameId)
+      val game = clientHandler.user.joinGame(message.gameId)
+
+      for (msg in joinGameMessages) {
+        clientHandler.user.queueEvent(GameInfoEvent(game, msg, toUser = clientHandler.user))
+      }
     } catch (e: JoinGameException) {
       logger.atSevere().withCause(e).log("Failed to join game.")
       try {

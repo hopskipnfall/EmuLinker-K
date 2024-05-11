@@ -2,6 +2,7 @@ package org.emulinker.kaillera.controller.v086.action
 
 import com.google.common.flogger.FluentLogger
 import javax.inject.Inject
+import javax.inject.Named
 import javax.inject.Singleton
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086ClientHandler
@@ -10,12 +11,15 @@ import org.emulinker.kaillera.controller.v086.protocol.CreateGameNotification
 import org.emulinker.kaillera.controller.v086.protocol.InformationMessage
 import org.emulinker.kaillera.controller.v086.protocol.QuitGameNotification
 import org.emulinker.kaillera.model.event.GameCreatedEvent
+import org.emulinker.kaillera.model.event.GameInfoEvent
 import org.emulinker.kaillera.model.exception.CreateGameException
 import org.emulinker.kaillera.model.exception.FloodException
 import org.emulinker.util.EmuLang
 
 @Singleton
-class CreateGameAction @Inject internal constructor() :
+class CreateGameAction
+@Inject
+internal constructor(@param:Named("joinGameMessages") private val joinGameMessages: List<String>) :
   V086Action<CreateGame>, V086ServerEventHandler<GameCreatedEvent> {
   override var actionPerformedCount = 0
     private set
@@ -28,7 +32,13 @@ class CreateGameAction @Inject internal constructor() :
   override fun performAction(message: CreateGame, clientHandler: V086ClientHandler) {
     actionPerformedCount++
     try {
-      clientHandler.user.createGame(message.romName)
+      val game = clientHandler.user.createGame(message.romName)
+
+      if (game != null) {
+        for (msg in joinGameMessages) {
+          clientHandler.user.queueEvent(GameInfoEvent(game, msg, toUser = clientHandler.user))
+        }
+      }
     } catch (e: CreateGameException) {
       logger
         .atInfo()

@@ -19,9 +19,19 @@ import kotlin.time.Duration.Companion.seconds
 class TaskScheduler @Inject constructor() {
   private var timer = Timer(/* isDaemon= */ true)
 
-  fun schedule(delay: Duration = 0.seconds, action: TimerTask.() -> Unit): TimerTask =
+  fun schedule(delay: Duration = 0.seconds, action: () -> Unit): TimerTask =
     try {
-      timer.schedule(delay = delay.inWholeMilliseconds, action)
+      timer.schedule(delay = delay.inWholeMilliseconds) {
+        // Wrap the action in a try/catch to prevent exceptions from killing the timer.
+        try {
+          action()
+        } catch (e: Exception) {
+          logger
+            .atWarning()
+            .withCause(e)
+            .log("Caught an exception that would have killed the timer")
+        }
+      }
     } catch (e: Exception) {
       logger
         .atWarning()
@@ -30,20 +40,39 @@ class TaskScheduler @Inject constructor() {
 
       timer = Timer()
 
-      timer.schedule(delay = delay.inWholeMilliseconds, action)
+      timer.schedule(delay = delay.inWholeMilliseconds) {
+        // Wrap the action in a try/catch to prevent exceptions from killing the timer.
+        try {
+          action()
+        } catch (e: Exception) {
+          logger
+            .atWarning()
+            .withCause(e)
+            .log("Caught an exception that would have killed the timer")
+        }
+      }
     }
 
   fun scheduleRepeating(
     period: Duration,
     initialDelay: Duration = 0.seconds,
-    action: TimerTask.() -> Unit
+    action: () -> Unit
   ): TimerTask =
     try {
       timer.schedule(
         delay = initialDelay.inWholeMilliseconds,
         period = period.inWholeMilliseconds,
-        action
-      )
+      ) {
+        // Wrap the action in a try/catch to prevent exceptions from killing the timer.
+        try {
+          action()
+        } catch (e: Exception) {
+          logger
+            .atWarning()
+            .withCause(e)
+            .log("Caught an exception that would have killed the timer")
+        }
+      }
     } catch (e: Exception) {
       logger
         .atWarning()
@@ -54,9 +83,18 @@ class TaskScheduler @Inject constructor() {
 
       timer.schedule(
         delay = initialDelay.inWholeMilliseconds,
-        period = period.inWholeMilliseconds,
-        action
-      )
+        period = period.inWholeMilliseconds
+      ) {
+        // Wrap the action in a try/catch to prevent exceptions from killing the timer.
+        try {
+          action()
+        } catch (e: Exception) {
+          logger
+            .atWarning()
+            .withCause(e)
+            .log("Caught an exception that would have killed the timer")
+        }
+      }
     }
 
   private companion object {

@@ -34,10 +34,12 @@ import org.emulinker.kaillera.model.impl.AutoFireDetectorFactory
 import org.emulinker.kaillera.model.impl.KailleraGameImpl
 import org.emulinker.kaillera.model.impl.Trivia
 import org.emulinker.kaillera.pico.AppModule
+import org.emulinker.kaillera.pico.CompiledFlags
 import org.emulinker.kaillera.release.ReleaseInfo
 import org.emulinker.util.EmuLang
 import org.emulinker.util.EmuUtil
 import org.emulinker.util.EmuUtil.threadSleep
+import org.emulinker.util.TaskScheduler
 
 /** Holds server-wide state. */
 @Singleton
@@ -52,6 +54,7 @@ internal constructor(
   private val lookingForGameReporter: TwitterBroadcaster,
   metrics: MetricRegistry,
   @param:Named("userActionsExecutor") private val userActionsExecutor: ThreadPoolExecutor,
+  private val taskScheduler: TaskScheduler,
 ) {
 
   private var allowedConnectionTypes = BooleanArray(7)
@@ -102,13 +105,13 @@ internal constructor(
 
   @Synchronized
   fun start() {
-    //    timerTask =
-    //      timer.schedule(
-    //        delay = (flags.maxPing * 3).milliseconds.inWholeMilliseconds,
-    //        period = (flags.maxPing * 3).milliseconds.inWholeMilliseconds
-    //      ) {
-    //        run()
-    //      }
+    timerTask =
+      taskScheduler.scheduleRepeating(
+        period = (flags.maxPing * 3).milliseconds,
+        initialDelay = (flags.maxPing * 3).milliseconds,
+      ) {
+        run()
+      }
   }
 
   @Synchronized
@@ -403,6 +406,14 @@ internal constructor(
         "${releaseInfo.productName} v${releaseInfo.version}: ${releaseInfo.websiteString}"
       )
     )
+    if (CompiledFlags.DEBUG_BUILD) {
+      userImpl.queueEvent(
+        InfoMessageEvent(
+          user,
+          "WARNING: This is an unoptimized debug build that should not be used in production."
+        )
+      )
+    }
     threadSleep(20.milliseconds)
     if (access > AccessManager.ACCESS_NORMAL) {
       logger
@@ -536,7 +547,7 @@ internal constructor(
       return
     }
     message = message!!.trim { it <= ' ' }
-    if (message.isNullOrBlank() || message.startsWith("�") || message.startsWith("�")) return
+    if (message.isBlank() || message.startsWith("�") || message.startsWith("�")) return
     if (access == AccessManager.ACCESS_NORMAL) {
       val chars = message.toCharArray()
       for (i in chars.indices) {
@@ -627,7 +638,7 @@ internal constructor(
         )
       }
     }
-    var game: KailleraGameImpl?
+    val game: KailleraGameImpl?
     val gameID = getNextGameID()
     game = KailleraGameImpl(gameID, romName, (user as KailleraUser?)!!, this, flags.gameBufferSize)
     gamesMap[gameID] = game
@@ -804,7 +815,6 @@ internal constructor(
     }
   }
 
-  // TODO(nue): This method is never used..
   private fun run() {
     try {
       if (usersMap.isEmpty()) return
