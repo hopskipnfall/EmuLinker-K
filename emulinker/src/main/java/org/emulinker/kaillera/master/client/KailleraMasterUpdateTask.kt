@@ -42,8 +42,8 @@ constructor(
       this.append("port", config.getInt("controllers.connect.port").toString())
       this.append("nbusers", kailleraServer.users.size.toString())
       this.append("maxconn", kailleraServer.maxUsers.toString())
-      // I want to use `releaseInfo.versionWithElkPrefix` here, but for some reason this RPC
-      // fails to write to the db. So we just write elk (lowercase in protest :P ).
+      // I want to use `releaseInfo.versionWithElkPrefix` here, but it's too long for the db schema
+      // field, so we just write elk (lowercase in protest :P ).
       this.append("version", "elk")
       this.append("nbgames", kailleraServer.games.size.toString())
       this.append("location", publicInfo.location)
@@ -94,5 +94,7 @@ constructor(
     private val logger = FluentLogger.forEnclosingClass()
 
     private const val TOUCH_LIST_URL = "http://www.kaillera.com/touch_server.php"
+
+    private const val FETCH_LIST_URL = "http://www.kaillera.com/raw_server_list2.php"
   }
 }

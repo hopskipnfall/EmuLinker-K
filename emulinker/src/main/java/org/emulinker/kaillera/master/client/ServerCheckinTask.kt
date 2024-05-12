@@ -16,6 +16,7 @@ import org.apache.commons.configuration.Configuration
 import org.emulinker.kaillera.master.PublicServerInformation
 import org.emulinker.kaillera.pico.AppModule
 import org.emulinker.kaillera.pico.CompiledFlags
+import org.emulinker.kaillera.release.ReleaseInfo
 
 @Serializable
 data class ServerInfo(
@@ -43,6 +44,7 @@ class ServerCheckinTask
 constructor(
   private val publicServerInfo: PublicServerInformation,
   private val config: Configuration,
+  private val releaseInfo: ReleaseInfo,
 ) : MasterListUpdateTask {
 
   override fun reportStatus() {
@@ -82,7 +84,7 @@ constructor(
           website = publicServerInfo.website,
           location = publicServerInfo.location,
           charset = AppModule.charsetDoNotUse.name,
-          version = CompiledFlags.PROJECT_VERSION,
+          version = releaseInfo.versionWithElkPrefix,
           isDevBuild = CompiledFlags.DEBUG_BUILD
         )
       )
