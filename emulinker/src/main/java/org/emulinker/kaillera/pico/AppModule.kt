@@ -25,6 +25,7 @@ import org.emulinker.kaillera.master.MasterListStatsCollector
 import org.emulinker.kaillera.master.StatsCollector
 import org.emulinker.kaillera.model.impl.AutoFireDetectorFactory
 import org.emulinker.kaillera.model.impl.AutoFireDetectorFactoryImpl
+import org.emulinker.util.EmuLang
 import org.emulinker.util.EmuLinkerPropertiesConfig
 
 @Module
@@ -116,6 +117,17 @@ abstract class AppModule {
     @Singleton
     fun provideMetricRegistry(): MetricRegistry {
       return MetricRegistry()
+    }
+
+    @Provides
+    @Singleton
+    @Named("joinGameMessages")
+    fun provideJoinGameMessages(): List<String> = buildList {
+      var i = 1
+      while (EmuLang.hasString("KailleraServerImpl.JoinGameMessage.$i")) {
+        add(EmuLang.getString("KailleraServerImpl.JoinGameMessage.$i"))
+        i++
+      }
     }
   }
 }

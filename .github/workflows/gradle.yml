@@ -7,7 +7,6 @@ on:
   pull_request:
     branches:
       - "master"
-      - "fewer-ports"
 
 permissions:
   contents: read

@@ -81,6 +81,7 @@ tasks.processResources {
             val name = project.description
             val version = project.version
             val url = properties["url"]
+            val prerelease = properties["prerelease"]
           },
         "useBytereadpacketInsteadOfBytebuffer" to false,
       )

@@ -2,6 +2,7 @@ package org.emulinker.kaillera.release
 
 import java.time.Instant
 import javax.inject.Inject
+import org.emulinker.kaillera.pico.CompiledFlags
 import org.emulinker.kaillera.pico.CompiledFlags.BUILD_DATE
 import org.emulinker.kaillera.pico.CompiledFlags.PROJECT_NAME
 import org.emulinker.kaillera.pico.CompiledFlags.PROJECT_URL
@@ -15,7 +16,8 @@ import org.emulinker.util.EmuUtil
 class ReleaseInfo @Inject constructor() {
   val productName: String = PROJECT_NAME
 
-  val version: String = PROJECT_VERSION
+  val version: String =
+    if (CompiledFlags.PRERELEASE_BUILD) "$PROJECT_VERSION (pre-release)" else PROJECT_VERSION
 
   val versionWithElkPrefix: String = "ELK$version"
 
@@ -23,7 +25,7 @@ class ReleaseInfo @Inject constructor() {
 
   val websiteString: String = PROJECT_URL
 
-  val licenseInfo = "Usage of this sofware is subject to the terms found in the included license"
+  val licenseInfo = "Usage of this software is subject to the terms found in the included license"
 
   /**
    * Formats release information into a welcome message. This message is printed by the server at

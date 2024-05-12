@@ -63,9 +63,13 @@ internal constructor(
         val message =
           "User: ${user.name}\nGame: ${lookingForGameEvent.gameTitle}\nServer: ${flags.serverName} (${flags.serverAddress})"
         val tweet = twitter.postTweet(message)
-        user.game!!.announce(getUrl(tweet, twitter.userIdFromAccessToken), user)
-        logger.atFine().log("Posted tweet: %s", getUrl(tweet, twitter.userIdFromAccessToken))
-        postedTweets[lookingForGameEvent] = tweet.id
+        if (tweet.id == null) {
+          logger.atWarning().log("Unable to post tweet")
+        } else {
+          user.game!!.announce(getUrl(tweet, twitter.userIdFromAccessToken), user)
+          logger.atFine().log("Posted tweet: %s", getUrl(tweet, twitter.userIdFromAccessToken))
+          postedTweets[lookingForGameEvent] = tweet.id
+        }
       }
     pendingReports[lookingForGameEvent] = timerTask
     return true
