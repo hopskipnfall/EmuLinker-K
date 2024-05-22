@@ -16,6 +16,7 @@ import java.net.InetSocketAddress
 import java.nio.ByteOrder
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
+import kotlin.concurrent.thread
 import org.apache.commons.configuration.Configuration
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.access.AccessManager
@@ -56,6 +57,21 @@ constructor(
   fun bind(port: Int) {
     embeddedServer(Netty, port = port) {
         val group = NioEventLoopGroup(flags.nettyFlags)
+
+        Runtime.getRuntime()
+          .addShutdownHook(
+            thread(start = false) {
+              logger.atInfo().log("Received SIGTERM, shutting down gracefully.")
+              try {
+                clientHandlers.values.forEach { handler ->
+                  handler.user.server.quit(handler.user, "Server shutting down")
+                }
+              } finally {
+                nettyChannel.close()
+              }
+            }
+          )
+
         try {
           Bootstrap().apply {
             group(group)

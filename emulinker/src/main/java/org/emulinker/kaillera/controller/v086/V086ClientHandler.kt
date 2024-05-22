@@ -8,16 +8,19 @@ import dagger.assisted.AssistedInject
 import io.netty.buffer.ByteBuf
 import io.netty.channel.socket.DatagramPacket
 import java.net.InetSocketAddress
+import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.controller.CombinedKailleraController
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.messaging.ParseException
 import org.emulinker.kaillera.controller.v086.action.FatalActionException
+import org.emulinker.kaillera.controller.v086.action.GameDataAction
 import org.emulinker.kaillera.controller.v086.action.V086Action
 import org.emulinker.kaillera.controller.v086.action.V086GameEventHandler
 import org.emulinker.kaillera.controller.v086.action.V086ServerEventHandler
 import org.emulinker.kaillera.controller.v086.action.V086UserEventHandler
+import org.emulinker.kaillera.controller.v086.protocol.GameData
 import org.emulinker.kaillera.controller.v086.protocol.V086Bundle
 import org.emulinker.kaillera.controller.v086.protocol.V086Bundle.Companion.parse
 import org.emulinker.kaillera.controller.v086.protocol.V086BundleFormatException
@@ -41,6 +44,7 @@ class V086ClientHandler
 constructor(
   metrics: MetricRegistry,
   private val flags: RuntimeFlags,
+  private val gameDataAction: GameDataAction,
   // TODO(nue): Try to replace this with remoteSocketAddress.
   /** I think this is the address from when the user called the connect controller. */
   @Assisted val connectRemoteSocketAddress: InetSocketAddress,
@@ -157,6 +161,7 @@ constructor(
   private fun handleReceivedInternal(buffer: ByteBuf) {
     val inBundle: V086Bundle =
       if (CompiledFlags.USE_BYTEREADPACKET_INSTEAD_OF_BYTEBUFFER) {
+        // Note: This is currently DISABLED as it's unstable (see tests marked as @Ignore).
         try {
           parse(buffer, lastMessageNumber)
         } catch (e: ParseException) {
@@ -190,7 +195,7 @@ constructor(
           //             TODO:   datagram.packet.release()
         }
       } else {
-        val newBuffer = buffer.nioBuffer()
+        val newBuffer: ByteBuffer = buffer.nioBuffer()
         try {
           parse(newBuffer, lastMessageNumber)
         } catch (e: ParseException) {
@@ -240,14 +245,22 @@ constructor(
       val messages = inBundle.messages
       // TODO(nue): Combine these two cases? This seems unnecessary.
       if (inBundle.numMessages == 1) {
-        lastMessageNumber = messages[0]!!.messageNumber
-        val action = controller.actions[messages[0]!!.messageTypeId.toInt()]
+        val m: V086Message = messages[0]!!
+        lastMessageNumber = m.messageNumber
+        val messageTypeId = m.messageTypeId
+        val action: V086Action<out V086Message>? =
+          // Checking for GameData first is a speed optimization.
+          if (messageTypeId == GameData.ID) {
+            gameDataAction
+          } else {
+            controller.actions[m.messageTypeId.toInt()]
+          }
         if (action == null) {
           logger
             .atSevere()
             .log("No action defined to handle client message: %s", messages.firstOrNull())
         }
-        (action as V086Action<V086Message>?)!!.performAction(messages[0]!!, this)
+        (action as V086Action<V086Message>?)!!.performAction(m, this)
       } else {
         // read the bundle from back to front to process the oldest messages first
         for (i in inBundle.numMessages - 1 downTo 0) {
@@ -257,7 +270,8 @@ constructor(
            * if (messages [i].getNumber() > lastMessageNumber)
            */
           prevMessageNumber = lastMessageNumber
-          lastMessageNumber = messages[i]!!.messageNumber
+          val m: V086Message = messages[i]!!
+          lastMessageNumber = m.messageNumber
           if (prevMessageNumber + 1 != lastMessageNumber) {
             if (prevMessageNumber == 0xFFFF && lastMessageNumber == 0) {
               // exception; do nothing
@@ -268,12 +282,19 @@ constructor(
               user.droppedPacket()
             }
           }
-          val action = controller.actions[messages[i]!!.messageTypeId.toInt()]
+          val messageTypeId = m.messageTypeId
+          val action: V086Action<out V086Message>? =
+            // Checking for GameData first is a speed optimization.
+            if (messageTypeId == GameData.ID) {
+              gameDataAction
+            } else {
+              controller.actions[m.messageTypeId.toInt()]
+            }
           if (action == null) {
             logger.atSevere().log("No action defined to handle client message: %s", messages[i])
           } else {
             // logger.atFine().log(user + " -> " + message);
-            (action as V086Action<V086Message>).performAction(messages[i]!!, this)
+            (action as V086Action<V086Message>).performAction(m, this)
           }
         }
       }

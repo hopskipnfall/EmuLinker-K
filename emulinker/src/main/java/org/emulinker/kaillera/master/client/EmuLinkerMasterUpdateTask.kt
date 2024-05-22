@@ -78,6 +78,6 @@ constructor(
 
     private const val TOUCH_LIST_URL = "http://kaillerareborn.2manygames.fr/touch_list.php"
 
-    private const val FETCH_LIST_URL = "http://kaillerareborn.2manygames.fr/game_list.php"
+    private const val FETCH_LIST_URL = "http://kaillerareborn.2manygames.fr/server_list.php"
   }
 }

@@ -4,7 +4,6 @@ import com.codahale.metrics.Gauge
 import com.codahale.metrics.MetricRegistry
 import com.google.common.flogger.FluentLogger
 import java.net.InetSocketAddress
-import java.time.Instant
 import java.util.Locale
 import java.util.TimerTask
 import java.util.concurrent.ConcurrentHashMap
@@ -852,8 +851,7 @@ internal constructor(
           flags.idleTimeout.isPositive() &&
             access == AccessManager.ACCESS_NORMAL &&
             user.loggedIn &&
-            (Instant.now().toEpochMilli() - user.lastActivity >
-              flags.idleTimeout.inWholeMilliseconds)
+            (System.currentTimeMillis() - user.lastActivity > flags.idleTimeout.inWholeMilliseconds)
         ) {
           logger.atInfo().log("%s inactivity timeout!", user)
           try {

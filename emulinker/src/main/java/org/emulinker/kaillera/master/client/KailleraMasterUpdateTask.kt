@@ -78,12 +78,12 @@ constructor(
         response.append(line)
       }
       br.close()
-      logger.atFine().log("Touching EmuLinker Master done: %s", response)
+      logger.atFine().log("Touching Kaillera Master done: %s", response)
     } else {
       logger
         .atWarning()
         .atMostEvery(6, TimeUnit.HOURS)
-        .log("Failed to touch EmuLinker Master: %d", responseCode)
+        .log("Failed to touch Kaillera Master: %d", responseCode)
     }
 
     // Disconnect the connection

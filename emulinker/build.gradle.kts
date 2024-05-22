@@ -18,7 +18,6 @@ repositories {
 
 dependencies {
   api("org.jetbrains.kotlin:kotlin-stdlib:1.8.21")
-  api("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.1")
 
   implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.1")
 
@@ -44,13 +43,14 @@ dependencies {
   api("commons-pool:commons-pool:1.2")
 
   val ktorVersion = "2.3.9"
-  api("io.ktor:ktor-network-jvm:$ktorVersion")
-  api("io.ktor:ktor-server-core-jvm:$ktorVersion")
-  api("io.ktor:ktor-server-netty-jvm:$ktorVersion")
-  api("io.ktor:ktor-server-status-pages-jvm:$ktorVersion")
-  api("io.ktor:ktor-server-default-headers-jvm:$ktorVersion")
+  implementation("io.ktor:ktor-network-jvm:$ktorVersion")
+  implementation("io.ktor:ktor-server-core-jvm:$ktorVersion")
+  implementation("io.ktor:ktor-server-netty-jvm:$ktorVersion")
+  implementation("io.ktor:ktor-server-status-pages-jvm:$ktorVersion")
+  implementation("io.ktor:ktor-server-default-headers-jvm:$ktorVersion")
 
-  api("io.reactivex.rxjava3:rxjava:3.1.1")
+  // This is only used by the fake testing client, hopefully we can remove this.
+  testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.1")
 
   testImplementation("junit:junit:4.13.2")
   testImplementation("com.google.truth:truth:1.1.3")

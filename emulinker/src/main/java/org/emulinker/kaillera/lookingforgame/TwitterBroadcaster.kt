@@ -4,14 +4,13 @@ import com.google.common.flogger.FluentLogger
 import io.github.redouane59.twitter.TwitterClient
 import io.github.redouane59.twitter.dto.tweet.Tweet
 import io.github.redouane59.twitter.dto.tweet.TweetParameters
-import io.reactivex.rxjava3.core.Observable
-import io.reactivex.rxjava3.schedulers.Schedulers
 import java.util.TimerTask
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentMap
 import javax.inject.Inject
 import javax.inject.Provider
 import javax.inject.Singleton
+import kotlin.time.Duration.Companion.seconds
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.model.KailleraUser
 import org.emulinker.util.EmuLang
@@ -106,15 +105,16 @@ internal constructor(
         val tweetId = postedTweets[event]
         if (tweetId != null) {
           postedTweets.remove(event)
-          Observable.just(tweetId).subscribeOn(Schedulers.io()).subscribe { id: String ->
+
+          taskScheduler.schedule(delay = 0.seconds) {
             if (flags.twitterDeletePostOnClose) {
-              twitter.deleteTweet(id)
-              logger.atFine().log("Deleted tweet %s", id)
+              twitter.deleteTweet(tweetId)
+              logger.atFine().log("Deleted tweet %s", tweetId)
             } else {
               val tweet =
                 twitter.postTweet(
                   TweetParameters.builder()
-                    .reply(TweetParameters.Reply.builder().inReplyToTweetId(id).build())
+                    .reply(TweetParameters.Reply.builder().inReplyToTweetId(tweetId).build())
                     .text(EmuLang.getStringOrDefault("KailleraServerImpl.TweetCloseMessage", "〆"))
                     .build()
                 )
