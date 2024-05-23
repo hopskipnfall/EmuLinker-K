@@ -3,7 +3,6 @@ package org.emulinker.kaillera.model
 import com.google.common.flogger.FluentLogger
 import java.net.InetSocketAddress
 import java.time.Duration
-import java.time.Instant
 import java.util.ArrayList
 import java.util.concurrent.BlockingQueue
 import java.util.concurrent.LinkedBlockingQueue
@@ -71,12 +70,9 @@ class KailleraUser(
   var bigLagSpikesCausedByUser = 0L
 
   /** The last time we heard from this player for lag detection purposes. */
-  private var lastUpdate = Instant.now()
+  private var lastUpdateNs = System.nanoTime()
   private var smallLagThresholdNs = Duration.ZERO.nano
   private var bigSpikeThresholdNs = Duration.ZERO.nano
-
-  // Saved to a variable because I think this might give a speed boost.
-  private val improvedLagstat = flags.improvedLagstatEnabled
 
   fun updateLastActivity() {
     lastKeepAlive = System.currentTimeMillis()
@@ -423,18 +419,16 @@ class KailleraUser(
 
   @Throws(GameDataException::class)
   fun addGameData(data: ByteArray) {
-    if (improvedLagstat) {
-      val delaySinceLastResponseNs = Duration.between(lastUpdate, Instant.now()).nano
-      when {
-        delaySinceLastResponseNs < smallLagThresholdNs -> {
-          // No lag occurred.
-        }
-        delaySinceLastResponseNs < bigSpikeThresholdNs -> {
-          smallLagSpikesCausedByUser++
-        }
-        delaySinceLastResponseNs >= bigSpikeThresholdNs -> {
-          bigLagSpikesCausedByUser++
-        }
+    val delaySinceLastResponseNs = System.nanoTime() - lastUpdateNs
+    when {
+      delaySinceLastResponseNs < smallLagThresholdNs -> {
+        // No lag occurred.
+      }
+      delaySinceLastResponseNs < bigSpikeThresholdNs -> {
+        smallLagSpikesCausedByUser++
+      }
+      delaySinceLastResponseNs >= bigSpikeThresholdNs -> {
+        bigLagSpikesCausedByUser++
       }
     }
 
@@ -497,9 +491,7 @@ class KailleraUser(
       }
     }
 
-    if (improvedLagstat) {
-      lastUpdate = Instant.now()
-    }
+    lastUpdateNs = System.nanoTime()
   }
 
   fun queueEvent(event: KailleraEvent) {
@@ -526,9 +518,7 @@ class KailleraUser(
           listener.actionPerformed(event)
           if (event is GameStartedEvent) {
             status = UserStatus.PLAYING
-            if (improvedLagstat) {
-              lastUpdate = Instant.now()
-            }
+            lastUpdateNs = System.nanoTime()
           } else if (event is UserQuitEvent && event.user == this) {
             stop()
           }

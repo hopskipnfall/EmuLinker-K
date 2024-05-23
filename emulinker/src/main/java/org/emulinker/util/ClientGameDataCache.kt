@@ -1,7 +1,6 @@
 package org.emulinker.util
 
 import java.lang.IndexOutOfBoundsException
-import java.util.Arrays
 
 // This is a very specialized structure designed for quickly caching int arrays during game play
 // Adapted from http://www.smotricz.com/kabutz/Issue027.html
@@ -40,7 +39,7 @@ class ClientGameDataCache(size: Int) : GameDataCache {
   }
 
   override fun indexOf(data: ByteArray?): Int {
-    for (i in 0 until size) if (Arrays.equals(data, array[convert(i)])) return i
+    for (i in 0 until size) if (data.contentEquals(array[convert(i)])) return i
     return -1
   }
 

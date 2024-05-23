@@ -26,6 +26,7 @@ import org.emulinker.kaillera.controller.v086.protocol.V086Bundle.Companion.pars
 import org.emulinker.kaillera.controller.v086.protocol.V086BundleFormatException
 import org.emulinker.kaillera.controller.v086.protocol.V086Message
 import org.emulinker.kaillera.model.KailleraUser
+import org.emulinker.kaillera.model.event.GameDataEvent
 import org.emulinker.kaillera.model.event.GameEvent
 import org.emulinker.kaillera.model.event.KailleraEvent
 import org.emulinker.kaillera.model.event.KailleraEventListener
@@ -72,7 +73,12 @@ constructor(
         )
       return
     }
-    clientRequestTimer.time().use { handleReceivedInternal(buf) }
+    if (flags.metricsEnabled) {
+      // TODO: Can we use measureNanoTime?
+      clientRequestTimer.time().use { handleReceivedInternal(buf) }
+    } else {
+      handleReceivedInternal(buf)
+    }
   }
 
   lateinit var user: KailleraUser
@@ -259,8 +265,9 @@ constructor(
           logger
             .atSevere()
             .log("No action defined to handle client message: %s", messages.firstOrNull())
+          return
         }
-        (action as V086Action<V086Message>?)!!.performAction(m, this)
+        (action as V086Action<V086Message>).performAction(m, this)
       } else {
         // read the bundle from back to front to process the oldest messages first
         for (i in inBundle.numMessages - 1 downTo 0) {
@@ -306,6 +313,10 @@ constructor(
 
   override fun actionPerformed(event: KailleraEvent) {
     when (event) {
+      // Check for GameDataEvent first to avoid map lookup slowness.
+      is GameDataEvent -> {
+        gameDataAction.handleEvent(event, this)
+      }
       is GameEvent -> {
         val eventHandler = controller.gameEventHandlers[event::class]
         if (eventHandler == null) {
@@ -351,14 +362,14 @@ constructor(
       var numToSend = 3 * timeoutCounter
       if (numToSend > V086Controller.MAX_BUNDLE_SIZE) numToSend = V086Controller.MAX_BUNDLE_SIZE
       logger.atFine().log("%s: resending last %d messages", this, numToSend)
-      send(null, numToSend)
+      resendFromCache(numToSend)
       lastResend = System.currentTimeMillis()
     } else {
       logger.atFine().log("Skipping resend...")
     }
   }
 
-  fun send(outMessage: V086Message?, numToSend: Int = 5) {
+  private fun resendFromCache(numToSend: Int = 5) {
     synchronized(sendMutex) {
       var numToSend = numToSend
 
@@ -367,9 +378,24 @@ constructor(
           .alloc()
           .directBuffer(flags.v086BufferSize)
           .order(ByteOrder.LITTLE_ENDIAN)
-      if (outMessage != null) {
-        lastMessageBuffer.add(outMessage)
-      }
+      numToSend = lastMessageBuffer.fill(outMessages, numToSend)
+      val outBundle = V086Bundle(outMessages, numToSend)
+      stripFromProdBinary { logger.atFinest().log("<- TO P%d: (RESEND)", user.id) }
+      outBundle.writeTo(buf)
+      combinedKailleraController.send(DatagramPacket(buf, remoteSocketAddress!!))
+    }
+  }
+
+  fun send(outMessage: V086Message, numToSend: Int = 5) {
+    synchronized(sendMutex) {
+      var numToSend = numToSend
+
+      val buf =
+        combinedKailleraController.nettyChannel
+          .alloc()
+          .directBuffer(flags.v086BufferSize)
+          .order(ByteOrder.LITTLE_ENDIAN)
+      lastMessageBuffer.add(outMessage)
       numToSend = lastMessageBuffer.fill(outMessages, numToSend)
       val outBundle = V086Bundle(outMessages, numToSend)
       stripFromProdBinary { logger.atFinest().log("<- TO P%d: %s", user.id, outMessage) }
