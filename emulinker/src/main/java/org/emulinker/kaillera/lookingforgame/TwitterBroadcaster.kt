@@ -33,6 +33,8 @@ internal constructor(
   private val pendingReports: ConcurrentMap<LookingForGameEvent, TimerTask> = ConcurrentHashMap()
   private val postedTweets: ConcurrentMap<LookingForGameEvent, String> = ConcurrentHashMap()
 
+  private var lastTweetContent: String = ""
+
   /**
    * After the number of seconds defined in the config, it will report.
    *
@@ -55,16 +57,22 @@ internal constructor(
       return false
     }
 
+    val user: KailleraUser = lookingForGameEvent.user
+    val message =
+      "User: ${user.name}\nGame: ${lookingForGameEvent.gameTitle}\nServer: ${flags.serverName} (${flags.serverAddress})"
+    if (message == lastTweetContent) {
+      // Twitter will not allow us to make the same post twice in a row.
+      return false
+    }
+
     val timerTask =
       taskScheduler.schedule(delay = flags.twitterBroadcastDelay) {
         pendingReports.remove(lookingForGameEvent)
-        val user: KailleraUser = lookingForGameEvent.user
-        val message =
-          "User: ${user.name}\nGame: ${lookingForGameEvent.gameTitle}\nServer: ${flags.serverName} (${flags.serverAddress})"
         val tweet = twitter.postTweet(message)
         if (tweet.id == null) {
           logger.atWarning().log("Unable to post tweet")
         } else {
+          lastTweetContent = message
           user.game!!.announce(getUrl(tweet, twitter.userIdFromAccessToken), user)
           logger.atFine().log("Posted tweet: %s", getUrl(tweet, twitter.userIdFromAccessToken))
           postedTweets[lookingForGameEvent] = tweet.id
