@@ -12,7 +12,7 @@ import javax.inject.Inject
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import org.apache.commons.configuration.Configuration
+import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.master.PublicServerInformation
 import org.emulinker.kaillera.pico.AppModule
 import org.emulinker.kaillera.pico.CompiledFlags
@@ -43,8 +43,8 @@ class ServerCheckinTask
 @Inject
 constructor(
   private val publicServerInfo: PublicServerInformation,
-  private val config: Configuration,
   private val releaseInfo: ReleaseInfo,
+  private val flags: RuntimeFlags,
 ) : MasterListUpdateTask {
 
   override fun reportStatus() {
@@ -80,7 +80,7 @@ constructor(
         ServerInfo(
           name = publicServerInfo.serverName,
           connectAddress = publicServerInfo.connectAddress,
-          connectPort = config.getInt("controllers.connect.port"),
+          connectPort = flags.serverPort,
           website = publicServerInfo.website,
           location = publicServerInfo.location,
           charset = AppModule.charsetDoNotUse.name,

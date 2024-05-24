@@ -145,8 +145,7 @@ constructor(
             }
 
             val buf = nettyChannel.alloc().buffer(bufferSize)
-            RequestPrivateKailleraPortResponse(config.getInt("controllers.connect.port"))
-              .writeTo(buf)
+            RequestPrivateKailleraPortResponse(flags.serverPort).writeTo(buf)
             ctx.writeAndFlush(DatagramPacket(buf, remoteSocketAddress))
           }
           else -> {

@@ -23,5 +23,5 @@ abstract class AppComponent {
   abstract val kailleraServer: KailleraServer
   abstract val masterListUpdater: MasterListUpdater
   abstract val metricRegistry: MetricRegistry
-  abstract val runtimeFlags: RuntimeFlags
+  abstract val flags: RuntimeFlags
 }

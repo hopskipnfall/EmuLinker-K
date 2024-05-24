@@ -8,7 +8,7 @@ import java.net.HttpURLConnection
 import java.net.URL
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
-import org.apache.commons.configuration.Configuration
+import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.master.PublicServerInformation
 import org.emulinker.kaillera.master.StatsCollector
 import org.emulinker.kaillera.model.GameStatus
@@ -18,9 +18,9 @@ class KailleraMasterUpdateTask
 @Inject
 constructor(
   private val publicInfo: PublicServerInformation,
-  private val config: Configuration,
   private val kailleraServer: KailleraServer,
   private val statsCollector: StatsCollector,
+  private val flags: RuntimeFlags,
 ) : MasterListUpdateTask {
 
   override fun reportStatus() {
@@ -39,7 +39,7 @@ constructor(
     val url = URLBuilder(TOUCH_LIST_URL)
     with(url.parameters) {
       this.append("servername", publicInfo.serverName)
-      this.append("port", config.getInt("controllers.connect.port").toString())
+      this.append("port", flags.serverPort.toString())
       this.append("nbusers", kailleraServer.users.size.toString())
       this.append("maxconn", kailleraServer.maxUsers.toString())
       // I want to use `releaseInfo.versionWithElkPrefix` here, but it's too long for the db schema
