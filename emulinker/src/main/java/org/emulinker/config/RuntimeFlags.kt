@@ -14,6 +14,8 @@ data class RuntimeFlags(
   val allowSinglePlayer: Boolean,
   val charset: Charset,
   val chatFloodTime: Int,
+  // tbh I have no idea what this does.
+  val clientTypes: List<String>,
   val connectionTypes: List<String>,
   val coreThreadPoolSize: Int,
   val createGameFloodTime: Int,
@@ -22,7 +24,6 @@ data class RuntimeFlags(
   val gameDesynchTimeouts: Int,
   val gameTimeout: Duration,
   val idleTimeout: Duration,
-  val improvedLagstatEnabled: Boolean,
   val keepAliveTimeout: Duration,
   val maxChatLength: Int,
   val maxClientNameLength: Int,
@@ -38,6 +39,7 @@ data class RuntimeFlags(
   val serverAddress: String,
   val serverLocation: String,
   val serverName: String,
+  val serverPort: Int,
   val serverWebsite: String,
   val touchEmulinker: Boolean,
   val touchKaillera: Boolean,
@@ -87,6 +89,7 @@ data class RuntimeFlags(
         allowSinglePlayer = config.getBoolean("server.allowSinglePlayer", true),
         charset = Charset.forName(config.getString("emulinker.charset")),
         chatFloodTime = config.getInt("server.chatFloodTime"),
+        clientTypes = config.getStringArray("controllers.v086.clientTypes.clientType").toList(),
         connectionTypes = config.getList("server.allowedConnectionTypes") as List<String>,
         coreThreadPoolSize = config.getInt("server.coreThreadpoolSize", 5),
         createGameFloodTime = config.getInt("server.createGameFloodTime"),
@@ -95,7 +98,6 @@ data class RuntimeFlags(
         gameDesynchTimeouts = config.getInt("game.desynchTimeouts"),
         gameTimeout = config.getInt("game.timeoutMillis").milliseconds,
         idleTimeout = config.getInt("server.idleTimeout").seconds,
-        improvedLagstatEnabled = config.getBoolean("server.improvedLagstatEnabled", true),
         keepAliveTimeout = config.getInt("server.keepAliveTimeout").seconds,
         maxChatLength = config.getInt("server.maxChatLength"),
         maxClientNameLength = config.getInt("server.maxClientNameLength"),
@@ -111,6 +113,7 @@ data class RuntimeFlags(
         serverAddress = config.getString("masterList.serverConnectAddress", ""),
         serverLocation = config.getString("masterList.serverLocation", "Unknown"),
         serverName = config.getString("masterList.serverName", "Emulinker Server"),
+        serverPort = config.getInt("controllers.connect.port"),
         serverWebsite = config.getString("masterList.serverWebsite", ""),
         touchEmulinker = config.getBoolean("masterList.touchEmulinker", false),
         touchKaillera = config.getBoolean("masterList.touchKaillera", false),
@@ -125,7 +128,7 @@ data class RuntimeFlags(
           config.getStringArray("twitter.preventBroadcastNameSuffixes").toList(),
         v086BufferSize = config.getInt("controllers.v086.bufferSize", 4096),
         // TODO(nue): This default works well, but maybe we can experiment further.
-        nettyFlags = config.getInt("server.nettyThreadpoolSize", 15),
+        nettyFlags = config.getInt("server.nettyThreadpoolSize", 30),
       )
     }
   }

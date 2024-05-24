@@ -8,7 +8,7 @@ import java.net.HttpURLConnection
 import java.net.URL
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
-import org.apache.commons.configuration.Configuration
+import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.master.PublicServerInformation
 import org.emulinker.kaillera.model.GameStatus
 import org.emulinker.kaillera.model.KailleraServer
@@ -17,8 +17,8 @@ class EmuLinkerMasterUpdateTask
 @Inject
 constructor(
   private val publicInfo: PublicServerInformation,
-  private val config: Configuration,
   private val kailleraServer: KailleraServer,
+  private val flags: RuntimeFlags,
 ) : MasterListUpdateTask {
 
   override fun reportStatus() {
@@ -28,7 +28,7 @@ constructor(
       this.append("ipAddress", publicInfo.connectAddress)
       this.append("location", publicInfo.location)
       this.append("website", publicInfo.website)
-      this.append("port", config.getInt("controllers.connect.port").toString())
+      this.append("port", flags.serverPort.toString())
       this.append("numUsers", kailleraServer.users.size.toString())
       this.append("maxUsers", kailleraServer.maxUsers.toString())
       this.append("numGames", kailleraServer.games.size.toString())
@@ -78,6 +78,6 @@ constructor(
 
     private const val TOUCH_LIST_URL = "http://kaillerareborn.2manygames.fr/touch_list.php"
 
-    private const val FETCH_LIST_URL = "http://kaillerareborn.2manygames.fr/game_list.php"
+    private const val FETCH_LIST_URL = "http://kaillerareborn.2manygames.fr/server_list.php"
   }
 }

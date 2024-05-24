@@ -1,23 +1,17 @@
 package org.emulinker.kaillera.access
 
-import java.time.Instant
-import java.util.*
+import java.util.Locale
 import kotlin.time.Duration
-import kotlin.time.toJavaDuration
 import org.emulinker.util.WildcardStringPattern
 
 sealed class TemporaryAttribute(accessStr: String, val duration: Duration) {
-  private val patterns =
-    accessStr
-      .lowercase(Locale.getDefault())
-      .splitToSequence("|")
-      .map { WildcardStringPattern(it) }
-      .toList()
+  private val patterns: List<WildcardStringPattern> =
+    accessStr.lowercase(Locale.getDefault()).split("|").map { WildcardStringPattern(it) }
 
-  private val endTime = Instant.now().plus(duration.toJavaDuration())
+  private val endTimeMs = System.currentTimeMillis() + duration.inWholeMilliseconds
 
   val isExpired
-    get() = Instant.now().isAfter(endTime)
+    get() = System.currentTimeMillis() > endTimeMs
 
   fun matches(address: String): Boolean {
     return patterns.any { it.match(address) }

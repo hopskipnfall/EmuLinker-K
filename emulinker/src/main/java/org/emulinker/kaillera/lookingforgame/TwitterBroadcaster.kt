@@ -4,14 +4,13 @@ import com.google.common.flogger.FluentLogger
 import io.github.redouane59.twitter.TwitterClient
 import io.github.redouane59.twitter.dto.tweet.Tweet
 import io.github.redouane59.twitter.dto.tweet.TweetParameters
-import io.reactivex.rxjava3.core.Observable
-import io.reactivex.rxjava3.schedulers.Schedulers
 import java.util.TimerTask
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentMap
 import javax.inject.Inject
 import javax.inject.Provider
 import javax.inject.Singleton
+import kotlin.time.Duration.Companion.seconds
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.model.KailleraUser
 import org.emulinker.util.EmuLang
@@ -33,6 +32,8 @@ internal constructor(
 
   private val pendingReports: ConcurrentMap<LookingForGameEvent, TimerTask> = ConcurrentHashMap()
   private val postedTweets: ConcurrentMap<LookingForGameEvent, String> = ConcurrentHashMap()
+
+  private var lastTweetContent: String = ""
 
   /**
    * After the number of seconds defined in the config, it will report.
@@ -56,16 +57,22 @@ internal constructor(
       return false
     }
 
+    val user: KailleraUser = lookingForGameEvent.user
+    val message =
+      "User: ${user.name}\nGame: ${lookingForGameEvent.gameTitle}\nServer: ${flags.serverName} (${flags.serverAddress})"
+    if (message == lastTweetContent) {
+      // Twitter will not allow us to make the same post twice in a row.
+      return false
+    }
+
     val timerTask =
       taskScheduler.schedule(delay = flags.twitterBroadcastDelay) {
         pendingReports.remove(lookingForGameEvent)
-        val user: KailleraUser = lookingForGameEvent.user
-        val message =
-          "User: ${user.name}\nGame: ${lookingForGameEvent.gameTitle}\nServer: ${flags.serverName} (${flags.serverAddress})"
         val tweet = twitter.postTweet(message)
         if (tweet.id == null) {
           logger.atWarning().log("Unable to post tweet")
         } else {
+          lastTweetContent = message
           user.game!!.announce(getUrl(tweet, twitter.userIdFromAccessToken), user)
           logger.atFine().log("Posted tweet: %s", getUrl(tweet, twitter.userIdFromAccessToken))
           postedTweets[lookingForGameEvent] = tweet.id
@@ -106,15 +113,16 @@ internal constructor(
         val tweetId = postedTweets[event]
         if (tweetId != null) {
           postedTweets.remove(event)
-          Observable.just(tweetId).subscribeOn(Schedulers.io()).subscribe { id: String ->
+
+          taskScheduler.schedule(delay = 0.seconds) {
             if (flags.twitterDeletePostOnClose) {
-              twitter.deleteTweet(id)
-              logger.atFine().log("Deleted tweet %s", id)
+              twitter.deleteTweet(tweetId)
+              logger.atFine().log("Deleted tweet %s", tweetId)
             } else {
               val tweet =
                 twitter.postTweet(
                   TweetParameters.builder()
-                    .reply(TweetParameters.Reply.builder().inReplyToTweetId(id).build())
+                    .reply(TweetParameters.Reply.builder().inReplyToTweetId(tweetId).build())
                     .text(EmuLang.getStringOrDefault("KailleraServerImpl.TweetCloseMessage", "〆"))
                     .build()
                 )

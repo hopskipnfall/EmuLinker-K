@@ -4,7 +4,6 @@ import com.codahale.metrics.Gauge
 import com.codahale.metrics.MetricRegistry
 import com.google.common.flogger.FluentLogger
 import java.net.InetSocketAddress
-import java.time.Instant
 import java.util.Locale
 import java.util.TimerTask
 import java.util.concurrent.ConcurrentHashMap
@@ -488,8 +487,8 @@ internal constructor(
     QuitGameException::class,
     CloseGameException::class
   )
-  fun quit(user: KailleraUser?, message: String?) = withLock {
-    lookingForGameReporter.cancelActionsForUser(user!!.id)
+  fun quit(user: KailleraUser, message: String?) = withLock {
+    lookingForGameReporter.cancelActionsForUser(user.id)
     if (!user.loggedIn) {
       usersMap.remove(user.id)
       logger.atSevere().log("%s quit failed: Not logged in", user)
@@ -497,25 +496,19 @@ internal constructor(
     }
     if (usersMap.remove(user.id) == null)
       logger.atSevere().log("%s quit failed: not in user list", user)
-    val userGame = (user as KailleraUser?)!!.game
+    val userGame = user.game
     if (userGame != null) user.quitGame()
     var quitMsg = message!!.trim { it <= ' ' }
     if (
       quitMsg.isBlank() ||
         (flags.maxQuitMessageLength > 0 && quitMsg.length > flags.maxQuitMessageLength)
-    )
-      quitMsg = EmuLang.getString("KailleraServerImpl.StandardQuitMessage")
-    val access = user.server.accessManager.getAccess(user.socketAddress!!.address)
-    if (
-      access < AccessManager.ACCESS_SUPERADMIN &&
-        user.server.accessManager.isSilenced(user.socketAddress!!.address)
     ) {
-      quitMsg = "www.EmuLinker.org"
+      quitMsg = EmuLang.getString("KailleraServerImpl.StandardQuitMessage")
     }
     logger.atInfo().log("%s quit: %s", user, quitMsg)
     val quitEvent = UserQuitEvent(this, user, quitMsg)
     addEvent(quitEvent)
-    (user as KailleraUser?)!!.queueEvent(quitEvent)
+    user.queueEvent(quitEvent)
   }
 
   @Synchronized
@@ -852,8 +845,7 @@ internal constructor(
           flags.idleTimeout.isPositive() &&
             access == AccessManager.ACCESS_NORMAL &&
             user.loggedIn &&
-            (Instant.now().toEpochMilli() - user.lastActivity >
-              flags.idleTimeout.inWholeMilliseconds)
+            (System.currentTimeMillis() - user.lastActivity > flags.idleTimeout.inWholeMilliseconds)
         ) {
           logger.atInfo().log("%s inactivity timeout!", user)
           try {
@@ -927,10 +919,7 @@ internal constructor(
 
   val o = Object()
   /** Helper function to avoid one level of indentation. */
-  private inline fun <T> withLock(action: () -> T): T =
-    synchronized(o) {
-      action() // = mutex.withLock { action() }
-    }
+  private inline fun <T> withLock(action: () -> T): T = synchronized(o) { action() }
 
   companion object {
     private val logger = FluentLogger.forEnclosingClass()

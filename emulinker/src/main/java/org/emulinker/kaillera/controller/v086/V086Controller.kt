@@ -111,8 +111,7 @@ internal constructor(
 ) : KailleraServerController {
   private var isRunning = false
 
-  override val clientTypes: Array<String> =
-    config.getStringArray("controllers.v086.clientTypes.clientType")
+  override val clientTypes: Array<String> = flags.clientTypes.toTypedArray()
 
   var clientHandlers: MutableMap<Int, V086ClientHandler> = ConcurrentHashMap()
 

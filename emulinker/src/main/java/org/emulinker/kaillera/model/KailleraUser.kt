@@ -3,7 +3,6 @@ package org.emulinker.kaillera.model
 import com.google.common.flogger.FluentLogger
 import java.net.InetSocketAddress
 import java.time.Duration
-import java.time.Instant
 import java.util.ArrayList
 import java.util.concurrent.BlockingQueue
 import java.util.concurrent.LinkedBlockingQueue
@@ -71,12 +70,9 @@ class KailleraUser(
   var bigLagSpikesCausedByUser = 0L
 
   /** The last time we heard from this player for lag detection purposes. */
-  private var lastUpdate = Instant.now()
-  private var smallLagThreshold = Duration.ZERO
-  private var bigSpikeThreshold = Duration.ZERO
-
-  // Saved to a variable because I think this might give a speed boost.
-  private val improvedLagstat = flags.improvedLagstatEnabled
+  private var lastUpdateNs = System.nanoTime()
+  private var smallLagThresholdNs = Duration.ZERO.nano
+  private var bigSpikeThresholdNs = Duration.ZERO.nano
 
   fun updateLastActivity() {
     lastKeepAlive = System.currentTimeMillis()
@@ -405,27 +401,33 @@ class KailleraUser(
     }
     totalDelay = game!!.highestUserFrameDelay + tempDelay + 5
 
-    smallLagThreshold =
+    smallLagThresholdNs =
       Duration.ofSeconds(1)
         .dividedBy(connectionType.updatesPerSecond.toLong())
         .multipliedBy(frameDelay.toLong())
         // Effectively this is the delay that is allowed before calling it a lag spike.
         .plusMillis(10)
-    bigSpikeThreshold =
+        .nano
+    bigSpikeThresholdNs =
       Duration.ofSeconds(1)
         .dividedBy(connectionType.updatesPerSecond.toLong())
         .multipliedBy(frameDelay.toLong())
         .plusMillis(50)
+        .nano
     game!!.ready(this, playerNumber)
   }
 
   @Throws(GameDataException::class)
   fun addGameData(data: ByteArray) {
-    if (improvedLagstat) {
-      val delaySinceLastResponse = Duration.between(lastUpdate, Instant.now())
-      if (delaySinceLastResponse.nano in smallLagThreshold.nano..bigSpikeThreshold.nano) {
+    val delaySinceLastResponseNs = System.nanoTime() - lastUpdateNs
+    when {
+      delaySinceLastResponseNs < smallLagThresholdNs -> {
+        // No lag occurred.
+      }
+      delaySinceLastResponseNs < bigSpikeThresholdNs -> {
         smallLagSpikesCausedByUser++
-      } else if (delaySinceLastResponse.nano > bigSpikeThreshold.nano) {
+      }
+      delaySinceLastResponseNs >= bigSpikeThresholdNs -> {
         bigLagSpikesCausedByUser++
       }
     }
@@ -489,9 +491,7 @@ class KailleraUser(
       }
     }
 
-    if (improvedLagstat) {
-      lastUpdate = Instant.now()
-    }
+    lastUpdateNs = System.nanoTime()
   }
 
   fun queueEvent(event: KailleraEvent) {
@@ -518,9 +518,7 @@ class KailleraUser(
           listener.actionPerformed(event)
           if (event is GameStartedEvent) {
             status = UserStatus.PLAYING
-            if (improvedLagstat) {
-              lastUpdate = Instant.now()
-            }
+            lastUpdateNs = System.nanoTime()
           } else if (event is UserQuitEvent && event.user == this) {
             stop()
           }

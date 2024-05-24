@@ -63,7 +63,7 @@ fun main() {
   val metrics = component.metricRegistry
   metrics.registerAll(ThreadStatesGaugeSet())
   //  metrics.registerAll(MemoryUsageGaugeSet())
-  val flags = component.runtimeFlags
+  val flags = component.flags
   if (flags.metricsEnabled) {
     ConsoleReporter.forRegistry(metrics)
       .convertRatesTo(SECONDS)
@@ -82,9 +82,7 @@ fun main() {
       .start(flags.metricsLoggingFrequency.inWholeSeconds, SECONDS)
   }
 
-  component.combinedKaillerController.bind(
-    component.configuration.getInt("controllers.connect.port")
-  )
+  component.combinedKaillerController.bind(component.flags.serverPort)
   //  // Hacky code but it works! Tests that two users can make and play a game.
   //  // TODO(nue): Move this into a test file in a subsequent PR.
   //  runBlocking {

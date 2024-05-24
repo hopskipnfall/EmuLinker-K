@@ -212,25 +212,15 @@ class GameOwnerCommandAction @Inject internal constructor(private val flags: Run
     game: KailleraGameImpl,
   ) {
     if (message == "/lagstat") {
-      if (flags.improvedLagstatEnabled) {
-        game.announce("Lagged frames per player:")
-        game.players
-          .asSequence()
-          .filter { !it.inStealthMode }
-          .forEach {
-            game.announce(
-              "P${it.playerNumber}: ${it.smallLagSpikesCausedByUser} (tiny), ${it.bigLagSpikesCausedByUser} (big)"
-            )
-          }
-      } else {
-        game.announce(
-          "${game.players
-          .asSequence()
-          .filter { !it.inStealthMode }
-          .map { "P" + it.playerNumber + ": " + it.timeouts }
-          .joinToString(", ")} lag spikes"
-        )
-      }
+      game.announce("Lagged frames per player:")
+      game.players
+        .asSequence()
+        .filter { !it.inStealthMode }
+        .forEach {
+          game.announce(
+            "P${it.playerNumber}: ${it.smallLagSpikesCausedByUser} (tiny), ${it.bigLagSpikesCausedByUser} (big)"
+          )
+        }
     } else if (message == "/lagreset") {
       for (player in game.players) {
         player.timeouts = 0
