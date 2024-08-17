@@ -22,7 +22,7 @@ enum class CommandUsageLocation {
   SERVER_CHAT,
 }
 
-fun provideGameChatCommands(twitterBroadcaster: TwitterBroadcaster): List<GameChatCommand> =
+fun buildGameChatCommands(twitterBroadcaster: TwitterBroadcaster): List<GameChatCommand> =
   listOf(
     object :
       GameChatCommand(
@@ -30,7 +30,7 @@ fun provideGameChatCommands(twitterBroadcaster: TwitterBroadcaster): List<GameCh
         commandPermissions = CommandPermissions.LENIENT,
       ) {
       override fun performAction(
-        message: String,
+        args: String,
         game: KailleraGameImpl,
         clientHandler: V086ClientHandler
       ) {
@@ -38,9 +38,8 @@ fun provideGameChatCommands(twitterBroadcaster: TwitterBroadcaster): List<GameCh
         game.announce("Private messages are now on.", clientHandler.user)
       }
 
-      override fun matches(command: String): ParseResult {
-        TODO("Not yet implemented")
-      }
+      override fun verifyArgs(args: String): ParseResult =
+        if (args.isEmpty()) ParseResult.Success else TODO("Write a message ARGS IS " + args)
     },
     object :
       GameChatCommand(
@@ -48,7 +47,7 @@ fun provideGameChatCommands(twitterBroadcaster: TwitterBroadcaster): List<GameCh
         commandPermissions = CommandPermissions.LENIENT,
       ) {
       override fun performAction(
-        message: String,
+        args: String,
         game: KailleraGameImpl,
         clientHandler: V086ClientHandler
       ) {
@@ -56,9 +55,8 @@ fun provideGameChatCommands(twitterBroadcaster: TwitterBroadcaster): List<GameCh
         game.announce("Private messages are now off.", clientHandler.user)
       }
 
-      override fun matches(command: String): ParseResult {
-        TODO("Not yet implemented")
-      }
+      override fun verifyArgs(args: String): ParseResult =
+        if (args.isEmpty()) ParseResult.Success else TODO("Write a message")
     },
     object :
       GameChatCommand(
@@ -66,7 +64,7 @@ fun provideGameChatCommands(twitterBroadcaster: TwitterBroadcaster): List<GameCh
         commandPermissions = CommandPermissions.LENIENT,
       ) {
       override fun performAction(
-        message: String,
+        args: String,
         game: KailleraGameImpl,
         clientHandler: V086ClientHandler
       ) {
@@ -91,9 +89,8 @@ fun provideGameChatCommands(twitterBroadcaster: TwitterBroadcaster): List<GameCh
         }
       }
 
-      override fun matches(command: String): ParseResult {
-        TODO("Not yet implemented")
-      }
+      override fun verifyArgs(args: String): ParseResult =
+        if (args.isEmpty()) ParseResult.Success else TODO("Write a message")
     },
     object :
       GameChatCommand(
@@ -101,7 +98,7 @@ fun provideGameChatCommands(twitterBroadcaster: TwitterBroadcaster): List<GameCh
         commandPermissions = CommandPermissions.LENIENT,
       ) {
       override fun performAction(
-        message: String,
+        args: String,
         game: KailleraGameImpl,
         clientHandler: V086ClientHandler
       ) {
@@ -126,9 +123,8 @@ fun provideGameChatCommands(twitterBroadcaster: TwitterBroadcaster): List<GameCh
         }
       }
 
-      override fun matches(command: String): ParseResult {
-        TODO("Not yet implemented")
-      }
+      override fun verifyArgs(args: String): ParseResult =
+        if (args.isEmpty()) ParseResult.Success else TODO("Write a message")
     },
     object :
       GameChatCommand(
@@ -136,11 +132,11 @@ fun provideGameChatCommands(twitterBroadcaster: TwitterBroadcaster): List<GameCh
         commandPermissions = CommandPermissions.LENIENT,
       ) {
       override fun performAction(
-        message: String,
+        args: String,
         game: KailleraGameImpl,
         clientHandler: V086ClientHandler
       ) {
-        val scanner = java.util.Scanner(message).useDelimiter(" ")
+        val scanner = java.util.Scanner(args).useDelimiter(" ")
         val access =
           clientHandler.user.server.accessManager.getAccess(
             clientHandler.user.socketAddress!!.address
@@ -155,7 +151,6 @@ fun provideGameChatCommands(twitterBroadcaster: TwitterBroadcaster): List<GameCh
           return
         }
         try {
-          scanner.next()
           val userID = scanner.nextInt()
           val user = clientHandler.user.server.getUser(userID)
           val sb = StringBuilder()
@@ -295,9 +290,8 @@ fun provideGameChatCommands(twitterBroadcaster: TwitterBroadcaster): List<GameCh
         }
       }
 
-      override fun matches(command: String): ParseResult {
-        TODO("Not yet implemented")
-      }
+      override fun verifyArgs(args: String): ParseResult =
+        if (args.isNotBlank()) ParseResult.Success else TODO("Write a message")
     },
     object :
       GameChatCommand(
@@ -305,7 +299,7 @@ fun provideGameChatCommands(twitterBroadcaster: TwitterBroadcaster): List<GameCh
         commandPermissions = CommandPermissions.LENIENT,
       ) {
       override fun performAction(
-        message: String,
+        args: String,
         game: KailleraGameImpl,
         clientHandler: V086ClientHandler
       ) {
@@ -317,9 +311,8 @@ fun provideGameChatCommands(twitterBroadcaster: TwitterBroadcaster): List<GameCh
         )
       }
 
-      override fun matches(command: String): ParseResult {
-        TODO("Not yet implemented")
-      }
+      override fun verifyArgs(args: String): ParseResult =
+        if (args.isEmpty()) ParseResult.Success else TODO("Write a message")
     },
     object :
       GameChatCommand(
@@ -327,7 +320,7 @@ fun provideGameChatCommands(twitterBroadcaster: TwitterBroadcaster): List<GameCh
         commandPermissions = CommandPermissions.LENIENT,
       ) {
       override fun performAction(
-        message: String,
+        args: String,
         game: KailleraGameImpl,
         clientHandler: V086ClientHandler
       ) {
@@ -339,9 +332,8 @@ fun provideGameChatCommands(twitterBroadcaster: TwitterBroadcaster): List<GameCh
         )
       }
 
-      override fun matches(command: String): ParseResult {
-        TODO("Not yet implemented")
-      }
+      override fun verifyArgs(args: String): ParseResult =
+        if (args.isEmpty()) ParseResult.Success else TODO("Write a message")
     },
     object :
       GameChatCommand(
@@ -349,13 +341,12 @@ fun provideGameChatCommands(twitterBroadcaster: TwitterBroadcaster): List<GameCh
         commandPermissions = CommandPermissions.LENIENT,
       ) {
       override fun performAction(
-        message: String,
+        args: String,
         game: KailleraGameImpl,
         clientHandler: V086ClientHandler
       ) {
-        val scanner = java.util.Scanner(message).useDelimiter(" ")
+        val scanner = java.util.Scanner(args).useDelimiter(" ")
         try {
-          scanner.next()
           val userID = scanner.nextInt()
           val user = clientHandler.user.server.getUser(userID)
           if (user == null) {
@@ -395,7 +386,7 @@ fun provideGameChatCommands(twitterBroadcaster: TwitterBroadcaster): List<GameCh
         }
       }
 
-      override fun matches(command: String): ParseResult {
+      override fun verifyArgs(args: String): ParseResult {
         TODO("Not yet implemented")
       }
     },
@@ -405,11 +396,11 @@ fun provideGameChatCommands(twitterBroadcaster: TwitterBroadcaster): List<GameCh
         commandPermissions = CommandPermissions.LENIENT,
       ) {
       override fun performAction(
-        message: String,
+        args: String,
         game: KailleraGameImpl,
         clientHandler: V086ClientHandler
       ) {
-        val scanner = java.util.Scanner(message).useDelimiter(" ")
+        val scanner = java.util.Scanner(args).useDelimiter(" ")
         try {
           scanner.next()
           val userID = scanner.nextInt()
@@ -454,7 +445,7 @@ fun provideGameChatCommands(twitterBroadcaster: TwitterBroadcaster): List<GameCh
         }
       }
 
-      override fun matches(command: String): ParseResult {
+      override fun verifyArgs(args: String): ParseResult {
         TODO("Not yet implemented")
       }
     },
@@ -464,16 +455,11 @@ fun provideGameChatCommands(twitterBroadcaster: TwitterBroadcaster): List<GameCh
         commandPermissions = CommandPermissions.LENIENT,
       ) {
       override fun performAction(
-        message: String,
+        args: String,
         game: KailleraGameImpl,
         clientHandler: V086ClientHandler
       ) {
-        val space = message.indexOf(' ')
-        if (space < 0) {
-          game.announce("Invalid # of Fields!", clientHandler.user)
-          return
-        }
-        var announcement = message.substring(space + 1)
+        var announcement = args
         if (announcement.startsWith(":"))
           announcement =
             announcement.substring(
@@ -501,17 +487,16 @@ fun provideGameChatCommands(twitterBroadcaster: TwitterBroadcaster): List<GameCh
         }
       }
 
-      override fun matches(command: String): ParseResult {
-        TODO("Not yet implemented")
-      }
+      override fun verifyArgs(args: String): ParseResult =
+        if (args.isNotBlank()) ParseResult.Success else TODO("Write a message")
     },
     object :
       GameChatCommand(
-        prefix = "",
+        prefix = "help",
         commandPermissions = CommandPermissions.LENIENT,
       ) {
       override fun performAction(
-        message: String,
+        args: String,
         game: KailleraGameImpl,
         clientHandler: V086ClientHandler
       ) {
@@ -537,17 +522,19 @@ fun provideGameChatCommands(twitterBroadcaster: TwitterBroadcaster): List<GameCh
         threadSleep(20.milliseconds)
       }
 
-      override fun matches(command: String): ParseResult {
-        TODO("Not yet implemented")
-      }
+      override fun verifyArgs(args: String): ParseResult = ParseResult.Success
     },
     object :
       GameChatCommand(
         prefix = "stop",
-        commandPermissions = CommandPermissions.LENIENT,
+        commandPermissions =
+          CommandPermissions(
+            allowedLocations = CommandUsageLocation.ROOM_CHAT,
+            gameOwnerOnly = true,
+          ),
       ) {
       override fun performAction(
-        message: String,
+        args: String,
         game: KailleraGameImpl,
         clientHandler: V086ClientHandler
       ) {
@@ -564,33 +551,14 @@ fun provideGameChatCommands(twitterBroadcaster: TwitterBroadcaster): List<GameCh
         }
       }
 
-      override fun matches(command: String): ParseResult {
-        TODO("Not yet implemented")
-      }
+      override fun verifyArgs(args: String): ParseResult =
+        if (args.isEmpty()) ParseResult.Success else TODO("Write a message ARGS IS " + args)
     },
-    // TODO(nue): Handle the "else" case.
-    object :
-      GameChatCommand(
-        prefix = "UNKNOWN",
-        commandPermissions = CommandPermissions.LENIENT,
-      ) {
-      override fun performAction(
-        message: String,
-        game: KailleraGameImpl,
-        clientHandler: V086ClientHandler
-      ) {
-        TODO("Not yet implemented")
-      }
-
-      override fun matches(command: String): ParseResult {
-        TODO("Not yet implemented")
-      }
-    }
   )
 
 class CommandPermissions(
-  val allowedLocations: CommandUsageLocation = CommandUsageLocation.ANYWHERE,
-  val gameOwnerOnly: Boolean = false,
+  val allowedLocations: CommandUsageLocation,
+  val gameOwnerOnly: Boolean,
   val minimumAccessRequired: Int = AccessManager.ACCESS_NORMAL,
 ) {
   companion object {
@@ -606,21 +574,24 @@ class CommandPermissions(
 abstract class GameChatCommand(
   /** For the command `/maxusers 42`, this would be `"maxusers"`. */
   val prefix: String,
+  // TODO(nue): Use this.
   val commandPermissions: CommandPermissions,
 ) {
   protected abstract fun performAction(
-    message: String,
+    args: String,
     game: KailleraGameImpl,
     clientHandler: V086ClientHandler
   )
 
   /** Validates whether the command is valid. */
-  protected abstract fun matches(command: String): ParseResult
+  protected abstract fun verifyArgs(args: String): ParseResult
 
+  /** @param message Does not start with "/". */
   fun handle(message: String, game: KailleraGameImpl, handler: V086ClientHandler) {
-    when (val parseResult = matches(message.trim())) {
+    val args = message.removePrefix(COMMAND_PREFIX + prefix).trim()
+    when (val parseResult = verifyArgs(args)) {
       ParseResult.Success -> {
-        performAction(message, game, handler)
+        performAction(args, game, handler)
       }
       is ParseResult.Failure -> {
         parseResult.messageToUser

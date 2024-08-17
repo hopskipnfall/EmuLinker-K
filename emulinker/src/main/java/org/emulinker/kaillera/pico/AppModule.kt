@@ -22,6 +22,7 @@ import org.emulinker.kaillera.access.AccessManager2
 import org.emulinker.kaillera.controller.KailleraServerController
 import org.emulinker.kaillera.controller.v086.V086Controller
 import org.emulinker.kaillera.controller.v086.commands.GameChatCommand
+import org.emulinker.kaillera.controller.v086.commands.buildGameChatCommands
 import org.emulinker.kaillera.lookingforgame.TwitterBroadcaster
 import org.emulinker.kaillera.master.MasterListStatsCollector
 import org.emulinker.kaillera.master.StatsCollector
@@ -135,6 +136,6 @@ abstract class AppModule {
     @Provides
     @Singleton
     fun provideGameChatCommands(twitterBroadcaster: TwitterBroadcaster): List<GameChatCommand> =
-      provideGameChatCommands(twitterBroadcaster)
+      buildGameChatCommands(twitterBroadcaster)
   }
 }

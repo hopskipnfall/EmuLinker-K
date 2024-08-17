@@ -72,7 +72,7 @@ internal constructor(
         message.message
           .trim()
           .removePrefix(GameChatCommand.COMMAND_PREFIX)
-          .split(" ", limit = 1)
+          .split(" ", limit = 2)
           .first()
       val matchedCommand = gameChatCommands.firstOrNull { it.prefix == commandName }
       if (matchedCommand == null) {
