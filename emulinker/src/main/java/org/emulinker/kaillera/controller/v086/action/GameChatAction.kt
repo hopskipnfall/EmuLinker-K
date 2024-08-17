@@ -8,6 +8,7 @@ import org.emulinker.kaillera.access.AccessManager
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086ClientHandler
 import org.emulinker.kaillera.controller.v086.commands.GameChatCommand
+import org.emulinker.kaillera.controller.v086.commands.GameChatCommandHandler
 import org.emulinker.kaillera.controller.v086.protocol.*
 import org.emulinker.kaillera.model.event.GameChatEvent
 import org.emulinker.kaillera.model.exception.ActionException
@@ -18,8 +19,7 @@ import org.emulinker.kaillera.model.impl.KailleraGameImpl
 class GameChatAction
 @Inject
 internal constructor(
-  private val gameOwnerCommandAction: GameOwnerCommandAction,
-  private val gameChatCommands: @JvmSuppressWildcards List<GameChatCommand>,
+  private val gameChatCommandHandler: GameChatCommandHandler,
 ) : V086Action<GameChatRequest>, V086GameEventHandler<GameChatEvent> {
   override var actionPerformedCount = 0
     private set
@@ -32,21 +32,7 @@ internal constructor(
   override fun performAction(message: GameChatRequest, clientHandler: V086ClientHandler) {
     if (clientHandler.user.game == null) return
     if (message.message.startsWith(ADMIN_COMMAND_ESCAPE_STRING)) {
-      // if(clientHandler.getUser().getAccess() >= AccessManager.ACCESS_ADMIN ||
-      // clientHandler.getUser().equals(clientHandler.getUser().getGame().getOwner())){
-      try {
-        if (gameOwnerCommandAction.isValidCommand((message as GameChat).message)) {
-          gameOwnerCommandAction.performAction(message, clientHandler)
-          if ((message as GameChat).message == "/help") checkCommands(message, clientHandler)
-        } else {
-          checkCommands(message, clientHandler)
-        }
-        return
-      } catch (e: FatalActionException) {
-        logger.atWarning().withCause(e).log("GameOwner command failed")
-      }
-
-      // }
+      checkCommands(message, clientHandler)
     }
     actionPerformedCount++
     try {
@@ -74,7 +60,7 @@ internal constructor(
           .removePrefix(GameChatCommand.COMMAND_PREFIX)
           .split(" ", limit = 2)
           .first()
-      val matchedCommand = gameChatCommands.firstOrNull { it.prefix == commandName }
+      val matchedCommand = gameChatCommandHandler.commands.firstOrNull { it.prefix == commandName }
       if (matchedCommand == null) {
         game.announce("Unknown Command: " + message.message, clientHandler.user)
       } else {
