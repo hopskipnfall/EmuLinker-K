@@ -21,6 +21,8 @@ import org.emulinker.kaillera.access.AccessManager
 import org.emulinker.kaillera.access.AccessManager2
 import org.emulinker.kaillera.controller.KailleraServerController
 import org.emulinker.kaillera.controller.v086.V086Controller
+import org.emulinker.kaillera.controller.v086.commands.GameChatCommand
+import org.emulinker.kaillera.lookingforgame.TwitterBroadcaster
 import org.emulinker.kaillera.master.MasterListStatsCollector
 import org.emulinker.kaillera.master.StatsCollector
 import org.emulinker.kaillera.model.impl.AutoFireDetectorFactory
@@ -129,5 +131,10 @@ abstract class AppModule {
         i++
       }
     }
+
+    @Provides
+    @Singleton
+    fun provideGameChatCommands(twitterBroadcaster: TwitterBroadcaster): List<GameChatCommand> =
+      provideGameChatCommands(twitterBroadcaster)
   }
 }
