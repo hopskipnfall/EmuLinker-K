@@ -484,6 +484,18 @@ internal constructor(
         } else {
           clientHandler.user.game!!.announce("No pending tweets.", clientHandler.user)
         }
+      } else if (message.message == "/lagstat") {
+        // Note: This was duplicated from GameOwnerCommandAction.
+        clientHandler.user.game!!.announce("Lagged frames per player:")
+        clientHandler.user.game!!
+          .players
+          .asSequence()
+          .filter { !it.inStealthMode }
+          .forEach {
+            clientHandler.user.game!!.announce(
+              "P${it.playerNumber}: ${it.smallLagSpikesCausedByUser} (tiny), ${it.bigLagSpikesCausedByUser} (big)"
+            )
+          }
       } else
         clientHandler.user.game!!.announce(
           "Unknown Command: " + message.message,

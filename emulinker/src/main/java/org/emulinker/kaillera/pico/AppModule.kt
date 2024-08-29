@@ -14,6 +14,7 @@ import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 import javax.inject.Named
 import javax.inject.Singleton
+import kotlinx.datetime.Clock
 import org.apache.commons.configuration.Configuration
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.config.RuntimeFlags.Companion.loadFromApacheConfiguration
@@ -107,17 +108,11 @@ abstract class AppModule {
       )
 
     // TODO(nue): We should probably be using TaskScheduler instead?
-    @Provides
-    @Singleton
-    fun provideTimer(): Timer {
-      return Timer(/* isDaemon= */ true)
-    }
+    @Provides @Singleton fun provideTimer(): Timer = Timer(/* isDaemon= */ true)
 
-    @Provides
-    @Singleton
-    fun provideMetricRegistry(): MetricRegistry {
-      return MetricRegistry()
-    }
+    @Provides @Singleton fun provideMetricRegistry(): MetricRegistry = MetricRegistry()
+
+    @Provides @Singleton fun provideClock(): Clock = Clock.System
 
     @Provides
     @Singleton

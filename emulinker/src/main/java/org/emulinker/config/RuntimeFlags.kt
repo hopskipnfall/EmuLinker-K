@@ -30,7 +30,7 @@ data class RuntimeFlags(
   val maxGameChatLength: Int,
   val maxGameNameLength: Int,
   val maxGames: Int,
-  val maxPing: Int,
+  val maxPing: Duration,
   val maxQuitMessageLength: Int,
   val maxUserNameLength: Int,
   val maxUsers: Int,
@@ -62,7 +62,7 @@ data class RuntimeFlags(
     require(maxUserNameLength <= 31) { "server.maxUserNameLength must be <= 31" }
     require(maxGameNameLength <= 127) { "server.maxGameNameLength must be <= 127" }
     require(maxClientNameLength <= 127) { "server.maxClientNameLength must be <= 127" }
-    require(maxPing in 1..1000) { "server.maxPing must be in 1..1000" }
+    require(maxPing in 1.milliseconds..1000.milliseconds) { "server.maxPing must be in 1..1000" }
     require(keepAliveTimeout.isPositive()) {
       "server.keepAliveTimeout must be > 0 (190 is recommended)"
     }
@@ -104,7 +104,7 @@ data class RuntimeFlags(
         maxGameChatLength = config.getInt("server.maxGameChatLength"),
         maxGameNameLength = config.getInt("server.maxGameNameLength"),
         maxGames = config.getInt("server.maxGames"),
-        maxPing = config.getInt("server.maxPing"),
+        maxPing = config.getInt("server.maxPing").milliseconds,
         maxQuitMessageLength = config.getInt("server.maxQuitMessageLength"),
         maxUserNameLength = config.getInt("server.maxUserNameLength"),
         maxUsers = config.getInt("server.maxUsers"),

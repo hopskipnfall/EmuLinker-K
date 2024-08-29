@@ -12,7 +12,9 @@ import javax.inject.Inject
 import javax.inject.Named
 import javax.inject.Singleton
 import kotlin.Throws
+import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
+import kotlinx.datetime.Clock
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.access.AccessManager
 import org.emulinker.kaillera.lookingforgame.LookingForGameEvent
@@ -54,6 +56,7 @@ internal constructor(
   metrics: MetricRegistry,
   @param:Named("userActionsExecutor") private val userActionsExecutor: ThreadPoolExecutor,
   private val taskScheduler: TaskScheduler,
+  private val clock: Clock,
 ) {
 
   private var allowedConnectionTypes = BooleanArray(7)
@@ -83,10 +86,6 @@ internal constructor(
     return gamesMap[gameID]
   }
 
-  val maxPing: Int = flags.maxPing
-  val maxUsers: Int = flags.maxUsers
-  val maxGames: Int = flags.maxGames
-
   val allowSinglePlayer = flags.allowSinglePlayer
   private val maxUserNameLength: Int = flags.maxUserNameLength
   val maxGameChatLength = flags.maxGameChatLength
@@ -106,8 +105,8 @@ internal constructor(
   fun start() {
     timerTask =
       taskScheduler.scheduleRepeating(
-        period = (flags.maxPing * 3).milliseconds,
-        initialDelay = (flags.maxPing * 3).milliseconds,
+        period = flags.maxPing * 3,
+        initialDelay = flags.maxPing * 3,
       ) {
         run()
       }
@@ -155,7 +154,9 @@ internal constructor(
     val access = accessManager.getAccess(clientSocketAddress.address)
 
     // admins will be allowed in even if the server is full
-    if (flags.maxUsers > 0 && usersMap.size >= maxUsers && access <= AccessManager.ACCESS_NORMAL) {
+    if (
+      flags.maxUsers > 0 && usersMap.size >= flags.maxUsers && access <= AccessManager.ACCESS_NORMAL
+    ) {
       logger
         .atWarning()
         .log(
@@ -173,7 +174,8 @@ internal constructor(
         listener,
         this,
         flags,
-        userActionsExecutor
+        userActionsExecutor,
+        clock,
       )
     user.status = UserStatus.CONNECTING
     logger
@@ -197,11 +199,11 @@ internal constructor(
   )
   fun login(user: KailleraUser?) = withLock {
     val userImpl = user
-    val loginDelay = System.currentTimeMillis() - user!!.connectTime
+    val loginDelay: Duration = clock.now() - user!!.connectTime
     logger
       .atInfo()
       .log(
-        "%s: login request: delay=%d ms, clientAddress=%s, name=%s, ping=%d, client=%s, connection=%s",
+        "%s: login request: delay=%s, clientAddress=%s, name=%s, ping=%d, client=%s, connection=%s",
         user,
         loginDelay,
         EmuUtil.formatSocketAddress(user.socketAddress!!),
@@ -226,13 +228,17 @@ internal constructor(
       usersMap.remove(userListKey)
       throw LoginException(EmuLang.getString("KailleraServerImpl.LoginDeniedAccessDenied"))
     }
-    if (access == AccessManager.ACCESS_NORMAL && maxPing > 0 && user.ping > maxPing) {
-      logger.atInfo().log("%s login denied: Ping %d > %d", user, user.ping, maxPing)
+    if (
+      access == AccessManager.ACCESS_NORMAL &&
+        flags.maxPing > 0.milliseconds &&
+        user.ping.milliseconds > flags.maxPing
+    ) {
+      logger.atInfo().log("%s login denied: Ping %d ms > %s", user, user.ping, flags.maxPing)
       usersMap.remove(userListKey)
       throw PingTimeException(
         EmuLang.getString(
           "KailleraServerImpl.LoginDeniedPingTooHigh",
-          user.ping.toString() + " > " + maxPing
+          "${user.ping} > ${flags.maxPing}"
         )
       )
     }
@@ -530,8 +536,8 @@ internal constructor(
     if (
       access == AccessManager.ACCESS_NORMAL &&
         flags.chatFloodTime > 0 &&
-        (System.currentTimeMillis() - (user as KailleraUser?)!!.lastChatTime <
-          flags.chatFloodTime * 1000)
+        (clock.now() - (user as KailleraUser?)!!.lastChatTime <
+          (flags.chatFloodTime * 1000).milliseconds)
     ) {
       logger.atWarning().log("%s chat denied: Flood: %s", user, message)
       throw FloodException(EmuLang.getString("KailleraServerImpl.ChatDeniedFloodControl"))
@@ -827,15 +833,11 @@ internal constructor(
             }
           }
         }
-        if (!user.loggedIn && System.currentTimeMillis() - user.connectTime > flags.maxPing * 15) {
+        if (!user.loggedIn && clock.now() - user.connectTime > flags.maxPing * 15) {
           logger.atInfo().log("%s connection timeout!", user)
           usersMap.remove(user.id)
-        } else if (
-          user.loggedIn &&
-            System.currentTimeMillis() - user.lastKeepAlive >
-              flags.keepAliveTimeout.inWholeMilliseconds
-        ) {
-          logger.atInfo().log("%s keepalive timeout!", user)
+        } else if (user.loggedIn && user.isDead) {
+          logger.atInfo().log("%s keepalive timeout! (ping timeout)", user)
           try {
             quit(user, EmuLang.getString("KailleraServerImpl.ForcedQuitPingTimeout"))
           } catch (e: Exception) {
@@ -845,9 +847,9 @@ internal constructor(
           flags.idleTimeout.isPositive() &&
             access == AccessManager.ACCESS_NORMAL &&
             user.loggedIn &&
-            (System.currentTimeMillis() - user.lastActivity > flags.idleTimeout.inWholeMilliseconds)
+            user.isIdleForTooLong
         ) {
-          logger.atInfo().log("%s inactivity timeout!", user)
+          logger.atInfo().log("%s inactivity timeout! (idle for too long)", user)
           try {
             quit(user, EmuLang.getString("KailleraServerImpl.ForcedQuitInactivityTimeout"))
           } catch (e: Exception) {
