@@ -9,11 +9,13 @@ import javax.inject.Singleton
 import kotlin.time.Duration.Companion.milliseconds
 import org.emulinker.kaillera.access.AccessManager
 import org.emulinker.kaillera.controller.v086.V086ClientHandler
+import org.emulinker.kaillera.controller.v086.protocol.InformationMessage
 import org.emulinker.kaillera.lookingforgame.TwitterBroadcaster
 import org.emulinker.kaillera.model.GameStatus
 import org.emulinker.kaillera.model.KailleraUser
 import org.emulinker.kaillera.model.impl.KailleraGameImpl
 import org.emulinker.util.EmuLang
+import org.emulinker.util.EmuUtil
 import org.emulinker.util.EmuUtil.threadSleep
 
 private val logger = FluentLogger.forEnclosingClass()
@@ -45,12 +47,19 @@ class CommandPermissions(
   }
 }
 
+abstract class ChatCommand() {
+  /** For the command `/maxusers 42`, this would be `"maxusers"`. */
+  abstract val prefix: String
+  abstract val commandPermissions: CommandPermissions
+
+
+}
+
 abstract class GameChatCommand(
   /** For the command `/maxusers 42`, this would be `"maxusers"`. */
-  val prefix: String,
-  // TODO(nue): Use this.
-  val commandPermissions: CommandPermissions,
-) {
+   override val prefix: String,
+   override val commandPermissions: CommandPermissions,
+): ChatCommand() {
   protected abstract fun performAction(
     args: String,
     game: KailleraGameImpl,
@@ -1329,14 +1338,94 @@ class GameChatCommandHandler @Inject constructor(twitterBroadcaster: TwitterBroa
         override fun verifyArgs(args: String): ParseResult =
           if (args.isEmpty()) ParseResult.Success else TODO("Write a message")
       },
+      // START OF SERVER CHAT COMMANDS
+      object :
+        GameChatCommand(
+          prefix = "alivecheck",
+          commandPermissions =
+            CommandPermissions(
+              allowedLocations = CommandUsageLocation.SERVER_CHAT_ONLY,
+              gameOwnerOnly = false,
+            ),
+        ) {
+        override fun performAction(
+          args: String,
+          game: KailleraGameImpl,
+          clientHandler: V086ClientHandler
+        ) {
+          clientHandler.send(
+            InformationMessage(
+              clientHandler.nextMessageNumber,
+              "server",
+              ":ALIVECHECK=EmuLinker-K Alive Check: You are still logged in."
+            )
+          )
+        }
+
+        override fun verifyArgs(args: String): ParseResult =
+          if (args.isEmpty()) ParseResult.Success else TODO("Write a message")
+      },
+      object :
+        GameChatCommand(
+          prefix = "version",
+          commandPermissions =
+          CommandPermissions(
+            allowedLocations = CommandUsageLocation.SERVER_CHAT_ONLY,
+            gameOwnerOnly = false,
+          ),
+        ) {
+        override fun performAction(
+          args: String,
+          game: KailleraGameImpl,
+          clientHandler: V086ClientHandler
+        ) {
+          val releaseInfo = clientHandler.user.server.releaseInfo
+            clientHandler.send(
+              InformationMessage(
+                clientHandler.nextMessageNumber,
+                "server",
+                "VERSION: ${releaseInfo.productName}: ${releaseInfo.version}: ${EmuUtil.toSimpleUtcDatetime(releaseInfo.buildDate)}"
+              )
+            )
+        }
+
+        override fun verifyArgs(args: String): ParseResult =
+          if (args.isEmpty()) ParseResult.Success else TODO("Write a message")
+      },
+      object :
+        GameChatCommand(
+          prefix = "myip",
+          commandPermissions =
+          CommandPermissions(
+            allowedLocations = CommandUsageLocation.SERVER_CHAT_ONLY,
+            gameOwnerOnly = false,
+          ),
+        ) {
+        override fun performAction(
+          args: String,
+          game: KailleraGameImpl,
+          clientHandler: V086ClientHandler
+        ) {
+          clientHandler.send(
+            InformationMessage(
+              clientHandler.nextMessageNumber,
+              "server",
+              "Your IP Address is: " + clientHandler.user.connectSocketAddress.address.hostAddress
+            )
+          )
+        }
+
+        override fun verifyArgs(args: String): ParseResult =
+          if (args.isEmpty()) ParseResult.Success else TODO("Write a message")
+      },
       object :
         GameChatCommand(
           prefix = "TEMPLATE",
           commandPermissions =
-            CommandPermissions(
-              allowedLocations = CommandUsageLocation.GAME_CHAT_ONLY,
-              gameOwnerOnly = false,
-            ),
+          CommandPermissions(
+            allowedLocations = CommandUsageLocation.SERVER_CHAT_ONLY,
+            gameOwnerOnly = false,
+          ),
         ) {
         override fun performAction(
           args: String,
@@ -1351,10 +1440,82 @@ class GameChatCommandHandler @Inject constructor(twitterBroadcaster: TwitterBroa
         GameChatCommand(
           prefix = "TEMPLATE",
           commandPermissions =
-            CommandPermissions(
-              allowedLocations = CommandUsageLocation.GAME_CHAT_ONLY,
-              gameOwnerOnly = false,
-            ),
+          CommandPermissions(
+            allowedLocations = CommandUsageLocation.SERVER_CHAT_ONLY,
+            gameOwnerOnly = false,
+          ),
+        ) {
+        override fun performAction(
+          args: String,
+          game: KailleraGameImpl,
+          clientHandler: V086ClientHandler
+        ) {}
+
+        override fun verifyArgs(args: String): ParseResult =
+          if (args.isEmpty()) ParseResult.Success else TODO("Write a message")
+      },
+      object :
+        GameChatCommand(
+          prefix = "TEMPLATE",
+          commandPermissions =
+          CommandPermissions(
+            allowedLocations = CommandUsageLocation.SERVER_CHAT_ONLY,
+            gameOwnerOnly = false,
+          ),
+        ) {
+        override fun performAction(
+          args: String,
+          game: KailleraGameImpl,
+          clientHandler: V086ClientHandler
+        ) {}
+
+        override fun verifyArgs(args: String): ParseResult =
+          if (args.isEmpty()) ParseResult.Success else TODO("Write a message")
+      },
+      object :
+        GameChatCommand(
+          prefix = "TEMPLATE",
+          commandPermissions =
+          CommandPermissions(
+            allowedLocations = CommandUsageLocation.SERVER_CHAT_ONLY,
+            gameOwnerOnly = false,
+          ),
+        ) {
+        override fun performAction(
+          args: String,
+          game: KailleraGameImpl,
+          clientHandler: V086ClientHandler
+        ) {}
+
+        override fun verifyArgs(args: String): ParseResult =
+          if (args.isEmpty()) ParseResult.Success else TODO("Write a message")
+      },
+      object :
+        GameChatCommand(
+          prefix = "TEMPLATE",
+          commandPermissions =
+          CommandPermissions(
+            allowedLocations = CommandUsageLocation.SERVER_CHAT_ONLY,
+            gameOwnerOnly = false,
+          ),
+        ) {
+        override fun performAction(
+          args: String,
+          game: KailleraGameImpl,
+          clientHandler: V086ClientHandler
+        ) {}
+
+        override fun verifyArgs(args: String): ParseResult =
+          if (args.isEmpty()) ParseResult.Success else TODO("Write a message")
+      },
+      object :
+        GameChatCommand(
+          prefix = "TEMPLATE",
+          commandPermissions =
+          CommandPermissions(
+            allowedLocations = CommandUsageLocation.SERVER_CHAT_ONLY,
+            gameOwnerOnly = false,
+          ),
         ) {
         override fun performAction(
           args: String,

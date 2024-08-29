@@ -17,7 +17,6 @@ import org.emulinker.kaillera.controller.v086.protocol.InformationMessage
 import org.emulinker.kaillera.model.event.ChatEvent
 import org.emulinker.kaillera.model.exception.ActionException
 import org.emulinker.util.EmuLang
-import org.emulinker.util.EmuUtil
 import org.emulinker.util.EmuUtil.threadSleep
 
 private const val ADMIN_COMMAND_ESCAPE_STRING = "/"
@@ -85,41 +84,10 @@ class ChatAction @Inject internal constructor(private val adminCommandAction: Ad
     }
     if (doCommand) {
       // SF MOD - User Commands
-      if (chatMessage.message == "/alivecheck") {
-        try {
-          clientHandler.send(
-            InformationMessage(
-              clientHandler.nextMessageNumber,
-              "server",
-              ":ALIVECHECK=EmuLinker-K Alive Check: You are still logged in."
-            )
-          )
-        } catch (e: Exception) {}
-      } else if (
+      if (chatMessage.message == "/alivecheck") {} else if (
         chatMessage.message == "/version" &&
           clientHandler.user.accessLevel < AccessManager.ACCESS_ADMIN
-      ) {
-        val releaseInfo = clientHandler.user.server.releaseInfo
-        try {
-          clientHandler.send(
-            InformationMessage(
-              clientHandler.nextMessageNumber,
-              "server",
-              "VERSION: ${releaseInfo.productName}: ${releaseInfo.version}: ${EmuUtil.toSimpleUtcDatetime(releaseInfo.buildDate)}"
-            )
-          )
-        } catch (e: Exception) {}
-      } else if (chatMessage.message == "/myip") {
-        try {
-          clientHandler.send(
-            InformationMessage(
-              clientHandler.nextMessageNumber,
-              "server",
-              "Your IP Address is: " + clientHandler.user.connectSocketAddress.address.hostAddress
-            )
-          )
-        } catch (e: Exception) {}
-      } else if (chatMessage.message == "/msgon") {
+      ) {TODO("THIS IS WHERE I WAS WORKING!!!")} else if (chatMessage.message == "/myip") {} else if (chatMessage.message == "/msgon") {
         clientHandler.user.isAcceptingDirectMessages = true
         try {
           clientHandler.send(

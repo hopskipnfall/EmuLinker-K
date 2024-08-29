@@ -21,7 +21,8 @@ import org.emulinker.util.TaskScheduler
  * external services (e.g. Twitter, Discord).
  */
 @Singleton
-class TwitterBroadcaster
+// Open for testing.
+open class TwitterBroadcaster
 @Inject
 internal constructor(
   private val flags: RuntimeFlags,

@@ -5,7 +5,6 @@ import java.util.*
 import javax.inject.Inject
 import javax.inject.Singleton
 import org.emulinker.kaillera.access.AccessManager
-import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086ClientHandler
 import org.emulinker.kaillera.controller.v086.commands.GameChatCommand
 import org.emulinker.kaillera.controller.v086.commands.GameChatCommandHandler
@@ -73,27 +72,27 @@ internal constructor(
 
   override fun handleEvent(gameChatEvent: GameChatEvent, clientHandler: V086ClientHandler) {
     handledEventCount++
-    try {
+    if (
+      clientHandler.user.searchIgnoredUsers(
+        gameChatEvent.user.connectSocketAddress.address.hostAddress
+      )
+    ) {
+      return
+    } else if (clientHandler.user.ignoreAll) {
       if (
-        clientHandler.user.searchIgnoredUsers(
-          gameChatEvent.user.connectSocketAddress.address.hostAddress
-        )
-      )
+        gameChatEvent.user.accessLevel < AccessManager.ACCESS_ADMIN &&
+          gameChatEvent.user !== clientHandler.user
+      ) {
         return
-      else if (clientHandler.user.ignoreAll) {
-        if (
-          gameChatEvent.user.accessLevel < AccessManager.ACCESS_ADMIN &&
-            gameChatEvent.user !== clientHandler.user
-        )
-          return
       }
-      val m = gameChatEvent.message
-      clientHandler.send(
-        GameChatNotification(clientHandler.nextMessageNumber, gameChatEvent.user.name!!, m)
-      )
-    } catch (e: MessageFormatException) {
-      logger.atSevere().withCause(e).log("Failed to construct GameChat.Notification message")
     }
+    clientHandler.send(
+      GameChatNotification(
+        clientHandler.nextMessageNumber,
+        gameChatEvent.user.name!!,
+        gameChatEvent.message
+      )
+    )
   }
 
   companion object {
