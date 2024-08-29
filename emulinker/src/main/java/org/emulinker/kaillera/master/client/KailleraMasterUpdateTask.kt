@@ -41,7 +41,7 @@ constructor(
       this.append("servername", publicInfo.serverName)
       this.append("port", flags.serverPort.toString())
       this.append("nbusers", kailleraServer.users.size.toString())
-      this.append("maxconn", kailleraServer.maxUsers.toString())
+      this.append("maxconn", flags.maxUsers.toString())
       // I want to use `releaseInfo.versionWithElkPrefix` here, but it's too long for the db schema
       // field, so we just write elk (lowercase in protest :P ).
       this.append("version", "elk")

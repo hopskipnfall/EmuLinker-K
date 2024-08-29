@@ -49,6 +49,8 @@ dependencies {
   implementation("io.ktor:ktor-server-status-pages-jvm:$ktorVersion")
   implementation("io.ktor:ktor-server-default-headers-jvm:$ktorVersion")
 
+  implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.1")
+
   // This is only used by the fake testing client, hopefully we can remove this.
   testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.1")
 

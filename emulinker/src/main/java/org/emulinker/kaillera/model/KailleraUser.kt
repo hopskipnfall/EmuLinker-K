@@ -9,6 +9,10 @@ import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 import kotlin.Throws
+import kotlin.system.measureNanoTime
+import kotlin.time.Duration.Companion.nanoseconds
+import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.access.AccessManager
 import org.emulinker.kaillera.model.event.GameDataEvent
@@ -33,8 +37,9 @@ class KailleraUser(
   val connectSocketAddress: InetSocketAddress,
   val listener: KailleraEventListener,
   val server: KailleraServer,
-  flags: RuntimeFlags,
-  private val threadpoolExecutor: ThreadPoolExecutor,
+  private val flags: RuntimeFlags,
+  threadpoolExecutor: ThreadPoolExecutor,
+  private val clock: Clock,
 ) {
   var inStealthMode = false
 
@@ -46,7 +51,7 @@ class KailleraUser(
         isEmuLinkerClient = true
     }
 
-  private val initTime = System.currentTimeMillis()
+  private val initTime = clock.now()
 
   var connectionType: ConnectionType =
     ConnectionType.DISABLED // TODO(nue): This probably shouldn't have a default.
@@ -61,9 +66,11 @@ class KailleraUser(
   var accessLevel = 0
   var isEmuLinkerClient = false
     private set
-  val connectTime: Long = initTime
+  val connectTime: Instant = initTime
   var timeouts = 0
-  var lastActivity: Long = initTime
+
+  /** This marks the last time the user interacted in the server. */
+  private var lastActivity: Instant = initTime
     private set
 
   var smallLagSpikesCausedByUser = 0L
@@ -75,13 +82,37 @@ class KailleraUser(
   private var bigSpikeThresholdNs = Duration.ZERO.nano
 
   fun updateLastActivity() {
-    lastKeepAlive = System.currentTimeMillis()
+    lastKeepAlive = clock.now()
     lastActivity = lastKeepAlive
   }
 
-  var lastKeepAlive: Long = initTime
-    private set
-  var lastChatTime: Long = initTime
+  /**
+   * We haven't heard anything from the user in a long time and it's likely their client is no
+   * longer connected.
+   */
+  val isDead: Boolean
+    get() {
+      val now = clock.now()
+      return isIdleForTooLong &&
+        now - lastKeepAlive > flags.keepAliveTimeout &&
+        now - Instant.fromEpochMilliseconds(lastUpdateNs.nanoseconds.inWholeMilliseconds) >
+          flags.keepAliveTimeout
+    }
+
+  /**
+   * The user may have a successful connection to the server, but they are seemingly AFK for longer
+   * than the policy allows.
+   */
+  val isIdleForTooLong: Boolean
+    get() {
+      val now = clock.now()
+      return now - lastActivity > flags.idleTimeout &&
+        now - Instant.fromEpochMilliseconds(lastUpdateNs.nanoseconds.inWholeMilliseconds) >
+          flags.idleTimeout
+    }
+
+  private var lastKeepAlive: Instant = initTime
+  var lastChatTime: Instant = initTime
     private set
   var lastCreateGameTime: Long = 0
     private set
@@ -170,7 +201,7 @@ class KailleraUser(
   var name: String? = null
 
   fun updateLastKeepAlive() {
-    lastKeepAlive = System.currentTimeMillis()
+    lastKeepAlive = clock.now()
   }
 
   var game: KailleraGameImpl? = null
@@ -230,7 +261,7 @@ class KailleraUser(
   fun chat(message: String?) {
     updateLastActivity()
     server.chat(this, message)
-    lastChatTime = System.currentTimeMillis()
+    lastChatTime = clock.now()
   }
 
   @Throws(GameKickException::class)
@@ -419,7 +450,67 @@ class KailleraUser(
 
   @Throws(GameDataException::class)
   fun addGameData(data: ByteArray) {
-    val delaySinceLastResponseNs = System.nanoTime() - lastUpdateNs
+    val timeWaitingNs = measureNanoTime {
+      try {
+        if (game == null) {
+          throw GameDataException(
+            EmuLang.getString("KailleraUserImpl.GameDataErrorNotInGame"),
+            data,
+            actionsPerMessage = connectionType.byteValue.toInt(),
+            playerNumber = 1,
+            numPlayers = 1
+          )
+        }
+
+        // Initial Delay
+        // totalDelay = (game.getDelay() + tempDelay + 5)
+        if (frameCount < totalDelay) {
+          bytesPerAction = data.size / connectionType.byteValue
+          arraySize = game!!.playerActionQueue!!.size * connectionType.byteValue * bytesPerAction
+          val response = ByteArray(arraySize)
+          for (i in response.indices) {
+            response[i] = 0
+          }
+          lostInput.add(data)
+          queueEvent(GameDataEvent(game as KailleraGameImpl, response))
+          frameCount++
+        } else {
+          // lostInput.add(data);
+          if (lostInput.size > 0) {
+            game!!.addData(this, playerNumber, lostInput[0])
+            lostInput.removeAt(0)
+          } else {
+            game!!.addData(this, playerNumber, data)
+          }
+        }
+        gameDataErrorTime = 0
+      } catch (e: GameDataException) {
+        // this should be warn level, but it creates tons of lines in the log
+        logger.atFine().withCause(e).log("%s add game data failed", this)
+
+        // i'm going to reflect the game data packet back at the user to prevent game lockups,
+        // but this uses extra bandwidth, so we'll set a counter to prevent people from leaving
+        // games running for a long time in this state
+        if (gameDataErrorTime > 0) {
+          if (
+            System.currentTimeMillis() - gameDataErrorTime > 30000
+          ) // give the user time to close the game
+          {
+            // this should be warn level, but it creates tons of lines in the log
+            logger.atFine().log("%s: error game data exceeds drop timeout!", this)
+            throw GameDataException(e.message)
+          } else {
+            // e.setReflectData(true);
+            throw e
+          }
+        } else {
+          gameDataErrorTime = System.currentTimeMillis()
+          throw e
+        }
+      }
+    }
+
+    val delaySinceLastResponseNs = System.nanoTime() - lastUpdateNs - timeWaitingNs
     when {
       delaySinceLastResponseNs < smallLagThresholdNs -> {
         // No lag occurred.
@@ -429,65 +520,6 @@ class KailleraUser(
       }
       delaySinceLastResponseNs >= bigSpikeThresholdNs -> {
         bigLagSpikesCausedByUser++
-      }
-    }
-
-    updateLastActivity()
-    try {
-      if (game == null) {
-        throw GameDataException(
-          EmuLang.getString("KailleraUserImpl.GameDataErrorNotInGame"),
-          data,
-          actionsPerMessage = connectionType.byteValue.toInt(),
-          playerNumber = 1,
-          numPlayers = 1
-        )
-      }
-
-      // Initial Delay
-      // totalDelay = (game.getDelay() + tempDelay + 5)
-      if (frameCount < totalDelay) {
-        bytesPerAction = data.size / connectionType.byteValue
-        arraySize = game!!.playerActionQueue!!.size * connectionType.byteValue * bytesPerAction
-        val response = ByteArray(arraySize)
-        for (i in response.indices) {
-          response[i] = 0
-        }
-        lostInput.add(data)
-        queueEvent(GameDataEvent(game as KailleraGameImpl, response))
-        frameCount++
-      } else {
-        // lostInput.add(data);
-        if (lostInput.size > 0) {
-          game!!.addData(this, playerNumber, lostInput[0])
-          lostInput.removeAt(0)
-        } else {
-          game!!.addData(this, playerNumber, data)
-        }
-      }
-      gameDataErrorTime = 0
-    } catch (e: GameDataException) {
-      // this should be warn level, but it creates tons of lines in the log
-      logger.atFine().withCause(e).log("%s add game data failed", this)
-
-      // i'm going to reflect the game data packet back at the user to prevent game lockups,
-      // but this uses extra bandwidth, so we'll set a counter to prevent people from leaving
-      // games running for a long time in this state
-      if (gameDataErrorTime > 0) {
-        if (
-          System.currentTimeMillis() - gameDataErrorTime > 30000
-        ) // give the user time to close the game
-        {
-          // this should be warn level, but it creates tons of lines in the log
-          logger.atFine().log("%s: error game data exceeds drop timeout!", this)
-          throw GameDataException(e.message)
-        } else {
-          // e.setReflectData(true);
-          throw e
-        }
-      } else {
-        gameDataErrorTime = System.currentTimeMillis()
-        throw e
       }
     }
 

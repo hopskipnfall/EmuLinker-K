@@ -355,9 +355,12 @@ constructor(
     }
   }
 
+  // Caching here for speed.
+  private val maxPingMs: Long = flags.maxPing.inWholeMilliseconds
+
   fun resend(timeoutCounter: Int) {
     // if ((System.currentTimeMillis() - lastResend) > (user.getPing()*3))
-    if (System.currentTimeMillis() - lastResend > controller.server.maxPing) {
+    if (System.currentTimeMillis() - lastResend > maxPingMs) {
       // int numToSend = (3+timeoutCounter);
       var numToSend = 3 * timeoutCounter
       if (numToSend > V086Controller.MAX_BUNDLE_SIZE) numToSend = V086Controller.MAX_BUNDLE_SIZE
