@@ -609,19 +609,21 @@ class KailleraGameImpl(
    * back to the client.
    */
   @Throws(GameDataException::class)
-  override fun addData(user: KailleraUser, playerNumber: Int, data: ByteArray) {
-    val playerActionQueueCopy = playerActionQueue ?: return
+  override fun addData(user: KailleraUser, playerNumber: Int, data: ByteArray): Result<Unit> {
+    val playerActionQueueCopy = playerActionQueue ?: return Result.success(Unit)
 
     // int bytesPerAction = (data.length / actionsPerMessage);
     var timeoutCounter = 0
     // int arraySize = (playerActionQueues.length * actionsPerMessage * user.getBytesPerAction());
     if (!isSynched) {
-      throw GameDataException(
-        EmuLang.getString("KailleraGameImpl.DesynchedWarning"),
-        data,
-        actionsPerMessage,
-        playerNumber,
-        playerActionQueueCopy.size,
+      return Result.failure(
+        GameDataException(
+          EmuLang.getString("KailleraGameImpl.DesynchedWarning"),
+          data,
+          actionsPerMessage,
+          playerNumber,
+          playerActionQueueCopy.size,
+        )
       )
     }
     playerActionQueueCopy[playerNumber - 1].addActions(data)
@@ -663,17 +665,20 @@ class KailleraGameImpl(
           }
         }
         if (!isSynched) {
-          throw GameDataException(
-            EmuLang.getString("KailleraGameImpl.DesynchedWarning"),
-            data,
-            user.bytesPerAction,
-            playerNumber,
-            playerActionQueueCopy.size,
+          return Result.failure(
+            GameDataException(
+              EmuLang.getString("KailleraGameImpl.DesynchedWarning"),
+              data,
+              user.bytesPerAction,
+              playerNumber,
+              playerActionQueueCopy.size,
+            )
           )
         }
         player.queueEvent(GameDataEvent(this, response))
       }
     }
+    return Result.success(Unit)
   }
 
   // it's very important this method is synchronized

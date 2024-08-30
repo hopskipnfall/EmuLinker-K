@@ -45,23 +45,26 @@ class ACKAction @Inject internal constructor() :
           clientHandler.averageNetworkSpeed,
           clientHandler.bestNetworkSpeed
         )
-      try {
-        user.login()
-      } catch (e: LoginException) {
-        try {
-          clientHandler.send(
-            ConnectionRejected(
-              clientHandler.nextMessageNumber,
-              // TODO(nue): Localize this?
-              username = "server",
-              user.id,
-              e.message ?: ""
-            )
-          )
-        } catch (e2: MessageFormatException) {
-          logger.atSevere().withCause(e2).log("Failed to construct new ConnectionRejected")
+      user.login().onFailure { e ->
+        when (e) {
+          is LoginException -> {
+            try {
+              clientHandler.send(
+                ConnectionRejected(
+                  clientHandler.nextMessageNumber,
+                  // TODO(nue): Localize this?
+                  username = "server",
+                  user.id,
+                  e.message ?: ""
+                )
+              )
+            } catch (e2: MessageFormatException) {
+              logger.atSevere().withCause(e2).log("Failed to construct new ConnectionRejected")
+            }
+            throw FatalActionException("Login failed: " + e.message)
+          }
+          else -> throw e
         }
-        throw FatalActionException("Login failed: " + e.message)
       }
     } else {
       try {

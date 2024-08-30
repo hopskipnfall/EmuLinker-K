@@ -243,16 +243,9 @@ class KailleraUser(
   }
 
   // server actions
-  @Throws(
-    PingTimeException::class,
-    ClientAddressException::class,
-    ConnectionTypeException::class,
-    UserNameException::class,
-    LoginException::class
-  )
-  fun login() = withLock {
+  fun login(): Result<Unit> = withLock {
     updateLastActivity()
-    server.login(this)
+    return server.login(this)
   }
 
   @Synchronized
@@ -448,17 +441,18 @@ class KailleraUser(
     game!!.ready(this, playerNumber)
   }
 
-  @Throws(GameDataException::class)
-  fun addGameData(data: ByteArray) {
+  fun addGameData(data: ByteArray): Result<Unit> {
     val timeWaitingNs = measureNanoTime {
-      try {
+      fun doTheThing(): Result<Unit> {
         if (game == null) {
-          throw GameDataException(
-            EmuLang.getString("KailleraUserImpl.GameDataErrorNotInGame"),
-            data,
-            actionsPerMessage = connectionType.byteValue.toInt(),
-            playerNumber = 1,
-            numPlayers = 1
+          return Result.failure(
+            GameDataException(
+              EmuLang.getString("KailleraUserImpl.GameDataErrorNotInGame"),
+              data,
+              actionsPerMessage = connectionType.byteValue.toInt(),
+              playerNumber = 1,
+              numPlayers = 1
+            )
           )
         }
 
@@ -477,35 +471,43 @@ class KailleraUser(
         } else {
           // lostInput.add(data);
           if (lostInput.size > 0) {
-            game!!.addData(this, playerNumber, lostInput[0])
+            game!!.addData(this, playerNumber, lostInput[0]).onFailure {
+              return Result.failure(it)
+            }
             lostInput.removeAt(0)
           } else {
-            game!!.addData(this, playerNumber, data)
+            game!!.addData(this, playerNumber, data).onFailure {
+              return Result.failure(it)
+            }
           }
         }
         gameDataErrorTime = 0
-      } catch (e: GameDataException) {
-        // this should be warn level, but it creates tons of lines in the log
-        logger.atFine().withCause(e).log("%s add game data failed", this)
+        return Result.success(Unit)
+      }
 
-        // i'm going to reflect the game data packet back at the user to prevent game lockups,
-        // but this uses extra bandwidth, so we'll set a counter to prevent people from leaving
-        // games running for a long time in this state
-        if (gameDataErrorTime > 0) {
-          if (
-            System.currentTimeMillis() - gameDataErrorTime > 30000
-          ) // give the user time to close the game
-          {
-            // this should be warn level, but it creates tons of lines in the log
-            logger.atFine().log("%s: error game data exceeds drop timeout!", this)
-            throw GameDataException(e.message)
+      val result = doTheThing()
+      result.onFailure { e ->
+        if (e is GameDataException) {
+          // this should be warn level, but it creates tons of lines in the log
+          logger.atFine().withCause(e).log("%s add game data failed", this)
+
+          // i'm going to reflect the game data packet back at the user to prevent game lockups,
+          // but this uses extra bandwidth, so we'll set a counter to prevent people from leaving
+          // games running for a long time in this state
+          if (gameDataErrorTime > 0) {
+            // give the user time to close the game
+            if (System.currentTimeMillis() - gameDataErrorTime > 30000) {
+              // this should be warn level, but it creates tons of lines in the log
+              logger.atFine().log("%s: error game data exceeds drop timeout!", this)
+              return Result.failure(GameDataException(e.message))
+            } else {
+              // e.setReflectData(true);
+              return result
+            }
           } else {
-            // e.setReflectData(true);
-            throw e
+            gameDataErrorTime = System.currentTimeMillis()
+            return result
           }
-        } else {
-          gameDataErrorTime = System.currentTimeMillis()
-          throw e
         }
       }
     }
@@ -521,6 +523,7 @@ class KailleraUser(
     }
 
     lastUpdateNs = System.nanoTime()
+    return Result.success(Unit)
   }
 
   fun queueEvent(event: KailleraEvent) {
