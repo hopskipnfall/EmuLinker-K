@@ -1,8 +1,6 @@
 package org.emulinker.kaillera.controller.v086.action
 
 import com.google.common.flogger.FluentLogger
-import javax.inject.Inject
-import javax.inject.Singleton
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086ClientHandler
 import org.emulinker.kaillera.controller.v086.protocol.CachedGameData
@@ -10,9 +8,7 @@ import org.emulinker.kaillera.controller.v086.protocol.GameData
 import org.emulinker.kaillera.model.event.GameDataEvent
 import org.emulinker.kaillera.model.exception.GameDataException
 
-@Singleton
-class GameDataAction @Inject internal constructor() :
-  V086Action<GameData>, V086GameEventHandler<GameDataEvent> {
+object GameDataAction : V086Action<GameData>, V086GameEventHandler<GameDataEvent> {
   override val actionPerformedCount = 0
   override val handledEventCount = 0
 
@@ -59,7 +55,5 @@ class GameDataAction @Inject internal constructor() :
     }
   }
 
-  companion object {
-    private val logger = FluentLogger.forEnclosingClass()
-  }
+  private val logger = FluentLogger.forEnclosingClass()
 }

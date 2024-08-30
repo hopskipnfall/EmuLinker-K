@@ -45,7 +45,6 @@ class V086ClientHandler
 constructor(
   metrics: MetricRegistry,
   private val flags: RuntimeFlags,
-  private val gameDataAction: GameDataAction,
   // TODO(nue): Try to replace this with remoteSocketAddress.
   /** I think this is the address from when the user called the connect controller. */
   @Assisted val connectRemoteSocketAddress: InetSocketAddress,
@@ -262,7 +261,7 @@ constructor(
         val action: V086Action<out V086Message>? =
           // Checking for GameData first is a speed optimization.
           if (messageTypeId == GameData.ID) {
-            gameDataAction
+            GameDataAction
           } else {
             controller.actions[m.messageTypeId.toInt()]
           }
@@ -298,7 +297,7 @@ constructor(
           val action: V086Action<out V086Message>? =
             // Checking for GameData first is a speed optimization.
             if (messageTypeId == GameData.ID) {
-              gameDataAction
+              GameDataAction
             } else {
               controller.actions[m.messageTypeId.toInt()]
             }
@@ -320,7 +319,7 @@ constructor(
     when (event) {
       // Check for GameDataEvent first to avoid map lookup slowness.
       is GameDataEvent -> {
-        gameDataAction.handleEvent(event, this)
+        GameDataAction.handleEvent(event, this)
       }
       is GameEvent -> {
         val eventHandler = controller.gameEventHandlers[event::class]

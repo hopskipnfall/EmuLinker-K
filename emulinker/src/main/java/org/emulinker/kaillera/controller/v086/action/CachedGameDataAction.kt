@@ -2,8 +2,6 @@ package org.emulinker.kaillera.controller.v086.action
 
 import com.google.common.flogger.FluentLogger
 import java.lang.IndexOutOfBoundsException
-import javax.inject.Inject
-import javax.inject.Singleton
 import kotlin.Throws
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086ClientHandler
@@ -12,8 +10,7 @@ import org.emulinker.kaillera.controller.v086.protocol.GameChatNotification
 import org.emulinker.kaillera.controller.v086.protocol.GameData.Companion.create
 import org.emulinker.kaillera.model.exception.GameDataException
 
-@Singleton
-class CachedGameDataAction @Inject internal constructor() : V086Action<CachedGameData> {
+object CachedGameDataAction : V086Action<CachedGameData> {
   override val actionPerformedCount = 0
 
   override fun toString() = "CachedGameDataAction"
@@ -65,7 +62,5 @@ class CachedGameDataAction @Inject internal constructor() : V086Action<CachedGam
     }
   }
 
-  companion object {
-    private val logger = FluentLogger.forEnclosingClass()
-  }
+  private val logger = FluentLogger.forEnclosingClass()
 }
