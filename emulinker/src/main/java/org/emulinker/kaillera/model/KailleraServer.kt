@@ -12,7 +12,6 @@ import javax.inject.Inject
 import javax.inject.Named
 import javax.inject.Singleton
 import kotlin.Throws
-import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
 import kotlinx.datetime.Clock
@@ -191,15 +190,12 @@ internal constructor(
     return user
   }
 
-  fun login(user: KailleraUser?): Result<Unit> = withLock {
-    val userImpl = user
-    val loginDelay: Duration = clock.now() - user!!.connectTime
+  fun login(user: KailleraUser): Result<Unit> = withLock {
     logger
       .atInfo()
       .log(
-        "%s: login request: delay=%s, clientAddress=%s, name=%s, ping=%d, client=%s, connection=%s",
+        "%s: login request: clientAddress=%s, name=%s, ping=%d, client=%s, connection=%s",
         user,
-        loginDelay,
         EmuUtil.formatSocketAddress(user.socketAddress!!),
         user.name,
         user.ping,
@@ -416,24 +412,24 @@ internal constructor(
     }
 
     // passed all checks
-    userImpl!!.accessLevel = access
-    userImpl.status = UserStatus.IDLE
-    userImpl.loggedIn = true
-    usersMap[userListKey] = userImpl
-    userImpl.queueEvent(ConnectedEvent(this, user))
+    user.accessLevel = access
+    user.status = UserStatus.IDLE
+    user.loggedIn = true
+    usersMap[userListKey] = user
+    user.queueEvent(ConnectedEvent(this, user))
     threadSleep(20.milliseconds)
     for (loginMessage in loginMessages) {
-      userImpl.queueEvent(InfoMessageEvent(user, loginMessage))
+      user.queueEvent(InfoMessageEvent(user, loginMessage))
       threadSleep(20.milliseconds)
     }
-    userImpl.queueEvent(
+    user.queueEvent(
       InfoMessageEvent(
         user,
         "${releaseInfo.productName} v${releaseInfo.version}: ${releaseInfo.websiteString}"
       )
     )
     if (CompiledFlags.DEBUG_BUILD) {
-      userImpl.queueEvent(
+      user.queueEvent(
         InfoMessageEvent(
           user,
           "WARNING: This is an unoptimized debug build that should not be used in production."
@@ -451,7 +447,7 @@ internal constructor(
 
     // this is fairly ugly
     if (user.isEmuLinkerClient) {
-      userImpl.queueEvent(InfoMessageEvent(user, ":ACCESS=" + userImpl.accessStr))
+      user.queueEvent(InfoMessageEvent(user, ":ACCESS=" + user.accessStr))
       if (access >= AccessManager.ACCESS_SUPERADMIN) {
         var sb = StringBuilder()
         sb.append(":USERINFO=")
@@ -489,13 +485,13 @@ internal constructor(
     }
     threadSleep(20.milliseconds)
     if (access >= AccessManager.ACCESS_ADMIN) {
-      userImpl.queueEvent(
+      user.queueEvent(
         InfoMessageEvent(user, EmuLang.getString("KailleraServerImpl.AdminWelcomeMessage"))
       )
       // Display messages to admins if they exist.
       AppModule.messagesToAdmins.forEach { message ->
         threadSleep(20.milliseconds)
-        userImpl.queueEvent(InfoMessageEvent(user, message))
+        user.queueEvent(InfoMessageEvent(user, message))
       }
     }
     addEvent(UserJoinedEvent(this, user))

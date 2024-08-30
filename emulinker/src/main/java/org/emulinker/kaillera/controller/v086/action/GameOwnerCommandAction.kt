@@ -213,7 +213,7 @@ class GameOwnerCommandAction @Inject internal constructor(private val flags: Run
     game: KailleraGameImpl,
   ) {
     if (message == "/lagstat") {
-      game.announce("Lagged frames per player:")
+      game.announce("Lagged frames per player by delay (small may contain false positives):")
       game.players
         .asSequence()
         .filter { !it.inStealthMode }

@@ -487,7 +487,9 @@ internal constructor(
         }
       } else if (message.message == "/lagstat") {
         // Note: This was duplicated from GameOwnerCommandAction.
-        clientHandler.user.game!!.announce("Lagged frames per player:")
+        clientHandler.user.game!!.announce(
+          "Lagged frames per player by delay (small may contain false positives):"
+        )
         clientHandler.user.game!!
           .players
           .asSequence()

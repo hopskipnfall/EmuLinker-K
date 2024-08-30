@@ -52,6 +52,7 @@ class KailleraUser(
     }
 
   private val initTime = clock.now()
+  val connectTime: Instant = initTime
 
   var connectionType: ConnectionType =
     ConnectionType.DISABLED // TODO(nue): This probably shouldn't have a default.
@@ -67,20 +68,16 @@ class KailleraUser(
   var isEmuLinkerClient = false
     private set
 
-  val connectTime: Instant = initTime
-
   /** This marks the last time the user interacted in the server. */
   private var lastActivity: Instant = initTime
 
   private var smallLagSpikesCausedByUser = 0L
   private var bigLagSpikesCausedByUser = 0L
-  private var hugeLagSpikesCausedByUser = 0L
 
   /** The last time we heard from this player for lag detection purposes. */
   private var lastUpdateNs = System.nanoTime()
   private var smallLagThresholdNs = 0.seconds.inWholeNanoseconds
   private var bigSpikeThresholdNs = 0.seconds.inWholeNanoseconds
-  private var hugeSpikeThresholdNs = 0.seconds.inWholeNanoseconds
 
   fun updateLastActivity() {
     lastKeepAlive = clock.now()
@@ -300,12 +297,11 @@ class KailleraUser(
   }
 
   fun summarizeLag(): String =
-    "$smallLagSpikesCausedByUser (small), $bigLagSpikesCausedByUser (big), $hugeLagSpikesCausedByUser (huge)"
+    "$smallLagSpikesCausedByUser (small), $bigLagSpikesCausedByUser (big)"
 
   fun resetLag() {
     smallLagSpikesCausedByUser = 0
     bigLagSpikesCausedByUser = 0
-    hugeLagSpikesCausedByUser = 0
   }
 
   @Throws(JoinGameException::class)
@@ -435,8 +431,7 @@ class KailleraUser(
 
     val singleFrameDuration = 1.seconds / connectionType.updatesPerSecond
     smallLagThresholdNs = (singleFrameDuration * 1.65).inWholeNanoseconds
-    bigSpikeThresholdNs = (singleFrameDuration * 3).inWholeNanoseconds
-    hugeSpikeThresholdNs = (singleFrameDuration * 10).inWholeNanoseconds
+    bigSpikeThresholdNs = (singleFrameDuration * 2).inWholeNanoseconds
 
     game!!.ready(this, playerNumber)
   }
@@ -518,8 +513,7 @@ class KailleraUser(
         // No lag occurred.
       }
       delaySinceLastResponseNs < bigSpikeThresholdNs -> smallLagSpikesCausedByUser++
-      delaySinceLastResponseNs < hugeSpikeThresholdNs -> bigLagSpikesCausedByUser++
-      else -> hugeLagSpikesCausedByUser++
+      else -> bigLagSpikesCausedByUser++
     }
 
     lastUpdateNs = System.nanoTime()

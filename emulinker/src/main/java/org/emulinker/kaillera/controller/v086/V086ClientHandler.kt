@@ -258,6 +258,7 @@ constructor(
         val m: V086Message = messages[0]!!
         lastMessageNumber = m.messageNumber
         val messageTypeId = m.messageTypeId
+
         val action: V086Action<out V086Message>? =
           // Checking for GameData first is a speed optimization.
           if (messageTypeId == GameData.ID) {
