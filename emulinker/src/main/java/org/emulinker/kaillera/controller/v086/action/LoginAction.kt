@@ -18,6 +18,7 @@ class LoginAction @Inject internal constructor() :
   V086Action<UserInformation>, V086ServerEventHandler<UserJoinedEvent> {
   override var actionPerformedCount = 0
     private set
+
   override var handledEventCount = 0
     private set
 

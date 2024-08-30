@@ -14,6 +14,7 @@ import javax.inject.Singleton
 import kotlin.Throws
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.minutes
 import kotlinx.datetime.Clock
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.access.AccessManager
@@ -105,8 +106,8 @@ internal constructor(
   fun start() {
     timerTask =
       taskScheduler.scheduleRepeating(
-        period = flags.maxPing * 3,
-        initialDelay = flags.maxPing * 3,
+        period = 1.minutes,
+        initialDelay = 1.minutes,
       ) {
         run()
       }
@@ -816,6 +817,19 @@ internal constructor(
 
   private fun run() {
     try {
+      // TODO(nue): Remove this. This is just being used for testing.
+      for (game in games) {
+        if (game.status == GameStatus.PLAYING) {
+          logger
+            .atInfo()
+            .log(
+              "LAGSTAT: G%d - %s",
+              game.id,
+              game.players.joinToString(separator = " ") { "[${it.name} ${it.summarizeLag()}]" }
+            )
+        }
+      }
+
       if (usersMap.isEmpty()) return
       for (user in users) {
         val access = accessManager.getAccess(user.connectSocketAddress.address)
@@ -823,13 +837,10 @@ internal constructor(
 
         // LagStat
         if (user.loggedIn) {
-          if (
-            user.game != null &&
-              user.game!!.status == GameStatus.PLAYING &&
-              !user.game!!.startTimeout
-          ) {
-            if (System.currentTimeMillis() - user.game!!.startTimeoutTime > 15000) {
-              user.game!!.startTimeout = true
+          val game = user.game
+          if (game != null && game.status == GameStatus.PLAYING && !game.startTimeout) {
+            if (System.currentTimeMillis() - game.startTimeoutTime > 15000) {
+              game.startTimeout = true
             }
           }
         }

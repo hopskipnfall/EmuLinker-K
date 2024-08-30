@@ -19,6 +19,7 @@ internal constructor(private val lookingForGameReporter: TwitterBroadcaster) :
   V086Action<StartGameRequest>, V086GameEventHandler<GameStartedEvent> {
   override var actionPerformedCount = 0
     private set
+
   override var handledEventCount = 0
     private set
 

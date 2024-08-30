@@ -33,6 +33,7 @@ sealed class Chat : V086Message() {
 
   object ChatSerializer : MessageSerializer<Chat> {
     override val messageTypeId: Byte = ID
+
     override fun read(packet: ByteReadPacket, messageNumber: Int): Result<Chat> {
       if (packet.remaining < 3) {
         return parseFailure("Failed byte count validation!")

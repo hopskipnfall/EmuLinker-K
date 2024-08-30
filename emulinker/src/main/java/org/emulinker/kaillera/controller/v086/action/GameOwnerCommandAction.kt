@@ -21,6 +21,7 @@ import org.emulinker.util.EmuUtil.threadSleep
 class GameOwnerCommandAction @Inject internal constructor(private val flags: RuntimeFlags) :
   V086Action<GameChat> {
   override val actionPerformedCount = 0
+
   override fun toString() = "GameOwnerCommandAction"
 
   fun isValidCommand(chat: String): Boolean {
@@ -216,16 +217,10 @@ class GameOwnerCommandAction @Inject internal constructor(private val flags: Run
       game.players
         .asSequence()
         .filter { !it.inStealthMode }
-        .forEach {
-          game.announce(
-            "P${it.playerNumber}: ${it.smallLagSpikesCausedByUser} (tiny), ${it.bigLagSpikesCausedByUser} (big)"
-          )
-        }
+        .forEach { game.announce("P${it.playerNumber}: ${it.summarizeLag()}") }
     } else if (message == "/lagreset") {
       for (player in game.players) {
-        player.timeouts = 0
-        player.smallLagSpikesCausedByUser = 0
-        player.bigLagSpikesCausedByUser = 0
+        player.resetLag()
       }
       game.announce(
         "LagStat has been reset!",

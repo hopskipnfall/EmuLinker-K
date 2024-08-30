@@ -1,14 +1,14 @@
 import java.time.Instant
 
 plugins {
-  id("com.diffplug.spotless") version "6.18.0"
-  id("org.jetbrains.dokka") version "1.8.10"
+  id("com.diffplug.spotless") version "6.25.0"
+  id("org.jetbrains.dokka") version "1.9.20"
   application
 
-  kotlin("jvm") version "1.9.23"
-  kotlin("plugin.serialization") version "1.8.21"
+  kotlin("jvm") version "2.0.20"
+  kotlin("plugin.serialization") version "2.0.20"
 
-  id("com.google.devtools.ksp") version "1.9.23-1.0.20"
+  id("com.google.devtools.ksp") version "2.0.20-1.0.24"
 }
 
 repositories {
@@ -17,32 +17,35 @@ repositories {
 }
 
 dependencies {
-  api("org.jetbrains.kotlin:kotlin-stdlib:1.8.21")
+  api("org.jetbrains.kotlin:kotlin-stdlib:2.0.20")
 
   implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.1")
 
-  implementation("io.github.redouane59.twitter:twittered:2.22")
+  implementation("io.github.redouane59.twitter:twittered:2.23")
 
   api("io.dropwizard.metrics:metrics-core:4.2.3")
   api("io.dropwizard.metrics:metrics-jvm:4.2.3")
 
-  api("com.google.flogger:flogger:0.7.4")
-  api("com.google.flogger:flogger-system-backend:0.7.4")
-  api("com.google.flogger:flogger-log4j2-backend:0.7.4")
+  val floggerVersion = "0.8"
+  api("com.google.flogger:flogger:$floggerVersion")
+  api("com.google.flogger:flogger-system-backend:$floggerVersion")
+  api("com.google.flogger:flogger-log4j2-backend:$floggerVersion")
 
-  implementation("com.google.dagger:dagger:2.51.1")
-  implementation("com.google.dagger:dagger-compiler:2.51.1")
-  ksp("com.google.dagger:dagger-compiler:2.51.1")
+  val daggerVersion = "2.52"
+  implementation("com.google.dagger:dagger:$daggerVersion")
+  implementation("com.google.dagger:dagger-compiler:$daggerVersion")
+  ksp("com.google.dagger:dagger-compiler:$daggerVersion")
 
-  api("org.apache.logging.log4j:log4j:2.20.0")
-  api("org.apache.logging.log4j:log4j-core:2.20.0")
-  api("org.apache.logging.log4j:log4j-api:2.20.0")
+  val log4j = "2.23.1"
+  api("org.apache.logging.log4j:log4j:$log4j")
+  api("org.apache.logging.log4j:log4j-core:$log4j")
+  api("org.apache.logging.log4j:log4j-api:$log4j")
 
   api("org.mortbay.jetty:jetty:4.2.12")
   api("commons-configuration:commons-configuration:1.1")
   api("commons-pool:commons-pool:1.2")
 
-  val ktorVersion = "2.3.9"
+  val ktorVersion = "2.3.12"
   implementation("io.ktor:ktor-network-jvm:$ktorVersion")
   implementation("io.ktor:ktor-server-core-jvm:$ktorVersion")
   implementation("io.ktor:ktor-server-netty-jvm:$ktorVersion")
@@ -52,13 +55,13 @@ dependencies {
   implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.1")
 
   // This is only used by the fake testing client, hopefully we can remove this.
-  testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.1")
+  testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1")
 
   testImplementation("junit:junit:4.13.2")
-  testImplementation("com.google.truth:truth:1.1.3")
+  testImplementation("com.google.truth:truth:1.4.4")
   testImplementation(kotlin("test"))
-  testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.6.4")
-  testImplementation("org.mockito.kotlin:mockito-kotlin:4.1.0")
+  testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.1")
+  testImplementation("org.mockito.kotlin:mockito-kotlin:5.4.0")
 }
 
 group = "org.emulinker"

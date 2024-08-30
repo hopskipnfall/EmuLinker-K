@@ -8,5 +8,6 @@ interface V086UserEventHandler<in T : UserEvent?> {
   override fun toString(): String
 
   fun handleEvent(event: T, clientHandler: V086ClientHandler)
+
   val handledEventCount: Int
 }

@@ -15,6 +15,7 @@ class DropGameAction @Inject internal constructor() :
   V086Action<PlayerDropRequest>, V086GameEventHandler<UserDroppedGameEvent> {
   override var actionPerformedCount = 0
     private set
+
   override var handledEventCount = 0
     private set
 

@@ -15,6 +15,7 @@ class QuitAction @Inject internal constructor() :
   V086Action<QuitRequest>, V086ServerEventHandler<UserQuitEvent> {
   override var actionPerformedCount = 0
     private set
+
   override var handledEventCount = 0
     private set
 

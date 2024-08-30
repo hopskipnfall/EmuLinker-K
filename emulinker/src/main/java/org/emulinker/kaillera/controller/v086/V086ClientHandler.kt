@@ -91,10 +91,13 @@ constructor(
 
   private var prevMessageNumber = -1
     private set
+
   private var lastMessageNumber = -1
     private set
+
   var clientGameDataCache: GameDataCache = ClientGameDataCache(256)
     private set
+
   var serverGameDataCache: GameDataCache = ClientGameDataCache(256)
     private set
 
@@ -104,8 +107,10 @@ constructor(
   private var lastMeasurement: Long = 0
   var speedMeasurementCount = 0
     private set
+
   var bestNetworkSpeed = Int.MAX_VALUE
     private set
+
   private var clientRetryCount = 0
   private var lastResend = 0L
 
@@ -230,8 +235,7 @@ constructor(
             .log("%s received invalid message: %s}", this, EmuUtil.dumpBuffer(newBuffer))
           null
         }
-      }
-        ?: return
+      } ?: return
 
     stripFromProdBinary {
       logger.atFinest().log("<- FROM P%d: %s", user.id, inBundle.messages.firstOrNull())

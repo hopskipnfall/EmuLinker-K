@@ -20,28 +20,38 @@ internal constructor(
   private val kailleraMasterUpdateTask: KailleraMasterUpdateTask,
   private val taskScheduler: TaskScheduler,
 ) {
-  private var timerJob: TimerTask? = null
+  private var listReporterJob: TimerTask? = null
+  private var serverCheckinJob: TimerTask? = null
 
   fun stop() {
-    timerJob?.cancel()
-    timerJob = null
+    listReporterJob?.cancel()
+    listReporterJob = null
+
+    serverCheckinJob?.cancel()
+    serverCheckinJob = null
   }
 
   fun run() {
-    timerJob =
-      taskScheduler.scheduleRepeating(
-        // Give a few seconds to allow the server to bind ports etc.
-        initialDelay = 10.seconds,
-        period = REPORTING_INTERVAL
-      ) {
+    if (flags.touchEmulinker || flags.touchKaillera) {
+      listReporterJob =
+        taskScheduler.scheduleRepeating(
+          // Give a few seconds to allow the server to bind ports etc.
+          initialDelay = 10.seconds,
+          period = LIST_REPORTING_INTERVAL
+        ) {
+          if (flags.touchEmulinker) emuLinkerMasterUpdateTask.reportStatus()
+          if (flags.touchKaillera) kailleraMasterUpdateTask.reportStatus()
+          statsCollector.clearStartedGamesList()
+        }
+    }
+    serverCheckinJob =
+      taskScheduler.scheduleRepeating(initialDelay = 10.seconds, period = CHECKIN_INTERVAL) {
         serverCheckinTask.reportStatus()
-        if (flags.touchEmulinker) emuLinkerMasterUpdateTask.reportStatus()
-        if (flags.touchKaillera) kailleraMasterUpdateTask.reportStatus()
-        statsCollector.clearStartedGamesList()
       }
   }
 
   private companion object {
-    val REPORTING_INTERVAL = 1.minutes
+    val LIST_REPORTING_INTERVAL = 1.minutes
+    val CHECKIN_INTERVAL = 30.minutes
   }
 }

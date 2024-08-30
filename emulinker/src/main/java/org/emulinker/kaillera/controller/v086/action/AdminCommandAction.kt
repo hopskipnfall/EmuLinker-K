@@ -29,6 +29,7 @@ import org.emulinker.util.WildcardStringPattern
 @Singleton
 class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
   override val actionPerformedCount = 0
+
   override fun toString() = "AdminCommandAction"
 
   fun isValidCommand(chat: String): Boolean {

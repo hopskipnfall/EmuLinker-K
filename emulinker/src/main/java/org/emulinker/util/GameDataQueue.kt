@@ -86,6 +86,7 @@ class GameDataQueue(
 
   class PlayerTimeoutException(val playerNumber: Int, val timeoutNumber: Int, e: TimeoutException) :
     Exception(e)
+
   class DesynchException(msg: String, val playerNumber: Int, e: TimeoutException) :
     Exception(msg, e)
 }

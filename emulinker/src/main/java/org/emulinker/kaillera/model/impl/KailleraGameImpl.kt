@@ -410,7 +410,6 @@ class KailleraGameImpl(
       val player = players[i]
       val playerNumber = i + 1
       if (!swap) player.playerNumber = playerNumber
-      player.timeouts = 0
       player.frameCount = 0
       actionQueueBuilder[i] =
         PlayerActionQueue(
@@ -687,7 +686,6 @@ class KailleraGameImpl(
     playerActionQueue.lastTimeout = e
     val player: KailleraUser = e.player!!
     if (timeoutNumber < desynchTimeouts) {
-      if (startTimeout) player.timeouts = player.timeouts + 1
       if (timeoutNumber % 12 == 0) {
         logger.atInfo().log("%s: %s: Timeout #%d", this, player, timeoutNumber / 12)
         addEventForAllPlayers(GameTimeoutEvent(this, player, timeoutNumber / 12))

@@ -9,5 +9,6 @@ interface V086Action<T : V086Message> {
 
   @Throws(FatalActionException::class)
   fun performAction(message: T, clientHandler: V086ClientHandler)
+
   val actionPerformedCount: Int
 }

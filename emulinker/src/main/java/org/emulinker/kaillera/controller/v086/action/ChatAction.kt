@@ -27,6 +27,7 @@ class ChatAction @Inject internal constructor(private val adminCommandAction: Ad
   V086Action<ChatRequest>, V086ServerEventHandler<ChatEvent> {
   override var actionPerformedCount = 0
     private set
+
   override var handledEventCount = 0
     private set
 

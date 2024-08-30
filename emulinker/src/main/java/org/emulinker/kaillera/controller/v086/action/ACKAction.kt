@@ -21,6 +21,7 @@ class ACKAction @Inject internal constructor() :
   V086Action<ClientAck>, V086UserEventHandler<UserEvent> {
   override var actionPerformedCount = 0
     private set
+
   override var handledEventCount = 0
     private set
 

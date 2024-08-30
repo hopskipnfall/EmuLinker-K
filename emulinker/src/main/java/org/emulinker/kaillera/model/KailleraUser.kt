@@ -2,7 +2,6 @@ package org.emulinker.kaillera.model
 
 import com.google.common.flogger.FluentLogger
 import java.net.InetSocketAddress
-import java.time.Duration
 import java.util.ArrayList
 import java.util.concurrent.BlockingQueue
 import java.util.concurrent.LinkedBlockingQueue
@@ -11,6 +10,7 @@ import java.util.concurrent.TimeUnit
 import kotlin.Throws
 import kotlin.system.measureNanoTime
 import kotlin.time.Duration.Companion.nanoseconds
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import org.emulinker.config.RuntimeFlags
@@ -35,7 +35,7 @@ class KailleraUser(
   val id: Int,
   val protocol: String,
   val connectSocketAddress: InetSocketAddress,
-  val listener: KailleraEventListener,
+  private val listener: KailleraEventListener,
   val server: KailleraServer,
   private val flags: RuntimeFlags,
   threadpoolExecutor: ThreadPoolExecutor,
@@ -66,20 +66,21 @@ class KailleraUser(
   var accessLevel = 0
   var isEmuLinkerClient = false
     private set
+
   val connectTime: Instant = initTime
-  var timeouts = 0
 
   /** This marks the last time the user interacted in the server. */
   private var lastActivity: Instant = initTime
-    private set
 
-  var smallLagSpikesCausedByUser = 0L
-  var bigLagSpikesCausedByUser = 0L
+  private var smallLagSpikesCausedByUser = 0L
+  private var bigLagSpikesCausedByUser = 0L
+  private var hugeLagSpikesCausedByUser = 0L
 
   /** The last time we heard from this player for lag detection purposes. */
   private var lastUpdateNs = System.nanoTime()
-  private var smallLagThresholdNs = Duration.ZERO.nano
-  private var bigSpikeThresholdNs = Duration.ZERO.nano
+  private var smallLagThresholdNs = 0.seconds.inWholeNanoseconds
+  private var bigSpikeThresholdNs = 0.seconds.inWholeNanoseconds
+  private var hugeSpikeThresholdNs = 0.seconds.inWholeNanoseconds
 
   fun updateLastActivity() {
     lastKeepAlive = clock.now()
@@ -91,31 +92,29 @@ class KailleraUser(
    * longer connected.
    */
   val isDead: Boolean
-    get() {
-      val now = clock.now()
-      return isIdleForTooLong &&
-        now - lastKeepAlive > flags.keepAliveTimeout &&
-        now - Instant.fromEpochMilliseconds(lastUpdateNs.nanoseconds.inWholeMilliseconds) >
-          flags.keepAliveTimeout
-    }
+    get() =
+      clock.now() - lastKeepAlive > flags.keepAliveTimeout &&
+        System.nanoTime() - lastUpdateNs > flags.keepAliveTimeout.inWholeNanoseconds
 
   /**
    * The user may have a successful connection to the server, but they are seemingly AFK for longer
    * than the policy allows.
    */
   val isIdleForTooLong: Boolean
-    get() {
-      val now = clock.now()
-      return now - lastActivity > flags.idleTimeout &&
-        now - Instant.fromEpochMilliseconds(lastUpdateNs.nanoseconds.inWholeMilliseconds) >
-          flags.idleTimeout
-    }
+    get() =
+      clock.now().let { now ->
+        now - lastActivity > flags.idleTimeout &&
+          now - Instant.fromEpochMilliseconds(lastUpdateNs.nanoseconds.inWholeMilliseconds) >
+            flags.idleTimeout
+      }
 
   private var lastKeepAlive: Instant = initTime
   var lastChatTime: Instant = initTime
     private set
+
   var lastCreateGameTime: Long = 0
     private set
+
   var frameCount = 0
   var frameDelay = 0
 
@@ -307,6 +306,15 @@ class KailleraUser(
     loggedIn = false
   }
 
+  fun summarizeLag(): String =
+    "$smallLagSpikesCausedByUser (small), $bigLagSpikesCausedByUser (big), $hugeLagSpikesCausedByUser (huge)"
+
+  fun resetLag() {
+    smallLagSpikesCausedByUser = 0
+    bigLagSpikesCausedByUser = 0
+    hugeLagSpikesCausedByUser = 0
+  }
+
   @Throws(JoinGameException::class)
   fun joinGame(gameID: Int): KailleraGame = withLock {
     updateLastActivity()
@@ -432,19 +440,11 @@ class KailleraUser(
     }
     totalDelay = game!!.highestUserFrameDelay + tempDelay + 5
 
-    smallLagThresholdNs =
-      Duration.ofSeconds(1)
-        .dividedBy(connectionType.updatesPerSecond.toLong())
-        .multipliedBy(frameDelay.toLong())
-        // Effectively this is the delay that is allowed before calling it a lag spike.
-        .plusMillis(10)
-        .nano
-    bigSpikeThresholdNs =
-      Duration.ofSeconds(1)
-        .dividedBy(connectionType.updatesPerSecond.toLong())
-        .multipliedBy(frameDelay.toLong())
-        .plusMillis(50)
-        .nano
+    val singleFrameDuration = 1.seconds / connectionType.updatesPerSecond
+    smallLagThresholdNs = (singleFrameDuration * 1.65).inWholeNanoseconds
+    bigSpikeThresholdNs = (singleFrameDuration * 3).inWholeNanoseconds
+    hugeSpikeThresholdNs = (singleFrameDuration * 10).inWholeNanoseconds
+
     game!!.ready(this, playerNumber)
   }
 
@@ -515,12 +515,9 @@ class KailleraUser(
       delaySinceLastResponseNs < smallLagThresholdNs -> {
         // No lag occurred.
       }
-      delaySinceLastResponseNs < bigSpikeThresholdNs -> {
-        smallLagSpikesCausedByUser++
-      }
-      delaySinceLastResponseNs >= bigSpikeThresholdNs -> {
-        bigLagSpikesCausedByUser++
-      }
+      delaySinceLastResponseNs < bigSpikeThresholdNs -> smallLagSpikesCausedByUser++
+      delaySinceLastResponseNs < hugeSpikeThresholdNs -> bigLagSpikesCausedByUser++
+      else -> hugeLagSpikesCausedByUser++
     }
 
     lastUpdateNs = System.nanoTime()

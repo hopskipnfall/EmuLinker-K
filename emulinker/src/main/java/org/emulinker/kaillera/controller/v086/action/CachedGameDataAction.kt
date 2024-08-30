@@ -15,6 +15,7 @@ import org.emulinker.kaillera.model.exception.GameDataException
 @Singleton
 class CachedGameDataAction @Inject internal constructor() : V086Action<CachedGameData> {
   override val actionPerformedCount = 0
+
   override fun toString() = "CachedGameDataAction"
 
   @Throws(FatalActionException::class)

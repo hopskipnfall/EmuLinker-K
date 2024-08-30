@@ -25,6 +25,7 @@ internal constructor(
 ) : V086Action<GameChatRequest>, V086GameEventHandler<GameChatEvent> {
   override var actionPerformedCount = 0
     private set
+
   override var handledEventCount = 0
     private set
 
@@ -492,9 +493,7 @@ internal constructor(
           .asSequence()
           .filter { !it.inStealthMode }
           .forEach {
-            clientHandler.user.game!!.announce(
-              "P${it.playerNumber}: ${it.smallLagSpikesCausedByUser} (tiny), ${it.bigLagSpikesCausedByUser} (big)"
-            )
+            clientHandler.user.game!!.announce("P${it.playerNumber}: ${it.summarizeLag()}")
           }
       } else
         clientHandler.user.game!!.announce(

@@ -21,11 +21,14 @@ constructor(
 ) {
   var isStarted = false
     protected set
+
   protected var stopFlag = false
   var exception: Exception? = null
     protected set
+
   protected var relayThreads = Hashtable<InetSocketAddress, RelayThread>()
   protected var channels = Hashtable<Int, DatagramChannel?>()
+
   protected abstract fun processClientToServer(
     receiveBuffer: ByteBuffer?,
     fromAddress: InetSocketAddress?,
@@ -70,6 +73,7 @@ constructor(
     protected var port = 0
     var channel: DatagramChannel? = null
       protected set
+
     var forwardAddress: InetSocketAddress?
       protected set
 
@@ -77,6 +81,7 @@ constructor(
 
     var lastActivity: Long
       protected set
+
     protected var running = false
 
     protected constructor(forwardAddress: InetSocketAddress?) : this(-1, forwardAddress) {}

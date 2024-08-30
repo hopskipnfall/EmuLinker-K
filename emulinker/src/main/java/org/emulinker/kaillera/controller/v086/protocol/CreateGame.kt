@@ -25,6 +25,7 @@ sealed class CreateGame : V086Message() {
 
   object CreateGameSerializer : MessageSerializer<CreateGame> {
     override val messageTypeId: Byte = ID
+
     override fun read(packet: ByteReadPacket, messageNumber: Int): Result<CreateGame> {
       if (packet.remaining < 8) {
         return parseFailure("Failed byte count validation!")
