@@ -409,55 +409,57 @@ class KailleraUser(
   @Throws(StartGameException::class)
   fun startGame() {
     updateLastActivity()
+    val game = this.game
     if (game == null) {
       logger.atWarning().log("%s start game failed: Not in a game", this)
       throw StartGameException(EmuLang.getString("KailleraUserImpl.StartGameErrorNotInGame"))
     }
-    game!!.start(this)
+    game.start(this)
   }
 
   @Throws(UserReadyException::class)
   fun playerReady() = withLock {
     updateLastActivity()
+    val game = this.game
     if (game == null) {
       logger.atWarning().log("%s player ready failed: Not in a game", this)
       throw UserReadyException(EmuLang.getString("KailleraUserImpl.PlayerReadyErrorNotInGame"))
     }
     if (
-      playerNumber > game!!.playerActionQueue!!.size ||
-        game!!.playerActionQueue!![playerNumber - 1].synced
+      playerNumber > game.playerActionQueue!!.size ||
+        game.playerActionQueue!![playerNumber - 1].synced
     ) {
       return
     }
-    totalDelay = game!!.highestUserFrameDelay + tempDelay + 5
+    totalDelay = game.highestUserFrameDelay + tempDelay + 5
 
     val singleFrameDuration = 1.seconds / connectionType.updatesPerSecond
     smallLagThresholdNs = (singleFrameDuration * 1.65).inWholeNanoseconds
     bigSpikeThresholdNs = (singleFrameDuration * 2).inWholeNanoseconds
 
-    game!!.ready(this, playerNumber)
+    game.ready(this, playerNumber)
   }
 
   fun addGameData(data: ByteArray): Result<Unit> {
     val timeWaitingNs = measureNanoTime {
       fun doTheThing(): Result<Unit> {
-        if (game == null) {
-          return Result.failure(
-            GameDataException(
-              EmuLang.getString("KailleraUserImpl.GameDataErrorNotInGame"),
-              data,
-              actionsPerMessage = connectionType.byteValue.toInt(),
-              playerNumber = 1,
-              numPlayers = 1
+        val game =
+          this.game
+            ?: return Result.failure(
+              GameDataException(
+                EmuLang.getString("KailleraUserImpl.GameDataErrorNotInGame"),
+                data,
+                actionsPerMessage = connectionType.byteValue.toInt(),
+                playerNumber = 1,
+                numPlayers = 1
+              )
             )
-          )
-        }
 
         // Initial Delay
         // totalDelay = (game.getDelay() + tempDelay + 5)
         if (frameCount < totalDelay) {
           bytesPerAction = data.size / connectionType.byteValue
-          arraySize = game!!.playerActionQueue!!.size * connectionType.byteValue * bytesPerAction
+          arraySize = game.playerActionQueue!!.size * connectionType.byteValue * bytesPerAction
           val response = ByteArray(arraySize)
           for (i in response.indices) {
             response[i] = 0
@@ -468,12 +470,12 @@ class KailleraUser(
         } else {
           // lostInput.add(data);
           if (lostInput.size > 0) {
-            game!!.addData(this, playerNumber, lostInput[0]).onFailure {
+            game.addData(this, playerNumber, lostInput[0]).onFailure {
               return Result.failure(it)
             }
             lostInput.removeAt(0)
           } else {
-            game!!.addData(this, playerNumber, data).onFailure {
+            game.addData(this, playerNumber, data).onFailure {
               return Result.failure(it)
             }
           }
@@ -484,27 +486,30 @@ class KailleraUser(
 
       val result = doTheThing()
       result.onFailure { e ->
-        if (e is GameDataException) {
-          // this should be warn level, but it creates tons of lines in the log
-          logger.atFine().withCause(e).log("%s add game data failed", this)
+        when (e) {
+          is GameDataException -> {
+            // this should be warn level, but it creates tons of lines in the log
+            logger.atFine().withCause(e).log("%s add game data failed", this)
 
-          // i'm going to reflect the game data packet back at the user to prevent game lockups,
-          // but this uses extra bandwidth, so we'll set a counter to prevent people from leaving
-          // games running for a long time in this state
-          if (gameDataErrorTime > 0) {
-            // give the user time to close the game
-            if (System.currentTimeMillis() - gameDataErrorTime > 30000) {
-              // this should be warn level, but it creates tons of lines in the log
-              logger.atFine().log("%s: error game data exceeds drop timeout!", this)
-              return Result.failure(GameDataException(e.message))
+            // i'm going to reflect the game data packet back at the user to prevent game lockups,
+            // but this uses extra bandwidth, so we'll set a counter to prevent people from leaving
+            // games running for a long time in this state
+            if (gameDataErrorTime > 0) {
+              // give the user time to close the game
+              if (System.currentTimeMillis() - gameDataErrorTime > 30000) {
+                // this should be warn level, but it creates tons of lines in the log
+                logger.atFine().log("%s: error game data exceeds drop timeout!", this)
+                return Result.failure(GameDataException(e.message))
+              } else {
+                // e.setReflectData(true);
+                return result
+              }
             } else {
-              // e.setReflectData(true);
+              gameDataErrorTime = System.currentTimeMillis()
               return result
             }
-          } else {
-            gameDataErrorTime = System.currentTimeMillis()
-            return result
           }
+          else -> throw e
         }
       }
     }
