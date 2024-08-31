@@ -47,8 +47,8 @@ class KailleraUser(
   var clientType: String? = null
     set(clientType) {
       field = clientType
-      if (clientType != null && clientType.startsWith(EMULINKER_CLIENT_NAME))
-        isEmuLinkerClient = true
+      if (clientType != null && clientType.startsWith(EMULINKERSF_ADMIN_CLIENT_NAME))
+        isEsfAdminClient = true
     }
 
   private val initTime = clock.now()
@@ -59,13 +59,15 @@ class KailleraUser(
   var ping = 0
   var socketAddress: InetSocketAddress? = null
   var status = UserStatus.PLAYING // TODO(nue): This probably shouldn't have a default value..
+
   /**
    * Level of access that the user has.
    *
-   * See AdminCommandAction for available values. This should be turned into an enum.
+   * See [AccessManager] for available values. This should be turned into an enum.
    */
   var accessLevel = 0
-  var isEmuLinkerClient = false
+
+  var isEsfAdminClient = false
     private set
 
   /** This marks the last time the user interacted in the server. */
@@ -567,6 +569,6 @@ class KailleraUser(
   companion object {
     private val logger = FluentLogger.forEnclosingClass()
 
-    private const val EMULINKER_CLIENT_NAME = "EmuLinker-K Admin Client"
+    private const val EMULINKERSF_ADMIN_CLIENT_NAME = "EmulinkerSF Admin Client"
   }
 }

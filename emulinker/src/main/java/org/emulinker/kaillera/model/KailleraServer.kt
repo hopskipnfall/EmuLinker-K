@@ -446,7 +446,7 @@ internal constructor(
     }
 
     // this is fairly ugly
-    if (user.isEmuLinkerClient) {
+    if (user.isEsfAdminClient) {
       user.queueEvent(InfoMessageEvent(user, ":ACCESS=" + user.accessStr))
       if (access >= AccessManager.ACCESS_SUPERADMIN) {
         var sb = StringBuilder()

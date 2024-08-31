@@ -54,7 +54,7 @@ class LoginAction @Inject internal constructor() :
         )
       )
       val thisUser = clientHandler.user
-      if (thisUser.isEmuLinkerClient && thisUser.accessLevel >= AccessManager.ACCESS_SUPERADMIN) {
+      if (thisUser.isEsfAdminClient && thisUser.accessLevel >= AccessManager.ACCESS_SUPERADMIN) {
         if (user != thisUser) {
           val sb = StringBuilder()
           sb.append(":USERINFO=")
