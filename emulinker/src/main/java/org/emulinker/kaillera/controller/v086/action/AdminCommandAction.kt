@@ -24,6 +24,7 @@ import org.emulinker.kaillera.model.impl.Trivia
 import org.emulinker.util.EmuLang
 import org.emulinker.util.EmuUtil
 import org.emulinker.util.EmuUtil.threadSleep
+import org.emulinker.util.EmuUtil.toSimpleUtcDatetime
 import org.emulinker.util.WildcardStringPattern
 
 @Singleton
@@ -889,7 +890,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
             ": " +
             releaseInfo.version +
             ": " +
-            EmuUtil.toSimpleUtcDatetime(releaseInfo.buildDate)
+            releaseInfo.buildDate.toSimpleUtcDatetime()
         )
       )
       threadSleep(20.milliseconds)

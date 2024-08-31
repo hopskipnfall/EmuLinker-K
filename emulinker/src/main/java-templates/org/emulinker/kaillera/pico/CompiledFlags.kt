@@ -1,6 +1,6 @@
 package org.emulinker.kaillera.pico
 
-import java.time.Instant
+import kotlinx.datetime.Instant
 
 /** Constants inserted at compile time. */
 object CompiledFlags {
@@ -12,7 +12,7 @@ object CompiledFlags {
 
   const val PROJECT_URL: String = "${project.url}"
 
-  val BUILD_DATE: Instant = Instant.ofEpochSecond(${buildTimestampSeconds})
+  val BUILD_DATE: Instant = Instant.fromEpochSeconds(${buildTimestampSeconds})
 
   const val USE_BYTEREADPACKET_INSTEAD_OF_BYTEBUFFER: Boolean = ${useBytereadpacketInsteadOfBytebuffer}
 
