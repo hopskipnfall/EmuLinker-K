@@ -42,11 +42,11 @@ constructor(
     with(url.parameters) {
       this.append("servername", publicInfo.serverName)
       this.append("port", flags.serverPort.toString())
-      this.append("nbusers", kailleraServer.users.size.toString())
+      this.append("nbusers", kailleraServer.usersMap.values.size.toString())
       this.append("maxconn", flags.maxUsers.toString())
       // The list only supports max 8 character versions.
       this.append("version", releaseInfo.versionWithElkPrefix.take(8))
-      this.append("nbgames", kailleraServer.games.size.toString())
+      this.append("nbgames", kailleraServer.gamesMap.values.size.toString())
       this.append("location", publicInfo.location)
       // If this doesn't "look right" to the server it will silently not show up in the server
       // list.
@@ -60,7 +60,7 @@ constructor(
     connection.setRequestProperty("Kaillera-games", createdGames.toString())
     connection.setRequestProperty(
       "Kaillera-wgames",
-      kailleraServer.games
+      kailleraServer.gamesMap.values
         .filter { it.status == GameStatus.WAITING }
         .joinToString(separator = "") {
           "${it.id}|${it.romName}|${it.owner.name}|${it.owner.clientType}|${it.players.size}|"

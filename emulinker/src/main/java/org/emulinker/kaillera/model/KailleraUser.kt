@@ -124,6 +124,7 @@ class KailleraUser(
   /** User action data response message size (in number of bytes). */
   var arraySize = 0
     private set
+
   /**
    * This is called "p2p mode" in the code and commands.
    *
@@ -138,6 +139,7 @@ class KailleraUser(
   var isMuted = false
 
   private val lostInput: MutableList<ByteArray> = ArrayList()
+
   /** Note that this is a different type from lostInput. */
   fun getLostInput(): ByteArray {
     return lostInput[0]
@@ -154,7 +156,7 @@ class KailleraUser(
   var tempDelay = 0
 
   val users: Collection<KailleraUser>
-    get() = server.users
+    get() = server.usersMap.values
 
   fun addIgnoredUser(address: String) {
     ignoredUsers.add(address)
@@ -336,7 +338,7 @@ class KailleraUser(
     //
     // }
     playerNumber = game.join(this)
-    this.game = game as KailleraGameImpl?
+    this.game = game as KailleraGameImpl
     gameDataErrorTime = -1
     return game
   }
@@ -346,24 +348,23 @@ class KailleraUser(
   @Throws(GameChatException::class)
   fun gameChat(message: String, messageID: Int) {
     updateLastActivity()
+    val game = this.game
     if (game == null) {
       logger.atWarning().log("%s game chat failed: Not in a game", this)
       throw GameChatException(EmuLang.getString("KailleraUserImpl.GameChatErrorNotInGame"))
     }
     if (isMuted) {
       logger.atWarning().log("%s gamechat denied: Muted: %s", this, message)
-      game!!.announce("You are currently muted!", this)
+      game.announce("You are currently muted!", this)
       return
     }
     if (server.accessManager.isSilenced(socketAddress!!.address)) {
       logger.atWarning().log("%s gamechat denied: Silenced: %s", this, message)
-      game!!.announce("You are currently silenced!", this)
+      game.announce("You are currently silenced!", this)
       return
     }
 
-    /*if(this == null){
-    	throw new GameChatException("You don't exist!");
-    }*/ game!!.chat(this, message)
+    game.chat(this, message)
   }
 
   @Throws(DropGameException::class)
@@ -373,13 +374,16 @@ class KailleraUser(
       return
     }
     status = UserStatus.IDLE
+    val game = this.game
     if (game != null) {
-      game!!.drop(this, playerNumber)
+      game.drop(this, playerNumber)
       // not necessary to show it twice
       /*if(p2P == true)
       	game.announce("Please Relogin, to update your client of missed server activity during P2P!", this);
       p2P = false;*/
-    } else logger.atFine().log("%s drop game failed: Not in a game", this)
+    } else {
+      logger.atFine().log("%s drop game failed: Not in a game", this)
+    }
   }
 
   @Throws(DropGameException::class, QuitGameException::class, CloseGameException::class)
@@ -568,6 +572,7 @@ class KailleraUser(
   }
 
   private val o = Object()
+
   /** Helper function to avoid one level of indentation. */
   private inline fun <T> withLock(action: () -> T): T = synchronized(o) { action() }
 

@@ -403,7 +403,7 @@ class KailleraGameImpl(
     val actionQueueBuilder: Array<PlayerActionQueue?> = arrayOfNulls(players.size)
     startTimeout = false
     highestUserFrameDelay = 1
-    if (server.users.size > 60) {
+    if (server.usersMap.values.size > 60) {
       ignoringUnnecessaryServerActivity = true
     }
     for (i in players.indices) {

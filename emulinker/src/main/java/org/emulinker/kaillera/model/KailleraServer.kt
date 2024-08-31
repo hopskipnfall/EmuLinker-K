@@ -66,11 +66,9 @@ internal constructor(
 
   var statsCollector: StatsCollector? = null
 
-  private val usersMap: MutableMap<Int, KailleraUser> = ConcurrentHashMap(flags.maxUsers)
-  val users = usersMap.values
+  val usersMap: MutableMap<Int, KailleraUser> = ConcurrentHashMap(flags.maxUsers)
 
   var gamesMap: MutableMap<Int, KailleraGameImpl> = ConcurrentHashMap(flags.maxGames)
-  val games = gamesMap.values
 
   var trivia: Trivia? = null
 
@@ -96,8 +94,8 @@ internal constructor(
   override fun toString(): String {
     return String.format(
       "KailleraServer[numUsers=%d numGames=%d]",
-      users.size,
-      games.size,
+      usersMap.values.size,
+      gamesMap.values.size,
     )
   }
 
@@ -190,6 +188,7 @@ internal constructor(
     return user
   }
 
+  // TODO(nue): Could this withLock be the source of lag on server join?
   fun login(user: KailleraUser): Result<Unit> = withLock {
     logger
       .atInfo()
@@ -366,7 +365,7 @@ internal constructor(
         )
       )
     }
-    for (u2 in users) {
+    for (u2 in usersMap.values) {
       if (u2.loggedIn) {
         if (
           u2.id != u.id &&
@@ -452,7 +451,7 @@ internal constructor(
         var sb = StringBuilder()
         sb.append(":USERINFO=")
         var sbCount = 0
-        for (u3 in users) {
+        for (u3 in usersMap.values) {
           if (!u3.loggedIn) continue
           sb.append(u3.id)
           sb.append(0x02.toChar())
@@ -622,7 +621,7 @@ internal constructor(
         logger.atWarning().log("%s create game denied: Flood: %s", user, romName)
         throw FloodException(EmuLang.getString("KailleraServerImpl.CreateGameDeniedFloodControl"))
       }
-      if (flags.maxGames > 0 && games.size >= flags.maxGames) {
+      if (flags.maxGames > 0 && gamesMap.values.size >= flags.maxGames) {
         logger
           .atWarning()
           .log("%s create game denied: Over maximum of %d current games!", user, flags.maxGames)
@@ -757,7 +756,7 @@ internal constructor(
 
   fun announce(message: String, gamesAlso: Boolean, targetUser: KailleraUser?) {
     if (targetUser == null) {
-      users
+      usersMap.values
         .asSequence()
         .filter { it.loggedIn }
         .forEach { kailleraUser ->
@@ -770,7 +769,7 @@ internal constructor(
         }
     } else {
       if (gamesAlso) { //   /msg and /me commands
-        users
+        usersMap.values
           .asSequence()
           .filter { it.loggedIn }
           .forEach { kailleraUser ->
@@ -832,7 +831,7 @@ internal constructor(
   private fun run() {
     try {
       // TODO(nue): Remove this. This is just being used for testing.
-      for (game in games) {
+      for (game in gamesMap.values) {
         if (game.status == GameStatus.PLAYING) {
           logger
             .atInfo()
@@ -845,7 +844,7 @@ internal constructor(
       }
 
       if (usersMap.isEmpty()) return
-      for (user in users) {
+      for (user in usersMap.values) {
         val access = accessManager.getAccess(user.connectSocketAddress.address)
         user.accessLevel = access
 

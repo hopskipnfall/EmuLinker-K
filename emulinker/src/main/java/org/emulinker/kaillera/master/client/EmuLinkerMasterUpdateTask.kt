@@ -31,9 +31,9 @@ constructor(
       this.append("location", publicInfo.location)
       this.append("website", publicInfo.website)
       this.append("port", flags.serverPort.toString())
-      this.append("numUsers", kailleraServer.users.size.toString())
+      this.append("numUsers", kailleraServer.usersMap.values.size.toString())
       this.append("maxUsers", flags.maxUsers.toString())
-      this.append("numGames", kailleraServer.games.size.toString())
+      this.append("numGames", kailleraServer.gamesMap.values.size.toString())
       this.append("maxGames", flags.maxGames.toString())
       // The list only supports max 8 character versions.
       this.append("version", releaseInfo.versionWithElkPrefix.take(8))
@@ -43,7 +43,7 @@ constructor(
     connection.setRequestMethod("GET")
     connection.setRequestProperty(
       "Waiting-games",
-      kailleraServer.games
+      kailleraServer.gamesMap.values
         .filter { it.status == GameStatus.WAITING }
         .joinToString(separator = "") {
           "${it.romName}|${it.owner.name}|${it.owner.clientType}|${it.players.size}/${it.maxUsers}|"

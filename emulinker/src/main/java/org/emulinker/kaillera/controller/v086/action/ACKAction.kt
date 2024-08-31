@@ -84,7 +84,7 @@ class ACKAction @Inject internal constructor() :
     val users = mutableListOf<ServerStatus.User>()
     val games = mutableListOf<ServerStatus.Game>()
     try {
-      for (user in server.users) {
+      for (user in server.usersMap.values) {
         if (user.status != UserStatus.CONNECTING && user != thisUser)
           users.add(
             ServerStatus.User(
@@ -101,7 +101,7 @@ class ACKAction @Inject internal constructor() :
       return
     }
     try {
-      for (game in server.games) {
+      for (game in server.gamesMap.values) {
         var num = 0
         for (user in game.players) {
           if (!user.inStealthMode) num++
