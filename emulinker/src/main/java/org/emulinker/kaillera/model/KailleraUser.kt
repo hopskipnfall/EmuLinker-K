@@ -76,6 +76,12 @@ class KailleraUser(
   private var smallLagSpikesCausedByUser = 0L
   private var bigLagSpikesCausedByUser = 0L
 
+  private var newLagMeasurement = 0L
+  private var newLagMeasurementStrict = 0L
+  private var lagLeewayNs = 0.seconds.inWholeNanoseconds
+  private var singleFrameDurationNs = 0.seconds.inWholeNanoseconds
+  private var partOfSingleFrameDurationNs = 0.seconds.inWholeNanoseconds
+
   /** The last time we heard from this player for lag detection purposes. */
   private var lastUpdateNs = System.nanoTime()
   private var smallLagThresholdNs = 0.seconds.inWholeNanoseconds
@@ -303,9 +309,14 @@ class KailleraUser(
   fun summarizeLag(): String =
     "$smallLagSpikesCausedByUser (small), $bigLagSpikesCausedByUser (big)"
 
+  fun summarizeLagNew(): String = "$newLagMeasurement, $newLagMeasurementStrict (strict)"
+
   fun resetLag() {
     smallLagSpikesCausedByUser = 0
     bigLagSpikesCausedByUser = 0
+
+    newLagMeasurement = 0
+    newLagMeasurementStrict = 0
   }
 
   @Throws(JoinGameException::class)
@@ -441,6 +452,10 @@ class KailleraUser(
     smallLagThresholdNs = (singleFrameDuration * 1.65).inWholeNanoseconds
     bigSpikeThresholdNs = (singleFrameDuration * 2).inWholeNanoseconds
 
+    singleFrameDurationNs = singleFrameDuration.inWholeNanoseconds
+    lagLeewayNs = singleFrameDurationNs
+    partOfSingleFrameDurationNs = (singleFrameDuration * 0.3).inWholeNanoseconds
+
     game.ready(this, playerNumber)
   }
 
@@ -518,13 +533,32 @@ class KailleraUser(
       }
     }
 
-    val delaySinceLastResponseNs = System.nanoTime() - lastUpdateNs - timeWaitingNs
+    val delaySinceLastResponseNs = System.nanoTime() - lastUpdateNs
+    val delaySinceLastResponseMinusWaitingNs = delaySinceLastResponseNs - timeWaitingNs
     when {
-      delaySinceLastResponseNs < smallLagThresholdNs -> {
+      delaySinceLastResponseMinusWaitingNs < smallLagThresholdNs -> {
         // No lag occurred.
       }
-      delaySinceLastResponseNs < bigSpikeThresholdNs -> smallLagSpikesCausedByUser++
+      delaySinceLastResponseMinusWaitingNs < bigSpikeThresholdNs -> smallLagSpikesCausedByUser++
       else -> bigLagSpikesCausedByUser++
+    }
+
+    lagLeewayNs += singleFrameDurationNs - delaySinceLastResponseNs
+    if (lagLeewayNs < 0) {
+      // Lag leeway fell below zero. There was lag!
+
+      if (delaySinceLastResponseMinusWaitingNs < singleFrameDurationNs) {
+        // Not our fault!
+      } else {
+        // We were at least partially to blame.
+        newLagMeasurementStrict++
+        if (
+          delaySinceLastResponseMinusWaitingNs - singleFrameDurationNs > partOfSingleFrameDurationNs
+        ) {
+          newLagMeasurement++
+        }
+      }
+      lagLeewayNs = 0
     }
 
     lastUpdateNs = System.nanoTime()

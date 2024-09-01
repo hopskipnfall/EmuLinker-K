@@ -441,7 +441,7 @@ internal constructor(
         .atInfo()
         .log("%s logged in successfully with %s access!", user, AccessManager.ACCESS_NAMES[access])
     } else {
-      logger.atInfo().log("%s logged in successfully", user)
+      logger.atFine().log("%s logged in successfully", user)
     }
 
     // this is fairly ugly
@@ -838,7 +838,9 @@ internal constructor(
             .log(
               "LAGSTAT: G%d - %s",
               game.id,
-              game.players.joinToString(separator = " ") { "[${it.name} ${it.summarizeLag()}]" }
+              game.players.joinToString(separator = " ") {
+                "[${it.name} ${it.summarizeLag()} ${it.summarizeLagNew()}]"
+              }
             )
         }
       }
