@@ -81,6 +81,7 @@ class KailleraUser(
   private var lagLeewayNs = 0.seconds.inWholeNanoseconds
   private var singleFrameDurationNs = 0.seconds.inWholeNanoseconds
   private var partOfSingleFrameDurationNs = 0.seconds.inWholeNanoseconds
+  private var totalDriftNs = 0.seconds.inWholeNanoseconds
 
   /** The last time we heard from this player for lag detection purposes. */
   private var lastUpdateNs = System.nanoTime()
@@ -309,7 +310,8 @@ class KailleraUser(
   fun summarizeLag(): String =
     "$smallLagSpikesCausedByUser (small), $bigLagSpikesCausedByUser (big)"
 
-  fun summarizeLagNew(): String = "$newLagMeasurement, $newLagMeasurementStrict (strict)"
+  fun summarizeLagNew(): String =
+    "$newLagMeasurement, $newLagMeasurementStrict (strict), drift: ${totalDriftNs.nanoseconds.inWholeMilliseconds}ms"
 
   fun resetLag() {
     smallLagSpikesCausedByUser = 0
@@ -317,6 +319,7 @@ class KailleraUser(
 
     newLagMeasurement = 0
     newLagMeasurementStrict = 0
+    totalDriftNs = 0
   }
 
   @Throws(JoinGameException::class)
@@ -453,7 +456,6 @@ class KailleraUser(
     bigSpikeThresholdNs = (singleFrameDuration * 2).inWholeNanoseconds
 
     singleFrameDurationNs = singleFrameDuration.inWholeNanoseconds
-    lagLeewayNs = singleFrameDurationNs
     partOfSingleFrameDurationNs = (singleFrameDuration * 0.3).inWholeNanoseconds
 
     game.ready(this, playerNumber)
@@ -543,20 +545,16 @@ class KailleraUser(
       else -> bigLagSpikesCausedByUser++
     }
 
-    lagLeewayNs += singleFrameDurationNs - delaySinceLastResponseNs
+    val leewayChangeNs = singleFrameDurationNs - delaySinceLastResponseMinusWaitingNs
+    lagLeewayNs += leewayChangeNs
     if (lagLeewayNs < 0) {
-      // Lag leeway fell below zero. There was lag!
+      // Lag leeway fell below zero. We caused lag!
 
-      if (delaySinceLastResponseMinusWaitingNs < singleFrameDurationNs) {
-        // Not our fault!
-      } else {
-        // We were at least partially to blame.
-        newLagMeasurementStrict++
-        if (
-          delaySinceLastResponseMinusWaitingNs - singleFrameDurationNs > partOfSingleFrameDurationNs
-        ) {
-          newLagMeasurement++
-        }
+      totalDriftNs += leewayChangeNs
+      // We were at least partially to blame.
+      newLagMeasurementStrict++
+      if (-leewayChangeNs > partOfSingleFrameDurationNs) {
+        newLagMeasurement++
       }
       lagLeewayNs = 0
     }
