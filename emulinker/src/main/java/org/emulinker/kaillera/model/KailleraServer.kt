@@ -838,9 +838,7 @@ internal constructor(
             .log(
               "LAGSTAT: G%d - %s",
               game.id,
-              game.players.joinToString(separator = " ") {
-                "[${it.name} ${it.summarizeLag()} ${it.summarizeLagNew()}]"
-              }
+              game.players.joinToString(separator = " ") { "[${it.name} ${it.summarizeLag()}]" }
             )
         }
       }

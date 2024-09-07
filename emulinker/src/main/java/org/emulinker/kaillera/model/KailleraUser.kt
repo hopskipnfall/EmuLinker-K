@@ -73,11 +73,6 @@ class KailleraUser(
   /** This marks the last time the user interacted in the server. */
   private var lastActivity: Instant = initTime
 
-  private var smallLagSpikesCausedByUser = 0L
-  private var bigLagSpikesCausedByUser = 0L
-
-  private var newLagMeasurement = 0L
-  private var newLagMeasurementStrict = 0L
   private var lagLeewayNs = 0.seconds.inWholeNanoseconds
   private var singleFrameDurationNs = 0.seconds.inWholeNanoseconds
   private var partOfSingleFrameDurationNs = 0.seconds.inWholeNanoseconds
@@ -307,18 +302,9 @@ class KailleraUser(
     loggedIn = false
   }
 
-  fun summarizeLag(): String =
-    "$smallLagSpikesCausedByUser (small), $bigLagSpikesCausedByUser (big)"
-
-  fun summarizeLagNew(): String =
-    "$newLagMeasurement, $newLagMeasurementStrict (strict), drift: ${totalDriftNs.nanoseconds.inWholeMilliseconds}ms"
+  fun summarizeLag(): String = "drift: ${totalDriftNs.nanoseconds}"
 
   fun resetLag() {
-    smallLagSpikesCausedByUser = 0
-    bigLagSpikesCausedByUser = 0
-
-    newLagMeasurement = 0
-    newLagMeasurementStrict = 0
     totalDriftNs = 0
   }
 
@@ -537,26 +523,19 @@ class KailleraUser(
 
     val delaySinceLastResponseNs = System.nanoTime() - lastUpdateNs
     val delaySinceLastResponseMinusWaitingNs = delaySinceLastResponseNs - timeWaitingNs
-    when {
-      delaySinceLastResponseMinusWaitingNs < smallLagThresholdNs -> {
-        // No lag occurred.
-      }
-      delaySinceLastResponseMinusWaitingNs < bigSpikeThresholdNs -> smallLagSpikesCausedByUser++
-      else -> bigLagSpikesCausedByUser++
-    }
-
     val leewayChangeNs = singleFrameDurationNs - delaySinceLastResponseMinusWaitingNs
     lagLeewayNs += leewayChangeNs
     if (lagLeewayNs < 0) {
       // Lag leeway fell below zero. We caused lag!
 
+      // TODO: Right now if the user lags 100ms it will add all of that to total drift. Maybe
+      // instead we should cap it at the length of one frame and maybe increment another counter for
+      // giant lag spikes?
       totalDriftNs += leewayChangeNs
-      // We were at least partially to blame.
-      newLagMeasurementStrict++
-      if (-leewayChangeNs > partOfSingleFrameDurationNs) {
-        newLagMeasurement++
-      }
       lagLeewayNs = 0
+    } else if (lagLeewayNs > singleFrameDurationNs) {
+      // Does not make sense to allow lag leeway to be longer than the length of one frame.
+      lagLeewayNs = singleFrameDurationNs
     }
 
     lastUpdateNs = System.nanoTime()
