@@ -7,6 +7,7 @@ import java.util.concurrent.CopyOnWriteArrayList
 import kotlin.Throws
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
+import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.access.AccessManager
 import org.emulinker.kaillera.master.StatsCollector
 import org.emulinker.kaillera.model.GameStatus
@@ -37,6 +38,7 @@ import org.emulinker.kaillera.model.exception.StartGameException
 import org.emulinker.kaillera.model.exception.UserReadyException
 import org.emulinker.util.EmuLang
 import org.emulinker.util.EmuUtil.threadSleep
+import org.emulinker.util.TimeOffsetCache
 
 class KailleraGameImpl(
   override val id: Int,
@@ -44,6 +46,7 @@ class KailleraGameImpl(
   override val owner: KailleraUser,
   override val server: KailleraServer,
   val bufferSize: Int,
+  flags: RuntimeFlags,
 ) : KailleraGame {
 
   override var highestUserFrameDelay = 0
@@ -62,6 +65,12 @@ class KailleraGameImpl(
     private set
 
   override val players: MutableList<KailleraUser> = CopyOnWriteArrayList()
+
+  var totalDriftNs = 0.seconds.inWholeNanoseconds
+  val totalDriftCache = TimeOffsetCache(delay = flags.lagstatDuration, resolution = 5.seconds)
+  /** The user ID that will be measuring game drift. */
+  var driftSetterId: Int? = null
+    private set
 
   val mutedUsers: MutableList<String> = mutableListOf()
   var aEmulator = "any"
@@ -95,7 +104,7 @@ class KailleraGameImpl(
   override val clientType: String?
     get() = owner.clientType
 
-  val autoFireDetector: AutoFireDetector?
+  val autoFireDetector: AutoFireDetector = server.getAutoFireDetector(this)
 
   override fun getPlayerNumber(user: KailleraUser): Int {
     return players.indexOf(user) + 1
@@ -397,9 +406,10 @@ class KailleraGameImpl(
         }
       }
     }
+    driftSetterId = players.first().id
     logger.atInfo().log("%s started: %s", user, this)
     status = GameStatus.SYNCHRONIZING
-    autoFireDetector?.start(players.size)
+    autoFireDetector.start(players.size)
     val actionQueueBuilder: Array<PlayerActionQueue?> = arrayOfNulls(players.size)
     startTimeout = false
     highestUserFrameDelay = 1
@@ -525,6 +535,12 @@ class KailleraGameImpl(
       // try{user.quit("Rejoining...");}catch(Exception e){}
       announce("Rejoin server to update client of ignored server activity!", user)
     }
+    if (driftSetterId == user.id) {
+      // TODO: Make this more resilient. I'm not sure how we recognize which users are actively
+      // playing.
+      logger.atFine().log("Drift setter dropped from game, setting to someone else.")
+      players.firstOrNull { it.id != user.id }?.let { driftSetterId = it.id }
+    }
   }
 
   @Throws(DropGameException::class, QuitGameException::class, CloseGameException::class)
@@ -533,6 +549,12 @@ class KailleraGameImpl(
       if (!players.remove(user)) {
         logger.atWarning().log("%s quit game failed: not in %s", user, this)
         throw QuitGameException(EmuLang.getString("KailleraGameImpl.QuitGameErrorNotInGame"))
+      }
+      if (driftSetterId == user.id) {
+        // TODO: Make this more resilient. I'm not sure how we recognize which users are actively
+        // playing.
+        logger.atFine().log("Drift setter quit game, setting to someone else.")
+        players.firstOrNull { it.id != user.id }?.let { driftSetterId = it.id }
       }
       logger.atInfo().log("%s quit: %s", user, this)
       addEventForAllPlayers(UserQuitGameEvent(this, user))
@@ -720,10 +742,6 @@ class KailleraGameImpl(
 
   /** Helper function to avoid one level of indentation. */
   private inline fun <T> withLock(action: () -> T): T = synchronized(lock) { action() }
-
-  init {
-    autoFireDetector = server.getAutoFireDetector(this)
-  }
 
   companion object {
     private val logger = FluentLogger.forEnclosingClass()

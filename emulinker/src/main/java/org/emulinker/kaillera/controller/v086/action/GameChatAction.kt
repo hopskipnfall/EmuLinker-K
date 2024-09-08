@@ -5,6 +5,7 @@ import java.util.*
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.nanoseconds
 import org.emulinker.kaillera.access.AccessManager
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086ClientHandler
@@ -455,12 +456,28 @@ internal constructor(
         }
       } else if (message.message == "/lagstat") {
         // Note: This was duplicated from GameOwnerCommandAction.
-        game.announce("Lagged frames per player by delay (small may contain false positives):")
+        game.announce("Game drift caused by player:")
         game.players
           .asSequence()
           .filter { !it.inStealthMode }
           .forEach { game.announce("P${it.playerNumber}: ${it.summarizeLag()}") }
-      } else game.announce("Unknown Command: " + message.message, clientHandler.user)
+        game.announce(
+          "Overall game drift: " +
+            (game.totalDriftNs.nanoseconds - game.totalDriftCache.getDelayedValue().nanoseconds)
+              .absoluteValue
+        )
+      } else if (message.message == "/lagreset") {
+        for (player in game.players) {
+          player.resetLag()
+        }
+        game.totalDriftNs = 0
+        game.totalDriftCache.clear()
+        game.announce(
+          "LagStat has been reset!",
+        )
+      } else {
+        game.announce("Unknown Command: " + message.message, clientHandler.user)
+      }
     } else {
       game.announce("Denied: Flood Control", clientHandler.user)
     }

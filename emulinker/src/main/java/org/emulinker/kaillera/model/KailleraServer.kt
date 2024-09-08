@@ -14,6 +14,7 @@ import javax.inject.Singleton
 import kotlin.Throws
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.nanoseconds
 import kotlinx.datetime.Clock
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.access.AccessManager
@@ -653,7 +654,15 @@ internal constructor(
     }
     val game: KailleraGameImpl?
     val gameID = getNextGameID()
-    game = KailleraGameImpl(gameID, romName, (user as KailleraUser?)!!, this, flags.gameBufferSize)
+    game =
+      KailleraGameImpl(
+        gameID,
+        romName,
+        (user as KailleraUser?)!!,
+        this,
+        flags.gameBufferSize,
+        flags
+      )
     gamesMap[gameID] = game
     addEvent(GameCreatedEvent(this, game))
     logger.atInfo().log("%s created: %s: %s", user, game, game.romName)
@@ -836,8 +845,11 @@ internal constructor(
           logger
             .atInfo()
             .log(
-              "LAGSTAT: G%d - %s",
+              "LAGSTAT: G%d - %s - %s",
               game.id,
+              (game.totalDriftNs - game.totalDriftCache.getDelayedValue())
+                .nanoseconds
+                .absoluteValue,
               game.players.joinToString(separator = " ") { "[${it.name} ${it.summarizeLag()}]" }
             )
         }

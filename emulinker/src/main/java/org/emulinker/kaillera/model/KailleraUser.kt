@@ -25,6 +25,7 @@ import org.emulinker.kaillera.model.event.UserQuitGameEvent
 import org.emulinker.kaillera.model.exception.*
 import org.emulinker.kaillera.model.impl.KailleraGameImpl
 import org.emulinker.util.EmuLang
+import org.emulinker.util.TimeOffsetCache
 
 /**
  * Represents a user in the server.
@@ -73,15 +74,14 @@ class KailleraUser(
   /** This marks the last time the user interacted in the server. */
   private var lastActivity: Instant = initTime
 
-  private var lagLeewayNs = 0.seconds.inWholeNanoseconds
   private var singleFrameDurationNs = 0.seconds.inWholeNanoseconds
-  private var partOfSingleFrameDurationNs = 0.seconds.inWholeNanoseconds
+  private var lagLeewayNs = 0.seconds.inWholeNanoseconds
   private var totalDriftNs = 0.seconds.inWholeNanoseconds
+  private val totalDriftCache =
+    TimeOffsetCache(delay = flags.lagstatDuration, resolution = 5.seconds)
 
   /** The last time we heard from this player for lag detection purposes. */
   private var lastUpdateNs = System.nanoTime()
-  private var smallLagThresholdNs = 0.seconds.inWholeNanoseconds
-  private var bigSpikeThresholdNs = 0.seconds.inWholeNanoseconds
 
   fun updateLastActivity() {
     lastKeepAlive = clock.now()
@@ -302,10 +302,12 @@ class KailleraUser(
     loggedIn = false
   }
 
-  fun summarizeLag(): String = "drift: ${totalDriftNs.nanoseconds}"
+  fun summarizeLag(): String =
+    "drift caused: ${(totalDriftNs.nanoseconds - totalDriftCache.getDelayedValue().nanoseconds).absoluteValue}"
 
   fun resetLag() {
     totalDriftNs = 0
+    totalDriftCache.clear()
   }
 
   @Throws(JoinGameException::class)
@@ -438,11 +440,8 @@ class KailleraUser(
     totalDelay = game.highestUserFrameDelay + tempDelay + 5
 
     val singleFrameDuration = 1.seconds / connectionType.updatesPerSecond
-    smallLagThresholdNs = (singleFrameDuration * 1.65).inWholeNanoseconds
-    bigSpikeThresholdNs = (singleFrameDuration * 2).inWholeNanoseconds
 
     singleFrameDurationNs = singleFrameDuration.inWholeNanoseconds
-    partOfSingleFrameDurationNs = (singleFrameDuration * 0.3).inWholeNanoseconds
 
     game.ready(this, playerNumber)
   }
@@ -521,7 +520,8 @@ class KailleraUser(
       }
     }
 
-    val delaySinceLastResponseNs = System.nanoTime() - lastUpdateNs
+    val nowNs = System.nanoTime()
+    val delaySinceLastResponseNs = nowNs - lastUpdateNs
     val delaySinceLastResponseMinusWaitingNs = delaySinceLastResponseNs - timeWaitingNs
     val leewayChangeNs = singleFrameDurationNs - delaySinceLastResponseMinusWaitingNs
     lagLeewayNs += leewayChangeNs
@@ -531,14 +531,20 @@ class KailleraUser(
       // TODO: Right now if the user lags 100ms it will add all of that to total drift. Maybe
       // instead we should cap it at the length of one frame and maybe increment another counter for
       // giant lag spikes?
-      totalDriftNs += leewayChangeNs
+      totalDriftNs += lagLeewayNs
       lagLeewayNs = 0
     } else if (lagLeewayNs > singleFrameDurationNs) {
       // Does not make sense to allow lag leeway to be longer than the length of one frame.
       lagLeewayNs = singleFrameDurationNs
     }
 
-    lastUpdateNs = System.nanoTime()
+    if (id == game!!.driftSetterId) {
+      game!!.totalDriftNs += singleFrameDurationNs - delaySinceLastResponseNs
+      game!!.totalDriftCache.update(game!!.totalDriftNs, nowNs = nowNs)
+    }
+
+    lastUpdateNs = nowNs
+    totalDriftCache.update(totalDriftNs, nowNs = nowNs)
     return Result.success(Unit)
   }
 
