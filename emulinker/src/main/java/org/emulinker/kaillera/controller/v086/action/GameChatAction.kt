@@ -463,7 +463,8 @@ internal constructor(
           .forEach { game.announce("P${it.playerNumber}: ${it.summarizeLag()}") }
         game.announce(
           "Overall game drift: " +
-            (game.totalDriftNs.nanoseconds - game.totalDriftCache.getDelayedValue().nanoseconds)
+            (game.totalDriftNs.nanoseconds -
+                (game.totalDriftCache.getDelayedValue() ?: 0).nanoseconds)
               .absoluteValue
         )
       } else if (message.message == "/lagreset") {

@@ -217,7 +217,7 @@ class GameOwnerCommandAction @Inject internal constructor(private val flags: Run
     if (message == "/lagstat") {
       game.announce(
         "Total game drift over last ${flags.lagstatDuration}: " +
-          (game.totalDriftNs - game.totalDriftCache.getDelayedValue())
+          (game.totalDriftNs - (game.totalDriftCache.getDelayedValue() ?: 0))
             .nanoseconds
             .absoluteValue
             .toString(MILLISECONDS) +
