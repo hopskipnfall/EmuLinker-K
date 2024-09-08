@@ -305,7 +305,7 @@ class KailleraUser(
 
   fun summarizeLag(): String =
     "drift caused: " +
-      (totalDriftNs - totalDriftCache.getDelayedValue())
+      (totalDriftNs - (totalDriftCache.getDelayedValue() ?: 0))
         .nanoseconds
         .absoluteValue
         .toString(MILLISECONDS)

@@ -847,7 +847,7 @@ internal constructor(
             .log(
               "LAGSTAT: G%d - %s - %s",
               game.id,
-              (game.totalDriftNs - game.totalDriftCache.getDelayedValue())
+              (game.totalDriftNs - (game.totalDriftCache.getDelayedValue() ?: 0))
                 .nanoseconds
                 .absoluteValue,
               game.players.joinToString(separator = " ") { "[${it.name} ${it.summarizeLag()}]" }
