@@ -11,6 +11,7 @@ import kotlin.Throws
 import kotlin.system.measureNanoTime
 import kotlin.time.Duration.Companion.nanoseconds
 import kotlin.time.Duration.Companion.seconds
+import kotlin.time.DurationUnit.MILLISECONDS
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import org.emulinker.config.RuntimeFlags
@@ -303,7 +304,11 @@ class KailleraUser(
   }
 
   fun summarizeLag(): String =
-    "drift caused: ${(totalDriftNs.nanoseconds - totalDriftCache.getDelayedValue().nanoseconds).absoluteValue}"
+    "drift caused: " +
+      (totalDriftNs - totalDriftCache.getDelayedValue())
+        .nanoseconds
+        .absoluteValue
+        .toString(MILLISECONDS)
 
   fun resetLag() {
     totalDriftNs = 0

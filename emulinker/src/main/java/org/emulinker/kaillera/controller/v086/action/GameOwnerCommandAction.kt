@@ -6,6 +6,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.nanoseconds
+import kotlin.time.DurationUnit.MILLISECONDS
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.access.AccessManager
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
@@ -214,9 +215,13 @@ class GameOwnerCommandAction @Inject internal constructor(private val flags: Run
     game: KailleraGameImpl,
   ) {
     if (message == "/lagstat") {
-      // Note: This was duplicated from GameOwnerCommandAction.
       game.announce(
-        "Total game drift over last ${flags.lagstatDuration}: ${(game.totalDriftNs.nanoseconds - game.totalDriftCache.getDelayedValue().nanoseconds).absoluteValue}. Breakdown by player:"
+        "Total game drift over last ${flags.lagstatDuration}: " +
+          (game.totalDriftNs - game.totalDriftCache.getDelayedValue())
+            .nanoseconds
+            .absoluteValue
+            .toString(MILLISECONDS) +
+          ". Breakdown by player:"
       )
       game.players
         .asSequence()
