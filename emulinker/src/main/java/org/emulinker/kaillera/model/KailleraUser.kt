@@ -84,7 +84,7 @@ class KailleraUser(
   /** The last time we heard from this player for lag detection purposes. */
   private var lastUpdateNs = System.nanoTime()
 
-  fun updateLastActivity() {
+  private fun updateLastActivity() {
     lastKeepAlive = clock.now()
     lastActivity = lastKeepAlive
   }
@@ -544,10 +544,17 @@ class KailleraUser(
     }
 
     if (id == game!!.driftSetterId) {
-      game!!.totalDriftNs += singleFrameDurationNs - delaySinceLastResponseNs
-      game!!.totalDriftCache.update(game!!.totalDriftNs, nowNs = nowNs)
+      game!!.lagLeewayNs += singleFrameDurationNs - delaySinceLastResponseNs
+      if (game!!.lagLeewayNs < 0) {
+        // Lag leeway fell below zero. Lag occurred!
+        game!!.totalDriftNs += game!!.lagLeewayNs
+        game!!.lagLeewayNs = 0
+      } else if (game!!.lagLeewayNs > singleFrameDurationNs) {
+        // Does not make sense to allow lag leeway to be longer than the length of one frame.
+        game!!.lagLeewayNs = singleFrameDurationNs
+      }
+      game!!.totalDriftCache.update(game!!.totalDriftNs)
     }
-
     lastUpdateNs = nowNs
     totalDriftCache.update(totalDriftNs, nowNs = nowNs)
     return Result.success(Unit)

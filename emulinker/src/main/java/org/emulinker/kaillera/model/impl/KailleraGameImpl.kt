@@ -66,8 +66,10 @@ class KailleraGameImpl(
 
   override val players: MutableList<KailleraUser> = CopyOnWriteArrayList()
 
+  var lagLeewayNs = 0.seconds.inWholeNanoseconds
   var totalDriftNs = 0.seconds.inWholeNanoseconds
   val totalDriftCache = TimeOffsetCache(delay = flags.lagstatDuration, resolution = 5.seconds)
+
   /** The user ID that will be measuring game drift. */
   var driftSetterId: Int? = null
     private set
