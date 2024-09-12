@@ -4,7 +4,6 @@ import kotlin.Throws
 import org.emulinker.kaillera.model.exception.CloseGameException
 import org.emulinker.kaillera.model.exception.DropGameException
 import org.emulinker.kaillera.model.exception.GameChatException
-import org.emulinker.kaillera.model.exception.GameDataException
 import org.emulinker.kaillera.model.exception.GameKickException
 import org.emulinker.kaillera.model.exception.JoinGameException
 import org.emulinker.kaillera.model.exception.QuitGameException
@@ -48,8 +47,7 @@ interface KailleraGame {
 
   @Throws(UserReadyException::class) fun ready(user: KailleraUser?, playerNumber: Int)
 
-  @Throws(GameDataException::class)
-  fun addData(user: KailleraUser, playerNumber: Int, data: ByteArray)
+  fun addData(user: KailleraUser, playerNumber: Int, data: ByteArray): Result<Unit>
 
   @Throws(DropGameException::class) fun drop(user: KailleraUser, playerNumber: Int)
 

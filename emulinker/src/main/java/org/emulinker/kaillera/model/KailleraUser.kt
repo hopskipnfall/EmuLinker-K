@@ -2,7 +2,6 @@ package org.emulinker.kaillera.model
 
 import com.google.common.flogger.FluentLogger
 import java.net.InetSocketAddress
-import java.time.Duration
 import java.util.ArrayList
 import java.util.concurrent.BlockingQueue
 import java.util.concurrent.LinkedBlockingQueue
@@ -11,6 +10,8 @@ import java.util.concurrent.TimeUnit
 import kotlin.Throws
 import kotlin.system.measureNanoTime
 import kotlin.time.Duration.Companion.nanoseconds
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.DurationUnit.MILLISECONDS
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import org.emulinker.config.RuntimeFlags
@@ -25,6 +26,8 @@ import org.emulinker.kaillera.model.event.UserQuitGameEvent
 import org.emulinker.kaillera.model.exception.*
 import org.emulinker.kaillera.model.impl.KailleraGameImpl
 import org.emulinker.util.EmuLang
+import org.emulinker.util.TimeOffsetCache
+import org.emulinker.util.stripFromProdBinary
 
 /**
  * Represents a user in the server.
@@ -35,7 +38,7 @@ class KailleraUser(
   val id: Int,
   val protocol: String,
   val connectSocketAddress: InetSocketAddress,
-  val listener: KailleraEventListener,
+  private val listener: KailleraEventListener,
   val server: KailleraServer,
   private val flags: RuntimeFlags,
   threadpoolExecutor: ThreadPoolExecutor,
@@ -47,41 +50,42 @@ class KailleraUser(
   var clientType: String? = null
     set(clientType) {
       field = clientType
-      if (clientType != null && clientType.startsWith(EMULINKER_CLIENT_NAME))
-        isEmuLinkerClient = true
+      if (clientType != null && clientType.startsWith(EMULINKERSF_ADMIN_CLIENT_NAME))
+        isEsfAdminClient = true
     }
 
   private val initTime = clock.now()
+  val connectTime: Instant = initTime
 
   var connectionType: ConnectionType =
     ConnectionType.DISABLED // TODO(nue): This probably shouldn't have a default.
   var ping = 0
   var socketAddress: InetSocketAddress? = null
   var status = UserStatus.PLAYING // TODO(nue): This probably shouldn't have a default value..
+
   /**
    * Level of access that the user has.
    *
-   * See AdminCommandAction for available values. This should be turned into an enum.
+   * See [AccessManager] for available values. This should be turned into an enum.
    */
   var accessLevel = 0
-  var isEmuLinkerClient = false
+
+  var isEsfAdminClient = false
     private set
-  val connectTime: Instant = initTime
-  var timeouts = 0
 
   /** This marks the last time the user interacted in the server. */
   private var lastActivity: Instant = initTime
-    private set
 
-  var smallLagSpikesCausedByUser = 0L
-  var bigLagSpikesCausedByUser = 0L
+  private var singleFrameDurationNs = 0.seconds.inWholeNanoseconds
+  private var lagLeewayNs = 0.seconds.inWholeNanoseconds
+  private var totalDriftNs = 0.seconds.inWholeNanoseconds
+  private val totalDriftCache =
+    TimeOffsetCache(delay = flags.lagstatDuration, resolution = 5.seconds)
 
   /** The last time we heard from this player for lag detection purposes. */
   private var lastUpdateNs = System.nanoTime()
-  private var smallLagThresholdNs = Duration.ZERO.nano
-  private var bigSpikeThresholdNs = Duration.ZERO.nano
 
-  fun updateLastActivity() {
+  private fun updateLastActivity() {
     lastKeepAlive = clock.now()
     lastActivity = lastKeepAlive
   }
@@ -91,33 +95,34 @@ class KailleraUser(
    * longer connected.
    */
   val isDead: Boolean
-    get() {
-      val now = clock.now()
-      return isIdleForTooLong &&
-        now - lastKeepAlive > flags.keepAliveTimeout &&
-        now - Instant.fromEpochMilliseconds(lastUpdateNs.nanoseconds.inWholeMilliseconds) >
-          flags.keepAliveTimeout
-    }
+    get() =
+      clock.now() - lastKeepAlive > flags.keepAliveTimeout &&
+        System.nanoTime() - lastUpdateNs > flags.keepAliveTimeout.inWholeNanoseconds
 
   /**
    * The user may have a successful connection to the server, but they are seemingly AFK for longer
    * than the policy allows.
    */
   val isIdleForTooLong: Boolean
-    get() {
-      val now = clock.now()
-      return now - lastActivity > flags.idleTimeout &&
-        now - Instant.fromEpochMilliseconds(lastUpdateNs.nanoseconds.inWholeMilliseconds) >
-          flags.idleTimeout
-    }
+    get() =
+      clock.now().let { now ->
+        now - lastActivity > flags.idleTimeout &&
+          now - Instant.fromEpochMilliseconds(lastUpdateNs.nanoseconds.inWholeMilliseconds) >
+            flags.idleTimeout
+      }
 
   private var lastKeepAlive: Instant = initTime
   var lastChatTime: Instant = initTime
     private set
+
   var lastCreateGameTime: Long = 0
     private set
+
   var frameCount = 0
   var frameDelay = 0
+
+  /** Legacy `/lagstat`. */
+  var timeouts: Long = 0
 
   private var totalDelay = 0
   var bytesPerAction = 0
@@ -126,6 +131,7 @@ class KailleraUser(
   /** User action data response message size (in number of bytes). */
   var arraySize = 0
     private set
+
   /**
    * This is called "p2p mode" in the code and commands.
    *
@@ -140,6 +146,7 @@ class KailleraUser(
   var isMuted = false
 
   private val lostInput: MutableList<ByteArray> = ArrayList()
+
   /** Note that this is a different type from lostInput. */
   fun getLostInput(): ByteArray {
     return lostInput[0]
@@ -156,7 +163,7 @@ class KailleraUser(
   var tempDelay = 0
 
   val users: Collection<KailleraUser>
-    get() = server.users
+    get() = server.usersMap.values
 
   fun addIgnoredUser(address: String) {
     ignoredUsers.add(address)
@@ -244,16 +251,9 @@ class KailleraUser(
   }
 
   // server actions
-  @Throws(
-    PingTimeException::class,
-    ClientAddressException::class,
-    ConnectionTypeException::class,
-    UserNameException::class,
-    LoginException::class
-  )
-  fun login() = withLock {
+  fun login(): Result<Unit> = withLock {
     updateLastActivity()
-    server.login(this)
+    return server.login(this)
   }
 
   @Synchronized
@@ -307,6 +307,20 @@ class KailleraUser(
     loggedIn = false
   }
 
+  fun summarizeLag(): String =
+    "drift caused: " +
+      (totalDriftNs - (totalDriftCache.getDelayedValue() ?: 0))
+        .nanoseconds
+        .absoluteValue
+        .toString(MILLISECONDS) +
+      "\n legacy lagstat: $timeouts"
+
+  fun resetLag() {
+    totalDriftNs = 0
+    totalDriftCache.clear()
+    timeouts = 0
+  }
+
   @Throws(JoinGameException::class)
   fun joinGame(gameID: Int): KailleraGame = withLock {
     updateLastActivity()
@@ -337,7 +351,7 @@ class KailleraUser(
     //
     // }
     playerNumber = game.join(this)
-    this.game = game as KailleraGameImpl?
+    this.game = game as KailleraGameImpl
     gameDataErrorTime = -1
     return game
   }
@@ -347,24 +361,23 @@ class KailleraUser(
   @Throws(GameChatException::class)
   fun gameChat(message: String, messageID: Int) {
     updateLastActivity()
+    val game = this.game
     if (game == null) {
       logger.atWarning().log("%s game chat failed: Not in a game", this)
       throw GameChatException(EmuLang.getString("KailleraUserImpl.GameChatErrorNotInGame"))
     }
     if (isMuted) {
       logger.atWarning().log("%s gamechat denied: Muted: %s", this, message)
-      game!!.announce("You are currently muted!", this)
+      game.announce("You are currently muted!", this)
       return
     }
     if (server.accessManager.isSilenced(socketAddress!!.address)) {
       logger.atWarning().log("%s gamechat denied: Silenced: %s", this, message)
-      game!!.announce("You are currently silenced!", this)
+      game.announce("You are currently silenced!", this)
       return
     }
 
-    /*if(this == null){
-    	throw new GameChatException("You don't exist!");
-    }*/ game!!.chat(this, message)
+    game.chat(this, message)
   }
 
   @Throws(DropGameException::class)
@@ -374,13 +387,16 @@ class KailleraUser(
       return
     }
     status = UserStatus.IDLE
+    val game = this.game
     if (game != null) {
-      game!!.drop(this, playerNumber)
+      game.drop(this, playerNumber)
       // not necessary to show it twice
       /*if(p2P == true)
       	game.announce("Please Relogin, to update your client of missed server activity during P2P!", this);
       p2P = false;*/
-    } else logger.atFine().log("%s drop game failed: Not in a game", this)
+    } else {
+      logger.atFine().log("%s drop game failed: Not in a game", this)
+    }
   }
 
   @Throws(DropGameException::class, QuitGameException::class, CloseGameException::class)
@@ -409,64 +425,59 @@ class KailleraUser(
   @Synchronized
   @Throws(StartGameException::class)
   fun startGame() {
+    resetLag()
     updateLastActivity()
+    val game = this.game
     if (game == null) {
       logger.atWarning().log("%s start game failed: Not in a game", this)
       throw StartGameException(EmuLang.getString("KailleraUserImpl.StartGameErrorNotInGame"))
     }
-    game!!.start(this)
+    game.start(this)
   }
 
   @Throws(UserReadyException::class)
   fun playerReady() = withLock {
     updateLastActivity()
+    val game = this.game
     if (game == null) {
       logger.atWarning().log("%s player ready failed: Not in a game", this)
       throw UserReadyException(EmuLang.getString("KailleraUserImpl.PlayerReadyErrorNotInGame"))
     }
     if (
-      playerNumber > game!!.playerActionQueue!!.size ||
-        game!!.playerActionQueue!![playerNumber - 1].synced
+      playerNumber > game.playerActionQueue!!.size ||
+        game.playerActionQueue!![playerNumber - 1].synced
     ) {
       return
     }
-    totalDelay = game!!.highestUserFrameDelay + tempDelay + 5
+    totalDelay = game.highestUserFrameDelay + tempDelay + 5
 
-    smallLagThresholdNs =
-      Duration.ofSeconds(1)
-        .dividedBy(connectionType.updatesPerSecond.toLong())
-        .multipliedBy(frameDelay.toLong())
-        // Effectively this is the delay that is allowed before calling it a lag spike.
-        .plusMillis(10)
-        .nano
-    bigSpikeThresholdNs =
-      Duration.ofSeconds(1)
-        .dividedBy(connectionType.updatesPerSecond.toLong())
-        .multipliedBy(frameDelay.toLong())
-        .plusMillis(50)
-        .nano
-    game!!.ready(this, playerNumber)
+    val singleFrameDuration = 1.seconds / connectionType.updatesPerSecond
+
+    singleFrameDurationNs = singleFrameDuration.inWholeNanoseconds
+
+    game.ready(this, playerNumber)
   }
 
-  @Throws(GameDataException::class)
-  fun addGameData(data: ByteArray) {
+  fun addGameData(data: ByteArray): Result<Unit> {
     val timeWaitingNs = measureNanoTime {
-      try {
-        if (game == null) {
-          throw GameDataException(
-            EmuLang.getString("KailleraUserImpl.GameDataErrorNotInGame"),
-            data,
-            actionsPerMessage = connectionType.byteValue.toInt(),
-            playerNumber = 1,
-            numPlayers = 1
-          )
-        }
+      fun doTheThing(): Result<Unit> {
+        val game =
+          this.game
+            ?: return Result.failure(
+              GameDataException(
+                EmuLang.getString("KailleraUserImpl.GameDataErrorNotInGame"),
+                data,
+                actionsPerMessage = connectionType.byteValue.toInt(),
+                playerNumber = 1,
+                numPlayers = 1
+              )
+            )
 
         // Initial Delay
         // totalDelay = (game.getDelay() + tempDelay + 5)
         if (frameCount < totalDelay) {
           bytesPerAction = data.size / connectionType.byteValue
-          arraySize = game!!.playerActionQueue!!.size * connectionType.byteValue * bytesPerAction
+          arraySize = game.playerActionQueue!!.size * connectionType.byteValue * bytesPerAction
           val response = ByteArray(arraySize)
           for (i in response.indices) {
             response[i] = 0
@@ -477,53 +488,87 @@ class KailleraUser(
         } else {
           // lostInput.add(data);
           if (lostInput.size > 0) {
-            game!!.addData(this, playerNumber, lostInput[0])
+            game.addData(this, playerNumber, lostInput[0]).onFailure {
+              return Result.failure(it)
+            }
             lostInput.removeAt(0)
           } else {
-            game!!.addData(this, playerNumber, data)
+            game.addData(this, playerNumber, data).onFailure {
+              return Result.failure(it)
+            }
           }
         }
         gameDataErrorTime = 0
-      } catch (e: GameDataException) {
-        // this should be warn level, but it creates tons of lines in the log
-        logger.atFine().withCause(e).log("%s add game data failed", this)
+        return Result.success(Unit)
+      }
 
-        // i'm going to reflect the game data packet back at the user to prevent game lockups,
-        // but this uses extra bandwidth, so we'll set a counter to prevent people from leaving
-        // games running for a long time in this state
-        if (gameDataErrorTime > 0) {
-          if (
-            System.currentTimeMillis() - gameDataErrorTime > 30000
-          ) // give the user time to close the game
-          {
+      val result = doTheThing()
+      result.onFailure { e ->
+        when (e) {
+          is GameDataException -> {
             // this should be warn level, but it creates tons of lines in the log
-            logger.atFine().log("%s: error game data exceeds drop timeout!", this)
-            throw GameDataException(e.message)
-          } else {
-            // e.setReflectData(true);
-            throw e
+            logger.atFine().withCause(e).log("%s add game data failed", this)
+
+            // i'm going to reflect the game data packet back at the user to prevent game lockups,
+            // but this uses extra bandwidth, so we'll set a counter to prevent people from leaving
+            // games running for a long time in this state
+            if (gameDataErrorTime > 0) {
+              // give the user time to close the game
+              if (System.currentTimeMillis() - gameDataErrorTime > 30000) {
+                // this should be warn level, but it creates tons of lines in the log
+                logger.atFine().log("%s: error game data exceeds drop timeout!", this)
+                return Result.failure(GameDataException(e.message))
+              } else {
+                // e.setReflectData(true);
+                return result
+              }
+            } else {
+              gameDataErrorTime = System.currentTimeMillis()
+              return result
+            }
           }
-        } else {
-          gameDataErrorTime = System.currentTimeMillis()
-          throw e
+          else -> throw e
         }
       }
     }
 
-    val delaySinceLastResponseNs = System.nanoTime() - lastUpdateNs - timeWaitingNs
-    when {
-      delaySinceLastResponseNs < smallLagThresholdNs -> {
-        // No lag occurred.
-      }
-      delaySinceLastResponseNs < bigSpikeThresholdNs -> {
-        smallLagSpikesCausedByUser++
-      }
-      delaySinceLastResponseNs >= bigSpikeThresholdNs -> {
-        bigLagSpikesCausedByUser++
-      }
+    val nowNs = System.nanoTime()
+    val delaySinceLastResponseNs = nowNs - lastUpdateNs
+    val delaySinceLastResponseMinusWaitingNs = delaySinceLastResponseNs - timeWaitingNs
+    val leewayChangeNs = singleFrameDurationNs - delaySinceLastResponseMinusWaitingNs
+    lagLeewayNs += leewayChangeNs
+    if (lagLeewayNs < 0) {
+      // Lag leeway fell below zero. We caused lag!
+
+      // TODO: Right now if the user lags 100ms it will add all of that to total drift. Maybe
+      // instead we should cap it at the length of one frame and maybe increment another counter for
+      // giant lag spikes?
+      totalDriftNs += lagLeewayNs
+      lagLeewayNs = 0
+    } else if (lagLeewayNs > singleFrameDurationNs) {
+      // Does not make sense to allow lag leeway to be longer than the length of one frame.
+      lagLeewayNs = singleFrameDurationNs
     }
 
-    lastUpdateNs = System.nanoTime()
+    // New lagstat is under development.
+    stripFromProdBinary {
+      if (id == game!!.driftSetterId) {
+        game!!.lagLeewayNs += singleFrameDurationNs - delaySinceLastResponseNs
+        if (game!!.lagLeewayNs < 0) {
+          // Lag leeway fell below zero. Lag occurred!
+          game!!.totalDriftNs += game!!.lagLeewayNs
+          game!!.lagLeewayNs = 0
+        } else if (game!!.lagLeewayNs > singleFrameDurationNs) {
+          // Does not make sense to allow lag leeway to be longer than the length of one frame.
+          game!!.lagLeewayNs = singleFrameDurationNs
+        }
+        game!!.totalDriftCache.update(game!!.totalDriftNs)
+      }
+    }
+    lastUpdateNs = nowNs
+    // New lagstat is under development.
+    stripFromProdBinary { totalDriftCache.update(totalDriftNs, nowNs = nowNs) }
+    return Result.success(Unit)
   }
 
   fun queueEvent(event: KailleraEvent) {
@@ -567,12 +612,13 @@ class KailleraUser(
   }
 
   private val o = Object()
+
   /** Helper function to avoid one level of indentation. */
   private inline fun <T> withLock(action: () -> T): T = synchronized(o) { action() }
 
   companion object {
     private val logger = FluentLogger.forEnclosingClass()
 
-    private const val EMULINKER_CLIENT_NAME = "EmuLinker-K Admin Client"
+    private const val EMULINKERSF_ADMIN_CLIENT_NAME = "EmulinkerSF Admin Client"
   }
 }

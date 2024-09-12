@@ -20,6 +20,7 @@ internal constructor(@param:Named("joinGameMessages") private val joinGameMessag
   V086Action<JoinGameRequest>, V086GameEventHandler<UserJoinedGameEvent> {
   override var actionPerformedCount = 0
     private set
+
   override var handledEventCount = 0
     private set
 

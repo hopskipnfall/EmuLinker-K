@@ -34,6 +34,7 @@ object UnsignedUtil {
   fun ByteBuf.getUnsignedShort(): Int = this.readShort().toInt() and 0xffff
 
   fun ByteReadPacket.readUnsignedShort(): Int = this.readShort().toInt() and 0xffff
+
   fun ByteReadPacket.readUnsignedShortLittleEndian(): Int =
     this.readShortLittleEndian().toInt() and 0xffff
 

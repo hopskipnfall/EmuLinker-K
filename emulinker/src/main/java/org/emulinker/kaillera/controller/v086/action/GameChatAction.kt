@@ -5,6 +5,9 @@ import java.util.*
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.nanoseconds
+import kotlin.time.DurationUnit.MILLISECONDS
+import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.access.AccessManager
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086ClientHandler
@@ -21,10 +24,12 @@ class GameChatAction
 @Inject
 internal constructor(
   private val gameOwnerCommandAction: GameOwnerCommandAction,
-  private val lookingForGameReporter: TwitterBroadcaster
+  private val lookingForGameReporter: TwitterBroadcaster,
+  private val flags: RuntimeFlags,
 ) : V086Action<GameChatRequest>, V086GameEventHandler<GameChatEvent> {
   override var actionPerformedCount = 0
     private set
+
   override var handledEventCount = 0
     private set
 
@@ -57,9 +62,10 @@ internal constructor(
   }
 
   @Throws(FatalActionException::class)
-  private fun checkCommands(message: V086Message, clientHandler: V086ClientHandler?) {
+  private fun checkCommands(message: V086Message, clientHandler: V086ClientHandler) {
     var doCommand = true
-    if (clientHandler!!.user.accessLevel < AccessManager.ACCESS_ELEVATED) {
+    val game = checkNotNull(clientHandler.user.game)
+    if (clientHandler.user.accessLevel < AccessManager.ACCESS_ELEVATED) {
       try {
         clientHandler.user.chat(":USER_COMMAND")
       } catch (e: ActionException) {
@@ -70,20 +76,20 @@ internal constructor(
       if ((message as GameChat).message == "/msgon") {
         try {
           clientHandler.user.isAcceptingDirectMessages = true
-          clientHandler.user.game!!.announce("Private messages are now on.", clientHandler.user)
+          game.announce("Private messages are now on.", clientHandler.user)
         } catch (e: Exception) {}
         return
       } else if (message.message == "/msgoff") {
         try {
           clientHandler.user.isAcceptingDirectMessages = false
-          clientHandler.user.game!!.announce("Private messages are now off.", clientHandler.user)
+          game.announce("Private messages are now off.", clientHandler.user)
         } catch (e: Exception) {}
         return
       } else if (message.message.startsWith("/p2p")) {
         if (message.message == "/p2pon") {
-          if (clientHandler.user.game!!.owner == clientHandler.user) {
-            clientHandler.user.game!!.ignoringUnnecessaryServerActivity = true
-            for (u in clientHandler.user.game!!.players) {
+          if (game.owner == clientHandler.user) {
+            game.ignoringUnnecessaryServerActivity = true
+            for (u in game.players) {
               u.ignoringUnnecessaryServerActivity = true
               if (u.loggedIn) {
                 u.game!!.announce(
@@ -94,7 +100,7 @@ internal constructor(
             }
           } else {
             clientHandler.user.ignoringUnnecessaryServerActivity = true
-            for (u in clientHandler.user.game!!.players) {
+            for (u in game.players) {
               if (u.loggedIn) {
                 u.game!!.announce(
                   "${clientHandler.user.name} will NOT receive any server activity during gameplay!",
@@ -104,9 +110,9 @@ internal constructor(
             }
           }
         } else if (message.message == "/p2poff") {
-          if (clientHandler.user.game!!.owner == clientHandler.user) {
-            clientHandler.user.game!!.ignoringUnnecessaryServerActivity = false
-            for (u in clientHandler.user.game!!.players) {
+          if (game.owner == clientHandler.user) {
+            game.ignoringUnnecessaryServerActivity = false
+            for (u in game.players) {
               u.ignoringUnnecessaryServerActivity = false
               if (u.loggedIn) {
                 u.game!!.announce(
@@ -117,7 +123,7 @@ internal constructor(
             }
           } else {
             clientHandler.user.ignoringUnnecessaryServerActivity = false
-            for (u in clientHandler.user.game!!.players) {
+            for (u in game.players) {
               if (u.loggedIn) {
                 u.game!!.announce(
                   clientHandler.user.name +
@@ -128,7 +134,7 @@ internal constructor(
             }
           }
         } else {
-          clientHandler.user.game!!.announce("Failed P2P: /p2pon or /p2poff", clientHandler.user)
+          game.announce("Failed P2P: /p2pon or /p2poff", clientHandler.user)
         }
         return
       } else if (message.message.startsWith("/msg")) {
@@ -143,7 +149,7 @@ internal constructor(
               clientHandler.user.socketAddress!!.address
             )
         ) {
-          clientHandler.user.game!!.announce("You are silenced!", clientHandler.user)
+          game.announce("You are silenced!", clientHandler.user)
           return
         }
         try {
@@ -156,25 +162,22 @@ internal constructor(
             sb.append(" ")
           }
           if (user == null) {
-            clientHandler.user.game!!.announce("User not found!", clientHandler.user)
+            game.announce("User not found!", clientHandler.user)
             return
           }
           if (user.game != clientHandler.user.game) {
-            clientHandler.user.game!!.announce("User not in this game!", clientHandler.user)
+            game.announce("User not in this game!", clientHandler.user)
             return
           }
           if (user === clientHandler.user) {
-            clientHandler.user.game!!.announce(
-              "You can't private message yourself!",
-              clientHandler.user
-            )
+            game.announce("You can't private message yourself!", clientHandler.user)
             return
           }
           if (
             !user.isAcceptingDirectMessages ||
               user.searchIgnoredUsers(clientHandler.user.connectSocketAddress.address.hostAddress)
           ) {
-            clientHandler.user.game!!.announce(
+            game.announce(
               "<" + user.name + "> Is not accepting private messages!",
               clientHandler.user
             )
@@ -188,7 +191,7 @@ internal constructor(
             for (i in chars.indices) {
               if (chars[i].code < 32) {
                 logger.atWarning().log("%s /msg denied: Illegal characters in message", user)
-                clientHandler.user.game!!.announce(
+                game.announce(
                   "Private Message Denied: Illegal characters in message",
                   clientHandler.user
                 )
@@ -197,10 +200,7 @@ internal constructor(
             }
             if (m.length > 320) {
               logger.atWarning().log("%s /msg denied: Message Length > 320", user)
-              clientHandler.user.game!!.announce(
-                "Private Message Denied: Message Too Long",
-                clientHandler.user
-              )
+              game.announce("Private Message Denied: Message Too Long", clientHandler.user)
               return
             }
           }
@@ -228,18 +228,15 @@ internal constructor(
                 sb.append(" ")
               }
               if (user == null) {
-                clientHandler.user.game!!.announce("User not found!", clientHandler.user)
+                game.announce("User not found!", clientHandler.user)
                 return
               }
               if (user.game != clientHandler.user.game) {
-                clientHandler.user.game!!.announce("User not in this game!", clientHandler.user)
+                game.announce("User not in this game!", clientHandler.user)
                 return
               }
               if (user === clientHandler.user) {
-                clientHandler.user.game!!.announce(
-                  "You can't private message yourself!",
-                  clientHandler.user
-                )
+                game.announce("You can't private message yourself!", clientHandler.user)
                 return
               }
               var m = sb.toString()
@@ -251,7 +248,7 @@ internal constructor(
                 while (i < chars.size) {
                   if (chars[i].code < 32) {
                     logger.atWarning().log("%s /msg denied: Illegal characters in message", user)
-                    clientHandler.user.game!!.announce(
+                    game.announce(
                       "Private Message Denied: Illegal characters in message",
                       clientHandler.user
                     )
@@ -261,10 +258,7 @@ internal constructor(
                 }
                 if (m.length > 320) {
                   logger.atWarning().log("%s /msg denied: Message Length > 320", user)
-                  clientHandler.user.game!!.announce(
-                    "Private Message Denied: Message Too Long",
-                    clientHandler.user
-                  )
+                  game.announce("Private Message Denied: Message Too Long", clientHandler.user)
                   return
                 }
               }
@@ -274,7 +268,7 @@ internal constructor(
               // + m, false, user1);
               // user.getServer().announce("<" + clientHandler.getUser().getName() + "> (" +
               // clientHandler.getUser().getID() + "): " + m, false, user);
-              clientHandler.user.game?.announce(
+              game.announce(
                 "TO: <${user.name}>(${user.id}) <${clientHandler.user.name}> (${clientHandler.user.id}): $m",
                 clientHandler.user
               )
@@ -284,17 +278,11 @@ internal constructor(
               )
               return
             } catch (e1: Exception) {
-              clientHandler.user.game!!.announce(
-                "Private Message Error: /msg <UserID> <message>",
-                clientHandler.user
-              )
+              game.announce("Private Message Error: /msg <UserID> <message>", clientHandler.user)
               return
             }
           } else {
-            clientHandler.user.game!!.announce(
-              "Private Message Error: /msg <UserID> <message>",
-              clientHandler.user
-            )
+            game.announce("Private Message Error: /msg <UserID> <message>", clientHandler.user)
             return
           }
         }
@@ -325,25 +313,19 @@ internal constructor(
           val userID = scanner.nextInt()
           val user = clientHandler.user.server.getUser(userID)
           if (user == null) {
-            clientHandler.user.game!!.announce("User not found!", clientHandler.user)
+            game.announce("User not found!", clientHandler.user)
             return
           }
           if (user === clientHandler.user) {
-            clientHandler.user.game!!.announce("You can't ignore yourself!", clientHandler.user)
+            game.announce("You can't ignore yourself!", clientHandler.user)
             return
           }
           if (clientHandler.user.findIgnoredUser(user.connectSocketAddress.address.hostAddress)) {
-            clientHandler.user.game!!.announce(
-              "You can't ignore a user that is already ignored!",
-              clientHandler.user
-            )
+            game.announce("You can't ignore a user that is already ignored!", clientHandler.user)
             return
           }
           if (user.accessLevel >= AccessManager.ACCESS_MODERATOR) {
-            clientHandler.user.game!!.announce(
-              "You cannot ignore a moderator or admin!",
-              clientHandler.user
-            )
+            game.announce("You cannot ignore a moderator or admin!", clientHandler.user)
             return
           }
           clientHandler.user.addIgnoredUser(user.connectSocketAddress.address.hostAddress)
@@ -354,10 +336,7 @@ internal constructor(
           )
           return
         } catch (e: NoSuchElementException) {
-          clientHandler.user.game!!.announce(
-            "Ignore User Error: /ignore <UserID>",
-            clientHandler.user
-          )
+          game.announce("Ignore User Error: /ignore <UserID>", clientHandler.user)
           logger
             .atInfo()
             .withCause(e)
@@ -375,14 +354,11 @@ internal constructor(
           val userID = scanner.nextInt()
           val user = clientHandler.user.server.getUser(userID)
           if (user == null) {
-            clientHandler.user.game!!.announce("User Not Found!", clientHandler.user)
+            game.announce("User Not Found!", clientHandler.user)
             return
           }
           if (!clientHandler.user.findIgnoredUser(user.connectSocketAddress.address.hostAddress)) {
-            clientHandler.user.game!!.announce(
-              "You can't unignore a user that isn't ignored",
-              clientHandler.user
-            )
+            game.announce("You can't unignore a user that isn't ignored", clientHandler.user)
             return
           }
           if (
@@ -404,10 +380,7 @@ internal constructor(
             } catch (e: Exception) {}
           return
         } catch (e: NoSuchElementException) {
-          clientHandler.user.game!!.announce(
-            "Unignore User Error: /ignore <UserID>",
-            clientHandler.user
-          )
+          game.announce("Unignore User Error: /ignore <UserID>", clientHandler.user)
           logger
             .atInfo()
             .withCause(e)
@@ -421,7 +394,7 @@ internal constructor(
       } else if (message.message.startsWith("/me")) {
         val space = message.message.indexOf(' ')
         if (space < 0) {
-          clientHandler.user.game!!.announce("Invalid # of Fields!", clientHandler.user)
+          game.announce("Invalid # of Fields!", clientHandler.user)
           return
         }
         var announcement = message.message.substring(space + 1)
@@ -440,41 +413,41 @@ internal constructor(
               clientHandler.user.socketAddress!!.address
             )
         ) {
-          clientHandler.user.game!!.announce("You are silenced!", clientHandler.user)
+          game.announce("You are silenced!", clientHandler.user)
           return
         }
         if (clientHandler.user.server.checkMe(clientHandler.user, announcement)) {
           val m = announcement
           announcement = "*" + clientHandler.user.name + " " + m
-          for (user in clientHandler.user.game!!.players) {
+          for (user in game.players) {
             user.game!!.announce(announcement, user)
           }
           return
         }
       } else if (message.message == "/help") {
-        clientHandler.user.game!!.announce(
+        game.announce(
           "/me <message> to make personal message eg. /me is bored ...SupraFast is bored.",
           clientHandler.user
         )
         threadSleep(20.milliseconds)
-        clientHandler.user.game!!.announce(
+        game.announce(
           "/msg <UserID> <msg> to PM somebody. /msgoff or /msgon to turn pm off | on.",
           clientHandler.user
         )
         threadSleep(20.milliseconds)
-        clientHandler.user.game!!.announce(
+        game.announce(
           "/ignore <UserID> or /unignore <UserID> or /ignoreall or /unignoreall to ignore users.",
           clientHandler.user
         )
         threadSleep(20.milliseconds)
-        clientHandler.user.game!!.announce(
+        game.announce(
           "/p2pon or /p2poff this option ignores all server activity during gameplay.",
           clientHandler.user
         )
         threadSleep(20.milliseconds)
       } else if (message.message == "/stop") {
         if (lookingForGameReporter.cancelActionsForUser(clientHandler.user.id)) {
-          clientHandler.user.game!!.announce(
+          game.announce(
             EmuLang.getStringOrDefault(
               "KailleraServerImpl.CanceledPendingTweet",
               default = "Canceled pending tweet."
@@ -482,27 +455,37 @@ internal constructor(
             clientHandler.user
           )
         } else {
-          clientHandler.user.game!!.announce("No pending tweets.", clientHandler.user)
+          game.announce("No pending tweets.", clientHandler.user)
         }
       } else if (message.message == "/lagstat") {
         // Note: This was duplicated from GameOwnerCommandAction.
-        clientHandler.user.game!!.announce("Lagged frames per player:")
-        clientHandler.user.game!!
-          .players
-          .asSequence()
-          .filter { !it.inStealthMode }
-          .forEach {
-            clientHandler.user.game!!.announce(
-              "P${it.playerNumber}: ${it.smallLagSpikesCausedByUser} (tiny), ${it.bigLagSpikesCausedByUser} (big)"
-            )
-          }
-      } else
-        clientHandler.user.game!!.announce(
-          "Unknown Command: " + message.message,
-          clientHandler.user
+        game.announce(
+          game.players
+            .filter { !it.inStealthMode }
+            .joinToString(separator = ", ") { "P${it.playerNumber}: ${it.timeouts}" } +
+            " lag spikes"
         )
+        game.announce(
+          "Total game drift over last ${flags.lagstatDuration}: " +
+            (game.totalDriftNs - (game.totalDriftCache.getDelayedValue() ?: 0))
+              .nanoseconds
+              .absoluteValue
+              .toString(MILLISECONDS, decimals = 0)
+        )
+      } else if (message.message == "/lagreset") {
+        for (player in game.players) {
+          player.resetLag()
+        }
+        game.totalDriftNs = 0
+        game.totalDriftCache.clear()
+        game.announce(
+          "LagStat has been reset!",
+        )
+      } else {
+        game.announce("Unknown Command: " + message.message, clientHandler.user)
+      }
     } else {
-      clientHandler.user.game!!.announce("Denied: Flood Control", clientHandler.user)
+      game.announce("Denied: Flood Control", clientHandler.user)
     }
   }
 

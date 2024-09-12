@@ -96,8 +96,6 @@ internal constructor(
   gameChatAction: GameChatAction,
   gameKickAction: GameKickAction,
   userReadyAction: UserReadyAction,
-  cachedGameDataAction: CachedGameDataAction,
-  gameDataAction: GameDataAction,
   dropGameAction: DropGameAction,
   closeGameAction: CloseGameAction,
   gameStatusAction: GameStatusAction,
@@ -131,7 +129,7 @@ internal constructor(
       GameStartedEvent::class to startGameAction,
       GameChatEvent::class to gameChatAction,
       AllReadyEvent::class to userReadyAction,
-      GameDataEvent::class to gameDataAction,
+      GameDataEvent::class to GameDataAction,
       UserDroppedGameEvent::class to dropGameAction,
       GameDesynchEvent::class to gameDesynchAction,
       PlayerDesynchEvent::class to playerDesynchAction,
@@ -205,8 +203,8 @@ internal constructor(
     actions[GameChat.ID.toInt()] = gameChatAction
     actions[GameKick.ID.toInt()] = gameKickAction
     actions[AllReady.ID.toInt()] = userReadyAction
-    actions[CachedGameData.ID.toInt()] = cachedGameDataAction
-    actions[GameData.ID.toInt()] = gameDataAction
+    actions[CachedGameData.ID.toInt()] = CachedGameDataAction
+    actions[GameData.ID.toInt()] = GameDataAction
     actions[PlayerDrop.ID.toInt()] = dropGameAction
   }
 

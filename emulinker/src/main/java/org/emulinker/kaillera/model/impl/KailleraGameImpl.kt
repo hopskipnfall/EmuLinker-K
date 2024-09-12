@@ -7,6 +7,7 @@ import java.util.concurrent.CopyOnWriteArrayList
 import kotlin.Throws
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
+import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.access.AccessManager
 import org.emulinker.kaillera.master.StatsCollector
 import org.emulinker.kaillera.model.GameStatus
@@ -37,6 +38,8 @@ import org.emulinker.kaillera.model.exception.StartGameException
 import org.emulinker.kaillera.model.exception.UserReadyException
 import org.emulinker.util.EmuLang
 import org.emulinker.util.EmuUtil.threadSleep
+import org.emulinker.util.TimeOffsetCache
+import org.emulinker.util.stripFromProdBinary
 
 class KailleraGameImpl(
   override val id: Int,
@@ -44,6 +47,7 @@ class KailleraGameImpl(
   override val owner: KailleraUser,
   override val server: KailleraServer,
   val bufferSize: Int,
+  flags: RuntimeFlags,
 ) : KailleraGame {
 
   override var highestUserFrameDelay = 0
@@ -62,6 +66,14 @@ class KailleraGameImpl(
     private set
 
   override val players: MutableList<KailleraUser> = CopyOnWriteArrayList()
+
+  var lagLeewayNs = 0.seconds.inWholeNanoseconds
+  var totalDriftNs = 0.seconds.inWholeNanoseconds
+  val totalDriftCache = TimeOffsetCache(delay = flags.lagstatDuration, resolution = 5.seconds)
+
+  /** The user ID that will be measuring game drift. */
+  var driftSetterId: Int? = null
+    private set
 
   val mutedUsers: MutableList<String> = mutableListOf()
   var aEmulator = "any"
@@ -95,7 +107,7 @@ class KailleraGameImpl(
   override val clientType: String?
     get() = owner.clientType
 
-  val autoFireDetector: AutoFireDetector?
+  val autoFireDetector: AutoFireDetector = server.getAutoFireDetector(this)
 
   override fun getPlayerNumber(user: KailleraUser): Int {
     return players.indexOf(user) + 1
@@ -397,20 +409,20 @@ class KailleraGameImpl(
         }
       }
     }
+    driftSetterId = players.first().id
     logger.atInfo().log("%s started: %s", user, this)
     status = GameStatus.SYNCHRONIZING
-    autoFireDetector?.start(players.size)
+    autoFireDetector.start(players.size)
     val actionQueueBuilder: Array<PlayerActionQueue?> = arrayOfNulls(players.size)
     startTimeout = false
     highestUserFrameDelay = 1
-    if (server.users.size > 60) {
+    if (server.usersMap.values.size > 60) {
       ignoringUnnecessaryServerActivity = true
     }
     for (i in players.indices) {
       val player = players[i]
       val playerNumber = i + 1
       if (!swap) player.playerNumber = playerNumber
-      player.timeouts = 0
       player.frameCount = 0
       actionQueueBuilder[i] =
         PlayerActionQueue(
@@ -526,6 +538,15 @@ class KailleraGameImpl(
       // try{user.quit("Rejoining...");}catch(Exception e){}
       announce("Rejoin server to update client of ignored server activity!", user)
     }
+    // New lagstat is under development.
+    stripFromProdBinary {
+      if (driftSetterId == user.id) {
+        // TODO: Make this more resilient. I'm not sure how we recognize which users are actively
+        // playing.
+        logger.atFine().log("Drift setter dropped from game, setting to someone else.")
+        players.firstOrNull { it.id != user.id }?.let { driftSetterId = it.id }
+      }
+    }
   }
 
   @Throws(DropGameException::class, QuitGameException::class, CloseGameException::class)
@@ -534,6 +555,15 @@ class KailleraGameImpl(
       if (!players.remove(user)) {
         logger.atWarning().log("%s quit game failed: not in %s", user, this)
         throw QuitGameException(EmuLang.getString("KailleraGameImpl.QuitGameErrorNotInGame"))
+      }
+      // New lagstat is under development.
+      stripFromProdBinary {
+        if (driftSetterId == user.id) {
+          // TODO: Make this more resilient. I'm not sure how we recognize which users are actively
+          // playing.
+          logger.atFine().log("Drift setter quit game, setting to someone else.")
+          players.firstOrNull { it.id != user.id }?.let { driftSetterId = it.id }
+        }
       }
       logger.atInfo().log("%s quit: %s", user, this)
       addEventForAllPlayers(UserQuitGameEvent(this, user))
@@ -610,19 +640,21 @@ class KailleraGameImpl(
    * back to the client.
    */
   @Throws(GameDataException::class)
-  override fun addData(user: KailleraUser, playerNumber: Int, data: ByteArray) {
-    val playerActionQueueCopy = playerActionQueue ?: return
+  override fun addData(user: KailleraUser, playerNumber: Int, data: ByteArray): Result<Unit> {
+    val playerActionQueueCopy = playerActionQueue ?: return Result.success(Unit)
 
     // int bytesPerAction = (data.length / actionsPerMessage);
     var timeoutCounter = 0
     // int arraySize = (playerActionQueues.length * actionsPerMessage * user.getBytesPerAction());
     if (!isSynched) {
-      throw GameDataException(
-        EmuLang.getString("KailleraGameImpl.DesynchedWarning"),
-        data,
-        actionsPerMessage,
-        playerNumber,
-        playerActionQueueCopy.size,
+      return Result.failure(
+        GameDataException(
+          EmuLang.getString("KailleraGameImpl.DesynchedWarning"),
+          data,
+          actionsPerMessage,
+          playerNumber,
+          playerActionQueueCopy.size,
+        )
       )
     }
     playerActionQueueCopy[playerNumber - 1].addActions(data)
@@ -664,17 +696,20 @@ class KailleraGameImpl(
           }
         }
         if (!isSynched) {
-          throw GameDataException(
-            EmuLang.getString("KailleraGameImpl.DesynchedWarning"),
-            data,
-            user.bytesPerAction,
-            playerNumber,
-            playerActionQueueCopy.size,
+          return Result.failure(
+            GameDataException(
+              EmuLang.getString("KailleraGameImpl.DesynchedWarning"),
+              data,
+              user.bytesPerAction,
+              playerNumber,
+              playerActionQueueCopy.size,
+            )
           )
         }
         player.queueEvent(GameDataEvent(this, response))
       }
     }
+    return Result.success(Unit)
   }
 
   // it's very important this method is synchronized
@@ -687,7 +722,7 @@ class KailleraGameImpl(
     playerActionQueue.lastTimeout = e
     val player: KailleraUser = e.player!!
     if (timeoutNumber < desynchTimeouts) {
-      if (startTimeout) player.timeouts = player.timeouts + 1
+      if (startTimeout) player.timeouts++
       if (timeoutNumber % 12 == 0) {
         logger.atInfo().log("%s: %s: Timeout #%d", this, player, timeoutNumber / 12)
         addEventForAllPlayers(GameTimeoutEvent(this, player, timeoutNumber / 12))
@@ -717,10 +752,6 @@ class KailleraGameImpl(
 
   /** Helper function to avoid one level of indentation. */
   private inline fun <T> withLock(action: () -> T): T = synchronized(lock) { action() }
-
-  init {
-    autoFireDetector = server.getAutoFireDetector(this)
-  }
 
   companion object {
     private val logger = FluentLogger.forEnclosingClass()

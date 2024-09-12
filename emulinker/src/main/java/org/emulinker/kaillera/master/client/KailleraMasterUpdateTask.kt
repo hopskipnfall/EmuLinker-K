@@ -13,6 +13,7 @@ import org.emulinker.kaillera.master.PublicServerInformation
 import org.emulinker.kaillera.master.StatsCollector
 import org.emulinker.kaillera.model.GameStatus
 import org.emulinker.kaillera.model.KailleraServer
+import org.emulinker.kaillera.release.ReleaseInfo
 
 class KailleraMasterUpdateTask
 @Inject
@@ -21,6 +22,7 @@ constructor(
   private val kailleraServer: KailleraServer,
   private val statsCollector: StatsCollector,
   private val flags: RuntimeFlags,
+  private val releaseInfo: ReleaseInfo,
 ) : MasterListUpdateTask {
 
   override fun reportStatus() {
@@ -40,12 +42,11 @@ constructor(
     with(url.parameters) {
       this.append("servername", publicInfo.serverName)
       this.append("port", flags.serverPort.toString())
-      this.append("nbusers", kailleraServer.users.size.toString())
+      this.append("nbusers", kailleraServer.usersMap.values.size.toString())
       this.append("maxconn", flags.maxUsers.toString())
-      // I want to use `releaseInfo.versionWithElkPrefix` here, but it's too long for the db schema
-      // field, so we just write elk (lowercase in protest :P ).
-      this.append("version", "elk")
-      this.append("nbgames", kailleraServer.games.size.toString())
+      // The list only supports max 8 character versions.
+      this.append("version", releaseInfo.versionWithElkPrefix.take(8))
+      this.append("nbgames", kailleraServer.gamesMap.values.size.toString())
       this.append("location", publicInfo.location)
       // If this doesn't "look right" to the server it will silently not show up in the server
       // list.
@@ -59,7 +60,7 @@ constructor(
     connection.setRequestProperty("Kaillera-games", createdGames.toString())
     connection.setRequestProperty(
       "Kaillera-wgames",
-      kailleraServer.games
+      kailleraServer.gamesMap.values
         .filter { it.status == GameStatus.WAITING }
         .joinToString(separator = "") {
           "${it.id}|${it.romName}|${it.owner.name}|${it.owner.clientType}|${it.players.size}|"

@@ -22,7 +22,9 @@ abstract class UDPRelay(
 ) : Runnable {
   var listenChannel: DatagramChannel? = null
     protected set
+
   protected var clients = Collections.synchronizedMap(HashMap<InetSocketAddress, ClientHandler>())
+
   protected abstract fun processClientToServer(
     receiveBuffer: ByteBuffer,
     fromAddress: InetSocketAddress,
@@ -76,6 +78,7 @@ abstract class UDPRelay(
   protected inner class ClientHandler(protected var clientSocketAddress: InetSocketAddress) :
     Runnable {
     protected var clientChannel: DatagramChannel
+
     @Throws(Exception::class)
     fun send(buffer: ByteBuffer) {
       //			logger.atInfo().log(EmuUtil.formatSocketAddress(clientSocketAddress) + " -> \t" +

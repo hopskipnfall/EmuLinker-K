@@ -45,7 +45,6 @@ class V086ClientHandler
 constructor(
   metrics: MetricRegistry,
   private val flags: RuntimeFlags,
-  private val gameDataAction: GameDataAction,
   // TODO(nue): Try to replace this with remoteSocketAddress.
   /** I think this is the address from when the user called the connect controller. */
   @Assisted val connectRemoteSocketAddress: InetSocketAddress,
@@ -91,10 +90,13 @@ constructor(
 
   private var prevMessageNumber = -1
     private set
+
   private var lastMessageNumber = -1
     private set
+
   var clientGameDataCache: GameDataCache = ClientGameDataCache(256)
     private set
+
   var serverGameDataCache: GameDataCache = ClientGameDataCache(256)
     private set
 
@@ -104,8 +106,10 @@ constructor(
   private var lastMeasurement: Long = 0
   var speedMeasurementCount = 0
     private set
+
   var bestNetworkSpeed = Int.MAX_VALUE
     private set
+
   private var clientRetryCount = 0
   private var lastResend = 0L
 
@@ -230,8 +234,7 @@ constructor(
             .log("%s received invalid message: %s}", this, EmuUtil.dumpBuffer(newBuffer))
           null
         }
-      }
-        ?: return
+      } ?: return
 
     stripFromProdBinary {
       logger.atFinest().log("<- FROM P%d: %s", user.id, inBundle.messages.firstOrNull())
@@ -254,10 +257,11 @@ constructor(
         val m: V086Message = messages[0]!!
         lastMessageNumber = m.messageNumber
         val messageTypeId = m.messageTypeId
+
         val action: V086Action<out V086Message>? =
           // Checking for GameData first is a speed optimization.
           if (messageTypeId == GameData.ID) {
-            gameDataAction
+            GameDataAction
           } else {
             controller.actions[m.messageTypeId.toInt()]
           }
@@ -293,7 +297,7 @@ constructor(
           val action: V086Action<out V086Message>? =
             // Checking for GameData first is a speed optimization.
             if (messageTypeId == GameData.ID) {
-              gameDataAction
+              GameDataAction
             } else {
               controller.actions[m.messageTypeId.toInt()]
             }
@@ -315,7 +319,7 @@ constructor(
     when (event) {
       // Check for GameDataEvent first to avoid map lookup slowness.
       is GameDataEvent -> {
-        gameDataAction.handleEvent(event, this)
+        GameDataAction.handleEvent(event, this)
       }
       is GameEvent -> {
         val eventHandler = controller.gameEventHandlers[event::class]

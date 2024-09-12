@@ -21,6 +21,7 @@ class ACKAction @Inject internal constructor() :
   V086Action<ClientAck>, V086UserEventHandler<UserEvent> {
   override var actionPerformedCount = 0
     private set
+
   override var handledEventCount = 0
     private set
 
@@ -44,23 +45,26 @@ class ACKAction @Inject internal constructor() :
           clientHandler.averageNetworkSpeed,
           clientHandler.bestNetworkSpeed
         )
-      try {
-        user.login()
-      } catch (e: LoginException) {
-        try {
-          clientHandler.send(
-            ConnectionRejected(
-              clientHandler.nextMessageNumber,
-              // TODO(nue): Localize this?
-              username = "server",
-              user.id,
-              e.message ?: ""
-            )
-          )
-        } catch (e2: MessageFormatException) {
-          logger.atSevere().withCause(e2).log("Failed to construct new ConnectionRejected")
+      user.login().onFailure { e ->
+        when (e) {
+          is LoginException -> {
+            try {
+              clientHandler.send(
+                ConnectionRejected(
+                  clientHandler.nextMessageNumber,
+                  // TODO(nue): Localize this?
+                  username = "server",
+                  user.id,
+                  e.message ?: ""
+                )
+              )
+            } catch (e2: MessageFormatException) {
+              logger.atSevere().withCause(e2).log("Failed to construct new ConnectionRejected")
+            }
+            throw FatalActionException("Login failed: " + e.message)
+          }
+          else -> throw e
         }
-        throw FatalActionException("Login failed: " + e.message)
       }
     } else {
       try {
@@ -80,7 +84,7 @@ class ACKAction @Inject internal constructor() :
     val users = mutableListOf<ServerStatus.User>()
     val games = mutableListOf<ServerStatus.Game>()
     try {
-      for (user in server.users) {
+      for (user in server.usersMap.values) {
         if (user.status != UserStatus.CONNECTING && user != thisUser)
           users.add(
             ServerStatus.User(
@@ -97,7 +101,7 @@ class ACKAction @Inject internal constructor() :
       return
     }
     try {
-      for (game in server.games) {
+      for (game in server.gamesMap.values) {
         var num = 0
         for (user in game.players) {
           if (!user.inStealthMode) num++

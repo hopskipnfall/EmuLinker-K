@@ -1,13 +1,13 @@
 package org.emulinker.kaillera.release
 
-import java.time.Instant
 import javax.inject.Inject
+import kotlinx.datetime.Instant
 import org.emulinker.kaillera.pico.CompiledFlags
 import org.emulinker.kaillera.pico.CompiledFlags.BUILD_DATE
 import org.emulinker.kaillera.pico.CompiledFlags.PROJECT_NAME
 import org.emulinker.kaillera.pico.CompiledFlags.PROJECT_URL
 import org.emulinker.kaillera.pico.CompiledFlags.PROJECT_VERSION
-import org.emulinker.util.EmuUtil
+import org.emulinker.util.EmuUtil.toSimpleUtcDatetime
 
 /**
  * Provides release and build information for the EmuLinker project. This class also formats a
@@ -32,7 +32,7 @@ class ReleaseInfo @Inject constructor() {
    * server startup.
    */
   val welcome =
-    """// $productName version $version (${EmuUtil.toSimpleUtcDatetime(buildDate)}) 
+    """// $productName version $version (${buildDate.toSimpleUtcDatetime()}) 
 // $licenseInfo
 // For the most up-to-date information please visit: $websiteString"""
 }

@@ -6,10 +6,8 @@ import com.codahale.metrics.MetricFilter
 import com.codahale.metrics.jvm.ThreadStatesGaugeSet
 import com.google.common.flogger.FluentLogger
 import java.io.File
-import java.time.Instant
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
 import java.util.concurrent.TimeUnit.*
+import org.emulinker.util.EmuUtil.toSimpleUtcDatetime
 import org.emulinker.util.stripFromProdBinary
 
 private val logger = FluentLogger.forEnclosingClass()
@@ -47,10 +45,7 @@ fun main() {
   }
   logger
     .atInfo()
-    .log(
-      "EmuLinker server is running @ %s",
-      DateTimeFormatter.ISO_ZONED_DATE_TIME.withZone(ZoneId.systemDefault()).format(Instant.now())
-    )
+    .log("EmuLinker server is running @ %s", component.clock.now().toSimpleUtcDatetime())
   // Essentially does nothing.
   component.kailleraServerController.start()
 

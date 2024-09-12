@@ -77,7 +77,9 @@ interface AccessManager : Closeable {
    * @param minutes Number of minutes this grant is valid from the time of addition
    */
   fun addTempAdmin(addressPattern: String, duration: Duration)
+
   fun addTempModerator(addressPattern: String, duration: Duration)
+
   fun addTempElevated(addressPattern: String, duration: Duration)
 
   /**
@@ -88,6 +90,7 @@ interface AccessManager : Closeable {
    * @param minutes Number of minutes this grant is valid from the time of addition
    */
   fun addSilenced(addressPattern: String, duration: Duration)
+
   fun clearTemp(address: InetAddress, clearAll: Boolean): Boolean
 
   companion object {

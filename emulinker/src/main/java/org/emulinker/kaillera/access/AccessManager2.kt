@@ -230,6 +230,7 @@ internal constructor(private val flags: RuntimeFlags, private val taskScheduler:
     private var resolvedAddresses: MutableList<String>
     var access = 0
       private set
+
     var message: String? = null
       private set
 

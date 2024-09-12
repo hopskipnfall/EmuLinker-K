@@ -10,11 +10,14 @@ import java.nio.ByteBuffer
 import java.nio.charset.Charset
 import java.text.DateFormat
 import java.text.SimpleDateFormat
-import java.time.Instant
-import java.time.ZoneOffset
-import java.time.format.DateTimeFormatter
 import java.util.Properties
 import kotlin.time.Duration
+import kotlinx.datetime.Instant
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.format
+import kotlinx.datetime.format.DateTimeComponents
+import kotlinx.datetime.format.format
+import kotlinx.datetime.offsetIn
 import org.emulinker.kaillera.pico.AppModule
 
 object EmuUtil {
@@ -285,8 +288,13 @@ object EmuUtil {
     }
   }
 
-  fun toSimpleUtcDatetime(instant: Instant): String =
-    DateTimeFormatter.RFC_1123_DATE_TIME.withZone(ZoneOffset.UTC).format(instant)
+  fun Instant.toSimpleUtcDatetime(): String =
+    DateTimeComponents.Formats.RFC_1123.format {
+      setDateTimeOffset(
+        this@toSimpleUtcDatetime,
+        this@toSimpleUtcDatetime.offsetIn(TimeZone.currentSystemDefault())
+      )
+    }
 
   // TODO(nue): Get rid of this after it's confirmed it can be safely removed.
   /** NOOP placeholder for a function that _used to_ call [Thread.sleep]. */

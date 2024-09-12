@@ -18,6 +18,7 @@ class LoginAction @Inject internal constructor() :
   V086Action<UserInformation>, V086ServerEventHandler<UserJoinedEvent> {
   override var actionPerformedCount = 0
     private set
+
   override var handledEventCount = 0
     private set
 
@@ -53,7 +54,7 @@ class LoginAction @Inject internal constructor() :
         )
       )
       val thisUser = clientHandler.user
-      if (thisUser.isEmuLinkerClient && thisUser.accessLevel >= AccessManager.ACCESS_SUPERADMIN) {
+      if (thisUser.isEsfAdminClient && thisUser.accessLevel >= AccessManager.ACCESS_SUPERADMIN) {
         if (user != thisUser) {
           val sb = StringBuilder()
           sb.append(":USERINFO=")

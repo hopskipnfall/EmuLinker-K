@@ -5,6 +5,8 @@ import java.util.*
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.nanoseconds
+import kotlin.time.DurationUnit.MILLISECONDS
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.access.AccessManager
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
@@ -21,6 +23,7 @@ import org.emulinker.util.EmuUtil.threadSleep
 class GameOwnerCommandAction @Inject internal constructor(private val flags: RuntimeFlags) :
   V086Action<GameChat> {
   override val actionPerformedCount = 0
+
   override fun toString() = "GameOwnerCommandAction"
 
   fun isValidCommand(chat: String): Boolean {
@@ -212,21 +215,24 @@ class GameOwnerCommandAction @Inject internal constructor(private val flags: Run
     game: KailleraGameImpl,
   ) {
     if (message == "/lagstat") {
-      game.announce("Lagged frames per player:")
-      game.players
-        .asSequence()
-        .filter { !it.inStealthMode }
-        .forEach {
-          game.announce(
-            "P${it.playerNumber}: ${it.smallLagSpikesCausedByUser} (tiny), ${it.bigLagSpikesCausedByUser} (big)"
-          )
-        }
+      game.announce(
+        game.players
+          .filter { !it.inStealthMode }
+          .joinToString(separator = ", ") { "P${it.playerNumber}: ${it.timeouts}" } + " lag spikes"
+      )
+      game.announce(
+        "Total game drift over last ${flags.lagstatDuration}: " +
+          (game.totalDriftNs - (game.totalDriftCache.getDelayedValue() ?: 0))
+            .nanoseconds
+            .absoluteValue
+            .toString(MILLISECONDS, decimals = 0)
+      )
     } else if (message == "/lagreset") {
       for (player in game.players) {
-        player.timeouts = 0
-        player.smallLagSpikesCausedByUser = 0
-        player.bigLagSpikesCausedByUser = 0
+        player.resetLag()
       }
+      game.totalDriftNs = 0
+      game.totalDriftCache.clear()
       game.announce(
         "LagStat has been reset!",
       )

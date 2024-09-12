@@ -17,8 +17,8 @@ import org.emulinker.kaillera.controller.v086.protocol.InformationMessage
 import org.emulinker.kaillera.model.event.ChatEvent
 import org.emulinker.kaillera.model.exception.ActionException
 import org.emulinker.util.EmuLang
-import org.emulinker.util.EmuUtil
 import org.emulinker.util.EmuUtil.threadSleep
+import org.emulinker.util.EmuUtil.toSimpleUtcDatetime
 
 private const val ADMIN_COMMAND_ESCAPE_STRING = "/"
 
@@ -27,6 +27,7 @@ class ChatAction @Inject internal constructor(private val adminCommandAction: Ad
   V086Action<ChatRequest>, V086ServerEventHandler<ChatEvent> {
   override var actionPerformedCount = 0
     private set
+
   override var handledEventCount = 0
     private set
 
@@ -105,7 +106,7 @@ class ChatAction @Inject internal constructor(private val adminCommandAction: Ad
             InformationMessage(
               clientHandler.nextMessageNumber,
               "server",
-              "VERSION: ${releaseInfo.productName}: ${releaseInfo.version}: ${EmuUtil.toSimpleUtcDatetime(releaseInfo.buildDate)}"
+              "VERSION: ${releaseInfo.productName}: ${releaseInfo.version}: ${releaseInfo.buildDate.toSimpleUtcDatetime()}"
             )
           )
         } catch (e: Exception) {}

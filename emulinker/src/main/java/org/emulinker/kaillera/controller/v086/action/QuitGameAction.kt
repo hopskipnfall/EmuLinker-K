@@ -20,6 +20,7 @@ class QuitGameAction @Inject constructor(private val lookingForGameReporter: Twi
   V086Action<QuitGameRequest>, V086GameEventHandler<UserQuitGameEvent> {
   override var actionPerformedCount = 0
     private set
+
   override var handledEventCount = 0
     private set
 

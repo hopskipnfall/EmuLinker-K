@@ -24,11 +24,13 @@ import org.emulinker.kaillera.model.impl.Trivia
 import org.emulinker.util.EmuLang
 import org.emulinker.util.EmuUtil
 import org.emulinker.util.EmuUtil.threadSleep
+import org.emulinker.util.EmuUtil.toSimpleUtcDatetime
 import org.emulinker.util.WildcardStringPattern
 
 @Singleton
 class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
   override val actionPerformedCount = 0
+
   override fun toString() = "AdminCommandAction"
 
   fun isValidCommand(chat: String): Boolean {
@@ -331,7 +333,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
     var foundCount = 0
     val str = message.substring(space + 1)
     // WildcardStringPattern pattern = new WildcardStringPattern
-    for (user in server.users) {
+    for (user in server.usersMap.values) {
       if (!user.loggedIn) continue
       if (user.name!!.lowercase(Locale.getDefault()).contains(str.lowercase(Locale.getDefault()))) {
         var msg =
@@ -364,7 +366,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
     if (space < 0) throw ActionException(EmuLang.getString("AdminCommandAction.FindGameError"))
     var foundCount = 0
     val pattern = WildcardStringPattern(message.substring(space + 1))
-    for (game in server.games) {
+    for (game in server.gamesMap.values) {
       if (pattern.match(game.romName)) {
         val sb = StringBuilder()
         sb.append("GameID: ")
@@ -888,7 +890,7 @@ class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
             ": " +
             releaseInfo.version +
             ": " +
-            EmuUtil.toSimpleUtcDatetime(releaseInfo.buildDate)
+            releaseInfo.buildDate.toSimpleUtcDatetime()
         )
       )
       threadSleep(20.milliseconds)

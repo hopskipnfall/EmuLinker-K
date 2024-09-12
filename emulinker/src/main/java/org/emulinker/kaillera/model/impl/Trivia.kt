@@ -23,6 +23,7 @@ class Trivia(private val server: KailleraServer) : Runnable {
   private var hint2 = false
   var isAnswered = false
     private set
+
   private var questionsCount = 0
   private var ipStreak = ""
   private var scoreStreak = 0
@@ -30,6 +31,7 @@ class Trivia(private val server: KailleraServer) : Runnable {
   private val questions: MutableList<Questions> = ArrayList()
   private val questionsNum: MutableList<Int> = ArrayList()
   private val scores: MutableList<Scores> = ArrayList()
+
   fun setQuestionTime(questionTime: Int) {
     this.questionTime = questionTime
   }
@@ -43,6 +45,7 @@ class Trivia(private val server: KailleraServer) : Runnable {
   }
 
   inner class Scores(var nick: String, var iP: String, var score: Int)
+
   private inner class Questions(var question: String, var answer: String)
 
   override fun run() {

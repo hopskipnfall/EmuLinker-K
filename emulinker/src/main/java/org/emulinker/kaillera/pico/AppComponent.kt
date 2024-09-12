@@ -3,6 +3,7 @@ package org.emulinker.kaillera.pico
 import com.codahale.metrics.MetricRegistry
 import dagger.Component
 import javax.inject.Singleton
+import kotlinx.datetime.Clock
 import org.apache.commons.configuration.Configuration
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.access.AccessManager2
@@ -24,4 +25,5 @@ abstract class AppComponent {
   abstract val masterListUpdater: MasterListUpdater
   abstract val metricRegistry: MetricRegistry
   abstract val flags: RuntimeFlags
+  abstract val clock: Clock
 }

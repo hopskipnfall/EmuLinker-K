@@ -12,6 +12,7 @@ import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.master.PublicServerInformation
 import org.emulinker.kaillera.model.GameStatus
 import org.emulinker.kaillera.model.KailleraServer
+import org.emulinker.kaillera.release.ReleaseInfo
 
 class EmuLinkerMasterUpdateTask
 @Inject
@@ -19,6 +20,7 @@ constructor(
   private val publicInfo: PublicServerInformation,
   private val kailleraServer: KailleraServer,
   private val flags: RuntimeFlags,
+  private val releaseInfo: ReleaseInfo,
 ) : MasterListUpdateTask {
 
   override fun reportStatus() {
@@ -29,20 +31,19 @@ constructor(
       this.append("location", publicInfo.location)
       this.append("website", publicInfo.website)
       this.append("port", flags.serverPort.toString())
-      this.append("numUsers", kailleraServer.users.size.toString())
+      this.append("numUsers", kailleraServer.usersMap.values.size.toString())
       this.append("maxUsers", flags.maxUsers.toString())
-      this.append("numGames", kailleraServer.games.size.toString())
+      this.append("numGames", kailleraServer.gamesMap.values.size.toString())
       this.append("maxGames", flags.maxGames.toString())
-      // I want to use `releaseInfo.versionWithElkPrefix` here, but it's too long for the db schema
-      // field, so we just write elk (lowercase in protest :P ).
-      this.append("version", "elk")
+      // The list only supports max 8 character versions.
+      this.append("version", releaseInfo.versionWithElkPrefix.take(8))
     }
 
     val connection: HttpURLConnection = URL(url.buildString()).openConnection() as HttpURLConnection
     connection.setRequestMethod("GET")
     connection.setRequestProperty(
       "Waiting-games",
-      kailleraServer.games
+      kailleraServer.gamesMap.values
         .filter { it.status == GameStatus.WAITING }
         .joinToString(separator = "") {
           "${it.romName}|${it.owner.name}|${it.owner.clientType}|${it.players.size}/${it.maxUsers}|"
