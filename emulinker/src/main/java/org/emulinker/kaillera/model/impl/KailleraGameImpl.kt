@@ -39,7 +39,6 @@ import org.emulinker.kaillera.model.exception.UserReadyException
 import org.emulinker.util.EmuLang
 import org.emulinker.util.EmuUtil.threadSleep
 import org.emulinker.util.TimeOffsetCache
-import org.emulinker.util.stripFromProdBinary
 
 class KailleraGameImpl(
   override val id: Int,
@@ -538,14 +537,11 @@ class KailleraGameImpl(
       // try{user.quit("Rejoining...");}catch(Exception e){}
       announce("Rejoin server to update client of ignored server activity!", user)
     }
-    // New lagstat is under development.
-    stripFromProdBinary {
-      if (driftSetterId == user.id) {
-        // TODO: Make this more resilient. I'm not sure how we recognize which users are actively
-        // playing.
-        logger.atFine().log("Drift setter dropped from game, setting to someone else.")
-        players.firstOrNull { it.id != user.id }?.let { driftSetterId = it.id }
-      }
+    if (driftSetterId == user.id) {
+      // TODO: Make this more resilient. I'm not sure how we recognize which users are actively
+      // playing.
+      logger.atFine().log("Drift setter dropped from game, setting to someone else.")
+      players.firstOrNull { it.id != user.id }?.let { driftSetterId = it.id }
     }
   }
 
@@ -556,14 +552,11 @@ class KailleraGameImpl(
         logger.atWarning().log("%s quit game failed: not in %s", user, this)
         throw QuitGameException(EmuLang.getString("KailleraGameImpl.QuitGameErrorNotInGame"))
       }
-      // New lagstat is under development.
-      stripFromProdBinary {
-        if (driftSetterId == user.id) {
-          // TODO: Make this more resilient. I'm not sure how we recognize which users are actively
-          // playing.
-          logger.atFine().log("Drift setter quit game, setting to someone else.")
-          players.firstOrNull { it.id != user.id }?.let { driftSetterId = it.id }
-        }
+      if (driftSetterId == user.id) {
+        // TODO: Make this more resilient. I'm not sure how we recognize which users are actively
+        // playing.
+        logger.atFine().log("Drift setter quit game, setting to someone else.")
+        players.firstOrNull { it.id != user.id }?.let { driftSetterId = it.id }
       }
       logger.atInfo().log("%s quit: %s", user, this)
       addEventForAllPlayers(UserQuitGameEvent(this, user))
