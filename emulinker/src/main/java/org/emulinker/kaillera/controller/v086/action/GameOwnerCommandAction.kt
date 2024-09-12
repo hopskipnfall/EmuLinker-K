@@ -216,17 +216,17 @@ class GameOwnerCommandAction @Inject internal constructor(private val flags: Run
   ) {
     if (message == "/lagstat") {
       game.announce(
+        game.players
+          .filter { !it.inStealthMode }
+          .joinToString(separator = ", ") { "P${it.playerNumber}: ${it.timeouts}" } + " lag spikes"
+      )
+      game.announce(
         "Total game drift over last ${flags.lagstatDuration}: " +
           (game.totalDriftNs - (game.totalDriftCache.getDelayedValue() ?: 0))
             .nanoseconds
             .absoluteValue
-            .toString(MILLISECONDS) +
-          ". Breakdown by player:"
+            .toString(MILLISECONDS, decimals = 0)
       )
-      game.players
-        .asSequence()
-        .filter { !it.inStealthMode }
-        .forEach { game.announce("P${it.playerNumber}: ${it.summarizeLag()}") }
     } else if (message == "/lagreset") {
       for (player in game.players) {
         player.resetLag()

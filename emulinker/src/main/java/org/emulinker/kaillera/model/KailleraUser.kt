@@ -27,6 +27,7 @@ import org.emulinker.kaillera.model.exception.*
 import org.emulinker.kaillera.model.impl.KailleraGameImpl
 import org.emulinker.util.EmuLang
 import org.emulinker.util.TimeOffsetCache
+import org.emulinker.util.stripFromProdBinary
 
 /**
  * Represents a user in the server.
@@ -119,6 +120,9 @@ class KailleraUser(
 
   var frameCount = 0
   var frameDelay = 0
+
+  /** Legacy `/lagstat`. */
+  var timeouts: Long = 0
 
   private var totalDelay = 0
   var bytesPerAction = 0
@@ -308,11 +312,13 @@ class KailleraUser(
       (totalDriftNs - (totalDriftCache.getDelayedValue() ?: 0))
         .nanoseconds
         .absoluteValue
-        .toString(MILLISECONDS)
+        .toString(MILLISECONDS) +
+      "\n legacy lagstat: $timeouts"
 
   fun resetLag() {
     totalDriftNs = 0
     totalDriftCache.clear()
+    timeouts = 0
   }
 
   @Throws(JoinGameException::class)
@@ -419,6 +425,7 @@ class KailleraUser(
   @Synchronized
   @Throws(StartGameException::class)
   fun startGame() {
+    resetLag()
     updateLastActivity()
     val game = this.game
     if (game == null) {
@@ -543,20 +550,24 @@ class KailleraUser(
       lagLeewayNs = singleFrameDurationNs
     }
 
-    if (id == game!!.driftSetterId) {
-      game!!.lagLeewayNs += singleFrameDurationNs - delaySinceLastResponseNs
-      if (game!!.lagLeewayNs < 0) {
-        // Lag leeway fell below zero. Lag occurred!
-        game!!.totalDriftNs += game!!.lagLeewayNs
-        game!!.lagLeewayNs = 0
-      } else if (game!!.lagLeewayNs > singleFrameDurationNs) {
-        // Does not make sense to allow lag leeway to be longer than the length of one frame.
-        game!!.lagLeewayNs = singleFrameDurationNs
+    // New lagstat is under development.
+    stripFromProdBinary {
+      if (id == game!!.driftSetterId) {
+        game!!.lagLeewayNs += singleFrameDurationNs - delaySinceLastResponseNs
+        if (game!!.lagLeewayNs < 0) {
+          // Lag leeway fell below zero. Lag occurred!
+          game!!.totalDriftNs += game!!.lagLeewayNs
+          game!!.lagLeewayNs = 0
+        } else if (game!!.lagLeewayNs > singleFrameDurationNs) {
+          // Does not make sense to allow lag leeway to be longer than the length of one frame.
+          game!!.lagLeewayNs = singleFrameDurationNs
+        }
+        game!!.totalDriftCache.update(game!!.totalDriftNs)
       }
-      game!!.totalDriftCache.update(game!!.totalDriftNs)
     }
     lastUpdateNs = nowNs
-    totalDriftCache.update(totalDriftNs, nowNs = nowNs)
+    // New lagstat is under development.
+    stripFromProdBinary { totalDriftCache.update(totalDriftNs, nowNs = nowNs) }
     return Result.success(Unit)
   }
 

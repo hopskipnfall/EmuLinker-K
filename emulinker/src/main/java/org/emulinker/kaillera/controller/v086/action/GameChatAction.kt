@@ -6,6 +6,8 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.nanoseconds
+import kotlin.time.DurationUnit.MILLISECONDS
+import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.access.AccessManager
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086ClientHandler
@@ -22,7 +24,8 @@ class GameChatAction
 @Inject
 internal constructor(
   private val gameOwnerCommandAction: GameOwnerCommandAction,
-  private val lookingForGameReporter: TwitterBroadcaster
+  private val lookingForGameReporter: TwitterBroadcaster,
+  private val flags: RuntimeFlags,
 ) : V086Action<GameChatRequest>, V086GameEventHandler<GameChatEvent> {
   override var actionPerformedCount = 0
     private set
@@ -456,16 +459,18 @@ internal constructor(
         }
       } else if (message.message == "/lagstat") {
         // Note: This was duplicated from GameOwnerCommandAction.
-        game.announce("Game drift caused by player:")
-        game.players
-          .asSequence()
-          .filter { !it.inStealthMode }
-          .forEach { game.announce("P${it.playerNumber}: ${it.summarizeLag()}") }
         game.announce(
-          "Overall game drift: " +
-            (game.totalDriftNs.nanoseconds -
-                (game.totalDriftCache.getDelayedValue() ?: 0).nanoseconds)
+          game.players
+            .filter { !it.inStealthMode }
+            .joinToString(separator = ", ") { "P${it.playerNumber}: ${it.timeouts}" } +
+            " lag spikes"
+        )
+        game.announce(
+          "Total game drift over last ${flags.lagstatDuration}: " +
+            (game.totalDriftNs - (game.totalDriftCache.getDelayedValue() ?: 0))
+              .nanoseconds
               .absoluteValue
+              .toString(MILLISECONDS, decimals = 0)
         )
       } else if (message.message == "/lagreset") {
         for (player in game.players) {

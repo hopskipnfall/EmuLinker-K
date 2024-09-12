@@ -42,6 +42,7 @@ import org.emulinker.util.EmuLang
 import org.emulinker.util.EmuUtil
 import org.emulinker.util.EmuUtil.threadSleep
 import org.emulinker.util.TaskScheduler
+import org.emulinker.util.stripFromProdBinary
 
 /** Holds server-wide state. */
 @Singleton
@@ -840,18 +841,21 @@ internal constructor(
   private fun run() {
     try {
       // TODO(nue): Remove this. This is just being used for testing.
-      for (game in gamesMap.values) {
-        if (game.status == GameStatus.PLAYING) {
-          logger
-            .atInfo()
-            .log(
-              "LAGSTAT: G%d - %s - %s",
-              game.id,
-              (game.totalDriftNs - (game.totalDriftCache.getDelayedValue() ?: 0))
-                .nanoseconds
-                .absoluteValue,
-              game.players.joinToString(separator = " ") { "[${it.name} ${it.summarizeLag()}]" }
-            )
+      // New lagstat is experimental.
+      stripFromProdBinary {
+        for (game in gamesMap.values) {
+          if (game.status == GameStatus.PLAYING) {
+            logger
+              .atInfo()
+              .log(
+                "LAGSTAT: G%d - %s - %s",
+                game.id,
+                (game.totalDriftNs - (game.totalDriftCache.getDelayedValue() ?: 0))
+                  .nanoseconds
+                  .absoluteValue,
+                game.players.joinToString(separator = " ") { "[${it.name} ${it.summarizeLag()}]" }
+              )
+          }
         }
       }
 

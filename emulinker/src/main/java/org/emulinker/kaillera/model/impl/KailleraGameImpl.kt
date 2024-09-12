@@ -39,6 +39,7 @@ import org.emulinker.kaillera.model.exception.UserReadyException
 import org.emulinker.util.EmuLang
 import org.emulinker.util.EmuUtil.threadSleep
 import org.emulinker.util.TimeOffsetCache
+import org.emulinker.util.stripFromProdBinary
 
 class KailleraGameImpl(
   override val id: Int,
@@ -537,11 +538,14 @@ class KailleraGameImpl(
       // try{user.quit("Rejoining...");}catch(Exception e){}
       announce("Rejoin server to update client of ignored server activity!", user)
     }
-    if (driftSetterId == user.id) {
-      // TODO: Make this more resilient. I'm not sure how we recognize which users are actively
-      // playing.
-      logger.atFine().log("Drift setter dropped from game, setting to someone else.")
-      players.firstOrNull { it.id != user.id }?.let { driftSetterId = it.id }
+    // New lagstat is under development.
+    stripFromProdBinary {
+      if (driftSetterId == user.id) {
+        // TODO: Make this more resilient. I'm not sure how we recognize which users are actively
+        // playing.
+        logger.atFine().log("Drift setter dropped from game, setting to someone else.")
+        players.firstOrNull { it.id != user.id }?.let { driftSetterId = it.id }
+      }
     }
   }
 
@@ -552,11 +556,14 @@ class KailleraGameImpl(
         logger.atWarning().log("%s quit game failed: not in %s", user, this)
         throw QuitGameException(EmuLang.getString("KailleraGameImpl.QuitGameErrorNotInGame"))
       }
-      if (driftSetterId == user.id) {
-        // TODO: Make this more resilient. I'm not sure how we recognize which users are actively
-        // playing.
-        logger.atFine().log("Drift setter quit game, setting to someone else.")
-        players.firstOrNull { it.id != user.id }?.let { driftSetterId = it.id }
+      // New lagstat is under development.
+      stripFromProdBinary {
+        if (driftSetterId == user.id) {
+          // TODO: Make this more resilient. I'm not sure how we recognize which users are actively
+          // playing.
+          logger.atFine().log("Drift setter quit game, setting to someone else.")
+          players.firstOrNull { it.id != user.id }?.let { driftSetterId = it.id }
+        }
       }
       logger.atInfo().log("%s quit: %s", user, this)
       addEventForAllPlayers(UserQuitGameEvent(this, user))
@@ -715,6 +722,7 @@ class KailleraGameImpl(
     playerActionQueue.lastTimeout = e
     val player: KailleraUser = e.player!!
     if (timeoutNumber < desynchTimeouts) {
+      if (startTimeout) player.timeouts++
       if (timeoutNumber % 12 == 0) {
         logger.atInfo().log("%s: %s: Timeout #%d", this, player, timeoutNumber / 12)
         addEventForAllPlayers(GameTimeoutEvent(this, player, timeoutNumber / 12))
