@@ -459,18 +459,22 @@ internal constructor(
         }
       } else if (message.message == "/lagstat") {
         // Note: This was duplicated from GameOwnerCommandAction.
-        game.announce(
-          game.players
-            .filter { !it.inStealthMode }
-            .joinToString(separator = ", ") { "P${it.playerNumber}: ${it.timeouts}" } +
-            " lag spikes"
-        )
+        if (!game.startTimeout) {
+          game.announce("Wait 15s after game starts to run lagstat.")
+          return
+        }
         game.announce(
           "Total game drift over last ${flags.lagstatDuration}: " +
             (game.totalDriftNs - (game.totalDriftCache.getDelayedValue() ?: 0))
               .nanoseconds
               .absoluteValue
               .toString(MILLISECONDS, decimals = 0)
+        )
+        game.announce(
+          "Drift caused by player: " +
+            game.players
+              .filter { !it.inStealthMode }
+              .joinToString(separator = ", ") { "P${it.playerNumber}: ${it.summarizeLag()}" }
         )
       } else if (message.message == "/lagreset") {
         for (player in game.players) {
