@@ -722,7 +722,8 @@ class KailleraGameImpl(
       // Does not make sense to allow lag leeway to be longer than the length of one frame.
       lagLeewayNs = singleFrameDurationNs
     }
-    totalDriftCache.update(totalDriftNs)
+    totalDriftCache.update(totalDriftNs, nowNs = nowNs)
+    lastFrameNs = nowNs
   }
 
   // it's very important this method is synchronized
