@@ -8,7 +8,6 @@ import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 import kotlin.Throws
-import kotlin.system.measureNanoTime
 import kotlin.time.Duration.Companion.nanoseconds
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.DurationUnit.MILLISECONDS
@@ -27,7 +26,6 @@ import org.emulinker.kaillera.model.exception.*
 import org.emulinker.kaillera.model.impl.KailleraGameImpl
 import org.emulinker.util.EmuLang
 import org.emulinker.util.TimeOffsetCache
-import org.emulinker.util.stripFromProdBinary
 
 /**
  * Represents a user in the server.
@@ -120,9 +118,6 @@ class KailleraUser(
 
   var frameCount = 0
   var frameDelay = 0
-
-  /** Legacy `/lagstat`. */
-  var timeouts: Long = 0
 
   private var totalDelay = 0
   var bytesPerAction = 0
@@ -308,17 +303,14 @@ class KailleraUser(
   }
 
   fun summarizeLag(): String =
-    "drift caused: " +
-      (totalDriftNs - (totalDriftCache.getDelayedValue() ?: 0))
-        .nanoseconds
-        .absoluteValue
-        .toString(MILLISECONDS) +
-      "\n legacy lagstat: $timeouts"
+    (totalDriftNs - (totalDriftCache.getDelayedValue() ?: 0))
+      .nanoseconds
+      .absoluteValue
+      .toString(MILLISECONDS)
 
   fun resetLag() {
     totalDriftNs = 0
     totalDriftCache.clear()
-    timeouts = 0
   }
 
   @Throws(JoinGameException::class)
@@ -458,117 +450,101 @@ class KailleraUser(
     game.ready(this, playerNumber)
   }
 
+  var receivedGameDataNs: Long? = null
+
   fun addGameData(data: ByteArray): Result<Unit> {
-    val timeWaitingNs = measureNanoTime {
-      fun doTheThing(): Result<Unit> {
-        val game =
-          this.game
-            ?: return Result.failure(
-              GameDataException(
-                EmuLang.getString("KailleraUserImpl.GameDataErrorNotInGame"),
-                data,
-                actionsPerMessage = connectionType.byteValue.toInt(),
-                playerNumber = 1,
-                numPlayers = 1
-              )
+    receivedGameDataNs = System.nanoTime()
+    fun doTheThing(): Result<Unit> {
+      val game =
+        this.game
+          ?: return Result.failure(
+            GameDataException(
+              EmuLang.getString("KailleraUserImpl.GameDataErrorNotInGame"),
+              data,
+              actionsPerMessage = connectionType.byteValue.toInt(),
+              playerNumber = 1,
+              numPlayers = 1
             )
+          )
 
-        // Initial Delay
-        // totalDelay = (game.getDelay() + tempDelay + 5)
-        if (frameCount < totalDelay) {
-          bytesPerAction = data.size / connectionType.byteValue
-          arraySize = game.playerActionQueue!!.size * connectionType.byteValue * bytesPerAction
-          val response = ByteArray(arraySize)
-          for (i in response.indices) {
-            response[i] = 0
+      // Initial Delay
+      // totalDelay = (game.getDelay() + tempDelay + 5)
+      if (frameCount < totalDelay) {
+        bytesPerAction = data.size / connectionType.byteValue
+        arraySize = game.playerActionQueue!!.size * connectionType.byteValue * bytesPerAction
+        val response = ByteArray(arraySize)
+        for (i in response.indices) {
+          response[i] = 0
+        }
+        lostInput.add(data)
+        queueEvent(GameDataEvent(game as KailleraGameImpl, response))
+        frameCount++
+      } else {
+        // lostInput.add(data);
+        if (lostInput.size > 0) {
+          game.addData(this, playerNumber, lostInput[0]).onFailure {
+            return Result.failure(it)
           }
-          lostInput.add(data)
-          queueEvent(GameDataEvent(game as KailleraGameImpl, response))
-          frameCount++
+          lostInput.removeAt(0)
         } else {
-          // lostInput.add(data);
-          if (lostInput.size > 0) {
-            game.addData(this, playerNumber, lostInput[0]).onFailure {
-              return Result.failure(it)
-            }
-            lostInput.removeAt(0)
-          } else {
-            game.addData(this, playerNumber, data).onFailure {
-              return Result.failure(it)
-            }
+          game.addData(this, playerNumber, data).onFailure {
+            return Result.failure(it)
           }
         }
-        gameDataErrorTime = 0
-        return Result.success(Unit)
       }
-
-      val result = doTheThing()
-      result.onFailure { e ->
-        when (e) {
-          is GameDataException -> {
-            // this should be warn level, but it creates tons of lines in the log
-            logger.atFine().withCause(e).log("%s add game data failed", this)
-
-            // i'm going to reflect the game data packet back at the user to prevent game lockups,
-            // but this uses extra bandwidth, so we'll set a counter to prevent people from leaving
-            // games running for a long time in this state
-            if (gameDataErrorTime > 0) {
-              // give the user time to close the game
-              if (System.currentTimeMillis() - gameDataErrorTime > 30000) {
-                // this should be warn level, but it creates tons of lines in the log
-                logger.atFine().log("%s: error game data exceeds drop timeout!", this)
-                return Result.failure(GameDataException(e.message))
-              } else {
-                // e.setReflectData(true);
-                return result
-              }
-            } else {
-              gameDataErrorTime = System.currentTimeMillis()
-              return result
-            }
-          }
-          else -> throw e
-        }
-      }
+      gameDataErrorTime = 0
+      return Result.success(Unit)
     }
 
+    val result = doTheThing()
+    result.onFailure { e ->
+      when (e) {
+        is GameDataException -> {
+          // this should be warn level, but it creates tons of lines in the log
+          logger.atFine().withCause(e).log("%s add game data failed", this)
+
+          // i'm going to reflect the game data packet back at the user to prevent game lockups,
+          // but this uses extra bandwidth, so we'll set a counter to prevent people from leaving
+          // games running for a long time in this state
+          if (gameDataErrorTime > 0) {
+            // give the user time to close the game
+            if (System.currentTimeMillis() - gameDataErrorTime > 30000) {
+              // this should be warn level, but it creates tons of lines in the log
+              logger.atFine().log("%s: error game data exceeds drop timeout!", this)
+              return Result.failure(GameDataException(e.message))
+            } else {
+              // e.setReflectData(true);
+              return result
+            }
+          } else {
+            gameDataErrorTime = System.currentTimeMillis()
+            return result
+          }
+        }
+        else -> throw e
+      }
+    }
+    return Result.success(Unit)
+  }
+
+  fun updateUserDrift() {
+    val receivedGameDataNs = receivedGameDataNs ?: return
     val nowNs = System.nanoTime()
     val delaySinceLastResponseNs = nowNs - lastUpdateNs
+    val timeWaitingNs = nowNs - receivedGameDataNs
     val delaySinceLastResponseMinusWaitingNs = delaySinceLastResponseNs - timeWaitingNs
     val leewayChangeNs = singleFrameDurationNs - delaySinceLastResponseMinusWaitingNs
     lagLeewayNs += leewayChangeNs
     if (lagLeewayNs < 0) {
       // Lag leeway fell below zero. We caused lag!
-
-      // TODO: Right now if the user lags 100ms it will add all of that to total drift. Maybe
-      // instead we should cap it at the length of one frame and maybe increment another counter for
-      // giant lag spikes?
       totalDriftNs += lagLeewayNs
       lagLeewayNs = 0
     } else if (lagLeewayNs > singleFrameDurationNs) {
       // Does not make sense to allow lag leeway to be longer than the length of one frame.
       lagLeewayNs = singleFrameDurationNs
     }
-
-    // New lagstat is under development.
-    stripFromProdBinary {
-      if (id == game!!.driftSetterId) {
-        game!!.lagLeewayNs += singleFrameDurationNs - delaySinceLastResponseNs
-        if (game!!.lagLeewayNs < 0) {
-          // Lag leeway fell below zero. Lag occurred!
-          game!!.totalDriftNs += game!!.lagLeewayNs
-          game!!.lagLeewayNs = 0
-        } else if (game!!.lagLeewayNs > singleFrameDurationNs) {
-          // Does not make sense to allow lag leeway to be longer than the length of one frame.
-          game!!.lagLeewayNs = singleFrameDurationNs
-        }
-        game!!.totalDriftCache.update(game!!.totalDriftNs)
-      }
-    }
     lastUpdateNs = nowNs
-    // New lagstat is under development.
-    stripFromProdBinary { totalDriftCache.update(totalDriftNs, nowNs = nowNs) }
-    return Result.success(Unit)
+    totalDriftCache.update(totalDriftNs, nowNs = nowNs)
   }
 
   fun queueEvent(event: KailleraEvent) {

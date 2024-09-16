@@ -215,11 +215,11 @@ class GameOwnerCommandAction @Inject internal constructor(private val flags: Run
     game: KailleraGameImpl,
   ) {
     if (message == "/lagstat") {
-      game.announce(
-        game.players
-          .filter { !it.inStealthMode }
-          .joinToString(separator = ", ") { "P${it.playerNumber}: ${it.timeouts}" } + " lag spikes"
-      )
+      // Note: This was duplicated from GameOwnerCommandAction.
+      if (!game.startTimeout) {
+        game.announce("Wait 15s after game starts to run lagstat.")
+        return
+      }
       game.announce(
         "Total game drift over last ${flags.lagstatDuration}: " +
           (game.totalDriftNs - (game.totalDriftCache.getDelayedValue() ?: 0))
@@ -227,12 +227,17 @@ class GameOwnerCommandAction @Inject internal constructor(private val flags: Run
             .absoluteValue
             .toString(MILLISECONDS, decimals = 0)
       )
+      game.announce(
+        "Drift caused by player: " +
+          game.players
+            .filter { !it.inStealthMode }
+            .joinToString(separator = ", ") { "P${it.playerNumber}: ${it.summarizeLag()}" }
+      )
     } else if (message == "/lagreset") {
       for (player in game.players) {
         player.resetLag()
       }
-      game.totalDriftNs = 0
-      game.totalDriftCache.clear()
+      game.resetLag()
       game.announce(
         "LagStat has been reset!",
       )

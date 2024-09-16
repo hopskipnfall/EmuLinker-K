@@ -1,6 +1,7 @@
 package org.emulinker.kaillera.model
 
 import kotlin.Throws
+import kotlinx.datetime.Instant
 import org.emulinker.kaillera.model.exception.CloseGameException
 import org.emulinker.kaillera.model.exception.DropGameException
 import org.emulinker.kaillera.model.exception.GameChatException
@@ -19,7 +20,7 @@ interface KailleraGame {
   val players: MutableList<KailleraUser>
   val romName: String
   val server: KailleraServer?
-  val startTimeoutTime: Long
+  val startTimeoutTime: Instant?
   val status: GameStatus
 
   var highestUserFrameDelay: Int

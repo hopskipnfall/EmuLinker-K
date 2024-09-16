@@ -59,6 +59,7 @@ class PlayerActionQueue(
     writeAtIndex: Int,
     actionLength: Int
   ) {
+    // Note: It's possible this never happens and we can replace this with an assertion.
     lock.withLock {
       if (synced && !containsNewDataForPlayer(playerIndex, actionLength)) {
         try {

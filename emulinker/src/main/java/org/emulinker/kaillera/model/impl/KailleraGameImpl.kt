@@ -7,6 +7,8 @@ import java.util.concurrent.CopyOnWriteArrayList
 import kotlin.Throws
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
+import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.access.AccessManager
 import org.emulinker.kaillera.master.StatsCollector
@@ -39,7 +41,6 @@ import org.emulinker.kaillera.model.exception.UserReadyException
 import org.emulinker.util.EmuLang
 import org.emulinker.util.EmuUtil.threadSleep
 import org.emulinker.util.TimeOffsetCache
-import org.emulinker.util.stripFromProdBinary
 
 class KailleraGameImpl(
   override val id: Int,
@@ -48,6 +49,7 @@ class KailleraGameImpl(
   override val server: KailleraServer,
   val bufferSize: Int,
   flags: RuntimeFlags,
+  private val clock: Clock,
 ) : KailleraGame {
 
   override var highestUserFrameDelay = 0
@@ -62,7 +64,13 @@ class KailleraGameImpl(
       server.addEvent(GameStatusChangedEvent(server, this))
     }
 
-  override var startTimeoutTime: Long = 0
+  // TODO(nue): Combine this with [KailleraUser.singleFrameDurationNs].
+  private var singleFrameDurationNs: Long = 0
+
+  /** Last time we fanned out data for a frame. */
+  private var lastFrameNs = System.nanoTime()
+
+  override var startTimeoutTime: Instant? = null
     private set
 
   override val players: MutableList<KailleraUser> = CopyOnWriteArrayList()
@@ -70,10 +78,6 @@ class KailleraGameImpl(
   var lagLeewayNs = 0.seconds.inWholeNanoseconds
   var totalDriftNs = 0.seconds.inWholeNanoseconds
   val totalDriftCache = TimeOffsetCache(delay = flags.lagstatDuration, resolution = 5.seconds)
-
-  /** The user ID that will be measuring game drift. */
-  var driftSetterId: Int? = null
-    private set
 
   val mutedUsers: MutableList<String> = mutableListOf()
   var aEmulator = "any"
@@ -366,6 +370,9 @@ class KailleraGameImpl(
       )
     }
 
+    val singleFrameDuration = 1.seconds / user.connectionType.updatesPerSecond
+    singleFrameDurationNs = singleFrameDuration.inWholeNanoseconds
+
     // do not start if not game
     if (owner.game!!.romName.startsWith("*")) return
     for (player in players) {
@@ -409,7 +416,6 @@ class KailleraGameImpl(
         }
       }
     }
-    driftSetterId = players.first().id
     logger.atInfo().log("%s started: %s", user, this)
     status = GameStatus.SYNCHRONIZING
     autoFireDetector.start(players.size)
@@ -447,7 +453,7 @@ class KailleraGameImpl(
       	player.setP2P(false);
       }*/
       logger.atInfo().log("%s: %s is player number %s", this, player, playerNumber)
-      autoFireDetector?.addPlayer(player, playerNumber)
+      autoFireDetector.addPlayer(player, playerNumber)
     }
     playerActionQueue = actionQueueBuilder.map { it!! }.toTypedArray()
     statsCollector?.markGameAsStarted(server, this)
@@ -480,7 +486,7 @@ class KailleraGameImpl(
       logger.atInfo().log("%s all players are ready: starting...", this)
       status = GameStatus.PLAYING
       isSynched = true
-      startTimeoutTime = System.currentTimeMillis()
+      startTimeoutTime = clock.now()
       addEventForAllPlayers(AllReadyEvent(this))
       var frameDelay = (highestUserFrameDelay + 1) * owner.connectionType.byteValue - 1
       if (sameDelay) {
@@ -521,7 +527,7 @@ class KailleraGameImpl(
       }
       logger.atInfo().log("%s: game desynched: less than 2 players playing!", this)
     }
-    autoFireDetector?.stop(playerNumber)
+    autoFireDetector.stop(playerNumber)
     if (playingCount == 0) {
       if (startN != -1) {
         startN = -1
@@ -538,15 +544,6 @@ class KailleraGameImpl(
       // try{user.quit("Rejoining...");}catch(Exception e){}
       announce("Rejoin server to update client of ignored server activity!", user)
     }
-    // New lagstat is under development.
-    stripFromProdBinary {
-      if (driftSetterId == user.id) {
-        // TODO: Make this more resilient. I'm not sure how we recognize which users are actively
-        // playing.
-        logger.atFine().log("Drift setter dropped from game, setting to someone else.")
-        players.firstOrNull { it.id != user.id }?.let { driftSetterId = it.id }
-      }
-    }
   }
 
   @Throws(DropGameException::class, QuitGameException::class, CloseGameException::class)
@@ -555,15 +552,6 @@ class KailleraGameImpl(
       if (!players.remove(user)) {
         logger.atWarning().log("%s quit game failed: not in %s", user, this)
         throw QuitGameException(EmuLang.getString("KailleraGameImpl.QuitGameErrorNotInGame"))
-      }
-      // New lagstat is under development.
-      stripFromProdBinary {
-        if (driftSetterId == user.id) {
-          // TODO: Make this more resilient. I'm not sure how we recognize which users are actively
-          // playing.
-          logger.atFine().log("Drift setter quit game, setting to someone else.")
-          players.firstOrNull { it.id != user.id }?.let { driftSetterId = it.id }
-        }
       }
       logger.atInfo().log("%s quit: %s", user, this)
       addEventForAllPlayers(UserQuitGameEvent(this, user))
@@ -601,7 +589,7 @@ class KailleraGameImpl(
         game = null
       }
     }
-    autoFireDetector?.stop()
+    autoFireDetector.stop()
     players.clear()
   }
 
@@ -658,7 +646,7 @@ class KailleraGameImpl(
       )
     }
     playerActionQueueCopy[playerNumber - 1].addActions(data)
-    autoFireDetector?.addData(playerNumber, data, user.bytesPerAction)
+    autoFireDetector.addData(playerNumber, data, user.bytesPerAction)
 
     // TODO(nue): This works for 2P but what about more? This probably results in unnecessary
     // messages.
@@ -689,6 +677,8 @@ class KailleraGameImpl(
                 )
                 break
               } catch (e: PlayerTimeoutException) {
+                // Note: this code only executes when we have data for all users, I think timeouts
+                // never happen anymore.
                 e.timeoutNumber = ++timeoutCounter
                 handleTimeout(e)
               }
@@ -707,9 +697,32 @@ class KailleraGameImpl(
           )
         }
         player.queueEvent(GameDataEvent(this, response))
+        player.updateUserDrift()
+        updateGameDrift()
       }
     }
     return Result.success(Unit)
+  }
+
+  fun resetLag() {
+    totalDriftCache.clear()
+    totalDriftNs = 0
+  }
+
+  private fun updateGameDrift() {
+    val nowNs = System.nanoTime()
+    val delaySinceLastResponseNs = nowNs - lastFrameNs
+
+    lagLeewayNs += singleFrameDurationNs - delaySinceLastResponseNs
+    if (lagLeewayNs < 0) {
+      // Lag leeway fell below zero. Lag occurred!
+      totalDriftNs += lagLeewayNs
+      lagLeewayNs = 0
+    } else if (lagLeewayNs > singleFrameDurationNs) {
+      // Does not make sense to allow lag leeway to be longer than the length of one frame.
+      lagLeewayNs = singleFrameDurationNs
+    }
+    totalDriftCache.update(totalDriftNs)
   }
 
   // it's very important this method is synchronized
@@ -722,7 +735,6 @@ class KailleraGameImpl(
     playerActionQueue.lastTimeout = e
     val player: KailleraUser = e.player!!
     if (timeoutNumber < desynchTimeouts) {
-      if (startTimeout) player.timeouts++
       if (timeoutNumber % 12 == 0) {
         logger.atInfo().log("%s: %s: Timeout #%d", this, player, timeoutNumber / 12)
         addEventForAllPlayers(GameTimeoutEvent(this, player, timeoutNumber / 12))

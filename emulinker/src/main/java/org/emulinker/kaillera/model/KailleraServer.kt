@@ -14,7 +14,7 @@ import javax.inject.Singleton
 import kotlin.Throws
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
-import kotlin.time.Duration.Companion.nanoseconds
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.datetime.Clock
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.access.AccessManager
@@ -25,9 +25,11 @@ import org.emulinker.kaillera.model.event.ChatEvent
 import org.emulinker.kaillera.model.event.ConnectedEvent
 import org.emulinker.kaillera.model.event.GameClosedEvent
 import org.emulinker.kaillera.model.event.GameCreatedEvent
+import org.emulinker.kaillera.model.event.GameDataEvent
+import org.emulinker.kaillera.model.event.GameStatusChangedEvent
 import org.emulinker.kaillera.model.event.InfoMessageEvent
+import org.emulinker.kaillera.model.event.KailleraEvent
 import org.emulinker.kaillera.model.event.KailleraEventListener
-import org.emulinker.kaillera.model.event.ServerEvent
 import org.emulinker.kaillera.model.event.UserJoinedEvent
 import org.emulinker.kaillera.model.event.UserQuitEvent
 import org.emulinker.kaillera.model.exception.*
@@ -42,7 +44,6 @@ import org.emulinker.util.EmuLang
 import org.emulinker.util.EmuUtil
 import org.emulinker.util.EmuUtil.threadSleep
 import org.emulinker.util.TaskScheduler
-import org.emulinker.util.stripFromProdBinary
 
 /** Holds server-wide state. */
 @Singleton
@@ -662,7 +663,8 @@ internal constructor(
         (user as KailleraUser?)!!,
         this,
         flags.gameBufferSize,
-        flags
+        flags,
+        clock,
       )
     gamesMap[gameID] = game
     addEvent(GameCreatedEvent(this, game))
@@ -810,20 +812,19 @@ internal constructor(
     }
   }
 
-  fun addEvent(event: ServerEvent) {
+  fun addEvent(event: KailleraEvent) {
     for (user in usersMap.values) {
       if (user.loggedIn) {
         if (user.status != UserStatus.IDLE) {
           if (user.ignoringUnnecessaryServerActivity) {
-            // TODO(nue): Get rid of this bad use of toString.
-            when (event.toString()) {
-              "GameDataEvent" -> user.queueEvent(event)
-              "ChatEvent",
-              "UserJoinedEvent",
-              "UserQuitEvent",
-              "GameStatusChangedEvent",
-              "GameClosedEvent",
-              "GameCreatedEvent" -> continue
+            when (event) {
+              is GameDataEvent -> user.queueEvent(event)
+              is ChatEvent,
+              is UserJoinedEvent,
+              is UserQuitEvent,
+              is GameStatusChangedEvent,
+              is GameClosedEvent,
+              is GameCreatedEvent -> continue
               else -> user.queueEvent(event)
             }
           } else {
@@ -840,25 +841,6 @@ internal constructor(
 
   private fun run() {
     try {
-      // TODO(nue): Remove this. This is just being used for testing.
-      // New lagstat is experimental.
-      stripFromProdBinary {
-        for (game in gamesMap.values) {
-          if (game.status == GameStatus.PLAYING) {
-            logger
-              .atInfo()
-              .log(
-                "LAGSTAT: G%d - %s - %s",
-                game.id,
-                (game.totalDriftNs - (game.totalDriftCache.getDelayedValue() ?: 0))
-                  .nanoseconds
-                  .absoluteValue,
-                game.players.joinToString(separator = " ") { "[${it.name} ${it.summarizeLag()}]" }
-              )
-          }
-        }
-      }
-
       if (usersMap.isEmpty()) return
       for (user in usersMap.values) {
         val access = accessManager.getAccess(user.connectSocketAddress.address)
@@ -868,7 +850,10 @@ internal constructor(
         if (user.loggedIn) {
           val game = user.game
           if (game != null && game.status == GameStatus.PLAYING && !game.startTimeout) {
-            if (System.currentTimeMillis() - game.startTimeoutTime > 15000) {
+            val stt = game.startTimeoutTime
+            if (stt != null && clock.now() - stt >= 15.seconds) {
+              game.players.forEach { it.resetLag() }
+              game.resetLag()
               game.startTimeout = true
             }
           }
