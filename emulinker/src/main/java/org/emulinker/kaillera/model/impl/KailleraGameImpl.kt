@@ -698,7 +698,10 @@ class KailleraGameImpl(
         }
         player.queueEvent(GameDataEvent(this, response))
         player.updateUserDrift()
-        updateGameDrift()
+        val firstPlayer = players.firstOrNull()
+        if (firstPlayer != null && firstPlayer.id == player.id) {
+          updateGameDrift()
+        }
       }
     }
     return Result.success(Unit)
