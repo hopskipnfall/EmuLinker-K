@@ -458,32 +458,32 @@ internal constructor(
           game.announce("No pending tweets.", clientHandler.user)
         }
       } else if (message.message == "/lagstat") {
+        game.chat(clientHandler.user, "/lagstat")
         // Note: This was duplicated from GameOwnerCommandAction.
         if (!game.startTimeout) {
-          game.announce("Wait 15s after game starts to run lagstat.")
+          game.announce("Wait a minute or so after the game starts to run lagstat.")
           return
         }
         game.announce(
-          "Total game drift over last ${flags.lagstatDuration}: " +
+          "Total lag over the last ${flags.lagstatDuration}: " +
             (game.totalDriftNs - (game.totalDriftCache.getDelayedValue() ?: 0))
               .nanoseconds
               .absoluteValue
               .toString(MILLISECONDS, decimals = 0)
         )
         game.announce(
-          "Drift caused by player: " +
+          "Lag caused by players: " +
             game.players
               .filter { !it.inStealthMode }
               .joinToString(separator = ", ") { "P${it.playerNumber}: ${it.summarizeLag()}" }
         )
       } else if (message.message == "/lagreset") {
+        game.chat(clientHandler.user, "/lagreset")
         for (player in game.players) {
           player.resetLag()
         }
         game.resetLag()
-        game.announce(
-          "LagStat has been reset!",
-        )
+        game.announce("LagStat has been reset!")
       } else {
         game.announce("Unknown Command: " + message.message, clientHandler.user)
       }

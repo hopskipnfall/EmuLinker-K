@@ -76,7 +76,7 @@ class GameOwnerCommandAction @Inject internal constructor(private val flags: Run
         chat.startsWith(COMMAND_UNMUTE) -> processUnmute(chat, game, user, clientHandler)
         chat.startsWith(COMMAND_SWAP) -> processSwap(chat, game, user)
         chat.startsWith(COMMAND_KICK) -> processKick(chat, game, user, clientHandler)
-        chat.startsWith(COMMAND_LAGSTAT) -> processLagstat(chat, game)
+        chat.startsWith(COMMAND_LAGSTAT) -> processLagstat(chat, game, user)
         chat.startsWith(COMMAND_SAMEDELAY) -> processSameDelay(chat, game, user)
         chat.startsWith(COMMAND_NUM) -> processNum(game, user)
         else -> {
@@ -213,34 +213,34 @@ class GameOwnerCommandAction @Inject internal constructor(private val flags: Run
   private fun processLagstat(
     message: String,
     game: KailleraGameImpl,
+    user: KailleraUser,
   ) {
     if (message == "/lagstat") {
-      // Note: This was duplicated from GameOwnerCommandAction.
+      game.chat(user, "/lagstat")
       if (!game.startTimeout) {
-        game.announce("Wait 15s after game starts to run lagstat.")
+        game.announce("Wait a minute or so after the game starts to run lagstat.")
         return
       }
       game.announce(
-        "Total game drift over last ${flags.lagstatDuration}: " +
+        "Total lag over the last ${flags.lagstatDuration}: " +
           (game.totalDriftNs - (game.totalDriftCache.getDelayedValue() ?: 0))
             .nanoseconds
             .absoluteValue
             .toString(MILLISECONDS, decimals = 0)
       )
       game.announce(
-        "Drift caused by player: " +
+        "Lag caused by players: " +
           game.players
             .filter { !it.inStealthMode }
             .joinToString(separator = ", ") { "P${it.playerNumber}: ${it.summarizeLag()}" }
       )
     } else if (message == "/lagreset") {
+      game.chat(user, "/lagreset")
       for (player in game.players) {
         player.resetLag()
       }
       game.resetLag()
-      game.announce(
-        "LagStat has been reset!",
-      )
+      game.announce("LagStat has been reset!")
     }
   }
 
