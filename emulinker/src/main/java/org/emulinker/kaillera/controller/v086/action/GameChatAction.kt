@@ -480,8 +480,7 @@ internal constructor(
         for (player in game.players) {
           player.resetLag()
         }
-        game.totalDriftNs = 0
-        game.totalDriftCache.clear()
+        game.resetLag()
         game.announce(
           "LagStat has been reset!",
         )

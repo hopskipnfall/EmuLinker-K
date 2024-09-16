@@ -543,20 +543,6 @@ class KailleraUser(
       // Does not make sense to allow lag leeway to be longer than the length of one frame.
       lagLeewayNs = singleFrameDurationNs
     }
-
-    // TODO(nue): Move this to KailleraGameImpl.
-    if (id == game!!.driftSetterId) {
-      game!!.lagLeewayNs += singleFrameDurationNs - delaySinceLastResponseNs
-      if (game!!.lagLeewayNs < 0) {
-        // Lag leeway fell below zero. Lag occurred!
-        game!!.totalDriftNs += game!!.lagLeewayNs
-        game!!.lagLeewayNs = 0
-      } else if (game!!.lagLeewayNs > singleFrameDurationNs) {
-        // Does not make sense to allow lag leeway to be longer than the length of one frame.
-        game!!.lagLeewayNs = singleFrameDurationNs
-      }
-      game!!.totalDriftCache.update(game!!.totalDriftNs)
-    }
     lastUpdateNs = nowNs
     totalDriftCache.update(totalDriftNs, nowNs = nowNs)
   }

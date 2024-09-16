@@ -237,8 +237,7 @@ class GameOwnerCommandAction @Inject internal constructor(private val flags: Run
       for (player in game.players) {
         player.resetLag()
       }
-      game.totalDriftNs = 0
-      game.totalDriftCache.clear()
+      game.resetLag()
       game.announce(
         "LagStat has been reset!",
       )

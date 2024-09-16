@@ -14,9 +14,7 @@ import javax.inject.Singleton
 import kotlin.Throws
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
-import kotlin.time.Duration.Companion.nanoseconds
 import kotlin.time.Duration.Companion.seconds
-import kotlin.time.DurationUnit
 import kotlinx.datetime.Clock
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.access.AccessManager
@@ -46,7 +44,6 @@ import org.emulinker.util.EmuLang
 import org.emulinker.util.EmuUtil
 import org.emulinker.util.EmuUtil.threadSleep
 import org.emulinker.util.TaskScheduler
-import org.emulinker.util.stripFromProdBinary
 
 /** Holds server-wide state. */
 @Singleton
@@ -844,26 +841,6 @@ internal constructor(
 
   private fun run() {
     try {
-      // TODO(nue): Remove this. This is just being used for testing.
-      stripFromProdBinary {
-        gamesMap.values
-          .asSequence()
-          .filter { it.status == GameStatus.PLAYING && it.startTimeout }
-          .forEach { game ->
-            logger
-              .atInfo()
-              .log(
-                "LAGSTAT: G%d - %s - %s",
-                game.id,
-                (game.totalDriftNs - (game.totalDriftCache.getDelayedValue() ?: 0))
-                  .nanoseconds
-                  .absoluteValue
-                  .toString(DurationUnit.MILLISECONDS),
-                game.players.joinToString(separator = " ") { "[${it.name} ${it.summarizeLag()}]" }
-              )
-          }
-      }
-
       if (usersMap.isEmpty()) return
       for (user in usersMap.values) {
         val access = accessManager.getAccess(user.connectSocketAddress.address)
@@ -876,8 +853,7 @@ internal constructor(
             val stt = game.startTimeoutTime
             if (stt != null && clock.now() - stt >= 15.seconds) {
               game.players.forEach { it.resetLag() }
-              game.totalDriftNs = 0
-              game.totalDriftCache.clear()
+              game.resetLag()
               game.startTimeout = true
             }
           }
