@@ -5,9 +5,6 @@ import java.util.*
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.time.Duration.Companion.milliseconds
-import kotlin.time.Duration.Companion.nanoseconds
-import kotlin.time.DurationUnit.MILLISECONDS
-import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.access.AccessManager
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086ClientHandler
@@ -20,32 +17,26 @@ import org.emulinker.util.EmuLang
 import org.emulinker.util.EmuUtil.threadSleep
 
 @Singleton
-class GameOwnerCommandAction @Inject internal constructor(private val flags: RuntimeFlags) :
-  V086Action<GameChat> {
+class GameOwnerCommandAction @Inject internal constructor() : V086Action<GameChat> {
   override val actionPerformedCount = 0
 
   override fun toString() = "GameOwnerCommandAction"
 
-  fun isValidCommand(chat: String): Boolean {
-    return when {
-      chat.startsWith(COMMAND_HELP) ||
-        chat.startsWith(COMMAND_DETECTAUTOFIRE) ||
-        chat.startsWith(COMMAND_MAXUSERS) ||
-        chat.startsWith(COMMAND_MAXPING) ||
-        chat == COMMAND_START ||
-        chat.startsWith(COMMAND_STARTN) ||
-        chat.startsWith(COMMAND_MUTE) ||
-        chat.startsWith(COMMAND_EMU) ||
-        chat.startsWith(COMMAND_CONN) ||
-        chat.startsWith(COMMAND_UNMUTE) ||
-        chat.startsWith(COMMAND_SWAP) ||
-        chat.startsWith(COMMAND_KICK) ||
-        chat.startsWith(COMMAND_SAMEDELAY) ||
-        chat.startsWith(COMMAND_LAGSTAT) ||
-        chat.startsWith(COMMAND_NUM) -> true
-      else -> false
-    }
-  }
+  fun isValidCommand(chat: String): Boolean =
+    chat.startsWith(COMMAND_HELP) ||
+      chat.startsWith(COMMAND_DETECTAUTOFIRE) ||
+      chat.startsWith(COMMAND_MAXUSERS) ||
+      chat.startsWith(COMMAND_MAXPING) ||
+      chat == COMMAND_START ||
+      chat.startsWith(COMMAND_STARTN) ||
+      chat.startsWith(COMMAND_MUTE) ||
+      chat.startsWith(COMMAND_EMU) ||
+      chat.startsWith(COMMAND_CONN) ||
+      chat.startsWith(COMMAND_UNMUTE) ||
+      chat.startsWith(COMMAND_SWAP) ||
+      chat.startsWith(COMMAND_KICK) ||
+      chat.startsWith(COMMAND_SAMEDELAY) ||
+      chat.startsWith(COMMAND_NUM)
 
   @Throws(FatalActionException::class)
   override fun performAction(message: GameChat, clientHandler: V086ClientHandler) {
@@ -76,7 +67,6 @@ class GameOwnerCommandAction @Inject internal constructor(private val flags: Run
         chat.startsWith(COMMAND_UNMUTE) -> processUnmute(chat, game, user, clientHandler)
         chat.startsWith(COMMAND_SWAP) -> processSwap(chat, game, user)
         chat.startsWith(COMMAND_KICK) -> processKick(chat, game, user, clientHandler)
-        chat.startsWith(COMMAND_LAGSTAT) -> processLagstat(chat, game, user)
         chat.startsWith(COMMAND_SAMEDELAY) -> processSameDelay(chat, game, user)
         chat.startsWith(COMMAND_NUM) -> processNum(game, user)
         else -> {
@@ -132,7 +122,7 @@ class GameOwnerCommandAction @Inject internal constructor(private val flags: Run
   }
 
   private fun autoFireHelp(game: KailleraGameImpl, admin: KailleraUser) {
-    val cur = game.autoFireDetector!!.sensitivity
+    val cur = game.autoFireDetector.sensitivity
     game.announce(EmuLang.getString("GameOwnerCommandAction.HelpSensitivity"), admin)
     threadSleep(20.milliseconds)
     game.announce(EmuLang.getString("GameOwnerCommandAction.HelpDisable"), admin)
@@ -207,41 +197,6 @@ class GameOwnerCommandAction @Inject internal constructor(private val flags: Run
   @Throws(ActionException::class, MessageFormatException::class)
   private fun processNum(game: KailleraGameImpl, admin: KailleraUser) {
     admin.game!!.announce("${game.players.size} in the room!", admin)
-  }
-
-  @Throws(ActionException::class, MessageFormatException::class)
-  private fun processLagstat(
-    message: String,
-    game: KailleraGameImpl,
-    user: KailleraUser,
-  ) {
-    if (message == "/lagstat") {
-      game.chat(user, "/lagstat")
-      if (!game.startTimeout) {
-        game.announce("Wait a minute or so after the game starts to run lagstat.")
-        return
-      }
-      game.announce(
-        "Total lag over the last ${flags.lagstatDuration}: " +
-          (game.totalDriftNs - (game.totalDriftCache.getDelayedValue() ?: 0))
-            .nanoseconds
-            .absoluteValue
-            .toString(MILLISECONDS, decimals = 0)
-      )
-      game.announce(
-        "Lag caused by players: " +
-          game.players
-            .filter { !it.inStealthMode }
-            .joinToString(separator = ", ") { "P${it.playerNumber}: ${it.summarizeLag()}" }
-      )
-    } else if (message == "/lagreset") {
-      game.chat(user, "/lagreset")
-      for (player in game.players) {
-        player.resetLag()
-      }
-      game.resetLag()
-      game.announce("LagStat has been reset!")
-    }
   }
 
   @Throws(ActionException::class, MessageFormatException::class)
@@ -565,8 +520,6 @@ class GameOwnerCommandAction @Inject internal constructor(private val flags: Run
     private const val COMMAND_DETECTAUTOFIRE = "/detectautofire"
 
     // SF MOD
-    private const val COMMAND_LAGSTAT = "/lag"
-
     private const val COMMAND_MAXUSERS = "/maxusers"
 
     private const val COMMAND_MAXPING = "/maxping"

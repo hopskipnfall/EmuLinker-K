@@ -39,19 +39,17 @@ internal constructor(
   override fun performAction(message: GameChatRequest, clientHandler: V086ClientHandler) {
     if (clientHandler.user.game == null) return
     if (message.message.startsWith(ADMIN_COMMAND_ESCAPE_STRING)) {
-      // if(clientHandler.getUser().getAccess() >= AccessManager.ACCESS_ADMIN ||
-      // clientHandler.getUser().equals(clientHandler.getUser().getGame().getOwner())){
       try {
         if (gameOwnerCommandAction.isValidCommand((message as GameChat).message)) {
           gameOwnerCommandAction.performAction(message, clientHandler)
           if ((message as GameChat).message == "/help") checkCommands(message, clientHandler)
-        } else checkCommands(message, clientHandler)
+        } else {
+          checkCommands(message, clientHandler)
+        }
         return
       } catch (e: FatalActionException) {
         logger.atWarning().withCause(e).log("GameOwner command failed")
       }
-
-      // }
     }
     actionPerformedCount++
     try {
