@@ -103,11 +103,8 @@ class KailleraUser(
    */
   val isIdleForTooLong: Boolean
     get() =
-      clock.now().let { now ->
-        now - lastActivity > flags.idleTimeout &&
-          now - Instant.fromEpochMilliseconds(lastUpdateNs.nanoseconds.inWholeMilliseconds) >
-            flags.idleTimeout
-      }
+      clock.now() - lastActivity > flags.idleTimeout &&
+        System.nanoTime() - lastUpdateNs > flags.idleTimeout.inWholeNanoseconds
 
   private var lastKeepAlive: Instant = initTime
   var lastChatTime: Instant = initTime

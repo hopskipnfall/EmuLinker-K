@@ -859,10 +859,17 @@ internal constructor(
           }
         }
         if (!user.loggedIn && clock.now() - user.connectTime > flags.maxPing * 15) {
-          logger.atInfo().log("%s connection timeout!", user)
+          logger
+            .atFine()
+            .log("%s Timeout: User didn't successfully log in, removing stale entry", user)
           usersMap.remove(user.id)
         } else if (user.loggedIn && user.isDead) {
-          logger.atInfo().log("%s keepalive timeout! (ping timeout)", user)
+          logger
+            .atInfo()
+            .log(
+              "%s Timeout: User likely disconnected from server without sending a Quit message.",
+              user
+            )
           try {
             quit(user, EmuLang.getString("KailleraServerImpl.ForcedQuitPingTimeout"))
           } catch (e: Exception) {
