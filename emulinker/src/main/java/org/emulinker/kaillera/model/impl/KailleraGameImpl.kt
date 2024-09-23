@@ -69,6 +69,7 @@ class KailleraGameImpl(
 
   /** Last time we fanned out data for a frame. */
   private var lastFrameNs = System.nanoTime()
+  private var NEWlastFrameNs = System.nanoTime()
 
   override var startTimeoutTime: Instant? = null
     private set
@@ -78,6 +79,10 @@ class KailleraGameImpl(
   var lagLeewayNs = 0.seconds.inWholeNanoseconds
   var totalDriftNs = 0.seconds.inWholeNanoseconds
   val totalDriftCache = TimeOffsetCache(delay = flags.lagstatDuration, resolution = 5.seconds)
+
+  var NEWlagLeewayNs = 0.seconds.inWholeNanoseconds
+  var NEWtotalDriftNs = 0.seconds.inWholeNanoseconds
+  val NEWtotalDriftCache = TimeOffsetCache(delay = flags.lagstatDuration, resolution = 5.seconds)
 
   val mutedUsers: MutableList<String> = mutableListOf()
   var aEmulator = "any"
@@ -697,10 +702,13 @@ class KailleraGameImpl(
           )
         }
         player.queueEvent(GameDataEvent(this, response))
-        player.updateUserDrift()
+        val nowNs = System.nanoTime()
+        player.updateUserDrift(nowNs)
+        player.NEWupdateUserDrift(nowNs)
         val firstPlayer = players.firstOrNull()
         if (firstPlayer != null && firstPlayer.id == player.id) {
-          updateGameDrift()
+          updateGameDrift(nowNs)
+          NEWupdateGameDrift(nowNs)
         }
       }
     }
@@ -710,10 +718,12 @@ class KailleraGameImpl(
   fun resetLag() {
     totalDriftCache.clear()
     totalDriftNs = 0
+    NEWtotalDriftCache.clear()
+    NEWtotalDriftNs = 0
   }
 
-  private fun updateGameDrift() {
-    val nowNs = System.nanoTime()
+  private fun updateGameDrift(nowNs: Long) {
+    //    val nowNs = System.nanoTime()
     val delaySinceLastResponseNs = nowNs - lastFrameNs
 
     lagLeewayNs += singleFrameDurationNs - delaySinceLastResponseNs
@@ -726,6 +736,25 @@ class KailleraGameImpl(
       lagLeewayNs = singleFrameDurationNs
     }
     totalDriftCache.update(totalDriftNs, nowNs = nowNs)
+    lastFrameNs = nowNs
+  }
+
+  private fun NEWupdateGameDrift(nowNs: Long) {
+    //    val nowNs = System.nanoTime()
+    val delaySinceLastResponseNs = nowNs - lastFrameNs
+
+    NEWlagLeewayNs += singleFrameDurationNs - delaySinceLastResponseNs
+    if (NEWlagLeewayNs < 0) {
+      // Lag leeway fell below zero. Lag occurred!
+      NEWtotalDriftNs += NEWlagLeewayNs
+      NEWlagLeewayNs = 0
+    }
+    // ALLOWING THIS FOR HIGH FRAME DELAY TESTING.
+    //    else if (NEWlagLeewayNs > singleFrameDurationNs) {
+    //      // Does not make sense to allow lag leeway to be longer than the length of one frame.
+    //      NEWlagLeewayNs = singleFrameDurationNs
+    //    }
+    NEWtotalDriftCache.update(NEWtotalDriftNs, nowNs = nowNs)
     lastFrameNs = nowNs
   }
 
