@@ -14,6 +14,7 @@ import javax.inject.Singleton
 import kotlin.Throws
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.nanoseconds
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.datetime.Clock
 import org.emulinker.config.RuntimeFlags
@@ -61,7 +62,6 @@ internal constructor(
   private val taskScheduler: TaskScheduler,
   private val clock: Clock,
 ) {
-
   private var allowedConnectionTypes = BooleanArray(7)
   private val loginMessages: List<String>
   private var connectionCounter = 1
@@ -840,6 +840,32 @@ internal constructor(
   }
 
   private fun run() {
+    // TODO(nue): Remove this. This is just being used for testing.
+    for (game in gamesMap.values) {
+      if (game.status == GameStatus.PLAYING) {
+        logger
+          .atInfo()
+          .log(
+            "LAGSTAT: G%d - %s - %s",
+            game.id,
+            (game.totalDriftNs - (game.totalDriftCache.getDelayedValue() ?: 0))
+              .nanoseconds
+              .absoluteValue,
+            game.players.joinToString(separator = " ") { "[${it.name} ${it.summarizeLag()}]" }
+          )
+        logger
+          .atInfo()
+          .log(
+            "LAGSTAT: G%d - %s - %s",
+            game.id,
+            (game.NEWtotalDriftNs - (game.NEWtotalDriftCache.getDelayedValue() ?: 0))
+              .nanoseconds
+              .absoluteValue,
+            game.players.joinToString(separator = " ") { "[${it.name} ${it.NEWsummarizeLag()}]" }
+          )
+      }
+    }
+
     try {
       if (usersMap.isEmpty()) return
       for (user in usersMap.values) {
