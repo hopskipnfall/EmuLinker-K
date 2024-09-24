@@ -26,6 +26,7 @@ import org.emulinker.kaillera.model.exception.*
 import org.emulinker.kaillera.model.impl.KailleraGameImpl
 import org.emulinker.util.EmuLang
 import org.emulinker.util.TimeOffsetCache
+import kotlin.time.DurationUnit
 
 /**
  * Represents a user in the server.
@@ -87,6 +88,7 @@ class KailleraUser(
 
   /** The last time we heard from this player for lag detection purposes. */
   private var lastUpdateNs = System.nanoTime()
+  private var NEWlastUpdateNs = System.nanoTime()
 
   private fun updateLastActivity() {
     lastKeepAlive = clock.now()
@@ -560,7 +562,7 @@ class KailleraUser(
   fun NEWupdateUserDrift(nowNs: Long) {
     val receivedGameDataNs = receivedGameDataNs ?: return
     //    val nowNs = System.nanoTime()
-    val delaySinceLastResponseNs = nowNs - lastUpdateNs
+    val delaySinceLastResponseNs = nowNs - NEWlastUpdateNs
     val timeWaitingNs = nowNs - receivedGameDataNs
     val delaySinceLastResponseMinusWaitingNs = delaySinceLastResponseNs - timeWaitingNs
     val leewayChangeNs = singleFrameDurationNs - delaySinceLastResponseMinusWaitingNs
@@ -571,11 +573,11 @@ class KailleraUser(
       NEWlagLeewayNs = 0
     }
     // ALLOW THIS FOR HIGH FRAME DELAY. See if this actually makes a difference.
-    //    else if (NEWlagLeewayNs > singleFrameDurationNs) {
-    //      // Does not make sense to allow lag leeway to be longer than the length of one frame.
-    //      NEWlagLeewayNs = singleFrameDurationNs
-    //    }
-    lastUpdateNs = nowNs
+        else if (NEWlagLeewayNs > singleFrameDurationNs) {
+      logger.atInfo().atMostEvery(1, TimeUnit.SECONDS).log("USER IS OVER FRAME DURATION: %s", NEWlagLeewayNs.nanoseconds.toString(DurationUnit.MILLISECONDS))
+//          NEWlagLeewayNs = singleFrameDurationNs
+        }
+    NEWlastUpdateNs = nowNs
     NEWtotalDriftCache.update(NEWtotalDriftNs, nowNs = nowNs)
   }
 
