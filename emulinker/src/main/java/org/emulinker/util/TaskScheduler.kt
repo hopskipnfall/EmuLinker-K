@@ -3,8 +3,6 @@ package org.emulinker.util
 import com.google.common.flogger.FluentLogger
 import java.util.Timer
 import java.util.TimerTask
-import javax.inject.Inject
-import javax.inject.Singleton
 import kotlin.concurrent.schedule
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
@@ -15,8 +13,7 @@ import kotlin.time.Duration.Companion.seconds
  * Scheduled tasks are wrapped in a try/catch to avoid unexpected exceptions from unintentionally
  * canceling the [Timer] instance being wrapped.
  */
-@Singleton
-class TaskScheduler @Inject constructor() {
+class TaskScheduler {
   private var timer = Timer(/* isDaemon= */ true)
 
   fun schedule(delay: Duration = 0.seconds, action: () -> Unit): TimerTask =

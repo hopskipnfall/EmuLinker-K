@@ -1,12 +1,9 @@
 package org.emulinker.kaillera.master
 
-import javax.inject.Inject
-import javax.inject.Singleton
 import org.emulinker.kaillera.model.KailleraGame
 import org.emulinker.kaillera.model.KailleraServer
 
-@Singleton
-class MasterListStatsCollector @Inject internal constructor() : StatsCollector {
+class MasterListStatsCollector : StatsCollector {
   private val startedGamesList = mutableListOf<String>()
 
   @Synchronized

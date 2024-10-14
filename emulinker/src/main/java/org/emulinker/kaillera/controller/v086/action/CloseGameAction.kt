@@ -1,15 +1,12 @@
 package org.emulinker.kaillera.controller.v086.action
 
 import com.google.common.flogger.FluentLogger
-import javax.inject.Inject
-import javax.inject.Singleton
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086ClientHandler
 import org.emulinker.kaillera.controller.v086.protocol.CloseGame
 import org.emulinker.kaillera.model.event.GameClosedEvent
 
-@Singleton
-class CloseGameAction @Inject internal constructor() : V086ServerEventHandler<GameClosedEvent> {
+class CloseGameAction : V086ServerEventHandler<GameClosedEvent> {
   override var handledEventCount = 0
     private set
 

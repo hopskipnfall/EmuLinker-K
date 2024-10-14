@@ -1,18 +1,13 @@
 package org.emulinker.kaillera.master.client
 
 import java.util.TimerTask
-import javax.inject.Inject
-import javax.inject.Singleton
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.master.StatsCollector
 import org.emulinker.util.TaskScheduler
 
-@Singleton
-class MasterListUpdater
-@Inject
-internal constructor(
+class MasterListUpdater(
   private val flags: RuntimeFlags,
   private val statsCollector: StatsCollector,
   private val serverCheckinTask: ServerCheckinTask,

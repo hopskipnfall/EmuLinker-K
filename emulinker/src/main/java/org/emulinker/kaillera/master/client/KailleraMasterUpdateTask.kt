@@ -7,7 +7,6 @@ import java.io.InputStreamReader
 import java.net.HttpURLConnection
 import java.net.URL
 import java.util.concurrent.TimeUnit
-import javax.inject.Inject
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.master.PublicServerInformation
 import org.emulinker.kaillera.master.StatsCollector
@@ -15,9 +14,7 @@ import org.emulinker.kaillera.model.GameStatus
 import org.emulinker.kaillera.model.KailleraServer
 import org.emulinker.kaillera.release.ReleaseInfo
 
-class KailleraMasterUpdateTask
-@Inject
-constructor(
+class KailleraMasterUpdateTask(
   private val publicInfo: PublicServerInformation,
   private val kailleraServer: KailleraServer,
   private val statsCollector: StatsCollector,

@@ -1,17 +1,13 @@
 package org.emulinker.kaillera.controller.v086.action
 
 import com.google.common.flogger.FluentLogger
-import javax.inject.Inject
-import javax.inject.Singleton
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086ClientHandler
 import org.emulinker.kaillera.controller.v086.protocol.AllReady
 import org.emulinker.kaillera.model.event.GameEvent
 import org.emulinker.kaillera.model.exception.UserReadyException
 
-@Singleton
-class UserReadyAction @Inject internal constructor() :
-  V086Action<AllReady>, V086GameEventHandler<GameEvent> {
+class UserReadyAction : V086Action<AllReady>, V086GameEventHandler<GameEvent> {
   override var actionPerformedCount = 0
     private set
 

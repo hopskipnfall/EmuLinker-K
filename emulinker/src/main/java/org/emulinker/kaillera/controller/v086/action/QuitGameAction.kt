@@ -1,8 +1,6 @@
 package org.emulinker.kaillera.controller.v086.action
 
 import com.google.common.flogger.FluentLogger
-import javax.inject.Inject
-import javax.inject.Singleton
 import kotlin.time.Duration.Companion.milliseconds
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086ClientHandler
@@ -15,8 +13,7 @@ import org.emulinker.kaillera.model.exception.DropGameException
 import org.emulinker.kaillera.model.exception.QuitGameException
 import org.emulinker.util.EmuUtil.threadSleep
 
-@Singleton
-class QuitGameAction @Inject constructor(private val lookingForGameReporter: TwitterBroadcaster) :
+class QuitGameAction(private val lookingForGameReporter: TwitterBroadcaster) :
   V086Action<QuitGameRequest>, V086GameEventHandler<UserQuitGameEvent> {
   override var actionPerformedCount = 0
     private set

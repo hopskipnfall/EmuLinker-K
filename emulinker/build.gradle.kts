@@ -23,6 +23,12 @@ dependencies {
 
   implementation("io.github.redouane59.twitter:twittered:2.23")
 
+  implementation(project.dependencies.platform("io.insert-koin:koin-bom:4.0.0"))
+  implementation("io.insert-koin:koin-core")
+  testImplementation("io.insert-koin:koin-test")
+  testImplementation("io.insert-koin:koin-test-junit4")
+  //  testImplementation("io.insert-koin:koin-test-junit5")
+
   api("io.dropwizard.metrics:metrics-core:4.2.3")
   api("io.dropwizard.metrics:metrics-jvm:4.2.3")
 

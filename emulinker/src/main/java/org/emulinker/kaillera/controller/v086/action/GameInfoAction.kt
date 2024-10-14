@@ -1,15 +1,12 @@
 package org.emulinker.kaillera.controller.v086.action
 
 import com.google.common.flogger.FluentLogger
-import javax.inject.Inject
-import javax.inject.Singleton
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086ClientHandler
 import org.emulinker.kaillera.controller.v086.protocol.GameChatNotification
 import org.emulinker.kaillera.model.event.GameInfoEvent
 
-@Singleton
-class GameInfoAction @Inject internal constructor() : V086GameEventHandler<GameInfoEvent> {
+class GameInfoAction : V086GameEventHandler<GameInfoEvent> {
   override var handledEventCount = 0
     private set
 

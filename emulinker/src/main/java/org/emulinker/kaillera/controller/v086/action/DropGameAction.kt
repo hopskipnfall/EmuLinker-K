@@ -1,8 +1,6 @@
 package org.emulinker.kaillera.controller.v086.action
 
 import com.google.common.flogger.FluentLogger
-import javax.inject.Inject
-import javax.inject.Singleton
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086ClientHandler
 import org.emulinker.kaillera.controller.v086.protocol.PlayerDropNotification
@@ -10,9 +8,7 @@ import org.emulinker.kaillera.controller.v086.protocol.PlayerDropRequest
 import org.emulinker.kaillera.model.event.UserDroppedGameEvent
 import org.emulinker.kaillera.model.exception.DropGameException
 
-@Singleton
-class DropGameAction @Inject internal constructor() :
-  V086Action<PlayerDropRequest>, V086GameEventHandler<UserDroppedGameEvent> {
+class DropGameAction : V086Action<PlayerDropRequest>, V086GameEventHandler<UserDroppedGameEvent> {
   override var actionPerformedCount = 0
     private set
 

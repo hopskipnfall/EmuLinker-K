@@ -1,8 +1,6 @@
 package org.emulinker.kaillera.controller.v086.action
 
 import com.google.common.flogger.FluentLogger
-import javax.inject.Inject
-import javax.inject.Singleton
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086ClientHandler
 import org.emulinker.kaillera.controller.v086.protocol.QuitNotification
@@ -10,9 +8,7 @@ import org.emulinker.kaillera.controller.v086.protocol.QuitRequest
 import org.emulinker.kaillera.model.event.UserQuitEvent
 import org.emulinker.kaillera.model.exception.ActionException
 
-@Singleton
-class QuitAction @Inject internal constructor() :
-  V086Action<QuitRequest>, V086ServerEventHandler<UserQuitEvent> {
+class QuitAction : V086Action<QuitRequest>, V086ServerEventHandler<UserQuitEvent> {
   override var actionPerformedCount = 0
     private set
 

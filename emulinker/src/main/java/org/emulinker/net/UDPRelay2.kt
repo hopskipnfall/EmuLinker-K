@@ -2,14 +2,11 @@ package org.emulinker.net
 
 import com.google.common.flogger.FluentLogger
 import java.io.IOException
-import java.lang.Exception
 import java.net.InetSocketAddress
 import java.nio.Buffer
 import java.nio.ByteBuffer
 import java.nio.channels.DatagramChannel
-import java.util.*
-import kotlin.Throws
-import kotlin.jvm.JvmOverloads
+import java.util.Hashtable
 import org.emulinker.util.EmuUtil.formatSocketAddress
 
 abstract class UDPRelay2

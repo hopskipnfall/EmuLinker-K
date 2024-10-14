@@ -2,8 +2,6 @@ package org.emulinker.kaillera.controller.v086.action
 
 import com.google.common.flogger.FluentLogger
 import java.util.*
-import javax.inject.Inject
-import javax.inject.Singleton
 import kotlin.time.Duration.Companion.milliseconds
 import org.emulinker.kaillera.access.AccessManager
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
@@ -16,8 +14,7 @@ import org.emulinker.kaillera.model.impl.KailleraGameImpl
 import org.emulinker.util.EmuLang
 import org.emulinker.util.EmuUtil.threadSleep
 
-@Singleton
-class GameOwnerCommandAction @Inject internal constructor() : V086Action<GameChat> {
+class GameOwnerCommandAction : V086Action<GameChat> {
   override val actionPerformedCount = 0
 
   override fun toString() = "GameOwnerCommandAction"

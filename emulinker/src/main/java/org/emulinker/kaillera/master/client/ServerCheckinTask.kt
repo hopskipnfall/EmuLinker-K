@@ -8,7 +8,6 @@ import java.io.InputStreamReader
 import java.net.HttpURLConnection
 import java.net.URL
 import java.util.concurrent.TimeUnit.HOURS
-import javax.inject.Inject
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -39,9 +38,7 @@ data class ServerInfo(
  * administrators, report high-level performance statistics to catch and fix regressions, and to
  * register the server with the master server lists (if enabled).
  */
-class ServerCheckinTask
-@Inject
-constructor(
+class ServerCheckinTask(
   private val publicServerInfo: PublicServerInformation,
   private val releaseInfo: ReleaseInfo,
   private val flags: RuntimeFlags,

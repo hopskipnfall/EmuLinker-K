@@ -7,28 +7,23 @@ import io.github.redouane59.twitter.dto.tweet.TweetParameters
 import java.util.TimerTask
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentMap
-import javax.inject.Inject
-import javax.inject.Provider
-import javax.inject.Singleton
 import kotlin.time.Duration.Companion.seconds
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.model.KailleraUser
 import org.emulinker.util.EmuLang
 import org.emulinker.util.TaskScheduler
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.get
 
 /**
  * Observes when a user is looking for a game opponent and publishes a report to one or more
  * external services (e.g. Twitter, Discord).
  */
-@Singleton
-class TwitterBroadcaster
-@Inject
-internal constructor(
+class TwitterBroadcaster(
   private val flags: RuntimeFlags,
-  twitterProvider: Provider<TwitterClient>,
   private val taskScheduler: TaskScheduler,
-) {
-  private val twitter: TwitterClient? = if (flags.twitterEnabled) twitterProvider.get() else null
+) : KoinComponent {
+  private val twitter: TwitterClient? = if (flags.twitterEnabled) get<TwitterClient>() else null
 
   private val pendingReports: ConcurrentMap<LookingForGameEvent, TimerTask> = ConcurrentHashMap()
   private val postedTweets: ConcurrentMap<LookingForGameEvent, String> = ConcurrentHashMap()
