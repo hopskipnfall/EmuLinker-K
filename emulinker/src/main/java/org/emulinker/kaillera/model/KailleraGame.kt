@@ -16,7 +16,7 @@ interface KailleraGame {
   val clientType: String?
   val id: Int
   val owner: KailleraUser?
-  val playerActionQueue: Array<PlayerActionQueue>?
+  val playerActionQueues: Array<PlayerActionQueue>?
   val players: MutableList<KailleraUser>
   val romName: String
   val server: KailleraServer?

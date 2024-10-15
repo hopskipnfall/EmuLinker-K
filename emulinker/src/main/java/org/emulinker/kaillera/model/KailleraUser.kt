@@ -433,8 +433,8 @@ class KailleraUser(
       throw UserReadyException(EmuLang.getString("KailleraUserImpl.PlayerReadyErrorNotInGame"))
     }
     if (
-      playerNumber > game.playerActionQueue!!.size ||
-        game.playerActionQueue!![playerNumber - 1].synced
+      playerNumber > game.playerActionQueues!!.size ||
+        game.playerActionQueues!![playerNumber - 1].synced
     ) {
       return
     }
@@ -468,7 +468,7 @@ class KailleraUser(
       // totalDelay = (game.getDelay() + tempDelay + 5)
       if (frameCount < totalDelay) {
         bytesPerAction = data.size / connectionType.byteValue
-        arraySize = game.playerActionQueue!!.size * connectionType.byteValue * bytesPerAction
+        arraySize = game.playerActionQueues!!.size * connectionType.byteValue * bytesPerAction
         val response = ByteArray(arraySize)
         for (i in response.indices) {
           response[i] = 0
