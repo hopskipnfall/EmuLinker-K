@@ -74,7 +74,6 @@ import org.emulinker.kaillera.model.event.UserQuitGameEvent
 import org.emulinker.kaillera.model.exception.NewConnectionException
 import org.emulinker.kaillera.model.exception.ServerFullException
 import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
 
 /** High level logic for handling messages on a port. Not tied to an individual user. */
 class V086Controller(
@@ -101,8 +100,6 @@ class V086Controller(
   infoMessageAction: InfoMessageAction,
   flags: RuntimeFlags,
 ) : KailleraServerController, KoinComponent {
-  private val v086ClientHandlerFactory: V086ClientHandler.Factory by inject()
-
   private var isRunning = false
 
   override val clientTypes: Array<String> = flags.clientTypes.toTypedArray()
@@ -162,11 +159,7 @@ class V086Controller(
   ): V086ClientHandler {
     if (!isRunning) throw NewConnectionException("Controller is not running")
     val clientHandler =
-      v086ClientHandlerFactory.create(
-        clientSocketAddress,
-        v086Controller = this,
-        combinedKailleraController
-      )
+      V086ClientHandler(clientSocketAddress, controller = this, combinedKailleraController)
     val user: KailleraUser = server.newConnection(clientSocketAddress, protocol, clientHandler)
     clientHandler.start(user)
     return clientHandler
