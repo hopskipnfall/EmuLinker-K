@@ -2,10 +2,7 @@ package org.emulinker.kaillera.controller.v086
 
 import java.net.InetSocketAddress
 import java.util.concurrent.ConcurrentHashMap
-import javax.inject.Inject
-import javax.inject.Singleton
 import kotlin.reflect.KClass
-import org.apache.commons.configuration.Configuration
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.controller.CombinedKailleraController
 import org.emulinker.kaillera.controller.KailleraServerController
@@ -76,14 +73,11 @@ import org.emulinker.kaillera.model.event.UserQuitEvent
 import org.emulinker.kaillera.model.event.UserQuitGameEvent
 import org.emulinker.kaillera.model.exception.NewConnectionException
 import org.emulinker.kaillera.model.exception.ServerFullException
+import org.koin.core.component.KoinComponent
 
 /** High level logic for handling messages on a port. Not tied to an individual user. */
-@Singleton
-class V086Controller
-@Inject
-internal constructor(
+class V086Controller(
   override var server: KailleraServer,
-  config: Configuration,
   loginAction: LoginAction,
   ackAction: ACKAction,
   chatAction: ChatAction,
@@ -104,9 +98,8 @@ internal constructor(
   gameInfoAction: GameInfoAction,
   gameTimeoutAction: GameTimeoutAction,
   infoMessageAction: InfoMessageAction,
-  private val v086ClientHandlerFactory: V086ClientHandler.Factory,
   flags: RuntimeFlags,
-) : KailleraServerController {
+) : KailleraServerController, KoinComponent {
   private var isRunning = false
 
   override val clientTypes: Array<String> = flags.clientTypes.toTypedArray()
@@ -166,11 +159,7 @@ internal constructor(
   ): V086ClientHandler {
     if (!isRunning) throw NewConnectionException("Controller is not running")
     val clientHandler =
-      v086ClientHandlerFactory.create(
-        clientSocketAddress,
-        v086Controller = this,
-        combinedKailleraController
-      )
+      V086ClientHandler(clientSocketAddress, controller = this, combinedKailleraController)
     val user: KailleraUser = server.newConnection(clientSocketAddress, protocol, clientHandler)
     clientHandler.start(user)
     return clientHandler

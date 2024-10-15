@@ -1,7 +1,6 @@
 package org.emulinker.kaillera.controller.v086
 
-import io.ktor.util.network.*
-import java.lang.StringBuilder
+import io.ktor.util.network.hostname
 import java.net.InetSocketAddress
 import java.nio.ByteBuffer
 import org.emulinker.kaillera.pico.AppModule

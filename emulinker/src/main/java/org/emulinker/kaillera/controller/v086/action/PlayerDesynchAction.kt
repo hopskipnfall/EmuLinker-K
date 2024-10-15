@@ -1,17 +1,13 @@
 package org.emulinker.kaillera.controller.v086.action
 
 import com.google.common.flogger.FluentLogger
-import javax.inject.Inject
-import javax.inject.Singleton
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086ClientHandler
 import org.emulinker.kaillera.controller.v086.protocol.GameChatNotification
 import org.emulinker.kaillera.model.event.PlayerDesynchEvent
 import org.emulinker.util.EmuLang
 
-@Singleton
-class PlayerDesynchAction @Inject internal constructor() :
-  V086GameEventHandler<PlayerDesynchEvent> {
+class PlayerDesynchAction : V086GameEventHandler<PlayerDesynchEvent> {
   override var handledEventCount = 0
     private set
 

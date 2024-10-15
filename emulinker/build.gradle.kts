@@ -7,8 +7,6 @@ plugins {
 
   kotlin("jvm") version "2.0.20"
   kotlin("plugin.serialization") version "2.0.20"
-
-  id("com.google.devtools.ksp") version "2.0.20-1.0.24"
 }
 
 repositories {
@@ -23,6 +21,12 @@ dependencies {
 
   implementation("io.github.redouane59.twitter:twittered:2.23")
 
+  implementation(project.dependencies.platform("io.insert-koin:koin-bom:4.0.0"))
+  implementation("io.insert-koin:koin-core")
+  testImplementation("io.insert-koin:koin-test")
+  testImplementation("io.insert-koin:koin-test-junit4")
+  //  testImplementation("io.insert-koin:koin-test-junit5")
+
   api("io.dropwizard.metrics:metrics-core:4.2.3")
   api("io.dropwizard.metrics:metrics-jvm:4.2.3")
 
@@ -31,19 +35,13 @@ dependencies {
   api("com.google.flogger:flogger-system-backend:$floggerVersion")
   api("com.google.flogger:flogger-log4j2-backend:$floggerVersion")
 
-  val daggerVersion = "2.52"
-  implementation("com.google.dagger:dagger:$daggerVersion")
-  implementation("com.google.dagger:dagger-compiler:$daggerVersion")
-  ksp("com.google.dagger:dagger-compiler:$daggerVersion")
-
   val log4j = "2.23.1"
   api("org.apache.logging.log4j:log4j:$log4j")
   api("org.apache.logging.log4j:log4j-core:$log4j")
   api("org.apache.logging.log4j:log4j-api:$log4j")
 
-  api("org.mortbay.jetty:jetty:4.2.12")
-  api("commons-configuration:commons-configuration:1.1")
-  api("commons-pool:commons-pool:1.2")
+  implementation("commons-configuration:commons-configuration:1.10")
+  implementation("commons-pool:commons-pool:1.6")
 
   val ktorVersion = "2.3.12"
   implementation("io.ktor:ktor-network-jvm:$ktorVersion")

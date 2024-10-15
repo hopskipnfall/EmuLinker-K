@@ -1,8 +1,6 @@
 package org.emulinker.kaillera.controller.v086.action
 
 import com.google.common.flogger.FluentLogger
-import javax.inject.Inject
-import javax.inject.Singleton
 import org.emulinker.kaillera.access.AccessManager
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086ClientHandler
@@ -13,9 +11,7 @@ import org.emulinker.kaillera.controller.v086.protocol.UserJoined
 import org.emulinker.kaillera.model.KailleraUser
 import org.emulinker.kaillera.model.event.UserJoinedEvent
 
-@Singleton
-class LoginAction @Inject internal constructor() :
-  V086Action<UserInformation>, V086ServerEventHandler<UserJoinedEvent> {
+class LoginAction : V086Action<UserInformation>, V086ServerEventHandler<UserJoinedEvent> {
   override var actionPerformedCount = 0
     private set
 

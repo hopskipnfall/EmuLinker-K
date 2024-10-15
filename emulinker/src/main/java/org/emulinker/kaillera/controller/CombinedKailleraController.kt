@@ -15,9 +15,7 @@ import io.netty.channel.socket.nio.NioDatagramChannel
 import java.net.InetSocketAddress
 import java.nio.ByteOrder
 import java.util.concurrent.ConcurrentHashMap
-import javax.inject.Inject
 import kotlin.concurrent.thread
-import org.apache.commons.configuration.Configuration
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.access.AccessManager
 import org.emulinker.kaillera.controller.connectcontroller.protocol.*
@@ -27,14 +25,10 @@ import org.emulinker.kaillera.model.exception.ServerFullException
 import org.emulinker.net.BindException
 import org.emulinker.util.EmuUtil.formatSocketAddress
 
-class CombinedKailleraController
-@Inject
-constructor(
+class CombinedKailleraController(
   private val flags: RuntimeFlags,
   private val accessManager: AccessManager,
-  // One for each version (which is only one).
-  kailleraServerControllers: @JvmSuppressWildcards Set<KailleraServerController>,
-  private val config: Configuration,
+  kailleraServerController: KailleraServerController,
 ) {
   var boundPort: Int? = null
 
@@ -201,11 +195,9 @@ constructor(
   }
 
   init {
-    for (controller in kailleraServerControllers) {
-      val clientTypes = controller.clientTypes
-      for (j in clientTypes.indices) {
-        controllersMap[clientTypes[j]] = controller
-      }
+    val clientTypes = kailleraServerController.clientTypes
+    for (j in clientTypes.indices) {
+      controllersMap[clientTypes[j]] = kailleraServerController
     }
   }
 

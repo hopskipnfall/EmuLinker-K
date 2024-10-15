@@ -1,9 +1,6 @@
 package org.emulinker.kaillera.controller.v086.action
 
 import com.google.common.flogger.FluentLogger
-import javax.inject.Inject
-import javax.inject.Named
-import javax.inject.Singleton
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086ClientHandler
 import org.emulinker.kaillera.controller.v086.protocol.*
@@ -12,12 +9,14 @@ import org.emulinker.kaillera.model.event.GameInfoEvent
 import org.emulinker.kaillera.model.event.UserJoinedGameEvent
 import org.emulinker.kaillera.model.exception.JoinGameException
 import org.emulinker.util.EmuLang
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
+import org.koin.core.qualifier.named
 
-@Singleton
-class JoinGameAction
-@Inject
-internal constructor(@param:Named("joinGameMessages") private val joinGameMessages: List<String>) :
-  V086Action<JoinGameRequest>, V086GameEventHandler<UserJoinedGameEvent> {
+class JoinGameAction :
+  V086Action<JoinGameRequest>, V086GameEventHandler<UserJoinedGameEvent>, KoinComponent {
+  private val joinGameMessages: List<String> by inject(named("joinGameMessages"))
+
   override var actionPerformedCount = 0
     private set
 

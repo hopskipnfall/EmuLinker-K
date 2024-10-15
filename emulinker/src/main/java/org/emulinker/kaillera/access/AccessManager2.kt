@@ -1,25 +1,27 @@
 package org.emulinker.kaillera.access
 
 import com.google.common.flogger.FluentLogger
-import java.io.*
+import java.io.BufferedReader
+import java.io.File
+import java.io.FileInputStream
+import java.io.FileNotFoundException
+import java.io.IOException
+import java.io.InputStreamReader
+import java.io.Reader
 import java.net.InetAddress
 import java.net.URISyntaxException
 import java.security.Security
-import java.util.*
+import java.util.Locale
+import java.util.StringTokenizer
+import java.util.TimerTask
 import java.util.concurrent.CopyOnWriteArrayList
-import javax.inject.Inject
-import javax.inject.Singleton
-import kotlin.concurrent.schedule
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.util.TaskScheduler
 import org.emulinker.util.WildcardStringPattern
 
-@Singleton
-class AccessManager2
-@Inject
-internal constructor(private val flags: RuntimeFlags, private val taskScheduler: TaskScheduler) :
+class AccessManager2(private val flags: RuntimeFlags, private val taskScheduler: TaskScheduler) :
   AccessManager {
   companion object {
     init {

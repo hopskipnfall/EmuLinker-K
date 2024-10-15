@@ -1,8 +1,6 @@
 package org.emulinker.kaillera.controller.v086.action
 
 import com.google.common.flogger.FluentLogger
-import javax.inject.Inject
-import javax.inject.Singleton
 import kotlin.time.Duration.Companion.milliseconds
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086ClientHandler
@@ -16,9 +14,7 @@ import org.emulinker.kaillera.model.event.UserEvent
 import org.emulinker.kaillera.model.exception.*
 import org.emulinker.util.EmuUtil.threadSleep
 
-@Singleton
-class ACKAction @Inject internal constructor() :
-  V086Action<ClientAck>, V086UserEventHandler<UserEvent> {
+class ACKAction : V086Action<ClientAck>, V086UserEventHandler<UserEvent> {
   override var actionPerformedCount = 0
     private set
 

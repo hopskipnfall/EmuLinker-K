@@ -1,6 +1,5 @@
 package org.emulinker.kaillera.release
 
-import javax.inject.Inject
 import kotlinx.datetime.Instant
 import org.emulinker.kaillera.pico.CompiledFlags
 import org.emulinker.kaillera.pico.CompiledFlags.BUILD_DATE
@@ -13,7 +12,7 @@ import org.emulinker.util.EmuUtil.toSimpleUtcDatetime
  * Provides release and build information for the EmuLinker project. This class also formats a
  * welcome message for printing at server startup.
  */
-class ReleaseInfo @Inject constructor() {
+class ReleaseInfo {
   val productName: String = PROJECT_NAME
 
   val version: String =

@@ -2,9 +2,6 @@ package org.emulinker.kaillera.controller.v086
 
 import com.codahale.metrics.MetricRegistry
 import com.google.common.flogger.FluentLogger
-import dagger.assisted.Assisted
-import dagger.assisted.AssistedFactory
-import dagger.assisted.AssistedInject
 import io.netty.buffer.ByteBuf
 import io.netty.channel.socket.DatagramPacket
 import java.net.InetSocketAddress
@@ -39,19 +36,20 @@ import org.emulinker.util.EmuUtil
 import org.emulinker.util.EmuUtil.dumpBufferFromBeginning
 import org.emulinker.util.GameDataCache
 import org.emulinker.util.stripFromProdBinary
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 
-class V086ClientHandler
-@AssistedInject
-constructor(
-  metrics: MetricRegistry,
-  private val flags: RuntimeFlags,
+class V086ClientHandler(
   // TODO(nue): Try to replace this with remoteSocketAddress.
   /** I think this is the address from when the user called the connect controller. */
-  @Assisted val connectRemoteSocketAddress: InetSocketAddress,
-  @param:Assisted val controller: V086Controller,
+  val connectRemoteSocketAddress: InetSocketAddress,
+  val controller: V086Controller,
   /** The [CombinedKailleraController] that created this instance. */
-  @param:Assisted val combinedKailleraController: CombinedKailleraController,
-) : KailleraEventListener {
+  private val combinedKailleraController: CombinedKailleraController,
+) : KailleraEventListener, KoinComponent {
+  private val metrics: MetricRegistry by inject()
+  private val flags: RuntimeFlags by inject()
+
   /** Mutex ensuring that only one packet is processed at a time for this [V086ClientHandler]. */
   val requestHandlerMutex = Object()
   private val sendMutex = Object()
@@ -115,15 +113,6 @@ constructor(
 
   private val clientRequestTimer =
     metrics.timer(MetricRegistry.name(this.javaClass, "V086ClientRequests"))
-
-  @AssistedFactory
-  interface Factory {
-    fun create(
-      remoteSocketAddress: InetSocketAddress,
-      v086Controller: V086Controller,
-      combinedKailleraController: CombinedKailleraController,
-    ): V086ClientHandler
-  }
 
   @get:Synchronized
   val nextMessageNumber: Int

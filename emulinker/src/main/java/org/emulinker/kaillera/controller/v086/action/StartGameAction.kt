@@ -1,8 +1,6 @@
 package org.emulinker.kaillera.controller.v086.action
 
 import com.google.common.flogger.FluentLogger
-import javax.inject.Inject
-import javax.inject.Singleton
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086ClientHandler
 import org.emulinker.kaillera.controller.v086.protocol.GameChatNotification
@@ -12,10 +10,7 @@ import org.emulinker.kaillera.lookingforgame.TwitterBroadcaster
 import org.emulinker.kaillera.model.event.GameStartedEvent
 import org.emulinker.kaillera.model.exception.StartGameException
 
-@Singleton
-class StartGameAction
-@Inject
-internal constructor(private val lookingForGameReporter: TwitterBroadcaster) :
+class StartGameAction(private val lookingForGameReporter: TwitterBroadcaster) :
   V086Action<StartGameRequest>, V086GameEventHandler<GameStartedEvent> {
   override var actionPerformedCount = 0
     private set

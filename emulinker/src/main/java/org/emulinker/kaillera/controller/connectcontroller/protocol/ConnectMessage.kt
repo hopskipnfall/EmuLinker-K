@@ -2,10 +2,8 @@ package org.emulinker.kaillera.controller.connectcontroller.protocol
 
 import io.ktor.utils.io.core.*
 import java.nio.ByteBuffer
-import java.nio.charset.CharacterCodingException
 import kotlin.Result.Companion.failure
 import kotlin.Result.Companion.success
-import kotlin.Throws
 import org.emulinker.kaillera.controller.messaging.ByteBufferMessage
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.pico.AppModule

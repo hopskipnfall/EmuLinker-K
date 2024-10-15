@@ -6,9 +6,14 @@ import com.codahale.metrics.MetricFilter
 import com.codahale.metrics.jvm.ThreadStatesGaugeSet
 import com.google.common.flogger.FluentLogger
 import java.io.File
-import java.util.concurrent.TimeUnit.*
+import java.util.concurrent.TimeUnit.MILLISECONDS
+import java.util.concurrent.TimeUnit.MINUTES
+import java.util.concurrent.TimeUnit.SECONDS
+import org.emulinker.kaillera.controller.v086.action.ActionModule
 import org.emulinker.util.EmuUtil.toSimpleUtcDatetime
 import org.emulinker.util.stripFromProdBinary
+import org.koin.core.context.startKoin
+import org.koin.dsl.bind
 
 private val logger = FluentLogger.forEnclosingClass()
 
@@ -31,7 +36,8 @@ fun main() {
     }
   }
 
-  val component = DaggerAppComponent.create()
+  startKoin { modules(koinModule, ActionModule) }
+  val component = NewAppComponent()
   // Use log4j as the flogger backend.
   System.setProperty(
     "flogger.backend_factory",

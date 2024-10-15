@@ -8,9 +8,6 @@ import java.util.Locale
 import java.util.TimerTask
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ThreadPoolExecutor
-import javax.inject.Inject
-import javax.inject.Named
-import javax.inject.Singleton
 import kotlin.Throws
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
@@ -44,12 +41,12 @@ import org.emulinker.util.EmuLang
 import org.emulinker.util.EmuUtil
 import org.emulinker.util.EmuUtil.threadSleep
 import org.emulinker.util.TaskScheduler
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
+import org.koin.core.qualifier.named
 
 /** Holds server-wide state. */
-@Singleton
-class KailleraServer
-@Inject
-internal constructor(
+class KailleraServer(
   val accessManager: AccessManager,
   private val flags: RuntimeFlags,
   statsCollector: StatsCollector?,
@@ -57,10 +54,12 @@ internal constructor(
   private val autoFireDetectorFactory: AutoFireDetectorFactory,
   private val lookingForGameReporter: TwitterBroadcaster,
   metrics: MetricRegistry,
-  @param:Named("userActionsExecutor") private val userActionsExecutor: ThreadPoolExecutor,
   private val taskScheduler: TaskScheduler,
   private val clock: Clock,
-) {
+) : KoinComponent {
+
+  private val userActionsExecutor: ThreadPoolExecutor by
+    inject(qualifier = named("userActionsExecutor"))
 
   private var allowedConnectionTypes = BooleanArray(7)
   private val loginMessages: List<String>

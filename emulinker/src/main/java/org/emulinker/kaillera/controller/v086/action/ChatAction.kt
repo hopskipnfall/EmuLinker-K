@@ -1,12 +1,7 @@
 package org.emulinker.kaillera.controller.v086.action
 
 import com.google.common.flogger.FluentLogger
-import java.lang.Exception
-import java.lang.StringBuilder
 import java.util.*
-import javax.inject.Inject
-import javax.inject.Singleton
-import kotlin.Throws
 import kotlin.time.Duration.Companion.milliseconds
 import org.emulinker.kaillera.access.AccessManager
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
@@ -22,8 +17,7 @@ import org.emulinker.util.EmuUtil.toSimpleUtcDatetime
 
 private const val ADMIN_COMMAND_ESCAPE_STRING = "/"
 
-@Singleton
-class ChatAction @Inject internal constructor(private val adminCommandAction: AdminCommandAction) :
+class ChatAction(private val adminCommandAction: AdminCommandAction) :
   V086Action<ChatRequest>, V086ServerEventHandler<ChatEvent> {
   override var actionPerformedCount = 0
     private set

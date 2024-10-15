@@ -1,9 +1,6 @@
 package org.emulinker.kaillera.relay
 
 import com.google.common.flogger.FluentLogger
-import dagger.assisted.Assisted
-import dagger.assisted.AssistedFactory
-import dagger.assisted.AssistedInject
 import java.net.InetSocketAddress
 import java.nio.Buffer
 import java.nio.ByteBuffer
@@ -16,19 +13,12 @@ import org.emulinker.net.UDPRelay
 import org.emulinker.util.EmuUtil.dumpBuffer
 
 // TODO(jonnjonn): I think this can be deleted??
-class V086Relay
-@AssistedInject
-internal constructor(
-  @Assisted listenPort: Int,
-  @Assisted serverSocketAddress: InetSocketAddress,
+class V086Relay(
+  listenPort: Int,
+  serverSocketAddress: InetSocketAddress,
 ) : UDPRelay(listenPort, serverSocketAddress) {
   private var lastServerMessageNumber = -1
   private var lastClientMessageNumber = -1
-
-  @AssistedFactory
-  interface Factory {
-    fun create(listenPort: Int, serverSocketAddress: InetSocketAddress?): V086Relay?
-  }
 
   override fun toString() =
     "Kaillera client datagram relay version 0.86 on port ${super.listenPort}"

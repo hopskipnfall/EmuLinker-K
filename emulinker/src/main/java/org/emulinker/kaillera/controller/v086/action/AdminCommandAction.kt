@@ -1,14 +1,8 @@
 package org.emulinker.kaillera.controller.v086.action
 
 import com.google.common.flogger.FluentLogger
-import java.lang.Exception
-import java.lang.Runtime
-import java.lang.StringBuilder
 import java.net.InetAddress
 import java.util.*
-import javax.inject.Inject
-import javax.inject.Singleton
-import kotlin.Throws
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
 import org.emulinker.kaillera.access.AccessManager
@@ -27,8 +21,7 @@ import org.emulinker.util.EmuUtil.threadSleep
 import org.emulinker.util.EmuUtil.toSimpleUtcDatetime
 import org.emulinker.util.WildcardStringPattern
 
-@Singleton
-class AdminCommandAction @Inject internal constructor() : V086Action<Chat> {
+class AdminCommandAction : V086Action<Chat> {
   override val actionPerformedCount = 0
 
   override fun toString() = "AdminCommandAction"

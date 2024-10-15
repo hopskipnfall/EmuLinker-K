@@ -2,8 +2,6 @@ package org.emulinker.kaillera.controller.v086.action
 
 import com.google.common.flogger.FluentLogger
 import java.util.*
-import javax.inject.Inject
-import javax.inject.Singleton
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.nanoseconds
 import kotlin.time.DurationUnit.MILLISECONDS
@@ -19,10 +17,7 @@ import org.emulinker.kaillera.model.exception.GameChatException
 import org.emulinker.util.EmuLang
 import org.emulinker.util.EmuUtil.threadSleep
 
-@Singleton
-class GameChatAction
-@Inject
-internal constructor(
+class GameChatAction(
   private val gameOwnerCommandAction: GameOwnerCommandAction,
   private val lookingForGameReporter: TwitterBroadcaster,
   private val flags: RuntimeFlags,
