@@ -26,6 +26,7 @@ import org.emulinker.kaillera.model.exception.*
 import org.emulinker.kaillera.model.impl.KailleraGameImpl
 import org.emulinker.util.EmuLang
 import org.emulinker.util.TimeOffsetCache
+import kotlin.time.DurationUnit
 
 /**
  * Represents a user in the server.
@@ -80,8 +81,14 @@ class KailleraUser(
   private val totalDriftCache =
     TimeOffsetCache(delay = flags.lagstatDuration, resolution = 5.seconds)
 
+  private var NEWlagLeewayNs = 0.seconds.inWholeNanoseconds
+  private var NEWtotalDriftNs = 0.seconds.inWholeNanoseconds
+  private val NEWtotalDriftCache =
+    TimeOffsetCache(delay = flags.lagstatDuration, resolution = 5.seconds)
+
   /** The last time we heard from this player for lag detection purposes. */
   private var lastUpdateNs = System.nanoTime()
+  private var NEWlastUpdateNs = System.nanoTime()
 
   private fun updateLastActivity() {
     lastKeepAlive = clock.now()
@@ -305,9 +312,17 @@ class KailleraUser(
       .absoluteValue
       .toString(MILLISECONDS)
 
+  fun NEWsummarizeLag(): String =
+    (NEWtotalDriftNs - (NEWtotalDriftCache.getDelayedValue() ?: 0))
+      .nanoseconds
+      .absoluteValue
+      .toString(MILLISECONDS)
+
   fun resetLag() {
     totalDriftNs = 0
     totalDriftCache.clear()
+    NEWtotalDriftNs = 0
+    NEWtotalDriftCache.clear()
   }
 
   @Throws(JoinGameException::class)
@@ -524,9 +539,9 @@ class KailleraUser(
     return Result.success(Unit)
   }
 
-  fun updateUserDrift() {
+  fun updateUserDrift(nowNs: Long) {
     val receivedGameDataNs = receivedGameDataNs ?: return
-    val nowNs = System.nanoTime()
+    //    val nowNs = System.nanoTime()
     val delaySinceLastResponseNs = nowNs - lastUpdateNs
     val timeWaitingNs = nowNs - receivedGameDataNs
     val delaySinceLastResponseMinusWaitingNs = delaySinceLastResponseNs - timeWaitingNs
@@ -542,6 +557,28 @@ class KailleraUser(
     }
     lastUpdateNs = nowNs
     totalDriftCache.update(totalDriftNs, nowNs = nowNs)
+  }
+
+  fun NEWupdateUserDrift(nowNs: Long) {
+    val receivedGameDataNs = receivedGameDataNs ?: return
+    //    val nowNs = System.nanoTime()
+    val delaySinceLastResponseNs = nowNs - NEWlastUpdateNs
+    val timeWaitingNs = nowNs - receivedGameDataNs
+    val delaySinceLastResponseMinusWaitingNs = delaySinceLastResponseNs - timeWaitingNs
+    val leewayChangeNs = singleFrameDurationNs - delaySinceLastResponseMinusWaitingNs
+    NEWlagLeewayNs += leewayChangeNs
+    if (NEWlagLeewayNs < 0) {
+      // Lag leeway fell below zero. We caused lag!
+      NEWtotalDriftNs += NEWlagLeewayNs
+      NEWlagLeewayNs = 0
+    }
+    // ALLOW THIS FOR HIGH FRAME DELAY. See if this actually makes a difference.
+        else if (NEWlagLeewayNs > singleFrameDurationNs) {
+      logger.atInfo().atMostEvery(1, TimeUnit.SECONDS).log("USER IS OVER FRAME DURATION: %s", NEWlagLeewayNs.nanoseconds.toString(DurationUnit.MILLISECONDS))
+//          NEWlagLeewayNs = singleFrameDurationNs
+        }
+    NEWlastUpdateNs = nowNs
+    NEWtotalDriftCache.update(NEWtotalDriftNs, nowNs = nowNs)
   }
 
   fun queueEvent(event: KailleraEvent) {
