@@ -1248,7 +1248,7 @@ $dokka.location:org.emulinker.kaillera.model.impl/KailleraGameImpl/maxPing/#/Poi
 $dokka.location:org.emulinker.kaillera.model.impl/KailleraGameImpl/maxUsers/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.model.impl/-kaillera-game-impl/max-users.html
 $dokka.location:org.emulinker.kaillera.model.impl/KailleraGameImpl/mutedUsers/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.model.impl/-kaillera-game-impl/muted-users.html
 $dokka.location:org.emulinker.kaillera.model.impl/KailleraGameImpl/owner/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.model.impl/-kaillera-game-impl/owner.html
-$dokka.location:org.emulinker.kaillera.model.impl/KailleraGameImpl/playerActionQueue/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.model.impl/-kaillera-game-impl/player-action-queue.html
+$dokka.location:org.emulinker.kaillera.model.impl/KailleraGameImpl/playerActionQueues/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.model.impl/-kaillera-game-impl/player-action-queues.html
 $dokka.location:org.emulinker.kaillera.model.impl/KailleraGameImpl/players/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.model.impl/-kaillera-game-impl/players.html
 $dokka.location:org.emulinker.kaillera.model.impl/KailleraGameImpl/quit/#org.emulinker.kaillera.model.KailleraUser#kotlin.Int/PointingToDeclaration/emulinker/org.emulinker.kaillera.model.impl/-kaillera-game-impl/quit.html
 $dokka.location:org.emulinker.kaillera.model.impl/KailleraGameImpl/ready/#org.emulinker.kaillera.model.KailleraUser?#kotlin.Int/PointingToDeclaration/emulinker/org.emulinker.kaillera.model.impl/-kaillera-game-impl/ready.html
@@ -1346,7 +1346,7 @@ $dokka.location:org.emulinker.kaillera.model/KailleraGame/kick/#org.emulinker.ka
 $dokka.location:org.emulinker.kaillera.model/KailleraGame/maxPing/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-kaillera-game/max-ping.html
 $dokka.location:org.emulinker.kaillera.model/KailleraGame/maxUsers/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-kaillera-game/max-users.html
 $dokka.location:org.emulinker.kaillera.model/KailleraGame/owner/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-kaillera-game/owner.html
-$dokka.location:org.emulinker.kaillera.model/KailleraGame/playerActionQueue/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-kaillera-game/player-action-queue.html
+$dokka.location:org.emulinker.kaillera.model/KailleraGame/playerActionQueues/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-kaillera-game/player-action-queues.html
 $dokka.location:org.emulinker.kaillera.model/KailleraGame/players/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-kaillera-game/players.html
 $dokka.location:org.emulinker.kaillera.model/KailleraGame/quit/#org.emulinker.kaillera.model.KailleraUser#kotlin.Int/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-kaillera-game/quit.html
 $dokka.location:org.emulinker.kaillera.model/KailleraGame/ready/#org.emulinker.kaillera.model.KailleraUser?#kotlin.Int/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-kaillera-game/ready.html
