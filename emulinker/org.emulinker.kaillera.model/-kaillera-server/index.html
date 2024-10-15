@@ -65,11 +65,30 @@
   <div class="breadcrumbs"><a href="../../../index.html">emulinker</a><span class="delimiter">/</span><a href="../index.html">org.emulinker.kaillera.model</a><span class="delimiter">/</span><span class="current">KailleraServer</span></div>
   <div class="cover ">
     <h1 class="cover"><span>Kaillera</span><wbr></wbr><span><span>Server</span></span></h1>
-    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker:dokkaHtml/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><span data-unresolved-link="javax.inject/Singleton///PointingToDeclaration/"><span class="token annotation builtin">Singleton</span></span></div></div><span class="token keyword">class </span><a href="index.html">KailleraServer</a></div><p class="paragraph">Holds server-wide state.</p></div></div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker:dokkaHtml/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="index.html">KailleraServer</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>accessManager<span class="token operator">: </span><a href="../../org.emulinker.kaillera.access/-access-manager/index.html">AccessManager</a><span class="token punctuation">, </span></span><span class="parameter ">flags<span class="token operator">: </span><a href="../../org.emulinker.config/-runtime-flags/index.html">RuntimeFlags</a><span class="token punctuation">, </span></span><span class="parameter ">statsCollector<span class="token operator">: </span><a href="../../org.emulinker.kaillera.master/-stats-collector/index.html">StatsCollector</a><span class="token operator">?</span><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>releaseInfo<span class="token operator">: </span><a href="../../org.emulinker.kaillera.release/-release-info/index.html">ReleaseInfo</a><span class="token punctuation">, </span></span><span class="parameter ">autoFireDetectorFactory<span class="token operator">: </span><a href="../../org.emulinker.kaillera.model.impl/-auto-fire-detector-factory/index.html">AutoFireDetectorFactory</a><span class="token punctuation">, </span></span><span class="parameter ">lookingForGameReporter<span class="token operator">: </span><a href="../../org.emulinker.kaillera.lookingforgame/-twitter-broadcaster/index.html">TwitterBroadcaster</a><span class="token punctuation">, </span></span><span class="parameter ">metrics<span class="token operator">: </span><span data-unresolved-link="com.codahale.metrics/MetricRegistry///PointingToDeclaration/">MetricRegistry</span><span class="token punctuation">, </span></span><span class="parameter ">taskScheduler<span class="token operator">: </span><a href="../../org.emulinker.util/-task-scheduler/index.html">TaskScheduler</a><span class="token punctuation">, </span></span><span class="parameter ">clock<span class="token operator">: </span><span data-unresolved-link="kotlinx.datetime/Clock///PointingToDeclaration/">Clock</span></span></span><span class="token punctuation">)</span> : <span data-unresolved-link="org.koin.core.component/KoinComponent///PointingToDeclaration/">KoinComponent</span></div><p class="paragraph">Holds server-wide state.</p></div></div>
   </div>
   <div class="tabbedcontent">
     <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION">Members</button></div>
     <div class="tabs-section-body">
+      <div data-togglable="CONSTRUCTOR">
+        <h2 class="">Constructors</h2>
+        <div class="table"><a data-name="1278820120%2FConstructors%2F133022281" anchor-label="KailleraServer" id="1278820120%2FConstructors%2F133022281" data-filterable-set=":emulinker:dokkaHtml/main"></a>
+          <div class="table-row" data-togglable="CONSTRUCTOR" data-filterable-current=":emulinker:dokkaHtml/main" data-filterable-set=":emulinker:dokkaHtml/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-kaillera-server.html"><span>Kaillera</span><wbr></wbr><span><span>Server</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1278820120%2FConstructors%2F133022281"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker:dokkaHtml/main"><div class="symbol monospace"><span class="token keyword">constructor</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">accessManager<span class="token operator">: </span><a href="../../org.emulinker.kaillera.access/-access-manager/index.html">AccessManager</a><span class="token punctuation">, </span></span><span class="parameter ">flags<span class="token operator">: </span><a href="../../org.emulinker.config/-runtime-flags/index.html">RuntimeFlags</a><span class="token punctuation">, </span></span><span class="parameter ">statsCollector<span class="token operator">: </span><a href="../../org.emulinker.kaillera.master/-stats-collector/index.html">StatsCollector</a><span class="token operator">?</span><span class="token punctuation">, </span></span><span class="parameter ">releaseInfo<span class="token operator">: </span><a href="../../org.emulinker.kaillera.release/-release-info/index.html">ReleaseInfo</a><span class="token punctuation">, </span></span><span class="parameter ">autoFireDetectorFactory<span class="token operator">: </span><a href="../../org.emulinker.kaillera.model.impl/-auto-fire-detector-factory/index.html">AutoFireDetectorFactory</a><span class="token punctuation">, </span></span><span class="parameter ">lookingForGameReporter<span class="token operator">: </span><a href="../../org.emulinker.kaillera.lookingforgame/-twitter-broadcaster/index.html">TwitterBroadcaster</a><span class="token punctuation">, </span></span><span class="parameter ">metrics<span class="token operator">: </span><span data-unresolved-link="com.codahale.metrics/MetricRegistry///PointingToDeclaration/">MetricRegistry</span><span class="token punctuation">, </span></span><span class="parameter ">taskScheduler<span class="token operator">: </span><a href="../../org.emulinker.util/-task-scheduler/index.html">TaskScheduler</a><span class="token punctuation">, </span></span><span class="parameter ">clock<span class="token operator">: </span><span data-unresolved-link="kotlinx.datetime/Clock///PointingToDeclaration/">Clock</span></span></span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
       <div data-togglable="TYPE">
         <h2 class="">Types</h2>
         <div class="table"><a data-name="-734284128%2FClasslikes%2F133022281" anchor-label="Companion" id="-734284128%2FClasslikes%2F133022281" data-filterable-set=":emulinker:dokkaHtml/main"></a>
@@ -391,6 +410,21 @@
               <div>
                 <div class="title">
                   <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker:dokkaHtml/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="get-game.html"><span class="token function">getGame</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">gameID<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html">Int</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../-kaillera-game/index.html">KailleraGame</a><span class="token operator">?</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="894441567%2FFunctions%2F133022281" anchor-label="getKoin" id="894441567%2FFunctions%2F133022281" data-filterable-set=":emulinker:dokkaHtml/main"></a>
+          <div class="table-row" data-filterable-current=":emulinker:dokkaHtml/main" data-filterable-set=":emulinker:dokkaHtml/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../../org.emulinker.kaillera.pico/-new-app-component/index.html#894441567%2FFunctions%2F133022281"><span>get</span><wbr></wbr><span><span>Koin</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="894441567%2FFunctions%2F133022281"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker:dokkaHtml/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="../../org.emulinker.kaillera.pico/-new-app-component/index.html#894441567%2FFunctions%2F133022281"><span class="token function">getKoin</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><span data-unresolved-link="org.koin.core/Koin///PointingToDeclaration/">Koin</span></div></div></div>
                 </div>
               </div>
             </div>
