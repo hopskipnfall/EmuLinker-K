@@ -1,5 +1,7 @@
 package org.emulinker.kaillera.model.impl
 
+import com.google.common.flogger.FluentLogger
+import com.google.common.flogger.StackSize
 import java.lang.InterruptedException
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.locks.ReentrantLock
@@ -39,6 +41,14 @@ class PlayerActionQueue(
   fun markDesynced() {
     synced = false
     // The game is in a broken state, so we should wake up all threads blocked waiting for new data.
+    if (lock.isLocked) {
+      // DO NOT MERGE.
+      logger
+        .atSevere()
+        .atMostEvery(5, TimeUnit.SECONDS)
+        .withStackTrace(StackSize.SMALL)
+        .log("INVESTIGATE: LOCKED!!! when marking desync")
+    }
     lock.withLock { condition.signalAll() }
   }
 
@@ -49,6 +59,14 @@ class PlayerActionQueue(
       // tail = ((tail + 1) % gameBufferSize);
       tail++
       if (tail == gameBufferSize) tail = 0
+    }
+    if (lock.isLocked) {
+      // DO NOT MERGE.
+      logger
+        .atSevere()
+        .atMostEvery(5, TimeUnit.SECONDS)
+        .withStackTrace(StackSize.SMALL)
+        .log("INVESTIGATE: LOCKED!!!")
     }
     lock.withLock { condition.signalAll() }
     lastTimeout = null
@@ -62,6 +80,14 @@ class PlayerActionQueue(
     actionLength: Int
   ) {
     // Note: It's possible this never happens and we can replace this with an assertion.
+    if (lock.isLocked) {
+      // DO NOT MERGE.
+      logger
+        .atSevere()
+        .atMostEvery(5, TimeUnit.SECONDS)
+        .withStackTrace(StackSize.SMALL)
+        .log("INVESTIGATE: LOCKED!!! when getting data")
+    }
     lock.withLock {
       if (synced && !containsNewDataForPlayer(playerIndex, actionLength)) {
         try {
@@ -87,4 +113,8 @@ class PlayerActionQueue(
 
   private fun getSize(playerIndex: Int): Int =
     (tail + gameBufferSize - heads[playerIndex]) % gameBufferSize
+
+  companion object {
+    private val logger = FluentLogger.forEnclosingClass()
+  }
 }

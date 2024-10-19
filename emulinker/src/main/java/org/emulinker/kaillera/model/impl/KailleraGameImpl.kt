@@ -64,6 +64,16 @@ class KailleraGameImpl(
       server.addEvent(GameStatusChangedEvent(server, this))
     }
 
+  /**
+   * Whether the game is holding data for the current frame, waiting on one or more players before
+   * fanning out.
+   */
+  var waitingOnData = false
+  /**
+   * If [waitingOnPlayerNumber[playerNumber - 1] is `true`, we are waiting on data for that player.
+   */
+  val waitingOnPlayerNumber = BooleanArray(10) { false }
+
   // TODO(nue): Combine this with [KailleraUser.singleFrameDurationNs].
   private var singleFrameDurationNs: Long = 0
 
@@ -91,8 +101,6 @@ class KailleraGameImpl(
       server.addEvent(GameStatusChangedEvent(server, this))
     }
 
-  private val toString =
-    "Game$id(${if (romName.length > 15) romName.substring(0, 15) + "..." else romName})"
   private var lastAddress = "null"
   private var lastAddressCount = 0
   private var isSynched = false
@@ -127,7 +135,8 @@ class KailleraGameImpl(
     return players[playerNumber - 1]
   }
 
-  override fun toString() = toString
+  override fun toString() =
+    "Game$id(${if (romName.length > 15) romName.substring(0, 15) + "..." else romName})"
 
   fun toDetailedString(): String {
     return "KailleraGame[id=$id romName=$romName owner=$owner numPlayers=${players.size} status=$status]"
@@ -507,7 +516,7 @@ class KailleraGameImpl(
   }
 
   @Throws(DropGameException::class)
-  override fun drop(user: KailleraUser, playerNumber: Int) = withLock {
+  override fun drop(user: KailleraUser, playerNumber: Int): Unit = withLock {
     if (!players.contains(user)) {
       logger.atWarning().log("%s drop game failed: not in %s", user, this)
       throw DropGameException(EmuLang.getString("KailleraGameImpl.DropGameErrorNotInGame"))
@@ -543,6 +552,11 @@ class KailleraGameImpl(
       // u.addEvent(new UserQuitEvent(server, user, "Rejoining..."));
       // try{user.quit("Rejoining...");}catch(Exception e){}
       announce("Rejoin server to update client of ignored server activity!", user)
+    }
+    if (waitingOnData) {
+      // DO NOT MERGE.
+      logger.atSevere().log("INVESTIGATE: WAITING ON DATA, sending now!!")
+      maybeSendData(user)
     }
   }
 
@@ -632,7 +646,6 @@ class KailleraGameImpl(
     val playerActionQueuesCopy = playerActionQueues ?: return Result.success(Unit)
 
     // int bytesPerAction = (data.length / actionsPerMessage);
-    var timeoutCounter = 0
     // int arraySize = (playerActionQueues.length * actionsPerMessage * user.getBytesPerAction());
     if (!isSynched) {
       return Result.failure(
@@ -645,14 +658,25 @@ class KailleraGameImpl(
         )
       )
     }
+    // Add the data for the user to their own player queue.
     playerActionQueuesCopy[playerNumber - 1].addActions(data)
     autoFireDetector.addData(playerNumber, data, user.bytesPerAction)
 
+    return maybeSendData(user, data)
+  }
+
+  /** @param data Only used for logging. */
+  fun maybeSendData(user: KailleraUser, data: ByteArray = byteArrayOf()): Result<Unit> {
+    val playerActionQueuesCopy = checkNotNull(playerActionQueues)
+
     // TODO(nue): This works for 2P but what about more? This probably results in unnecessary
     // messages.
+    var timeoutCounter = 0
     for (player in players) {
       val playerNumber = player.playerNumber
 
+      // If all are either desynced or have their own information (meaning they have submitted
+      // their own data i guess)
       if (
         playerActionQueuesCopy.all {
           !it.synced ||
@@ -662,6 +686,7 @@ class KailleraGameImpl(
             )
         }
       ) {
+        waitingOnData = false
         val response = ByteArray(user.arraySize)
         for (actionCounter in 0 until actionsPerMessage) {
           for (playerActionQueueIndex in playerActionQueuesCopy.indices) {
@@ -702,6 +727,16 @@ class KailleraGameImpl(
         val firstPlayer = players.firstOrNull()
         if (firstPlayer != null && firstPlayer.id == player.id) {
           updateGameDrift()
+        }
+      } else {
+        waitingOnData = true
+        playerActionQueuesCopy.forEach {
+          waitingOnPlayerNumber[it.playerNumber - 1] =
+            it.synced &&
+              !it.containsNewDataForPlayer(
+                playerIndex = playerNumber - 1,
+                actionLength = actionsPerMessage * user.bytesPerAction,
+              )
         }
       }
     }

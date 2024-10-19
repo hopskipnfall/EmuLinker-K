@@ -300,6 +300,6 @@ object EmuUtil {
   /** NOOP placeholder for a function that _used to_ call [Thread.sleep]. */
   @Deprecated(message = "Don't sleep!", level = DeprecationLevel.WARNING)
   fun threadSleep(d: Duration) {
-    // try { Thread.sleep(d.inWholeMilliseconds) } catch (e: Exception) {}
+    Thread.yield()
   }
 }
