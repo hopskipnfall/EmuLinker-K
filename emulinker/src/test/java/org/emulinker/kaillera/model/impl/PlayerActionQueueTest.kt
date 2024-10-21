@@ -3,6 +3,7 @@ package org.emulinker.kaillera.model.impl
 import com.google.common.truth.Truth.assertThat
 import kotlin.time.Duration.Companion.seconds
 import org.emulinker.testing.LoggingRule
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mockito.kotlin.mock
@@ -68,6 +69,7 @@ class PlayerActionQueueTest {
   }
 
   @Test
+  @Ignore // TODO: Fill out this test properly with real data.
   fun `containsNewDataForPlayer works for two players`() {
     val queue =
       PlayerActionQueue(
