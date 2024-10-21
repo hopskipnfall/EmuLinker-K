@@ -2,11 +2,10 @@ package org.emulinker.util
 
 import java.lang.IndexOutOfBoundsException
 
-// This is a very specialized structure designed for quickly caching int arrays during game play
-// Adapted from http://www.smotricz.com/kabutz/Issue027.html
-class ClientGameDataCache(size: Int) : GameDataCache {
-  // array holds the elements
-  private var array: Array<ByteArray?> = arrayOfNulls(size)
+class GameDataCacheImpl(capacity: Int) : GameDataCache {
+  private var lastRetrievedIndex = -1
+
+  private var array: Array<ByteArray?> = arrayOfNulls(capacity)
 
   // head points to the first logical element in the array, and
   // tail points to the element following the last. This means
@@ -15,31 +14,32 @@ class ClientGameDataCache(size: Int) : GameDataCache {
   private var head = 0
   private var tail = 0
 
-  // Strictly speaking, we don't need to keep a handle to size,
-  // as it can be calculated programmatically, but keeping it
-  // makes the algorithms faster.
-  // the size can also be worked out each time as: (tail + array.length -
-  // head) % array.length
   override var size = 0
     private set
 
-  override fun containsAll(elements: Collection<ByteArray?>): Boolean =
-    elements.all { contains(it) }
+  override fun containsAll(elements: Collection<ByteArray>): Boolean = elements.all { contains(it) }
 
   override fun isEmpty(): Boolean = size == 0
 
-  override fun iterator(): Iterator<ByteArray?> = array.iterator()
+  override fun iterator(): Iterator<ByteArray> = array.asSequence().filterNotNull().iterator()
 
-  override fun toString(): String {
-    return "ClientGameDataCache[size=$size head=$head tail=$tail]"
-  }
+  override fun contains(element: ByteArray): Boolean = indexOf(element) >= 0
 
-  override fun contains(element: ByteArray?): Boolean {
-    return indexOf(element) >= 0
-  }
-
-  override fun indexOf(data: ByteArray?): Int {
-    for (i in 0 until size) if (data.contentEquals(array[convert(i)])) return i
+  override fun indexOf(data: ByteArray): Int {
+    // Often the state is exactly the same from call to call, so it helps to check the last index
+    // returned first.
+    if (lastRetrievedIndex >= 0) {
+      if (data.contentEquals(array[convert(lastRetrievedIndex)])) {
+        return lastRetrievedIndex
+      }
+    }
+    for (i in size - 1 downTo 0) {
+      if (data.contentEquals(array[convert(i)])) {
+        lastRetrievedIndex = i
+        return i
+      }
+    }
+    lastRetrievedIndex = -1
     return -1
   }
 
@@ -48,7 +48,7 @@ class ClientGameDataCache(size: Int) : GameDataCache {
     return array[convert(index)]
   }
 
-  override operator fun set(index: Int, data: ByteArray?): ByteArray? {
+  override operator fun set(index: Int, data: ByteArray): ByteArray? {
     rangeCheck(index)
     val convertedIndex = convert(index)
     val oldValue = array[convertedIndex]
@@ -91,13 +91,15 @@ class ClientGameDataCache(size: Int) : GameDataCache {
   }
 
   override fun clear() {
-    for (i in 0 until size) array[convert(i)] = null
+    for (i in 0 until size) {
+      array[convert(i)] = null
+    }
     size = 0
     tail = size
     head = tail
   }
 
-  override fun add(data: ByteArray?): Int {
+  override fun add(data: ByteArray): Int {
     if (size == array.size) remove(0)
     val pos = tail
     array[tail] = data
@@ -109,16 +111,11 @@ class ClientGameDataCache(size: Int) : GameDataCache {
     return unconvert(pos)
   }
 
-  // The convert() method takes a logical index (as if head was always 0) and
-  // calculates the index within array
-  private fun convert(index: Int): Int {
-    return (index + head) % array.size
-  }
+  /** Maps the external index to the index in [array]. */
+  private fun convert(index: Int): Int = (index + head) % array.size
 
-  // there gotta be a better way to do this but I can't figure it out
-  private fun unconvert(index: Int): Int {
-    return if (index >= head) index - head else array.size - head + index
-  }
+  private fun unconvert(index: Int): Int =
+    if (index >= head) index - head else array.size - head + index
 
   private fun rangeCheck(index: Int) {
     if (index >= size || index < 0) throw IndexOutOfBoundsException("index=$index, size=$size")

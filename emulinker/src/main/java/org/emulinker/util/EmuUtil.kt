@@ -1,5 +1,6 @@
 package org.emulinker.util
 
+import com.codahale.metrics.Timer
 import io.ktor.utils.io.core.ByteReadPacket
 import io.netty.buffer.ByteBuf
 import java.io.File
@@ -11,10 +12,11 @@ import java.nio.charset.Charset
 import java.text.DateFormat
 import java.text.SimpleDateFormat
 import java.util.Properties
+import java.util.concurrent.TimeUnit
+import kotlin.system.measureNanoTime
 import kotlin.time.Duration
 import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
-import kotlinx.datetime.format
 import kotlinx.datetime.format.DateTimeComponents
 import kotlinx.datetime.format.format
 import kotlinx.datetime.offsetIn
@@ -301,5 +303,11 @@ object EmuUtil {
   @Deprecated(message = "Don't sleep!", level = DeprecationLevel.WARNING)
   fun threadSleep(d: Duration) {
     Thread.yield()
+  }
+
+  inline fun <R> Timer.timeKt(toTime: () -> R): R {
+    var out: R
+    this.update(measureNanoTime { out = toTime() }, TimeUnit.NANOSECONDS)
+    return out
   }
 }

@@ -31,10 +31,11 @@ import org.emulinker.kaillera.model.event.ServerEvent
 import org.emulinker.kaillera.model.event.StopFlagEvent
 import org.emulinker.kaillera.model.event.UserEvent
 import org.emulinker.kaillera.pico.CompiledFlags
-import org.emulinker.util.ClientGameDataCache
 import org.emulinker.util.EmuUtil
 import org.emulinker.util.EmuUtil.dumpBufferFromBeginning
+import org.emulinker.util.EmuUtil.timeKt
 import org.emulinker.util.GameDataCache
+import org.emulinker.util.GameDataCacheImpl
 import org.emulinker.util.stripFromProdBinary
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -71,8 +72,7 @@ class V086ClientHandler(
       return
     }
     if (flags.metricsEnabled) {
-      // TODO: Can we use measureNanoTime?
-      clientRequestTimer.time().use { handleReceivedInternal(buf) }
+      clientRequestTimer.timeKt { handleReceivedInternal(buf) }
     } else {
       handleReceivedInternal(buf)
     }
@@ -87,16 +87,12 @@ class V086ClientHandler(
   val numAcksForSpeedTest = 3
 
   private var prevMessageNumber = -1
-    private set
 
   private var lastMessageNumber = -1
-    private set
 
-  var clientGameDataCache: GameDataCache = ClientGameDataCache(256)
-    private set
+  val clientGameDataCache: GameDataCache = GameDataCacheImpl(256)
 
-  var serverGameDataCache: GameDataCache = ClientGameDataCache(256)
-    private set
+  val serverGameDataCache: GameDataCache = GameDataCacheImpl(256)
 
   private val lastMessageBuffer = LastMessageBuffer(V086Controller.MAX_BUNDLE_SIZE)
   private val outMessages = arrayOfNulls<V086Message>(V086Controller.MAX_BUNDLE_SIZE)
@@ -122,11 +118,8 @@ class V086ClientHandler(
     }
 
   fun resetGameDataCache() {
-    clientGameDataCache = ClientGameDataCache(256)
-    /*SF MOD - Button Ghosting Patch
-    serverCache = new ServerGameDataCache(256);
-    */
-    serverGameDataCache = ClientGameDataCache(256)
+    clientGameDataCache.clear()
+    serverGameDataCache.clear()
   }
 
   fun startSpeedTest() {
@@ -404,7 +397,7 @@ class V086ClientHandler(
     resetGameDataCache()
   }
 
-  private companion object {
-    val logger = FluentLogger.forEnclosingClass()
+  companion object {
+    private val logger = FluentLogger.forEnclosingClass()
   }
 }

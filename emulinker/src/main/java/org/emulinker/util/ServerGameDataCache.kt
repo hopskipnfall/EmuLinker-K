@@ -2,10 +2,8 @@ package org.emulinker.util
 
 import java.lang.IndexOutOfBoundsException
 import java.util.Arrays
-import java.util.HashMap
 
-// TODO(nue): This class is never used. Remove?
-// Adapted from http://www.smotricz.com/kabutz/Issue027.html
+@Deprecated("This has promise but indexOf does not work reliably!", level = DeprecationLevel.ERROR)
 class ServerGameDataCache(size: Int) : GameDataCache {
   // array holds the elements
   private var array: Array<ByteArray?> = arrayOfNulls(size)
@@ -29,20 +27,16 @@ class ServerGameDataCache(size: Int) : GameDataCache {
   override var size = 0
     private set
 
-  override fun toString() = "ServerGameDataCache[size=$size head=$head tail=$tail]"
+  override fun contains(element: ByteArray): Boolean = indexOf(element) >= 0
 
-  override fun contains(element: ByteArray?): Boolean = indexOf(element) >= 0
-
-  override fun containsAll(elements: Collection<ByteArray?>): Boolean =
-    elements.all { contains(it) }
+  override fun containsAll(elements: Collection<ByteArray>): Boolean = elements.all { contains(it) }
 
   override fun isEmpty(): Boolean = size == 0
 
-  override fun iterator(): Iterator<ByteArray?> = array.iterator()
+  override fun iterator(): Iterator<ByteArray> = array.asSequence().filterNotNull().iterator()
 
-  override fun indexOf(data: ByteArray?): Int {
-    //		Integer i = map.get(Arrays.toString(data));
-    val i = map[Arrays.hashCode(data)]
+  override fun indexOf(data: ByteArray): Int {
+    val i = map[data.contentHashCode()]
     return i?.let { unconvert(it) } ?: -1
   }
 
@@ -51,13 +45,13 @@ class ServerGameDataCache(size: Int) : GameDataCache {
     return array[convert(index)]
   }
 
-  override fun set(index: Int, data: ByteArray?): ByteArray? {
+  override fun set(index: Int, data: ByteArray): ByteArray? {
     rangeCheck(index)
     val convertedIndex = convert(index)
     val oldValue = array[convertedIndex]
     array[convertedIndex] = data
     //		map.put(Arrays.toString(data), convertedIndex);
-    map[Arrays.hashCode(data)] = convertedIndex
+    map[data.contentHashCode()] = convertedIndex
     return oldValue
   }
 
@@ -69,7 +63,7 @@ class ServerGameDataCache(size: Int) : GameDataCache {
     val pos = convert(index)
     return try {
       //			map.remove(array[pos]);
-      map.remove(Arrays.hashCode(array[pos]))
+      map.remove(array[pos].contentHashCode())
       //			map.remove(Arrays.toString(array[pos]));
       array[pos]
     } finally {
@@ -102,7 +96,7 @@ class ServerGameDataCache(size: Int) : GameDataCache {
     map.clear()
   }
 
-  override fun add(data: ByteArray?): Int {
+  override fun add(data: ByteArray): Int {
     if (size == array.size) remove(0)
     val pos = tail
     array[tail] = data
@@ -116,14 +110,11 @@ class ServerGameDataCache(size: Int) : GameDataCache {
 
   // The convert() method takes a logical index (as if head was always 0) and
   // calculates the index within array
-  private fun convert(index: Int): Int {
-    return (index + head) % array.size
-  }
+  private fun convert(index: Int): Int = (index + head) % array.size
 
   // there gotta be a better way to do this but I can't figure it out
-  private fun unconvert(index: Int): Int {
-    return if (index >= head) index - head else array.size - head + index
-  }
+  private fun unconvert(index: Int): Int =
+    if (index >= head) index - head else array.size - head + index
 
   private fun rangeCheck(index: Int) {
     if (index >= size || index < 0) throw IndexOutOfBoundsException("index=$index, size=$size")
