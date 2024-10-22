@@ -228,7 +228,7 @@ class KailleraServer(
     if (
       access == AccessManager.ACCESS_NORMAL &&
         flags.maxPing > 0.milliseconds &&
-        user.ping.milliseconds > flags.maxPing
+        user.ping > flags.maxPing
     ) {
       logger.atInfo().log("%s login denied: Ping %d ms > %s", user, user.ping, flags.maxPing)
       usersMap.remove(userListKey)
@@ -256,7 +256,7 @@ class KailleraServer(
         )
       )
     }
-    if (user.ping < 0) {
+    if (user.ping < 0.milliseconds) {
       logger.atWarning().log("%s login denied: Invalid ping: %d", user, user.ping)
       usersMap.remove(userListKey)
       return Result.failure(
@@ -473,14 +473,14 @@ class KailleraServer(
           sb.append(0x03.toChar())
           sbCount++
           if (sb.length > 300) {
-            (user as KailleraUser?)!!.queueEvent(InfoMessageEvent(user, sb.toString()))
+            user.queueEvent(InfoMessageEvent(user, sb.toString()))
             sb = StringBuilder()
             sb.append(":USERINFO=")
             sbCount = 0
             threadSleep(100.milliseconds)
           }
         }
-        if (sbCount > 0) (user as KailleraUser?)!!.queueEvent(InfoMessageEvent(user, sb.toString()))
+        if (sbCount > 0) user.queueEvent(InfoMessageEvent(user, sb.toString()))
         threadSleep(100.milliseconds)
       }
     }
@@ -490,7 +490,7 @@ class KailleraServer(
         InfoMessageEvent(user, EmuLang.getString("KailleraServerImpl.AdminWelcomeMessage"))
       )
       // Display messages to admins if they exist.
-      AppModule.messagesToAdmins.forEach { message ->
+      for (message in AppModule.messagesToAdmins) {
         threadSleep(20.milliseconds)
         user.queueEvent(InfoMessageEvent(user, message))
       }
@@ -840,6 +840,21 @@ class KailleraServer(
 
   private fun run() {
     try {
+      // Identify and repair games in a frozen state, where one user left and the server is waiting
+      // on input to fan-out.
+      for (game in gamesMap.values) {
+        if (game.waitingOnData && game.status == GameStatus.PLAYING) {
+          for (player in game.players) {
+            if (
+              player.status == UserStatus.IDLE &&
+                game.waitingOnPlayerNumber[player.playerNumber - 1]
+            ) {
+              game.maybeSendData(usersMap[player.id]!!)
+              break
+            }
+          }
+        }
+      }
       if (usersMap.isEmpty()) return
       for (user in usersMap.values) {
         val access = accessManager.getAccess(user.connectSocketAddress.address)

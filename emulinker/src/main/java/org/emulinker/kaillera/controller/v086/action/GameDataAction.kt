@@ -1,6 +1,7 @@
 package org.emulinker.kaillera.controller.v086.action
 
 import com.google.common.flogger.FluentLogger
+import java.util.concurrent.TimeUnit
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086ClientHandler
 import org.emulinker.kaillera.controller.v086.protocol.CachedGameData
@@ -22,7 +23,7 @@ object GameDataAction : V086Action<GameData>, V086GameEventHandler<GameDataEvent
     user.addGameData(data).onFailure { e ->
       when (e) {
         is GameDataException -> {
-          logger.atWarning().withCause(e).log("Game data error")
+          logger.atWarning().atMostEvery(5, TimeUnit.SECONDS).withCause(e).log("Game data error")
           if (e.response != null) {
             try {
               clientHandler.send(GameData.create(clientHandler.nextMessageNumber, e.response!!))

@@ -51,8 +51,8 @@ import org.emulinker.kaillera.controller.v086.protocol.UserJoined
 import org.emulinker.kaillera.controller.v086.protocol.V086Bundle
 import org.emulinker.kaillera.controller.v086.protocol.V086Message
 import org.emulinker.kaillera.model.ConnectionType
-import org.emulinker.util.ClientGameDataCache
 import org.emulinker.util.GameDataCache
+import org.emulinker.util.GameDataCacheImpl
 
 /** Fake client for testing. */
 class EvalClient(
@@ -70,7 +70,7 @@ class EvalClient(
 
   private lateinit var socket: ConnectedDatagramSocket
 
-  private var gameDataCache: GameDataCache = ClientGameDataCache(256)
+  private var gameDataCache: GameDataCache = GameDataCacheImpl(256)
 
   private val outMutex = Mutex()
 

@@ -4,6 +4,9 @@ import io.ktor.utils.io.core.ByteReadPacket
 import io.ktor.utils.io.core.readInt
 import io.netty.buffer.ByteBuf
 import java.nio.ByteBuffer
+import kotlin.math.roundToLong
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.kaillera.controller.v086.V086Utils.getNumBytesPlusStopByte
@@ -13,6 +16,7 @@ import org.emulinker.kaillera.model.UserStatus
 import org.emulinker.util.EmuUtil
 import org.emulinker.util.EmuUtil.readString
 import org.emulinker.util.EmuUtil.toHexString
+import org.emulinker.util.EmuUtil.toMillisDouble
 import org.emulinker.util.UnsignedUtil.getUnsignedInt
 import org.emulinker.util.UnsignedUtil.getUnsignedShort
 import org.emulinker.util.UnsignedUtil.putUnsignedInt
@@ -53,14 +57,14 @@ data class ServerStatus(
   // TODO(nue): this User and Game class should not be here.
   data class User(
     val username: String,
-    val ping: Long,
+    val ping: Duration,
     val status: UserStatus,
     val userId: Int,
     val connectionType: ConnectionType
   ) {
 
     init {
-      if (ping < 0 || ping > 2048)
+      if (ping < 0.milliseconds || ping > 2048.milliseconds)
         throw MessageFormatException(
           "Invalid Server Status format: ping out of acceptable range: $ping"
         )
@@ -83,7 +87,7 @@ data class ServerStatus(
 
     fun writeTo(buffer: ByteBuf) {
       EmuUtil.writeString(buffer, username)
-      buffer.putUnsignedInt(ping)
+      buffer.putUnsignedInt(ping.toMillisDouble().roundToLong())
       buffer.writeByte(status.byteValue.toInt())
       buffer.putUnsignedShort(userId)
       buffer.writeByte(connectionType.byteValue.toInt())
@@ -91,7 +95,7 @@ data class ServerStatus(
 
     fun writeTo(buffer: ByteBuffer) {
       EmuUtil.writeString(buffer, username)
-      buffer.putUnsignedInt(ping)
+      buffer.putUnsignedInt(ping.toMillisDouble().roundToLong())
       buffer.put(status.byteValue)
       buffer.putUnsignedShort(userId)
       buffer.put(connectionType.byteValue)
@@ -184,7 +188,7 @@ data class ServerStatus(
           val connectionType: Byte = buffer.readByte()
           User(
             userName,
-            ping,
+            ping.milliseconds,
             UserStatus.fromByteValue(status),
             userID,
             ConnectionType.fromByteValue(connectionType)
@@ -247,7 +251,7 @@ data class ServerStatus(
           val connectionType: Byte = buffer.get()
           User(
             userName,
-            ping,
+            ping.milliseconds,
             UserStatus.fromByteValue(status),
             userID,
             ConnectionType.fromByteValue(connectionType)
@@ -310,7 +314,7 @@ data class ServerStatus(
           val connectionType: Byte = packet.readByte()
           User(
             userName,
-            ping,
+            ping.milliseconds,
             UserStatus.fromByteValue(status),
             userID,
             ConnectionType.fromByteValue(connectionType)

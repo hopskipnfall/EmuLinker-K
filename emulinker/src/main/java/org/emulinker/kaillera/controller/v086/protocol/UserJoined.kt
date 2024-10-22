@@ -3,12 +3,16 @@ package org.emulinker.kaillera.controller.v086.protocol
 import io.ktor.utils.io.core.ByteReadPacket
 import io.netty.buffer.ByteBuf
 import java.nio.ByteBuffer
+import kotlin.math.roundToLong
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.kaillera.controller.v086.V086Utils.getNumBytesPlusStopByte
 import org.emulinker.kaillera.model.ConnectionType
 import org.emulinker.util.EmuUtil
 import org.emulinker.util.EmuUtil.readString
+import org.emulinker.util.EmuUtil.toMillisDouble
 import org.emulinker.util.UnsignedUtil.getUnsignedInt
 import org.emulinker.util.UnsignedUtil.getUnsignedShort
 import org.emulinker.util.UnsignedUtil.putUnsignedInt
@@ -26,7 +30,7 @@ data class UserJoined(
   override val messageNumber: Int,
   val username: String,
   val userId: Int,
-  val ping: Long,
+  val ping: Duration,
   val connectionType: ConnectionType
 ) : V086Message() {
   override val messageTypeId = ID
@@ -34,7 +38,7 @@ data class UserJoined(
   init {
     if (username.isBlank()) throw MessageFormatException("Empty username: $username")
     require(userId in 0..65535) { "UserID out of acceptable range: $userId" }
-    require(ping in 0..2048) { "Ping out of acceptable range: $ping" }
+    require(ping in 0.milliseconds..2048.milliseconds) { "Ping out of acceptable range: $ping" }
   }
 
   override val bodyBytes =
@@ -74,7 +78,7 @@ data class UserJoined(
           messageNumber,
           userName,
           userID,
-          ping,
+          ping.milliseconds,
           ConnectionType.fromByteValue(connectionType)
         )
       )
@@ -96,7 +100,7 @@ data class UserJoined(
           messageNumber,
           userName,
           userID,
-          ping,
+          ping.milliseconds,
           ConnectionType.fromByteValue(connectionType)
         )
       )
@@ -118,7 +122,7 @@ data class UserJoined(
           messageNumber,
           userName,
           userID,
-          ping,
+          ping.milliseconds,
           ConnectionType.fromByteValue(connectionType)
         )
       )
@@ -127,14 +131,14 @@ data class UserJoined(
     override fun write(buffer: ByteBuf, message: UserJoined) {
       EmuUtil.writeString(buffer, message.username)
       buffer.putUnsignedShort(message.userId)
-      buffer.putUnsignedInt(message.ping)
+      buffer.putUnsignedInt(message.ping.toMillisDouble().roundToLong())
       buffer.writeByte(message.connectionType.byteValue.toInt())
     }
 
     override fun write(buffer: ByteBuffer, message: UserJoined) {
       EmuUtil.writeString(buffer, message.username)
       buffer.putUnsignedShort(message.userId)
-      buffer.putUnsignedInt(message.ping)
+      buffer.putUnsignedInt(message.ping.toMillisDouble().roundToLong())
       buffer.put(message.connectionType.byteValue)
     }
   }

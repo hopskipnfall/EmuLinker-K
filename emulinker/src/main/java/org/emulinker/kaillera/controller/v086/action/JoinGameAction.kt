@@ -68,9 +68,7 @@ class JoinGameAction :
         game.players
           .asSequence()
           .filter { it != thisUser && !it.inStealthMode }
-          .mapTo(players) {
-            PlayerInformation.Player(it.name!!, it.ping.toLong(), it.id, it.connectionType)
-          }
+          .mapTo(players) { PlayerInformation.Player(it.name!!, it.ping, it.id, it.connectionType) }
         clientHandler.send(PlayerInformation(clientHandler.nextMessageNumber, players))
       }
       if (!user.inStealthMode)
@@ -80,7 +78,7 @@ class JoinGameAction :
             game.id,
             0,
             user.name!!,
-            user.ping.toLong(),
+            user.ping.inWholeMilliseconds,
             user.id,
             user.connectionType
           )

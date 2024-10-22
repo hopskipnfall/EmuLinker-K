@@ -83,13 +83,7 @@ class ACKAction : V086Action<ClientAck>, V086UserEventHandler<UserEvent> {
       for (user in server.usersMap.values) {
         if (user.status != UserStatus.CONNECTING && user != thisUser)
           users.add(
-            ServerStatus.User(
-              user.name!!,
-              user.ping.toLong(),
-              user.status,
-              user.id,
-              user.connectionType
-            )
+            ServerStatus.User(user.name!!, user.ping, user.status, user.id, user.connectionType)
           )
       }
     } catch (e: MessageFormatException) {

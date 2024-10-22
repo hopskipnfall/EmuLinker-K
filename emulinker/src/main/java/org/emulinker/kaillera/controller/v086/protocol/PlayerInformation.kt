@@ -4,12 +4,16 @@ import io.ktor.utils.io.core.ByteReadPacket
 import io.ktor.utils.io.core.readInt
 import io.netty.buffer.ByteBuf
 import java.nio.ByteBuffer
+import kotlin.math.roundToLong
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.kaillera.controller.v086.V086Utils.getNumBytesPlusStopByte
 import org.emulinker.kaillera.model.ConnectionType
 import org.emulinker.util.EmuUtil
 import org.emulinker.util.EmuUtil.readString
+import org.emulinker.util.EmuUtil.toMillisDouble
 import org.emulinker.util.UnsignedUtil.getUnsignedInt
 import org.emulinker.util.UnsignedUtil.getUnsignedShort
 import org.emulinker.util.UnsignedUtil.putUnsignedInt
@@ -41,7 +45,7 @@ data class PlayerInformation(override val messageNumber: Int, val players: List<
 
   data class Player(
     val username: String,
-    val ping: Long,
+    val ping: Duration,
     val userId: Int,
     val connectionType: ConnectionType
   ) {
@@ -53,20 +57,20 @@ data class PlayerInformation(override val messageNumber: Int, val players: List<
 
     fun writeTo(buffer: ByteBuf) {
       EmuUtil.writeString(buffer, username)
-      buffer.putUnsignedInt(ping)
+      buffer.putUnsignedInt(ping.toMillisDouble().roundToLong())
       buffer.putUnsignedShort(userId)
       buffer.writeByte(connectionType.byteValue.toInt())
     }
 
     fun writeTo(buffer: ByteBuffer) {
       EmuUtil.writeString(buffer, username)
-      buffer.putUnsignedInt(ping)
+      buffer.putUnsignedInt(ping.toMillisDouble().roundToLong())
       buffer.putUnsignedShort(userId)
       buffer.put(connectionType.byteValue)
     }
 
     init {
-      if (ping !in 0..2048) { // what should max ping be?
+      if (ping !in 0.milliseconds..2048.milliseconds) {
         throw MessageFormatException(
           "Invalid Player Information format: ping out of acceptable range: $ping"
         )
@@ -113,7 +117,7 @@ data class PlayerInformation(override val messageNumber: Int, val players: List<
           val ping = buffer.getUnsignedInt()
           val userID = buffer.getUnsignedShort()
           val connectionType = buffer.readByte()
-          Player(userName, ping, userID, ConnectionType.fromByteValue(connectionType))
+          Player(userName, ping.milliseconds, userID, ConnectionType.fromByteValue(connectionType))
         }
       return Result.success(PlayerInformation(messageNumber, players))
     }
@@ -145,7 +149,7 @@ data class PlayerInformation(override val messageNumber: Int, val players: List<
           val ping = buffer.getUnsignedInt()
           val userID = buffer.getUnsignedShort()
           val connectionType = buffer.get()
-          Player(userName, ping, userID, ConnectionType.fromByteValue(connectionType))
+          Player(userName, ping.milliseconds, userID, ConnectionType.fromByteValue(connectionType))
         }
       return Result.success(PlayerInformation(messageNumber, players))
     }
@@ -177,7 +181,7 @@ data class PlayerInformation(override val messageNumber: Int, val players: List<
           val ping = packet.readUnsignedInt()
           val userID = packet.readUnsignedShort()
           val connectionType = packet.readByte()
-          Player(userName, ping, userID, ConnectionType.fromByteValue(connectionType))
+          Player(userName, ping.milliseconds, userID, ConnectionType.fromByteValue(connectionType))
         }
       return Result.success(PlayerInformation(messageNumber, players))
     }

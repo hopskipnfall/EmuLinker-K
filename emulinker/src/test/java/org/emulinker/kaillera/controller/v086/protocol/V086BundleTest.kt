@@ -7,6 +7,7 @@ import io.ktor.utils.io.core.ByteReadPacket
 import java.net.InetSocketAddress
 import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets
+import kotlin.time.Duration.Companion.milliseconds
 import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.kaillera.controller.v086.V086Utils.toKtorAddress
 import org.emulinker.kaillera.controller.v086.protocol.V086Message.Companion.SERIALIZERS
@@ -134,7 +135,7 @@ class V086BundleTest {
             messageNumber = 5,
             username = "jj",
             userId = 395,
-            ping = 31,
+            ping = 31.milliseconds,
             connectionType = ConnectionType.LAN
           ),
           ServerStatus(
@@ -143,7 +144,7 @@ class V086BundleTest {
               listOf(
                 ServerStatus.User(
                   username = "test",
-                  ping = 19,
+                  ping = 19.milliseconds,
                   status = UserStatus.CONNECTING,
                   userId = 392,
                   connectionType = ConnectionType.LAN
@@ -182,7 +183,7 @@ class V086BundleTest {
             messageNumber = 5,
             username = "jj",
             userId = 395,
-            ping = 31,
+            ping = 31.milliseconds,
             connectionType = ConnectionType.LAN
           ),
           ServerStatus(
@@ -191,7 +192,7 @@ class V086BundleTest {
               listOf(
                 ServerStatus.User(
                   username = "test",
-                  ping = 19,
+                  ping = 19.milliseconds,
                   status = UserStatus.CONNECTING,
                   userId = 392,
                   connectionType = ConnectionType.LAN
@@ -325,7 +326,7 @@ class V086BundleTest {
               listOf(
                 ServerStatus.User(
                   username = "test",
-                  ping = 19,
+                  ping = 19.milliseconds,
                   status = UserStatus.CONNECTING,
                   userId = 392,
                   connectionType = ConnectionType.LAN

@@ -13,7 +13,6 @@ import org.emulinker.kaillera.controller.v086.action.ActionModule
 import org.emulinker.util.EmuUtil.toSimpleUtcDatetime
 import org.emulinker.util.stripFromProdBinary
 import org.koin.core.context.startKoin
-import org.koin.dsl.bind
 
 private val logger = FluentLogger.forEnclosingClass()
 
