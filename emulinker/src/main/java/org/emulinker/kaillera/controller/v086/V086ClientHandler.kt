@@ -7,6 +7,8 @@ import io.netty.channel.socket.DatagramPacket
 import java.net.InetSocketAddress
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.nanoseconds
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.controller.CombinedKailleraController
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
@@ -123,7 +125,7 @@ class V086ClientHandler(
   }
 
   fun startSpeedTest() {
-    lastMeasurement = System.currentTimeMillis()
+    lastMeasurement = System.nanoTime()
     testStart = lastMeasurement
     speedMeasurementCount = 0
   }
@@ -134,11 +136,11 @@ class V086ClientHandler(
       bestNetworkSpeed = et
     }
     speedMeasurementCount++
-    lastMeasurement = System.currentTimeMillis()
+    lastMeasurement = System.nanoTime()
   }
 
-  val averageNetworkSpeed: Int
-    get() = ((lastMeasurement - testStart) / speedMeasurementCount).toInt()
+  val averageNetworkSpeed: Duration
+    get() = (lastMeasurement - testStart).nanoseconds / speedMeasurementCount
 
   fun start(user: KailleraUser) {
     this.user = user

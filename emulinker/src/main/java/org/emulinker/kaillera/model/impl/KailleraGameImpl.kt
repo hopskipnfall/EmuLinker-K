@@ -40,6 +40,7 @@ import org.emulinker.kaillera.model.exception.StartGameException
 import org.emulinker.kaillera.model.exception.UserReadyException
 import org.emulinker.util.EmuLang
 import org.emulinker.util.EmuUtil.threadSleep
+import org.emulinker.util.EmuUtil.toMillisDouble
 import org.emulinker.util.TimeOffsetCache
 
 class KailleraGameImpl(
@@ -254,7 +255,7 @@ class KailleraGameImpl(
       logger.atWarning().log("%s join game denied: max users reached %s", user, this)
       throw JoinGameException("This room's user capacity has been reached.")
     }
-    if (access < AccessManager.ACCESS_ELEVATED && user.ping > maxPing) {
+    if (access < AccessManager.ACCESS_ELEVATED && user.ping > maxPing.milliseconds) {
       logger.atWarning().log("%s join game denied: max ping reached %s", user, this)
       throw JoinGameException("Your ping is too high for this room.")
     }
@@ -448,7 +449,8 @@ class KailleraGameImpl(
         )
       // SF MOD - player.setPlayerNumber(playerNumber);
       // SF MOD - Delay Value = [(60/connectionType) * (ping/1000)] + 1
-      val delayVal = 60 / player.connectionType.byteValue * (player.ping.toDouble() / 1000) + 1
+      val delayVal =
+        60.0 / player.connectionType.byteValue * (player.ping.toMillisDouble() / 1000.0) + 1.0
       player.frameDelay = delayVal.toInt()
       if (delayVal.toInt() > highestUserFrameDelay) {
         highestUserFrameDelay = delayVal.toInt()

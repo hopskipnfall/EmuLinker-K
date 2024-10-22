@@ -45,7 +45,7 @@ class LoginAction : V086Action<UserInformation>, V086ServerEventHandler<UserJoin
           clientHandler.nextMessageNumber,
           user.name!!,
           user.id,
-          user.ping.toLong(),
+          user.ping,
           user.connectionType
         )
       )

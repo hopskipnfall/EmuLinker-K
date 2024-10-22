@@ -8,6 +8,7 @@ import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 import kotlin.Throws
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.nanoseconds
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.DurationUnit.MILLISECONDS
@@ -57,7 +58,7 @@ class KailleraUser(
 
   var connectionType: ConnectionType =
     ConnectionType.DISABLED // TODO(nue): This probably shouldn't have a default.
-  var ping = 0
+  var ping = 0.milliseconds // TODO(nue): This probably shouldn't have a default.
   var socketAddress: InetSocketAddress? = null
   var status = UserStatus.PLAYING // TODO(nue): This probably shouldn't have a default value..
 

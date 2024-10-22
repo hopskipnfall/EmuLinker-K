@@ -15,6 +15,7 @@ import java.util.Properties
 import java.util.concurrent.TimeUnit
 import kotlin.system.measureNanoTime
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.format.DateTimeComponents
@@ -310,4 +311,7 @@ object EmuUtil {
     this.update(measureNanoTime { out = toTime() }, TimeUnit.NANOSECONDS)
     return out
   }
+
+  fun Duration.toMillisDouble(): Double =
+    this.inWholeNanoseconds / 1.milliseconds.inWholeNanoseconds.toDouble()
 }

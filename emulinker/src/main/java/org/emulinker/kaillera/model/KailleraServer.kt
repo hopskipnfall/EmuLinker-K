@@ -228,7 +228,7 @@ class KailleraServer(
     if (
       access == AccessManager.ACCESS_NORMAL &&
         flags.maxPing > 0.milliseconds &&
-        user.ping.milliseconds > flags.maxPing
+        user.ping > flags.maxPing
     ) {
       logger.atInfo().log("%s login denied: Ping %d ms > %s", user, user.ping, flags.maxPing)
       usersMap.remove(userListKey)
@@ -256,7 +256,7 @@ class KailleraServer(
         )
       )
     }
-    if (user.ping < 0) {
+    if (user.ping < 0.milliseconds) {
       logger.atWarning().log("%s login denied: Invalid ping: %d", user, user.ping)
       usersMap.remove(userListKey)
       return Result.failure(
