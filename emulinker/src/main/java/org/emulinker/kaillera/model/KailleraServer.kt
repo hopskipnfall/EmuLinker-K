@@ -849,8 +849,6 @@ class KailleraServer(
               player.status == UserStatus.IDLE &&
                 game.waitingOnPlayerNumber[player.playerNumber - 1]
             ) {
-              // DO NOT MERGE.
-              logger.atSevere().log("INVESTIGATE: FOUND STUCK GAME? triggering fan-out %s", player)
               game.maybeSendData(usersMap[player.id]!!)
               break
             }

@@ -445,7 +445,6 @@ class KailleraGameImpl(
           player,
           numPlayers = players.size,
           gameBufferSize = bufferSize,
-          timeout,
         )
       // SF MOD - player.setPlayerNumber(playerNumber);
       // SF MOD - Delay Value = [(60/connectionType) * (ping/1000)] + 1
@@ -505,7 +504,7 @@ class KailleraGameImpl(
         while (i < playerActionQueues!!.size && i < players.size) {
           val player = players[i]
           // do not show delay if stealth mode
-          if (player != null && !player.inStealthMode) {
+          if (!player.inStealthMode) {
             frameDelay = (player.frameDelay + 1) * player.connectionType.byteValue - 1
             announce("P${i + 1} Delay = ${player.frameDelay} ($frameDelay frame delay)")
           }
@@ -554,8 +553,6 @@ class KailleraGameImpl(
       announce("Rejoin server to update client of ignored server activity!", user)
     }
     if (waitingOnData) {
-      // DO NOT MERGE.
-      logger.atSevere().log("INVESTIGATE: WAITING ON DATA, sending now!!")
       maybeSendData(user)
     }
   }

@@ -1,13 +1,6 @@
 package org.emulinker.kaillera.model.impl
 
-import com.google.common.flogger.FluentLogger
-import com.google.common.flogger.StackSize
-import java.lang.InterruptedException
-import java.util.concurrent.TimeUnit
-import java.util.concurrent.locks.ReentrantLock
 import kotlin.Throws
-import kotlin.concurrent.withLock
-import kotlin.time.Duration
 import org.emulinker.kaillera.model.KailleraUser
 
 class PlayerActionQueue(
@@ -15,7 +8,6 @@ class PlayerActionQueue(
   val player: KailleraUser,
   numPlayers: Int,
   private val gameBufferSize: Int,
-  private val gameTimeout: Duration,
 ) {
   var lastTimeout: PlayerTimeoutException? = null
   private val array = ByteArray(gameBufferSize)
@@ -31,25 +23,12 @@ class PlayerActionQueue(
   var synced = false
     private set
 
-  private val lock = ReentrantLock()
-  private val condition = lock.newCondition()
-
   fun markSynced() {
     synced = true
   }
 
   fun markDesynced() {
     synced = false
-    // The game is in a broken state, so we should wake up all threads blocked waiting for new data.
-    if (lock.isLocked) {
-      // DO NOT MERGE.
-      logger
-        .atSevere()
-        .atMostEvery(5, TimeUnit.SECONDS)
-        .withStackTrace(StackSize.SMALL)
-        .log("INVESTIGATE: LOCKED!!! when marking desync")
-    }
-    lock.withLock { condition.signalAll() }
   }
 
   fun addActions(actions: ByteArray) {
@@ -60,15 +39,6 @@ class PlayerActionQueue(
       tail++
       if (tail == gameBufferSize) tail = 0
     }
-    if (lock.isLocked) {
-      // DO NOT MERGE.
-      logger
-        .atSevere()
-        .atMostEvery(5, TimeUnit.SECONDS)
-        .withStackTrace(StackSize.SMALL)
-        .log("INVESTIGATE: LOCKED!!!")
-    }
-    lock.withLock { condition.signalAll() }
     lastTimeout = null
   }
 
@@ -79,21 +49,8 @@ class PlayerActionQueue(
     writeAtIndex: Int,
     actionLength: Int
   ) {
-    // Note: It's possible this never happens and we can replace this with an assertion.
-    if (lock.isLocked) {
-      // DO NOT MERGE.
-      logger
-        .atSevere()
-        .atMostEvery(5, TimeUnit.SECONDS)
-        .withStackTrace(StackSize.SMALL)
-        .log("INVESTIGATE: LOCKED!!! when getting data")
-    }
-    lock.withLock {
-      if (synced && !containsNewDataForPlayer(playerIndex, actionLength)) {
-        try {
-          condition.await(gameTimeout.inWholeMilliseconds, TimeUnit.MILLISECONDS)
-        } catch (e: InterruptedException) {}
-      }
+    if (synced && !containsNewDataForPlayer(playerIndex, actionLength)) {
+      throw AssertionError("I think this is impossible")
     }
     if (getSize(playerIndex) >= actionLength) {
       for (i in 0 until actionLength) {
@@ -113,8 +70,4 @@ class PlayerActionQueue(
 
   private fun getSize(playerIndex: Int): Int =
     (tail + gameBufferSize - heads[playerIndex]) % gameBufferSize
-
-  companion object {
-    private val logger = FluentLogger.forEnclosingClass()
-  }
 }

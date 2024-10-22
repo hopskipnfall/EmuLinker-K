@@ -1,7 +1,6 @@
 package org.emulinker.kaillera.model.impl
 
 import com.google.common.truth.Truth.assertThat
-import kotlin.time.Duration.Companion.seconds
 import org.emulinker.testing.LoggingRule
 import org.junit.Ignore
 import org.junit.Rule
@@ -14,13 +13,7 @@ class PlayerActionQueueTest {
   @Test
   fun `containsNewDataForPlayer returns false if no data`() {
     val queue =
-      PlayerActionQueue(
-        playerNumber = 1,
-        player = mock(),
-        numPlayers = 1,
-        gameBufferSize = 4096,
-        gameTimeout = 1.seconds
-      )
+      PlayerActionQueue(playerNumber = 1, player = mock(), numPlayers = 1, gameBufferSize = 4096)
     queue.markSynced()
 
     assertThat(queue.containsNewDataForPlayer(playerIndex = 0, actionLength = DATA.size)).isFalse()
@@ -29,13 +22,7 @@ class PlayerActionQueueTest {
   @Test
   fun `containsNewDataForPlayer returns false if there is data`() {
     val queue =
-      PlayerActionQueue(
-        playerNumber = 1,
-        player = mock(),
-        numPlayers = 1,
-        gameBufferSize = 4096,
-        gameTimeout = 1.seconds
-      )
+      PlayerActionQueue(playerNumber = 1, player = mock(), numPlayers = 1, gameBufferSize = 4096)
     queue.markSynced()
 
     queue.addActions(DATA)
@@ -46,13 +33,7 @@ class PlayerActionQueueTest {
   @Test
   fun containsNewDataForPlayer() {
     val queue =
-      PlayerActionQueue(
-        playerNumber = 1,
-        player = mock(),
-        numPlayers = 1,
-        gameBufferSize = 4096,
-        gameTimeout = 1.seconds
-      )
+      PlayerActionQueue(playerNumber = 1, player = mock(), numPlayers = 1, gameBufferSize = 4096)
     queue.markSynced()
 
     queue.addActions(DATA)
@@ -72,13 +53,7 @@ class PlayerActionQueueTest {
   @Ignore // TODO: Fill out this test properly with real data.
   fun `containsNewDataForPlayer works for two players`() {
     val queue =
-      PlayerActionQueue(
-        playerNumber = 1,
-        player = mock(),
-        numPlayers = 2,
-        gameBufferSize = 4096,
-        gameTimeout = 1.seconds
-      )
+      PlayerActionQueue(playerNumber = 1, player = mock(), numPlayers = 2, gameBufferSize = 4096)
     queue.markSynced()
 
     queue.addActions(DATA)
