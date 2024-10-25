@@ -12,6 +12,7 @@ import kotlin.Throws
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
+import kotlin.time.DurationUnit
 import kotlinx.datetime.Clock
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.access.AccessManager
@@ -195,11 +196,11 @@ class KailleraServer(
     logger
       .atInfo()
       .log(
-        "%s: login request: clientAddress=%s, name=%s, ping=%d, client=%s, connection=%s",
+        "%s: login request: clientAddress=%s, name=%s, ping=%s, client=%s, connection=%s",
         user,
         EmuUtil.formatSocketAddress(user.socketAddress!!),
         user.name,
-        user.ping,
+        user.ping.toString(DurationUnit.MILLISECONDS, decimals = 1),
         user.clientType,
         user.connectionType
       )
