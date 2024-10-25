@@ -78,7 +78,7 @@ class JoinGameAction :
             game.id,
             0,
             user.name!!,
-            user.ping.inWholeMilliseconds,
+            user.ping,
             user.id,
             user.connectionType
           )
