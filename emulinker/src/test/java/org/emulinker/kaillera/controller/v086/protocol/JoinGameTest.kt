@@ -3,6 +3,7 @@ package org.emulinker.kaillera.controller.v086.protocol
 import com.google.common.truth.Truth.assertThat
 import io.ktor.utils.io.core.ByteReadPacket
 import java.nio.ByteBuffer
+import kotlin.time.Duration.Companion.milliseconds
 import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.kaillera.controller.v086.protocol.MessageTestUtils.assertBufferContainsExactly
 import org.emulinker.kaillera.model.ConnectionType
@@ -85,7 +86,7 @@ class JoinGameTest : ProtocolBaseTest() {
         gameId = 135,
         val1 = 1234,
         username = "nue",
-        ping = 1235,
+        ping = 1235.milliseconds,
         userId = 13,
         connectionType = ConnectionType.BAD
       )
