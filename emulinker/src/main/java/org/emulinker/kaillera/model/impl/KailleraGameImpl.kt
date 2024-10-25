@@ -447,8 +447,6 @@ class KailleraGameImpl(
           numPlayers = players.size,
           gameBufferSize = bufferSize,
         )
-      // SF MOD - player.setPlayerNumber(playerNumber);
-      // SF MOD - Delay Value = [(60/connectionType) * (ping/1000)] + 1
       val delayVal =
         60.0 / player.connectionType.byteValue * (player.ping.toMillisDouble() / 1000.0) + 1.0
       player.frameDelay = delayVal.toInt()

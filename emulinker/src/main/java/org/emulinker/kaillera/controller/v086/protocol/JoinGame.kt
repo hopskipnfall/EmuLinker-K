@@ -3,12 +3,16 @@ package org.emulinker.kaillera.controller.v086.protocol
 import io.ktor.utils.io.core.ByteReadPacket
 import io.netty.buffer.ByteBuf
 import java.nio.ByteBuffer
+import kotlin.math.roundToLong
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.kaillera.controller.v086.V086Utils.getNumBytesPlusStopByte
 import org.emulinker.kaillera.model.ConnectionType
 import org.emulinker.util.EmuUtil
 import org.emulinker.util.EmuUtil.readString
+import org.emulinker.util.EmuUtil.toMillisDouble
 import org.emulinker.util.UnsignedUtil.getUnsignedInt
 import org.emulinker.util.UnsignedUtil.getUnsignedShort
 import org.emulinker.util.UnsignedUtil.putUnsignedInt
@@ -49,7 +53,7 @@ sealed class JoinGame : V086Message() {
 
     private const val REQUEST_VAL1 = 0
     private const val REQUEST_USERNAME = ""
-    private const val REQUEST_PING = 0L
+    private val REQUEST_PING = 0L.milliseconds
     private const val REQUEST_USER_ID = 0xFFFF
   }
 
@@ -81,7 +85,7 @@ sealed class JoinGame : V086Message() {
             gameID,
             val1,
             userName,
-            ping,
+            ping.milliseconds,
             userID,
             ConnectionType.fromByteValue(connectionType)
           )
@@ -113,7 +117,7 @@ sealed class JoinGame : V086Message() {
             gameID,
             val1,
             userName,
-            ping,
+            ping.milliseconds,
             userID,
             ConnectionType.fromByteValue(connectionType)
           )
@@ -145,7 +149,7 @@ sealed class JoinGame : V086Message() {
             gameID,
             val1,
             userName,
-            ping,
+            ping.milliseconds,
             userID,
             ConnectionType.fromByteValue(connectionType)
           )
@@ -170,9 +174,11 @@ sealed class JoinGame : V086Message() {
       )
       buffer.putUnsignedInt(
         when (message) {
-          is JoinGameRequest -> REQUEST_PING
-          is JoinGameNotification -> message.ping
-        }
+            is JoinGameRequest -> REQUEST_PING
+            is JoinGameNotification -> message.ping
+          }
+          .toMillisDouble()
+          .roundToLong()
       )
       buffer.putUnsignedShort(
         when (message) {
@@ -201,9 +207,11 @@ sealed class JoinGame : V086Message() {
       )
       buffer.putUnsignedInt(
         when (message) {
-          is JoinGameRequest -> REQUEST_PING
-          is JoinGameNotification -> message.ping
-        }
+            is JoinGameRequest -> REQUEST_PING
+            is JoinGameNotification -> message.ping
+          }
+          .toMillisDouble()
+          .roundToLong()
       )
       buffer.putUnsignedShort(
         when (message) {
@@ -226,14 +234,14 @@ data class JoinGameNotification(
   override val gameId: Int,
   val val1: Int,
   val username: String,
-  val ping: Long,
+  val ping: Duration,
   val userId: Int,
   override val connectionType: ConnectionType
 ) : JoinGame(), ServerMessage {
 
   init {
     require(gameId in 0..0xFFFF) { "gameID out of acceptable range: $gameId" }
-    require(ping in 0..0xFFFF) { "ping out of acceptable range: $ping" }
+    require(ping in 0.milliseconds..0xFFFF.milliseconds) { "ping out of acceptable range: $ping" }
     require(userId in 0..0xFFFF) { "UserID out of acceptable range: $userId" }
     require(username.isNotBlank()) { "Username cannot be empty" }
   }
