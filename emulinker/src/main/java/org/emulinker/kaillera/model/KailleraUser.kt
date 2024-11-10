@@ -441,7 +441,7 @@ class KailleraUser(
     }
     totalDelay = game.highestUserFrameDelay + tempDelay + 5
 
-    val singleFrameDuration = 1.seconds / connectionType.updatesPerSecond
+    val singleFrameDuration = 1.seconds / connectionType.getUpdatesPerSecond()
 
     singleFrameDurationNs = singleFrameDuration.inWholeNanoseconds
 

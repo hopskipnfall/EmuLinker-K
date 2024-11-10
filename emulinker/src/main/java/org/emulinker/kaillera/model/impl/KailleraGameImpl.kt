@@ -71,12 +71,12 @@ class KailleraGameImpl(
    */
   var waitingOnData = false
   /**
-   * If [waitingOnPlayerNumber[playerNumber - 1] is `true`, we are waiting on data for that player.
+   * If `waitingOnPlayerNumber[playerNumber - 1]` is `true`, we are waiting on data for that player.
    */
   val waitingOnPlayerNumber = BooleanArray(10) { false }
 
   // TODO(nue): Combine this with [KailleraUser.singleFrameDurationNs].
-  private var singleFrameDurationNs: Long = 0
+  private var singleFrameDurationNs = 0L
 
   /** Last time we fanned out data for a frame. */
   private var lastFrameNs = System.nanoTime()
@@ -86,7 +86,7 @@ class KailleraGameImpl(
 
   override val players: MutableList<KailleraUser> = CopyOnWriteArrayList()
 
-  var lagLeewayNs = 0.seconds.inWholeNanoseconds
+  private var lagLeewayNs = 0.seconds.inWholeNanoseconds
   var totalDriftNs = 0.seconds.inWholeNanoseconds
   val totalDriftCache = TimeOffsetCache(delay = flags.lagstatDuration, resolution = 5.seconds)
 
@@ -106,7 +106,6 @@ class KailleraGameImpl(
   private var lastAddressCount = 0
   private var isSynched = false
 
-  private val timeout = 100.milliseconds
   private val desynchTimeouts = 120
 
   private val statsCollector: StatsCollector? = server.statsCollector
@@ -380,7 +379,7 @@ class KailleraGameImpl(
       )
     }
 
-    val singleFrameDuration = 1.seconds / user.connectionType.updatesPerSecond
+    val singleFrameDuration = 1.seconds / user.connectionType.getUpdatesPerSecond(GAME_FPS)
     singleFrameDurationNs = singleFrameDuration.inWholeNanoseconds
 
     // do not start if not game
@@ -448,7 +447,8 @@ class KailleraGameImpl(
           gameBufferSize = bufferSize,
         )
       val delayVal =
-        60.0 / player.connectionType.byteValue * (player.ping.toMillisDouble() / 1000.0) + 1.0
+        GAME_FPS.toDouble() / player.connectionType.byteValue *
+          (player.ping.toMillisDouble() / 1000.0) + 1.0
       player.frameDelay = delayVal.toInt()
       if (delayVal.toInt() > highestUserFrameDelay) {
         highestUserFrameDelay = delayVal.toInt()
@@ -797,12 +797,13 @@ class KailleraGameImpl(
     }
   }
 
-  private val lock = Object()
-
   /** Helper function to avoid one level of indentation. */
-  private inline fun <T> withLock(action: () -> T): T = synchronized(lock) { action() }
+  private inline fun <T> withLock(action: () -> T): T = synchronized(this) { action() }
 
   companion object {
     private val logger = FluentLogger.forEnclosingClass()
+
+    /** Unfortunately Kaillera is built on the assumption that all games run at 60FPS. */
+    const val GAME_FPS = 60
   }
 }
