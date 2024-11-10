@@ -53,6 +53,9 @@ enum class ConnectionType(
   override fun toString() = readableName
 
   fun getUpdatesPerSecond(gameFps: Int = KailleraGameImpl.GAME_FPS): Double =
+    getUpdatesPerSecond(gameFps.toDouble())
+
+  fun getUpdatesPerSecond(gameFps: Double): Double =
     if (byteValue == 0.toByte()) 0.0 else gameFps.toDouble() / byteValue
 
   companion object {

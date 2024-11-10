@@ -11,7 +11,6 @@ import kotlin.Throws
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.nanoseconds
 import kotlin.time.Duration.Companion.seconds
-import kotlin.time.DurationUnit.MILLISECONDS
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import org.emulinker.config.RuntimeFlags
@@ -26,6 +25,7 @@ import org.emulinker.kaillera.model.event.UserQuitGameEvent
 import org.emulinker.kaillera.model.exception.*
 import org.emulinker.kaillera.model.impl.KailleraGameImpl
 import org.emulinker.util.EmuLang
+import org.emulinker.util.EmuUtil.toSecondDoublePrecisionString
 import org.emulinker.util.TimeOffsetCache
 
 /**
@@ -75,11 +75,11 @@ class KailleraUser(
   /** This marks the last time the user interacted in the server. */
   private var lastActivity: Instant = initTime
 
-  private var singleFrameDurationNs = 0.seconds.inWholeNanoseconds
   private var lagLeewayNs = 0.seconds.inWholeNanoseconds
   private var totalDriftNs = 0.seconds.inWholeNanoseconds
   private val totalDriftCache =
     TimeOffsetCache(delay = flags.lagstatDuration, resolution = 5.seconds)
+  private var receivedGameDataNs: Long? = null
 
   /** The last time we heard from this player for lag detection purposes. */
   private var lastUpdateNs = System.nanoTime()
@@ -304,7 +304,7 @@ class KailleraUser(
     (totalDriftNs - (totalDriftCache.getDelayedValue() ?: 0))
       .nanoseconds
       .absoluteValue
-      .toString(MILLISECONDS)
+      .toSecondDoublePrecisionString()
 
   fun resetLag() {
     totalDriftNs = 0
@@ -441,14 +441,8 @@ class KailleraUser(
     }
     totalDelay = game.highestUserFrameDelay + tempDelay + 5
 
-    val singleFrameDuration = 1.seconds / connectionType.getUpdatesPerSecond()
-
-    singleFrameDurationNs = singleFrameDuration.inWholeNanoseconds
-
     game.ready(this, playerNumber)
   }
-
-  var receivedGameDataNs: Long? = null
 
   fun addGameData(data: ByteArray): Result<Unit> {
     receivedGameDataNs = System.nanoTime()
@@ -531,15 +525,16 @@ class KailleraUser(
     val delaySinceLastResponseNs = nowNs - lastUpdateNs
     val timeWaitingNs = nowNs - receivedGameDataNs
     val delaySinceLastResponseMinusWaitingNs = delaySinceLastResponseNs - timeWaitingNs
-    val leewayChangeNs = singleFrameDurationNs - delaySinceLastResponseMinusWaitingNs
+    val leewayChangeNs =
+      game!!.singleFrameDurationForLagCalculationOnlyNs - delaySinceLastResponseMinusWaitingNs
     lagLeewayNs += leewayChangeNs
     if (lagLeewayNs < 0) {
       // Lag leeway fell below zero. We caused lag!
       totalDriftNs += lagLeewayNs
       lagLeewayNs = 0
-    } else if (lagLeewayNs > singleFrameDurationNs) {
+    } else if (lagLeewayNs > game!!.singleFrameDurationForLagCalculationOnlyNs) {
       // Does not make sense to allow lag leeway to be longer than the length of one frame.
-      lagLeewayNs = singleFrameDurationNs
+      lagLeewayNs = game!!.singleFrameDurationForLagCalculationOnlyNs
     }
     lastUpdateNs = nowNs
     totalDriftCache.update(totalDriftNs, nowNs = nowNs)

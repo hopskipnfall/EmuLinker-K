@@ -76,7 +76,8 @@ class KailleraGameImpl(
   val waitingOnPlayerNumber = BooleanArray(10) { false }
 
   // TODO(nue): Combine this with [KailleraUser.singleFrameDurationNs].
-  private var singleFrameDurationNs = 0L
+  var singleFrameDurationForLagCalculationOnlyNs = 0L
+    private set
 
   /** Last time we fanned out data for a frame. */
   private var lastFrameNs = System.nanoTime()
@@ -85,6 +86,9 @@ class KailleraGameImpl(
     private set
 
   override val players: MutableList<KailleraUser> = CopyOnWriteArrayList()
+
+  var lastLagReset = clock.now()
+    private set
 
   private var lagLeewayNs = 0.seconds.inWholeNanoseconds
   var totalDriftNs = 0.seconds.inWholeNanoseconds
@@ -379,8 +383,8 @@ class KailleraGameImpl(
       )
     }
 
-    val singleFrameDuration = 1.seconds / user.connectionType.getUpdatesPerSecond(GAME_FPS)
-    singleFrameDurationNs = singleFrameDuration.inWholeNanoseconds
+    singleFrameDurationForLagCalculationOnlyNs =
+      (1.seconds / user.connectionType.getUpdatesPerSecond(GAME_FPS)).inWholeNanoseconds
 
     // do not start if not game
     if (owner.game!!.romName.startsWith("*")) return
@@ -743,20 +747,31 @@ class KailleraGameImpl(
   fun resetLag() {
     totalDriftCache.clear()
     totalDriftNs = 0
+    lastLagReset = clock.now()
+  }
+
+  /** Sets the game framerate for lag measuring purposes. */
+  fun setGameFps(fps: Double) {
+    singleFrameDurationForLagCalculationOnlyNs =
+      (1.seconds / players.first().connectionType.getUpdatesPerSecond(fps)).inWholeNanoseconds
+    resetLag()
+    for (player in players) {
+      player.resetLag()
+    }
   }
 
   private fun updateGameDrift() {
     val nowNs = System.nanoTime()
     val delaySinceLastResponseNs = nowNs - lastFrameNs
 
-    lagLeewayNs += singleFrameDurationNs - delaySinceLastResponseNs
+    lagLeewayNs += singleFrameDurationForLagCalculationOnlyNs - delaySinceLastResponseNs
     if (lagLeewayNs < 0) {
       // Lag leeway fell below zero. Lag occurred!
       totalDriftNs += lagLeewayNs
       lagLeewayNs = 0
-    } else if (lagLeewayNs > singleFrameDurationNs) {
+    } else if (lagLeewayNs > singleFrameDurationForLagCalculationOnlyNs) {
       // Does not make sense to allow lag leeway to be longer than the length of one frame.
-      lagLeewayNs = singleFrameDurationNs
+      lagLeewayNs = singleFrameDurationForLagCalculationOnlyNs
     }
     totalDriftCache.update(totalDriftNs, nowNs = nowNs)
     lastFrameNs = nowNs
