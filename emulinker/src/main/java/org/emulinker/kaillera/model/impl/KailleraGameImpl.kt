@@ -768,6 +768,7 @@ class KailleraGameImpl(
     }
   }
 
+  @Deprecated("Maybe this should be removed before submitting.")
   private val fps = metrics.meter("gameFps")
 
   private fun updateGameDrift() {

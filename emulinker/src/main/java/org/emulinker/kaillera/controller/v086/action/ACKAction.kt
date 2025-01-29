@@ -36,7 +36,7 @@ class ACKAction : V086Action<ClientAck>, V086UserEventHandler<UserEvent> {
       logger
         .atFine()
         .log(
-          "Calculated %s ping time: average=%d, best=%d",
+          "Calculated %s ping time: average=%s, best=%d",
           user,
           clientHandler.averageNetworkSpeed,
           clientHandler.bestNetworkSpeed

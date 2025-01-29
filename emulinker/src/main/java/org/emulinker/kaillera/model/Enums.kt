@@ -56,7 +56,7 @@ enum class ConnectionType(
     getUpdatesPerSecond(gameFps.toDouble())
 
   fun getUpdatesPerSecond(gameFps: Double): Double =
-    if (byteValue == 0.toByte()) 0.0 else gameFps.toDouble() / byteValue
+    if (byteValue == 0.toByte()) 0.0 else gameFps / byteValue
 
   companion object {
     fun fromByteValue(byteValue: Byte): ConnectionType =

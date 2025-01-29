@@ -131,7 +131,7 @@ class V086ClientHandler(
   }
 
   fun addSpeedMeasurement() {
-    val et = (System.currentTimeMillis() - lastMeasurement).toInt()
+    val et = (System.nanoTime() - lastMeasurement).toInt()
     if (et < bestNetworkSpeed) {
       bestNetworkSpeed = et
     }
