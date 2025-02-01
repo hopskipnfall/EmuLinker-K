@@ -464,11 +464,14 @@ class GameChatAction(
           return
         }
         val lagstatDuration = min(flags.lagstatDuration, clock.now() - game.lastLagReset)
-        val asString =
-          if (lagstatDuration < 1.minutes) lagstatDuration.toString(SECONDS)
-          else lagstatDuration.toString(MINUTES, 1)
+        val lagstatDurationAsString =
+          if (lagstatDuration < 1.minutes) {
+            lagstatDuration.toString(SECONDS)
+          } else {
+            lagstatDuration.toString(MINUTES, 1)
+          }
         game.announce(
-          "Total lag over the last ${asString}: " +
+          "Total lag over the last ${lagstatDurationAsString}: " +
             (game.totalDriftNs - (game.totalDriftCache.getDelayedValue() ?: 0))
               .nanoseconds
               .absoluteValue
@@ -488,10 +491,11 @@ class GameChatAction(
         game.resetLag()
         game.announce("LagStat has been reset!")
       } else if (
-        message.message.startsWith("/fps") &&
+        message.message.startsWith("/fps ") &&
           message.message.removePrefix("/fps ").toDoubleOrNull() != null
       ) {
         game.chat(clientHandler.user, message.message)
+        // TODO(nue): Enforce fps bounds.
         val newFps = message.message.removePrefix("/fps ").toDouble()
         game.setGameFps(newFps)
         game.announce("Measuring lag for $newFps frames per second")
