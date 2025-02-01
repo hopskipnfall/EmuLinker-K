@@ -1,6 +1,5 @@
 package org.emulinker.kaillera.model.impl
 
-import com.codahale.metrics.MetricRegistry
 import com.google.common.flogger.FluentLogger
 import java.lang.Exception
 import java.util.Date
@@ -44,7 +43,6 @@ import org.emulinker.util.EmuUtil.threadSleep
 import org.emulinker.util.EmuUtil.toMillisDouble
 import org.emulinker.util.TimeOffsetCache
 import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
 
 class KailleraGameImpl(
   override val id: Int,
@@ -55,8 +53,6 @@ class KailleraGameImpl(
   flags: RuntimeFlags,
   private val clock: Clock,
 ) : KailleraGame, KoinComponent {
-
-  private val metrics: MetricRegistry by inject()
 
   override var highestUserFrameDelay = 0
   override var maxPing = 1000
@@ -768,12 +764,7 @@ class KailleraGameImpl(
     }
   }
 
-  @Deprecated("Maybe this should be removed before submitting.")
-  private val fps = metrics.meter("gameFps")
-
   private fun updateGameDrift() {
-    fps.mark()
-
     val nowNs = System.nanoTime()
     val delaySinceLastResponseNs = nowNs - lastFrameNs
 

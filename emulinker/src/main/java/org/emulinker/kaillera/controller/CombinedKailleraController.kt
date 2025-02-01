@@ -57,9 +57,11 @@ class CombinedKailleraController(
             thread(start = false) {
               logger.atInfo().log("Received SIGTERM, shutting down gracefully.")
               try {
-                clientHandlers.values.forEach { handler ->
+                for (handler in clientHandlers.values) {
                   handler.user.server.quit(handler.user, "Server shutting down")
                 }
+                // Give the server time to notify everyone they are being kicked.
+                Thread.sleep(3_000)
               } finally {
                 nettyChannel.close()
               }
