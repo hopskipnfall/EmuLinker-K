@@ -1,8 +1,9 @@
 package org.emulinker.kaillera.controller.v086.protocol
 
-import io.ktor.utils.io.core.ByteReadPacket
+import io.ktor.utils.io.core.remaining
 import io.netty.buffer.ByteBuf
 import java.nio.ByteBuffer
+import kotlinx.io.Source
 import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.kaillera.controller.v086.V086Utils.getNumBytesPlusStopByte
 import org.emulinker.util.EmuUtil
@@ -26,7 +27,7 @@ sealed class CreateGame : V086Message() {
   object CreateGameSerializer : MessageSerializer<CreateGame> {
     override val messageTypeId: Byte = ID
 
-    override fun read(packet: ByteReadPacket, messageNumber: Int): Result<CreateGame> {
+    override fun read(packet: Source, messageNumber: Int): Result<CreateGame> {
       if (packet.remaining < 8) {
         return parseFailure("Failed byte count validation!")
       }

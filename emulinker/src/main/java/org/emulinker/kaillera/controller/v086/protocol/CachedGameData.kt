@@ -1,8 +1,9 @@
 package org.emulinker.kaillera.controller.v086.protocol
 
-import io.ktor.utils.io.core.ByteReadPacket
+import io.ktor.utils.io.core.remaining
 import io.netty.buffer.ByteBuf
 import java.nio.ByteBuffer
+import kotlinx.io.Source
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.util.UnsignedUtil.getUnsignedByte
@@ -64,7 +65,7 @@ constructor(override val messageNumber: Int, val key: Int) :
       return Result.success(CachedGameData(messageNumber, buffer.getUnsignedByte().toInt()))
     }
 
-    override fun read(packet: ByteReadPacket, messageNumber: Int): Result<CachedGameData> {
+    override fun read(packet: Source, messageNumber: Int): Result<CachedGameData> {
       if (packet.remaining < 2) {
         return parseFailure("Failed byte count validation!")
       }

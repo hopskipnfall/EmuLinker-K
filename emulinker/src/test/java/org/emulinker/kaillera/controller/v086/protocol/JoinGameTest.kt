@@ -2,6 +2,7 @@ package org.emulinker.kaillera.controller.v086.protocol
 
 import com.google.common.truth.Truth.assertThat
 import io.ktor.utils.io.core.ByteReadPacket
+import io.ktor.utils.io.core.endOfInput
 import java.nio.ByteBuffer
 import kotlin.time.Duration.Companion.milliseconds
 import org.emulinker.kaillera.controller.v086.V086Utils

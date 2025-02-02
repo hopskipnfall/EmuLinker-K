@@ -43,7 +43,7 @@ dependencies {
   implementation("commons-configuration:commons-configuration:1.10")
   implementation("commons-pool:commons-pool:1.6")
 
-  val ktorVersion = "2.3.12"
+  val ktorVersion = "3.0.3"
   implementation("io.ktor:ktor-network-jvm:$ktorVersion")
   implementation("io.ktor:ktor-server-core-jvm:$ktorVersion")
   implementation("io.ktor:ktor-server-netty-jvm:$ktorVersion")

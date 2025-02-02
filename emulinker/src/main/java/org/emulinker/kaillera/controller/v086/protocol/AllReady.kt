@@ -1,8 +1,9 @@
 package org.emulinker.kaillera.controller.v086.protocol
 
-import io.ktor.utils.io.core.ByteReadPacket
+import io.ktor.utils.io.core.remaining
 import io.netty.buffer.ByteBuf
 import java.nio.ByteBuffer
+import kotlinx.io.Source
 import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.util.EmuUtil
 import org.emulinker.util.EmuUtil.toHexString
@@ -59,7 +60,7 @@ data class AllReady(override val messageNumber: Int) : V086Message(), ServerMess
       return Result.success(AllReady(messageNumber))
     }
 
-    override fun read(packet: ByteReadPacket, messageNumber: Int): Result<AllReady> {
+    override fun read(packet: Source, messageNumber: Int): Result<AllReady> {
       if (packet.remaining < 1) {
         return parseFailure("Failed byte count validation!")
       }

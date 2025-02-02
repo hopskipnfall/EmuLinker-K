@@ -1,9 +1,9 @@
 package org.emulinker.kaillera.controller.v086.protocol
 
 import com.google.common.flogger.FluentLogger
-import io.ktor.utils.io.core.ByteReadPacket
 import io.netty.buffer.ByteBuf
 import java.nio.ByteBuffer
+import kotlinx.io.Source
 import org.emulinker.kaillera.controller.messaging.ByteBufferMessage
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.messaging.ParseException
@@ -197,7 +197,7 @@ abstract class V086Message : ByteBufferMessage() {
     }
 
     @Throws(ParseException::class, MessageFormatException::class)
-    fun parse(messageNumber: Int, messageLength: Int, packet: ByteReadPacket): V086Message {
+    fun parse(messageNumber: Int, messageLength: Int, packet: Source): V086Message {
       val messageType = packet.readByte()
 
       val serializer =

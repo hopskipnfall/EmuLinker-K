@@ -1,8 +1,9 @@
 package org.emulinker.kaillera.controller.v086.protocol
 
-import io.ktor.utils.io.core.ByteReadPacket
+import io.ktor.utils.io.core.remaining
 import io.netty.buffer.ByteBuf
 import java.nio.ByteBuffer
+import kotlinx.io.Source
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.kaillera.controller.v086.V086Utils.getNumBytesPlusStopByte
@@ -87,7 +88,7 @@ constructor(
       return Result.success(ConnectionRejected(messageNumber, userName, userID, message))
     }
 
-    override fun read(packet: ByteReadPacket, messageNumber: Int): Result<ConnectionRejected> {
+    override fun read(packet: Source, messageNumber: Int): Result<ConnectionRejected> {
       if (packet.remaining < 6) {
         return parseFailure("Failed byte count validation!")
       }

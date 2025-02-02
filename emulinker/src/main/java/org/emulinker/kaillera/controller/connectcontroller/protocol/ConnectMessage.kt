@@ -4,10 +4,10 @@ import io.ktor.utils.io.core.*
 import java.nio.ByteBuffer
 import kotlin.Result.Companion.failure
 import kotlin.Result.Companion.success
+import kotlinx.io.Source
 import org.emulinker.kaillera.controller.messaging.ByteBufferMessage
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.pico.AppModule
-import org.emulinker.util.EmuUtil
 
 /**
  * Abstract class representing a message for connecting to the server.
@@ -61,11 +61,11 @@ sealed class ConnectMessage : ByteBufferMessage() {
     }
 
     @Throws(MessageFormatException::class)
-    fun parse(byteReadPacket: ByteReadPacket): ConnectMessage {
+    fun parse(packet: Source): ConnectMessage {
       val messageStr =
         try {
           //            val stringDecoder = charset.newDecoder()
-          byteReadPacket.readText(AppModule.charsetDoNotUse)
+          packet.readText(AppModule.charsetDoNotUse)
           //            stringDecoder.decode(byteReadPacket).toString()
         } catch (e: CharacterCodingException) {
           throw MessageFormatException("Invalid bytes received: failed to decode to a string!", e)
@@ -89,9 +89,8 @@ sealed class ConnectMessage : ByteBufferMessage() {
         }
         //      byteReadPacket.rewind()
         else ->
-          throw MessageFormatException(
-            "Unrecognized connect message: " + EmuUtil.dumpBuffer(byteReadPacket.readByteBuffer())
-          )
+          // TODO(nue): Figure out how to dump all bytes from Sources.
+          throw MessageFormatException("Unrecognized connect message: TODO")
       }
     }
   }

@@ -1,10 +1,11 @@
 package org.emulinker.kaillera.controller.v086.protocol
 
-import io.ktor.utils.io.core.ByteReadPacket
 import io.ktor.utils.io.core.readShortLittleEndian
+import io.ktor.utils.io.core.remaining
 import io.netty.buffer.ByteBuf
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
+import kotlinx.io.Source
 import org.emulinker.kaillera.controller.messaging.ByteBufferMessage
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.messaging.ParseException
@@ -195,7 +196,7 @@ class V086Bundle(val messages: Array<V086Message?>, numToWrite: Int = Int.MAX_VA
     }
 
     @Throws(ParseException::class, V086BundleFormatException::class, MessageFormatException::class)
-    fun parse(packet: ByteReadPacket, lastMessageID: Int = -1): V086Bundle {
+    fun parse(packet: Source, lastMessageID: Int = -1): V086Bundle {
       if (packet.remaining < 5) {
         throw V086BundleFormatException("Invalid buffer length: " + packet.remaining)
       }

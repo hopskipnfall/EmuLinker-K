@@ -1,18 +1,16 @@
 package org.emulinker.util
 
-import io.ktor.utils.io.core.ByteReadPacket
-import io.ktor.utils.io.core.readInt
-import io.ktor.utils.io.core.readShort
 import io.ktor.utils.io.core.readShortLittleEndian
 import io.netty.buffer.ByteBuf
 import java.nio.ByteBuffer
+import kotlinx.io.Source
 
 object UnsignedUtil {
   fun ByteBuffer.getUnsignedByte(): Short = (this.get().toInt() and 0xff).toShort()
 
   fun ByteBuf.getUnsignedByte(): Short = (this.readByte().toInt() and 0xff).toShort()
 
-  fun ByteReadPacket.readUnsignedByte(): Short = (this.readByte().toInt() and 0xff).toShort()
+  fun Source.readUnsignedByte(): Short = (this.readByte().toInt() and 0xff).toShort()
 
   fun ByteBuffer.putUnsignedByte(value: Int) {
     this.put((value and 0xff).toByte())
@@ -33,10 +31,9 @@ object UnsignedUtil {
 
   fun ByteBuf.getUnsignedShort(): Int = this.readShort().toInt() and 0xffff
 
-  fun ByteReadPacket.readUnsignedShort(): Int = this.readShort().toInt() and 0xffff
+  fun Source.readUnsignedShort(): Int = this.readShort().toInt() and 0xffff
 
-  fun ByteReadPacket.readUnsignedShortLittleEndian(): Int =
-    this.readShortLittleEndian().toInt() and 0xffff
+  fun Source.readUnsignedShortLittleEndian(): Int = this.readShortLittleEndian().toInt() and 0xffff
 
   fun ByteBuffer.putUnsignedShort(value: Int) {
     this.putShort((value and 0xffff).toShort())
@@ -57,7 +54,7 @@ object UnsignedUtil {
 
   fun ByteBuf.getUnsignedInt(): Long = this.readInt().toLong() and 0xffffffffL
 
-  fun ByteReadPacket.readUnsignedInt(): Long = this.readInt().toLong() and 0xffffffffL
+  fun Source.readUnsignedInt(): Long = this.readInt().toLong() and 0xffffffffL
 
   fun ByteBuffer.putUnsignedInt(value: Long) {
     this.putInt((value and 0xffffffffL).toInt())
