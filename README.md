@@ -1,5 +1,5 @@
 ![Maintained][maintained-badge]
-[![build](https://github.com/hopskipnfall/EmuLinker-K/actions/workflows/gradle.yml/badge.svg)](https://github.com/hopskipnfall/EmuLinker-K/actions/workflows/maven.yml)
+[![build](https://github.com/hopskipnfall/EmuLinker-K/actions/workflows/gradle.yml/badge.svg)](https://github.com/hopskipnfall/EmuLinker-K/actions/workflows/gradle.yml)
 [![Make a pull request][prs-badge]][prs]
 
 [![Watch on GitHub][github-watch-badge]][github-watch]
