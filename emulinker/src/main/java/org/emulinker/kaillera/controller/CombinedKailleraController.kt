@@ -66,7 +66,7 @@ class CombinedKailleraController(
                   server.quit(handler.user, "Server shutting down")
                 }
                 // Give the server time to notify everyone they are being kicked.
-                Thread.sleep(3_000)
+                Thread.sleep(1_000)
               } finally {
                 nettyChannel.close()
               }

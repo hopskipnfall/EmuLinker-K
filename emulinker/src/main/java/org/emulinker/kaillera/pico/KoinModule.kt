@@ -104,7 +104,7 @@ val koinModule = module {
         idleTimeout = config.getInt("server.idleTimeout").seconds,
         keepAliveTimeout = config.getInt("server.keepAliveTimeout").seconds,
         lagstatDuration =
-          config.getInt("server.lagstatDurationSeconds", 3.minutes.inWholeSeconds.toInt()).seconds,
+          config.getInt("server.lagstatDurationSeconds", 1.minutes.inWholeSeconds.toInt()).seconds,
         maxChatLength = config.getInt("server.maxChatLength"),
         maxClientNameLength = config.getInt("server.maxClientNameLength"),
         maxGameChatLength = config.getInt("server.maxGameChatLength"),

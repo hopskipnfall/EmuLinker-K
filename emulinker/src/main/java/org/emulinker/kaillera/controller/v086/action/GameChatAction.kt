@@ -481,36 +481,36 @@ class GameChatAction(
           (game.totalDriftNs - (game.totalDriftCache.getDelayedValue() ?: 0))
             .nanoseconds
             .absoluteValue
+        game.announce(
+          "Total lag over the last ${lagstatDurationAsString}: " +
+            gameLag.toSecondDoublePrecisionString()
+        )
+        game.announce(
+          "Lag definitively caused by players: " +
+            game.players
+              .filter { !it.inStealthMode }
+              .joinToString(separator = ", ") {
+                "P${it.playerNumber}: ${it.lagAttributedToUser()
+                    .toSecondDoublePrecisionString()}"
+              }
+        )
 
         // Attempt to give a summary of lag and recommendation.
         // TODO(nue): Expand this to more connection types.
         val p1 = game.players.firstOrNull()
         if (p1 != null && p1.connectionType == ConnectionType.LAN && lagstatDuration > 10.seconds) {
           val lagPerDuration = gameLag / lagstatDuration
-
-          val lagSummary =
-            when {
-              lagPerDuration < 100.milliseconds / 3.minutes -> null
-              lagPerDuration < 500.milliseconds / 3.minutes -> "A bit laggy"
-              lagPerDuration < 1.seconds / 3.minutes -> "Pretty laggy"
-              lagPerDuration < 1.5.seconds / 3.minutes -> "Laggy"
-              else -> "Very laggy"
-            }
-          if (lagSummary == null) {
-            game.announce("Lag summary: The game seems to be running fine.")
-          } else {
-            game.announce("Lag summary: $lagSummary")
-
+          if (lagPerDuration > 0.5.seconds / 1.minutes) {
             val laggiestPlayer = game.players.maxBy { it.lagAttributedToUser() }
             if (laggiestPlayer.lagAttributedToUser() > Duration.ZERO) {
               val targetFrameDelay = laggiestPlayer.frameDelay + 1
 
               fun pingThresholdForDelay(delay: Int, connectionType: ConnectionType): Duration =
                 ((delay - 1.0) * connectionType.byteValue.toInt() / KailleraGameImpl.GAME_FPS)
-                  .milliseconds
+                  .seconds
 
               val suggestedFakePing: Duration =
-                listOf(
+                arrayOf(
                     pingThresholdForDelay(targetFrameDelay, laggiestPlayer.connectionType),
                     pingThresholdForDelay(targetFrameDelay + 1, laggiestPlayer.connectionType)
                   )
@@ -519,22 +519,13 @@ class GameChatAction(
                   .milliseconds
 
               game.announce(
-                "Recommendation: ${laggiestPlayer.name} should try playing on ${targetFrameDelay} frames. Enter ${suggestedFakePing.toMillisDouble().roundToInt()} in the ping spoof field when joining. If lag continues, run /lagstat again."
+                "Recommendation: ${laggiestPlayer.name} should try playing on $targetFrameDelay frames. Enter ${suggestedFakePing.toMillisDouble().roundToInt()} in the ping spoof field when joining. If lag continues, run /lagstat again."
               )
             }
+          } else {
+            game.announce("The game does not appear to be significantly laggy.")
           }
         }
-        game.announce(
-          "Detailed info: Total lag over the last ${lagstatDurationAsString}: " +
-            gameLag.toSecondDoublePrecisionString() +
-            ". Lag definitively caused by players: " +
-            game.players
-              .filter { !it.inStealthMode }
-              .joinToString(separator = ", ") {
-                "P${it.playerNumber}: ${it.lagAttributedToUser()
-                .toSecondDoublePrecisionString()}"
-              }
-        )
       } else if (message.message == "/lagreset") {
         game.chat(clientHandler.user, message.message)
         for (player in game.players) {
