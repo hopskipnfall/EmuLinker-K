@@ -16,6 +16,9 @@ import java.util.concurrent.TimeUnit
 import kotlin.system.measureNanoTime
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.DurationUnit.MINUTES
+import kotlin.time.DurationUnit.SECONDS
 import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.format.DateTimeComponents
@@ -301,10 +304,16 @@ object EmuUtil {
 
   // TODO(nue): Get rid of this after it's confirmed it can be safely removed.
   /** NOOP placeholder for a function that _used to_ call [Thread.sleep]. */
-  @Deprecated(message = "Don't sleep!", level = DeprecationLevel.WARNING)
+  @Deprecated(
+    message = "We no longer sleep. Should be inlined.",
+    ReplaceWith("Thread.yield()"),
+    DeprecationLevel.WARNING
+  )
   fun threadSleep(d: Duration) {
     Thread.yield()
   }
+
+  fun min(a: Duration, b: Duration) = if (a <= b) a else b
 
   inline fun <R> Timer.timeKt(toTime: () -> R): R {
     var out: R
@@ -314,4 +323,7 @@ object EmuUtil {
 
   fun Duration.toMillisDouble(): Double =
     this.inWholeNanoseconds / 1.milliseconds.inWholeNanoseconds.toDouble()
+
+  fun Duration.toSecondDoublePrecisionString() =
+    if (this < 1.minutes) toString(SECONDS, 2) else toString(MINUTES, 1)
 }

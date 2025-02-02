@@ -758,15 +758,7 @@ class KailleraServer(
     return true
   }
 
-  fun announceInGame(announcement: String?, user: KailleraUser) {
-    user.game!!.announce(announcement!!, user)
-  }
-
-  fun announce(message: String, gamesAlso: Boolean) {
-    announce(message, gamesAlso, targetUser = null)
-  }
-
-  fun announce(message: String, gamesAlso: Boolean, targetUser: KailleraUser?) {
+  fun announce(message: String, gamesAlso: Boolean, targetUser: KailleraUser? = null) {
     if (targetUser == null) {
       usersMap.values
         .asSequence()
@@ -966,7 +958,7 @@ class KailleraServer(
     )
   }
 
-  val o = Object()
+  private val o = Object()
   /** Helper function to avoid one level of indentation. */
   private inline fun <T> withLock(action: () -> T): T = synchronized(o) { action() }
 

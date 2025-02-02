@@ -2,25 +2,37 @@ package org.emulinker.kaillera.controller.v086.action
 
 import com.google.common.flogger.FluentLogger
 import java.util.*
+import kotlin.math.roundToInt
+import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.nanoseconds
-import kotlin.time.DurationUnit.MILLISECONDS
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.DurationUnit.MINUTES
+import kotlin.time.DurationUnit.SECONDS
+import kotlinx.datetime.Clock
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.access.AccessManager
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086ClientHandler
 import org.emulinker.kaillera.controller.v086.protocol.*
 import org.emulinker.kaillera.lookingforgame.TwitterBroadcaster
+import org.emulinker.kaillera.model.ConnectionType
 import org.emulinker.kaillera.model.event.GameChatEvent
 import org.emulinker.kaillera.model.exception.ActionException
 import org.emulinker.kaillera.model.exception.GameChatException
+import org.emulinker.kaillera.model.impl.KailleraGameImpl
 import org.emulinker.util.EmuLang
+import org.emulinker.util.EmuUtil.min
 import org.emulinker.util.EmuUtil.threadSleep
+import org.emulinker.util.EmuUtil.toMillisDouble
+import org.emulinker.util.EmuUtil.toSecondDoublePrecisionString
 
 class GameChatAction(
   private val gameOwnerCommandAction: GameOwnerCommandAction,
   private val lookingForGameReporter: TwitterBroadcaster,
   private val flags: RuntimeFlags,
+  private val clock: Clock,
 ) : V086Action<GameChatRequest>, V086GameEventHandler<GameChatEvent> {
   override var actionPerformedCount = 0
     private set
@@ -451,32 +463,85 @@ class GameChatAction(
           game.announce("No pending tweets.", clientHandler.user)
         }
       } else if (message.message == "/lagstat") {
-        game.chat(clientHandler.user, "/lagstat")
+        // TODO(nue): Localize this.
+        game.chat(clientHandler.user, message.message)
         // Note: This was duplicated from GameOwnerCommandAction.
         if (!game.startTimeout) {
           game.announce("Wait a minute or so after the game starts to run lagstat.")
           return
         }
+        val lagstatDuration = min(flags.lagstatDuration, clock.now() - game.lastLagReset)
+        val lagstatDurationAsString =
+          if (lagstatDuration < 1.minutes) {
+            lagstatDuration.toString(SECONDS)
+          } else {
+            lagstatDuration.toString(MINUTES, 1)
+          }
+        val gameLag =
+          (game.totalDriftNs - (game.totalDriftCache.getDelayedValue() ?: 0))
+            .nanoseconds
+            .absoluteValue
         game.announce(
-          "Total lag over the last ${flags.lagstatDuration}: " +
-            (game.totalDriftNs - (game.totalDriftCache.getDelayedValue() ?: 0))
-              .nanoseconds
-              .absoluteValue
-              .toString(MILLISECONDS, decimals = 0)
+          "Total lag over the last ${lagstatDurationAsString}: " +
+            gameLag.toSecondDoublePrecisionString()
         )
         game.announce(
-          "Lag caused by players: " +
+          "Lag definitively caused by players: " +
             game.players
               .filter { !it.inStealthMode }
-              .joinToString(separator = ", ") { "P${it.playerNumber}: ${it.summarizeLag()}" }
+              .joinToString(separator = ", ") {
+                "P${it.playerNumber}: ${it.lagAttributedToUser()
+                    .toSecondDoublePrecisionString()}"
+              }
         )
+
+        // Attempt to give a summary of lag and recommendation.
+        // TODO(nue): Expand this to more connection types.
+        val p1 = game.players.firstOrNull()
+        if (p1 != null && p1.connectionType == ConnectionType.LAN && lagstatDuration > 10.seconds) {
+          val lagPerDuration = gameLag / lagstatDuration
+          if (lagPerDuration > 0.5.seconds / 1.minutes) {
+            val laggiestPlayer = game.players.maxBy { it.lagAttributedToUser() }
+            if (laggiestPlayer.lagAttributedToUser() > Duration.ZERO) {
+              val targetFrameDelay = laggiestPlayer.frameDelay + 1
+
+              fun pingThresholdForDelay(delay: Int, connectionType: ConnectionType): Duration =
+                ((delay - 1.0) * connectionType.byteValue.toInt() / KailleraGameImpl.GAME_FPS)
+                  .seconds
+
+              val suggestedFakePing: Duration =
+                arrayOf(
+                    pingThresholdForDelay(targetFrameDelay, laggiestPlayer.connectionType),
+                    pingThresholdForDelay(targetFrameDelay + 1, laggiestPlayer.connectionType)
+                  )
+                  .map { it.toMillisDouble() }
+                  .average()
+                  .milliseconds
+
+              game.announce(
+                "Recommendation: ${laggiestPlayer.name} should try playing on $targetFrameDelay frames. Enter ${suggestedFakePing.toMillisDouble().roundToInt()} in the ping spoof field when joining. If lag continues, run /lagstat again."
+              )
+            }
+          } else {
+            game.announce("The game does not appear to be significantly laggy.")
+          }
+        }
       } else if (message.message == "/lagreset") {
-        game.chat(clientHandler.user, "/lagreset")
+        game.chat(clientHandler.user, message.message)
         for (player in game.players) {
           player.resetLag()
         }
         game.resetLag()
         game.announce("LagStat has been reset!")
+      } else if (
+        message.message.startsWith("/fps ") &&
+          message.message.removePrefix("/fps ").toDoubleOrNull() != null
+      ) {
+        game.chat(clientHandler.user, message.message)
+        // TODO(nue): Enforce fps bounds.
+        val newFps = message.message.removePrefix("/fps ").toDouble()
+        game.setGameFps(newFps)
+        game.announce("Measuring lag for $newFps frames per second")
       } else {
         game.announce("Unknown Command: " + message.message, clientHandler.user)
       }
@@ -492,14 +557,15 @@ class GameChatAction(
         clientHandler.user.searchIgnoredUsers(
           gameChatEvent.user.connectSocketAddress.address.hostAddress
         )
-      )
+      ) {
         return
-      else if (clientHandler.user.ignoreAll) {
+      } else if (clientHandler.user.ignoreAll) {
         if (
           gameChatEvent.user.accessLevel < AccessManager.ACCESS_ADMIN &&
             gameChatEvent.user !== clientHandler.user
-        )
+        ) {
           return
+        }
       }
       val m = gameChatEvent.message
       clientHandler.send(
