@@ -535,7 +535,8 @@ class GameChatAction(
         game.announce("LagStat has been reset!")
       } else if (
         message.message.startsWith("/fps ") &&
-          message.message.removePrefix("/fps ").toDoubleOrNull() != null
+          message.message.removePrefix("/fps ").toDoubleOrNull() != null &&
+          message.message.removePrefix("/fps ").toDouble() in 0.1..100.0
       ) {
         game.chat(clientHandler.user, message.message)
         // TODO(nue): Enforce fps bounds.
