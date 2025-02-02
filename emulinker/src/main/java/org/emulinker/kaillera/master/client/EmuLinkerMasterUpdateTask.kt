@@ -32,8 +32,8 @@ class EmuLinkerMasterUpdateTask(
       this.append("maxUsers", flags.maxUsers.toString())
       this.append("numGames", kailleraServer.gamesMap.values.size.toString())
       this.append("maxGames", flags.maxGames.toString())
-      // The list only supports max 8 character versions.
-      this.append("version", releaseInfo.versionWithElkPrefix.take(8))
+      // The list only supports max 31 character versions, but we don't need that much.
+      this.append("version", releaseInfo.versionWithElkPrefix.take(30))
     }
 
     val connection: HttpURLConnection = URL(url.buildString()).openConnection() as HttpURLConnection
