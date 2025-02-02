@@ -81,7 +81,7 @@ class GameChatTest : ProtocolBaseTest() {
       GameChatNotification(
         messageNumber = MESSAGE_NUMBER,
         username = "nue",
-        message = "Hello, world!"
+        message = "Hello, world!",
       )
     private val GAME_CHAT_REQUEST =
       GameChatRequest(messageNumber = MESSAGE_NUMBER, message = "Hello, world!")

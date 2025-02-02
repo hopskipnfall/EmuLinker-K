@@ -41,7 +41,7 @@ object CachedGameDataAction : V086Action<CachedGameData> {
             .withCause(e)
             .log(
               "Game data error!  The client cached key %s was not found in the cache!",
-              message.key
+              message.key,
             )
 
           // This may not always be the best thing to do...
@@ -50,7 +50,7 @@ object CachedGameDataAction : V086Action<CachedGameData> {
               GameChatNotification(
                 clientHandler.nextMessageNumber,
                 "Error",
-                "Game Data Error!  Game state will be inconsistent!"
+                "Game Data Error!  Game state will be inconsistent!",
               )
             )
           } catch (e2: MessageFormatException) {

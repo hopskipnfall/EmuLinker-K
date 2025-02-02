@@ -156,7 +156,7 @@ abstract class V086Message : ByteBufferMessage() {
           .log(
             "Bundle contained length %d != parsed length %d",
             messageLength,
-            message.bodyBytesPlusMessageIdType
+            message.bodyBytesPlusMessageIdType,
           )
       }
       return message
@@ -190,7 +190,7 @@ abstract class V086Message : ByteBufferMessage() {
           .log(
             "Bundle contained length %d != parsed length %d",
             messageLength,
-            message.bodyBytesPlusMessageIdType
+            message.bodyBytesPlusMessageIdType,
           )
       }
       return message
@@ -223,7 +223,7 @@ abstract class V086Message : ByteBufferMessage() {
           .log(
             "Bundle contained length %d != parsed length %d",
             messageLength,
-            message.bodyBytesPlusMessageIdType
+            message.bodyBytesPlusMessageIdType,
           )
       }
       return message

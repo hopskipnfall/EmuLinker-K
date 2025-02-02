@@ -24,7 +24,7 @@ class GameStatusAction : V086ServerEventHandler<GameStatusChangedEvent> {
           0.toShort().toInt(),
           game.status,
           visiblePlayers.toByte(),
-          game.maxUsers.toByte()
+          game.maxUsers.toByte(),
         )
       )
     } catch (e: MessageFormatException) {

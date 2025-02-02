@@ -49,14 +49,14 @@ class CreateGameAction :
           InformationMessage(
             clientHandler.nextMessageNumber,
             "server",
-            EmuLang.getString("CreateGameAction.CreateGameDenied", e.message)
+            EmuLang.getString("CreateGameAction.CreateGameDenied", e.message),
           )
         )
         clientHandler.send(
           QuitGameNotification(
             clientHandler.nextMessageNumber,
             clientHandler.user.name!!,
-            clientHandler.user.id
+            clientHandler.user.id,
           )
         )
       } catch (e2: MessageFormatException) {
@@ -72,14 +72,14 @@ class CreateGameAction :
           InformationMessage(
             clientHandler.nextMessageNumber,
             "server",
-            EmuLang.getString("CreateGameAction.CreateGameDeniedFloodControl")
+            EmuLang.getString("CreateGameAction.CreateGameDeniedFloodControl"),
           )
         )
         clientHandler.send(
           QuitGameNotification(
             clientHandler.nextMessageNumber,
             clientHandler.user.name!!,
-            clientHandler.user.id
+            clientHandler.user.id,
           )
         )
       } catch (e2: MessageFormatException) {
@@ -100,7 +100,7 @@ class CreateGameAction :
           game.romName,
           owner.clientType!!,
           game.id,
-          0.toShort().toInt()
+          0.toShort().toInt(),
         )
       )
     } catch (e: MessageFormatException) {

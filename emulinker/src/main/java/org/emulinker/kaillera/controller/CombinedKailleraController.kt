@@ -85,7 +85,7 @@ class CombinedKailleraController(
                   handleReceived(
                     packet.content().order(ByteOrder.LITTLE_ENDIAN),
                     packet.sender(),
-                    ctx
+                    ctx,
                   )
                 }
 
@@ -126,7 +126,7 @@ class CombinedKailleraController(
   private fun handleReceived(
     buffer: ByteBuf,
     remoteSocketAddress: InetSocketAddress,
-    ctx: ChannelHandlerContext
+    ctx: ChannelHandlerContext,
   ) {
     var handler = clientHandlers[remoteSocketAddress]
     if (handler == null) {
@@ -155,7 +155,7 @@ class CombinedKailleraController(
               .log(
                 "Received unexpected message type from %s: %s",
                 formatSocketAddress(remoteSocketAddress),
-                connectMessageResult
+                connectMessageResult,
               )
           }
         }
@@ -181,7 +181,7 @@ class CombinedKailleraController(
           protocolController.newConnection(
             remoteSocketAddress,
             "v086",
-            this@CombinedKailleraController
+            this@CombinedKailleraController,
           )
         } catch (e: ServerFullException) {
           logger

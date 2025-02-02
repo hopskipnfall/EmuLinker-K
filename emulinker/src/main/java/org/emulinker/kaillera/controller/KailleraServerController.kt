@@ -17,7 +17,7 @@ interface KailleraServerController {
   fun newConnection(
     clientSocketAddress: InetSocketAddress,
     protocol: String,
-    combinedKailleraController: CombinedKailleraController
+    combinedKailleraController: CombinedKailleraController,
   ): V086ClientHandler
 
   fun start()

@@ -32,7 +32,7 @@ data class UserJoined(
   val username: String,
   val userId: Int,
   val ping: Duration,
-  val connectionType: ConnectionType
+  val connectionType: ConnectionType,
 ) : V086Message() {
   override val messageTypeId = ID
 
@@ -80,7 +80,7 @@ data class UserJoined(
           userName,
           userID,
           ping.milliseconds,
-          ConnectionType.fromByteValue(connectionType)
+          ConnectionType.fromByteValue(connectionType),
         )
       )
     }
@@ -102,7 +102,7 @@ data class UserJoined(
           userName,
           userID,
           ping.milliseconds,
-          ConnectionType.fromByteValue(connectionType)
+          ConnectionType.fromByteValue(connectionType),
         )
       )
     }
@@ -124,7 +124,7 @@ data class UserJoined(
           userName,
           userID,
           ping.milliseconds,
-          ConnectionType.fromByteValue(connectionType)
+          ConnectionType.fromByteValue(connectionType),
         )
       )
     }

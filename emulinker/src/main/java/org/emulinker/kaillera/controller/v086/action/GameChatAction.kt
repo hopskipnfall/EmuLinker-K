@@ -99,7 +99,7 @@ class GameChatAction(
               if (u.loggedIn) {
                 u.game!!.announce(
                   "This game will NOT receive any server activity during gameplay!",
-                  u
+                  u,
                 )
               }
             }
@@ -109,7 +109,7 @@ class GameChatAction(
               if (u.loggedIn) {
                 u.game!!.announce(
                   "${clientHandler.user.name} will NOT receive any server activity during gameplay!",
-                  u
+                  u,
                 )
               }
             }
@@ -122,7 +122,7 @@ class GameChatAction(
               if (u.loggedIn) {
                 u.game!!.announce(
                   "This game will NOW receive ALL server activity during gameplay!",
-                  u
+                  u,
                 )
               }
             }
@@ -133,7 +133,7 @@ class GameChatAction(
                 u.game!!.announce(
                   clientHandler.user.name +
                     " will NOW receive ALL server activity during gameplay!",
-                  u
+                  u,
                 )
               }
             }
@@ -184,7 +184,7 @@ class GameChatAction(
           ) {
             game.announce(
               "<" + user.name + "> Is not accepting private messages!",
-              clientHandler.user
+              clientHandler.user,
             )
             return
           }
@@ -198,7 +198,7 @@ class GameChatAction(
                 logger.atWarning().log("%s /msg denied: Illegal characters in message", user)
                 game.announce(
                   "Private Message Denied: Illegal characters in message",
-                  clientHandler.user
+                  clientHandler.user,
                 )
                 return
               }
@@ -219,7 +219,7 @@ class GameChatAction(
           // clientHandler.getUser().getID() + "): " + m, false, user);
           clientHandler.user.game?.announce(
             "TO: <${user.name}>(${user.id}) <${clientHandler.user.name}> (${clientHandler.user.id}): $m",
-            clientHandler.user
+            clientHandler.user,
           )
           user.game?.announce("<${clientHandler.user.name}> (${clientHandler.user.id}): $m", user)
           return
@@ -255,7 +255,7 @@ class GameChatAction(
                     logger.atWarning().log("%s /msg denied: Illegal characters in message", user)
                     game.announce(
                       "Private Message Denied: Illegal characters in message",
-                      clientHandler.user
+                      clientHandler.user,
                     )
                     return
                   }
@@ -275,11 +275,11 @@ class GameChatAction(
               // clientHandler.getUser().getID() + "): " + m, false, user);
               game.announce(
                 "TO: <${user.name}>(${user.id}) <${clientHandler.user.name}> (${clientHandler.user.id}): $m",
-                clientHandler.user
+                clientHandler.user,
               )
               user.game?.announce(
                 "<${clientHandler.user.name}> (${clientHandler.user.id}): $m",
-                user
+                user,
               )
               return
             } catch (e1: Exception) {
@@ -297,7 +297,7 @@ class GameChatAction(
           clientHandler.user.server.announce(
             clientHandler.user.name + " is now ignoring everyone!",
             false,
-            null
+            null,
           )
         } catch (e: Exception) {}
         return
@@ -307,7 +307,7 @@ class GameChatAction(
           clientHandler.user.server.announce(
             clientHandler.user.name + " is now unignoring everyone!",
             false,
-            null
+            null,
           )
         } catch (e: Exception) {}
         return
@@ -337,7 +337,7 @@ class GameChatAction(
           user.server.announce(
             "${clientHandler.user.name} is now ignoring <${user.name}> ID: ${user.id}",
             false,
-            null
+            null,
           )
           return
         } catch (e: NoSuchElementException) {
@@ -348,7 +348,7 @@ class GameChatAction(
             .log(
               "IGNORE USER ERROR: %s: %s",
               clientHandler.user.name,
-              clientHandler.remoteSocketAddress!!.hostName
+              clientHandler.remoteSocketAddress!!.hostName,
             )
           return
         }
@@ -369,13 +369,13 @@ class GameChatAction(
           if (
             clientHandler.user.removeIgnoredUser(
               user.connectSocketAddress.address.hostAddress,
-              false
+              false,
             )
           )
             user.server.announce(
               "${clientHandler.user.name} is now unignoring <${user.name}> ID: ${user.id}",
               false,
-              null
+              null,
             )
           else
             try {
@@ -392,7 +392,7 @@ class GameChatAction(
             .log(
               "UNIGNORE USER ERROR: %s: %s",
               clientHandler.user.name,
-              clientHandler.remoteSocketAddress!!.hostName
+              clientHandler.remoteSocketAddress!!.hostName,
             )
           return
         }
@@ -432,22 +432,22 @@ class GameChatAction(
       } else if (message.message == "/help") {
         game.announce(
           "/me <message> to make personal message eg. /me is bored ...SupraFast is bored.",
-          clientHandler.user
+          clientHandler.user,
         )
         threadSleep(20.milliseconds)
         game.announce(
           "/msg <UserID> <msg> to PM somebody. /msgoff or /msgon to turn pm off | on.",
-          clientHandler.user
+          clientHandler.user,
         )
         threadSleep(20.milliseconds)
         game.announce(
           "/ignore <UserID> or /unignore <UserID> or /ignoreall or /unignoreall to ignore users.",
-          clientHandler.user
+          clientHandler.user,
         )
         threadSleep(20.milliseconds)
         game.announce(
           "/p2pon or /p2poff this option ignores all server activity during gameplay.",
-          clientHandler.user
+          clientHandler.user,
         )
         threadSleep(20.milliseconds)
       } else if (message.message == "/stop") {
@@ -455,9 +455,9 @@ class GameChatAction(
           game.announce(
             EmuLang.getStringOrDefault(
               "KailleraServerImpl.CanceledPendingTweet",
-              default = "Canceled pending tweet."
+              default = "Canceled pending tweet.",
             ),
-            clientHandler.user
+            clientHandler.user,
           )
         } else {
           game.announce("No pending tweets.", clientHandler.user)
@@ -512,7 +512,7 @@ class GameChatAction(
               val suggestedFakePing: Duration =
                 arrayOf(
                     pingThresholdForDelay(targetFrameDelay, laggiestPlayer.connectionType),
-                    pingThresholdForDelay(targetFrameDelay + 1, laggiestPlayer.connectionType)
+                    pingThresholdForDelay(targetFrameDelay + 1, laggiestPlayer.connectionType),
                   )
                   .map { it.toMillisDouble() }
                   .average()

@@ -16,10 +16,8 @@ import java.util.concurrent.Executors
 import kotlin.Throws
 import org.emulinker.util.EmuUtil.formatSocketAddress
 
-abstract class UDPRelay(
-  var listenPort: Int,
-  var serverSocketAddress: InetSocketAddress,
-) : Runnable {
+abstract class UDPRelay(var listenPort: Int, var serverSocketAddress: InetSocketAddress) :
+  Runnable {
   var listenChannel: DatagramChannel? = null
     protected set
 
@@ -28,13 +26,13 @@ abstract class UDPRelay(
   protected abstract fun processClientToServer(
     receiveBuffer: ByteBuffer,
     fromAddress: InetSocketAddress,
-    toAddress: InetSocketAddress
+    toAddress: InetSocketAddress,
   ): ByteBuffer?
 
   protected abstract fun processServerToClient(
     receiveBuffer: ByteBuffer,
     fromAddress: InetSocketAddress,
-    toAddress: InetSocketAddress
+    toAddress: InetSocketAddress,
   ): ByteBuffer?
 
   override fun run() {
@@ -134,7 +132,7 @@ abstract class UDPRelay(
         .log(
           "ClientHandler for %s bound to port %d",
           formatSocketAddress(clientSocketAddress),
-          clientChannel.socket().port
+          clientChannel.socket().port,
         )
     }
   }

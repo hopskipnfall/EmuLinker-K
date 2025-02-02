@@ -60,45 +60,45 @@ class PlayerInformationTest : ProtocolBaseTest() {
               username = "nue",
               ping = 100L.milliseconds,
               userId = 13,
-              connectionType = ConnectionType.LAN
+              connectionType = ConnectionType.LAN,
             ),
             PlayerInformation.Player(
               username = "nue1",
               ping = 100L.milliseconds,
               userId = 14,
-              connectionType = ConnectionType.LAN
+              connectionType = ConnectionType.LAN,
             ),
             PlayerInformation.Player(
               username = "nue2",
               ping = 100L.milliseconds,
               userId = 18,
-              connectionType = ConnectionType.AVERAGE
+              connectionType = ConnectionType.AVERAGE,
             ),
             PlayerInformation.Player(
               username = "nue3",
               ping = 100L.milliseconds,
               userId = 200,
-              connectionType = ConnectionType.LAN
+              connectionType = ConnectionType.LAN,
             ),
             PlayerInformation.Player(
               username = "nue4",
               ping = 100L.milliseconds,
               userId = 12,
-              connectionType = ConnectionType.LAN
+              connectionType = ConnectionType.LAN,
             ),
             PlayerInformation.Player(
               username = "nue5",
               ping = 100L.milliseconds,
               userId = 8,
-              connectionType = ConnectionType.BAD
+              connectionType = ConnectionType.BAD,
             ),
             PlayerInformation.Player(
               username = "nue6",
               ping = 100.milliseconds,
               userId = 3,
-              connectionType = ConnectionType.BAD
+              connectionType = ConnectionType.BAD,
             ),
-          )
+          ),
       )
   }
 }

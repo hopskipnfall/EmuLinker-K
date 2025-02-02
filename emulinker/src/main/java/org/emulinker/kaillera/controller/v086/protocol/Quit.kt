@@ -105,7 +105,7 @@ sealed class Quit : V086Message() {
         when (message) {
           is QuitRequest -> REQUEST_USERNAME
           is QuitNotification -> message.username
-        }
+        },
       )
       buffer.putUnsignedShort(
         when (message) {
@@ -122,7 +122,7 @@ sealed class Quit : V086Message() {
         when (message) {
           is QuitRequest -> REQUEST_USERNAME
           is QuitNotification -> message.username
-        }
+        },
       )
       buffer.putUnsignedShort(
         when (message) {
@@ -144,7 +144,7 @@ data class QuitNotification(
   override val messageNumber: Int,
   val username: String,
   val userId: Int,
-  override val message: String
+  override val message: String,
 ) : Quit() {
 
   init {

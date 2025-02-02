@@ -14,7 +14,7 @@ data class GameStatusChangedEvent(override val server: KailleraServer, val game:
 data class ChatEvent(
   override val server: KailleraServer,
   val user: KailleraUser,
-  val message: String
+  val message: String,
 ) : ServerEvent
 
 data class GameClosedEvent(override val server: KailleraServer, val game: KailleraGame) :
@@ -29,5 +29,5 @@ data class UserJoinedEvent(override val server: KailleraServer, val user: Kaille
 data class UserQuitEvent(
   override val server: KailleraServer,
   val user: KailleraUser,
-  val message: String
+  val message: String,
 ) : ServerEvent

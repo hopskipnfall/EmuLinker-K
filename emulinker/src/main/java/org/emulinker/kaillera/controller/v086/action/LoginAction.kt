@@ -46,7 +46,7 @@ class LoginAction : V086Action<UserInformation>, V086ServerEventHandler<UserJoin
           user.name!!,
           user.id,
           user.ping,
-          user.connectionType
+          user.connectionType,
         )
       )
       val thisUser = clientHandler.user

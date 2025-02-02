@@ -41,14 +41,14 @@ class JoinGameAction :
           InformationMessage(
             clientHandler.nextMessageNumber,
             "server",
-            EmuLang.getString("JoinGameAction.JoinGameDenied", e.message)
+            EmuLang.getString("JoinGameAction.JoinGameDenied", e.message),
           )
         )
         clientHandler.send(
           QuitGameNotification(
             clientHandler.nextMessageNumber,
             clientHandler.user.name!!,
-            clientHandler.user.id
+            clientHandler.user.id,
           )
         )
       } catch (e2: MessageFormatException) {
@@ -80,7 +80,7 @@ class JoinGameAction :
             user.name!!,
             user.ping,
             user.id,
-            user.connectionType
+            user.connectionType,
           )
         )
     } catch (e: MessageFormatException) {

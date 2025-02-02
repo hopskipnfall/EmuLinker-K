@@ -20,7 +20,7 @@ class PlayerDesynchAction : V086GameEventHandler<PlayerDesynchEvent> {
         GameChatNotification(
           clientHandler.nextMessageNumber,
           EmuLang.getString("PlayerDesynchAction.DesynchDetected"),
-          event.message
+          event.message,
         )
       )
       // if (clientHandler.getUser().getStatus() == KailleraUser.STATUS_PLAYING)

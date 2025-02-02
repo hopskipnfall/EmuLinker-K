@@ -52,7 +52,7 @@ class UserJoinedTest : ProtocolBaseTest() {
         username = "nue",
         userId = 13,
         ping = 999.milliseconds,
-        connectionType = ConnectionType.LAN
+        connectionType = ConnectionType.LAN,
       )
   }
 }

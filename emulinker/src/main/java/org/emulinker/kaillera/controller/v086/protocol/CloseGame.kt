@@ -15,7 +15,7 @@ data class CloseGame(
   override val messageNumber: Int,
   val gameId: Int,
   // TODO(nue): Figure out what [val1] represents..
-  val val1: Int
+  val val1: Int,
 ) : V086Message(), ServerMessage {
 
   override val messageTypeId = ID

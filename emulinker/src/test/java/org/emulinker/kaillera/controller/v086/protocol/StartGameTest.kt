@@ -80,7 +80,7 @@ class StartGameTest : ProtocolBaseTest() {
         messageNumber = MESSAGE_NUMBER,
         numPlayers = 4,
         playerNumber = 42,
-        val1 = 2000
+        val1 = 2000,
       )
     private val START_GAME_REQUEST = StartGameRequest(messageNumber = MESSAGE_NUMBER)
   }

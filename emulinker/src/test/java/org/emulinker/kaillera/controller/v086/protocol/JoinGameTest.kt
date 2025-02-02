@@ -89,13 +89,13 @@ class JoinGameTest : ProtocolBaseTest() {
         username = "nue",
         ping = 1235.milliseconds,
         userId = 13,
-        connectionType = ConnectionType.BAD
+        connectionType = ConnectionType.BAD,
       )
     private val JOIN_GAME_REQUEST =
       JoinGameRequest(
         messageNumber = MESSAGE_NUMBER,
         gameId = 135,
-        connectionType = ConnectionType.BAD
+        connectionType = ConnectionType.BAD,
       )
   }
 }

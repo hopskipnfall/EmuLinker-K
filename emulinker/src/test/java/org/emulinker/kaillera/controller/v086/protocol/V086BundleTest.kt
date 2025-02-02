@@ -136,7 +136,7 @@ class V086BundleTest {
             username = "jj",
             userId = 395,
             ping = 31.milliseconds,
-            connectionType = ConnectionType.LAN
+            connectionType = ConnectionType.LAN,
           ),
           ServerStatus(
             messageNumber = 4,
@@ -147,8 +147,8 @@ class V086BundleTest {
                   ping = 19.milliseconds,
                   status = UserStatus.CONNECTING,
                   userId = 392,
-                  connectionType = ConnectionType.LAN
-                ),
+                  connectionType = ConnectionType.LAN,
+                )
               ),
             games =
               listOf(
@@ -158,10 +158,10 @@ class V086BundleTest {
                   clientType = "Project 64k 0.13 (01 Aug 2003)",
                   username = "test",
                   playerCountOutOfMax = "1/2",
-                  status = GameStatus.PLAYING
+                  status = GameStatus.PLAYING,
                 )
-              )
-          )
+              ),
+          ),
         )
       )
   }
@@ -184,7 +184,7 @@ class V086BundleTest {
             username = "jj",
             userId = 395,
             ping = 31.milliseconds,
-            connectionType = ConnectionType.LAN
+            connectionType = ConnectionType.LAN,
           ),
           ServerStatus(
             messageNumber = 4,
@@ -195,8 +195,8 @@ class V086BundleTest {
                   ping = 19.milliseconds,
                   status = UserStatus.CONNECTING,
                   userId = 392,
-                  connectionType = ConnectionType.LAN
-                ),
+                  connectionType = ConnectionType.LAN,
+                )
               ),
             games =
               listOf(
@@ -206,10 +206,10 @@ class V086BundleTest {
                   clientType = "Project 64k 0.13 (01 Aug 2003)",
                   username = "test",
                   playerCountOutOfMax = "1/2",
-                  status = GameStatus.PLAYING
+                  status = GameStatus.PLAYING,
                 )
-              )
-          )
+              ),
+          ),
         )
       )
   }
@@ -230,15 +230,15 @@ class V086BundleTest {
         arrayOf(
           GameData(
             messageNumber = 9,
-            byteArrayOf(16, 32, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+            byteArrayOf(16, 32, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
           ),
           GameData(
             messageNumber = 8,
-            byteArrayOf(16, 36, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 0, 0, 0, 0, 0)
+            byteArrayOf(16, 36, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 0, 0, 0, 0, 0),
           ),
           // Technically AllReady(messageNumber = 7) is also here, but discarded because already
           // seen.
-          null
+          null,
         )
       )
   }
@@ -256,15 +256,15 @@ class V086BundleTest {
         arrayOf(
           GameData(
             messageNumber = 9,
-            byteArrayOf(16, 32, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+            byteArrayOf(16, 32, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
           ),
           GameData(
             messageNumber = 8,
-            byteArrayOf(16, 36, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 0, 0, 0, 0, 0)
+            byteArrayOf(16, 36, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 0, 0, 0, 0, 0),
           ),
           // Technically AllReady(messageNumber = 7) is also here, but discarded because already
           // seen.
-          null
+          null,
         )
       )
   }
@@ -329,8 +329,8 @@ class V086BundleTest {
                   ping = 19.milliseconds,
                   status = UserStatus.CONNECTING,
                   userId = 392,
-                  connectionType = ConnectionType.LAN
-                ),
+                  connectionType = ConnectionType.LAN,
+                )
               ),
             games =
               listOf(
@@ -340,9 +340,9 @@ class V086BundleTest {
                   clientType = "Project 64k 0.13 (01 Aug 2003)",
                   username = "test",
                   playerCountOutOfMax = "1/2",
-                  status = GameStatus.PLAYING
+                  status = GameStatus.PLAYING,
                 )
-              )
+              ),
           )
           .bodyBytes
       )

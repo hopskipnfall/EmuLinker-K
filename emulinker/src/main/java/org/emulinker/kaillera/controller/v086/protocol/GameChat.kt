@@ -97,7 +97,7 @@ sealed class GameChat : V086Message() {
         when (message) {
           is GameChatRequest -> REQUEST_USERNAME
           is GameChatNotification -> message.username
-        }
+        },
       )
       EmuUtil.writeString(buffer, message.message)
     }
@@ -108,7 +108,7 @@ sealed class GameChat : V086Message() {
         when (message) {
           is GameChatRequest -> REQUEST_USERNAME
           is GameChatNotification -> message.username
-        }
+        },
       )
       EmuUtil.writeString(buffer, message.message)
     }

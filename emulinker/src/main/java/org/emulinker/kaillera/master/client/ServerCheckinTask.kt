@@ -82,7 +82,7 @@ class ServerCheckinTask(
           location = publicServerInfo.location,
           charset = AppModule.charsetDoNotUse.name,
           version = releaseInfo.versionWithElkPrefix,
-          isDevBuild = CompiledFlags.DEBUG_BUILD
+          isDevBuild = CompiledFlags.DEBUG_BUILD,
         )
       )
 

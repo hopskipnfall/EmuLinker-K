@@ -1,12 +1,12 @@
 import java.time.Instant
 
 plugins {
-  id("com.diffplug.spotless") version "6.25.0"
+  id("com.diffplug.spotless") version "7.0.2"
   id("org.jetbrains.dokka") version "1.9.20"
   application
 
-  kotlin("jvm") version "2.0.20"
-  kotlin("plugin.serialization") version "2.0.20"
+  kotlin("jvm") version "2.1.10"
+  kotlin("plugin.serialization") version "2.1.10"
 }
 
 repositories {
@@ -15,7 +15,7 @@ repositories {
 }
 
 dependencies {
-  api("org.jetbrains.kotlin:kotlin-stdlib:2.0.20")
+  api("org.jetbrains.kotlin:kotlin-stdlib:2.1.10")
 
   implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.1")
 
@@ -35,7 +35,7 @@ dependencies {
   api("com.google.flogger:flogger-system-backend:$floggerVersion")
   api("com.google.flogger:flogger-log4j2-backend:$floggerVersion")
 
-  val log4j = "2.23.1"
+  val log4j = "2.24.3"
   api("org.apache.logging.log4j:log4j:$log4j")
   api("org.apache.logging.log4j:log4j-core:$log4j")
   api("org.apache.logging.log4j:log4j-api:$log4j")
@@ -121,7 +121,7 @@ tasks.withType<Test> {
 
   systemProperty(
     "flogger.backend_factory",
-    "org.emulinker.testing.TestLoggingBackendFactory#getInstance"
+    "org.emulinker.testing.TestLoggingBackendFactory#getInstance",
   )
 }
 

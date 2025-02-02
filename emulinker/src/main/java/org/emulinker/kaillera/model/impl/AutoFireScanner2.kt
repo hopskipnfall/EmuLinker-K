@@ -177,9 +177,7 @@ class AutoFireScanner2(private var game: KailleraGame, sensitivity: Int) : AutoF
             //						}
             if (aSequenceCount >= minReps && bSequenceCount >= minReps && !stopFlag) {
               val gameImpl = game as KailleraGameImpl
-              gameImpl.announce(
-                getString("AutoFireScanner2.AutoFireDetected", user!!.name),
-              )
+              gameImpl.announce(getString("AutoFireScanner2.AutoFireDetected", user!!.name))
               logger
                 .atInfo()
                 .log(
@@ -189,7 +187,7 @@ class AutoFireScanner2(private var game: KailleraGame, sensitivity: Int) : AutoF
                   game.id,
                   game.romName,
                   user.name,
-                  user.socketAddress!!.address.hostAddress
+                  user.socketAddress!!.address.hostAddress,
                 )
               break
             }
@@ -214,7 +212,7 @@ class AutoFireScanner2(private var game: KailleraGame, sensitivity: Int) : AutoF
         intArrayOf(3, 11),
         intArrayOf(4, 9),
         intArrayOf(5, 7),
-        intArrayOf(6, 5)
+        intArrayOf(6, 5),
       )
     protected var executor: ExecutorService = Executors.newCachedThreadPool()
   }

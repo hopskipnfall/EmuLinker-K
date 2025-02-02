@@ -59,7 +59,7 @@ sealed class Chat : V086Message() {
         when (message) {
           is ChatRequest -> ""
           is ChatNotification -> message.username
-        }
+        },
       )
       EmuUtil.writeString(buffer, message.message)
     }
@@ -106,7 +106,7 @@ sealed class Chat : V086Message() {
         when (message) {
           is ChatRequest -> ""
           is ChatNotification -> message.username
-        }
+        },
       )
       EmuUtil.writeString(buffer, message.message)
     }
@@ -121,7 +121,7 @@ sealed class Chat : V086Message() {
 data class ChatNotification(
   override val messageNumber: Int,
   val username: String,
-  override val message: String
+  override val message: String,
 ) : Chat(), ServerMessage
 
 /**

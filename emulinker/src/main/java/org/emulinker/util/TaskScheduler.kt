@@ -29,12 +29,9 @@ class TaskScheduler {
   fun scheduleRepeating(
     period: Duration,
     initialDelay: Duration = 0.seconds,
-    action: () -> Unit
+    action: () -> Unit,
   ): TimerTask =
-    timer.schedule(
-      delay = initialDelay.inWholeMilliseconds,
-      period = period.inWholeMilliseconds,
-    ) {
+    timer.schedule(delay = initialDelay.inWholeMilliseconds, period = period.inWholeMilliseconds) {
       // Wrap the action in a try/catch to prevent exceptions from killing the timer.
       try {
         action()

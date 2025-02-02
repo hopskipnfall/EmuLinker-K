@@ -32,7 +32,7 @@ class MasterListUpdater(
         taskScheduler.scheduleRepeating(
           // Give a few seconds to allow the server to bind ports etc.
           initialDelay = 10.seconds,
-          period = LIST_REPORTING_INTERVAL
+          period = LIST_REPORTING_INTERVAL,
         ) {
           if (flags.touchEmulinker) emuLinkerMasterUpdateTask.reportStatus()
           if (flags.touchKaillera) kailleraMasterUpdateTask.reportStatus()

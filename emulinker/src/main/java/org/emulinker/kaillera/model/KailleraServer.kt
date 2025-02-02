@@ -105,12 +105,7 @@ class KailleraServer(
   @Synchronized
   fun start() {
     timerTask =
-      taskScheduler.scheduleRepeating(
-        period = 1.minutes,
-        initialDelay = 1.minutes,
-      ) {
-        run()
-      }
+      taskScheduler.scheduleRepeating(period = 1.minutes, initialDelay = 1.minutes) { run() }
   }
 
   @Synchronized
@@ -142,7 +137,7 @@ class KailleraServer(
   fun newConnection(
     clientSocketAddress: InetSocketAddress,
     protocol: String,
-    listener: KailleraEventListener
+    listener: KailleraEventListener,
   ): KailleraUser {
     // we'll assume at this point that ConnectController has already asked AccessManager if this IP
     // is banned, so no need to do it again here
@@ -150,7 +145,7 @@ class KailleraServer(
       .atFine()
       .log(
         "Processing connection request from %s",
-        EmuUtil.formatSocketAddress(clientSocketAddress)
+        EmuUtil.formatSocketAddress(clientSocketAddress),
       )
     val access = accessManager.getAccess(clientSocketAddress.address)
 
@@ -162,7 +157,7 @@ class KailleraServer(
         .atWarning()
         .log(
           "Connection from %s denied: Server is full!",
-          EmuUtil.formatSocketAddress(clientSocketAddress)
+          EmuUtil.formatSocketAddress(clientSocketAddress),
         )
       throw ServerFullException(EmuLang.getString("KailleraServerImpl.LoginDeniedServerFull"))
     }
@@ -185,7 +180,7 @@ class KailleraServer(
         "%s attempting new connection using protocol %s from %s",
         user,
         protocol,
-        EmuUtil.formatSocketAddress(clientSocketAddress)
+        EmuUtil.formatSocketAddress(clientSocketAddress),
       )
     usersMap[userID] = user
     return user
@@ -202,7 +197,7 @@ class KailleraServer(
         user.name,
         user.ping.toString(DurationUnit.MILLISECONDS, decimals = 1),
         user.clientType,
-        user.connectionType
+        user.connectionType,
       )
     if (user.loggedIn) {
       logger.atWarning().log("%s login denied: Already logged in!", user)
@@ -237,7 +232,7 @@ class KailleraServer(
         PingTimeException(
           EmuLang.getString(
             "KailleraServerImpl.LoginDeniedPingTooHigh",
-            "${user.ping} > ${flags.maxPing}"
+            "${user.ping} > ${flags.maxPing}",
           )
         )
       )
@@ -252,7 +247,7 @@ class KailleraServer(
         LoginException(
           EmuLang.getString(
             "KailleraServerImpl.LoginDeniedConnectionTypeDenied",
-            user.connectionType
+            user.connectionType,
           )
         )
       )
@@ -349,7 +344,7 @@ class KailleraServer(
           "%s login denied: Connect address does not match login address: %s != %s",
           user,
           u.connectSocketAddress.address.hostAddress,
-          user.socketAddress!!.address.hostAddress
+          user.socketAddress!!.address.hostAddress,
         )
       return Result.failure(
         ClientAddressException(EmuLang.getString("KailleraServerImpl.LoginDeniedAddressMatchError"))
@@ -427,14 +422,14 @@ class KailleraServer(
     user.queueEvent(
       InfoMessageEvent(
         user,
-        "${releaseInfo.productName} v${releaseInfo.version}: ${releaseInfo.websiteString}"
+        "${releaseInfo.productName} v${releaseInfo.version}: ${releaseInfo.websiteString}",
       )
     )
     if (CompiledFlags.DEBUG_BUILD) {
       user.queueEvent(
         InfoMessageEvent(
           user,
-          "WARNING: This is an unoptimized debug build that should not be used in production."
+          "WARNING: This is an unoptimized debug build that should not be used in production.",
         )
       )
     }
@@ -508,7 +503,7 @@ class KailleraServer(
     QuitException::class,
     DropGameException::class,
     QuitGameException::class,
-    CloseGameException::class
+    CloseGameException::class,
   )
   fun quit(user: KailleraUser, message: String?) = withLock {
     lookingForGameReporter.cancelActionsForUser(user.id)
@@ -690,9 +685,9 @@ class KailleraServer(
       user.game!!.announce(
         EmuLang.getString(
           "KailleraServerImpl.TweetPendingAnnouncement",
-          flags.twitterBroadcastDelay.inWholeSeconds
+          flags.twitterBroadcastDelay.inWholeSeconds,
         ),
-        user
+        user,
       )
     }
     return game
@@ -875,7 +870,7 @@ class KailleraServer(
             .atInfo()
             .log(
               "%s Timeout: User likely disconnected from server without sending a Quit message.",
-              user
+              user,
             )
           try {
             quit(user, EmuLang.getString("KailleraServerImpl.ForcedQuitPingTimeout"))
@@ -942,23 +937,24 @@ class KailleraServer(
     }
     metrics.register(
       MetricRegistry.name(this.javaClass, "users", "idle"),
-      Gauge { usersMap.values.count { it.status == UserStatus.IDLE } }
+      Gauge { usersMap.values.count { it.status == UserStatus.IDLE } },
     )
     metrics.register(
       MetricRegistry.name(this.javaClass, "users", "playing"),
-      Gauge { usersMap.values.count { it.status == UserStatus.PLAYING } }
+      Gauge { usersMap.values.count { it.status == UserStatus.PLAYING } },
     )
     metrics.register(
       MetricRegistry.name(this.javaClass, "games", "waiting"),
-      Gauge { gamesMap.values.count { it.status == GameStatus.WAITING } }
+      Gauge { gamesMap.values.count { it.status == GameStatus.WAITING } },
     )
     metrics.register(
       MetricRegistry.name(this.javaClass, "games", "playing"),
-      Gauge { gamesMap.values.count { it.status == GameStatus.PLAYING } }
+      Gauge { gamesMap.values.count { it.status == GameStatus.PLAYING } },
     )
   }
 
   private val o = Object()
+
   /** Helper function to avoid one level of indentation. */
   private inline fun <T> withLock(action: () -> T): T = synchronized(o) { action() }
 
