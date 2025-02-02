@@ -20,6 +20,7 @@ import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.access.AccessManager
 import org.emulinker.kaillera.controller.connectcontroller.protocol.*
 import org.emulinker.kaillera.controller.v086.V086ClientHandler
+import org.emulinker.kaillera.model.KailleraServer
 import org.emulinker.kaillera.model.exception.NewConnectionException
 import org.emulinker.kaillera.model.exception.ServerFullException
 import org.emulinker.net.BindException
@@ -29,8 +30,9 @@ class CombinedKailleraController(
   private val flags: RuntimeFlags,
   private val accessManager: AccessManager,
   kailleraServerController: KailleraServerController,
+  private val server: KailleraServer,
 ) {
-  var boundPort: Int? = null
+  private var boundPort: Int? = null
 
   private var stopFlag = false
 
@@ -57,8 +59,11 @@ class CombinedKailleraController(
             thread(start = false) {
               logger.atInfo().log("Received SIGTERM, shutting down gracefully.")
               try {
+                server.announce("The server is shutting down", gamesAlso = true)
+                Thread.sleep(1_000)
+
                 for (handler in clientHandlers.values) {
-                  handler.user.server.quit(handler.user, "Server shutting down")
+                  server.quit(handler.user, "Server shutting down")
                 }
                 // Give the server time to notify everyone they are being kicked.
                 Thread.sleep(3_000)

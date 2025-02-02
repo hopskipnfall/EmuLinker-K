@@ -758,15 +758,7 @@ class KailleraServer(
     return true
   }
 
-  fun announceInGame(announcement: String?, user: KailleraUser) {
-    user.game!!.announce(announcement!!, user)
-  }
-
-  fun announce(message: String, gamesAlso: Boolean) {
-    announce(message, gamesAlso, targetUser = null)
-  }
-
-  fun announce(message: String, gamesAlso: Boolean, targetUser: KailleraUser?) {
+  fun announce(message: String, gamesAlso: Boolean, targetUser: KailleraUser? = null) {
     if (targetUser == null) {
       usersMap.values
         .asSequence()
