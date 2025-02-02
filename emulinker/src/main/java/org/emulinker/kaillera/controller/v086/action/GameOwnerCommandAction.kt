@@ -116,6 +116,11 @@ class GameOwnerCommandAction : V086Action<GameChat> {
       admin
     )
     threadSleep(20.milliseconds)
+    game.announce(
+      "/samedelay {true | false} to play at the same delay as player with highest ping. Default is false.",
+      admin
+    )
+    threadSleep(20.milliseconds)
   }
 
   private fun autoFireHelp(game: KailleraGameImpl, admin: KailleraUser) {

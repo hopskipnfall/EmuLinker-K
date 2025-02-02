@@ -958,7 +958,7 @@ class KailleraServer(
     )
   }
 
-  val o = Object()
+  private val o = Object()
   /** Helper function to avoid one level of indentation. */
   private inline fun <T> withLock(action: () -> T): T = synchronized(o) { action() }
 

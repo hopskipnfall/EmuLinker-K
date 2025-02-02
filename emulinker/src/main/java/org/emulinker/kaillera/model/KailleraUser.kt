@@ -8,6 +8,7 @@ import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 import kotlin.Throws
+import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.nanoseconds
 import kotlin.time.Duration.Companion.seconds
@@ -25,7 +26,6 @@ import org.emulinker.kaillera.model.event.UserQuitGameEvent
 import org.emulinker.kaillera.model.exception.*
 import org.emulinker.kaillera.model.impl.KailleraGameImpl
 import org.emulinker.util.EmuLang
-import org.emulinker.util.EmuUtil.toSecondDoublePrecisionString
 import org.emulinker.util.TimeOffsetCache
 
 /**
@@ -299,11 +299,8 @@ class KailleraUser(
     loggedIn = false
   }
 
-  fun summarizeLag(): String =
-    (totalDriftNs - (totalDriftCache.getDelayedValue() ?: 0))
-      .nanoseconds
-      .absoluteValue
-      .toSecondDoublePrecisionString()
+  fun lagAttributedToUser(): Duration =
+    (totalDriftNs - (totalDriftCache.getDelayedValue() ?: 0)).nanoseconds.absoluteValue
 
   fun resetLag() {
     totalDriftNs = 0

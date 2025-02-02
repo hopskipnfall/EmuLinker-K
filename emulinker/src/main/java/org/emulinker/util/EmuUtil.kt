@@ -304,7 +304,11 @@ object EmuUtil {
 
   // TODO(nue): Get rid of this after it's confirmed it can be safely removed.
   /** NOOP placeholder for a function that _used to_ call [Thread.sleep]. */
-  @Deprecated(message = "Don't sleep!", level = DeprecationLevel.WARNING)
+  @Deprecated(
+    message = "We no longer sleep. Should be inlined.",
+    ReplaceWith("Thread.yield()"),
+    DeprecationLevel.WARNING
+  )
   fun threadSleep(d: Duration) {
     Thread.yield()
   }
