@@ -40,7 +40,7 @@ fun main() {
   // Use log4j as the flogger backend.
   System.setProperty(
     "flogger.backend_factory",
-    "com.google.common.flogger.backend.log4j2.Log4j2BackendFactory#getInstance"
+    "com.google.common.flogger.backend.log4j2.Log4j2BackendFactory#getInstance",
   )
 
   logger.atInfo().log("EmuLinker server Starting...")

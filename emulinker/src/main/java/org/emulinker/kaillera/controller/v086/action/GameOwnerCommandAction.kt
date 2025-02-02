@@ -97,7 +97,7 @@ class GameOwnerCommandAction : V086Action<GameChat> {
     threadSleep(20.milliseconds)
     game.announce(
       "/swap <order> eg. 123..n {n = total # of players; Each slot = new player#}",
-      admin
+      admin,
     )
     threadSleep(20.milliseconds)
     game.announce("/kick <Player#> or /kickall to kick a player(s).", admin)
@@ -108,17 +108,17 @@ class GameOwnerCommandAction : V086Action<GameChat> {
     threadSleep(20.milliseconds)
     game.announce(
       "/lagstat To check who has the most lag spikes or /lagreset to reset lagstat!",
-      admin
+      admin,
     )
     threadSleep(20.milliseconds)
     game.announce(
       "/samedelay {true | false} to play at the same delay as player with highest ping. Default is false.",
-      admin
+      admin,
     )
     threadSleep(20.milliseconds)
     game.announce(
       "/samedelay {true | false} to play at the same delay as player with highest ping. Default is false.",
-      admin
+      admin,
     )
     threadSleep(20.milliseconds)
   }
@@ -132,7 +132,7 @@ class GameOwnerCommandAction : V086Action<GameChat> {
     game.announce(
       EmuLang.getString("GameOwnerCommandAction.HelpCurrentSensitivity", cur) +
         if (cur == 0) EmuLang.getString("GameOwnerCommandAction.HelpDisabled") else "",
-      admin
+      admin,
     )
   }
 
@@ -160,7 +160,7 @@ class GameOwnerCommandAction : V086Action<GameChat> {
     game.autoFireDetector!!.sensitivity = sensitivity
     game.announce(
       EmuLang.getString("GameOwnerCommandAction.HelpCurrentSensitivity", sensitivity) +
-        if (sensitivity == 0) EmuLang.getString("GameOwnerCommandAction.HelpDisabled") else "",
+        if (sensitivity == 0) EmuLang.getString("GameOwnerCommandAction.HelpDisabled") else ""
     )
   }
 
@@ -169,16 +169,14 @@ class GameOwnerCommandAction : V086Action<GameChat> {
     message: String,
     game: KailleraGameImpl,
     admin: KailleraUser,
-    clientHandler: V086ClientHandler
+    clientHandler: V086ClientHandler,
   ) {
     var emu = game.owner.clientType
     if (message == "/setemu any") {
       emu = "any"
     }
     admin.game!!.aEmulator = emu!!
-    admin.game!!.announce(
-      "Owner has restricted the emulator to: $emu",
-    )
+    admin.game!!.announce("Owner has restricted the emulator to: $emu")
     return
   }
 
@@ -190,9 +188,7 @@ class GameOwnerCommandAction : V086Action<GameChat> {
       conn = "any"
     }
     admin.game!!.aConnection = conn
-    admin.game!!.announce(
-      "Owner has restricted the connection type to: $conn",
-    )
+    admin.game!!.announce("Owner has restricted the connection type to: $conn")
     return
   }
 
@@ -202,21 +198,13 @@ class GameOwnerCommandAction : V086Action<GameChat> {
   }
 
   @Throws(ActionException::class, MessageFormatException::class)
-  private fun processSameDelay(
-    message: String,
-    game: KailleraGameImpl,
-    admin: KailleraUser,
-  ) {
+  private fun processSameDelay(message: String, game: KailleraGameImpl, admin: KailleraUser) {
     if (message == "/samedelay true") {
       game.sameDelay = true
-      admin.game!!.announce(
-        "Players will have the same delay when game starts (restarts)!",
-      )
+      admin.game!!.announce("Players will have the same delay when game starts (restarts)!")
     } else {
       game.sameDelay = false
-      admin.game!!.announce(
-        "Players will have independent delays when game starts (restarts)!",
-      )
+      admin.game!!.announce("Players will have independent delays when game starts (restarts)!")
     }
   }
 
@@ -225,7 +213,7 @@ class GameOwnerCommandAction : V086Action<GameChat> {
     message: String,
     game: KailleraGameImpl,
     admin: KailleraUser,
-    clientHandler: V086ClientHandler
+    clientHandler: V086ClientHandler,
   ) {
     val scanner = Scanner(message).useDelimiter(" ")
     try {
@@ -241,9 +229,7 @@ class GameOwnerCommandAction : V086Action<GameChat> {
             game.mutedUsers.add(game.getPlayer(w)!!.connectSocketAddress.address.hostAddress)
           }
         }
-        admin.game!!.announce(
-          "All players have been muted!",
-        )
+        admin.game!!.announce("All players have been muted!")
         return
       }
       val userID = scanner.nextInt()
@@ -268,9 +254,7 @@ class GameOwnerCommandAction : V086Action<GameChat> {
       game.mutedUsers.add(user.connectSocketAddress.address.hostAddress)
       user.isMuted = true
       val user1 = clientHandler.user
-      user1.game!!.announce(
-        user.name + " has been muted!",
-      )
+      user1.game!!.announce(user.name + " has been muted!")
     } catch (e: NoSuchElementException) {
       val user = clientHandler.user
       user.game!!.announce("Mute Player Error: /mute <UserID>", admin)
@@ -282,7 +266,7 @@ class GameOwnerCommandAction : V086Action<GameChat> {
     message: String,
     game: KailleraGameImpl,
     admin: KailleraUser,
-    clientHandler: V086ClientHandler
+    clientHandler: V086ClientHandler,
   ) {
     val scanner = Scanner(message).useDelimiter(" ")
     try {
@@ -292,9 +276,7 @@ class GameOwnerCommandAction : V086Action<GameChat> {
           kailleraUser.isMuted = false
           game.mutedUsers.remove(kailleraUser.connectSocketAddress.address.hostAddress)
         }
-        admin.game!!.announce(
-          "All players have been unmuted!",
-        )
+        admin.game!!.announce("All players have been unmuted!")
         return
       }
       val userID = scanner.nextInt()
@@ -317,9 +299,7 @@ class GameOwnerCommandAction : V086Action<GameChat> {
       game.mutedUsers.remove(user.connectSocketAddress.address.hostAddress)
       user.isMuted = false
       val user1 = clientHandler.user
-      user1.game!!.announce(
-        user.name + " has been unmuted!",
-      )
+      user1.game!!.announce(user.name + " has been unmuted!")
     } catch (e: NoSuchElementException) {
       val user = clientHandler.user
       user.game!!.announce("Unmute Player Error: /unmute <UserID>", admin)
@@ -331,7 +311,7 @@ class GameOwnerCommandAction : V086Action<GameChat> {
     message: String,
     game: KailleraGameImpl,
     admin: KailleraUser,
-    clientHandler: V086ClientHandler
+    clientHandler: V086ClientHandler,
   ) {
     val scanner = Scanner(message).useDelimiter(" ")
     try {
@@ -339,9 +319,7 @@ class GameOwnerCommandAction : V086Action<GameChat> {
       val num = scanner.nextInt()
       if (num in 1..100) {
         game.startN = num.toByte().toInt()
-        game.announce(
-          "This game will start when $num players have joined.",
-        )
+        game.announce("This game will start when $num players have joined.")
       } else {
         game.announce("StartN Error: Enter value between 1 and 100.", admin)
       }
@@ -351,11 +329,7 @@ class GameOwnerCommandAction : V086Action<GameChat> {
   }
 
   @Throws(ActionException::class, MessageFormatException::class)
-  private fun processSwap(
-    message: String,
-    game: KailleraGameImpl,
-    admin: KailleraUser,
-  ) {
+  private fun processSwap(message: String, game: KailleraGameImpl, admin: KailleraUser) {
     /*if(game.getStatus() != KailleraGame.STATUS_PLAYING){
     	game.announce("Failed: wap Players can only be used during gameplay!", admin);
     	return;
@@ -397,21 +371,19 @@ class GameOwnerCommandAction : V086Action<GameChat> {
             }
             else{
             	game.getPlayerActionQueue()[i] = game.getPlayerActionQueue()[num[i]-1];
-            }*/ game.announce(
-              player.name + " is now Player#: " + player.playerNumber,
-            )
+            }*/ game.announce(player.name + " is now Player#: " + player.playerNumber)
             i++
           }
         } else
           game.announce(
             "Swap Player Error: /swap <order> eg. 123..n {n = total # of players; Each slot = new player#}",
-            admin
+            admin,
           )
       }
     } catch (e: NoSuchElementException) {
       game.announce(
         "Swap Player Error: /swap <order> eg. 123..n {n = total # of players; Each slot = new player#}",
-        admin
+        admin,
       )
     }
   }
@@ -426,7 +398,7 @@ class GameOwnerCommandAction : V086Action<GameChat> {
     message: String,
     game: KailleraGameImpl,
     admin: KailleraUser,
-    clientHandler: V086ClientHandler
+    clientHandler: V086ClientHandler,
   ) {
     val scanner = Scanner(message).useDelimiter(" ")
     try {
@@ -440,9 +412,7 @@ class GameOwnerCommandAction : V086Action<GameChat> {
           )
             game.kick(admin, game.getPlayer(w)!!.id)
         }
-        admin.game!!.announce(
-          "All players have been kicked!",
-        )
+        admin.game!!.announce("All players have been kicked!")
         return
       }
       val playerNumber = scanner.nextInt()
@@ -461,11 +431,7 @@ class GameOwnerCommandAction : V086Action<GameChat> {
   }
 
   @Throws(ActionException::class, MessageFormatException::class)
-  private fun processMaxUsers(
-    message: String,
-    game: KailleraGameImpl,
-    admin: KailleraUser,
-  ) {
+  private fun processMaxUsers(message: String, game: KailleraGameImpl, admin: KailleraUser) {
     if (System.currentTimeMillis() - lastMaxUserChange <= 3000) {
       game.announce("Max User Command Spam Detection...Please Wait!", admin)
       lastMaxUserChange = System.currentTimeMillis()
@@ -479,9 +445,7 @@ class GameOwnerCommandAction : V086Action<GameChat> {
       val num = scanner.nextInt()
       if (num in 1..100) {
         game.maxUsers = num
-        game.announce(
-          "Max Users has been set to $num",
-        )
+        game.announce("Max Users has been set to $num")
       } else {
         game.announce("Max Users Error: Enter value between 1 and 100", admin)
       }
@@ -491,20 +455,14 @@ class GameOwnerCommandAction : V086Action<GameChat> {
   }
 
   @Throws(ActionException::class, MessageFormatException::class)
-  private fun processMaxPing(
-    message: String,
-    game: KailleraGameImpl,
-    admin: KailleraUser,
-  ) {
+  private fun processMaxPing(message: String, game: KailleraGameImpl, admin: KailleraUser) {
     val scanner = Scanner(message).useDelimiter(" ")
     try {
       scanner.next()
       val num = scanner.nextInt()
       if (num in 1..1000) {
         game.maxPing = num
-        game.announce(
-          "Max Ping has been set to $num",
-        )
+        game.announce("Max Ping has been set to $num")
       } else {
         game.announce("Max Ping Error: Enter value between 1 and 1000", admin)
       }

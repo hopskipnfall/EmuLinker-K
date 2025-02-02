@@ -164,7 +164,7 @@ data class StartGameNotification(
   override val messageNumber: Int,
   val val1: Int,
   val playerNumber: Short,
-  val numPlayers: Short
+  val numPlayers: Short,
 ) : StartGame(), ServerMessage {
 
   init {

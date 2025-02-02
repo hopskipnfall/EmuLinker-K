@@ -61,7 +61,7 @@ class KailleraMasterUpdateTask(
         .filter { it.status == GameStatus.WAITING }
         .joinToString(separator = "") {
           "${it.id}|${it.romName}|${it.owner.name}|${it.owner.clientType}|${it.players.size}|"
-        }
+        },
     )
 
     // Get response code

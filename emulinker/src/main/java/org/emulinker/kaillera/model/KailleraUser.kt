@@ -291,7 +291,7 @@ class KailleraUser(
     QuitException::class,
     DropGameException::class,
     QuitGameException::class,
-    CloseGameException::class
+    CloseGameException::class,
   )
   fun quit(message: String?) {
     updateLastActivity()
@@ -455,7 +455,7 @@ class KailleraUser(
               data,
               actionsPerMessage = connectionType.byteValue.toInt(),
               playerNumber = 1,
-              numPlayers = 1
+              numPlayers = 1,
             )
           )
 

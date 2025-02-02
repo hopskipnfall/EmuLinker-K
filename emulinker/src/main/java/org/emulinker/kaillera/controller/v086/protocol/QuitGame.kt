@@ -100,7 +100,7 @@ sealed class QuitGame : V086Message() {
         when (message) {
           is QuitGameRequest -> REQUEST_USERNAME
           is QuitGameNotification -> message.username
-        }
+        },
       )
       buffer.putUnsignedShort(
         when (message) {
@@ -116,7 +116,7 @@ sealed class QuitGame : V086Message() {
         when (message) {
           is QuitGameRequest -> REQUEST_USERNAME
           is QuitGameNotification -> message.username
-        }
+        },
       )
       buffer.putUnsignedShort(
         when (message) {
@@ -143,7 +143,7 @@ data class QuitGameRequest(override val messageNumber: Int) : QuitGame(), Client
 data class QuitGameNotification(
   override val messageNumber: Int,
   val username: String,
-  val userId: Int
+  val userId: Int,
 ) : QuitGame(), ServerMessage {
 
   init {

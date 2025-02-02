@@ -59,49 +59,49 @@ class ServerStatusTest : ProtocolBaseTest() {
               ping = 100L.milliseconds,
               userId = 13,
               connectionType = ConnectionType.LAN,
-              status = UserStatus.CONNECTING
+              status = UserStatus.CONNECTING,
             ),
             ServerStatus.User(
               username = "nue1",
               ping = 100L.milliseconds,
               userId = 14,
               connectionType = ConnectionType.LAN,
-              status = UserStatus.IDLE
+              status = UserStatus.IDLE,
             ),
             ServerStatus.User(
               username = "nue2",
               ping = 100L.milliseconds,
               userId = 18,
               connectionType = ConnectionType.AVERAGE,
-              status = UserStatus.PLAYING
+              status = UserStatus.PLAYING,
             ),
             ServerStatus.User(
               username = "nue3",
               ping = 100L.milliseconds,
               userId = 200,
               connectionType = ConnectionType.LAN,
-              status = UserStatus.CONNECTING
+              status = UserStatus.CONNECTING,
             ),
             ServerStatus.User(
               username = "nue4",
               ping = 100L.milliseconds,
               userId = 12,
               connectionType = ConnectionType.LAN,
-              status = UserStatus.PLAYING
+              status = UserStatus.PLAYING,
             ),
             ServerStatus.User(
               username = "nue5",
               ping = 100L.milliseconds,
               userId = 8,
               connectionType = ConnectionType.BAD,
-              status = UserStatus.CONNECTING
+              status = UserStatus.CONNECTING,
             ),
             ServerStatus.User(
               username = "nue6",
               ping = 100L.milliseconds,
               userId = 3,
               connectionType = ConnectionType.BAD,
-              status = UserStatus.IDLE
+              status = UserStatus.IDLE,
             ),
           ),
         games =
@@ -112,7 +112,7 @@ class ServerStatusTest : ProtocolBaseTest() {
               clientType = "My N64 Emulator",
               username = "nue",
               playerCountOutOfMax = "2/4",
-              GameStatus.PLAYING
+              GameStatus.PLAYING,
             ),
             ServerStatus.Game(
               romName = "My ROM",
@@ -120,7 +120,7 @@ class ServerStatusTest : ProtocolBaseTest() {
               clientType = "My N64 Emulator",
               username = "nue2",
               playerCountOutOfMax = "2/4",
-              GameStatus.PLAYING
+              GameStatus.PLAYING,
             ),
             ServerStatus.Game(
               romName = "My ROM",
@@ -128,7 +128,7 @@ class ServerStatusTest : ProtocolBaseTest() {
               clientType = "My N64 Emulator",
               username = "nue3",
               playerCountOutOfMax = "2/4",
-              GameStatus.SYNCHRONIZING
+              GameStatus.SYNCHRONIZING,
             ),
             ServerStatus.Game(
               romName = "My ROM",
@@ -136,9 +136,9 @@ class ServerStatusTest : ProtocolBaseTest() {
               clientType = "My N64 Emulator",
               username = "nue4",
               playerCountOutOfMax = "2/4",
-              GameStatus.WAITING
+              GameStatus.WAITING,
             ),
-          )
+          ),
       )
   }
 }

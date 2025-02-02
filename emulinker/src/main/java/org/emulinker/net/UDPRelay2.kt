@@ -29,13 +29,13 @@ constructor(
   protected abstract fun processClientToServer(
     receiveBuffer: ByteBuffer?,
     fromAddress: InetSocketAddress?,
-    toAddress: InetSocketAddress?
+    toAddress: InetSocketAddress?,
   ): ByteBuffer?
 
   protected abstract fun processServerToClient(
     receiveBuffer: ByteBuffer?,
     fromAddress: InetSocketAddress?,
-    toAddress: InetSocketAddress?
+    toAddress: InetSocketAddress?,
   ): ByteBuffer?
 
   @Synchronized
@@ -146,7 +146,7 @@ constructor(
               .atFine()
               .log(
                 "No RelayThread is registered to forward to %s... creating new RelayThread",
-                formatSocketAddress(fromAddress)
+                formatSocketAddress(fromAddress),
               )
             responseThread = RelayThread(fromAddress)
             relayThreads[fromAddress] = responseThread
@@ -187,7 +187,7 @@ constructor(
             .log(
               "Using previously created DatagramChannel bound to port %d that will forward to %s",
               channel!!.socket().localPort,
-              formatSocketAddress(forwardAddress!!)
+              formatSocketAddress(forwardAddress!!),
             )
         }
       } else {
@@ -198,7 +198,7 @@ constructor(
           .log(
             "Creating new DatagramChannel bound to arbitrary port %d that will forward to %s",
             channel!!.socket().localPort,
-            formatSocketAddress(forwardAddress!!)
+            formatSocketAddress(forwardAddress!!),
           )
       }
       lastActivity = System.currentTimeMillis()

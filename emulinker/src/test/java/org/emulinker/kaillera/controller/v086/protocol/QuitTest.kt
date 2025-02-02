@@ -82,7 +82,7 @@ class QuitTest : ProtocolBaseTest() {
         messageNumber = MESSAGE_NUMBER,
         username = "nue",
         userId = 13,
-        message = "Hello, world!"
+        message = "Hello, world!",
       )
     private val QUIT_REQUEST =
       QuitRequest(messageNumber = MESSAGE_NUMBER, message = "Hello, world!")

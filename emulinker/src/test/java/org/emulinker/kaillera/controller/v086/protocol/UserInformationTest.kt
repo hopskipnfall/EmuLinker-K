@@ -51,7 +51,7 @@ class UserInformationTest : ProtocolBaseTest() {
         MESSAGE_NUMBER,
         username = "nue",
         clientType = "My Emulator",
-        connectionType = ConnectionType.LAN
+        connectionType = ConnectionType.LAN,
       )
   }
 }

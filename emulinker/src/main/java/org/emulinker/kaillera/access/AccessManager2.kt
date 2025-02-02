@@ -115,7 +115,7 @@ class AccessManager2(private val flags: RuntimeFlags, private val taskScheduler:
 
   private fun <T : TemporaryAttribute> addTemporaryAttributeToList(
     list: MutableList<T>,
-    attribute: T
+    attribute: T,
   ) {
     logger.atInfo().log("Adding temporary attribute: %s", attribute)
     list.add(attribute)

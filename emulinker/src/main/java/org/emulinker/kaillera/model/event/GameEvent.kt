@@ -10,13 +10,13 @@ sealed interface GameEvent : KailleraEvent {
 data class GameInfoEvent(
   override val game: KailleraGame,
   val message: String,
-  val toUser: KailleraUser? = null
+  val toUser: KailleraUser? = null,
 ) : GameEvent
 
 data class GameChatEvent(
   override val game: KailleraGame,
   val user: KailleraUser,
-  val message: String
+  val message: String,
 ) : GameEvent
 
 data class AllReadyEvent(override val game: KailleraGame) : GameEvent
@@ -30,7 +30,7 @@ data class GameStartedEvent(override val game: KailleraGame) : GameEvent
 data class GameTimeoutEvent(
   override val game: KailleraGame,
   val user: KailleraUser,
-  val timeoutNumber: Int
+  val timeoutNumber: Int,
 ) : GameEvent
 
 data class UserJoinedGameEvent(override val game: KailleraGame, val user: KailleraUser) : GameEvent
@@ -41,11 +41,11 @@ data class UserQuitGameEvent(override val game: KailleraGame?, val user: Kailler
 data class PlayerDesynchEvent(
   override val game: KailleraGame,
   val user: KailleraUser,
-  val message: String
+  val message: String,
 ) : GameEvent
 
 data class UserDroppedGameEvent(
   override val game: KailleraGame,
   val user: KailleraUser,
-  val playerNumber: Int
+  val playerNumber: Int,
 ) : GameEvent

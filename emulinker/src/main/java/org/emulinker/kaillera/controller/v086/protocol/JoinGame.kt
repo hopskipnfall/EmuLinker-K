@@ -88,7 +88,7 @@ sealed class JoinGame : V086Message() {
             userName,
             ping.milliseconds,
             userID,
-            ConnectionType.fromByteValue(connectionType)
+            ConnectionType.fromByteValue(connectionType),
           )
       )
     }
@@ -120,7 +120,7 @@ sealed class JoinGame : V086Message() {
             userName,
             ping.milliseconds,
             userID,
-            ConnectionType.fromByteValue(connectionType)
+            ConnectionType.fromByteValue(connectionType),
           )
       )
     }
@@ -152,7 +152,7 @@ sealed class JoinGame : V086Message() {
             userName,
             ping.milliseconds,
             userID,
-            ConnectionType.fromByteValue(connectionType)
+            ConnectionType.fromByteValue(connectionType),
           )
       )
     }
@@ -171,7 +171,7 @@ sealed class JoinGame : V086Message() {
         when (message) {
           is JoinGameRequest -> REQUEST_USERNAME
           is JoinGameNotification -> message.username
-        }
+        },
       )
       buffer.putUnsignedInt(
         when (message) {
@@ -204,7 +204,7 @@ sealed class JoinGame : V086Message() {
         when (message) {
           is JoinGameRequest -> REQUEST_USERNAME
           is JoinGameNotification -> message.username
-        }
+        },
       )
       buffer.putUnsignedInt(
         when (message) {
@@ -237,7 +237,7 @@ data class JoinGameNotification(
   val username: String,
   val ping: Duration,
   val userId: Int,
-  override val connectionType: ConnectionType
+  override val connectionType: ConnectionType,
 ) : JoinGame(), ServerMessage {
 
   init {
@@ -256,7 +256,7 @@ data class JoinGameNotification(
 data class JoinGameRequest(
   override val messageNumber: Int,
   override val gameId: Int,
-  override val connectionType: ConnectionType
+  override val connectionType: ConnectionType,
 ) : JoinGame(), ClientMessage {
 
   init {

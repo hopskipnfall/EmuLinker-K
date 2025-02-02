@@ -58,7 +58,7 @@ class ChatAction(private val adminCommandAction: AdminCommandAction) :
           InformationMessage(
             clientHandler.nextMessageNumber,
             "server",
-            EmuLang.getString("ChatAction.ChatDenied", e.message)
+            EmuLang.getString("ChatAction.ChatDenied", e.message),
           )
         )
       } catch (e2: MessageFormatException) {
@@ -86,7 +86,7 @@ class ChatAction(private val adminCommandAction: AdminCommandAction) :
             InformationMessage(
               clientHandler.nextMessageNumber,
               "server",
-              ":ALIVECHECK=EmuLinker-K Alive Check: You are still logged in."
+              ":ALIVECHECK=EmuLinker-K Alive Check: You are still logged in.",
             )
           )
         } catch (e: Exception) {}
@@ -100,7 +100,7 @@ class ChatAction(private val adminCommandAction: AdminCommandAction) :
             InformationMessage(
               clientHandler.nextMessageNumber,
               "server",
-              "VERSION: ${releaseInfo.productName}: ${releaseInfo.version}: ${releaseInfo.buildDate.toSimpleUtcDatetime()}"
+              "VERSION: ${releaseInfo.productName}: ${releaseInfo.version}: ${releaseInfo.buildDate.toSimpleUtcDatetime()}",
             )
           )
         } catch (e: Exception) {}
@@ -110,7 +110,7 @@ class ChatAction(private val adminCommandAction: AdminCommandAction) :
             InformationMessage(
               clientHandler.nextMessageNumber,
               "server",
-              "Your IP Address is: " + clientHandler.user.connectSocketAddress.address.hostAddress
+              "Your IP Address is: " + clientHandler.user.connectSocketAddress.address.hostAddress,
             )
           )
         } catch (e: Exception) {}
@@ -121,7 +121,7 @@ class ChatAction(private val adminCommandAction: AdminCommandAction) :
             InformationMessage(
               clientHandler.nextMessageNumber,
               "server",
-              "Private messages are now on."
+              "Private messages are now on.",
             )
           )
         } catch (e: Exception) {}
@@ -132,7 +132,7 @@ class ChatAction(private val adminCommandAction: AdminCommandAction) :
             InformationMessage(
               clientHandler.nextMessageNumber,
               "server",
-              "Private messages are now off."
+              "Private messages are now off.",
             )
           )
         } catch (e: Exception) {}
@@ -218,7 +218,7 @@ class ChatAction(private val adminCommandAction: AdminCommandAction) :
                 InformationMessage(
                   clientHandler.nextMessageNumber,
                   "server",
-                  "You can't private message yourself!"
+                  "You can't private message yourself!",
                 )
               )
             } catch (e: Exception) {}
@@ -233,7 +233,7 @@ class ChatAction(private val adminCommandAction: AdminCommandAction) :
                 InformationMessage(
                   clientHandler.nextMessageNumber,
                   "server",
-                  "<" + user.name + "> Is not accepting private messages!"
+                  "<" + user.name + "> Is not accepting private messages!",
                 )
               )
             } catch (e: Exception) {}
@@ -252,7 +252,7 @@ class ChatAction(private val adminCommandAction: AdminCommandAction) :
                     InformationMessage(
                       clientHandler.nextMessageNumber,
                       "server",
-                      "Private Message Denied: Illegal characters in message"
+                      "Private Message Denied: Illegal characters in message",
                     )
                   )
                 } catch (e: Exception) {}
@@ -266,7 +266,7 @@ class ChatAction(private val adminCommandAction: AdminCommandAction) :
                   InformationMessage(
                     clientHandler.nextMessageNumber,
                     "server",
-                    "Private Message Denied: Message Too Long"
+                    "Private Message Denied: Message Too Long",
                   )
                 )
               } catch (e: Exception) {}
@@ -278,12 +278,12 @@ class ChatAction(private val adminCommandAction: AdminCommandAction) :
           user1.server.announce(
             "TO: <${user.name}>(${user.id}) <${clientHandler.user.name}> (${clientHandler.user.id}): $m",
             false,
-            user1
+            user1,
           )
           user.server.announce(
             "<${clientHandler.user.name}> (${clientHandler.user.id}): $m",
             false,
-            user
+            user,
           )
 
           /*if(user1.getGame() != null){
@@ -316,7 +316,7 @@ class ChatAction(private val adminCommandAction: AdminCommandAction) :
                     InformationMessage(
                       clientHandler.nextMessageNumber,
                       "server",
-                      "You can't private message yourself!"
+                      "You can't private message yourself!",
                     )
                   )
                 } catch (e1: Exception) {}
@@ -328,7 +328,7 @@ class ChatAction(private val adminCommandAction: AdminCommandAction) :
                     InformationMessage(
                       clientHandler.nextMessageNumber,
                       "server",
-                      "<" + user.name + "> Is not accepting private messages!"
+                      "<" + user.name + "> Is not accepting private messages!",
                     )
                   )
                 } catch (e1: Exception) {}
@@ -348,7 +348,7 @@ class ChatAction(private val adminCommandAction: AdminCommandAction) :
                         InformationMessage(
                           clientHandler.nextMessageNumber,
                           "server",
-                          "Private Message Denied: Illegal characters in message"
+                          "Private Message Denied: Illegal characters in message",
                         )
                       )
                     } catch (e1: Exception) {}
@@ -363,7 +363,7 @@ class ChatAction(private val adminCommandAction: AdminCommandAction) :
                       InformationMessage(
                         clientHandler.nextMessageNumber,
                         "server",
-                        "Private Message Denied: Message Too Long"
+                        "Private Message Denied: Message Too Long",
                       )
                     )
                   } catch (e1: Exception) {}
@@ -373,12 +373,12 @@ class ChatAction(private val adminCommandAction: AdminCommandAction) :
               user1.server.announce(
                 "TO: <${user.name}>(${user.id}) <${clientHandler.user.name}> (${clientHandler.user.id}): $m",
                 false,
-                user1
+                user1,
               )
               user.server.announce(
                 "<${clientHandler.user.name}> (${clientHandler.user.id}): $m",
                 false,
-                user
+                user,
               )
               /*if(user1.getGame() != null){
               	user1.getGame().announce("TO: <" + user.getName() + ">(" + user.getID() + ") <" + clientHandler.getUser().getName() + "> (" + clientHandler.getUser().getID() + "): " + m, user1);
@@ -393,7 +393,7 @@ class ChatAction(private val adminCommandAction: AdminCommandAction) :
                   InformationMessage(
                     clientHandler.nextMessageNumber,
                     "server",
-                    "Private Message Error: /msg <UserID> <message>"
+                    "Private Message Error: /msg <UserID> <message>",
                   )
                 )
               } catch (e2: Exception) {}
@@ -405,7 +405,7 @@ class ChatAction(private val adminCommandAction: AdminCommandAction) :
                 InformationMessage(
                   clientHandler.nextMessageNumber,
                   "server",
-                  "Private Message Error: /msg <UserID> <message>"
+                  "Private Message Error: /msg <UserID> <message>",
                 )
               )
             } catch (e1: Exception) {}
@@ -416,19 +416,13 @@ class ChatAction(private val adminCommandAction: AdminCommandAction) :
         val user = clientHandler.user
         try {
           clientHandler.user.ignoreAll = true
-          user.server.announce(
-            clientHandler.user.name + " is now ignoring everyone!",
-            false,
-          )
+          user.server.announce(clientHandler.user.name + " is now ignoring everyone!", false)
         } catch (e: Exception) {}
       } else if (chatMessage.message == "/unignoreall") {
         val user = clientHandler.user
         try {
           clientHandler.user.ignoreAll = false
-          user.server.announce(
-            clientHandler.user.name + " is now unignoring everyone!",
-            false,
-          )
+          user.server.announce(clientHandler.user.name + " is now unignoring everyone!", false)
         } catch (e: Exception) {}
       } else if (chatMessage.message.startsWith("/ignore")) {
         val scanner = Scanner(chatMessage.message).useDelimiter(" ")
@@ -450,7 +444,7 @@ class ChatAction(private val adminCommandAction: AdminCommandAction) :
                 InformationMessage(
                   clientHandler.nextMessageNumber,
                   "server",
-                  "You can't ignore yourself!"
+                  "You can't ignore yourself!",
                 )
               )
             } catch (e: Exception) {}
@@ -462,7 +456,7 @@ class ChatAction(private val adminCommandAction: AdminCommandAction) :
                 InformationMessage(
                   clientHandler.nextMessageNumber,
                   "server",
-                  "You can't ignore a user that is already ignored!"
+                  "You can't ignore a user that is already ignored!",
                 )
               )
             } catch (e: Exception) {}
@@ -474,7 +468,7 @@ class ChatAction(private val adminCommandAction: AdminCommandAction) :
                 InformationMessage(
                   clientHandler.nextMessageNumber,
                   "server",
-                  "You cannot ignore a moderator or admin!"
+                  "You cannot ignore a moderator or admin!",
                 )
               )
             } catch (e: Exception) {}
@@ -493,7 +487,7 @@ class ChatAction(private val adminCommandAction: AdminCommandAction) :
             .log(
               "IGNORE USER ERROR: %s: %s",
               user.name,
-              clientHandler.remoteSocketAddress!!.hostName
+              clientHandler.remoteSocketAddress!!.hostName,
             )
           return
         }
@@ -517,7 +511,7 @@ class ChatAction(private val adminCommandAction: AdminCommandAction) :
                 InformationMessage(
                   clientHandler.nextMessageNumber,
                   "server",
-                  "You can't unignore a user that isn't ignored!"
+                  "You can't unignore a user that isn't ignored!",
                 )
               )
             } catch (e: Exception) {}
@@ -526,12 +520,12 @@ class ChatAction(private val adminCommandAction: AdminCommandAction) :
           if (
             clientHandler.user.removeIgnoredUser(
               user.connectSocketAddress.address.hostAddress,
-              false
+              false,
             )
           )
             user.server.announce(
               clientHandler.user.name + " is now unignoring <" + user.name + "> ID: " + user.id,
-              gamesAlso = false
+              gamesAlso = false,
             )
           else
             try {
@@ -543,7 +537,7 @@ class ChatAction(private val adminCommandAction: AdminCommandAction) :
           clientHandler.user.server.announce(
             "Unignore User Error: /ignore <UserID>",
             false,
-            clientHandler.user
+            clientHandler.user,
           )
           logger
             .atInfo()
@@ -551,7 +545,7 @@ class ChatAction(private val adminCommandAction: AdminCommandAction) :
             .log(
               "UNIGNORE USER ERROR: %s: %s",
               clientHandler.user.name,
-              clientHandler.remoteSocketAddress
+              clientHandler.remoteSocketAddress,
             )
           return
         }
@@ -561,7 +555,7 @@ class ChatAction(private val adminCommandAction: AdminCommandAction) :
             InformationMessage(
               clientHandler.nextMessageNumber,
               "server",
-              "/me <message> to make personal message eg. /me is bored ...SupraFast is bored."
+              "/me <message> to make personal message eg. /me is bored ...SupraFast is bored.",
             )
           )
         } catch (e: Exception) {}
@@ -571,7 +565,7 @@ class ChatAction(private val adminCommandAction: AdminCommandAction) :
             InformationMessage(
               clientHandler.nextMessageNumber,
               "server",
-              "/ignore <UserID> or /unignore <UserID> or /ignoreall or /unignoreall to ignore users."
+              "/ignore <UserID> or /unignore <UserID> or /ignoreall or /unignoreall to ignore users.",
             )
           )
         } catch (e: Exception) {}
@@ -581,7 +575,7 @@ class ChatAction(private val adminCommandAction: AdminCommandAction) :
             InformationMessage(
               clientHandler.nextMessageNumber,
               "server",
-              "/msg <UserID> <msg> to PM somebody. /msgoff or /msgon to turn pm off | on."
+              "/msg <UserID> <msg> to PM somebody. /msgoff or /msgon to turn pm off | on.",
             )
           )
         } catch (e: Exception) {}
@@ -591,7 +585,7 @@ class ChatAction(private val adminCommandAction: AdminCommandAction) :
             InformationMessage(
               clientHandler.nextMessageNumber,
               "server",
-              "/myip to get your IP Address."
+              "/myip to get your IP Address.",
             )
           )
         } catch (e: Exception) {}
@@ -602,7 +596,7 @@ class ChatAction(private val adminCommandAction: AdminCommandAction) :
               InformationMessage(
                 clientHandler.nextMessageNumber,
                 "server",
-                "/silence <UserID> <min> to silence a user. 15min max."
+                "/silence <UserID> <min> to silence a user. 15min max.",
               )
             )
           } catch (e: Exception) {}
@@ -612,7 +606,7 @@ class ChatAction(private val adminCommandAction: AdminCommandAction) :
               InformationMessage(
                 clientHandler.nextMessageNumber,
                 "server",
-                "/kick <UserID> to kick a user."
+                "/kick <UserID> to kick a user.",
               )
             )
           } catch (e: Exception) {}
@@ -624,7 +618,7 @@ class ChatAction(private val adminCommandAction: AdminCommandAction) :
               InformationMessage(
                 clientHandler.nextMessageNumber,
                 "server",
-                "/version to get server version."
+                "/version to get server version.",
               )
             )
           } catch (e: Exception) {}
@@ -634,7 +628,7 @@ class ChatAction(private val adminCommandAction: AdminCommandAction) :
               InformationMessage(
                 clientHandler.nextMessageNumber,
                 "server",
-                "/finduser <Nick> to get a user's info. eg. /finduser sup ...will return SupraFast info."
+                "/finduser <Nick> to get a user's info. eg. /finduser sup ...will return SupraFast info.",
               )
             )
           } catch (e: Exception) {}
@@ -652,7 +646,7 @@ class ChatAction(private val adminCommandAction: AdminCommandAction) :
               InformationMessage(
                 clientHandler.nextMessageNumber,
                 "server",
-                "Finduser Error: /finduser <nick> eg. /finduser sup ...will return SupraFast info."
+                "Finduser Error: /finduser <nick> eg. /finduser sup ...will return SupraFast info.",
               )
             )
           } catch (e: Exception) {}

@@ -108,7 +108,7 @@ sealed class CreateGame : V086Message() {
         when (message) {
           is CreateGameRequest -> REQUEST_USERNAME
           is CreateGameNotification -> message.username
-        }
+        },
       )
       EmuUtil.writeString(buffer, message.romName)
       EmuUtil.writeString(
@@ -116,7 +116,7 @@ sealed class CreateGame : V086Message() {
         when (message) {
           is CreateGameRequest -> REQUEST_CLIENT_TYPE
           is CreateGameNotification -> message.clientType
-        }
+        },
       )
       buffer.putUnsignedShort(
         when (message) {
@@ -138,7 +138,7 @@ sealed class CreateGame : V086Message() {
         when (message) {
           is CreateGameRequest -> REQUEST_USERNAME
           is CreateGameNotification -> message.username
-        }
+        },
       )
       EmuUtil.writeString(buffer, message.romName)
       EmuUtil.writeString(
@@ -146,7 +146,7 @@ sealed class CreateGame : V086Message() {
         when (message) {
           is CreateGameRequest -> REQUEST_CLIENT_TYPE
           is CreateGameNotification -> message.clientType
-        }
+        },
       )
       buffer.putUnsignedShort(
         when (message) {
@@ -175,7 +175,7 @@ data class CreateGameNotification(
   override val romName: String,
   val clientType: String,
   val gameId: Int,
-  val val1: Int
+  val val1: Int,
 ) : CreateGame(), ServerMessage {
 
   override val messageTypeId = ID

@@ -82,7 +82,7 @@ sealed class PlayerDrop : V086Message() {
         when (message) {
           is PlayerDropRequest -> REQUEST_USERNAME
           is PlayerDropNotification -> message.username
-        }
+        },
       )
       buffer.writeByte(
         when (message) {
@@ -98,7 +98,7 @@ sealed class PlayerDrop : V086Message() {
         when (message) {
           is PlayerDropRequest -> REQUEST_USERNAME
           is PlayerDropNotification -> message.username
-        }
+        },
       )
       buffer.put(
         when (message) {
@@ -114,7 +114,7 @@ data class PlayerDropNotification(
   override val messageNumber: Int,
   val username: String,
   /** The port number, not the player ID. */
-  val playerNumber: Byte
+  val playerNumber: Byte,
 ) : PlayerDrop(), ServerMessage {
 
   init {

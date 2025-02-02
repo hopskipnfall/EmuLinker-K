@@ -23,7 +23,7 @@ constructor(
   override val messageNumber: Int,
   val username: String,
   val clientType: String,
-  val connectionType: ConnectionType
+  val connectionType: ConnectionType,
 ) : V086Message(), ClientMessage {
   override val messageTypeId = ID
 
@@ -65,7 +65,7 @@ constructor(
           messageNumber,
           userName,
           clientType,
-          ConnectionType.fromByteValue(connectionType)
+          ConnectionType.fromByteValue(connectionType),
         )
       )
     }
@@ -88,7 +88,7 @@ constructor(
           messageNumber,
           userName,
           clientType,
-          ConnectionType.fromByteValue(connectionType)
+          ConnectionType.fromByteValue(connectionType),
         )
       )
     }
@@ -111,7 +111,7 @@ constructor(
           messageNumber,
           userName,
           clientType,
-          ConnectionType.fromByteValue(connectionType)
+          ConnectionType.fromByteValue(connectionType),
         )
       )
     }

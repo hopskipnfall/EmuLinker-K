@@ -114,7 +114,7 @@ object EmuUtil {
     message = "This doesn't work very well",
     replaceWith =
       ReplaceWith("b.toHexString()", imports = arrayOf("org.emulinker.util.Byte.toHexString")),
-    level = DeprecationLevel.WARNING
+    level = DeprecationLevel.WARNING,
   )
   fun byteToHex(b: Byte): String {
     return (HEX_CHARS[b.toInt() and 0xf0 shr 4].toString() +
@@ -220,7 +220,7 @@ object EmuUtil {
 
   fun ByteBuffer.readString(
     stopByte: Int = 0x00,
-    charset: Charset = AppModule.charsetDoNotUse
+    charset: Charset = AppModule.charsetDoNotUse,
   ): String {
     val tempBuffer = ByteBuffer.allocate(this.remaining())
     while (this.hasRemaining()) {
@@ -233,7 +233,7 @@ object EmuUtil {
 
   fun ByteBuf.readString(
     stopByte: Int = 0x00,
-    charset: Charset = AppModule.charsetDoNotUse
+    charset: Charset = AppModule.charsetDoNotUse,
   ): String {
     val tempBuffer = ByteBuffer.allocate(this.readableBytes())
     while (this.readableBytes() > 0) {
@@ -246,7 +246,7 @@ object EmuUtil {
 
   fun Source.readString(
     stopByte: Int = 0x00,
-    charset: Charset = AppModule.charsetDoNotUse
+    charset: Charset = AppModule.charsetDoNotUse,
   ): String {
     val tempBuffer = ByteBuffer.allocate(this.remaining.toInt())
     while (!this.endOfInput) {
@@ -261,7 +261,7 @@ object EmuUtil {
     buffer: ByteBuffer,
     s: String,
     stopByte: Int = 0x00,
-    charset: Charset = AppModule.charsetDoNotUse
+    charset: Charset = AppModule.charsetDoNotUse,
   ) {
     buffer.put(charset.encode(s))
     //		char[] tempArray = s.toCharArray();
@@ -274,7 +274,7 @@ object EmuUtil {
     buffer: ByteBuf,
     s: String,
     stopByte: Int = 0x00,
-    charset: Charset = AppModule.charsetDoNotUse
+    charset: Charset = AppModule.charsetDoNotUse,
   ) {
     buffer.writeBytes(charset.encode(s))
     //		char[] tempArray = s.toCharArray();
@@ -300,7 +300,7 @@ object EmuUtil {
     DateTimeComponents.Formats.RFC_1123.format {
       setDateTimeOffset(
         this@toSimpleUtcDatetime,
-        this@toSimpleUtcDatetime.offsetIn(TimeZone.currentSystemDefault())
+        this@toSimpleUtcDatetime.offsetIn(TimeZone.currentSystemDefault()),
       )
     }
 
@@ -309,7 +309,7 @@ object EmuUtil {
   @Deprecated(
     message = "We no longer sleep. Should be inlined.",
     ReplaceWith("Thread.yield()"),
-    DeprecationLevel.WARNING
+    DeprecationLevel.WARNING,
   )
   fun threadSleep(d: Duration) {
     Thread.yield()

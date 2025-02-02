@@ -130,10 +130,7 @@ class V086Controller(
       GameTimeoutEvent::class to gameTimeoutAction,
     )
   val userEventHandlers: Map<KClass<out UserEvent>, V086UserEventHandler<Nothing>> =
-    mapOf(
-      ConnectedEvent::class to ackAction,
-      InfoMessageEvent::class to infoMessageAction,
-    )
+    mapOf(ConnectedEvent::class to ackAction, InfoMessageEvent::class to infoMessageAction)
 
   var actions: Array<V086Action<*>?> = arrayOfNulls(25)
 
@@ -155,7 +152,7 @@ class V086Controller(
   override fun newConnection(
     clientSocketAddress: InetSocketAddress,
     protocol: String,
-    combinedKailleraController: CombinedKailleraController
+    combinedKailleraController: CombinedKailleraController,
   ): V086ClientHandler {
     if (!isRunning) throw NewConnectionException("Controller is not running")
     val clientHandler =

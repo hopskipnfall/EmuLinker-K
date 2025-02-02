@@ -42,7 +42,7 @@ class GameDataException : ActionException {
     data: ByteArray,
     actionsPerMessage: Int,
     playerNumber: Int,
-    numPlayers: Int
+    numPlayers: Int,
   ) : super(message) {
     val bytesPerAction = data.size / actionsPerMessage
     val arraySize = numPlayers * actionsPerMessage * bytesPerAction
@@ -53,7 +53,7 @@ class GameDataException : ActionException {
         0,
         response,
         actionCounter * (numPlayers * bytesPerAction) + (playerNumber - 1) * bytesPerAction,
-        bytesPerAction
+        bytesPerAction,
       )
     }
   }

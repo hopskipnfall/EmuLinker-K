@@ -44,7 +44,7 @@ class EmuLinkerMasterUpdateTask(
         .filter { it.status == GameStatus.WAITING }
         .joinToString(separator = "") {
           "${it.romName}|${it.owner.name}|${it.owner.clientType}|${it.players.size}/${it.maxUsers}|"
-        }
+        },
     )
 
     // Get response code

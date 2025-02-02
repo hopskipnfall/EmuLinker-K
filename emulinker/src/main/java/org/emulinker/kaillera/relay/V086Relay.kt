@@ -13,10 +13,8 @@ import org.emulinker.net.UDPRelay
 import org.emulinker.util.EmuUtil.dumpBuffer
 
 // TODO(jonnjonn): I think this can be deleted??
-class V086Relay(
-  listenPort: Int,
-  serverSocketAddress: InetSocketAddress,
-) : UDPRelay(listenPort, serverSocketAddress) {
+class V086Relay(listenPort: Int, serverSocketAddress: InetSocketAddress) :
+  UDPRelay(listenPort, serverSocketAddress) {
   private var lastServerMessageNumber = -1
   private var lastClientMessageNumber = -1
 
@@ -26,7 +24,7 @@ class V086Relay(
   override fun processClientToServer(
     receiveBuffer: ByteBuffer,
     fromAddress: InetSocketAddress,
-    toAddress: InetSocketAddress
+    toAddress: InetSocketAddress,
   ): ByteBuffer? {
     //    logger.atFine().log("-> " + dumpBuffer(receiveBuffer))
     val inBundle: V086Bundle =
@@ -66,7 +64,7 @@ class V086Relay(
   override fun processServerToClient(
     receiveBuffer: ByteBuffer,
     fromAddress: InetSocketAddress,
-    toAddress: InetSocketAddress
+    toAddress: InetSocketAddress,
   ): ByteBuffer? {
     //    logger.atFine().log("<- " + dumpBuffer(receiveBuffer))
     val inBundle: V086Bundle =

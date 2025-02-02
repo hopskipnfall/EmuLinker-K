@@ -21,10 +21,7 @@ class ExtendedBundleTest {
         "Parsing legacy way for first line ${byteString.split(" ").take(16).joinToString(" ")}"
       )
 
-      val oldBundle =
-        V086Bundle.parse(
-          V086Utils.hexStringToByteBuffer(byteString),
-        )
+      val oldBundle = V086Bundle.parse(V086Utils.hexStringToByteBuffer(byteString))
       println(oldBundle)
 
       //      println("Parsing new way")

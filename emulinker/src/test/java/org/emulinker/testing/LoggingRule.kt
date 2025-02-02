@@ -24,7 +24,7 @@ class LoggingRule : TestRule {
    * the test.
    */
   fun assertThat(): LogCollectionSubject =
-    assertAbout(LogCollectionSubject.logCollection()).that(TestLoggingBackend.logs)
+    assertAbout(LogCollectionSubject.logCollection).that(TestLoggingBackend.logs)
 
   override fun apply(test: Statement, desc: Description) =
     object : Statement() {
@@ -83,6 +83,8 @@ class LogCollectionSubject(failureMetadata: FailureMetadata, private val subject
 
   companion object {
     /** Start a Truth assertion with `assertAbout(logCollection())`. */
-    fun logCollection() = ::LogCollectionSubject
+    val logCollection = { metadata: FailureMetadata, actual: LogCollection? ->
+      LogCollectionSubject(metadata, checkNotNull(actual))
+    }
   }
 }

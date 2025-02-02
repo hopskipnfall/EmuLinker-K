@@ -54,7 +54,7 @@ class ConnectionRejectedTest : ProtocolBaseTest() {
         messageNumber = MESSAGE_NUMBER,
         username = "nue",
         userId = 100,
-        message = "This is a message!"
+        message = "This is a message!",
       )
   }
 }

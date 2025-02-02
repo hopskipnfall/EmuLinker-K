@@ -39,7 +39,7 @@ class DropGameAction : V086Action<PlayerDropRequest>, V086GameEventHandler<UserD
           PlayerDropNotification(
             clientHandler.nextMessageNumber,
             user.name!!,
-            playerNumber.toByte()
+            playerNumber.toByte(),
           )
         )
     } catch (e: MessageFormatException) {

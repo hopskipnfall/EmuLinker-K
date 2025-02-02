@@ -34,7 +34,7 @@ import org.emulinker.util.UnsignedUtil.readUnsignedShort
 data class ServerStatus(
   override val messageNumber: Int,
   val users: List<User>,
-  val games: List<Game>
+  val games: List<Game>,
 ) : V086Message(), ServerMessage {
 
   override val messageTypeId = ID
@@ -60,7 +60,7 @@ data class ServerStatus(
     val ping: Duration,
     val status: UserStatus,
     val userId: Int,
-    val connectionType: ConnectionType
+    val connectionType: ConnectionType,
   ) {
 
     init {
@@ -112,7 +112,7 @@ data class ServerStatus(
      * room.
      */
     val playerCountOutOfMax: String,
-    val status: GameStatus
+    val status: GameStatus,
   ) {
 
     init {
@@ -191,7 +191,7 @@ data class ServerStatus(
             ping.milliseconds,
             UserStatus.fromByteValue(status),
             userID,
-            ConnectionType.fromByteValue(connectionType)
+            ConnectionType.fromByteValue(connectionType),
           )
         }
       val games: List<Game> =
@@ -254,7 +254,7 @@ data class ServerStatus(
             ping.milliseconds,
             UserStatus.fromByteValue(status),
             userID,
-            ConnectionType.fromByteValue(connectionType)
+            ConnectionType.fromByteValue(connectionType),
           )
         }
       val games: List<Game> =
@@ -317,7 +317,7 @@ data class ServerStatus(
             ping.milliseconds,
             UserStatus.fromByteValue(status),
             userID,
-            ConnectionType.fromByteValue(connectionType)
+            ConnectionType.fromByteValue(connectionType),
           )
         }
       val games: List<Game> =

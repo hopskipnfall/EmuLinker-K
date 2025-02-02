@@ -52,7 +52,7 @@ class GameStatusTest : ProtocolBaseTest() {
         val1 = 2345,
         gameStatus = SYNCHRONIZING,
         numPlayers = 4,
-        maxPlayers = 4
+        maxPlayers = 4,
       )
   }
 }

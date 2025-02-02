@@ -69,7 +69,7 @@ class V086ClientHandler(
         .log(
           "Rejecting packet received from wrong address: %s != %s",
           EmuUtil.formatSocketAddress(remoteSocketAddress),
-          EmuUtil.formatSocketAddress(this.remoteSocketAddress!!)
+          EmuUtil.formatSocketAddress(this.remoteSocketAddress!!),
         )
       return
     }
@@ -172,7 +172,7 @@ class V086ClientHandler(
             .log(
               "%s received invalid message bundle: %s",
               this,
-              buffer.nioBuffer().dumpBufferFromBeginning()
+              buffer.nioBuffer().dumpBufferFromBeginning(),
             )
           null
         } catch (e: MessageFormatException) {
@@ -182,7 +182,7 @@ class V086ClientHandler(
             .log(
               "%s received invalid message: %s}",
               this,
-              buffer.nioBuffer().dumpBufferFromBeginning()
+              buffer.nioBuffer().dumpBufferFromBeginning(),
             )
           null
         } finally {
@@ -207,7 +207,7 @@ class V086ClientHandler(
             .log(
               "%s received invalid message bundle: %s",
               this,
-              EmuUtil.dumpBuffer(buffer.nioBuffer())
+              EmuUtil.dumpBuffer(buffer.nioBuffer()),
             )
           null
         } catch (e: MessageFormatException) {
@@ -323,7 +323,7 @@ class V086ClientHandler(
             .log(
               "%s found no ServerEventHandler registered to handle server event: %s",
               this,
-              event
+              event,
             )
           return
         }

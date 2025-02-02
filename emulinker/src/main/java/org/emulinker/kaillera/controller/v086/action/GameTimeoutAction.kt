@@ -21,7 +21,7 @@ class GameTimeoutAction : V086GameEventHandler<GameTimeoutEvent> {
           "%s received timeout event %d for %s: resending messages...",
           user,
           event.timeoutNumber,
-          event.game
+          event.game,
         )
       clientHandler.resend(event.timeoutNumber)
     } else {
@@ -32,7 +32,7 @@ class GameTimeoutAction : V086GameEventHandler<GameTimeoutEvent> {
           user,
           event.timeoutNumber,
           player,
-          event.game
+          event.game,
         )
     }
   }

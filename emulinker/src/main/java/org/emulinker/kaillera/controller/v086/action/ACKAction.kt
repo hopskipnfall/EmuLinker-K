@@ -39,7 +39,7 @@ class ACKAction : V086Action<ClientAck>, V086UserEventHandler<UserEvent> {
           "Calculated %s ping time: average=%s, best=%d",
           user,
           clientHandler.averageNetworkSpeed,
-          clientHandler.bestNetworkSpeed
+          clientHandler.bestNetworkSpeed,
         )
       user.login().onFailure { e ->
         when (e) {
@@ -51,7 +51,7 @@ class ACKAction : V086Action<ClientAck>, V086UserEventHandler<UserEvent> {
                   // TODO(nue): Localize this?
                   username = "server",
                   user.id,
-                  e.message ?: ""
+                  e.message ?: "",
                 )
               )
             } catch (e2: MessageFormatException) {
@@ -103,7 +103,7 @@ class ACKAction : V086Action<ClientAck>, V086UserEventHandler<UserEvent> {
             game.clientType!!,
             game.owner.name!!,
             "$num/${game.maxUsers}",
-            game.status
+            game.status,
           )
         )
       }
@@ -164,7 +164,7 @@ class ACKAction : V086Action<ClientAck>, V086UserEventHandler<UserEvent> {
     clientHandler: V086ClientHandler,
     users: List<ServerStatus.User>,
     games: List<ServerStatus.Game>,
-    counter: Int
+    counter: Int,
   ) {
     logger
       .atFine()
@@ -174,7 +174,7 @@ class ACKAction : V086Action<ClientAck>, V086UserEventHandler<UserEvent> {
         users.size,
         games.size,
         counter,
-        games.map { it.gameId }
+        games.map { it.gameId },
       )
     try {
       clientHandler.send(ServerStatus(clientHandler.nextMessageNumber, users, games))

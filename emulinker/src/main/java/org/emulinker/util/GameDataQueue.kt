@@ -7,7 +7,7 @@ class GameDataQueue(
   val gameID: Int,
   val numPlayers: Int,
   val timeoutMillis: Int,
-  val retries: Int
+  val retries: Int,
 ) {
   private val playerQueues: Array<PlayerDataQueue> =
     (1..numPlayers).map { PlayerDataQueue() }.toTypedArray()
@@ -66,7 +66,7 @@ class GameDataQueue(
               throw DesynchException(
                 "Player " + (i % numPlayers + 1) + " is lagged!",
                 i % numPlayers + 1,
-                e
+                e,
               )
             else throw PlayerTimeoutException(i % numPlayers + 1, timeoutCounter, e)
           }

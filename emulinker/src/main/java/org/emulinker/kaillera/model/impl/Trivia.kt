@@ -128,7 +128,7 @@ class Trivia(private val server: KailleraServer) : Runnable {
           server.announce(
             "<Trivia> " + "Time's up! The answer is: " + questions[questionsCount].answer,
             false,
-            null
+            null,
           )
         }
         if (count == questions.size) {
@@ -136,7 +136,7 @@ class Trivia(private val server: KailleraServer) : Runnable {
           server.announce(
             "<Trivia> " + "***All questions have been exhaused! Restarting list...***",
             false,
-            null
+            null,
           )
         }
 
@@ -161,7 +161,7 @@ class Trivia(private val server: KailleraServer) : Runnable {
             " of " +
             questions.size,
           false,
-          null
+          null,
         )
         threadSleep(questionTime.milliseconds)
         newQuestion = true
@@ -190,7 +190,7 @@ class Trivia(private val server: KailleraServer) : Runnable {
         "seventh",
         "eighth",
         "nineth",
-        "tenth"
+        "tenth",
       )
     val placement1 = arrayOf("1st", "2nd", "3rd", "4th", "5th", "6th", "7th", "8th", "9th", "10th")
     if (
@@ -265,7 +265,7 @@ class Trivia(private val server: KailleraServer) : Runnable {
             ")! Your score is: " +
             s,
           false,
-          null
+          null,
         )
         if (ipStreak == ip) {
           scoreStreak++
@@ -284,13 +284,13 @@ class Trivia(private val server: KailleraServer) : Runnable {
           server.announce(
             "<Trivia> $nick, you're so smart you're going to break the Trivia Bot!",
             false,
-            null
+            null,
           )
         } else if (s == 100) {
           server.announce(
             "<Trivia> $nick, you're in a league of your own. Nobody can compete!",
             false,
-            null
+            null,
           )
         } else if (s % 100 == 0) {
           server.announce("<Trivia> $nick, you're a God at SupraTrivia!", false, null)
@@ -304,7 +304,7 @@ class Trivia(private val server: KailleraServer) : Runnable {
     server.announce(
       "<Trivia> $nick is the winner of this round ($answer)! His score is: 1",
       false,
-      null
+      null,
     )
   }
 

@@ -53,7 +53,7 @@ class StartGameAction(private val lookingForGameReporter: TwitterBroadcaster) :
           clientHandler.nextMessageNumber,
           delay.toShort().toInt(),
           playerNumber.toByte().toShort(),
-          game.players.size.toByte().toShort()
+          game.players.size.toByte().toShort(),
         )
       )
     } catch (e: MessageFormatException) {

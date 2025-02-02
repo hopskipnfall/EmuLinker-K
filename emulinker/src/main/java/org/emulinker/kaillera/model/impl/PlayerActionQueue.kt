@@ -47,7 +47,7 @@ class PlayerActionQueue(
     playerIndex: Int,
     writeToArray: ByteArray,
     writeAtIndex: Int,
-    actionLength: Int
+    actionLength: Int,
   ) {
     if (synced && !containsNewDataForPlayer(playerIndex, actionLength)) {
       throw AssertionError("I think this is impossible")

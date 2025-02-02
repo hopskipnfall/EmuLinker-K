@@ -83,7 +83,7 @@ class CreateGameTest : ProtocolBaseTest() {
         romName = "My Game",
         clientType = "My N64 Emulator",
         gameId = 100,
-        val1 = 4242
+        val1 = 4242,
       )
     private val CREATE_GAME_REQUEST =
       CreateGameRequest(messageNumber = MESSAGE_NUMBER, romName = "My Game")

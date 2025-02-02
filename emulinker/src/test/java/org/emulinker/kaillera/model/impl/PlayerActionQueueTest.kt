@@ -43,7 +43,7 @@ class PlayerActionQueueTest {
       playerIndex = 0,
       writeToArray = out,
       writeAtIndex = 0,
-      actionLength = DATA.size
+      actionLength = DATA.size,
     )
 
     assertThat(out).isEqualTo(DATA)
@@ -63,7 +63,7 @@ class PlayerActionQueueTest {
       playerIndex = 0,
       writeToArray = out,
       writeAtIndex = 0,
-      actionLength = DATA.size
+      actionLength = DATA.size,
     )
 
     assertThat(queue.containsNewDataForPlayer(playerIndex = 0, actionLength = DATA.size)).isTrue()

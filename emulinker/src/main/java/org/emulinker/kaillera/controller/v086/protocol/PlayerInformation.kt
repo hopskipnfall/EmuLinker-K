@@ -47,7 +47,7 @@ data class PlayerInformation(override val messageNumber: Int, val players: List<
     val username: String,
     val ping: Duration,
     val userId: Int,
-    val connectionType: ConnectionType
+    val connectionType: ConnectionType,
   ) {
     val numBytes: Int =
       username.getNumBytesPlusStopByte() +

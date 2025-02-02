@@ -40,7 +40,7 @@ enum class ConnectionType(
    * Note: Technically not all games run at 60FPS, but Kaillera assumes it is for most purposes.
    */
   val byteValue: Byte,
-  val readableName: String
+  val readableName: String,
 ) {
   DISABLED(0, "DISABLED"),
   LAN(1, "LAN"),
