@@ -232,7 +232,7 @@ $dokka.location:org.emulinker.kaillera.controller.v086.action/FatalActionExcepti
 $dokka.location:org.emulinker.kaillera.controller.v086.action/FatalActionException/FatalActionException/#kotlin.String?/PointingToDeclaration/emulinker/org.emulinker.kaillera.controller.v086.action/-fatal-action-exception/-fatal-action-exception.html
 $dokka.location:org.emulinker.kaillera.controller.v086.action/GameChatAction.Companion///PointingToDeclaration/emulinker/org.emulinker.kaillera.controller.v086.action/-game-chat-action/-companion/index.html
 $dokka.location:org.emulinker.kaillera.controller.v086.action/GameChatAction///PointingToDeclaration/emulinker/org.emulinker.kaillera.controller.v086.action/-game-chat-action/index.html
-$dokka.location:org.emulinker.kaillera.controller.v086.action/GameChatAction/GameChatAction/#org.emulinker.kaillera.controller.v086.action.GameOwnerCommandAction#org.emulinker.kaillera.lookingforgame.TwitterBroadcaster#org.emulinker.config.RuntimeFlags/PointingToDeclaration/emulinker/org.emulinker.kaillera.controller.v086.action/-game-chat-action/-game-chat-action.html
+$dokka.location:org.emulinker.kaillera.controller.v086.action/GameChatAction/GameChatAction/#org.emulinker.kaillera.controller.v086.action.GameOwnerCommandAction#org.emulinker.kaillera.lookingforgame.TwitterBroadcaster#org.emulinker.config.RuntimeFlags#kotlinx.datetime.Clock/PointingToDeclaration/emulinker/org.emulinker.kaillera.controller.v086.action/-game-chat-action/-game-chat-action.html
 $dokka.location:org.emulinker.kaillera.controller.v086.action/GameChatAction/actionPerformedCount/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.controller.v086.action/-game-chat-action/action-performed-count.html
 $dokka.location:org.emulinker.kaillera.controller.v086.action/GameChatAction/handleEvent/#org.emulinker.kaillera.model.event.GameChatEvent#org.emulinker.kaillera.controller.v086.V086ClientHandler/PointingToDeclaration/emulinker/org.emulinker.kaillera.controller.v086.action/-game-chat-action/handle-event.html
 $dokka.location:org.emulinker.kaillera.controller.v086.action/GameChatAction/handledEventCount/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.controller.v086.action/-game-chat-action/handled-event-count.html
@@ -971,9 +971,8 @@ $dokka.location:org.emulinker.kaillera.controller.v086/V086Utils/toJavaAddress/#
 $dokka.location:org.emulinker.kaillera.controller.v086/V086Utils/toKtorAddress/java.net.InetSocketAddress#/PointingToDeclaration/emulinker/org.emulinker.kaillera.controller.v086/-v086-utils/to-ktor-address.html
 $dokka.location:org.emulinker.kaillera.controller////PointingToDeclaration/emulinker/org.emulinker.kaillera.controller/index.html
 $dokka.location:org.emulinker.kaillera.controller/CombinedKailleraController///PointingToDeclaration/emulinker/org.emulinker.kaillera.controller/-combined-kaillera-controller/index.html
-$dokka.location:org.emulinker.kaillera.controller/CombinedKailleraController/CombinedKailleraController/#org.emulinker.config.RuntimeFlags#org.emulinker.kaillera.access.AccessManager#org.emulinker.kaillera.controller.KailleraServerController/PointingToDeclaration/emulinker/org.emulinker.kaillera.controller/-combined-kaillera-controller/-combined-kaillera-controller.html
+$dokka.location:org.emulinker.kaillera.controller/CombinedKailleraController/CombinedKailleraController/#org.emulinker.config.RuntimeFlags#org.emulinker.kaillera.access.AccessManager#org.emulinker.kaillera.controller.KailleraServerController#org.emulinker.kaillera.model.KailleraServer/PointingToDeclaration/emulinker/org.emulinker.kaillera.controller/-combined-kaillera-controller/-combined-kaillera-controller.html
 $dokka.location:org.emulinker.kaillera.controller/CombinedKailleraController/bind/#kotlin.Int/PointingToDeclaration/emulinker/org.emulinker.kaillera.controller/-combined-kaillera-controller/bind.html
-$dokka.location:org.emulinker.kaillera.controller/CombinedKailleraController/boundPort/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.controller/-combined-kaillera-controller/bound-port.html
 $dokka.location:org.emulinker.kaillera.controller/CombinedKailleraController/bufferSize/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.controller/-combined-kaillera-controller/buffer-size.html
 $dokka.location:org.emulinker.kaillera.controller/CombinedKailleraController/clientHandlers/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.controller/-combined-kaillera-controller/client-handlers.html
 $dokka.location:org.emulinker.kaillera.controller/CombinedKailleraController/nettyChannel/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.controller/-combined-kaillera-controller/netty-channel.html
@@ -1238,6 +1237,7 @@ $dokka.location:org.emulinker.kaillera.model.impl/AutoFireScanner2/start/#kotlin
 $dokka.location:org.emulinker.kaillera.model.impl/AutoFireScanner2/stop/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.model.impl/-auto-fire-scanner2/stop.html
 $dokka.location:org.emulinker.kaillera.model.impl/AutoFireScanner2/stop/#kotlin.Int/PointingToDeclaration/emulinker/org.emulinker.kaillera.model.impl/-auto-fire-scanner2/stop.html
 $dokka.location:org.emulinker.kaillera.model.impl/KailleraGameImpl.Companion///PointingToDeclaration/emulinker/org.emulinker.kaillera.model.impl/-kaillera-game-impl/-companion/index.html
+$dokka.location:org.emulinker.kaillera.model.impl/KailleraGameImpl.Companion/GAME_FPS/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.model.impl/-kaillera-game-impl/-companion/-g-a-m-e_-f-p-s.html
 $dokka.location:org.emulinker.kaillera.model.impl/KailleraGameImpl///PointingToDeclaration/emulinker/org.emulinker.kaillera.model.impl/-kaillera-game-impl/index.html
 $dokka.location:org.emulinker.kaillera.model.impl/KailleraGameImpl/KailleraGameImpl/#kotlin.Int#kotlin.String#org.emulinker.kaillera.model.KailleraUser#org.emulinker.kaillera.model.KailleraServer#kotlin.Int#org.emulinker.config.RuntimeFlags#kotlinx.datetime.Clock/PointingToDeclaration/emulinker/org.emulinker.kaillera.model.impl/-kaillera-game-impl/-kaillera-game-impl.html
 $dokka.location:org.emulinker.kaillera.model.impl/KailleraGameImpl/aConnection/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.model.impl/-kaillera-game-impl/a-connection.html
@@ -1258,7 +1258,7 @@ $dokka.location:org.emulinker.kaillera.model.impl/KailleraGameImpl/id/#/Pointing
 $dokka.location:org.emulinker.kaillera.model.impl/KailleraGameImpl/ignoringUnnecessaryServerActivity/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.model.impl/-kaillera-game-impl/ignoring-unnecessary-server-activity.html
 $dokka.location:org.emulinker.kaillera.model.impl/KailleraGameImpl/join/#org.emulinker.kaillera.model.KailleraUser/PointingToDeclaration/emulinker/org.emulinker.kaillera.model.impl/-kaillera-game-impl/join.html
 $dokka.location:org.emulinker.kaillera.model.impl/KailleraGameImpl/kick/#org.emulinker.kaillera.model.KailleraUser#kotlin.Int/PointingToDeclaration/emulinker/org.emulinker.kaillera.model.impl/-kaillera-game-impl/kick.html
-$dokka.location:org.emulinker.kaillera.model.impl/KailleraGameImpl/lagLeewayNs/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.model.impl/-kaillera-game-impl/lag-leeway-ns.html
+$dokka.location:org.emulinker.kaillera.model.impl/KailleraGameImpl/lastLagReset/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.model.impl/-kaillera-game-impl/last-lag-reset.html
 $dokka.location:org.emulinker.kaillera.model.impl/KailleraGameImpl/maxPing/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.model.impl/-kaillera-game-impl/max-ping.html
 $dokka.location:org.emulinker.kaillera.model.impl/KailleraGameImpl/maxUsers/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.model.impl/-kaillera-game-impl/max-users.html
 $dokka.location:org.emulinker.kaillera.model.impl/KailleraGameImpl/maybeSendData/#org.emulinker.kaillera.model.KailleraUser#kotlin.ByteArray/PointingToDeclaration/emulinker/org.emulinker.kaillera.model.impl/-kaillera-game-impl/maybe-send-data.html
@@ -1272,6 +1272,8 @@ $dokka.location:org.emulinker.kaillera.model.impl/KailleraGameImpl/resetLag/#/Po
 $dokka.location:org.emulinker.kaillera.model.impl/KailleraGameImpl/romName/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.model.impl/-kaillera-game-impl/rom-name.html
 $dokka.location:org.emulinker.kaillera.model.impl/KailleraGameImpl/sameDelay/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.model.impl/-kaillera-game-impl/same-delay.html
 $dokka.location:org.emulinker.kaillera.model.impl/KailleraGameImpl/server/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.model.impl/-kaillera-game-impl/server.html
+$dokka.location:org.emulinker.kaillera.model.impl/KailleraGameImpl/setGameFps/#kotlin.Double/PointingToDeclaration/emulinker/org.emulinker.kaillera.model.impl/-kaillera-game-impl/set-game-fps.html
+$dokka.location:org.emulinker.kaillera.model.impl/KailleraGameImpl/singleFrameDurationForLagCalculationOnlyNs/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.model.impl/-kaillera-game-impl/single-frame-duration-for-lag-calculation-only-ns.html
 $dokka.location:org.emulinker.kaillera.model.impl/KailleraGameImpl/start/#org.emulinker.kaillera.model.KailleraUser/PointingToDeclaration/emulinker/org.emulinker.kaillera.model.impl/-kaillera-game-impl/start.html
 $dokka.location:org.emulinker.kaillera.model.impl/KailleraGameImpl/startDate/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.model.impl/-kaillera-game-impl/start-date.html
 $dokka.location:org.emulinker.kaillera.model.impl/KailleraGameImpl/startN/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.model.impl/-kaillera-game-impl/start-n.html
@@ -1332,9 +1334,10 @@ $dokka.location:org.emulinker.kaillera.model/ConnectionType.LOW///PointingToDecl
 $dokka.location:org.emulinker.kaillera.model/ConnectionType///PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-connection-type/index.html
 $dokka.location:org.emulinker.kaillera.model/ConnectionType/byteValue/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-connection-type/byte-value.html
 $dokka.location:org.emulinker.kaillera.model/ConnectionType/entries/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-connection-type/entries.html
+$dokka.location:org.emulinker.kaillera.model/ConnectionType/getUpdatesPerSecond/#kotlin.Double/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-connection-type/get-updates-per-second.html
+$dokka.location:org.emulinker.kaillera.model/ConnectionType/getUpdatesPerSecond/#kotlin.Int/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-connection-type/get-updates-per-second.html
 $dokka.location:org.emulinker.kaillera.model/ConnectionType/readableName/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-connection-type/readable-name.html
 $dokka.location:org.emulinker.kaillera.model/ConnectionType/toString/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-connection-type/to-string.html
-$dokka.location:org.emulinker.kaillera.model/ConnectionType/updatesPerSecond/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-connection-type/updates-per-second.html
 $dokka.location:org.emulinker.kaillera.model/ConnectionType/valueOf/#kotlin.String/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-connection-type/value-of.html
 $dokka.location:org.emulinker.kaillera.model/ConnectionType/values/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-connection-type/values.html
 $dokka.location:org.emulinker.kaillera.model/GameStatus.Companion///PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-game-status/-companion/index.html
@@ -1383,8 +1386,6 @@ $dokka.location:org.emulinker.kaillera.model/KailleraServer/accessManager/#/Poin
 $dokka.location:org.emulinker.kaillera.model/KailleraServer/addEvent/#org.emulinker.kaillera.model.event.KailleraEvent/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-kaillera-server/add-event.html
 $dokka.location:org.emulinker.kaillera.model/KailleraServer/allowSinglePlayer/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-kaillera-server/allow-single-player.html
 $dokka.location:org.emulinker.kaillera.model/KailleraServer/announce/#kotlin.String#kotlin.Boolean#org.emulinker.kaillera.model.KailleraUser?/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-kaillera-server/announce.html
-$dokka.location:org.emulinker.kaillera.model/KailleraServer/announce/#kotlin.String#kotlin.Boolean/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-kaillera-server/announce.html
-$dokka.location:org.emulinker.kaillera.model/KailleraServer/announceInGame/#kotlin.String?#org.emulinker.kaillera.model.KailleraUser/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-kaillera-server/announce-in-game.html
 $dokka.location:org.emulinker.kaillera.model/KailleraServer/chat/#org.emulinker.kaillera.model.KailleraUser?#kotlin.String?/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-kaillera-server/chat.html
 $dokka.location:org.emulinker.kaillera.model/KailleraServer/checkMe/#org.emulinker.kaillera.model.KailleraUser#kotlin.String/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-kaillera-server/check-me.html
 $dokka.location:org.emulinker.kaillera.model/KailleraServer/closeGame/#org.emulinker.kaillera.model.KailleraGame#org.emulinker.kaillera.model.KailleraUser/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-kaillera-server/close-game.html
@@ -1396,7 +1397,6 @@ $dokka.location:org.emulinker.kaillera.model/KailleraServer/getUser/#kotlin.Int/
 $dokka.location:org.emulinker.kaillera.model/KailleraServer/login/#org.emulinker.kaillera.model.KailleraUser/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-kaillera-server/login.html
 $dokka.location:org.emulinker.kaillera.model/KailleraServer/maxGameChatLength/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-kaillera-server/max-game-chat-length.html
 $dokka.location:org.emulinker.kaillera.model/KailleraServer/newConnection/#java.net.InetSocketAddress#kotlin.String#org.emulinker.kaillera.model.event.KailleraEventListener/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-kaillera-server/new-connection.html
-$dokka.location:org.emulinker.kaillera.model/KailleraServer/o/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-kaillera-server/o.html
 $dokka.location:org.emulinker.kaillera.model/KailleraServer/quit/#org.emulinker.kaillera.model.KailleraUser#kotlin.String?/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-kaillera-server/quit.html
 $dokka.location:org.emulinker.kaillera.model/KailleraServer/releaseInfo/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-kaillera-server/release-info.html
 $dokka.location:org.emulinker.kaillera.model/KailleraServer/start/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-kaillera-server/start.html
@@ -1442,6 +1442,7 @@ $dokka.location:org.emulinker.kaillera.model/KailleraUser/isEsfAdminClient/#/Poi
 $dokka.location:org.emulinker.kaillera.model/KailleraUser/isIdleForTooLong/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-kaillera-user/is-idle-for-too-long.html
 $dokka.location:org.emulinker.kaillera.model/KailleraUser/isMuted/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-kaillera-user/is-muted.html
 $dokka.location:org.emulinker.kaillera.model/KailleraUser/joinGame/#kotlin.Int/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-kaillera-user/join-game.html
+$dokka.location:org.emulinker.kaillera.model/KailleraUser/lagAttributedToUser/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-kaillera-user/lag-attributed-to-user.html
 $dokka.location:org.emulinker.kaillera.model/KailleraUser/lastChatTime/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-kaillera-user/last-chat-time.html
 $dokka.location:org.emulinker.kaillera.model/KailleraUser/lastCreateGameTime/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-kaillera-user/last-create-game-time.html
 $dokka.location:org.emulinker.kaillera.model/KailleraUser/lastMsgID/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-kaillera-user/last-msg-i-d.html
@@ -1455,7 +1456,6 @@ $dokka.location:org.emulinker.kaillera.model/KailleraUser/protocol/#/PointingToD
 $dokka.location:org.emulinker.kaillera.model/KailleraUser/queueEvent/#org.emulinker.kaillera.model.event.KailleraEvent/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-kaillera-user/queue-event.html
 $dokka.location:org.emulinker.kaillera.model/KailleraUser/quit/#kotlin.String?/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-kaillera-user/quit.html
 $dokka.location:org.emulinker.kaillera.model/KailleraUser/quitGame/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-kaillera-user/quit-game.html
-$dokka.location:org.emulinker.kaillera.model/KailleraUser/receivedGameDataNs/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-kaillera-user/received-game-data-ns.html
 $dokka.location:org.emulinker.kaillera.model/KailleraUser/removeIgnoredUser/#kotlin.String#kotlin.Boolean/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-kaillera-user/remove-ignored-user.html
 $dokka.location:org.emulinker.kaillera.model/KailleraUser/resetLag/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-kaillera-user/reset-lag.html
 $dokka.location:org.emulinker.kaillera.model/KailleraUser/searchIgnoredUsers/#kotlin.String/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-kaillera-user/search-ignored-users.html
@@ -1464,7 +1464,6 @@ $dokka.location:org.emulinker.kaillera.model/KailleraUser/socketAddress/#/Pointi
 $dokka.location:org.emulinker.kaillera.model/KailleraUser/startGame/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-kaillera-user/start-game.html
 $dokka.location:org.emulinker.kaillera.model/KailleraUser/status/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-kaillera-user/status.html
 $dokka.location:org.emulinker.kaillera.model/KailleraUser/stop/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-kaillera-user/stop.html
-$dokka.location:org.emulinker.kaillera.model/KailleraUser/summarizeLag/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-kaillera-user/summarize-lag.html
 $dokka.location:org.emulinker.kaillera.model/KailleraUser/tempDelay/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-kaillera-user/temp-delay.html
 $dokka.location:org.emulinker.kaillera.model/KailleraUser/toString/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-kaillera-user/to-string.html
 $dokka.location:org.emulinker.kaillera.model/KailleraUser/updateLastKeepAlive/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-kaillera-user/update-last-keep-alive.html
@@ -1576,6 +1575,7 @@ $dokka.location:org.emulinker.util/EmuUtil/formatSocketAddress/#java.net.SocketA
 $dokka.location:org.emulinker.util/EmuUtil/hexToByte/#kotlin.CharArray/PointingToDeclaration/emulinker/org.emulinker.util/-emu-util/hex-to-byte.html
 $dokka.location:org.emulinker.util/EmuUtil/hexToByteArray/#kotlin.String/PointingToDeclaration/emulinker/org.emulinker.util/-emu-util/hex-to-byte-array.html
 $dokka.location:org.emulinker.util/EmuUtil/loadProperties/#kotlin.String/PointingToDeclaration/emulinker/org.emulinker.util/-emu-util/load-properties.html
+$dokka.location:org.emulinker.util/EmuUtil/min/#kotlin.time.Duration#kotlin.time.Duration/PointingToDeclaration/emulinker/org.emulinker.util/-emu-util/min.html
 $dokka.location:org.emulinker.util/EmuUtil/readString/io.ktor.utils.io.core.ByteReadPacket#kotlin.Int#java.nio.charset.Charset/PointingToDeclaration/emulinker/org.emulinker.util/-emu-util/read-string.html
 $dokka.location:org.emulinker.util/EmuUtil/readString/io.netty.buffer.ByteBuf#kotlin.Int#java.nio.charset.Charset/PointingToDeclaration/emulinker/org.emulinker.util/-emu-util/read-string.html
 $dokka.location:org.emulinker.util/EmuUtil/readString/java.nio.ByteBuffer#kotlin.Int#java.nio.charset.Charset/PointingToDeclaration/emulinker/org.emulinker.util/-emu-util/read-string.html
@@ -1585,6 +1585,7 @@ $dokka.location:org.emulinker.util/EmuUtil/timeKt/com.codahale.metrics.Timer#kot
 $dokka.location:org.emulinker.util/EmuUtil/toHexString/kotlin.Byte#/PointingToDeclaration/emulinker/org.emulinker.util/-emu-util/to-hex-string.html
 $dokka.location:org.emulinker.util/EmuUtil/toHexString/kotlin.ByteArray#/PointingToDeclaration/emulinker/org.emulinker.util/-emu-util/to-hex-string.html
 $dokka.location:org.emulinker.util/EmuUtil/toMillisDouble/kotlin.time.Duration#/PointingToDeclaration/emulinker/org.emulinker.util/-emu-util/to-millis-double.html
+$dokka.location:org.emulinker.util/EmuUtil/toSecondDoublePrecisionString/kotlin.time.Duration#/PointingToDeclaration/emulinker/org.emulinker.util/-emu-util/to-second-double-precision-string.html
 $dokka.location:org.emulinker.util/EmuUtil/toSimpleUtcDatetime/kotlinx.datetime.Instant#/PointingToDeclaration/emulinker/org.emulinker.util/-emu-util/to-simple-utc-datetime.html
 $dokka.location:org.emulinker.util/EmuUtil/writeString/#io.netty.buffer.ByteBuf#kotlin.String#kotlin.Int#java.nio.charset.Charset/PointingToDeclaration/emulinker/org.emulinker.util/-emu-util/write-string.html
 $dokka.location:org.emulinker.util/EmuUtil/writeString/#java.nio.ByteBuffer#kotlin.String#kotlin.Int#java.nio.charset.Charset/PointingToDeclaration/emulinker/org.emulinker.util/-emu-util/write-string.html
