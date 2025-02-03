@@ -954,8 +954,6 @@ $dokka.location:org.emulinker.kaillera.controller.v086/V086Utils/getNumBytesPlus
 $dokka.location:org.emulinker.kaillera.controller.v086/V086Utils/hexStringToByteArray2/#kotlin.String/PointingToDeclaration/emulinker/org.emulinker.kaillera.controller.v086/-v086-utils/hex-string-to-byte-array2.html
 $dokka.location:org.emulinker.kaillera.controller.v086/V086Utils/hexStringToByteBuffer/#kotlin.String/PointingToDeclaration/emulinker/org.emulinker.kaillera.controller.v086/-v086-utils/hex-string-to-byte-buffer.html
 $dokka.location:org.emulinker.kaillera.controller.v086/V086Utils/toHex/#java.nio.ByteBuffer/PointingToDeclaration/emulinker/org.emulinker.kaillera.controller.v086/-v086-utils/to-hex.html
-$dokka.location:org.emulinker.kaillera.controller.v086/V086Utils/toJavaAddress/#io.ktor.network.sockets.InetSocketAddress/PointingToDeclaration/emulinker/org.emulinker.kaillera.controller.v086/-v086-utils/to-java-address.html
-$dokka.location:org.emulinker.kaillera.controller.v086/V086Utils/toKtorAddress/java.net.InetSocketAddress#/PointingToDeclaration/emulinker/org.emulinker.kaillera.controller.v086/-v086-utils/to-ktor-address.html
 $dokka.location:org.emulinker.kaillera.controller////PointingToDeclaration/emulinker/org.emulinker.kaillera.controller/index.html
 $dokka.location:org.emulinker.kaillera.controller/CombinedKailleraController///PointingToDeclaration/emulinker/org.emulinker.kaillera.controller/-combined-kaillera-controller/index.html
 $dokka.location:org.emulinker.kaillera.controller/CombinedKailleraController/CombinedKailleraController/#org.emulinker.config.RuntimeFlags#org.emulinker.kaillera.access.AccessManager#org.emulinker.kaillera.controller.KailleraServerController#org.emulinker.kaillera.model.KailleraServer/PointingToDeclaration/emulinker/org.emulinker.kaillera.controller/-combined-kaillera-controller/-combined-kaillera-controller.html
@@ -1010,10 +1008,11 @@ $dokka.location:org.emulinker.kaillera.master.client/ServerCheckinTask///Pointin
 $dokka.location:org.emulinker.kaillera.master.client/ServerCheckinTask/ServerCheckinTask/#org.emulinker.kaillera.master.PublicServerInformation#org.emulinker.kaillera.release.ReleaseInfo#org.emulinker.config.RuntimeFlags/PointingToDeclaration/emulinker/org.emulinker.kaillera.master.client/-server-checkin-task/-server-checkin-task.html
 $dokka.location:org.emulinker.kaillera.master.client/ServerCheckinTask/reportStatus/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.master.client/-server-checkin-task/report-status.html
 $dokka.location:org.emulinker.kaillera.master.client/ServerInfo///PointingToDeclaration/emulinker/org.emulinker.kaillera.master.client/-server-info/index.html
-$dokka.location:org.emulinker.kaillera.master.client/ServerInfo/ServerInfo/#kotlin.String#kotlin.String#kotlin.Int#kotlin.String#kotlin.String#kotlin.String#kotlin.String#kotlin.Boolean/PointingToDeclaration/emulinker/org.emulinker.kaillera.master.client/-server-info/-server-info.html
+$dokka.location:org.emulinker.kaillera.master.client/ServerInfo/ServerInfo/#kotlin.String#kotlin.String#kotlin.Int#kotlin.String#kotlin.String#kotlin.String#kotlin.String#kotlin.Boolean#kotlin.String/PointingToDeclaration/emulinker/org.emulinker.kaillera.master.client/-server-info/-server-info.html
 $dokka.location:org.emulinker.kaillera.master.client/ServerInfo/charset/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.master.client/-server-info/charset.html
 $dokka.location:org.emulinker.kaillera.master.client/ServerInfo/connectAddress/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.master.client/-server-info/connect-address.html
 $dokka.location:org.emulinker.kaillera.master.client/ServerInfo/connectPort/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.master.client/-server-info/connect-port.html
+$dokka.location:org.emulinker.kaillera.master.client/ServerInfo/defaultLocale/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.master.client/-server-info/default-locale.html
 $dokka.location:org.emulinker.kaillera.master.client/ServerInfo/isDevBuild/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.master.client/-server-info/is-dev-build.html
 $dokka.location:org.emulinker.kaillera.master.client/ServerInfo/location/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.master.client/-server-info/location.html
 $dokka.location:org.emulinker.kaillera.master.client/ServerInfo/name/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.master.client/-server-info/name.html
@@ -1504,7 +1503,7 @@ $dokka.location:org.emulinker.kaillera.release/ReleaseInfo/productName/#/Pointin
 $dokka.location:org.emulinker.kaillera.release/ReleaseInfo/version/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.release/-release-info/version.html
 $dokka.location:org.emulinker.kaillera.release/ReleaseInfo/versionWithElkPrefix/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.release/-release-info/version-with-elk-prefix.html
 $dokka.location:org.emulinker.kaillera.release/ReleaseInfo/websiteString/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.release/-release-info/website-string.html
-$dokka.location:org.emulinker.kaillera.release/ReleaseInfo/welcome/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.release/-release-info/welcome.html
+$dokka.location:org.emulinker.kaillera.release/ReleaseInfo/welcomeMessages/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.release/-release-info/welcome-messages.html
 $dokka.location:org.emulinker.net////PointingToDeclaration/emulinker/org.emulinker.net/index.html
 $dokka.location:org.emulinker.net/BindException///PointingToDeclaration/emulinker/org.emulinker.net/-bind-exception/index.html
 $dokka.location:org.emulinker.net/BindException/BindException/#kotlin.String?#kotlin.Int#java.lang.Exception?/PointingToDeclaration/emulinker/org.emulinker.net/-bind-exception/-bind-exception.html
