@@ -20,6 +20,12 @@ const val MINIMUM_JAVA_VERSION = 11
 
 /** Main entry point for the Kaillera server. */
 fun main() {
+  // Use log4j as the flogger backend.
+  System.setProperty(
+    "flogger.backend_factory",
+    "com.google.common.flogger.backend.log4j2.Log4j2BackendFactory#getInstance",
+  )
+
   val javaVersion: Double? = System.getProperty("java.specification.version").toDoubleOrNull()
   when {
     javaVersion == null -> {
@@ -30,21 +36,14 @@ fun main() {
         "Installed Java version $javaVersion is below the required minimum $MINIMUM_JAVA_VERSION. Please install a recent version of Java to run this server."
       )
     }
-    else -> {
-      logger.atInfo().log("Detected installed Java version: %f", javaVersion)
-    }
   }
 
   startKoin { modules(koinModule, ActionModule) }
   val component = NewAppComponent()
-  // Use log4j as the flogger backend.
-  System.setProperty(
-    "flogger.backend_factory",
-    "com.google.common.flogger.backend.log4j2.Log4j2BackendFactory#getInstance",
-  )
 
-  logger.atInfo().log("EmuLinker server Starting...")
-  logger.atInfo().log(component.releaseInfo.welcome)
+  for (message in component.releaseInfo.welcomeMessages) {
+    logger.atInfo().log(message)
+  }
   stripFromProdBinary {
     logger.atWarning().log("DEBUG BUILD -- This should not be used for production servers!")
   }

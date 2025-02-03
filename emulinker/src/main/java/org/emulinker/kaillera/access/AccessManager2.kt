@@ -57,7 +57,7 @@ class AccessManager2(private val flags: RuntimeFlags, private val taskScheduler:
   @Synchronized
   private fun loadAccess() {
     val af = accessFile ?: return
-    logger.atInfo().log("Reloading permissions...")
+    logger.atFine().log("Reloading permissions...")
     lastLoadModifiedTime = af.lastModified()
     userList.clear()
     gameList.clear()

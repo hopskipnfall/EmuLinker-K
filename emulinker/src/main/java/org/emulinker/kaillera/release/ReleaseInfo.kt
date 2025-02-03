@@ -30,8 +30,10 @@ class ReleaseInfo {
    * Formats release information into a welcome message. This message is printed by the server at
    * server startup.
    */
-  val welcome =
-    """// $productName version $version (${buildDate.toSimpleUtcDatetime()}) 
-// $licenseInfo
-// For the most up-to-date information please visit: $websiteString"""
+  val welcomeMessages =
+    arrayOf(
+      "$productName version $version (${buildDate.toSimpleUtcDatetime()})",
+      licenseInfo,
+      "For the most up-to-date information please visit: $websiteString",
+    )
 }
