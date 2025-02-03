@@ -10,7 +10,6 @@ import java.util.concurrent.TimeUnit.MILLISECONDS
 import java.util.concurrent.TimeUnit.MINUTES
 import java.util.concurrent.TimeUnit.SECONDS
 import org.emulinker.kaillera.controller.v086.action.ActionModule
-import org.emulinker.util.EmuUtil.toSimpleUtcDatetime
 import org.emulinker.util.stripFromProdBinary
 import org.koin.core.context.startKoin
 
@@ -47,9 +46,6 @@ fun main() {
   stripFromProdBinary {
     logger.atWarning().log("DEBUG BUILD -- This should not be used for production servers!")
   }
-  logger
-    .atInfo()
-    .log("EmuLinker server is running @ %s", component.clock.now().toSimpleUtcDatetime())
   // Essentially does nothing.
   component.kailleraServerController.start()
 
