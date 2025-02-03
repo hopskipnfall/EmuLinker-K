@@ -12,17 +12,27 @@ EmuLinker-K (ELK) is a server that uses the Kaillera protocol to facilitate onli
 
 EmuLinker-K is a Kotlin rewrite of [EmulinkerSF](https://github.com/God-Weapon/EmuLinkerSF), with an emphasis on measuring and improving performance, patching security and privacy vulnerabilities, and adding useful features for both server owners and users.  EmuLinker-K is maintained by [nue](https://twitter.com/6kRt62r2zvKp5Rh).
 
-Feel free to file bugs and feature requests on this repository, or find our channel in the Kaillera Reborn discord: 
+Feel free to file bugs and feature requests on this repository, or find our channel in the Kaillera Reborn discord:
 
 [![Discord](https://img.shields.io/badge/Discord-%235865F2.svg?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/MqZEph388c)
 
 ## Setting up a new server
 
-If you want to start a new server, see our [Releases](https://github.com/hopskipnfall/EmuLinker-K/releases/latest) page for the latest stable release.
+Download the latest version from the [Releases](https://github.com/hopskipnfall/EmuLinker-K/releases/latest) page. After unzipping, make sure Java 17 or above is installed before run the following commands:
 
-```kt
-// TODO(nue): Write better instructions, including how to work with charsets.
+1. Allow scripts to be executed:
+
+```bash
+chmod +x *.sh
 ```
+
+2. Run the server:
+
+```bash
+./start_server.sh
+```
+
+The server should now be running on port `27888`.
 
 ## Features
 

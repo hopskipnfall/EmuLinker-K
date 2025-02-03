@@ -1,7 +1,5 @@
 package org.emulinker.kaillera.controller.v086
 
-import io.ktor.util.network.hostname
-import java.net.InetSocketAddress
 import java.nio.ByteBuffer
 import org.emulinker.kaillera.pico.AppModule
 
@@ -73,10 +71,4 @@ object V086Utils {
    * plus one for the stop byte.
    */
   fun String.getNumBytesPlusStopByte(): Int = this.toByteArray(AppModule.charsetDoNotUse).size + 1
-
-  fun toJavaAddress(address: io.ktor.network.sockets.InetSocketAddress) =
-    InetSocketAddress(address.hostname, address.port)
-
-  fun InetSocketAddress.toKtorAddress() =
-    io.ktor.network.sockets.InetSocketAddress(this.hostname, this.port)
 }

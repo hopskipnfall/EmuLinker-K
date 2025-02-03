@@ -7,6 +7,7 @@ import java.io.DataOutputStream
 import java.io.InputStreamReader
 import java.net.HttpURLConnection
 import java.net.URL
+import java.util.Locale
 import java.util.concurrent.TimeUnit.HOURS
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
@@ -27,6 +28,7 @@ data class ServerInfo(
   val charset: String,
   val version: String,
   val isDevBuild: Boolean,
+  val defaultLocale: String,
 )
 
 @Serializable data class CheckinRequest(val serverInfo: ServerInfo)
@@ -83,6 +85,7 @@ class ServerCheckinTask(
           charset = AppModule.charsetDoNotUse.name,
           version = releaseInfo.versionWithElkPrefix,
           isDevBuild = CompiledFlags.DEBUG_BUILD,
+          defaultLocale = Locale.getDefault().toString(),
         )
       )
 

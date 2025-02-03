@@ -4,12 +4,10 @@ import com.google.common.truth.Truth.assertThat
 import io.ktor.network.sockets.*
 import io.ktor.util.network.*
 import io.ktor.utils.io.core.ByteReadPacket
-import java.net.InetSocketAddress
 import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets
 import kotlin.time.Duration.Companion.milliseconds
 import org.emulinker.kaillera.controller.v086.V086Utils
-import org.emulinker.kaillera.controller.v086.V086Utils.toKtorAddress
 import org.emulinker.kaillera.controller.v086.protocol.V086Message.Companion.SERIALIZERS
 import org.emulinker.kaillera.model.ConnectionType
 import org.emulinker.kaillera.model.GameStatus
@@ -354,17 +352,6 @@ class V086BundleTest {
     val address = io.ktor.network.sockets.InetSocketAddress("127.2.0.1", 42)
 
     val converted = address.toJavaAddress()
-
-    assertThat(converted).isEqualTo(converted)
-    assertThat(converted.hostname).isEqualTo("127.2.0.1")
-    assertThat(converted.port).isEqualTo(42)
-  }
-
-  @Test
-  fun toKtorAddress() {
-    val address = InetSocketAddress("127.2.0.1", 42)
-
-    val converted = address.toKtorAddress()
 
     assertThat(converted).isEqualTo(converted)
     assertThat(converted.hostname).isEqualTo("127.2.0.1")

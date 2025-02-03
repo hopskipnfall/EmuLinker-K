@@ -36,9 +36,10 @@ dependencies {
   api("com.google.flogger:flogger-log4j2-backend:$floggerVersion")
 
   val log4j = "2.24.3"
-  api("org.apache.logging.log4j:log4j:$log4j")
-  api("org.apache.logging.log4j:log4j-core:$log4j")
-  api("org.apache.logging.log4j:log4j-api:$log4j")
+  implementation("org.apache.logging.log4j:log4j:$log4j")
+  implementation("org.apache.logging.log4j:log4j-core:$log4j")
+  implementation("org.apache.logging.log4j:log4j-api:$log4j")
+  implementation("org.slf4j:slf4j-nop:2.0.16")
 
   implementation("commons-configuration:commons-configuration:1.10")
   implementation("commons-pool:commons-pool:1.6")
