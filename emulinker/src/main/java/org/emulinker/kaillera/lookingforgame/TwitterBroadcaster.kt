@@ -10,7 +10,7 @@ import java.util.concurrent.ConcurrentMap
 import kotlin.time.Duration.Companion.seconds
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.model.KailleraUser
-import org.emulinker.util.EmuLang
+import org.emulinker.util.EmuLang.getStringOrNull
 import org.emulinker.util.TaskScheduler
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.get
@@ -118,7 +118,7 @@ class TwitterBroadcaster(
                 twitter.postTweet(
                   TweetParameters.builder()
                     .reply(TweetParameters.Reply.builder().inReplyToTweetId(tweetId).build())
-                    .text(EmuLang.getStringOrDefault("KailleraServerImpl.TweetCloseMessage", "〆"))
+                    .text(getStringOrNull("KailleraServerImpl.TweetCloseMessage") ?: "〆")
                     .build()
                 )
               logger

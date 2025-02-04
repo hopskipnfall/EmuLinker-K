@@ -41,6 +41,7 @@ import org.emulinker.kaillera.release.ReleaseInfo
 import org.emulinker.util.EmuLang
 import org.emulinker.util.EmuUtil
 import org.emulinker.util.EmuUtil.threadSleep
+import org.emulinker.util.NewEmuLang
 import org.emulinker.util.TaskScheduler
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -674,7 +675,11 @@ class KailleraServer(
         .log("Caught exception while making owner join game! This shouldn't happen!")
     }
     announce(
-      EmuLang.getString("KailleraServerImpl.UserCreatedGameAnnouncement", user.name, game.romName),
+      NewEmuLang.getString(
+        "KailleraServerImpl.UserCreatedGameAnnouncement",
+        user.name!!,
+        game.romName,
+      ),
       false,
     )
     if (

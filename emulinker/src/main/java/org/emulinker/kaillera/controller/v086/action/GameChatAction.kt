@@ -22,7 +22,7 @@ import org.emulinker.kaillera.model.event.GameChatEvent
 import org.emulinker.kaillera.model.exception.ActionException
 import org.emulinker.kaillera.model.exception.GameChatException
 import org.emulinker.kaillera.model.impl.KailleraGameImpl
-import org.emulinker.util.EmuLang
+import org.emulinker.util.EmuLang.getStringOrNull
 import org.emulinker.util.EmuUtil.min
 import org.emulinker.util.EmuUtil.threadSleep
 import org.emulinker.util.EmuUtil.toMillisDouble
@@ -453,10 +453,7 @@ class GameChatAction(
       } else if (message.message == "/stop") {
         if (lookingForGameReporter.cancelActionsForUser(clientHandler.user.id)) {
           game.announce(
-            EmuLang.getStringOrDefault(
-              "KailleraServerImpl.CanceledPendingTweet",
-              default = "Canceled pending tweet.",
-            ),
+            getStringOrNull("KailleraServerImpl.CanceledPendingTweet") ?: "Canceled pending tweet.",
             clientHandler.user,
           )
         } else {

@@ -98,7 +98,7 @@ sourceSets {
     kotlin.srcDir("src/main/java")
     kotlin.srcDir("build/resources/main")
 
-    resources { srcDirs("conf") }
+    resources { srcDirs("conf", "src/main/i18n") }
   }
 
   test {
