@@ -38,10 +38,10 @@ import org.emulinker.kaillera.model.impl.Trivia
 import org.emulinker.kaillera.pico.AppModule
 import org.emulinker.kaillera.pico.CompiledFlags
 import org.emulinker.kaillera.release.ReleaseInfo
+import org.emulinker.util.CustomUserStrings
 import org.emulinker.util.EmuLang
 import org.emulinker.util.EmuUtil
 import org.emulinker.util.EmuUtil.threadSleep
-import org.emulinker.util.NewEmuLang
 import org.emulinker.util.TaskScheduler
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -675,7 +675,7 @@ class KailleraServer(
         .log("Caught exception while making owner join game! This shouldn't happen!")
     }
     announce(
-      NewEmuLang.getString(
+      EmuLang.getString(
         "KailleraServerImpl.UserCreatedGameAnnouncement",
         user.name!!,
         game.romName,
@@ -928,8 +928,8 @@ class KailleraServer(
   init {
     val loginMessagesBuilder = mutableListOf<String>()
     var i = 1
-    while (EmuLang.hasString("KailleraServerImpl.LoginMessage.$i")) {
-      loginMessagesBuilder.add(EmuLang.getString("KailleraServerImpl.LoginMessage.$i"))
+    while (CustomUserStrings.hasString("KailleraServerImpl.LoginMessage.$i")) {
+      loginMessagesBuilder.add(CustomUserStrings.getString("KailleraServerImpl.LoginMessage.$i"))
       i++
     }
     loginMessages = loginMessagesBuilder
