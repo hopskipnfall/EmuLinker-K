@@ -7,7 +7,7 @@ import java.util.MissingResourceException
 import java.util.ResourceBundle
 
 object EmuLang {
-  private const val BUNDLE_NAME = "language"
+  private const val BUNDLE_NAME = "messages"
 
   private val RESOURCE_BUNDLE = ResourceBundle.getBundle(BUNDLE_NAME)
 

@@ -33,7 +33,7 @@ import org.emulinker.kaillera.model.impl.AutoFireDetectorFactory
 import org.emulinker.kaillera.model.impl.AutoFireDetectorFactoryImpl
 import org.emulinker.kaillera.pico.AppModule.Companion.charsetDoNotUse
 import org.emulinker.kaillera.release.ReleaseInfo
-import org.emulinker.util.EmuLang
+import org.emulinker.util.CustomUserStrings
 import org.emulinker.util.EmuLinkerPropertiesConfig
 import org.emulinker.util.TaskScheduler
 import org.koin.core.module.dsl.factoryOf
@@ -64,8 +64,8 @@ val koinModule = module {
   single(named("joinGameMessages")) {
     buildList {
       var i = 1
-      while (EmuLang.hasString("KailleraServerImpl.JoinGameMessage.$i")) {
-        add(EmuLang.getString("KailleraServerImpl.JoinGameMessage.$i"))
+      while (CustomUserStrings.hasString("KailleraServerImpl.JoinGameMessage.$i")) {
+        add(CustomUserStrings.getString("KailleraServerImpl.JoinGameMessage.$i"))
         i++
       }
     }
