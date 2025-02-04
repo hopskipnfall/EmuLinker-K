@@ -1539,7 +1539,7 @@ $dokka.location:org.emulinker.util/CircularBlockingByteQueue/toString/#/Pointing
 $dokka.location:org.emulinker.util/EmuLang///PointingToDeclaration/emulinker/org.emulinker.util/-emu-lang/index.html
 $dokka.location:org.emulinker.util/EmuLang/getString/#kotlin.String#kotlin.Array[kotlin.Any?]/PointingToDeclaration/emulinker/org.emulinker.util/-emu-lang/get-string.html
 $dokka.location:org.emulinker.util/EmuLang/getString/#kotlin.String/PointingToDeclaration/emulinker/org.emulinker.util/-emu-lang/get-string.html
-$dokka.location:org.emulinker.util/EmuLang/getStringOrDefault/#kotlin.String#kotlin.String/PointingToDeclaration/emulinker/org.emulinker.util/-emu-lang/get-string-or-default.html
+$dokka.location:org.emulinker.util/EmuLang/getStringOrNull/#kotlin.String/PointingToDeclaration/emulinker/org.emulinker.util/-emu-lang/get-string-or-null.html
 $dokka.location:org.emulinker.util/EmuLang/hasString/#kotlin.String/PointingToDeclaration/emulinker/org.emulinker.util/-emu-lang/has-string.html
 $dokka.location:org.emulinker.util/EmuLinkerPropertiesConfig///PointingToDeclaration/emulinker/org.emulinker.util/-emu-linker-properties-config/index.html
 $dokka.location:org.emulinker.util/EmuLinkerPropertiesConfig/EmuLinkerPropertiesConfig/#/PointingToDeclaration/emulinker/org.emulinker.util/-emu-linker-properties-config/-emu-linker-properties-config.html
@@ -1617,6 +1617,10 @@ $dokka.location:org.emulinker.util/GameDataQueue/setGameDesynched/#/PointingToDe
 $dokka.location:org.emulinker.util/GameDataQueue/timeoutMillis/#/PointingToDeclaration/emulinker/org.emulinker.util/-game-data-queue/timeout-millis.html
 $dokka.location:org.emulinker.util/HexConverter///PointingToDeclaration/emulinker/org.emulinker.util/-hex-converter/index.html
 $dokka.location:org.emulinker.util/HexConverter/main/#kotlin.Array[kotlin.String]/PointingToDeclaration/emulinker/org.emulinker.util/-hex-converter/main.html
+$dokka.location:org.emulinker.util/NewEmuLang///PointingToDeclaration/emulinker/org.emulinker.util/-new-emu-lang/index.html
+$dokka.location:org.emulinker.util/NewEmuLang/getString/#kotlin.String#kotlin.Array[kotlin.Any]/PointingToDeclaration/emulinker/org.emulinker.util/-new-emu-lang/get-string.html
+$dokka.location:org.emulinker.util/NewEmuLang/getString/#kotlin.String/PointingToDeclaration/emulinker/org.emulinker.util/-new-emu-lang/get-string.html
+$dokka.location:org.emulinker.util/NewEmuLang/hasString/#kotlin.String/PointingToDeclaration/emulinker/org.emulinker.util/-new-emu-lang/has-string.html
 $dokka.location:org.emulinker.util/ServerGameDataCache///PointingToDeclaration/emulinker/org.emulinker.util/-server-game-data-cache/index.html
 $dokka.location:org.emulinker.util/ServerGameDataCache/ServerGameDataCache/#kotlin.Int/PointingToDeclaration/emulinker/org.emulinker.util/-server-game-data-cache/-server-game-data-cache.html
 $dokka.location:org.emulinker.util/ServerGameDataCache/add/#kotlin.ByteArray/PointingToDeclaration/emulinker/org.emulinker.util/-server-game-data-cache/add.html
