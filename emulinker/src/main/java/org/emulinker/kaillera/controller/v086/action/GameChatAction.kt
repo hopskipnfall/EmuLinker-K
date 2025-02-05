@@ -308,8 +308,7 @@ class GameChatAction(
           clientHandler.user.ignoreAll = false
           clientHandler.user.server.announce(
             clientHandler.user.name + " is now unignoring everyone!",
-            false,
-            null,
+            gamesAlso = false,
           )
         } catch (e: Exception) {}
         return
@@ -488,7 +487,8 @@ class GameChatAction(
           )
         )
         game.announce(
-          "Lag definitively caused by players: " +
+          EmuLang.getString("Lagstat.PerUserSummary") +
+            " " +
             game.players
               .filter { !it.inStealthMode }
               .joinToString(separator = ", ") {
@@ -497,7 +497,6 @@ class GameChatAction(
               }
         )
 
-        // Attempt to give a summary of lag and recommendation.
         // TODO(nue): Expand this to more connection types.
         val p1 = game.players.firstOrNull()
         if (p1 != null && p1.connectionType == ConnectionType.LAN && lagstatDuration > 10.seconds) {
@@ -549,9 +548,12 @@ class GameChatAction(
         // TODO(nue): Enforce fps bounds.
         val newFps = message.message.removePrefix("/fps ").toDouble()
         game.setGameFps(newFps)
-        game.announce("Measuring lag for $newFps frames per second")
+        game.announce(EmuLang.getString("Fps.NewFpsMeasurement", newFps))
       } else {
-        game.announce("Unknown Command: " + message.message, clientHandler.user)
+        game.announce(
+          EmuLang.getString("ChatAction.UnrecognizedCommand", message.message),
+          clientHandler.user,
+        )
       }
     } else {
       game.announce("Denied: Flood Control", clientHandler.user)
