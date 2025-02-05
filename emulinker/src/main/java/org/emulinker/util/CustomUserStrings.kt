@@ -2,13 +2,12 @@ package org.emulinker.util
 
 import java.lang.Exception
 import java.text.MessageFormat
-import java.util.Locale
 import java.util.ResourceBundle
 
 object CustomUserStrings {
   private const val BUNDLE_NAME = "language"
 
-  private val RESOURCE_BUNDLE = ResourceBundle.getBundle(BUNDLE_NAME, Locale.ENGLISH)
+  private val RESOURCE_BUNDLE = ResourceBundle.getBundle(BUNDLE_NAME)
 
   /*
   	public static void reload()

@@ -18,6 +18,7 @@ import kotlin.system.measureNanoTime
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
+import kotlin.time.DurationUnit
 import kotlin.time.DurationUnit.MINUTES
 import kotlin.time.DurationUnit.SECONDS
 import kotlinx.datetime.Instant
@@ -304,6 +305,28 @@ object EmuUtil {
       )
     }
 
+  /**
+   * Similar to [Duration.toString()] except localized to the language.
+   *
+   * For example: 5s in English and 5秒 in Japanese.
+   */
+  fun Duration.toLocalizedString(unit: DurationUnit, decimals: Int = 0): String =
+    when (unit) {
+      DurationUnit.NANOSECONDS,
+      DurationUnit.MICROSECONDS,
+      DurationUnit.MILLISECONDS,
+      DurationUnit.HOURS,
+      DurationUnit.DAYS -> TODO("Unit $unit not yet supported")
+      SECONDS -> {
+        val number = this.toString(unit, decimals).removeSuffix("s")
+        EmuLang.getString("Time.SecondsAbbreviation", number)
+      }
+      MINUTES -> {
+        val number = this.toString(unit, decimals).removeSuffix("m")
+        EmuLang.getString("Time.MinutesAbbreviation", number)
+      }
+    }
+
   // TODO(nue): Get rid of this after it's confirmed it can be safely removed.
   /** NOOP placeholder for a function that _used to_ call [Thread.sleep]. */
   @Deprecated(
@@ -327,5 +350,5 @@ object EmuUtil {
     this.inWholeNanoseconds / 1.milliseconds.inWholeNanoseconds.toDouble()
 
   fun Duration.toSecondDoublePrecisionString() =
-    if (this < 1.minutes) toString(SECONDS, 2) else toString(MINUTES, 1)
+    if (this < 1.minutes) toLocalizedString(SECONDS, 2) else toLocalizedString(MINUTES, 1)
 }

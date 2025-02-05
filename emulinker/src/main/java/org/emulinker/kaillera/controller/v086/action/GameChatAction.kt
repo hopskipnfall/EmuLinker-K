@@ -22,9 +22,11 @@ import org.emulinker.kaillera.model.event.GameChatEvent
 import org.emulinker.kaillera.model.exception.ActionException
 import org.emulinker.kaillera.model.exception.GameChatException
 import org.emulinker.kaillera.model.impl.KailleraGameImpl
+import org.emulinker.util.EmuLang
 import org.emulinker.util.EmuLang.getStringOrNull
 import org.emulinker.util.EmuUtil.min
 import org.emulinker.util.EmuUtil.threadSleep
+import org.emulinker.util.EmuUtil.toLocalizedString
 import org.emulinker.util.EmuUtil.toMillisDouble
 import org.emulinker.util.EmuUtil.toSecondDoublePrecisionString
 
@@ -464,23 +466,26 @@ class GameChatAction(
         game.chat(clientHandler.user, message.message)
         // Note: This was duplicated from GameOwnerCommandAction.
         if (!game.startTimeout) {
-          game.announce("Wait a minute or so after the game starts to run lagstat.")
+          game.announce(EmuLang.getString("Lagstat.LagstatNotReady"))
           return
         }
         val lagstatDuration = min(flags.lagstatDuration, clock.now() - game.lastLagReset)
         val lagstatDurationAsString =
           if (lagstatDuration < 1.minutes) {
-            lagstatDuration.toString(SECONDS)
+            lagstatDuration.toLocalizedString(SECONDS)
           } else {
-            lagstatDuration.toString(MINUTES, 1)
+            lagstatDuration.toLocalizedString(MINUTES, 1)
           }
         val gameLag =
           (game.totalDriftNs - (game.totalDriftCache.getDelayedValue() ?: 0))
             .nanoseconds
             .absoluteValue
         game.announce(
-          "Total lag over the last ${lagstatDurationAsString}: " +
-            gameLag.toSecondDoublePrecisionString()
+          EmuLang.getString(
+            "Lagstat.TotalGameLagSummary",
+            lagstatDurationAsString,
+            gameLag.toSecondDoublePrecisionString(),
+          )
         )
         game.announce(
           "Lag definitively caused by players: " +
@@ -516,11 +521,16 @@ class GameChatAction(
                   .milliseconds
 
               game.announce(
-                "Recommendation: ${laggiestPlayer.name} should try playing on $targetFrameDelay frames. Enter ${suggestedFakePing.toMillisDouble().roundToInt()} in the ping spoof field when joining. If lag continues, run /lagstat again."
+                EmuLang.getString(
+                  "Lagstat.LagReductionRecommendation",
+                  laggiestPlayer.name,
+                  targetFrameDelay,
+                  suggestedFakePing.toMillisDouble().roundToInt(),
+                )
               )
             }
           } else {
-            game.announce("The game does not appear to be significantly laggy.")
+            game.announce(EmuLang.getString("Lagstat.GameNotLaggy"))
           }
         }
       } else if (message.message == "/lagreset") {
@@ -529,7 +539,7 @@ class GameChatAction(
           player.resetLag()
         }
         game.resetLag()
-        game.announce("LagStat has been reset!")
+        game.announce("Lagstat.LagstatReset")
       } else if (
         message.message.startsWith("/fps ") &&
           message.message.removePrefix("/fps ").toDoubleOrNull() != null &&

@@ -13,24 +13,6 @@ object EmuLang {
 
   private val logger = FluentLogger.forEnclosingClass()
 
-  /*
-  	public static void reload()
-  	{
-  		try
-  		{
-  			Class klass = RESOURCE_BUNDLE.getClass().getSuperclass();
-  			Field field = klass.getDeclaredField("cacheList");
-  			field.setAccessible(true);
-  			sun.misc.SoftCache cache = (sun.misc.SoftCache)field.get(null);
-  			cache.clear();
-  		}
-  		catch(Exception e)
-  		{
-
-  		}
-  	}
-  */
-
   fun hasString(key: String): Boolean {
     if (RESOURCE_BUNDLE.containsKey(key)) {
       try {
