@@ -1574,6 +1574,7 @@ $dokka.location:org.emulinker.util/EmuUtil/threadSleep/#kotlin.time.Duration/Poi
 $dokka.location:org.emulinker.util/EmuUtil/timeKt/com.codahale.metrics.Timer#kotlin.Function0[TypeParam(bounds=[kotlin.Any?])]/PointingToDeclaration/emulinker/org.emulinker.util/-emu-util/time-kt.html
 $dokka.location:org.emulinker.util/EmuUtil/toHexString/kotlin.Byte#/PointingToDeclaration/emulinker/org.emulinker.util/-emu-util/to-hex-string.html
 $dokka.location:org.emulinker.util/EmuUtil/toHexString/kotlin.ByteArray#/PointingToDeclaration/emulinker/org.emulinker.util/-emu-util/to-hex-string.html
+$dokka.location:org.emulinker.util/EmuUtil/toLocalizedString/kotlin.time.Duration#kotlin.time.DurationUnit#kotlin.Int/PointingToDeclaration/emulinker/org.emulinker.util/-emu-util/to-localized-string.html
 $dokka.location:org.emulinker.util/EmuUtil/toMillisDouble/kotlin.time.Duration#/PointingToDeclaration/emulinker/org.emulinker.util/-emu-util/to-millis-double.html
 $dokka.location:org.emulinker.util/EmuUtil/toSecondDoublePrecisionString/kotlin.time.Duration#/PointingToDeclaration/emulinker/org.emulinker.util/-emu-util/to-second-double-precision-string.html
 $dokka.location:org.emulinker.util/EmuUtil/toSimpleUtcDatetime/kotlinx.datetime.Instant#/PointingToDeclaration/emulinker/org.emulinker.util/-emu-util/to-simple-utc-datetime.html
