@@ -1,6 +1,6 @@
 ![Maintained][maintained-badge]
 [![build](https://github.com/hopskipnfall/EmuLinker-K/actions/workflows/gradle.yml/badge.svg)](https://github.com/hopskipnfall/EmuLinker-K/actions/workflows/gradle.yml)
-[![Make a pull request][prs-badge]][prs]
+[![Crowdin](https://badges.crowdin.net/emulinker-k/localized.svg)](https://crowdin.com/project/emulinker-k)
 
 [![Watch on GitHub][github-watch-badge]][github-watch]
 [![Star on GitHub][github-star-badge]][github-star]
@@ -11,6 +11,8 @@
 EmuLinker-K (ELK) is a server that uses the Kaillera protocol to facilitate online multiplayer for emulators.
 
 EmuLinker-K is a Kotlin rewrite of [EmulinkerSF](https://github.com/God-Weapon/EmuLinkerSF), with an emphasis on measuring and improving performance, patching security and privacy vulnerabilities, and adding useful features for both server owners and users.  EmuLinker-K is maintained by [nue](https://twitter.com/6kRt62r2zvKp5Rh).
+
+Please help us translate the server into more languages by contributing to our [CrowdIn project](https://crowdin.com/project/emulinker-k)
 
 Feel free to file bugs and feature requests on this repository, or find our channel in the Kaillera Reborn discord:
 
