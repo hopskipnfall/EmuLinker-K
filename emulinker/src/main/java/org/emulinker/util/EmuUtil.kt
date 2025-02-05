@@ -19,8 +19,7 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.DurationUnit
-import kotlin.time.DurationUnit.MINUTES
-import kotlin.time.DurationUnit.SECONDS
+import kotlin.time.DurationUnit.*
 import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.format.DateTimeComponents
@@ -310,22 +309,32 @@ object EmuUtil {
    *
    * For example: 5s in English and 5秒 in Japanese.
    */
-  fun Duration.toLocalizedString(unit: DurationUnit, decimals: Int = 0): String =
-    when (unit) {
-      DurationUnit.NANOSECONDS,
-      DurationUnit.MICROSECONDS,
-      DurationUnit.MILLISECONDS,
-      DurationUnit.HOURS,
-      DurationUnit.DAYS -> TODO("Unit $unit not yet supported")
-      SECONDS -> {
-        val number = this.toString(unit, decimals).removeSuffix("s")
-        EmuLang.getString("Time.SecondsAbbreviation", number)
+  fun Duration.toLocalizedString(unit: DurationUnit, decimals: Int = 0): String {
+    val unitSuffix =
+      when (unit) {
+        NANOSECONDS -> "ns"
+        MICROSECONDS -> "us"
+        MILLISECONDS -> "ms"
+        SECONDS -> "s"
+        MINUTES -> "m"
+        HOURS -> "h"
+        DAYS -> "d"
       }
-      MINUTES -> {
-        val number = this.toString(unit, decimals).removeSuffix("m")
-        EmuLang.getString("Time.MinutesAbbreviation", number)
+
+    val i18nTemplate =
+      when (unit) {
+        NANOSECONDS,
+        MICROSECONDS,
+        MILLISECONDS,
+        HOURS,
+        DAYS -> TODO("Unit $unit not yet supported")
+        SECONDS -> "Time.SecondsAbbreviation"
+        MINUTES -> "Time.MinutesAbbreviation"
       }
-    }
+
+    val number = this.toString(unit, decimals).removeSuffix(unitSuffix)
+    return EmuLang.getString(i18nTemplate, number)
+  }
 
   // TODO(nue): Get rid of this after it's confirmed it can be safely removed.
   /** NOOP placeholder for a function that _used to_ call [Thread.sleep]. */

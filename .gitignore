@@ -1,6 +1,7 @@
 # Compiled class file
 build/
 emulinker/build/
+emulinker/bin/
 target/
 *.class
 
