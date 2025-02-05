@@ -539,7 +539,7 @@ class GameChatAction(
           player.resetLag()
         }
         game.resetLag()
-        game.announce("Lagstat.LagstatReset")
+        game.announce(EmuLang.getString("Lagstat.LagstatReset"))
       } else if (
         message.message.startsWith("/fps ") &&
           message.message.removePrefix("/fps ").toDoubleOrNull() != null &&
