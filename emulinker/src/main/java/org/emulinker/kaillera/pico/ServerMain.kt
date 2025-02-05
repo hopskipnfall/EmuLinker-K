@@ -65,7 +65,7 @@ fun main() {
       .convertDurationsTo(MILLISECONDS)
       .filter(MetricFilter.ALL)
       .build()
-      .start(1, MINUTES) // TODO: Revert this.
+      .start(15, MINUTES)
 
     val file = File("./metrics/")
     file.mkdirs()
