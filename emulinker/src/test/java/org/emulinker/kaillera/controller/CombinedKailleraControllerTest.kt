@@ -12,7 +12,6 @@ import io.netty.handler.logging.LoggingHandler
 import java.net.InetSocketAddress
 import java.nio.ByteOrder
 import kotlin.time.Duration
-import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.nanoseconds
 import kotlin.time.Duration.Companion.seconds
 import org.emulinker.kaillera.controller.connectcontroller.protocol.ConnectMessage
@@ -75,7 +74,7 @@ class CombinedKailleraControllerTest : ProtocolBaseTest(), KoinTest {
   private fun createGame() {
     send(CreateGameRequest(messageNumber = 5, romName = "Test Game"))
 
-    assertThat(receiveAll())
+    assertThat(receiveAll(take = 3))
       .containsExactly(
         CreateGameNotification(
           messageNumber = 13,
@@ -94,15 +93,28 @@ class CombinedKailleraControllerTest : ProtocolBaseTest(), KoinTest {
           maxPlayers = 8,
         ),
         PlayerInformation(messageNumber = 15, players = emptyList()),
+      )
+
+    val packet = receive()
+    assertThat(packet).isInstanceOf(JoinGameNotification::class.java)
+    check(packet is JoinGameNotification)
+    // TODO(nue): Bind a fake Clock so measured ping is consistent between invocations.
+    assertThat(packet.ping).isIn(Range.closed(1.nanoseconds, 1.seconds))
+    assertThat(packet.copy(ping = Duration.ZERO))
+      .isEqualTo(
         JoinGameNotification(
           messageNumber = 16,
           gameId = 1,
           val1 = 0,
           username = "tester",
-          ping = 2.milliseconds,
+          ping = Duration.ZERO,
           userId = 1,
           connectionType = ConnectionType.LAN,
-        ),
+        )
+      )
+
+    assertThat(receiveAll())
+      .containsExactly(
         InformationMessage(
           messageNumber = 17,
           source = "server",
