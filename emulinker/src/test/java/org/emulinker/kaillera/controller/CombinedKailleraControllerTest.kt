@@ -2,13 +2,13 @@ package org.emulinker.kaillera.controller
 
 import com.google.common.collect.Range
 import com.google.common.truth.Expect
-import com.google.common.truth.Truth.assertWithMessage
 import io.ktor.util.network.hostname
 import io.ktor.util.network.port
 import io.netty.buffer.ByteBuf
 import io.netty.buffer.Unpooled
 import io.netty.channel.embedded.EmbeddedChannel
 import io.netty.channel.socket.DatagramPacket
+import io.netty.handler.logging.LoggingHandler
 import java.net.InetSocketAddress
 import java.nio.ByteOrder
 import kotlin.time.Duration
@@ -35,6 +35,7 @@ import org.emulinker.kaillera.controller.v086.protocol.V086Bundle
 import org.emulinker.kaillera.controller.v086.protocol.V086Message
 import org.emulinker.kaillera.model.ConnectionType
 import org.emulinker.kaillera.model.GameStatus.WAITING
+import org.emulinker.kaillera.model.UserStatus
 import org.emulinker.kaillera.pico.koinModule
 import org.junit.After
 import org.junit.Before
@@ -54,55 +55,88 @@ class CombinedKailleraControllerTest : ProtocolBaseTest(), KoinTest {
 
   @Before
   fun before() {
-
     startKoin { modules(koinModule, ActionModule) }
-    channel =
-      EmbeddedChannel(
-        // LoggingHandler(),
-        server
-      )
+    channel = EmbeddedChannel(LoggingHandler(), server)
   }
 
   @After
   fun after() {
+    stopKoin()
+
     // Make sure we didn't skip any messages.
     for ((port, messages) in portToMessages) {
-      assertWithMessage("Port $port should have no outstanding messages").that(messages).isEmpty()
+      expect.withMessage("Port $port should have no outstanding messages").that(messages).isEmpty()
     }
-
-    stopKoin()
   }
 
   @Test
   fun `log into server and create a game`() {
     requestPort(clientPort = 1)
 
-    login(clientPort = 1)
+    login(clientPort = 1, existingUsers = emptyList(), existingGames = emptyList())
 
-    createGame(clientPort = 1)
+    createGame(clientPort = 1, lastServerMessageNumber = 12)
   }
 
   @Test
-  @Ignore // TODO(nue)
+  @Ignore
   fun `two users in server and join game`() {
     requestPort(clientPort = 1)
-    login(clientPort = 1)
+    login(clientPort = 1, existingUsers = emptyList(), existingGames = emptyList())
 
     requestPort(clientPort = 2)
-    login(clientPort = 2)
-
-    //    createGame(clientPort = 1)
-  }
-
-  private fun createGame(clientPort: Int) {
-    send(CreateGameRequest(messageNumber = 5, romName = "Test Game"), fromPort = clientPort)
+    login(
+      clientPort = 2,
+      existingUsers =
+        listOf(
+          ServerStatus.User(
+            username = "tester1",
+            ping = Duration.ZERO,
+            userId = 1,
+            status = UserStatus.IDLE,
+            connectionType = ConnectionType.LAN,
+          )
+        ),
+      existingGames = emptyList(),
+    )
 
     expect
-      .that(receiveAll(onPort = clientPort, take = 3))
+      .that(receiveAll(onPort = 1, take = 2).map { zeroDurationFields(it) })
+      .containsExactly(
+        UserJoined(
+          messageNumber = 13,
+          username = "tester2",
+          userId = 2,
+          ping = Duration.ZERO,
+          connectionType = ConnectionType.LAN,
+        ),
+        InformationMessage(
+          messageNumber = 14,
+          source = "server",
+          message = "Server Owner Logged In!",
+        ),
+      )
+
+    createGame(clientPort = 1, lastServerMessageNumber = 14)
+
+    expect
+      .that(zeroDurationFields(receive(onPort = 1)))
+      .isEqualTo(
+        UserJoined(
+          messageNumber = 13,
+          username = "tester2",
+          userId = 2,
+          ping = Duration.ZERO,
+          connectionType = ConnectionType.LAN,
+        )
+      )
+
+    expect
+      .that(receiveAll(onPort = 2, take = 3))
       .containsExactly(
         CreateGameNotification(
           messageNumber = 13,
-          username = "tester$clientPort",
+          username = "tester1",
           romName = "Test Game",
           clientType = "tester_tester",
           gameId = 1,
@@ -116,7 +150,64 @@ class CombinedKailleraControllerTest : ProtocolBaseTest(), KoinTest {
           numPlayers = 1,
           maxPlayers = 8,
         ),
-        PlayerInformation(messageNumber = 15, players = emptyList()),
+        InformationMessage(
+          messageNumber = 15,
+          source = "server",
+          message = "tester1 created game: Test Game",
+        ),
+      )
+
+    expect
+      .that(receiveAll(onPort = 2, take = 3))
+      .containsExactly(
+        CreateGameNotification(
+          messageNumber = 13,
+          username = "tester1",
+          romName = "Test Game",
+          clientType = "tester_tester",
+          gameId = 1,
+          val1 = 0,
+        ),
+        GameStatus(
+          messageNumber = 14,
+          gameId = 1,
+          val1 = 0,
+          gameStatus = WAITING,
+          numPlayers = 1,
+          maxPlayers = 8,
+        ),
+        InformationMessage(
+          messageNumber = 15,
+          source = "server",
+          message = "tester1 created game: Test Game",
+        ),
+      )
+  }
+
+  private fun createGame(clientPort: Int, lastServerMessageNumber: Int) {
+    var expectedMessageNumber = lastServerMessageNumber + 1
+    send(CreateGameRequest(messageNumber = 5, romName = "Test Game"), fromPort = clientPort)
+
+    expect
+      .that(receiveAll(onPort = clientPort, take = 3))
+      .containsExactly(
+        CreateGameNotification(
+          messageNumber = expectedMessageNumber++,
+          username = "tester$clientPort",
+          romName = "Test Game",
+          clientType = "tester_tester",
+          gameId = 1,
+          val1 = 0,
+        ),
+        GameStatus(
+          messageNumber = expectedMessageNumber++,
+          gameId = 1,
+          val1 = 0,
+          gameStatus = WAITING,
+          numPlayers = 1,
+          maxPlayers = 8,
+        ),
+        PlayerInformation(messageNumber = expectedMessageNumber++, players = emptyList()),
       )
 
     val packet = receive(onPort = 1)
@@ -125,10 +216,10 @@ class CombinedKailleraControllerTest : ProtocolBaseTest(), KoinTest {
     // TODO(nue): Bind a fake Clock so measured ping is consistent between invocations.
     expect.that(packet.ping).isIn(Range.closed(1.nanoseconds, 1.seconds))
     expect
-      .that(packet.copy(ping = Duration.ZERO))
+      .that(zeroDurationFields(packet))
       .isEqualTo(
         JoinGameNotification(
-          messageNumber = 16,
+          messageNumber = expectedMessageNumber++,
           gameId = 1,
           val1 = 0,
           username = "tester$clientPort",
@@ -139,22 +230,26 @@ class CombinedKailleraControllerTest : ProtocolBaseTest(), KoinTest {
       )
 
     expect
-      .that(receiveAll(onPort = clientPort))
+      .that(receiveAll(onPort = clientPort, take = 2))
       .containsExactly(
         InformationMessage(
-          messageNumber = 17,
+          messageNumber = expectedMessageNumber++,
           source = "server",
-          message = "tester created game: Test Game",
+          message = "tester$clientPort created game: Test Game",
         ),
         GameChatNotification(
-          messageNumber = 18,
+          messageNumber = expectedMessageNumber++,
           username = "Server",
           message = "Message that appears when a user joins/starts a game!",
         ),
       )
   }
 
-  private fun login(clientPort: Int) {
+  private fun login(
+    clientPort: Int,
+    existingUsers: List<ServerStatus.User>,
+    existingGames: List<ServerStatus.Game>,
+  ) {
     send(
       UserInformation(
         messageNumber = 0,
@@ -176,9 +271,9 @@ class CombinedKailleraControllerTest : ProtocolBaseTest(), KoinTest {
     send(ClientAck(4), fromPort = clientPort)
 
     expect
-      .that(receiveAll(onPort = clientPort, take = 4))
+      .that(receiveAll(onPort = clientPort, take = 4).map { zeroDurationFields(it) })
       .containsExactly(
-        ServerStatus(4, users = emptyList(), games = emptyList()),
+        ServerStatus(4, users = existingUsers, games = existingGames),
         InformationMessage(5, source = "server", message = "Welcome to a new EmuLinker-K Server!"),
         InformationMessage(
           6,
@@ -218,7 +313,7 @@ class CombinedKailleraControllerTest : ProtocolBaseTest(), KoinTest {
     // TODO(nue): Bind a fake Clock so measured ping is consistent between invocations.
     expect.that(newPacket.ping).isIn(Range.closed(1.nanoseconds, 1.seconds))
     expect
-      .that(newPacket.copy(ping = Duration.ZERO))
+      .that(zeroDurationFields(newPacket))
       .isEqualTo(
         UserJoined(
           messageNumber = 11,
@@ -234,9 +329,7 @@ class CombinedKailleraControllerTest : ProtocolBaseTest(), KoinTest {
       .isEqualTo(InformationMessage(12, source = "server", message = "Server Owner Logged In!"))
   }
 
-  private fun requestPort(
-    clientPort: Int // = 1
-  ) {
+  private fun requestPort(clientPort: Int) {
     // Initial handshake
     channel.writeInbound(
       datagramPacket(
@@ -256,26 +349,17 @@ class CombinedKailleraControllerTest : ProtocolBaseTest(), KoinTest {
   }
 
   /** Send message to the server. */
-  private fun send(
-    message: V086Message,
-    fromPort: Int, // = 1
-  ) {
+  private fun send(message: V086Message, fromPort: Int) {
     val buf = channel.alloc().buffer().order(ByteOrder.LITTLE_ENDIAN)
     V086Bundle(arrayOf(message)).writeTo(buf)
     channel.writeInbound(datagramPacket(buf, fromPort = fromPort))
   }
 
   /** Receive one message from the server. */
-  private fun receive(
-    onPort: Int // = 1
-  ): V086Message = receiveAll(onPort, take = 1).first()
+  private fun receive(onPort: Int): V086Message = receiveAll(onPort, take = 1).first()
 
   /** Receive all available messages from the server. */
-  private fun receiveAll(
-    onPort: Int // = 1
-    ,
-    take: Int = Integer.MAX_VALUE,
-  ) =
+  private fun receiveAll(onPort: Int, take: Int) =
     buildList<V086Message> {
       retrieveMessages()
 
@@ -292,7 +376,11 @@ class CombinedKailleraControllerTest : ProtocolBaseTest(), KoinTest {
       // The server we test against runs on multiple threads, so sometimes we have to wait a few
       // milliseconds for it to catch up.
       if (receivedPacket == null) {
-        Thread.sleep(10)
+        Thread.sleep(5)
+        receivedPacket = channel.readOutbound()
+      }
+      if (receivedPacket == null) {
+        Thread.sleep(50)
         receivedPacket = channel.readOutbound()
       }
       if (receivedPacket == null) {
@@ -308,10 +396,7 @@ class CombinedKailleraControllerTest : ProtocolBaseTest(), KoinTest {
 
   private val portToMessages = mutableMapOf<Int, MutableList<V086Message>>()
 
-  private fun datagramPacket(
-    buffer: ByteBuf,
-    fromPort: Int, // = 1
-  ) =
+  private fun datagramPacket(buffer: ByteBuf, fromPort: Int) =
     DatagramPacket(
       Unpooled.wrappedBuffer(buffer),
       /* recipient= */ InetSocketAddress(
@@ -321,3 +406,11 @@ class CombinedKailleraControllerTest : ProtocolBaseTest(), KoinTest {
       /* sender= */ InetSocketAddress(channel.localAddress().hostname, fromPort),
     )
 }
+
+private fun zeroDurationFields(message: V086Message): V086Message =
+  when (message) {
+    is ServerStatus -> message.copy(users = message.users.map { it.copy(ping = Duration.ZERO) })
+    is JoinGameNotification -> message.copy(ping = Duration.ZERO)
+    is UserJoined -> message.copy(ping = Duration.ZERO)
+    else -> message
+  }
