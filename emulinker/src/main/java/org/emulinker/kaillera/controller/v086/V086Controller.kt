@@ -100,8 +100,6 @@ class V086Controller(
   infoMessageAction: InfoMessageAction,
   flags: RuntimeFlags,
 ) : KailleraServerController, KoinComponent {
-  private var isRunning = false
-
   override val clientTypes: Array<String> = flags.clientTypes.toTypedArray()
 
   var clientHandlers: MutableMap<Int, V086ClientHandler> = ConcurrentHashMap()
@@ -141,7 +139,7 @@ class V086Controller(
   override val bufferSize = flags.v086BufferSize
 
   override fun toString(): String {
-    return "V086Controller[clients=${clientHandlers.size} isRunning=$isRunning]"
+    return "V086Controller[clients=${clientHandlers.size}"
   }
 
   /**
@@ -154,7 +152,6 @@ class V086Controller(
     protocol: String,
     combinedKailleraController: CombinedKailleraController,
   ): V086ClientHandler {
-    if (!isRunning) throw NewConnectionException("Controller is not running")
     val clientHandler =
       V086ClientHandler(clientSocketAddress, controller = this, combinedKailleraController)
     val user: KailleraUser = server.newConnection(clientSocketAddress, protocol, clientHandler)
@@ -162,14 +159,10 @@ class V086Controller(
     return clientHandler
   }
 
-  @Synchronized
-  override fun start() {
-    isRunning = true
-  }
+  @Synchronized override fun start() {}
 
   @Synchronized
   override fun stop() {
-    isRunning = false
     clientHandlers.values.forEach { it.stop() }
     clientHandlers.clear()
   }
