@@ -56,6 +56,9 @@ dependencies {
   // This is only used by the fake testing client, hopefully we can remove this.
   testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1")
 
+  // https://mvnrepository.com/artifact/io.netty/netty-all
+  testImplementation("io.netty:netty-all:4.2.0.RC2")
+
   testImplementation("junit:junit:4.13.2")
   testImplementation("com.google.truth:truth:1.4.4")
   testImplementation(kotlin("test"))

@@ -1,8 +1,10 @@
 package org.emulinker.kaillera.controller
 
 import com.google.common.flogger.FluentLogger
+import io.ktor.server.engine.EmbeddedServer
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
+import io.ktor.server.netty.NettyApplicationEngine
 import io.netty.bootstrap.Bootstrap
 import io.netty.buffer.ByteBuf
 import io.netty.buffer.PooledByteBufAllocator
@@ -23,7 +25,6 @@ import org.emulinker.kaillera.controller.v086.V086ClientHandler
 import org.emulinker.kaillera.model.KailleraServer
 import org.emulinker.kaillera.model.exception.NewConnectionException
 import org.emulinker.kaillera.model.exception.ServerFullException
-import org.emulinker.net.BindException
 import org.emulinker.util.EmuUtil.formatSocketAddress
 
 class CombinedKailleraController(
@@ -31,7 +32,7 @@ class CombinedKailleraController(
   private val accessManager: AccessManager,
   kailleraServerController: KailleraServerController,
   private val server: KailleraServer,
-) {
+) : SimpleChannelInboundHandler<DatagramPacket>() {
   private var boundPort: Int? = null
 
   private var stopFlag = false
@@ -49,8 +50,9 @@ class CombinedKailleraController(
   }
 
   @Synchronized
-  @Throws(BindException::class)
-  fun bind(port: Int) {
+  fun bind(
+    port: Int
+  ): EmbeddedServer<NettyApplicationEngine, NettyApplicationEngine.Configuration> =
     embeddedServer(Netty, port = port) {
         val group = NioEventLoopGroup(flags.nettyFlags)
 
@@ -79,22 +81,7 @@ class CombinedKailleraController(
             channel(NioDatagramChannel::class.java)
             option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
             option(ChannelOption.SO_BROADCAST, true)
-            handler(
-              object : SimpleChannelInboundHandler<DatagramPacket>() {
-                override fun channelRead0(ctx: ChannelHandlerContext, packet: DatagramPacket) {
-                  handleReceived(
-                    packet.content().order(ByteOrder.LITTLE_ENDIAN),
-                    packet.sender(),
-                    ctx,
-                  )
-                }
-
-                override fun channelRegistered(ctx: ChannelHandlerContext?) {
-                  logger.atInfo().log("Ready to accept connections on port %d", port)
-                  super.channelRegistered(ctx)
-                }
-              }
-            )
+            handler(this@CombinedKailleraController)
 
             nettyChannel = bind(port).sync().channel()
             nettyChannel.closeFuture().sync()
@@ -105,12 +92,10 @@ class CombinedKailleraController(
         }
       }
       .start(true)
-    logger.atInfo().log("Stopped listening on port")
-  }
 
   fun send(datagram: DatagramPacket) {
     try {
-      nettyChannel.writeAndFlush(datagram)
+      this.nettyChannel.writeAndFlush(datagram)
     } catch (e: Exception) {
       logger.atSevere().withCause(e).log("Failed to send on port %s", boundPort)
     }
@@ -206,6 +191,18 @@ class CombinedKailleraController(
     for (j in clientTypes.indices) {
       controllersMap[clientTypes[j]] = kailleraServerController
     }
+  }
+
+  override fun channelRead0(ctx: ChannelHandlerContext, packet: DatagramPacket) {
+    handleReceived(packet.content().order(ByteOrder.LITTLE_ENDIAN), packet.sender(), ctx)
+  }
+
+  override fun channelRegistered(ctx: ChannelHandlerContext) {
+    // This is only used by tests right now.
+    if (!this::nettyChannel.isInitialized) this.nettyChannel = ctx.channel()
+
+    logger.atSevere().log("Ready to accept connections on port")
+    super.channelRegistered(ctx)
   }
 
   private companion object {
