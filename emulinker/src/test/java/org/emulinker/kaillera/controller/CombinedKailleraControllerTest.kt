@@ -1,5 +1,6 @@
 package org.emulinker.kaillera.controller
 
+import com.google.common.collect.Range
 import com.google.common.truth.Truth.assertThat
 import io.ktor.util.network.hostname
 import io.ktor.util.network.port
@@ -10,13 +11,22 @@ import io.netty.channel.socket.DatagramPacket
 import io.netty.handler.logging.LoggingHandler
 import java.net.InetSocketAddress
 import java.nio.ByteOrder
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.nanoseconds
+import kotlin.time.Duration.Companion.seconds
 import org.emulinker.kaillera.controller.connectcontroller.protocol.ConnectMessage
 import org.emulinker.kaillera.controller.connectcontroller.protocol.RequestPrivateKailleraPortRequest
 import org.emulinker.kaillera.controller.connectcontroller.protocol.RequestPrivateKailleraPortResponse
 import org.emulinker.kaillera.controller.v086.action.ActionModule
 import org.emulinker.kaillera.controller.v086.protocol.ClientAck
+import org.emulinker.kaillera.controller.v086.protocol.CreateGameNotification
+import org.emulinker.kaillera.controller.v086.protocol.CreateGameRequest
+import org.emulinker.kaillera.controller.v086.protocol.GameChatNotification
+import org.emulinker.kaillera.controller.v086.protocol.GameStatus
 import org.emulinker.kaillera.controller.v086.protocol.InformationMessage
+import org.emulinker.kaillera.controller.v086.protocol.JoinGameNotification
+import org.emulinker.kaillera.controller.v086.protocol.PlayerInformation
 import org.emulinker.kaillera.controller.v086.protocol.ProtocolBaseTest
 import org.emulinker.kaillera.controller.v086.protocol.ServerAck
 import org.emulinker.kaillera.controller.v086.protocol.ServerStatus
@@ -47,48 +57,65 @@ class CombinedKailleraControllerTest : ProtocolBaseTest(), KoinTest {
   @After
   fun after() {
     // Make sure we didn't skip any messages.
-    assertThat(channel.inboundMessages()).isEmpty()
-    assertThat(channel.outboundMessages()).isEmpty()
+    assertThat(receiveAll()).isEmpty()
 
     stopKoin()
   }
 
   @Test
-  fun `initial handshake`() {
-    val clientPort = 1
+  fun `log into server and create a game`() {
+    requestPort()
 
-    val buf = channel.alloc().buffer().order(ByteOrder.LITTLE_ENDIAN)
-    RequestPrivateKailleraPortRequest(protocol = "0.83").writeTo(buf)
+    login()
 
-    channel.writeInbound(datagramPacket(buf, fromPort = clientPort))
-
-    assertThat(channel.outboundMessages()).hasSize(1)
-    val a = channel.readOutbound<DatagramPacket>()
-
-    val response: ConnectMessage = ConnectMessage.parse(a.content().nioBuffer()).getOrThrow()
-    assertThat(response).isEqualTo(RequestPrivateKailleraPortResponse(27888))
+    createGame()
   }
 
-  @Test
-  fun `log into server`() {
-    val clientPort = 1
+  private fun createGame() {
+    send(CreateGameRequest(messageNumber = 5, romName = "Test Game"))
 
-    channel.writeInbound(
-      datagramPacket(
-        channel.alloc().buffer().order(ByteOrder.LITTLE_ENDIAN).also {
-          RequestPrivateKailleraPortRequest(protocol = "0.83").writeTo(it)
-        },
-        fromPort = clientPort,
+    assertThat(receiveAll())
+      .containsExactly(
+        CreateGameNotification(
+          messageNumber = 13,
+          username = "tester",
+          romName = "Test Game",
+          clientType = "tester_tester",
+          gameId = 1,
+          val1 = 0,
+        ),
+        GameStatus(
+          messageNumber = 14,
+          gameId = 1,
+          val1 = 0,
+          gameStatus = org.emulinker.kaillera.model.GameStatus.WAITING,
+          numPlayers = 1,
+          maxPlayers = 8,
+        ),
+        PlayerInformation(messageNumber = 15, players = emptyList()),
+        JoinGameNotification(
+          messageNumber = 16,
+          gameId = 1,
+          val1 = 0,
+          username = "tester",
+          ping = 2.milliseconds,
+          userId = 1,
+          connectionType = ConnectionType.LAN,
+        ),
+        InformationMessage(
+          messageNumber = 17,
+          source = "server",
+          message = "tester created game: Test Game",
+        ),
+        GameChatNotification(
+          messageNumber = 18,
+          username = "Server",
+          message = "Message that appears when a user joins/starts a game!",
+        ),
       )
-    )
+  }
 
-    assertThat(channel.outboundMessages()).hasSize(1)
-    val receivedPacket = channel.readOutbound<DatagramPacket>()
-
-    val response: ConnectMessage =
-      ConnectMessage.parse(receivedPacket.content().nioBuffer()).getOrThrow()
-    assertThat(response).isEqualTo(RequestPrivateKailleraPortResponse(27888))
-
+  private fun login() {
     send(
       UserInformation(
         messageNumber = 0,
@@ -153,42 +180,75 @@ class CombinedKailleraControllerTest : ProtocolBaseTest(), KoinTest {
         )
       )
 
-    // This happens on another thread, so we have to wait for it to catch up.. There should be a
-    // better way to do this.
-    Thread.sleep(50)
-
     newPacket = receive()
     assertThat(newPacket).isInstanceOf(UserJoined::class.java)
     check(newPacket is UserJoined)
-    assertThat(newPacket.username).isEqualTo("tester")
-    assertThat(newPacket.userId).isEqualTo(1)
-    assertThat(newPacket.connectionType).isEqualTo(ConnectionType.LAN)
-    assertThat(newPacket.ping).isGreaterThan(1.nanoseconds)
+    // TODO(nue): Bind a fake Clock so measured ping is consistent between invocations.
+    assertThat(newPacket.ping).isIn(Range.closed(1.nanoseconds, 1.seconds))
+    assertThat(newPacket.copy(ping = Duration.ZERO))
+      .isEqualTo(
+        UserJoined(
+          messageNumber = 11,
+          username = "tester",
+          userId = 1,
+          connectionType = ConnectionType.LAN,
+          ping = Duration.ZERO,
+        )
+      )
 
     assertThat(receive())
       .isEqualTo(InformationMessage(12, source = "server", message = "Server Owner Logged In!"))
   }
 
-  private fun send(message: V086Message, fromPort: Int = 1) {
+  private fun requestPort() {
+    // Initial handshake
     channel.writeInbound(
       datagramPacket(
         channel.alloc().buffer().order(ByteOrder.LITTLE_ENDIAN).also {
-          V086Bundle(arrayOf(message)).writeTo(it)
-        },
-        fromPort = fromPort,
+          RequestPrivateKailleraPortRequest(protocol = "0.83").writeTo(it)
+        }
       )
     )
-  }
 
-  private fun receive(onPort: Int = 1): V086Message {
+    assertThat(channel.outboundMessages()).hasSize(1)
     val receivedPacket = channel.readOutbound<DatagramPacket>()
-    assertThat(receivedPacket.recipient().port == onPort)
-    // TODO(nue): Don't just pull the first message..
-    val message = V086Bundle.parse(receivedPacket.content().nioBuffer()).messages.first()
-    return checkNotNull(message)
+
+    val response: ConnectMessage =
+      ConnectMessage.parse(receivedPacket.content().nioBuffer()).getOrThrow()
+    assertThat(response).isEqualTo(RequestPrivateKailleraPortResponse(27888))
   }
 
-  private fun datagramPacket(buffer: ByteBuf, fromPort: Int) =
+  /** Send message to the server. */
+  private fun send(message: V086Message, fromPort: Int = 1) {
+    val buf = channel.alloc().buffer().order(ByteOrder.LITTLE_ENDIAN)
+    V086Bundle(arrayOf(message)).writeTo(buf)
+    channel.writeInbound(datagramPacket(buf, fromPort = fromPort))
+  }
+
+  /** Receive one message from the server. */
+  private fun receive(onPort: Int = 1): V086Message = receiveAll(onPort, take = 1).first()
+
+  /** Receive all available messages from the server. */
+  private fun receiveAll(onPort: Int = 1, take: Int = Integer.MAX_VALUE) =
+    buildList<V086Message> {
+      while (size < take) {
+        var receivedPacket: DatagramPacket? = channel.readOutbound()
+
+        // The server we test against runs on multiple threads, so sometimes we have to wait a few
+        // milliseconds for it to catch up.
+        if (receivedPacket == null) {
+          Thread.sleep(10)
+          receivedPacket = channel.readOutbound() ?: break
+        }
+
+        assertThat(receivedPacket.recipient().port == onPort)
+        // TODO(nue): Don't just pull the first message..
+        val message = V086Bundle.parse(receivedPacket.content().nioBuffer()).messages.first()
+        add(message!!)
+      }
+    }
+
+  private fun datagramPacket(buffer: ByteBuf, fromPort: Int = 1) =
     DatagramPacket(
       Unpooled.wrappedBuffer(buffer),
       /* recipient= */ InetSocketAddress(
