@@ -232,7 +232,7 @@ class CombinedKailleraControllerTest : ProtocolBaseTest(), KoinTest {
           receivedPacket = channel.readOutbound()
         }
         if (receivedPacket == null) {
-          Thread.sleep(10)
+          Thread.sleep(50)
           receivedPacket = channel.readOutbound() ?: break
         }
 
