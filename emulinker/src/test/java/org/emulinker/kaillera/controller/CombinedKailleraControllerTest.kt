@@ -35,6 +35,7 @@ import org.emulinker.kaillera.controller.v086.protocol.UserJoined
 import org.emulinker.kaillera.controller.v086.protocol.V086Bundle
 import org.emulinker.kaillera.controller.v086.protocol.V086Message
 import org.emulinker.kaillera.model.ConnectionType
+import org.emulinker.kaillera.model.GameStatus.WAITING
 import org.emulinker.kaillera.pico.koinModule
 import org.junit.After
 import org.junit.Before
@@ -88,7 +89,7 @@ class CombinedKailleraControllerTest : ProtocolBaseTest(), KoinTest {
           messageNumber = 14,
           gameId = 1,
           val1 = 0,
-          gameStatus = org.emulinker.kaillera.model.GameStatus.WAITING,
+          gameStatus = WAITING,
           numPlayers = 1,
           maxPlayers = 8,
         ),
@@ -135,49 +136,39 @@ class CombinedKailleraControllerTest : ProtocolBaseTest(), KoinTest {
     assertThat(receive()).isEqualTo(ServerAck(3))
     send(ClientAck(4))
 
-    assertThat(receive()).isEqualTo(ServerStatus(4, users = emptyList(), games = emptyList()))
-
-    assertThat(receive())
-      .isEqualTo(
-        InformationMessage(5, source = "server", message = "Welcome to a new EmuLinker-K Server!")
-      )
-    assertThat(receive())
-      .isEqualTo(
+    assertThat(receiveAll(take = 4))
+      .containsExactly(
+        ServerStatus(4, users = emptyList(), games = emptyList()),
+        InformationMessage(5, source = "server", message = "Welcome to a new EmuLinker-K Server!"),
         InformationMessage(
           6,
           source = "server",
           message = "Edit emulinker.cfg to setup your server configuration",
-        )
-      )
-    assertThat(receive())
-      .isEqualTo(
+        ),
         InformationMessage(
           7,
           source = "server",
           message = "Edit language.properties to setup your login announcements",
-        )
+        ),
       )
 
     var newPacket = receive()
     assertThat(newPacket).isInstanceOf(InformationMessage::class.java)
     assertThat((newPacket as InformationMessage).message).matches("EmuLinker-K v.*")
 
-    assertThat(receive())
-      .isEqualTo(
+    assertThat(receiveAll(take = 2))
+      .containsExactly(
         InformationMessage(
           9,
           source = "server",
           message =
             "WARNING: This is an unoptimized debug build that should not be used in production.",
-        )
-      )
-    assertThat(receive())
-      .isEqualTo(
+        ),
         InformationMessage(
           10,
           source = "server",
           message = "Welcome Admin! Type /help for a admin command list.",
-        )
+        ),
       )
 
     newPacket = receive()
@@ -236,6 +227,10 @@ class CombinedKailleraControllerTest : ProtocolBaseTest(), KoinTest {
 
         // The server we test against runs on multiple threads, so sometimes we have to wait a few
         // milliseconds for it to catch up.
+        if (receivedPacket == null) {
+          Thread.sleep(10)
+          receivedPacket = channel.readOutbound()
+        }
         if (receivedPacket == null) {
           Thread.sleep(10)
           receivedPacket = channel.readOutbound() ?: break
