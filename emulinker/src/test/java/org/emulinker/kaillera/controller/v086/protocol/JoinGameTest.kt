@@ -8,7 +8,6 @@ import kotlin.time.Duration.Companion.milliseconds
 import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.kaillera.controller.v086.protocol.MessageTestUtils.assertBufferContainsExactly
 import org.emulinker.kaillera.model.ConnectionType
-import org.junit.Ignore
 import org.junit.Test
 
 class JoinGameTest : ProtocolBaseTest() {
@@ -19,7 +18,6 @@ class JoinGameTest : ProtocolBaseTest() {
   }
 
   @Test
-  @Ignore // Fails!
   fun joinGameNotification_byteReadPacket_deserializeBody() {
     val packet = ByteReadPacket(V086Utils.hexStringToByteBuffer(NOTIFICATION_BYTES))
     assertThat(JoinGame.JoinGameSerializer.read(packet, MESSAGE_NUMBER).getOrThrow())
@@ -50,7 +48,6 @@ class JoinGameTest : ProtocolBaseTest() {
   }
 
   @Test
-  @Ignore // Fails!
   fun joinGameRequest_byteReadPacket_deserializeBody() {
     val packet = ByteReadPacket(V086Utils.hexStringToByteBuffer(REQUEST_BYTES))
     assertThat(JoinGame.JoinGameSerializer.read(packet, MESSAGE_NUMBER).getOrThrow())

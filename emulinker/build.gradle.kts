@@ -53,9 +53,6 @@ dependencies {
 
   implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.1")
 
-  // This is only used by the fake testing client, hopefully we can remove this.
-  testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1")
-
   // https://mvnrepository.com/artifact/io.netty/netty-all
   testImplementation("io.netty:netty-all:4.2.0.RC2")
 
