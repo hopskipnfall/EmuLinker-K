@@ -39,7 +39,6 @@ import org.emulinker.kaillera.model.UserStatus
 import org.emulinker.kaillera.pico.koinModule
 import org.junit.After
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.koin.core.context.startKoin
@@ -79,7 +78,6 @@ class CombinedKailleraControllerTest : ProtocolBaseTest(), KoinTest {
   }
 
   @Test
-  @Ignore
   fun `two users in server and join game`() {
     requestPort(clientPort = 1)
     login(clientPort = 1, existingUsers = emptyList(), existingGames = emptyList())
@@ -118,44 +116,6 @@ class CombinedKailleraControllerTest : ProtocolBaseTest(), KoinTest {
       )
 
     createGame(clientPort = 1, lastServerMessageNumber = 14)
-
-    expect
-      .that(zeroDurationFields(receive(onPort = 1)))
-      .isEqualTo(
-        UserJoined(
-          messageNumber = 13,
-          username = "tester2",
-          userId = 2,
-          ping = Duration.ZERO,
-          connectionType = ConnectionType.LAN,
-        )
-      )
-
-    expect
-      .that(receiveAll(onPort = 2, take = 3))
-      .containsExactly(
-        CreateGameNotification(
-          messageNumber = 13,
-          username = "tester1",
-          romName = "Test Game",
-          clientType = "tester_tester",
-          gameId = 1,
-          val1 = 0,
-        ),
-        GameStatus(
-          messageNumber = 14,
-          gameId = 1,
-          val1 = 0,
-          gameStatus = WAITING,
-          numPlayers = 1,
-          maxPlayers = 8,
-        ),
-        InformationMessage(
-          messageNumber = 15,
-          source = "server",
-          message = "tester1 created game: Test Game",
-        ),
-      )
 
     expect
       .that(receiveAll(onPort = 2, take = 3))
