@@ -34,25 +34,31 @@ import org.emulinker.kaillera.model.ConnectionType.LAN
 import org.emulinker.kaillera.model.GameStatus.WAITING
 import org.emulinker.kaillera.model.UserStatus
 import org.emulinker.kaillera.pico.koinModule
+import org.emulinker.kaillera.release.ReleaseInfo
 import org.junit.After
 import org.junit.Before
 import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
-import org.koin.core.context.startKoin
-import org.koin.core.context.stopKoin
 import org.koin.test.KoinTest
+import org.koin.test.KoinTestRule
 import org.koin.test.inject
 
 class CombinedKailleraControllerTest : ProtocolBaseTest(), KoinTest {
+  @get:Rule val koinTestRule = KoinTestRule.create { modules(koinModule, ActionModule) }
+
   @get:Rule val expect = Expect.create()
 
   private val server: CombinedKailleraController by inject()
+
+  private val releaseInfo: ReleaseInfo by inject()
+
+  // private val threadPoolExecutor: ThreadPoolExecutor by inject(named("userActionsExecutor"))
+
   private lateinit var channel: EmbeddedChannel
 
   @Before
   fun before() {
-    startKoin { modules(koinModule, ActionModule) }
     channel =
       EmbeddedChannel(
         // io.netty.handler.logging.LoggingHandler(),
@@ -62,9 +68,12 @@ class CombinedKailleraControllerTest : ProtocolBaseTest(), KoinTest {
 
   @After
   fun after() {
-    stopKoin()
+    // TODO:
+    // threadPoolExecutor.shutdown()
+    // threadPoolExecutor.awaitTermination(5, TimeUnit.SECONDS)
 
     // Make sure we didn't skip any messages.
+    retrieveMessages(Int.MAX_VALUE)
     for ((port, messages) in portToMessages) {
       expect.withMessage("Port $port should have no outstanding messages").that(messages).isEmpty()
     }
@@ -292,7 +301,7 @@ class CombinedKailleraControllerTest : ProtocolBaseTest(), KoinTest {
     send(ClientAck(4), fromPort = clientPort)
 
     expect
-      .that(receiveAll(onPort = clientPort, take = 4))
+      .that(receiveAll(onPort = clientPort, take = 9))
       .containsExactly(
         ServerStatus(0, users = existingUsers, games = existingGames),
         InformationMessage(0, source = "server", message = "Welcome to a new EmuLinker-K Server!"),
@@ -306,15 +315,12 @@ class CombinedKailleraControllerTest : ProtocolBaseTest(), KoinTest {
           source = "server",
           message = "Edit language.properties to setup your login announcements",
         ),
-      )
-
-    var newPacket = receive(onPort = clientPort)
-    expect.that(newPacket).isInstanceOf(InformationMessage::class.java)
-    expect.that((newPacket as InformationMessage).message).matches("EmuLinker-K v.*")
-
-    expect
-      .that(receiveAll(onPort = clientPort, take = 2))
-      .containsExactly(
+        InformationMessage(
+          0,
+          source = "server",
+          message =
+            "${releaseInfo.productName} v${releaseInfo.version}: ${releaseInfo.websiteString}",
+        ),
         InformationMessage(
           0,
           source = "server",
@@ -326,23 +332,15 @@ class CombinedKailleraControllerTest : ProtocolBaseTest(), KoinTest {
           source = "server",
           message = "Welcome Admin! Type /help for a admin command list.",
         ),
-      )
-
-    expect
-      .that(receive(onPort = clientPort))
-      .isEqualTo(
         UserJoined(
           messageNumber = 0,
           username = "tester$clientPort",
           userId = clientPort, // I'm doing this on purpose.
           connectionType = LAN,
           ping = Duration.ZERO,
-        )
+        ),
+        InformationMessage(0, source = "server", message = "Server Owner Logged In!"),
       )
-
-    expect
-      .that(receive(onPort = clientPort))
-      .isEqualTo(InformationMessage(0, source = "server", message = "Server Owner Logged In!"))
   }
 
   private fun requestPort(clientPort: Int) {
@@ -381,9 +379,9 @@ class CombinedKailleraControllerTest : ProtocolBaseTest(), KoinTest {
   /** Receive all available messages from the server. */
   private fun receiveAll(onPort: Int, take: Int) =
     buildList<V086Message> {
-      retrieveMessages()
-
       val incoming = portToMessages.getOrPut(onPort) { mutableListOf() }
+      retrieveMessages(take - incoming.size)
+
       while (incoming.isNotEmpty() && size < take) {
         add(incoming.removeFirst())
       }
@@ -391,9 +389,10 @@ class CombinedKailleraControllerTest : ProtocolBaseTest(), KoinTest {
 
   private val lock = Object()
 
-  private fun retrieveMessages() =
+  private fun retrieveMessages(take: Int) =
     synchronized(lock) {
-      while (true) {
+      var taken = 0
+      while (taken < take) {
         var receivedPacket: DatagramPacket? = channel.readOutbound()
 
         // The server we test against runs on multiple threads, so sometimes we have to wait a few
@@ -433,6 +432,7 @@ class CombinedKailleraControllerTest : ProtocolBaseTest(), KoinTest {
             .add(message.zeroMessageNumber().zeroDurationFields())
           portToLastServerMessageId[receivedPacket.recipient().port] = message.messageNumber
           lastMessageId++
+          taken++
         }
       }
     }
