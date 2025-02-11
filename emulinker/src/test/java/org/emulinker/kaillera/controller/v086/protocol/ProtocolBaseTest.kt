@@ -6,7 +6,7 @@ import org.emulinker.testing.LoggingRule
 import org.junit.BeforeClass
 import org.junit.Rule
 
-open class ProtocolBaseTest {
+abstract class ProtocolBaseTest {
   @get:Rule val logging = LoggingRule()
 
   companion object {

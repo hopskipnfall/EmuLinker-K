@@ -46,8 +46,6 @@ fun main() {
   stripFromProdBinary {
     logger.atWarning().log("DEBUG BUILD -- This should not be used for production servers!")
   }
-  // Essentially does nothing.
-  component.kailleraServerController.start()
 
   // Keeps iterating over users to look for people who should be kicked.
   component.kailleraServer.start()
