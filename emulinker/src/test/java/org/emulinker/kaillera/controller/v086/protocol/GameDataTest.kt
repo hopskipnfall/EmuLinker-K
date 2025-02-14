@@ -3,7 +3,6 @@ package org.emulinker.kaillera.controller.v086.protocol
 import com.google.common.truth.Truth.assertThat
 import io.ktor.utils.io.core.ByteReadPacket
 import io.ktor.utils.io.core.endOfInput
-import io.netty.buffer.Unpooled
 import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.kaillera.controller.v086.protocol.MessageTestUtils.assertBufferContainsExactly
@@ -28,10 +27,10 @@ class GameDataTest : ProtocolBaseTest() {
 
   @Test
   fun deserializeBody() {
-    val buffer = Unpooled.wrappedBuffer(V086Utils.hexStringToByteBuffer(BODY_BYTES))
+    val buffer = V086Utils.hexStringToByteBuffer(BODY_BYTES)
     assertThat(GameData.GameDataSerializer.read(buffer, MESSAGE_NUMBER).getOrThrow())
       .isEqualTo(GAME_DATA)
-    assertThat(buffer.capacity()).isEqualTo(buffer.readerIndex())
+    assertThat(buffer.hasRemaining()).isFalse()
   }
 
   @Test

@@ -26,10 +26,10 @@ class CloseGameTest : ProtocolBaseTest() {
 
   @Test
   fun deserializeBody() {
-    val buffer = Unpooled.wrappedBuffer(V086Utils.hexStringToByteBuffer(BODY_BYTES))
+    val buffer = V086Utils.hexStringToByteBuffer(BODY_BYTES)
     assertThat(CloseGame.CloseGameSerializer.read(buffer, MESSAGE_NUMBER).getOrThrow())
       .isEqualTo(CLOSE_GAME)
-    assertThat(buffer.capacity()).isEqualTo(buffer.readerIndex())
+    assertThat(buffer.hasRemaining()).isFalse()
   }
 
   @Test

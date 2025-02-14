@@ -18,10 +18,10 @@ class AckTest : ProtocolBaseTest() {
 
   @Test
   fun clientAck_deserializeBody() {
-    val buffer = Unpooled.wrappedBuffer(V086Utils.hexStringToByteBuffer(ACK_BODY_BYTES))
+    val buffer = V086Utils.hexStringToByteBuffer(ACK_BODY_BYTES)
     assertThat(Ack.ClientAckSerializer.read(buffer, MESSAGE_NUMBER).getOrThrow())
       .isEqualTo(CLIENT_ACK)
-    assertThat(buffer.capacity()).isEqualTo(buffer.readerIndex())
+    assertThat(buffer.hasRemaining()).isFalse()
   }
 
   @Test
@@ -58,10 +58,10 @@ class AckTest : ProtocolBaseTest() {
 
   @Test
   fun serverAck_deserializeBody() {
-    val buffer = Unpooled.wrappedBuffer(V086Utils.hexStringToByteBuffer(ACK_BODY_BYTES))
+    val buffer = V086Utils.hexStringToByteBuffer(ACK_BODY_BYTES)
     assertThat(Ack.ServerAckSerializer.read(buffer, MESSAGE_NUMBER).getOrThrow())
       .isEqualTo(SERVER_ACK)
-    assertThat(buffer.capacity()).isEqualTo(buffer.readerIndex())
+    assertThat(buffer.hasRemaining()).isFalse()
   }
 
   @Test
