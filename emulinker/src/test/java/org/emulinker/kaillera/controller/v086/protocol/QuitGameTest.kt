@@ -3,6 +3,7 @@ package org.emulinker.kaillera.controller.v086.protocol
 import com.google.common.truth.Truth.assertThat
 import io.ktor.utils.io.core.ByteReadPacket
 import io.ktor.utils.io.core.endOfInput
+import io.netty.buffer.Unpooled
 import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.kaillera.controller.v086.protocol.MessageTestUtils.assertBufferContainsExactly
@@ -25,10 +26,11 @@ class QuitGameTest : ProtocolBaseTest() {
 
   @Test
   fun quitGameNotification_deserializeBody() {
-    val buffer = V086Utils.hexStringToByteBuffer(QUIT_GAME_NOTIFICATION_BODY_BYTES)
+    val buffer =
+      Unpooled.wrappedBuffer(V086Utils.hexStringToByteBuffer(QUIT_GAME_NOTIFICATION_BODY_BYTES))
     assertThat(QuitGame.QuitGameSerializer.read(buffer, MESSAGE_NUMBER).getOrThrow())
       .isEqualTo(QUIT_GAME_NOTIFICATION)
-    assertThat(buffer.hasRemaining()).isFalse()
+    assertThat(buffer.capacity()).isEqualTo(buffer.readerIndex())
   }
 
   @Test
@@ -55,10 +57,11 @@ class QuitGameTest : ProtocolBaseTest() {
 
   @Test
   fun quitGameRequest_deserializeBody() {
-    val buffer = V086Utils.hexStringToByteBuffer(QUIT_GAME_REQUEST_BODY_BYTES)
+    val buffer =
+      Unpooled.wrappedBuffer(V086Utils.hexStringToByteBuffer(QUIT_GAME_REQUEST_BODY_BYTES))
     assertThat(QuitGame.QuitGameSerializer.read(buffer, MESSAGE_NUMBER).getOrThrow())
       .isEqualTo(QUIT_GAME_REQUEST)
-    assertThat(buffer.hasRemaining()).isFalse()
+    assertThat(buffer.capacity()).isEqualTo(buffer.readerIndex())
   }
 
   @Test

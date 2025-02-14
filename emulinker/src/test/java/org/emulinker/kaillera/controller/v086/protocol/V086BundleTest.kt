@@ -4,6 +4,7 @@ import com.google.common.truth.Truth.assertThat
 import io.ktor.network.sockets.*
 import io.ktor.util.network.*
 import io.ktor.utils.io.core.ByteReadPacket
+import io.netty.buffer.Unpooled
 import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets
 import kotlin.time.Duration.Companion.milliseconds
@@ -24,8 +25,8 @@ class V086BundleTest {
   fun hexStringToByteBuffer() {
     val hexInput =
       "01 00 00 24 00 03 EA 4B 00 50 72 6F 6A 65 63 74 20 36 34 6B 20 30 2E 31 33 20 28 30 31 20 41 75 67 20 32 30 30 33 29 00 01"
-    val byteBuffer = V086Utils.hexStringToByteBuffer(hexInput)
-    assertThat(V086Utils.toHex(byteBuffer)).isEqualTo(hexInput.replace(" ", ""))
+    val byteBuffer = Unpooled.wrappedBuffer(V086Utils.hexStringToByteBuffer(hexInput))
+    assertThat(V086Utils.toHex(byteBuffer.nioBuffer())).isEqualTo(hexInput.replace(" ", ""))
   }
 
   @Test
@@ -278,7 +279,7 @@ class V086BundleTest {
      val hexInput =
          "05 0E 02 06 00 12 00 02 00 00 00 0D 02 06 00 12 00 02 00 00 00 0C 02 06 00 12 00 02 00 00 00 0B 02 06 00 12 00 02 00 00 00 0A 02 06 00 12 00 02 00 00 00".lowercase(
              Locale.getDefault())
-     val buffer = V086Utils.hexStringToByteBuffer(hexInput)
+     val buffer = Unpooled.wrappedBuffer(V086Utils.hexStringToByteBuffer(hexInput))
      val parsedBundle = V086Bundle.parse(buffer, lastMessageID = -1)
      assertThat(parsedBundle.messages)
          .isEqualTo(

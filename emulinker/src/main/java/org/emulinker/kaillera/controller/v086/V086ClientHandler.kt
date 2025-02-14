@@ -154,7 +154,7 @@ class V086ClientHandler(
 
   private fun handleReceivedInternal(buffer: ByteBuf) {
     val inBundle: V086Bundle =
-      if (CompiledFlags.USE_BYTEREADPACKET_INSTEAD_OF_BYTEBUFFER) {
+      if (CompiledFlags.USE_BYTEBUF_INSTEAD_OF_BYTEBUFFER) {
         // Note: This is currently DISABLED as it's unstable (see tests marked as @Ignore).
         try {
           parse(buffer, lastMessageNumber)

@@ -18,10 +18,10 @@ class ChatTest : ProtocolBaseTest() {
 
   @Test
   fun chatNotification_deserializeBody() {
-    val buffer = hexStringToByteBuffer(CHAT_NOTIFICATION_BODY_BYTES)
+    val buffer = Unpooled.wrappedBuffer(hexStringToByteBuffer(CHAT_NOTIFICATION_BODY_BYTES))
     assertThat(Chat.ChatSerializer.read(buffer, MESSAGE_NUMBER).getOrThrow())
       .isEqualTo(CHAT_NOTIFICATION)
-    assertThat(buffer.hasRemaining()).isFalse()
+    assertThat(buffer.capacity()).isEqualTo(buffer.readerIndex())
   }
 
   @Test
@@ -57,10 +57,10 @@ class ChatTest : ProtocolBaseTest() {
 
   @Test
   fun deserializeBody() {
-    val buffer = hexStringToByteBuffer(CHAT_REQUEST_BODY_BYTES)
+    val buffer = Unpooled.wrappedBuffer(hexStringToByteBuffer(CHAT_REQUEST_BODY_BYTES))
     assertThat(Chat.ChatSerializer.read(buffer, MESSAGE_NUMBER).getOrThrow())
       .isEqualTo(CHAT_REQUEST)
-    assertThat(buffer.hasRemaining()).isFalse()
+    assertThat(buffer.capacity()).isEqualTo(buffer.readerIndex())
   }
 
   @Test

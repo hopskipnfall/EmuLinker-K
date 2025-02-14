@@ -3,6 +3,7 @@ package org.emulinker.kaillera.controller.v086.protocol
 import com.google.common.truth.Truth.assertThat
 import io.ktor.utils.io.core.ByteReadPacket
 import io.ktor.utils.io.core.endOfInput
+import io.netty.buffer.Unpooled
 import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.kaillera.controller.v086.protocol.MessageTestUtils.assertBufferContainsExactly
@@ -25,10 +26,10 @@ class PlayerDropTest {
 
   @Test
   fun playerDropNotification_deserializeBody() {
-    val buffer = V086Utils.hexStringToByteBuffer(NOTIFICATION_BODY_BYTES)
+    val buffer = Unpooled.wrappedBuffer(V086Utils.hexStringToByteBuffer(NOTIFICATION_BODY_BYTES))
     assertThat(PlayerDrop.PlayerDropSerializer.read(buffer, MESSAGE_NUMBER).getOrThrow())
       .isEqualTo(PLAYER_DROP_NOTIFICATION)
-    assertThat(buffer.hasRemaining()).isFalse()
+    assertThat(buffer.capacity()).isEqualTo(buffer.readerIndex())
   }
 
   @Test
@@ -55,10 +56,10 @@ class PlayerDropTest {
 
   @Test
   fun playerDropRequest_deserializeBody() {
-    val buffer = V086Utils.hexStringToByteBuffer(REQUEST_BODY_BYTES)
+    val buffer = Unpooled.wrappedBuffer(V086Utils.hexStringToByteBuffer(REQUEST_BODY_BYTES))
     assertThat(PlayerDrop.PlayerDropSerializer.read(buffer, MESSAGE_NUMBER).getOrThrow())
       .isEqualTo(PLAYER_DROP_REQUEST)
-    assertThat(buffer.hasRemaining()).isFalse()
+    assertThat(buffer.capacity()).isEqualTo(buffer.readerIndex())
   }
 
   @Test
