@@ -48,5 +48,5 @@ class VariableSizeByteArray(initialData: ByteArray = byteArrayOf()) {
 }
 
 fun ByteBuffer.put(o: VariableSizeByteArray) {
-  this.put(o.bytes, 0, o.bytes.size)
+  this.put(o.bytes, 0, o.size)
 }
