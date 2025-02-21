@@ -51,6 +51,9 @@ dependencies {
   implementation("io.ktor:ktor-server-status-pages-jvm:$ktorVersion")
   implementation("io.ktor:ktor-server-default-headers-jvm:$ktorVersion")
 
+  // https://mvnrepository.com/artifact/com.github.chrisvest/stormpot
+  implementation("com.github.chrisvest:stormpot:3.2")
+
   implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.1")
 
   // https://mvnrepository.com/artifact/io.netty/netty-all

@@ -42,6 +42,7 @@ import org.emulinker.util.EmuLang
 import org.emulinker.util.EmuUtil.threadSleep
 import org.emulinker.util.EmuUtil.toMillisDouble
 import org.emulinker.util.TimeOffsetCache
+import org.emulinker.util.VariableSizeByteArray
 import org.koin.core.component.KoinComponent
 
 class KailleraGameImpl(
@@ -647,7 +648,11 @@ class KailleraGameImpl(
    * back to the client.
    */
   @Throws(GameDataException::class)
-  override fun addData(user: KailleraUser, playerNumber: Int, data: ByteArray): Result<Unit> {
+  override fun addData(
+    user: KailleraUser,
+    playerNumber: Int,
+    data: VariableSizeByteArray,
+  ): Result<Unit> {
     val playerActionQueuesCopy = playerActionQueues ?: return Result.success(Unit)
 
     // int bytesPerAction = (data.length / actionsPerMessage);
@@ -667,7 +672,7 @@ class KailleraGameImpl(
     playerActionQueuesCopy[playerNumber - 1].addActions(data)
     autoFireDetector.addData(playerNumber, data, user.bytesPerAction)
 
-    return maybeSendData(user, data)
+    return maybeSendData(user)
   }
 
   /** @param data Only used for logging. */
@@ -692,7 +697,8 @@ class KailleraGameImpl(
         }
       ) {
         waitingOnData = false
-        val response = ByteArray(user.arraySize)
+        val response = VariableSizeByteArray.pool.tryClaim()
+        response.size = user.arraySize
         for (actionCounter in 0 until actionsPerMessage) {
           for (playerActionQueueIndex in playerActionQueuesCopy.indices) {
             // TODO(nue): Consider removing this loop, I'm fairly certain it isn't needed.
@@ -720,7 +726,7 @@ class KailleraGameImpl(
           return Result.failure(
             GameDataException(
               EmuLang.getString("KailleraGameImpl.DesynchedWarning"),
-              data,
+              VariableSizeByteArray(data),
               user.bytesPerAction,
               playerNumber,
               playerActionQueuesCopy.size,
