@@ -2,7 +2,6 @@ package org.emulinker.util
 
 import java.nio.ByteBuffer
 import java.util.Arrays
-import org.emulinker.kaillera.pico.CompiledFlags
 import stormpot.Allocator
 import stormpot.Expiration
 import stormpot.Pool

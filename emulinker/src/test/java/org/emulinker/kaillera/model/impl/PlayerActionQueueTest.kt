@@ -39,7 +39,7 @@ class PlayerActionQueueTest {
 
     queue.addActions(VariableSizeByteArray(DATA))
 
-    val out = ByteArray(DATA.size) { 0 }
+    val out = VariableSizeByteArray(ByteArray(DATA.size) { 0 })
     queue.getActionAndWriteToArray(
       playerIndex = 0,
       writeToArray = out,
@@ -47,7 +47,7 @@ class PlayerActionQueueTest {
       actionLength = DATA.size,
     )
 
-    assertThat(out).isEqualTo(DATA)
+    assertThat(out.toByteArray()).isEqualTo(DATA)
   }
 
   @Test
@@ -59,7 +59,7 @@ class PlayerActionQueueTest {
 
     queue.addActions(VariableSizeByteArray(DATA))
 
-    val out = ByteArray(DATA.size) { 0 }
+    val out = VariableSizeByteArray(ByteArray(DATA.size) { 0 })
     queue.getActionAndWriteToArray(
       playerIndex = 0,
       writeToArray = out,
@@ -68,7 +68,7 @@ class PlayerActionQueueTest {
     )
 
     assertThat(queue.containsNewDataForPlayer(playerIndex = 0, actionLength = DATA.size)).isTrue()
-    assertThat(out).isEqualTo(DATA)
+    assertThat(out.toByteArray()).isEqualTo(DATA)
   }
 
   companion object {
