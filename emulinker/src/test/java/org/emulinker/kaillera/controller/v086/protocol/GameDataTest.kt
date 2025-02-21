@@ -6,6 +6,7 @@ import io.ktor.utils.io.core.endOfInput
 import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.kaillera.controller.v086.protocol.MessageTestUtils.assertBufferContainsExactly
+import org.emulinker.util.VariableSizeByteArray
 import org.junit.Ignore
 import org.junit.Test
 
@@ -47,6 +48,9 @@ class GameDataTest : ProtocolBaseTest() {
     private const val BODY_BYTES = "00, 00, 05, 01, 02, 03, 04, 05"
 
     private val GAME_DATA =
-      GameData(messageNumber = MESSAGE_NUMBER, gameData = byteArrayOf(1, 2, 3, 4, 5))
+      GameData(
+        messageNumber = MESSAGE_NUMBER,
+        gameData = VariableSizeByteArray(byteArrayOf(1, 2, 3, 4, 5)),
+      )
   }
 }

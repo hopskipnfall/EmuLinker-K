@@ -1,12 +1,11 @@
 package org.emulinker.util
 
 import java.lang.IndexOutOfBoundsException
-import java.util.Arrays
 
 @Deprecated("This has promise but indexOf does not work reliably!", level = DeprecationLevel.ERROR)
 class ServerGameDataCache(size: Int) : GameDataCache {
   // array holds the elements
-  private var array: Array<ByteArray?> = arrayOfNulls(size)
+  private var array: Array<VariableSizeByteArray?> = arrayOfNulls(size)
 
   // hashmap for quicker indexOf access, but slows down inserts
   //	protected HashMap<byte[], Integer>	map;
@@ -27,43 +26,35 @@ class ServerGameDataCache(size: Int) : GameDataCache {
   override var size = 0
     private set
 
-  override fun contains(element: ByteArray): Boolean = indexOf(element) >= 0
+  override fun contains(element: VariableSizeByteArray): Boolean = indexOf(element) >= 0
 
-  override fun containsAll(elements: Collection<ByteArray>): Boolean = elements.all { contains(it) }
+  override fun containsAll(elements: Collection<VariableSizeByteArray>): Boolean =
+    elements.all { contains(it) }
 
   override fun isEmpty(): Boolean = size == 0
 
-  override fun iterator(): Iterator<ByteArray> = array.asSequence().filterNotNull().iterator()
+  override fun iterator(): Iterator<VariableSizeByteArray> =
+    array.asSequence().filterNotNull().iterator()
 
-  override fun indexOf(data: ByteArray): Int {
-    val i = map[data.contentHashCode()]
+  override fun indexOf(data: VariableSizeByteArray): Int {
+    val i = map[data.hashCode()]
     return i?.let { unconvert(it) } ?: -1
   }
 
-  override fun get(index: Int): ByteArray? {
+  override fun get(index: Int): VariableSizeByteArray? {
     rangeCheck(index)
     return array[convert(index)]
-  }
-
-  override fun set(index: Int, data: ByteArray): ByteArray? {
-    rangeCheck(index)
-    val convertedIndex = convert(index)
-    val oldValue = array[convertedIndex]
-    array[convertedIndex] = data
-    //		map.put(Arrays.toString(data), convertedIndex);
-    map[data.contentHashCode()] = convertedIndex
-    return oldValue
   }
 
   // This method is the main reason we re-wrote the class.
   // It is optimized for removing first and last elements
   // but also allows you to remove in the middle of the list.
-  override fun remove(index: Int): ByteArray? {
+  override fun remove(index: Int) {
     rangeCheck(index)
     val pos = convert(index)
-    return try {
+    try {
       //			map.remove(array[pos]);
-      map.remove(array[pos].contentHashCode())
+      map.remove(array[pos].hashCode())
       //			map.remove(Arrays.toString(array[pos]));
       array[pos]
     } finally {
@@ -96,13 +87,13 @@ class ServerGameDataCache(size: Int) : GameDataCache {
     map.clear()
   }
 
-  override fun add(data: ByteArray): Int {
+  override fun add(data: VariableSizeByteArray): Int {
     if (size == array.size) remove(0)
     val pos = tail
     array[tail] = data
     //		map.put(Arrays.toString(data), tail);
     //		map.put(data, tail);
-    map[Arrays.hashCode(data)] = tail
+    map[data.hashCode()] = tail
     tail = (tail + 1) % array.size
     size++
     return unconvert(pos)

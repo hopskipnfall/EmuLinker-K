@@ -2,6 +2,7 @@ package org.emulinker.kaillera.model.impl
 
 import kotlin.Throws
 import org.emulinker.kaillera.model.KailleraUser
+import org.emulinker.util.VariableSizeByteArray
 
 class PlayerActionQueue(
   val playerNumber: Int,
@@ -31,7 +32,7 @@ class PlayerActionQueue(
     synced = false
   }
 
-  fun addActions(actions: ByteArray) {
+  fun addActions(actions: VariableSizeByteArray) {
     if (!synced) return
     for (i in actions.indices) {
       array[tail] = actions[i]

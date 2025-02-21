@@ -12,7 +12,7 @@ sealed interface MessageSerializer<E : V086Message> {
 
   fun read(buffer: ByteBuf, messageNumber: Int): Result<E>
 
-  fun read(packet: Source, messageNumber: Int): Result<E>
+  @Deprecated("It doesn't work!") fun read(packet: Source, messageNumber: Int): Result<E>
 
   fun write(buffer: ByteBuffer, message: E)
 

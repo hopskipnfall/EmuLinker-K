@@ -27,6 +27,7 @@ import org.emulinker.kaillera.model.exception.*
 import org.emulinker.kaillera.model.impl.KailleraGameImpl
 import org.emulinker.util.EmuLang
 import org.emulinker.util.TimeOffsetCache
+import org.emulinker.util.VariableSizeByteArray
 
 /**
  * Represents a user in the server.
@@ -138,10 +139,10 @@ class KailleraUser(
   var lastMsgID = -1
   var isMuted = false
 
-  private val lostInput: MutableList<ByteArray> = ArrayList()
+  private val lostInput: MutableList<VariableSizeByteArray> = ArrayList()
 
   /** Note that this is a different type from lostInput. */
-  fun getLostInput(): ByteArray {
+  fun getLostInput(): VariableSizeByteArray {
     return lostInput[0]
   }
 
@@ -444,7 +445,7 @@ class KailleraUser(
     game.ready(this, playerNumber)
   }
 
-  fun addGameData(data: ByteArray): Result<Unit> {
+  fun addGameData(data: VariableSizeByteArray): Result<Unit> {
     receivedGameDataNs = System.nanoTime()
     fun doTheThing(): Result<Unit> {
       val game =
@@ -469,7 +470,7 @@ class KailleraUser(
           response[i] = 0
         }
         lostInput.add(data)
-        queueEvent(GameDataEvent(game as KailleraGameImpl, response))
+        queueEvent(GameDataEvent(game, VariableSizeByteArray(response)))
         frameCount++
       } else {
         // lostInput.add(data);

@@ -14,6 +14,7 @@ import org.emulinker.kaillera.model.GameStatus
 import org.emulinker.kaillera.model.UserStatus
 import org.emulinker.kaillera.pico.AppModule
 import org.emulinker.testing.LoggingRule
+import org.emulinker.util.VariableSizeByteArray
 import org.junit.Rule
 import org.junit.Test
 
@@ -228,11 +229,15 @@ class V086BundleTest {
         arrayOf(
           GameData(
             messageNumber = 9,
-            byteArrayOf(16, 32, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
+            VariableSizeByteArray(
+              byteArrayOf(16, 32, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+            ),
           ),
           GameData(
             messageNumber = 8,
-            byteArrayOf(16, 36, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 0, 0, 0, 0, 0),
+            VariableSizeByteArray(
+              byteArrayOf(16, 36, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 0, 0, 0, 0, 0)
+            ),
           ),
           // Technically AllReady(messageNumber = 7) is also here, but discarded because already
           // seen.
@@ -254,11 +259,15 @@ class V086BundleTest {
         arrayOf(
           GameData(
             messageNumber = 9,
-            byteArrayOf(16, 32, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
+            VariableSizeByteArray(
+              byteArrayOf(16, 32, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+            ),
           ),
           GameData(
             messageNumber = 8,
-            byteArrayOf(16, 36, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 0, 0, 0, 0, 0),
+            VariableSizeByteArray(
+              byteArrayOf(16, 36, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 0, 0, 0, 0, 0)
+            ),
           ),
           // Technically AllReady(messageNumber = 7) is also here, but discarded because already
           // seen.

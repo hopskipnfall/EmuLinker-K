@@ -130,7 +130,6 @@ abstract class V086Message : ByteBufferMessage() {
 
     @Throws(ParseException::class, MessageFormatException::class)
     fun parse(messageNumber: Int, messageLength: Int, buffer: ByteBuffer): V086Message {
-
       val messageType = buffer.get()
 
       val serializer =
@@ -196,6 +195,7 @@ abstract class V086Message : ByteBufferMessage() {
       return message
     }
 
+    @Deprecated("This isn't working")
     @Throws(ParseException::class, MessageFormatException::class)
     fun parse(messageNumber: Int, messageLength: Int, packet: Source): V086Message {
       val messageType = packet.readByte()

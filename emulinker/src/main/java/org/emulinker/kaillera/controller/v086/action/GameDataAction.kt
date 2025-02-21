@@ -26,7 +26,9 @@ object GameDataAction : V086Action<GameData>, V086GameEventHandler<GameDataEvent
           logger.atWarning().atMostEvery(5, TimeUnit.SECONDS).withCause(e).log("Game data error")
           if (e.response != null) {
             try {
-              clientHandler.send(GameData.create(clientHandler.nextMessageNumber, e.response!!))
+              clientHandler.send(
+                GameData.createAndMakeDeepCopy(clientHandler.nextMessageNumber, e.response!!)
+              )
             } catch (e2: MessageFormatException) {
               logger.atSevere().withCause(e2).log("Failed to construct GameData message")
             }
@@ -43,7 +45,7 @@ object GameDataAction : V086Action<GameData>, V086GameEventHandler<GameDataEvent
     if (key < 0) {
       clientHandler.serverGameDataCache.add(data)
       try {
-        clientHandler.send(GameData.create(clientHandler.nextMessageNumber, data))
+        clientHandler.send(GameData.createAndMakeDeepCopy(clientHandler.nextMessageNumber, data))
       } catch (e: MessageFormatException) {
         logger.atSevere().withCause(e).log("Failed to construct GameData message")
       }
