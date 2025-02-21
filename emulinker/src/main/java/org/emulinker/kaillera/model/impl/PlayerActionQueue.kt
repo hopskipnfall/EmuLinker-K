@@ -46,7 +46,7 @@ class PlayerActionQueue(
   @Throws(PlayerTimeoutException::class)
   fun getActionAndWriteToArray(
     playerIndex: Int,
-    writeToArray: ByteArray,
+    writeToArray: VariableSizeByteArray,
     writeAtIndex: Int,
     actionLength: Int,
   ) {

@@ -58,6 +58,10 @@ class VariableSizeByteArray(initialData: ByteArray = EMPTY_DATA, private val slo
 
   operator fun get(index: Int): Byte = bytes[index]
 
+  operator fun set(index: Int, value: Byte) {
+    bytes[index] = value
+  }
+
   companion object {
     val EMPTY_DATA = byteArrayOf()
 
@@ -71,8 +75,7 @@ class VariableSizeByteArray(initialData: ByteArray = EMPTY_DATA, private val slo
           }
         )
         .setExpiration(Expiration.never())
-        .setSize(100)
-        .setPreciseLeakDetectionEnabled(CompiledFlags.PRERELEASE_BUILD)
+        .setSize(1_000)
         .build()
   }
 }

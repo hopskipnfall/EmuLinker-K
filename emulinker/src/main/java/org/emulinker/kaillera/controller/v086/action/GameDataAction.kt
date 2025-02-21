@@ -46,20 +46,24 @@ object GameDataAction : V086Action<GameData>, V086GameEventHandler<GameDataEvent
 
   override fun handleEvent(event: GameDataEvent, clientHandler: V086ClientHandler) {
     val data = event.data
-    val key = clientHandler.serverGameDataCache.indexOf(data)
-    if (key < 0) {
-      clientHandler.serverGameDataCache.add(data)
-      try {
-        clientHandler.send(GameData.createAndMakeDeepCopy(clientHandler.nextMessageNumber, data))
-      } catch (e: MessageFormatException) {
-        logger.atSevere().withCause(e).log("Failed to construct GameData message")
+    try {
+      val key = clientHandler.serverGameDataCache.indexOf(data)
+      if (key < 0) {
+        clientHandler.serverGameDataCache.add(data)
+        try {
+          clientHandler.send(GameData.createAndMakeDeepCopy(clientHandler.nextMessageNumber, data))
+        } catch (e: MessageFormatException) {
+          logger.atSevere().withCause(e).log("Failed to construct GameData message")
+        }
+      } else {
+        try {
+          clientHandler.send(CachedGameData(clientHandler.nextMessageNumber, key))
+        } catch (e: MessageFormatException) {
+          logger.atSevere().withCause(e).log("Failed to construct CachedGameData message")
+        }
       }
-    } else {
-      try {
-        clientHandler.send(CachedGameData(clientHandler.nextMessageNumber, key))
-      } catch (e: MessageFormatException) {
-        logger.atSevere().withCause(e).log("Failed to construct CachedGameData message")
-      }
+    } finally {
+      data.release()
     }
   }
 

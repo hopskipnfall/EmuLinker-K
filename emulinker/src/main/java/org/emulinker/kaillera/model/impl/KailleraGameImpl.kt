@@ -697,7 +697,8 @@ class KailleraGameImpl(
         }
       ) {
         waitingOnData = false
-        val response = ByteArray(user.arraySize)
+        val response = VariableSizeByteArray.pool.tryClaim()
+        response.size = user.arraySize
         for (actionCounter in 0 until actionsPerMessage) {
           for (playerActionQueueIndex in playerActionQueuesCopy.indices) {
             // TODO(nue): Consider removing this loop, I'm fairly certain it isn't needed.
@@ -732,8 +733,7 @@ class KailleraGameImpl(
             )
           )
         }
-        // TODO(nue): Reuse a VariableSizeByteArray here.
-        player.queueEvent(GameDataEvent(this, VariableSizeByteArray(response)))
+        player.queueEvent(GameDataEvent(this, response))
         player.updateUserDrift()
         val firstPlayer = players.firstOrNull()
         if (firstPlayer != null && firstPlayer.id == player.id) {
