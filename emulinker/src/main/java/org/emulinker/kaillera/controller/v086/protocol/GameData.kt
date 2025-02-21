@@ -1,5 +1,7 @@
 package org.emulinker.kaillera.controller.v086.protocol
 
+// import org.emulinker.util.get
+import com.google.common.flogger.FluentLogger
 import io.ktor.utils.io.core.readAvailable
 import io.ktor.utils.io.core.remaining
 import io.netty.buffer.ByteBuf
@@ -11,6 +13,7 @@ import org.emulinker.util.UnsignedUtil.getUnsignedShort
 import org.emulinker.util.UnsignedUtil.putUnsignedShort
 import org.emulinker.util.UnsignedUtil.readUnsignedShortLittleEndian
 import org.emulinker.util.VariableSizeByteArray
+import org.emulinker.util.get
 import org.emulinker.util.put
 
 /**
@@ -93,6 +96,7 @@ constructor(override var messageNumber: Int, var gameData: VariableSizeByteArray
   }
 
   object GameDataSerializer : MessageSerializer<GameData> {
+    private val logger = FluentLogger.forEnclosingClass()
     override val messageTypeId: Byte = ID
 
     override fun read(buffer: ByteBuf, messageNumber: Int): Result<GameData> {
@@ -118,9 +122,10 @@ constructor(override var messageNumber: Int, var gameData: VariableSizeByteArray
       if (dataSize <= 0 || dataSize > buffer.remaining()) {
         return parseFailure("Invalid Game Data format: dataSize = $dataSize")
       }
-      val gameData = ByteArray(dataSize)
+      val gameData = VariableSizeByteArray.pool.tryClaim()
+      gameData.size = dataSize
       buffer.get(gameData)
-      return Result.success(GameData(messageNumber, VariableSizeByteArray(gameData)))
+      return Result.success(GameData(messageNumber, gameData))
     }
 
     override fun read(packet: Source, messageNumber: Int): Result<GameData> {

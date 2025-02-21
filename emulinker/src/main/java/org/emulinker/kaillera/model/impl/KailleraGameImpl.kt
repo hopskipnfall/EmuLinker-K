@@ -732,6 +732,7 @@ class KailleraGameImpl(
             )
           )
         }
+        // TODO(nue): Reuse a VariableSizeByteArray here.
         player.queueEvent(GameDataEvent(this, VariableSizeByteArray(response)))
         player.updateUserDrift()
         val firstPlayer = players.firstOrNull()

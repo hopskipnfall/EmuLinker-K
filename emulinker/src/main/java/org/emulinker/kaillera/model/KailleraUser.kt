@@ -465,12 +465,8 @@ class KailleraUser(
       if (frameCount < totalDelay) {
         bytesPerAction = data.size / connectionType.byteValue
         arraySize = game.playerActionQueues!!.size * connectionType.byteValue * bytesPerAction
-        val response = ByteArray(arraySize)
-        for (i in response.indices) {
-          response[i] = 0
-        }
         lostInput.add(data)
-        queueEvent(GameDataEvent(game, VariableSizeByteArray(response)))
+        queueEvent(GameDataEvent(game, VariableSizeByteArray(ByteArray(arraySize) { 0 })))
         frameCount++
       } else {
         // lostInput.add(data);

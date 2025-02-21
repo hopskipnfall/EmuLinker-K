@@ -133,7 +133,11 @@ abstract class V086Message : ByteBufferMessage() {
       val messageType = buffer.get()
 
       val serializer =
-        checkNotNull(SERIALIZERS[messageType]) { "Unrecognized message ID: $messageType" }
+        when (messageType) {
+          GameData.ID -> GameData.GameDataSerializer
+          CachedGameData.ID -> CachedGameData.CachedGameDataSerializer
+          else -> checkNotNull(SERIALIZERS[messageType]) { "Unrecognized message ID: $messageType" }
+        }
 
       var parseResult: Result<V086Message> = serializer.read(buffer, messageNumber)
       parseResult.onSuccess { parseResult = it.validateMessageNumber() }
