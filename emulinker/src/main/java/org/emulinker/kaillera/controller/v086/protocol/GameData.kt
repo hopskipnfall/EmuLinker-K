@@ -139,7 +139,7 @@ constructor(override var messageNumber: Int, var gameData: VariableSizeByteArray
       }
       val gameData = ByteArray(dataSize)
       packet.readAvailable(gameData) // TODO(nue): This might not work?
-      return Result.success(createAndMakeDeepCopy(messageNumber, VariableSizeByteArray(gameData)))
+      return Result.success(GameData(messageNumber, VariableSizeByteArray(gameData)))
     }
 
     override fun write(buffer: ByteBuf, message: GameData) {

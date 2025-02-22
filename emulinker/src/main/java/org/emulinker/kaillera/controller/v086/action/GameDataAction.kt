@@ -51,7 +51,7 @@ object GameDataAction : V086Action<GameData>, V086GameEventHandler<GameDataEvent
       if (key < 0) {
         clientHandler.serverGameDataCache.add(data)
         try {
-          clientHandler.send(GameData.createAndMakeDeepCopy(clientHandler.nextMessageNumber, data))
+          clientHandler.send(GameData(clientHandler.nextMessageNumber, data))
         } catch (e: MessageFormatException) {
           logger.atSevere().withCause(e).log("Failed to construct GameData message")
         }
