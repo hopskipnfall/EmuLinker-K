@@ -33,7 +33,6 @@ import org.emulinker.kaillera.model.event.UserQuitEvent
 import org.emulinker.kaillera.model.exception.*
 import org.emulinker.kaillera.model.impl.AutoFireDetector
 import org.emulinker.kaillera.model.impl.AutoFireDetectorFactory
-import org.emulinker.kaillera.model.impl.KailleraGameImpl
 import org.emulinker.kaillera.model.impl.Trivia
 import org.emulinker.kaillera.pico.AppModule
 import org.emulinker.kaillera.pico.CompiledFlags
@@ -72,7 +71,7 @@ class KailleraServer(
 
   val usersMap: MutableMap<Int, KailleraUser> = ConcurrentHashMap(flags.maxUsers)
 
-  var gamesMap: MutableMap<Int, KailleraGameImpl> = ConcurrentHashMap(flags.maxGames)
+  var gamesMap: MutableMap<Int, KailleraGame> = ConcurrentHashMap(flags.maxGames)
 
   var trivia: Trivia? = null
 
@@ -650,10 +649,10 @@ class KailleraServer(
         )
       }
     }
-    val game: KailleraGameImpl?
+    val game: KailleraGame?
     val gameID = getNextGameID()
     game =
-      KailleraGameImpl(
+      KailleraGame(
         gameID,
         romName,
         (user as KailleraUser?)!!,
@@ -708,7 +707,7 @@ class KailleraServer(
       logger.atSevere().log("%s close %s failed: not in list: %s", user, game, game)
       return
     }
-    (game as KailleraGameImpl).close(user)
+    game.close(user)
     gamesMap.remove(game.id)
     logger.atInfo().log("%s closed: %s", user, game)
     addEvent(GameClosedEvent(this, game))

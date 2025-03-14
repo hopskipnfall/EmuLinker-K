@@ -18,10 +18,10 @@ import org.emulinker.kaillera.controller.v086.V086ClientHandler
 import org.emulinker.kaillera.controller.v086.protocol.*
 import org.emulinker.kaillera.lookingforgame.TwitterBroadcaster
 import org.emulinker.kaillera.model.ConnectionType
+import org.emulinker.kaillera.model.KailleraGame
 import org.emulinker.kaillera.model.event.GameChatEvent
 import org.emulinker.kaillera.model.exception.ActionException
 import org.emulinker.kaillera.model.exception.GameChatException
-import org.emulinker.kaillera.model.impl.KailleraGameImpl
 import org.emulinker.util.EmuLang
 import org.emulinker.util.EmuLang.getStringOrNull
 import org.emulinker.util.EmuUtil.min
@@ -507,8 +507,7 @@ class GameChatAction(
               val targetFrameDelay = laggiestPlayer.frameDelay + 1
 
               fun pingThresholdForDelay(delay: Int, connectionType: ConnectionType): Duration =
-                ((delay - 1.0) * connectionType.byteValue.toInt() / KailleraGameImpl.GAME_FPS)
-                  .seconds
+                ((delay - 1.0) * connectionType.byteValue.toInt() / KailleraGame.GAME_FPS).seconds
 
               val suggestedFakePing: Duration =
                 arrayOf(
