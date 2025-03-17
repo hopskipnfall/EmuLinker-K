@@ -1,7 +1,5 @@
 package org.emulinker.kaillera.model
 
-import org.emulinker.kaillera.model.impl.KailleraGameImpl
-
 enum class UserStatus(val byteValue: Byte, private val readableName: String) {
   PLAYING(0, "Playing"),
   IDLE(1, "Idle"),
@@ -52,7 +50,7 @@ enum class ConnectionType(
 
   override fun toString() = readableName
 
-  fun getUpdatesPerSecond(gameFps: Int = KailleraGameImpl.GAME_FPS): Double =
+  fun getUpdatesPerSecond(gameFps: Int = KailleraGame.GAME_FPS): Double =
     getUpdatesPerSecond(gameFps.toDouble())
 
   fun getUpdatesPerSecond(gameFps: Double): Double =

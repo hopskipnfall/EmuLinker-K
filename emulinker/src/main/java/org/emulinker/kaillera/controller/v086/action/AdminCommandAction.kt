@@ -13,7 +13,6 @@ import org.emulinker.kaillera.controller.v086.protocol.InformationMessage
 import org.emulinker.kaillera.model.KailleraServer
 import org.emulinker.kaillera.model.KailleraUser
 import org.emulinker.kaillera.model.exception.ActionException
-import org.emulinker.kaillera.model.impl.KailleraGameImpl
 import org.emulinker.kaillera.model.impl.Trivia
 import org.emulinker.util.EmuLang
 import org.emulinker.util.EmuUtil
@@ -476,7 +475,7 @@ class AdminCommandAction : V086Action<Chat> {
       scanner.next()
       val gameID = scanner.nextInt()
       val game =
-        server.getGame(gameID) as KailleraGameImpl
+        server.getGame(gameID)
           ?: throw ActionException(EmuLang.getString("AdminCommandAction.GameNotFound", gameID))
       val owner = game.owner
       val access = server.accessManager.getAccess(owner.connectSocketAddress.address)
@@ -818,7 +817,7 @@ class AdminCommandAction : V086Action<Chat> {
         sb.append(" ")
       }
       val game =
-        server.getGame(gameID) as KailleraGameImpl
+        server.getGame(gameID)
           ?: throw ActionException(EmuLang.getString("AdminCommandAction.GameNotFound", gameID))
       game.announce(sb.toString())
     } catch (e: NoSuchElementException) {

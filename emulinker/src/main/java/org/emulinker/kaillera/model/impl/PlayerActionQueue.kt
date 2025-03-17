@@ -15,7 +15,7 @@ class PlayerActionQueue(
   private var tail = 0
 
   /**
-   * Whether the queue is synced with the [KailleraGameImpl].
+   * Whether the queue is synced with the [KailleraGame].
    *
    * Synced starts as `true` at the beginning of a game, and if it ever is set to false there is no
    * path where it will resync.

@@ -24,7 +24,6 @@ import org.emulinker.kaillera.model.event.StopFlagEvent
 import org.emulinker.kaillera.model.event.UserQuitEvent
 import org.emulinker.kaillera.model.event.UserQuitGameEvent
 import org.emulinker.kaillera.model.exception.*
-import org.emulinker.kaillera.model.impl.KailleraGameImpl
 import org.emulinker.util.EmuLang
 import org.emulinker.util.TimeOffsetCache
 
@@ -204,7 +203,7 @@ class KailleraUser(
     lastKeepAlive = clock.now()
   }
 
-  var game: KailleraGameImpl? = null
+  var game: KailleraGame? = null
     set(value) {
       if (value == null) {
         playerNumber = -1
@@ -338,7 +337,7 @@ class KailleraUser(
     //
     // }
     playerNumber = game.join(this)
-    this.game = game as KailleraGameImpl
+    this.game = game
     gameDataErrorTime = -1
     return game
   }
@@ -469,7 +468,7 @@ class KailleraUser(
           response[i] = 0
         }
         lostInput.add(data)
-        queueEvent(GameDataEvent(game as KailleraGameImpl, response))
+        queueEvent(GameDataEvent(game, response))
         frameCount++
       } else {
         // lostInput.add(data);
