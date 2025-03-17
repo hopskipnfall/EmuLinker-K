@@ -20,39 +20,50 @@ object GameDataAction : V086Action<GameData>, V086GameEventHandler<GameDataEvent
     val user = clientHandler.user
     val data = message.gameData
     clientHandler.clientGameDataCache.add(data)
-    user.addGameData(data).onFailure { e ->
-      when (e) {
-        is GameDataException -> {
-          logger.atWarning().atMostEvery(5, TimeUnit.SECONDS).withCause(e).log("Game data error")
-          if (e.response != null) {
-            try {
-              clientHandler.send(GameData.create(clientHandler.nextMessageNumber, e.response!!))
-            } catch (e2: MessageFormatException) {
-              logger.atSevere().withCause(e2).log("Failed to construct GameData message")
+    try {
+      user.addGameData(data).onFailure { e ->
+        when (e) {
+          is GameDataException -> {
+            logger.atWarning().atMostEvery(5, TimeUnit.SECONDS).withCause(e).log("Game data error")
+            if (e.response != null) {
+              try {
+                clientHandler.send(
+                  GameData.createAndMakeDeepCopy(clientHandler.nextMessageNumber, e.response!!)
+                )
+              } catch (e2: MessageFormatException) {
+                logger.atSevere().withCause(e2).log("Failed to construct GameData message")
+              }
             }
           }
+
+          else -> throw e
         }
-        else -> throw e
       }
+    } finally {
+      data.release()
     }
   }
 
   override fun handleEvent(event: GameDataEvent, clientHandler: V086ClientHandler) {
     val data = event.data
-    val key = clientHandler.serverGameDataCache.indexOf(data)
-    if (key < 0) {
-      clientHandler.serverGameDataCache.add(data)
-      try {
-        clientHandler.send(GameData.create(clientHandler.nextMessageNumber, data))
-      } catch (e: MessageFormatException) {
-        logger.atSevere().withCause(e).log("Failed to construct GameData message")
+    try {
+      val key = clientHandler.serverGameDataCache.indexOf(data)
+      if (key < 0) {
+        clientHandler.serverGameDataCache.add(data)
+        try {
+          clientHandler.send(GameData(clientHandler.nextMessageNumber, data))
+        } catch (e: MessageFormatException) {
+          logger.atSevere().withCause(e).log("Failed to construct GameData message")
+        }
+      } else {
+        try {
+          clientHandler.send(CachedGameData(clientHandler.nextMessageNumber, key))
+        } catch (e: MessageFormatException) {
+          logger.atSevere().withCause(e).log("Failed to construct CachedGameData message")
+        }
       }
-    } else {
-      try {
-        clientHandler.send(CachedGameData(clientHandler.nextMessageNumber, key))
-      } catch (e: MessageFormatException) {
-        logger.atSevere().withCause(e).log("Failed to construct CachedGameData message")
-      }
+    } finally {
+      data.release()
     }
   }
 

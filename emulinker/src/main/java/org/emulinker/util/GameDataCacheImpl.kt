@@ -5,7 +5,7 @@ import java.lang.IndexOutOfBoundsException
 class GameDataCacheImpl(capacity: Int) : GameDataCache {
   private var lastRetrievedIndex = -1
 
-  private var array: Array<ByteArray?> = arrayOfNulls(capacity)
+  private var array: Array<VariableSizeByteArray> = Array(capacity) { VariableSizeByteArray() }
 
   // head points to the first logical element in the array, and
   // tail points to the element following the last. This means
@@ -17,24 +17,25 @@ class GameDataCacheImpl(capacity: Int) : GameDataCache {
   override var size = 0
     private set
 
-  override fun containsAll(elements: Collection<ByteArray>): Boolean = elements.all { contains(it) }
+  override fun containsAll(elements: Collection<VariableSizeByteArray>): Boolean =
+    elements.all { contains(it) }
 
   override fun isEmpty(): Boolean = size == 0
 
-  override fun iterator(): Iterator<ByteArray> = array.asSequence().filterNotNull().iterator()
+  override fun iterator(): Iterator<VariableSizeByteArray> = array.iterator()
 
-  override fun contains(element: ByteArray): Boolean = indexOf(element) >= 0
+  override fun contains(element: VariableSizeByteArray): Boolean = indexOf(element) >= 0
 
-  override fun indexOf(data: ByteArray): Int {
+  override fun indexOf(data: VariableSizeByteArray): Int {
     // Often the state is exactly the same from call to call, so it helps to check the last index
     // returned first.
     if (lastRetrievedIndex >= 0) {
-      if (data.contentEquals(array[convert(lastRetrievedIndex)])) {
+      if (data == (array[convert(lastRetrievedIndex)])) {
         return lastRetrievedIndex
       }
     }
     for (i in size - 1 downTo 0) {
-      if (data.contentEquals(array[convert(i)])) {
+      if (data == (array[convert(i)])) {
         lastRetrievedIndex = i
         return i
       }
@@ -43,66 +44,55 @@ class GameDataCacheImpl(capacity: Int) : GameDataCache {
     return -1
   }
 
-  override operator fun get(index: Int): ByteArray? {
+  override operator fun get(index: Int): VariableSizeByteArray {
     rangeCheck(index)
     return array[convert(index)]
-  }
-
-  override operator fun set(index: Int, data: ByteArray): ByteArray? {
-    rangeCheck(index)
-    val convertedIndex = convert(index)
-    val oldValue = array[convertedIndex]
-    array[convertedIndex] = data
-    return oldValue
   }
 
   // This method is the main reason we re-wrote the class.
   // It is optimized for removing first and last elements
   // but also allows you to remove in the middle of the list.
-  override fun remove(index: Int): ByteArray? {
+  override fun remove(index: Int) {
     rangeCheck(index)
     val pos = convert(index)
-    return try {
-      array[pos]
-    } finally {
-      array[pos] = null // Let gc do its work
+    // We don't need to do
+    array[pos].size = 0 // It's effectively deleted.
 
-      // optimized for FIFO access, i.e. adding to back and
-      // removing from front
-      if (pos == head) {
+    // optimized for FIFO access, i.e. adding to back and
+    // removing from front
+    if (pos == head) {
+      // head = (head + 1) % array.length;
+      head++
+      if (head == array.size) head = 0
+    } else if (pos == tail) {
+      tail = Math.floorMod(tail - 1, array.size)
+    } else {
+      if (pos > head && pos > tail) { // tail/head/pos
+        System.arraycopy(array, head, array, head + 1, pos - head)
         // head = (head + 1) % array.length;
         head++
         if (head == array.size) head = 0
-      } else if (pos == tail) {
-        tail = Math.floorMod(tail - 1, array.size)
       } else {
-        if (pos > head && pos > tail) { // tail/head/pos
-          System.arraycopy(array, head, array, head + 1, pos - head)
-          // head = (head + 1) % array.length;
-          head++
-          if (head == array.size) head = 0
-        } else {
-          System.arraycopy(array, pos + 1, array, pos, tail - pos - 1)
-          tail = Math.floorMod(tail - 1, array.size)
-        }
+        System.arraycopy(array, pos + 1, array, pos, tail - pos - 1)
+        tail = Math.floorMod(tail - 1, array.size)
       }
-      size--
     }
+    size--
   }
 
   override fun clear() {
     for (i in 0 until size) {
-      array[convert(i)] = null
+      array[convert(i)].size = 0
     }
     size = 0
     tail = size
     head = tail
   }
 
-  override fun add(data: ByteArray): Int {
+  override fun add(data: VariableSizeByteArray): Int {
     if (size == array.size) remove(0)
     val pos = tail
-    array[tail] = data
+    data.copyTo(array[tail])
 
     // tail = ((tail + 1) % array.length);
     tail++
