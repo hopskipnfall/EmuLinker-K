@@ -30,7 +30,7 @@ On Debian/Ubuntu:
 java --version
 ```
 
-If Java 17 is not isntalled, then run
+If Java 17 is not installed, then run
 
 ```bash
 sudo apt update
