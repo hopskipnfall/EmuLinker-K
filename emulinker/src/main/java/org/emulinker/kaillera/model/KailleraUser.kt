@@ -190,14 +190,7 @@ class KailleraUser(
 
   var loggedIn = false
 
-  override fun toString(): String {
-    val n = name
-    return if (n == null) {
-      "User$id(${connectSocketAddress.address.hostAddress})"
-    } else {
-      "User$id(${if (n.length > 15) n.take(15) + "..." else n}/${connectSocketAddress.address.hostAddress})"
-    }
-  }
+  override fun toString(): String = "User[id=$id name=$name]"
 
   var name: String? = null
 
@@ -452,7 +445,7 @@ class KailleraUser(
         this.game
           ?: return Result.failure(
             GameDataException(
-              EmuLang.getString("KailleraUserImpl.GameDataErrorNotInGame"),
+              toString() + " " + EmuLang.getString("KailleraUserImpl.GameDataErrorNotInGame"),
               data,
               actionsPerMessage = connectionType.byteValue.toInt(),
               playerNumber = 1,

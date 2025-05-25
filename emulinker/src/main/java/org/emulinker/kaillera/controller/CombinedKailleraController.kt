@@ -201,7 +201,7 @@ class CombinedKailleraController(
     // This is only used by tests right now.
     if (!this::nettyChannel.isInitialized) this.nettyChannel = ctx.channel()
 
-    logger.atInfo().log("Ready to accept connections on port")
+    logger.atInfo().log("Ready to accept connections on port %d", flags.serverPort)
     super.channelRegistered(ctx)
   }
 

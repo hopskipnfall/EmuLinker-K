@@ -142,11 +142,7 @@ class KailleraGameImpl(
   }
 
   override fun toString() =
-    "Game$id(${if (romName.length > 15) romName.substring(0, 15) + "..." else romName})"
-
-  fun toDetailedString(): String {
-    return "KailleraGame[id=$id romName=$romName owner=$owner numPlayers=${players.size} status=$status]"
-  }
+    "Game[id=$id name=${if (romName.length > 15) romName.substring(0, 15) + "..." else romName}]"
 
   private val playingCount: Int
     get() = players.asSequence().filter { it.status == UserStatus.PLAYING }.count()
@@ -466,7 +462,7 @@ class KailleraGameImpl(
       /*else{
       	player.setP2P(false);
       }*/
-      logger.atInfo().log("%s: %s is player number %s", this, player, playerNumber)
+      logger.atFine().log("%s: %s is player number %s", this, player, playerNumber)
       autoFireDetector.addPlayer(player, playerNumber)
     }
     playerActionQueues = actionQueueBuilder.map { it!! }.toTypedArray()
@@ -495,10 +491,10 @@ class KailleraGameImpl(
       logger.atSevere().log("%s ready failed: %s playerActionQueues == null!", user, this)
       throw UserReadyException(EmuLang.getString("KailleraGameImpl.ReadyGameErrorInternalError"))
     }
-    logger.atInfo().log("%s (player %s) is ready to play: %s", user, playerNumber, this)
+    logger.atFine().log("%s (player %s) is ready to play: %s", user, playerNumber, this)
     playerActionQueues!![playerNumber - 1].markSynced()
     if (synchedCount == players.size) {
-      logger.atInfo().log("%s all players are ready: starting...", this)
+      logger.atFine().log("%s all players are ready: starting...", this)
       status = GameStatus.PLAYING
       isSynched = true
       startTimeoutTime = clock.now()

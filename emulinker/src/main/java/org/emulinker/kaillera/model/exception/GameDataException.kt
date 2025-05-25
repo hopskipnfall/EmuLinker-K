@@ -52,7 +52,7 @@ class GameDataException : ActionException {
 
     for (actionCounter in 0 until actionsPerMessage) {
       System.arraycopy(
-        data,
+        data.toByteArray(),
         0,
         r.bytes,
         actionCounter * (numPlayers * bytesPerAction) + (playerNumber - 1) * bytesPerAction,
