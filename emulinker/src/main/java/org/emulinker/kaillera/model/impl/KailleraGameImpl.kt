@@ -643,6 +643,7 @@ class KailleraGameImpl(
    * Adds data and suspends until all data is available, at which time it returns the sends new data
    * back to the client.
    */
+  // Pretty sure this is most of the lag.
   @Throws(GameDataException::class)
   override fun addData(
     user: KailleraUser,
@@ -666,12 +667,14 @@ class KailleraGameImpl(
     }
     // Add the data for the user to their own player queue.
     playerActionQueuesCopy[playerNumber - 1].addActions(data)
+
     autoFireDetector.addData(playerNumber, data, user.bytesPerAction)
 
     return maybeSendData(user)
   }
 
   /** @param data Only used for logging. */
+  // HERE!
   fun maybeSendData(user: KailleraUser, data: ByteArray = byteArrayOf()): Result<Unit> {
     val playerActionQueuesCopy = checkNotNull(playerActionQueues)
 
@@ -693,6 +696,7 @@ class KailleraGameImpl(
         }
       ) {
         waitingOnData = false
+        // NOTE: This can sometimes take a few ms which is not really acceptable.
         val response = VariableSizeByteArray.pool.tryClaim()
         response.size = user.arraySize
         for (actionCounter in 0 until actionsPerMessage) {

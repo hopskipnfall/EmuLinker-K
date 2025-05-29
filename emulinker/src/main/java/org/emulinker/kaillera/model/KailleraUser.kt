@@ -3,10 +3,8 @@ package org.emulinker.kaillera.model
 import com.google.common.flogger.FluentLogger
 import java.net.InetSocketAddress
 import java.util.ArrayList
-import java.util.concurrent.BlockingQueue
-import java.util.concurrent.LinkedBlockingQueue
+import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.ThreadPoolExecutor
-import java.util.concurrent.TimeUnit
 import kotlin.Throws
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
@@ -152,7 +150,7 @@ class KailleraUser(
   private var threadIsActive = false
 
   private var stopFlag = false
-  private val eventQueue: BlockingQueue<KailleraEvent> = LinkedBlockingQueue()
+  private val eventQueue = ConcurrentLinkedQueue<KailleraEvent>()
 
   var tempDelay = 0
 
@@ -438,6 +436,7 @@ class KailleraUser(
     game.ready(this, playerNumber)
   }
 
+  // Current source of the lag.
   fun addGameData(data: VariableSizeByteArray): Result<Unit> {
     receivedGameDataNs = System.nanoTime()
     fun doTheThing(): Result<Unit> {
@@ -478,7 +477,14 @@ class KailleraUser(
       return Result.success(Unit)
     }
 
-    val result = doTheThing()
+    val result: Result<Unit>
+
+    //    measureTime {
+    result = doTheThing()
+    //    }.let {
+    //      if (it > 2.milliseconds)
+    //        logger.atWarning().log("IT TOOK TOO LONG 99: %f ms", it.toMillisDouble())
+    //    }
     result.onFailure { e ->
       when (e) {
         is GameDataException -> {
@@ -545,8 +551,9 @@ class KailleraUser(
       logger.atFine().log("%s thread running...", this)
       try {
         while (!stopFlag) {
-          val event = eventQueue.poll(200, TimeUnit.SECONDS)
+          val event = eventQueue.poll()
           if (event == null) {
+            Thread.sleep(1)
             continue
           } else if (event is StopFlagEvent) {
             break
