@@ -2,14 +2,8 @@ package org.emulinker.util
 
 import java.nio.ByteBuffer
 import java.util.Arrays
-import stormpot.Allocator
-import stormpot.Expiration
-import stormpot.Pool
-import stormpot.Poolable
-import stormpot.Slot
 
-class VariableSizeByteArray(initialData: ByteArray = EMPTY_DATA, private val slot: Slot? = null) :
-  Poolable {
+class VariableSizeByteArray(initialData: ByteArray = EMPTY_DATA) {
   var bytes = initialData
     private set
 
@@ -41,10 +35,6 @@ class VariableSizeByteArray(initialData: ByteArray = EMPTY_DATA, private val slo
     return result
   }
 
-  override fun release() {
-    slot?.release(this)
-  }
-
   fun copyTo(other: VariableSizeByteArray) {
     other.size = size
     System.arraycopy(this.bytes, 0, other.bytes, 0, size)
@@ -64,18 +54,7 @@ class VariableSizeByteArray(initialData: ByteArray = EMPTY_DATA, private val slo
   companion object {
     val EMPTY_DATA = byteArrayOf()
 
-    val pool: Pool<VariableSizeByteArray> =
-      Pool.fromInline(
-          object : Allocator<VariableSizeByteArray> {
-            override fun allocate(p0: Slot): VariableSizeByteArray =
-              VariableSizeByteArray(slot = p0)
-
-            override fun deallocate(p0: VariableSizeByteArray) {}
-          }
-        )
-        .setExpiration(Expiration.never())
-        .setSize(1_000)
-        .build()
+    val pool = ObjectPool<VariableSizeByteArray>(initialSize = 100) { VariableSizeByteArray() }
   }
 }
 

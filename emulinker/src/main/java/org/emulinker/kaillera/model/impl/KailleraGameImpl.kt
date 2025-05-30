@@ -696,8 +696,7 @@ class KailleraGameImpl(
         }
       ) {
         waitingOnData = false
-        // NOTE: This can sometimes take a few ms which is not really acceptable.
-        val response = VariableSizeByteArray.pool.tryClaim()
+        val response = VariableSizeByteArray.pool.claim()
         response.size = user.arraySize
         for (actionCounter in 0 until actionsPerMessage) {
           for (playerActionQueueIndex in playerActionQueuesCopy.indices) {

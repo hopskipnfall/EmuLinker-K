@@ -122,7 +122,7 @@ constructor(override var messageNumber: Int, var gameData: VariableSizeByteArray
       if (dataSize <= 0 || dataSize > buffer.remaining()) {
         return parseFailure("Invalid Game Data format: dataSize = $dataSize")
       }
-      val gameData = VariableSizeByteArray.pool.tryClaim()
+      val gameData = VariableSizeByteArray.pool.claim()
       gameData.size = dataSize
       buffer.get(gameData)
       return Result.success(GameData(messageNumber, gameData))

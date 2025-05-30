@@ -8,6 +8,7 @@ import org.emulinker.kaillera.controller.v086.protocol.CachedGameData
 import org.emulinker.kaillera.controller.v086.protocol.GameData
 import org.emulinker.kaillera.model.event.GameDataEvent
 import org.emulinker.kaillera.model.exception.GameDataException
+import org.emulinker.util.VariableSizeByteArray
 
 object GameDataAction : V086Action<GameData>, V086GameEventHandler<GameDataEvent> {
   override val actionPerformedCount = 0
@@ -40,7 +41,7 @@ object GameDataAction : V086Action<GameData>, V086GameEventHandler<GameDataEvent
         }
       }
     } finally {
-      data.release()
+      VariableSizeByteArray.pool.recycle(data)
     }
   }
 
@@ -63,7 +64,7 @@ object GameDataAction : V086Action<GameData>, V086GameEventHandler<GameDataEvent
         }
       }
     } finally {
-      data.release()
+      VariableSizeByteArray.pool.recycle(data)
     }
   }
 
