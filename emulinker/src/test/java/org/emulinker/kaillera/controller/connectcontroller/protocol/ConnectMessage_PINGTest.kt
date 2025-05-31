@@ -22,7 +22,7 @@ class ConnectMessage_PINGTest : ProtocolBaseTest() {
   }
 
   private companion object {
-    val MESSAGE = ConnectMessage_PING()
+    val MESSAGE = ConnectMessage_PING
 
     const val BODY_BYTES = "50,49,4E,47,00"
   }

@@ -54,6 +54,7 @@ class CombinedKailleraController(
     port: Int
   ): EmbeddedServer<NettyApplicationEngine, NettyApplicationEngine.Configuration> =
     embeddedServer(Netty, port = port) {
+        // Note: This is a fixed number of threads.
         val group = NioEventLoopGroup(flags.nettyFlags)
 
         Runtime.getRuntime()
@@ -113,6 +114,8 @@ class CombinedKailleraController(
     remoteSocketAddress: InetSocketAddress,
     ctx: ChannelHandlerContext,
   ) {
+    // Note: The the port also has to match. Users relaunching their kaillera clients and connecting
+    // again will most likely be connecting from a different port.
     var handler = clientHandlers[remoteSocketAddress]
     if (handler == null) {
       // User is new. It's either a ConnectMessage or it's the user's first message after
@@ -122,7 +125,7 @@ class CombinedKailleraController(
         when (val connectMessage = connectMessageResult.getOrThrow()) {
           is ConnectMessage_PING -> {
             val buf = nettyChannel.alloc().buffer(bufferSize)
-            ConnectMessage_PONG().writeTo(buf)
+            ConnectMessage_PONG.writeTo(buf)
             ctx.writeAndFlush(DatagramPacket(buf, remoteSocketAddress))
           }
           is RequestPrivateKailleraPortRequest -> {
@@ -179,8 +182,9 @@ class CombinedKailleraController(
           return
         }
 
-      clientHandlers[remoteSocketAddress] = handler!!
+      clientHandlers[remoteSocketAddress] = handler
     }
+    // I do not like blocking on a request thread.
     synchronized(handler.requestHandlerMutex) {
       handler.handleReceived(buffer, remoteSocketAddress)
     }
