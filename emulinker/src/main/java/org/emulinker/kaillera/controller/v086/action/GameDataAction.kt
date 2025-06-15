@@ -8,6 +8,7 @@ import org.emulinker.kaillera.controller.v086.protocol.CachedGameData
 import org.emulinker.kaillera.controller.v086.protocol.GameData
 import org.emulinker.kaillera.model.event.GameDataEvent
 import org.emulinker.kaillera.model.exception.GameDataException
+import org.emulinker.kaillera.pico.CompiledFlags
 import org.emulinker.util.VariableSizeByteArray
 
 object GameDataAction : V086Action<GameData>, V086GameEventHandler<GameDataEvent> {
@@ -41,7 +42,7 @@ object GameDataAction : V086Action<GameData>, V086GameEventHandler<GameDataEvent
         }
       }
     } finally {
-      VariableSizeByteArray.pool.recycle(data)
+      if (CompiledFlags.USE_BYTE_ARRAY_POOL) VariableSizeByteArray.pool.recycle(data)
     }
   }
 
@@ -64,7 +65,7 @@ object GameDataAction : V086Action<GameData>, V086GameEventHandler<GameDataEvent
         }
       }
     } finally {
-      VariableSizeByteArray.pool.recycle(data)
+      if (CompiledFlags.USE_BYTE_ARRAY_POOL) VariableSizeByteArray.pool.recycle(data)
     }
   }
 

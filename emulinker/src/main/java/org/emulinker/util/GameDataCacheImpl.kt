@@ -1,11 +1,12 @@
 package org.emulinker.util
 
 import java.lang.IndexOutOfBoundsException
+import org.emulinker.kaillera.pico.CompiledFlags
 
 class GameDataCacheImpl(capacity: Int) : GameDataCache {
   private var lastRetrievedIndex = -1
 
-  private var array: Array<VariableSizeByteArray> = Array(capacity) { VariableSizeByteArray() }
+  private var array: Array<VariableSizeByteArray?> = Array(capacity) { VariableSizeByteArray() }
 
   // head points to the first logical element in the array, and
   // tail points to the element following the last. This means
@@ -22,7 +23,8 @@ class GameDataCacheImpl(capacity: Int) : GameDataCache {
 
   override fun isEmpty(): Boolean = size == 0
 
-  override fun iterator(): Iterator<VariableSizeByteArray> = array.iterator()
+  override fun iterator(): Iterator<VariableSizeByteArray> =
+    array.asSequence().filterNotNull().iterator()
 
   override fun contains(element: VariableSizeByteArray): Boolean = indexOf(element) >= 0
 
@@ -30,12 +32,12 @@ class GameDataCacheImpl(capacity: Int) : GameDataCache {
     // Often the state is exactly the same from call to call, so it helps to check the last index
     // returned first.
     if (lastRetrievedIndex >= 0) {
-      if (data == (array[convert(lastRetrievedIndex)])) {
+      if (data == array[convert(lastRetrievedIndex)]) {
         return lastRetrievedIndex
       }
     }
     for (i in size - 1 downTo 0) {
-      if (data == (array[convert(i)])) {
+      if (data == array[convert(i)]) {
         lastRetrievedIndex = i
         return i
       }
@@ -46,7 +48,7 @@ class GameDataCacheImpl(capacity: Int) : GameDataCache {
 
   override operator fun get(index: Int): VariableSizeByteArray {
     rangeCheck(index)
-    return array[convert(index)]
+    return array[convert(index)]!!
   }
 
   // This method is the main reason we re-wrote the class.
@@ -55,8 +57,11 @@ class GameDataCacheImpl(capacity: Int) : GameDataCache {
   override fun remove(index: Int) {
     rangeCheck(index)
     val pos = convert(index)
-    // We don't need to do
-    array[pos].size = 0 // It's effectively deleted.
+    if (CompiledFlags.USE_BYTE_ARRAY_POOL) {
+      array[pos]!!.size = 0 // It's effectively deleted.
+    } else {
+      array[pos] = null
+    }
 
     // optimized for FIFO access, i.e. adding to back and
     // removing from front
@@ -82,7 +87,7 @@ class GameDataCacheImpl(capacity: Int) : GameDataCache {
 
   override fun clear() {
     for (i in 0 until size) {
-      array[convert(i)].size = 0
+      array[convert(i)]!!.size = 0
     }
     size = 0
     tail = size
@@ -92,7 +97,11 @@ class GameDataCacheImpl(capacity: Int) : GameDataCache {
   override fun add(data: VariableSizeByteArray): Int {
     if (size == array.size) remove(0)
     val pos = tail
-    data.copyTo(array[tail])
+    if (CompiledFlags.USE_BYTE_ARRAY_POOL) {
+      data.copyTo(array[tail]!!)
+    } else {
+      array[tail] = data
+    }
 
     // tail = ((tail + 1) % array.length);
     tail++

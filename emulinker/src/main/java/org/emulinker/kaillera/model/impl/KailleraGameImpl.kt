@@ -38,6 +38,7 @@ import org.emulinker.kaillera.model.exception.JoinGameException
 import org.emulinker.kaillera.model.exception.QuitGameException
 import org.emulinker.kaillera.model.exception.StartGameException
 import org.emulinker.kaillera.model.exception.UserReadyException
+import org.emulinker.kaillera.pico.CompiledFlags
 import org.emulinker.util.EmuLang
 import org.emulinker.util.EmuUtil.threadSleep
 import org.emulinker.util.EmuUtil.toMillisDouble
@@ -696,7 +697,12 @@ class KailleraGameImpl(
         }
       ) {
         waitingOnData = false
-        val response = VariableSizeByteArray.pool.claim()
+        val response =
+          if (CompiledFlags.USE_BYTE_ARRAY_POOL) {
+            VariableSizeByteArray.pool.claim()
+          } else {
+            VariableSizeByteArray()
+          }
         response.size = user.arraySize
         for (actionCounter in 0 until actionsPerMessage) {
           for (playerActionQueueIndex in playerActionQueuesCopy.indices) {

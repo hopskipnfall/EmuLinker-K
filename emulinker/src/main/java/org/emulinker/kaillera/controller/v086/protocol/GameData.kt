@@ -1,7 +1,5 @@
 package org.emulinker.kaillera.controller.v086.protocol
 
-// import org.emulinker.util.get
-import com.google.common.flogger.FluentLogger
 import io.ktor.utils.io.core.readAvailable
 import io.ktor.utils.io.core.remaining
 import io.netty.buffer.ByteBuf
@@ -9,6 +7,7 @@ import java.nio.ByteBuffer
 import kotlinx.io.Source
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086Utils
+import org.emulinker.kaillera.pico.CompiledFlags
 import org.emulinker.util.UnsignedUtil.getUnsignedShort
 import org.emulinker.util.UnsignedUtil.putUnsignedShort
 import org.emulinker.util.UnsignedUtil.readUnsignedShortLittleEndian
@@ -96,7 +95,6 @@ constructor(override var messageNumber: Int, var gameData: VariableSizeByteArray
   }
 
   object GameDataSerializer : MessageSerializer<GameData> {
-    private val logger = FluentLogger.forEnclosingClass()
     override val messageTypeId: Byte = ID
 
     override fun read(buffer: ByteBuf, messageNumber: Int): Result<GameData> {
@@ -122,7 +120,12 @@ constructor(override var messageNumber: Int, var gameData: VariableSizeByteArray
       if (dataSize <= 0 || dataSize > buffer.remaining()) {
         return parseFailure("Invalid Game Data format: dataSize = $dataSize")
       }
-      val gameData = VariableSizeByteArray.pool.claim()
+      val gameData =
+        if (CompiledFlags.USE_BYTE_ARRAY_POOL) {
+          VariableSizeByteArray.pool.claim()
+        } else {
+          VariableSizeByteArray()
+        }
       gameData.size = dataSize
       buffer.get(gameData)
       return Result.success(GameData(messageNumber, gameData))
