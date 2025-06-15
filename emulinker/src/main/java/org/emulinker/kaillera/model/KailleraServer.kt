@@ -176,7 +176,7 @@ class KailleraServer(
       )
     user.status = UserStatus.CONNECTING
     logger
-      .atInfo()
+      .atFine()
       .log(
         "%s attempting new connection using protocol %s from %s",
         user,

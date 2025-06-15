@@ -11,6 +11,7 @@ import org.emulinker.kaillera.model.exception.QuitGameException
 import org.emulinker.kaillera.model.exception.StartGameException
 import org.emulinker.kaillera.model.exception.UserReadyException
 import org.emulinker.kaillera.model.impl.PlayerActionQueue
+import org.emulinker.util.VariableSizeByteArray
 
 interface KailleraGame {
   val clientType: String?
@@ -48,7 +49,7 @@ interface KailleraGame {
 
   @Throws(UserReadyException::class) fun ready(user: KailleraUser?, playerNumber: Int)
 
-  fun addData(user: KailleraUser, playerNumber: Int, data: ByteArray): Result<Unit>
+  fun addData(user: KailleraUser, playerNumber: Int, data: VariableSizeByteArray): Result<Unit>
 
   @Throws(DropGameException::class) fun drop(user: KailleraUser, playerNumber: Int)
 

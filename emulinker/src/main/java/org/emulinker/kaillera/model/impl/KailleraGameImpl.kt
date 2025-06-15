@@ -38,10 +38,12 @@ import org.emulinker.kaillera.model.exception.JoinGameException
 import org.emulinker.kaillera.model.exception.QuitGameException
 import org.emulinker.kaillera.model.exception.StartGameException
 import org.emulinker.kaillera.model.exception.UserReadyException
+import org.emulinker.kaillera.pico.CompiledFlags
 import org.emulinker.util.EmuLang
 import org.emulinker.util.EmuUtil.threadSleep
 import org.emulinker.util.EmuUtil.toMillisDouble
 import org.emulinker.util.TimeOffsetCache
+import org.emulinker.util.VariableSizeByteArray
 import org.koin.core.component.KoinComponent
 
 class KailleraGameImpl(
@@ -141,11 +143,7 @@ class KailleraGameImpl(
   }
 
   override fun toString() =
-    "Game$id(${if (romName.length > 15) romName.substring(0, 15) + "..." else romName})"
-
-  fun toDetailedString(): String {
-    return "KailleraGame[id=$id romName=$romName owner=$owner numPlayers=${players.size} status=$status]"
-  }
+    "Game[id=$id name=${if (romName.length > 15) romName.substring(0, 15) + "..." else romName}]"
 
   private val playingCount: Int
     get() = players.asSequence().filter { it.status == UserStatus.PLAYING }.count()
@@ -465,7 +463,7 @@ class KailleraGameImpl(
       /*else{
       	player.setP2P(false);
       }*/
-      logger.atInfo().log("%s: %s is player number %s", this, player, playerNumber)
+      logger.atFine().log("%s: %s is player number %s", this, player, playerNumber)
       autoFireDetector.addPlayer(player, playerNumber)
     }
     playerActionQueues = actionQueueBuilder.map { it!! }.toTypedArray()
@@ -494,10 +492,10 @@ class KailleraGameImpl(
       logger.atSevere().log("%s ready failed: %s playerActionQueues == null!", user, this)
       throw UserReadyException(EmuLang.getString("KailleraGameImpl.ReadyGameErrorInternalError"))
     }
-    logger.atInfo().log("%s (player %s) is ready to play: %s", user, playerNumber, this)
+    logger.atFine().log("%s (player %s) is ready to play: %s", user, playerNumber, this)
     playerActionQueues!![playerNumber - 1].markSynced()
     if (synchedCount == players.size) {
-      logger.atInfo().log("%s all players are ready: starting...", this)
+      logger.atFine().log("%s all players are ready: starting...", this)
       status = GameStatus.PLAYING
       isSynched = true
       startTimeoutTime = clock.now()
@@ -646,8 +644,13 @@ class KailleraGameImpl(
    * Adds data and suspends until all data is available, at which time it returns the sends new data
    * back to the client.
    */
+  // Pretty sure this is most of the lag.
   @Throws(GameDataException::class)
-  override fun addData(user: KailleraUser, playerNumber: Int, data: ByteArray): Result<Unit> {
+  override fun addData(
+    user: KailleraUser,
+    playerNumber: Int,
+    data: VariableSizeByteArray,
+  ): Result<Unit> {
     val playerActionQueuesCopy = playerActionQueues ?: return Result.success(Unit)
 
     // int bytesPerAction = (data.length / actionsPerMessage);
@@ -665,12 +668,14 @@ class KailleraGameImpl(
     }
     // Add the data for the user to their own player queue.
     playerActionQueuesCopy[playerNumber - 1].addActions(data)
+
     autoFireDetector.addData(playerNumber, data, user.bytesPerAction)
 
-    return maybeSendData(user, data)
+    return maybeSendData(user)
   }
 
   /** @param data Only used for logging. */
+  // HERE!
   fun maybeSendData(user: KailleraUser, data: ByteArray = byteArrayOf()): Result<Unit> {
     val playerActionQueuesCopy = checkNotNull(playerActionQueues)
 
@@ -692,7 +697,13 @@ class KailleraGameImpl(
         }
       ) {
         waitingOnData = false
-        val response = ByteArray(user.arraySize)
+        val response =
+          if (CompiledFlags.USE_BYTE_ARRAY_POOL) {
+            VariableSizeByteArray.pool.claim()
+          } else {
+            VariableSizeByteArray()
+          }
+        response.size = user.arraySize
         for (actionCounter in 0 until actionsPerMessage) {
           for (playerActionQueueIndex in playerActionQueuesCopy.indices) {
             // TODO(nue): Consider removing this loop, I'm fairly certain it isn't needed.
@@ -720,7 +731,7 @@ class KailleraGameImpl(
           return Result.failure(
             GameDataException(
               EmuLang.getString("KailleraGameImpl.DesynchedWarning"),
-              data,
+              VariableSizeByteArray(data),
               user.bytesPerAction,
               playerNumber,
               playerActionQueuesCopy.size,

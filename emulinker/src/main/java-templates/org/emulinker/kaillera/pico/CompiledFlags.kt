@@ -18,4 +18,7 @@ object CompiledFlags {
 
   /** Indicates a build still in development (and lacking a unique version number). */
   const val PRERELEASE_BUILD: Boolean = ${project.prerelease}
+
+  /** Use a shared object pool instead of creating ByteArrays every time. */
+  const val USE_BYTE_ARRAY_POOL: Boolean = ${useByteArrayPool}
 }

@@ -22,7 +22,7 @@ class ConnectMessage_PONGTest : ProtocolBaseTest() {
   }
 
   private companion object {
-    val MESSAGE = ConnectMessage_PONG()
+    val MESSAGE = ConnectMessage_PONG
 
     const val BODY_BYTES = "50,4F,4E,47,00"
   }

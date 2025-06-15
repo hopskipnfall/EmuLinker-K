@@ -65,9 +65,9 @@ class V086ClientHandler(
       this.remoteSocketAddress = remoteSocketAddress
     } else if (remoteSocketAddress != this.remoteSocketAddress) {
       logger
-        .atWarning()
+        .atSevere()
         .log(
-          "Rejecting packet received from wrong address: %s != %s",
+          "Rejecting packet received from wrong address: %s != %s. This should not be possible!",
           EmuUtil.formatSocketAddress(remoteSocketAddress),
           EmuUtil.formatSocketAddress(this.remoteSocketAddress!!),
         )

@@ -2,6 +2,7 @@ package org.emulinker.kaillera.model.impl
 
 import com.google.common.truth.Truth.assertThat
 import org.emulinker.testing.LoggingRule
+import org.emulinker.util.VariableSizeByteArray
 import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
@@ -25,7 +26,7 @@ class PlayerActionQueueTest {
       PlayerActionQueue(playerNumber = 1, player = mock(), numPlayers = 1, gameBufferSize = 4096)
     queue.markSynced()
 
-    queue.addActions(DATA)
+    queue.addActions(VariableSizeByteArray(DATA))
 
     assertThat(queue.containsNewDataForPlayer(playerIndex = 0, actionLength = DATA.size)).isTrue()
   }
@@ -36,9 +37,9 @@ class PlayerActionQueueTest {
       PlayerActionQueue(playerNumber = 1, player = mock(), numPlayers = 1, gameBufferSize = 4096)
     queue.markSynced()
 
-    queue.addActions(DATA)
+    queue.addActions(VariableSizeByteArray(DATA))
 
-    val out = ByteArray(DATA.size) { 0 }
+    val out = VariableSizeByteArray(ByteArray(DATA.size) { 0 })
     queue.getActionAndWriteToArray(
       playerIndex = 0,
       writeToArray = out,
@@ -46,7 +47,7 @@ class PlayerActionQueueTest {
       actionLength = DATA.size,
     )
 
-    assertThat(out).isEqualTo(DATA)
+    assertThat(out.toByteArray()).isEqualTo(DATA)
   }
 
   @Test
@@ -56,9 +57,9 @@ class PlayerActionQueueTest {
       PlayerActionQueue(playerNumber = 1, player = mock(), numPlayers = 2, gameBufferSize = 4096)
     queue.markSynced()
 
-    queue.addActions(DATA)
+    queue.addActions(VariableSizeByteArray(DATA))
 
-    val out = ByteArray(DATA.size) { 0 }
+    val out = VariableSizeByteArray(ByteArray(DATA.size) { 0 })
     queue.getActionAndWriteToArray(
       playerIndex = 0,
       writeToArray = out,
@@ -67,7 +68,7 @@ class PlayerActionQueueTest {
     )
 
     assertThat(queue.containsNewDataForPlayer(playerIndex = 0, actionLength = DATA.size)).isTrue()
-    assertThat(out).isEqualTo(DATA)
+    assertThat(out.toByteArray()).isEqualTo(DATA)
   }
 
   companion object {
