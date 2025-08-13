@@ -1,6 +1,9 @@
+import com.google.protobuf.gradle.id
 import java.time.Instant
 
 plugins {
+  id("com.google.protobuf") version "0.9.5"
+
   id("com.diffplug.spotless") version "7.0.2"
   id("org.jetbrains.dokka") version "1.9.20"
   application
@@ -26,6 +29,10 @@ dependencies {
   testImplementation("io.insert-koin:koin-test")
   testImplementation("io.insert-koin:koin-test-junit4")
   //  testImplementation("io.insert-koin:koin-test-junit5")
+
+  implementation("com.google.protobuf:protobuf-kotlin:4.31.1")
+  implementation("com.google.protobuf:protobuf-java:4.31.1")
+  implementation("com.google.protobuf:protobuf-java-util:4.31.1")
 
   api("io.dropwizard.metrics:metrics-core:4.2.3")
   api("io.dropwizard.metrics:metrics-jvm:4.2.3")
@@ -73,6 +80,10 @@ kotlin { jvmToolchain(17) }
 
 // Copy/filter files before compiling.
 tasks.processResources {
+  // Fails to compile without this.
+  // https://github.com/google/protobuf-gradle-plugin/issues/522#issuecomment-1195266995
+  duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
   from("src/main/java-templates") {
     include("**/*")
 
@@ -95,6 +106,7 @@ tasks.processResources {
 
 sourceSets {
   main {
+    proto.srcDir("src/main/proto")
     kotlin.srcDir("src/main/java")
     kotlin.srcDir("build/resources/main")
 
@@ -102,6 +114,7 @@ sourceSets {
   }
 
   test {
+    proto.srcDir("src/main/proto")
     kotlin.srcDir("src/test/java")
     kotlin.srcDir("build/resources/test")
 
@@ -110,6 +123,8 @@ sourceSets {
 }
 
 tasks.named("compileKotlin") {
+  dependsOn(":emulinker:generateProto")
+
   // Filtering the resources has to happen first.
   dependsOn(":emulinker:processResources")
 }
@@ -138,6 +153,19 @@ spotless {
     target("**/*.yml", "**/*.yaml")
     targetExclude("build/", ".git/", ".idea/", ".mvn")
     jackson()
+  }
+}
+
+protobuf {
+  protoc { artifact = "com.google.protobuf:protoc:4.31.1" }
+
+  generateProtoTasks {
+    ofSourceSet("main").forEach {
+      it.plugins {
+        // Generates Kotlin DSL builders.
+        id("kotlin") {}
+      }
+    }
   }
 }
 

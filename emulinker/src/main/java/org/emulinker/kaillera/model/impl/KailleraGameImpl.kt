@@ -1,11 +1,17 @@
 package org.emulinker.kaillera.model.impl
 
 import com.google.common.flogger.FluentLogger
+import com.google.protobuf.util.Timestamps
+import java.io.FileOutputStream
 import java.lang.Exception
 import java.util.Date
 import java.util.concurrent.CopyOnWriteArrayList
+import java.util.zip.GZIPOutputStream
 import kotlin.Throws
+import kotlin.io.path.createTempDirectory
 import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.nanoseconds
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
@@ -38,6 +44,15 @@ import org.emulinker.kaillera.model.exception.JoinGameException
 import org.emulinker.kaillera.model.exception.QuitGameException
 import org.emulinker.kaillera.model.exception.StartGameException
 import org.emulinker.kaillera.model.exception.UserReadyException
+import org.emulinker.proto.EventKt.GameStartKt.playerDetails
+import org.emulinker.proto.EventKt.LagstatSummaryKt.playerAttributedLag
+import org.emulinker.proto.EventKt.fanOut
+import org.emulinker.proto.EventKt.gameStart
+import org.emulinker.proto.EventKt.lagstatSummary
+import org.emulinker.proto.EventKt.receivedGameData
+import org.emulinker.proto.GameLog
+import org.emulinker.proto.PlayerNumber
+import org.emulinker.proto.event
 import org.emulinker.util.EmuLang
 import org.emulinker.util.EmuUtil.threadSleep
 import org.emulinker.util.EmuUtil.toMillisDouble
@@ -50,7 +65,7 @@ class KailleraGameImpl(
   override val owner: KailleraUser,
   override val server: KailleraServer,
   val bufferSize: Int,
-  flags: RuntimeFlags,
+  private val flags: RuntimeFlags,
   private val clock: Clock,
 ) : KailleraGame, KoinComponent {
 
@@ -65,6 +80,13 @@ class KailleraGameImpl(
       field = maxUsers
       server.addEvent(GameStatusChangedEvent(server, this))
     }
+
+  /**
+   * Record of all game log events.
+   *
+   * This feature must be activated by an admin with the `/loggame` command.
+   */
+  var gameLogBuilder: GameLog.Builder? = null
 
   /**
    * Whether the game is holding data for the current frame, waiting on one or more players before
@@ -470,6 +492,22 @@ class KailleraGameImpl(
     }
     playerActionQueues = actionQueueBuilder.map { it!! }.toTypedArray()
     statsCollector?.markGameAsStarted(server, this)
+    gameLogBuilder?.addEvents(
+      event {
+        timestampNs = System.nanoTime()
+        gameStart = gameStart {
+          timestamp = Timestamps.now()
+          for (player in this@KailleraGameImpl.players) {
+            this@gameStart.players += playerDetails {
+              playerNumber = player.playerNumber.toPlayerNumberProto()
+
+              frameDelay = player.frameDelay
+              pingMs = player.ping.toMillisDouble()
+            }
+          }
+        }
+      }
+    )
 
     /*if(user.getConnectionType() > KailleraUser.CONNECTION_TYPE_GOOD || user.getConnectionType() < KailleraUser.CONNECTION_TYPE_GOOD){
     	//sameDelay = true;
@@ -609,6 +647,22 @@ class KailleraGameImpl(
     }
     autoFireDetector.stop()
     players.clear()
+
+    // Write the game log out to a compressed file.
+    val gameLog = gameLogBuilder?.build()
+    if (gameLog != null) {
+      try {
+        val filePath = createTempDirectory("gamelog").resolve("gamelog.bin.gz").toFile()
+        FileOutputStream(filePath).use { fos ->
+          GZIPOutputStream(fos).use { gzipOut ->
+            gzipOut.write(gameLog.toByteArray())
+            logger.atInfo().log("Stored game log for game %d at %s", id, filePath)
+          }
+        }
+      } catch (e: Exception) {
+        logger.atWarning().withCause(e).log("Failed to save game log for game %d", id)
+      }
+    }
   }
 
   @Synchronized
@@ -649,6 +703,20 @@ class KailleraGameImpl(
   @Throws(GameDataException::class)
   override fun addData(user: KailleraUser, playerNumber: Int, data: ByteArray): Result<Unit> {
     val playerActionQueuesCopy = playerActionQueues ?: return Result.success(Unit)
+
+    gameLogBuilder?.addEvents(
+      event {
+        timestampNs = checkNotNull(user.receivedGameDataNs) { "user.receivedGameDataNs is null!" }
+        receivedGameData =
+          when (user.playerNumber) {
+            1 -> RECEIVED_FROM_P1
+            2 -> RECEIVED_FROM_P2
+            3 -> RECEIVED_FROM_P3
+            4 -> RECEIVED_FROM_P4
+            else -> throw IllegalStateException("Player number is out of bounds!")
+          }
+      }
+    )
 
     // int bytesPerAction = (data.length / actionsPerMessage);
     // int arraySize = (playerActionQueues.length * actionsPerMessage * user.getBytesPerAction());
@@ -764,8 +832,46 @@ class KailleraGameImpl(
     }
   }
 
+  private var lastLagstatNs = 0L
+
+  /** The total duration that the game has drifted over the lagstat measurement window. */
+  val currentGameLag
+    get() = (totalDriftNs - (totalDriftCache.getDelayedValue() ?: 0)).nanoseconds.absoluteValue
+
   private fun updateGameDrift() {
     val nowNs = System.nanoTime()
+
+    val glb = gameLogBuilder
+    if (glb != null) {
+      glb.addEvents(
+        event {
+          timestampNs = nowNs
+          fanOut = FAN_OUT
+        }
+      )
+
+      // Log the /lagstat data once every 1 minute.
+      if ((nowNs - lastFrameNs).nanoseconds > 1.minutes) {
+        glb.addEvents(
+          event {
+            timestampNs = nowNs
+            lagstatSummary = lagstatSummary {
+              windowDurationMs = flags.lagstatDuration.inWholeMilliseconds.toInt()
+              gameLagMs = currentGameLag.toMillisDouble()
+
+              for (p in players) {
+                playerAttributedLags += playerAttributedLag {
+                  player = p.playerNumber.toPlayerNumberProto()
+                  attributedLagMs = p.lagAttributedToUser().toMillisDouble()
+                }
+              }
+            }
+          }
+        )
+        lastLagstatNs = nowNs
+      }
+    }
+
     val delaySinceLastResponseNs = nowNs - lastFrameNs
 
     lagLeewayNs += singleFrameDurationForLagCalculationOnlyNs - delaySinceLastResponseNs
@@ -822,5 +928,21 @@ class KailleraGameImpl(
 
     /** Unfortunately Kaillera is built on the assumption that all games run at 60FPS. */
     const val GAME_FPS = 60
+
+    // A few logging constants to avoid creating unnecessary objects.
+    private val FAN_OUT = fanOut {}
+    private val RECEIVED_FROM_P1 = receivedGameData { receivedFrom = PlayerNumber.ONE }
+    private val RECEIVED_FROM_P2 = receivedGameData { receivedFrom = PlayerNumber.TWO }
+    private val RECEIVED_FROM_P3 = receivedGameData { receivedFrom = PlayerNumber.THREE }
+    private val RECEIVED_FROM_P4 = receivedGameData { receivedFrom = PlayerNumber.FOUR }
+
+    private fun Int.toPlayerNumberProto(): PlayerNumber =
+      when (this) {
+        1 -> PlayerNumber.ONE
+        2 -> PlayerNumber.TWO
+        3 -> PlayerNumber.THREE
+        4 -> PlayerNumber.FOUR
+        else -> throw IllegalStateException("Player number is out of bounds!")
+      }
   }
 }
