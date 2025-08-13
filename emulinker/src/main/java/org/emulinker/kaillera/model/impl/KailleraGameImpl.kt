@@ -936,7 +936,7 @@ class KailleraGameImpl(
     private val RECEIVED_FROM_P3 = receivedGameData { receivedFrom = PlayerNumber.THREE }
     private val RECEIVED_FROM_P4 = receivedGameData { receivedFrom = PlayerNumber.FOUR }
 
-    fun Int.toPlayerNumberProto(): PlayerNumber =
+    private fun Int.toPlayerNumberProto(): PlayerNumber =
       when (this) {
         1 -> PlayerNumber.ONE
         2 -> PlayerNumber.TWO
