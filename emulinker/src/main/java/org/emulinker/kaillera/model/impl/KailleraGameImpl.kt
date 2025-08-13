@@ -501,7 +501,7 @@ class KailleraGameImpl(
                   2 -> PlayerNumber.TWO
                   3 -> PlayerNumber.THREE
                   4 -> PlayerNumber.FOUR
-                  else -> throw AssertionError("This is impossible!")
+                  else -> throw IllegalStateException("Player number is out of bounds!")
                 }
 
               frameDelay = player.frameDelay
@@ -716,7 +716,7 @@ class KailleraGameImpl(
             2 -> RECEIVED_FROM_P2
             3 -> RECEIVED_FROM_P3
             4 -> RECEIVED_FROM_P4
-            else -> throw AssertionError("This is impossible!")
+            else -> throw IllegalStateException("Player number is out of bounds!")
           }
       }
     )
