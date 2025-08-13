@@ -114,7 +114,7 @@ sourceSets {
   }
 
   test {
-    //    proto.srcDir("src/main/proto")
+    proto.srcDir("src/main/proto")
     kotlin.srcDir("src/test/java")
     kotlin.srcDir("build/resources/test")
 
@@ -157,17 +157,14 @@ spotless {
 }
 
 protobuf {
-  // Configures the protoc executable
-  protoc {
-    // Downloads the protoc compiler from Maven Central
-    artifact = "com.google.protobuf:protoc:4.31.1"
-  }
+  protoc { artifact = "com.google.protobuf:protoc:4.31.1" }
 
-  // Configures the code generation tasks
   generateProtoTasks {
     ofSourceSet("main").forEach {
-      // Add the Kotlin generator
-      it.plugins { id("kotlin") {} }
+      it.plugins {
+        // Generates Kotlin DSL builders.
+        id("kotlin") {}
+      }
     }
   }
 }
