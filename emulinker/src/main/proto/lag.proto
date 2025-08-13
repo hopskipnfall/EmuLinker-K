@@ -7,8 +7,10 @@ option java_multiple_files = true;
 
 import "google/protobuf/timestamp.proto";
 
-enum Player {
-  PLAYER_UNKNOWN = 0;
+enum PlayerNumber {
+  // Note: In some languages having multiple enum values with the same
+  // name causes issues so it's good to prefix with the name.
+  PLAYER_NUMBER_UNKNOWN = 0;
   ONE = 1;
   TWO = 2;
   THREE = 3;
@@ -22,12 +24,23 @@ message Event {
   int64 timestamp_ns = 1;
 
   message GameStart {
-    int32 player_count = 1;
-    google.protobuf.Timestamp start_time = 2;
+
+    message PlayerDetails {
+      PlayerNumber player_number = 1;
+
+      // User's average ping when they joined the server.
+      double ping_ms = 2;
+
+      int32 frame_delay = 3;
+    }
+
+    repeated PlayerDetails players = 1;
+
+    google.protobuf.Timestamp timestamp = 2;
   }
 
   message ReceivedGameData {
-    Player received_from = 1;
+    PlayerNumber received_from = 1;
   }
 
   // Server has collected data from all parties for the frame and will
