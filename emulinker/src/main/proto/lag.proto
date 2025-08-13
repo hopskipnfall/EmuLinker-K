@@ -5,29 +5,40 @@ package org.emulinker.proto;
 
 option java_multiple_files = true;
 
+import "google/protobuf/timestamp.proto";
+
 enum Player {
-  ONE = 0;
-  TWO = 1;
-  THREE = 2;
-  FOUR = 3;
+  PLAYER_UNKNOWN = 0;
+  ONE = 1;
+  TWO = 2;
+  THREE = 3;
+  FOUR = 4;
 }
 
 message Event {
   // Number of nanoseconds from an arbitrary point of time in the past.
   // This can be used to check elapsed time between events events for
-  // a single game, but not necessarily between events in different games.
+  // a single game, but not necessarily between events between two games.
   int64 timestamp_ns = 1;
+
+  message GameStart {
+    int32 player_count = 1;
+    google.protobuf.Timestamp start_time = 2;
+  }
 
   message ReceivedGameData {
     Player received_from = 1;
   }
 
+  // Server has collected data from all parties for the frame and will
+  // now combine and broadcast them back out to each player.
   message FanOut {
   }
 
   oneof event_type {
-    ReceivedGameData received_game_data = 2;
-    FanOut fan_out = 3;
+    GameStart game_start = 2;
+    ReceivedGameData received_game_data = 3;
+    FanOut fan_out = 4;
   }
 }
 
