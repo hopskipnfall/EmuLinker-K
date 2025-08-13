@@ -19,8 +19,8 @@ enum PlayerNumber {
 
 message Event {
   // Number of nanoseconds from an arbitrary point of time in the past.
-  // This can be used to check elapsed time between events events for
-  // a single game, but not necessarily between events between two games.
+  // This can be used to check elapsed time between events for a single
+  // game, but not necessarily between events between two games.
   int64 timestamp_ns = 1;
 
   message GameStart {
