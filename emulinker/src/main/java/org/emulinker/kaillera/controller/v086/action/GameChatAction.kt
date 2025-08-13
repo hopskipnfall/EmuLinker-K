@@ -475,11 +475,12 @@ class GameChatAction(
           } else {
             lagstatDuration.toLocalizedString(MINUTES, 1)
           }
+        val gameLag = game.currentGameLag
         game.announce(
           EmuLang.getString(
             "Lagstat.TotalGameLagSummary",
             lagstatDurationAsString,
-            game.currentGameLag.toSecondDoublePrecisionString(),
+            gameLag.toSecondDoublePrecisionString(),
           )
         )
         game.announce(
@@ -496,7 +497,7 @@ class GameChatAction(
         // TODO(nue): Expand this to more connection types.
         val p1 = game.players.firstOrNull()
         if (p1 != null && p1.connectionType == ConnectionType.LAN && lagstatDuration > 10.seconds) {
-          val lagPerDuration = gameLag / lagstatDuration
+          val lagPerDuration = game.currentGameLag / lagstatDuration
           if (lagPerDuration > 0.5.seconds / 1.minutes) {
             val laggiestPlayer = game.players.maxBy { it.lagAttributedToUser() }
             if (laggiestPlayer.lagAttributedToUser() > Duration.ZERO) {
