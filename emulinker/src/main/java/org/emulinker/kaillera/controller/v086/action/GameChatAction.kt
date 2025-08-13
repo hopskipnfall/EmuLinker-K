@@ -6,7 +6,6 @@ import kotlin.math.roundToInt
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
-import kotlin.time.Duration.Companion.nanoseconds
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.DurationUnit.MINUTES
 import kotlin.time.DurationUnit.SECONDS
@@ -476,15 +475,11 @@ class GameChatAction(
           } else {
             lagstatDuration.toLocalizedString(MINUTES, 1)
           }
-        val gameLag =
-          (game.totalDriftNs - (game.totalDriftCache.getDelayedValue() ?: 0))
-            .nanoseconds
-            .absoluteValue
         game.announce(
           EmuLang.getString(
             "Lagstat.TotalGameLagSummary",
             lagstatDurationAsString,
-            gameLag.toSecondDoublePrecisionString(),
+            game.currentGameLag.toSecondDoublePrecisionString(),
           )
         )
         game.announce(

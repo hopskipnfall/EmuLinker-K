@@ -10,6 +10,8 @@ import java.util.zip.GZIPOutputStream
 import kotlin.Throws
 import kotlin.io.path.createTempDirectory
 import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.nanoseconds
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
@@ -43,8 +45,10 @@ import org.emulinker.kaillera.model.exception.QuitGameException
 import org.emulinker.kaillera.model.exception.StartGameException
 import org.emulinker.kaillera.model.exception.UserReadyException
 import org.emulinker.proto.EventKt.GameStartKt.playerDetails
+import org.emulinker.proto.EventKt.LagstatSummaryKt.playerAttributedLag
 import org.emulinker.proto.EventKt.fanOut
 import org.emulinker.proto.EventKt.gameStart
+import org.emulinker.proto.EventKt.lagstatSummary
 import org.emulinker.proto.EventKt.receivedGameData
 import org.emulinker.proto.GameLog
 import org.emulinker.proto.PlayerNumber
@@ -61,7 +65,7 @@ class KailleraGameImpl(
   override val owner: KailleraUser,
   override val server: KailleraServer,
   val bufferSize: Int,
-  flags: RuntimeFlags,
+  private val flags: RuntimeFlags,
   private val clock: Clock,
 ) : KailleraGame, KoinComponent {
 
@@ -495,14 +499,7 @@ class KailleraGameImpl(
           timestamp = Timestamps.now()
           for (player in this@KailleraGameImpl.players) {
             this@gameStart.players += playerDetails {
-              playerNumber =
-                when (player.playerNumber) {
-                  1 -> PlayerNumber.ONE
-                  2 -> PlayerNumber.TWO
-                  3 -> PlayerNumber.THREE
-                  4 -> PlayerNumber.FOUR
-                  else -> throw IllegalStateException("Player number is out of bounds!")
-                }
+              playerNumber = player.playerNumber.toPlayerNumberProto()
 
               frameDelay = player.frameDelay
               pingMs = player.ping.toMillisDouble()
@@ -709,7 +706,7 @@ class KailleraGameImpl(
 
     gameLogBuilder?.addEvents(
       event {
-        timestampNs = System.nanoTime()
+        timestampNs = checkNotNull(user.receivedGameDataNs) { "user.receivedGameDataNs is null!" }
         receivedGameData =
           when (user.playerNumber) {
             1 -> RECEIVED_FROM_P1
@@ -835,14 +832,46 @@ class KailleraGameImpl(
     }
   }
 
+  private var lastLagstatNs = 0L
+
+  /** The total duration that the game has drifted over the lagstat measurement window. */
+  val currentGameLag
+    get() = (totalDriftNs - (totalDriftCache.getDelayedValue() ?: 0)).nanoseconds.absoluteValue
+
   private fun updateGameDrift() {
     val nowNs = System.nanoTime()
-    gameLogBuilder?.addEvents(
-      event {
-        timestampNs = nowNs
-        fanOut = FAN_OUT
+
+    val glb = gameLogBuilder
+    if (glb != null) {
+      glb.addEvents(
+        event {
+          timestampNs = nowNs
+          fanOut = FAN_OUT
+        }
+      )
+
+      // Log the /lagstat data once every 1 minute.
+      if ((nowNs - lastFrameNs).nanoseconds > 1.minutes) {
+        glb.addEvents(
+          event {
+            timestampNs = nowNs
+            lagstatSummary = lagstatSummary {
+              windowDurationMs = flags.lagstatDuration.inWholeMilliseconds.toInt()
+              gameLagMs = currentGameLag.toMillisDouble()
+
+              for (p in players) {
+                playerAttributedLags += playerAttributedLag {
+                  player = p.playerNumber.toPlayerNumberProto()
+                  attributedLagMs = p.lagAttributedToUser().toMillisDouble()
+                }
+              }
+            }
+          }
+        )
+        lastLagstatNs = nowNs
       }
-    )
+    }
+
     val delaySinceLastResponseNs = nowNs - lastFrameNs
 
     lagLeewayNs += singleFrameDurationForLagCalculationOnlyNs - delaySinceLastResponseNs
@@ -906,5 +935,14 @@ class KailleraGameImpl(
     private val RECEIVED_FROM_P2 = receivedGameData { receivedFrom = PlayerNumber.TWO }
     private val RECEIVED_FROM_P3 = receivedGameData { receivedFrom = PlayerNumber.THREE }
     private val RECEIVED_FROM_P4 = receivedGameData { receivedFrom = PlayerNumber.FOUR }
+
+    fun Int.toPlayerNumberProto(): PlayerNumber =
+      when (this) {
+        1 -> PlayerNumber.ONE
+        2 -> PlayerNumber.TWO
+        3 -> PlayerNumber.THREE
+        4 -> PlayerNumber.FOUR
+        else -> throw IllegalStateException("Player number is out of bounds!")
+      }
   }
 }

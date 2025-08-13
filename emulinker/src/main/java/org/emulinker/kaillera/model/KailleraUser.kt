@@ -79,7 +79,10 @@ class KailleraUser(
   private var totalDriftNs = 0.seconds.inWholeNanoseconds
   private val totalDriftCache =
     TimeOffsetCache(delay = flags.lagstatDuration, resolution = 5.seconds)
-  private var receivedGameDataNs: Long? = null
+
+  /** Time we received the latest game data from the user for lag measurement purposes. */
+  var receivedGameDataNs: Long? = null
+    private set
 
   /** The last time we heard from this player for lag detection purposes. */
   private var lastUpdateNs = System.nanoTime()

@@ -48,10 +48,31 @@ message Event {
   message FanOut {
   }
 
+  // It might be useful to know what the /lagstat command would say
+  // as a point of comparison.
+  message LagstatSummary {
+    // The duration over which lag is being measured.
+    int32 window_duration_ms = 1;
+
+    // The measured drift over the window
+    double game_lag_ms = 2;
+
+    message PlayerAttributedLag {
+      PlayerNumber player = 1;
+
+      // How much of the drift can be reliably attributed to the
+      // player.
+      double attributed_lag_ms = 2;
+    }
+
+    repeated PlayerAttributedLag player_attributed_lags = 3;
+  }
+
   oneof event_type {
     GameStart game_start = 2;
     ReceivedGameData received_game_data = 3;
     FanOut fan_out = 4;
+    LagstatSummary lagstat_summary = 5;
   }
 }
 

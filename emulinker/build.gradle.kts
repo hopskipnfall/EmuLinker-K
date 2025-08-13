@@ -80,6 +80,7 @@ kotlin { jvmToolchain(17) }
 
 // Copy/filter files before compiling.
 tasks.processResources {
+  // Fails to compile without this.
   // https://github.com/google/protobuf-gradle-plugin/issues/522#issuecomment-1195266995
   duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 
