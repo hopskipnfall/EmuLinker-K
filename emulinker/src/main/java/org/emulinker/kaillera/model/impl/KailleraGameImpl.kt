@@ -42,11 +42,12 @@ import org.emulinker.kaillera.model.exception.JoinGameException
 import org.emulinker.kaillera.model.exception.QuitGameException
 import org.emulinker.kaillera.model.exception.StartGameException
 import org.emulinker.kaillera.model.exception.UserReadyException
+import org.emulinker.proto.EventKt.GameStartKt.playerDetails
 import org.emulinker.proto.EventKt.fanOut
 import org.emulinker.proto.EventKt.gameStart
 import org.emulinker.proto.EventKt.receivedGameData
 import org.emulinker.proto.GameLog
-import org.emulinker.proto.Player
+import org.emulinker.proto.PlayerNumber
 import org.emulinker.proto.event
 import org.emulinker.util.EmuLang
 import org.emulinker.util.EmuUtil.threadSleep
@@ -491,8 +492,22 @@ class KailleraGameImpl(
       event {
         timestampNs = System.nanoTime()
         gameStart = gameStart {
-          startTime = Timestamps.now()
-          playerCount = players.size
+          timestamp = Timestamps.now()
+          for (player in this@KailleraGameImpl.players) {
+            this@gameStart.players += playerDetails {
+              playerNumber =
+                when (player.playerNumber) {
+                  1 -> PlayerNumber.ONE
+                  2 -> PlayerNumber.TWO
+                  3 -> PlayerNumber.THREE
+                  4 -> PlayerNumber.FOUR
+                  else -> throw AssertionError("This is impossible!")
+                }
+
+              frameDelay = player.frameDelay
+              pingMs = player.ping.toMillisDouble()
+            }
+          }
         }
       }
     )
@@ -695,16 +710,14 @@ class KailleraGameImpl(
     gameLogBuilder?.addEvents(
       event {
         timestampNs = System.nanoTime()
-        receivedGameData = receivedGameData {
-          receivedFrom =
-            when (user.playerNumber) {
-              1 -> Player.ONE
-              2 -> Player.TWO
-              3 -> Player.THREE
-              4 -> Player.FOUR
-              else -> throw AssertionError("This is impossible!")
-            }
-        }
+        receivedGameData =
+          when (user.playerNumber) {
+            1 -> RECEIVED_FROM_P1
+            2 -> RECEIVED_FROM_P2
+            3 -> RECEIVED_FROM_P3
+            4 -> RECEIVED_FROM_P4
+            else -> throw AssertionError("This is impossible!")
+          }
       }
     )
 
@@ -887,6 +900,11 @@ class KailleraGameImpl(
     /** Unfortunately Kaillera is built on the assumption that all games run at 60FPS. */
     const val GAME_FPS = 60
 
+    // A few logging constants to avoid creating unnecessary objects.
     private val FAN_OUT = fanOut {}
+    private val RECEIVED_FROM_P1 = receivedGameData { receivedFrom = PlayerNumber.ONE }
+    private val RECEIVED_FROM_P2 = receivedGameData { receivedFrom = PlayerNumber.TWO }
+    private val RECEIVED_FROM_P3 = receivedGameData { receivedFrom = PlayerNumber.THREE }
+    private val RECEIVED_FROM_P4 = receivedGameData { receivedFrom = PlayerNumber.FOUR }
   }
 }
