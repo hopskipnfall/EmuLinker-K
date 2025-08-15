@@ -65,7 +65,7 @@ object TestLoggingBackend : LoggerBackend() {
   }
 
   override fun handleError(e: RuntimeException?, logData: LogData) {
-    logs.loggerToMessage.add(logData.loggerName to logData.literalArgument.toString())
+    logs.loggerToMessage.add(logData.loggerName!! to logData.literalArgument.toString())
   }
 }
 

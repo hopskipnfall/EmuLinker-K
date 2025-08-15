@@ -1,7 +1,7 @@
 package org.emulinker.kaillera.model
 
 import kotlin.Throws
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 import org.emulinker.kaillera.model.exception.CloseGameException
 import org.emulinker.kaillera.model.exception.DropGameException
 import org.emulinker.kaillera.model.exception.GameChatException
