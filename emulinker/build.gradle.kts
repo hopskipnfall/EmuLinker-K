@@ -66,6 +66,7 @@ dependencies {
 
   testImplementation("junit:junit:4.13.2")
   testImplementation("com.google.truth:truth:1.4.4")
+  testImplementation("com.google.truth.extensions:truth-proto-extension:1.4.4")
   testImplementation(kotlin("test"))
   testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.1")
   testImplementation("org.mockito.kotlin:mockito-kotlin:5.4.0")

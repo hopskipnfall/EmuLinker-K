@@ -85,6 +85,9 @@ class KailleraGameImpl(
       server.addEvent(GameStatusChangedEvent(server, this))
     }
 
+  /** The last time we logged lagstat to [gameLogBuilder]. */
+  private var lastLagstatNs = 0L
+
   /**
    * Record of all game log events.
    *
@@ -836,8 +839,6 @@ class KailleraGameImpl(
     }
   }
 
-  private var lastLagstatNs = 0L
-
   /** The total duration that the game has drifted over the lagstat measurement window. */
   val currentGameLag
     get() = (totalDriftNs - (totalDriftCache.getDelayedValue() ?: 0)).nanoseconds.absoluteValue
@@ -855,7 +856,7 @@ class KailleraGameImpl(
       )
 
       // Log the /lagstat data once every 1 minute.
-      if ((nowNs - lastFrameNs).nanoseconds > 1.minutes) {
+      if ((nowNs - lastLagstatNs).nanoseconds > 1.minutes) {
         glb.addEvents(
           event {
             timestampNs = nowNs
