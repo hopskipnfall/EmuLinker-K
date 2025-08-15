@@ -5,8 +5,8 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompilationTask
 plugins {
   id("com.google.protobuf") version "0.9.5"
   id("build.buf") version "0.10.2"
-  id("com.diffplug.spotless") version "7.0.2"
-  id("org.jetbrains.dokka") version "1.9.20"
+  id("com.diffplug.spotless") version "7.2.1"
+  id("org.jetbrains.dokka") version "2.0.0"
   application
 
   kotlin("jvm") version "2.2.10"
