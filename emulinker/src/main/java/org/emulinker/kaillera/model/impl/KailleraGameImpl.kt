@@ -9,12 +9,12 @@ import java.util.concurrent.CopyOnWriteArrayList
 import java.util.zip.GZIPOutputStream
 import kotlin.Throws
 import kotlin.io.path.createTempDirectory
+import kotlin.time.Clock
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.nanoseconds
 import kotlin.time.Duration.Companion.seconds
-import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.access.AccessManager
 import org.emulinker.kaillera.master.StatsCollector
@@ -51,7 +51,11 @@ import org.emulinker.proto.EventKt.gameStart
 import org.emulinker.proto.EventKt.lagstatSummary
 import org.emulinker.proto.EventKt.receivedGameData
 import org.emulinker.proto.GameLog
-import org.emulinker.proto.PlayerNumber
+import org.emulinker.proto.Player
+import org.emulinker.proto.Player.PLAYER_FOUR
+import org.emulinker.proto.Player.PLAYER_ONE
+import org.emulinker.proto.Player.PLAYER_THREE
+import org.emulinker.proto.Player.PLAYER_TWO
 import org.emulinker.proto.event
 import org.emulinker.util.EmuLang
 import org.emulinker.util.EmuUtil.threadSleep
@@ -931,17 +935,17 @@ class KailleraGameImpl(
 
     // A few logging constants to avoid creating unnecessary objects.
     private val FAN_OUT = fanOut {}
-    private val RECEIVED_FROM_P1 = receivedGameData { receivedFrom = PlayerNumber.ONE }
-    private val RECEIVED_FROM_P2 = receivedGameData { receivedFrom = PlayerNumber.TWO }
-    private val RECEIVED_FROM_P3 = receivedGameData { receivedFrom = PlayerNumber.THREE }
-    private val RECEIVED_FROM_P4 = receivedGameData { receivedFrom = PlayerNumber.FOUR }
+    private val RECEIVED_FROM_P1 = receivedGameData { receivedFrom = PLAYER_ONE }
+    private val RECEIVED_FROM_P2 = receivedGameData { receivedFrom = PLAYER_TWO }
+    private val RECEIVED_FROM_P3 = receivedGameData { receivedFrom = PLAYER_THREE }
+    private val RECEIVED_FROM_P4 = receivedGameData { receivedFrom = PLAYER_FOUR }
 
-    private fun Int.toPlayerNumberProto(): PlayerNumber =
+    private fun Int.toPlayerNumberProto(): Player =
       when (this) {
-        1 -> PlayerNumber.ONE
-        2 -> PlayerNumber.TWO
-        3 -> PlayerNumber.THREE
-        4 -> PlayerNumber.FOUR
+        1 -> PLAYER_ONE
+        2 -> PLAYER_TWO
+        3 -> PLAYER_THREE
+        4 -> PLAYER_FOUR
         else -> throw IllegalStateException("Player number is out of bounds!")
       }
   }

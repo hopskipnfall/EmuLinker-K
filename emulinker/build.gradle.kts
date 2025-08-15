@@ -1,15 +1,16 @@
 import com.google.protobuf.gradle.id
 import java.time.Instant
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompilationTask
 
 plugins {
   id("com.google.protobuf") version "0.9.5"
-
+  id("build.buf") version "0.10.2"
   id("com.diffplug.spotless") version "7.0.2"
   id("org.jetbrains.dokka") version "1.9.20"
   application
 
-  kotlin("jvm") version "2.1.10"
-  kotlin("plugin.serialization") version "2.1.10"
+  kotlin("jvm") version "2.2.10"
+  kotlin("plugin.serialization") version "2.2.10"
 }
 
 repositories {
@@ -18,13 +19,13 @@ repositories {
 }
 
 dependencies {
-  api("org.jetbrains.kotlin:kotlin-stdlib:2.1.10")
+  api("org.jetbrains.kotlin:kotlin-stdlib:2.2.10")
 
   implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.1")
 
   implementation("io.github.redouane59.twitter:twittered:2.23")
 
-  implementation(project.dependencies.platform("io.insert-koin:koin-bom:4.0.0"))
+  implementation(project.dependencies.platform("io.insert-koin:koin-bom:4.1.0"))
   implementation("io.insert-koin:koin-core")
   testImplementation("io.insert-koin:koin-test")
   testImplementation("io.insert-koin:koin-test-junit4")
@@ -37,31 +38,31 @@ dependencies {
   api("io.dropwizard.metrics:metrics-core:4.2.3")
   api("io.dropwizard.metrics:metrics-jvm:4.2.3")
 
-  val floggerVersion = "0.8"
+  val floggerVersion = "0.9"
   api("com.google.flogger:flogger:$floggerVersion")
   api("com.google.flogger:flogger-system-backend:$floggerVersion")
   api("com.google.flogger:flogger-log4j2-backend:$floggerVersion")
 
-  val log4j = "2.24.3"
+  val log4j = "2.25.1"
   implementation("org.apache.logging.log4j:log4j:$log4j")
   implementation("org.apache.logging.log4j:log4j-core:$log4j")
   implementation("org.apache.logging.log4j:log4j-api:$log4j")
-  implementation("org.slf4j:slf4j-nop:2.0.16")
+  implementation("org.slf4j:slf4j-nop:2.0.17")
 
   implementation("commons-configuration:commons-configuration:1.10")
   implementation("commons-pool:commons-pool:1.6")
 
-  val ktorVersion = "3.0.3"
+  val ktorVersion = "3.2.3"
   implementation("io.ktor:ktor-network-jvm:$ktorVersion")
   implementation("io.ktor:ktor-server-core-jvm:$ktorVersion")
   implementation("io.ktor:ktor-server-netty-jvm:$ktorVersion")
   implementation("io.ktor:ktor-server-status-pages-jvm:$ktorVersion")
   implementation("io.ktor:ktor-server-default-headers-jvm:$ktorVersion")
 
-  implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.1")
+  implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.7.1")
 
   // https://mvnrepository.com/artifact/io.netty/netty-all
-  testImplementation("io.netty:netty-all:4.2.0.RC2")
+  testImplementation("io.netty:netty-all:4.2.4.Final")
 
   testImplementation("junit:junit:4.13.2")
   testImplementation("com.google.truth:truth:1.4.4")
@@ -122,11 +123,13 @@ sourceSets {
   }
 }
 
-tasks.named("compileKotlin") {
+tasks.named<KotlinCompilationTask<*>>("compileKotlin") {
   dependsOn(":emulinker:generateProto")
 
   // Filtering the resources has to happen first.
   dependsOn(":emulinker:processResources")
+
+  compilerOptions.optIn.add("kotlin.time.ExperimentalTime")
 }
 
 tasks.named("compileTestKotlin") { dependsOn(":emulinker:processTestResources") }

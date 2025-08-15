@@ -3,18 +3,18 @@ edition = "2023";
 
 package org.emulinker.proto;
 
-option java_multiple_files = true;
-
 import "google/protobuf/timestamp.proto";
 
-enum PlayerNumber {
+option java_multiple_files = true;
+
+enum Player {
   // Note: In some languages having multiple enum values with the same
   // name causes issues so it's good to prefix with the name.
-  PLAYER_NUMBER_UNKNOWN = 0;
-  ONE = 1;
-  TWO = 2;
-  THREE = 3;
-  FOUR = 4;
+  PLAYER_UNSPECIFIED = 0;
+  PLAYER_ONE = 1;
+  PLAYER_TWO = 2;
+  PLAYER_THREE = 3;
+  PLAYER_FOUR = 4;
 }
 
 message Event {
@@ -24,9 +24,8 @@ message Event {
   int64 timestamp_ns = 1;
 
   message GameStart {
-
     message PlayerDetails {
-      PlayerNumber player_number = 1;
+      Player player_number = 1;
 
       // User's average ping when they joined the server.
       double ping_ms = 2;
@@ -40,13 +39,12 @@ message Event {
   }
 
   message ReceivedGameData {
-    PlayerNumber received_from = 1;
+    Player received_from = 1;
   }
 
   // Server has collected data from all parties for the frame and will
   // now combine and broadcast them back out to each player.
-  message FanOut {
-  }
+  message FanOut {}
 
   // It might be useful to know what the /lagstat command would say
   // as a point of comparison.
@@ -58,7 +56,7 @@ message Event {
     double game_lag_ms = 2;
 
     message PlayerAttributedLag {
-      PlayerNumber player = 1;
+      Player player = 1;
 
       // How much of the drift can be reliably attributed to the
       // player.
