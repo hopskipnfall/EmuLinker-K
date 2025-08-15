@@ -25,7 +25,7 @@ class SerializationTest {
             gameStart = gameStart {
               timestamp = Timestamps.fromNanos(12345)
               players += playerDetails {
-                playerNumber = PlayerNumber.ONE
+                playerNumber = Player.PLAYER_ONE
                 pingMs = 12.0
                 frameDelay = 1
               }
@@ -33,7 +33,7 @@ class SerializationTest {
           }
           events += event {
             timestampNs = 2
-            receivedGameData = receivedGameData { receivedFrom = PlayerNumber.ONE }
+            receivedGameData = receivedGameData { receivedFrom = Player.PLAYER_ONE }
           }
           events += event {
             timestampNs = 3
