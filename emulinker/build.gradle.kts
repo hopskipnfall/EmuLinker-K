@@ -148,7 +148,7 @@ tasks.withType<Test> {
 spotless {
   kotlin {
     target("**/*.kt", "**/*.kts")
-    targetExclude("build/", ".git/", ".idea/", ".mvn", "src/main/java-templates/")
+    targetExclude("bin/", "build/", ".git/", ".idea/", ".mvn", "src/main/java-templates/")
     ktfmt().googleStyle()
   }
 
