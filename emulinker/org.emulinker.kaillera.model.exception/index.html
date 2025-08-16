@@ -26,42 +26,85 @@
 <link href="../../styles/prism.css" rel="Stylesheet">
 <link href="../../styles/logo-styles.css" rel="Stylesheet">
 <link href="../../styles/font-jb-sans-auto.css" rel="Stylesheet">
+<link href="../../ui-kit/ui-kit.min.css" rel="Stylesheet">
 <script type="text/javascript" src="../../scripts/clipboard.js" async="async"></script>
 <script type="text/javascript" src="../../scripts/navigation-loader.js" async="async"></script>
 <script type="text/javascript" src="../../scripts/platform-content-handler.js" async="async"></script>
 <script type="text/javascript" src="../../scripts/main.js" defer="defer"></script>
 <script type="text/javascript" src="../../scripts/prism.js" async="async"></script>
+<script type="text/javascript" src="../../ui-kit/ui-kit.min.js" defer="defer"></script>
 <script type="text/javascript" src="../../scripts/symbol-parameters-wrapper_deferred.js" defer="defer"></script>
 </head>
 <body>
     <div class="root">
-<nav class="navigation" id="navigation-wrapper">
-    <div class="navigation--inner">
-        <div class="navigation-title">
-            <button class="menu-toggle" id="menu-toggle" type="button">toggle menu</button>
-            <div class="library-name">
-                    <a class="library-name--link" href="../../index.html">
-                            emulinker
-                    </a>
+    <nav class="navigation theme-dark" id="navigation-wrapper">
+            <a class="library-name--link" href="../../index.html">
+                    emulinker
+            </a>
+        <button class="navigation-controls--btn navigation-controls--btn_toc ui-kit_mobile-only" id="toc-toggle"
+                type="button">Toggle table of contents
+        </button>
+        <div class="navigation-controls--break ui-kit_mobile-only"></div>
+        <div class="library-version" id="library-version">
+0.15.0        </div>
+        <div class="navigation-controls">
+        <div class="filter-section filter-section_loading" id="filter-section">
+                <button class="platform-tag platform-selector jvm-like" data-active=""
+                        data-filter=":emulinker/main">jvm</button>
+            <div class="dropdown filter-section--dropdown" data-role="dropdown" id="filter-section-dropdown">
+                <button class="button button_dropdown filter-section--dropdown-toggle" role="combobox"
+                        data-role="dropdown-toggle"
+                        aria-controls="platform-tags-listbox"
+                        aria-haspopup="listbox"
+                        aria-expanded="false"
+                        aria-label="Toggle source sets"
+                ></button>
+                <ul role="listbox" id="platform-tags-listbox" class="dropdown--list" data-role="dropdown-listbox">
+                    <div class="dropdown--header"><span>Platform filter</span>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close platform filter">
+                            <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                        </button>
+                    </div>
+                        <li role="option" class="dropdown--option platform-selector-option jvm-like" tabindex="0">
+                            <label class="checkbox">
+                                <input type="checkbox" class="checkbox--input" id=":emulinker/main"
+                                       data-filter=":emulinker/main"/>
+                                <span class="checkbox--icon"></span>
+                                jvm
+                            </label>
+                        </li>
+                </ul>
+                <div class="dropdown--overlay"></div>
             </div>
-            <div class="library-version">
-0.15.0            </div>
         </div>
-        <div class="filter-section" id="filter-section">
-                <button class="platform-tag platform-selector jvm-like" data-active="" data-filter=":emulinker:dokkaHtml/main">jvm</button>
+            <button class="navigation-controls--btn navigation-controls--btn_theme" id="theme-toggle-button"
+                    type="button">Switch theme
+            </button>
+            <div class="navigation-controls--btn navigation-controls--btn_search" id="searchBar" role="button">Search in
+                API
+            </div>
         </div>
-    </div>
-    <div class="navigation-controls">
-        <button class="navigation-controls--btn navigation-controls--theme" id="theme-toggle-button" type="button">switch theme</button>
-        <div class="navigation-controls--btn navigation-controls--search" id="searchBar" role="button">search in API</div>
-    </div>
-</nav>
+    </nav>
         <div id="container">
             <div class="sidebar" id="leftColumn">
-                <div class="sidebar--inner" id="sideMenu"></div>
+                <div class="dropdown theme-dark_mobile" data-role="dropdown" id="toc-dropdown">
+                    <ul role="listbox" id="toc-listbox" class="dropdown--list dropdown--list_toc-list"
+                        data-role="dropdown-listbox">
+                        <div class="dropdown--header">
+                            <span>
+                                    emulinker
+                            </span>
+                            <button class="button" data-role="dropdown-toggle" aria-label="Close table of contents">
+                                <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                            </button>
+                        </div>
+                        <div class="sidebar--inner" id="sideMenu"></div>
+                    </ul>
+                    <div class="dropdown--overlay"></div>
+                </div>
             </div>
             <div id="main">
-<div class="main-content" data-page-type="package" id="content" pageIds="emulinker::org.emulinker.kaillera.model.exception////PointingToDeclaration//133022281">
+<div class="main-content" data-page-type="package" id="content" pageIds="emulinker::org.emulinker.kaillera.model.exception////PointingToDeclaration//-1834219614">
   <div class="breadcrumbs"><a href="../../index.html">emulinker</a><span class="delimiter">/</span><span class="current">org.emulinker.kaillera.model.exception</span></div>
   <div class="cover ">
     <h1 class="cover"><span><span>Package-level</span></span> <span><span>declarations</span></span></h1>
@@ -71,332 +114,332 @@
     <div class="tabs-section-body">
       <div data-togglable="TYPE">
         <h2 class="">Types</h2>
-        <div class="table"><a data-name="1872273286%2FClasslikes%2F133022281" anchor-label="ActionException" id="1872273286%2FClasslikes%2F133022281" data-filterable-set=":emulinker:dokkaHtml/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker:dokkaHtml/main" data-filterable-set=":emulinker:dokkaHtml/main">
+        <div class="table"><a data-name="1872273286%2FClasslikes%2F-1834219614" anchor-label="ActionException" id="1872273286%2FClasslikes%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-action-exception/index.html"><span>Action</span><wbr></wbr><span><span>Exception</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1872273286%2FClasslikes%2F133022281"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1872273286%2FClasslikes%2F-1834219614"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker:dokkaHtml/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">class </span><a href="-action-exception/index.html">ActionException</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">message<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter ">source<span class="token operator">: </span><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Exception.html">Exception</a><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span> : <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Exception.html">Exception</a></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">class </span><a href="-action-exception/index.html">ActionException</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">message<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter ">source<span class="token operator">: </span><a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Exception.html">Exception</a><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span> : <a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Exception.html">Exception</a></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="-1430220888%2FClasslikes%2F133022281" anchor-label="ChatException" id="-1430220888%2FClasslikes%2F133022281" data-filterable-set=":emulinker:dokkaHtml/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker:dokkaHtml/main" data-filterable-set=":emulinker:dokkaHtml/main">
+<a data-name="-1430220888%2FClasslikes%2F-1834219614" anchor-label="ChatException" id="-1430220888%2FClasslikes%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-chat-exception/index.html"><span>Chat</span><wbr></wbr><span><span>Exception</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1430220888%2FClasslikes%2F133022281"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1430220888%2FClasslikes%2F-1834219614"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker:dokkaHtml/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-chat-exception/index.html">ChatException</a> : <a href="-action-exception/index.html">ActionException</a></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-chat-exception/index.html">ChatException</a> : <a href="-action-exception/index.html">ActionException</a></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="1020200605%2FClasslikes%2F133022281" anchor-label="ClientAddressException" id="1020200605%2FClasslikes%2F133022281" data-filterable-set=":emulinker:dokkaHtml/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker:dokkaHtml/main" data-filterable-set=":emulinker:dokkaHtml/main">
+<a data-name="1020200605%2FClasslikes%2F-1834219614" anchor-label="ClientAddressException" id="1020200605%2FClasslikes%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-client-address-exception/index.html"><span>Client</span><wbr></wbr><span>Address</span><wbr></wbr><span><span>Exception</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1020200605%2FClasslikes%2F133022281"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1020200605%2FClasslikes%2F-1834219614"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker:dokkaHtml/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-client-address-exception/index.html">ClientAddressException</a> : <a href="-login-exception/index.html">LoginException</a></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-client-address-exception/index.html">ClientAddressException</a> : <a href="-login-exception/index.html">LoginException</a></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="1533154238%2FClasslikes%2F133022281" anchor-label="CloseGameException" id="1533154238%2FClasslikes%2F133022281" data-filterable-set=":emulinker:dokkaHtml/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker:dokkaHtml/main" data-filterable-set=":emulinker:dokkaHtml/main">
+<a data-name="1533154238%2FClasslikes%2F-1834219614" anchor-label="CloseGameException" id="1533154238%2FClasslikes%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-close-game-exception/index.html"><span>Close</span><wbr></wbr><span>Game</span><wbr></wbr><span><span>Exception</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1533154238%2FClasslikes%2F133022281"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1533154238%2FClasslikes%2F-1834219614"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker:dokkaHtml/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-close-game-exception/index.html">CloseGameException</a> : <a href="-action-exception/index.html">ActionException</a></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-close-game-exception/index.html">CloseGameException</a> : <a href="-action-exception/index.html">ActionException</a></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="-2109639160%2FClasslikes%2F133022281" anchor-label="ConnectionTypeException" id="-2109639160%2FClasslikes%2F133022281" data-filterable-set=":emulinker:dokkaHtml/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker:dokkaHtml/main" data-filterable-set=":emulinker:dokkaHtml/main">
+<a data-name="-2109639160%2FClasslikes%2F-1834219614" anchor-label="ConnectionTypeException" id="-2109639160%2FClasslikes%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-connection-type-exception/index.html"><span>Connection</span><wbr></wbr><span>Type</span><wbr></wbr><span><span>Exception</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-2109639160%2FClasslikes%2F133022281"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-2109639160%2FClasslikes%2F-1834219614"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker:dokkaHtml/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-connection-type-exception/index.html">ConnectionTypeException</a> : <a href="-login-exception/index.html">LoginException</a></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-connection-type-exception/index.html">ConnectionTypeException</a> : <a href="-login-exception/index.html">LoginException</a></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="334481246%2FClasslikes%2F133022281" anchor-label="CreateGameException" id="334481246%2FClasslikes%2F133022281" data-filterable-set=":emulinker:dokkaHtml/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker:dokkaHtml/main" data-filterable-set=":emulinker:dokkaHtml/main">
+<a data-name="334481246%2FClasslikes%2F-1834219614" anchor-label="CreateGameException" id="334481246%2FClasslikes%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-create-game-exception/index.html"><span>Create</span><wbr></wbr><span>Game</span><wbr></wbr><span><span>Exception</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="334481246%2FClasslikes%2F133022281"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="334481246%2FClasslikes%2F-1834219614"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker:dokkaHtml/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-create-game-exception/index.html">CreateGameException</a> : <a href="-action-exception/index.html">ActionException</a></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-create-game-exception/index.html">CreateGameException</a> : <a href="-action-exception/index.html">ActionException</a></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="-42390895%2FClasslikes%2F133022281" anchor-label="DropGameException" id="-42390895%2FClasslikes%2F133022281" data-filterable-set=":emulinker:dokkaHtml/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker:dokkaHtml/main" data-filterable-set=":emulinker:dokkaHtml/main">
+<a data-name="-42390895%2FClasslikes%2F-1834219614" anchor-label="DropGameException" id="-42390895%2FClasslikes%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-drop-game-exception/index.html"><span>Drop</span><wbr></wbr><span>Game</span><wbr></wbr><span><span>Exception</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-42390895%2FClasslikes%2F133022281"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-42390895%2FClasslikes%2F-1834219614"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker:dokkaHtml/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-drop-game-exception/index.html">DropGameException</a> : <a href="-action-exception/index.html">ActionException</a></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-drop-game-exception/index.html">DropGameException</a> : <a href="-action-exception/index.html">ActionException</a></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="1222594994%2FClasslikes%2F133022281" anchor-label="FloodException" id="1222594994%2FClasslikes%2F133022281" data-filterable-set=":emulinker:dokkaHtml/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker:dokkaHtml/main" data-filterable-set=":emulinker:dokkaHtml/main">
+<a data-name="1222594994%2FClasslikes%2F-1834219614" anchor-label="FloodException" id="1222594994%2FClasslikes%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-flood-exception/index.html"><span>Flood</span><wbr></wbr><span><span>Exception</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1222594994%2FClasslikes%2F133022281"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1222594994%2FClasslikes%2F-1834219614"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker:dokkaHtml/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-flood-exception/index.html">FloodException</a> : <a href="-action-exception/index.html">ActionException</a></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-flood-exception/index.html">FloodException</a> : <a href="-action-exception/index.html">ActionException</a></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="63462202%2FClasslikes%2F133022281" anchor-label="GameChatException" id="63462202%2FClasslikes%2F133022281" data-filterable-set=":emulinker:dokkaHtml/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker:dokkaHtml/main" data-filterable-set=":emulinker:dokkaHtml/main">
+<a data-name="63462202%2FClasslikes%2F-1834219614" anchor-label="GameChatException" id="63462202%2FClasslikes%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-game-chat-exception/index.html"><span>Game</span><wbr></wbr><span>Chat</span><wbr></wbr><span><span>Exception</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="63462202%2FClasslikes%2F133022281"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="63462202%2FClasslikes%2F-1834219614"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker:dokkaHtml/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-game-chat-exception/index.html">GameChatException</a> : <a href="-action-exception/index.html">ActionException</a></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-game-chat-exception/index.html">GameChatException</a> : <a href="-action-exception/index.html">ActionException</a></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="-635493620%2FClasslikes%2F133022281" anchor-label="GameDataException" id="-635493620%2FClasslikes%2F133022281" data-filterable-set=":emulinker:dokkaHtml/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker:dokkaHtml/main" data-filterable-set=":emulinker:dokkaHtml/main">
+<a data-name="-635493620%2FClasslikes%2F-1834219614" anchor-label="GameDataException" id="-635493620%2FClasslikes%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-game-data-exception/index.html"><span>Game</span><wbr></wbr><span>Data</span><wbr></wbr><span><span>Exception</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-635493620%2FClasslikes%2F133022281"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-635493620%2FClasslikes%2F-1834219614"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker:dokkaHtml/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-game-data-exception/index.html">GameDataException</a> : <a href="-action-exception/index.html">ActionException</a></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-game-data-exception/index.html">GameDataException</a> : <a href="-action-exception/index.html">ActionException</a></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="1826932392%2FClasslikes%2F133022281" anchor-label="GameKickException" id="1826932392%2FClasslikes%2F133022281" data-filterable-set=":emulinker:dokkaHtml/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker:dokkaHtml/main" data-filterable-set=":emulinker:dokkaHtml/main">
+<a data-name="1826932392%2FClasslikes%2F-1834219614" anchor-label="GameKickException" id="1826932392%2FClasslikes%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-game-kick-exception/index.html"><span>Game</span><wbr></wbr><span>Kick</span><wbr></wbr><span><span>Exception</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1826932392%2FClasslikes%2F133022281"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1826932392%2FClasslikes%2F-1834219614"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker:dokkaHtml/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-game-kick-exception/index.html">GameKickException</a> : <a href="-action-exception/index.html">ActionException</a></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-game-kick-exception/index.html">GameKickException</a> : <a href="-action-exception/index.html">ActionException</a></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="1312030568%2FClasslikes%2F133022281" anchor-label="InvalidRequestException" id="1312030568%2FClasslikes%2F133022281" data-filterable-set=":emulinker:dokkaHtml/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker:dokkaHtml/main" data-filterable-set=":emulinker:dokkaHtml/main">
+<a data-name="1312030568%2FClasslikes%2F-1834219614" anchor-label="InvalidRequestException" id="1312030568%2FClasslikes%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-invalid-request-exception/index.html"><span>Invalid</span><wbr></wbr><span>Request</span><wbr></wbr><span><span>Exception</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1312030568%2FClasslikes%2F133022281"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1312030568%2FClasslikes%2F-1834219614"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker:dokkaHtml/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-invalid-request-exception/index.html">InvalidRequestException</a> : <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Exception.html">Exception</a></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-invalid-request-exception/index.html">InvalidRequestException</a> : <a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Exception.html">Exception</a></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="-415083380%2FClasslikes%2F133022281" anchor-label="JoinGameException" id="-415083380%2FClasslikes%2F133022281" data-filterable-set=":emulinker:dokkaHtml/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker:dokkaHtml/main" data-filterable-set=":emulinker:dokkaHtml/main">
+<a data-name="-415083380%2FClasslikes%2F-1834219614" anchor-label="JoinGameException" id="-415083380%2FClasslikes%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-join-game-exception/index.html"><span>Join</span><wbr></wbr><span>Game</span><wbr></wbr><span><span>Exception</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-415083380%2FClasslikes%2F133022281"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-415083380%2FClasslikes%2F-1834219614"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker:dokkaHtml/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-join-game-exception/index.html">JoinGameException</a> : <a href="-action-exception/index.html">ActionException</a></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-join-game-exception/index.html">JoinGameException</a> : <a href="-action-exception/index.html">ActionException</a></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="-795180451%2FClasslikes%2F133022281" anchor-label="LoginException" id="-795180451%2FClasslikes%2F133022281" data-filterable-set=":emulinker:dokkaHtml/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker:dokkaHtml/main" data-filterable-set=":emulinker:dokkaHtml/main">
+<a data-name="-795180451%2FClasslikes%2F-1834219614" anchor-label="LoginException" id="-795180451%2FClasslikes%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-login-exception/index.html"><span>Login</span><wbr></wbr><span><span>Exception</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-795180451%2FClasslikes%2F133022281"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-795180451%2FClasslikes%2F-1834219614"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker:dokkaHtml/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">class </span><a href="-login-exception/index.html">LoginException</a> : <a href="-action-exception/index.html">ActionException</a></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">class </span><a href="-login-exception/index.html">LoginException</a> : <a href="-action-exception/index.html">ActionException</a></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="90247250%2FClasslikes%2F133022281" anchor-label="NewConnectionException" id="90247250%2FClasslikes%2F133022281" data-filterable-set=":emulinker:dokkaHtml/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker:dokkaHtml/main" data-filterable-set=":emulinker:dokkaHtml/main">
+<a data-name="90247250%2FClasslikes%2F-1834219614" anchor-label="NewConnectionException" id="90247250%2FClasslikes%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-new-connection-exception/index.html"><span>New</span><wbr></wbr><span>Connection</span><wbr></wbr><span><span>Exception</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="90247250%2FClasslikes%2F133022281"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="90247250%2FClasslikes%2F-1834219614"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker:dokkaHtml/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">class </span><a href="-new-connection-exception/index.html">NewConnectionException</a> : <a href="-action-exception/index.html">ActionException</a></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">class </span><a href="-new-connection-exception/index.html">NewConnectionException</a> : <a href="-action-exception/index.html">ActionException</a></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="-1965026577%2FClasslikes%2F133022281" anchor-label="PingTimeException" id="-1965026577%2FClasslikes%2F133022281" data-filterable-set=":emulinker:dokkaHtml/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker:dokkaHtml/main" data-filterable-set=":emulinker:dokkaHtml/main">
+<a data-name="-1965026577%2FClasslikes%2F-1834219614" anchor-label="PingTimeException" id="-1965026577%2FClasslikes%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-ping-time-exception/index.html"><span>Ping</span><wbr></wbr><span>Time</span><wbr></wbr><span><span>Exception</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1965026577%2FClasslikes%2F133022281"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1965026577%2FClasslikes%2F-1834219614"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker:dokkaHtml/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-ping-time-exception/index.html">PingTimeException</a> : <a href="-login-exception/index.html">LoginException</a></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-ping-time-exception/index.html">PingTimeException</a> : <a href="-login-exception/index.html">LoginException</a></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="-1631280929%2FClasslikes%2F133022281" anchor-label="QuitException" id="-1631280929%2FClasslikes%2F133022281" data-filterable-set=":emulinker:dokkaHtml/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker:dokkaHtml/main" data-filterable-set=":emulinker:dokkaHtml/main">
+<a data-name="-1631280929%2FClasslikes%2F-1834219614" anchor-label="QuitException" id="-1631280929%2FClasslikes%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-quit-exception/index.html"><span>Quit</span><wbr></wbr><span><span>Exception</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1631280929%2FClasslikes%2F133022281"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1631280929%2FClasslikes%2F-1834219614"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker:dokkaHtml/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-quit-exception/index.html">QuitException</a> : <a href="-action-exception/index.html">ActionException</a></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-quit-exception/index.html">QuitException</a> : <a href="-action-exception/index.html">ActionException</a></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="483235313%2FClasslikes%2F133022281" anchor-label="QuitGameException" id="483235313%2FClasslikes%2F133022281" data-filterable-set=":emulinker:dokkaHtml/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker:dokkaHtml/main" data-filterable-set=":emulinker:dokkaHtml/main">
+<a data-name="483235313%2FClasslikes%2F-1834219614" anchor-label="QuitGameException" id="483235313%2FClasslikes%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-quit-game-exception/index.html"><span>Quit</span><wbr></wbr><span>Game</span><wbr></wbr><span><span>Exception</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="483235313%2FClasslikes%2F133022281"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="483235313%2FClasslikes%2F-1834219614"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker:dokkaHtml/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-quit-game-exception/index.html">QuitGameException</a> : <a href="-action-exception/index.html">ActionException</a></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-quit-game-exception/index.html">QuitGameException</a> : <a href="-action-exception/index.html">ActionException</a></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="627988418%2FClasslikes%2F133022281" anchor-label="ServerFullException" id="627988418%2FClasslikes%2F133022281" data-filterable-set=":emulinker:dokkaHtml/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker:dokkaHtml/main" data-filterable-set=":emulinker:dokkaHtml/main">
+<a data-name="627988418%2FClasslikes%2F-1834219614" anchor-label="ServerFullException" id="627988418%2FClasslikes%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-server-full-exception/index.html"><span>Server</span><wbr></wbr><span>Full</span><wbr></wbr><span><span>Exception</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="627988418%2FClasslikes%2F133022281"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="627988418%2FClasslikes%2F-1834219614"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker:dokkaHtml/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-server-full-exception/index.html">ServerFullException</a> : <a href="-new-connection-exception/index.html">NewConnectionException</a></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-server-full-exception/index.html">ServerFullException</a> : <a href="-new-connection-exception/index.html">NewConnectionException</a></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="-1445930328%2FClasslikes%2F133022281" anchor-label="StartGameException" id="-1445930328%2FClasslikes%2F133022281" data-filterable-set=":emulinker:dokkaHtml/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker:dokkaHtml/main" data-filterable-set=":emulinker:dokkaHtml/main">
+<a data-name="-1445930328%2FClasslikes%2F-1834219614" anchor-label="StartGameException" id="-1445930328%2FClasslikes%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-start-game-exception/index.html"><span>Start</span><wbr></wbr><span>Game</span><wbr></wbr><span><span>Exception</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1445930328%2FClasslikes%2F133022281"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1445930328%2FClasslikes%2F-1834219614"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker:dokkaHtml/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-start-game-exception/index.html">StartGameException</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">message<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter ">cause<span class="token operator">: </span><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Exception.html">Exception</a><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span> : <a href="-action-exception/index.html">ActionException</a></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-start-game-exception/index.html">StartGameException</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">message<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter ">cause<span class="token operator">: </span><a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Exception.html">Exception</a><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span> : <a href="-action-exception/index.html">ActionException</a></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="-605377850%2FClasslikes%2F133022281" anchor-label="UserNameException" id="-605377850%2FClasslikes%2F133022281" data-filterable-set=":emulinker:dokkaHtml/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker:dokkaHtml/main" data-filterable-set=":emulinker:dokkaHtml/main">
+<a data-name="-605377850%2FClasslikes%2F-1834219614" anchor-label="UserNameException" id="-605377850%2FClasslikes%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-user-name-exception/index.html"><span>User</span><wbr></wbr><span>Name</span><wbr></wbr><span><span>Exception</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-605377850%2FClasslikes%2F133022281"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-605377850%2FClasslikes%2F-1834219614"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker:dokkaHtml/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-user-name-exception/index.html">UserNameException</a> : <a href="-login-exception/index.html">LoginException</a></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-user-name-exception/index.html">UserNameException</a> : <a href="-login-exception/index.html">LoginException</a></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="1202893516%2FClasslikes%2F133022281" anchor-label="UserReadyException" id="1202893516%2FClasslikes%2F133022281" data-filterable-set=":emulinker:dokkaHtml/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker:dokkaHtml/main" data-filterable-set=":emulinker:dokkaHtml/main">
+<a data-name="1202893516%2FClasslikes%2F-1834219614" anchor-label="UserReadyException" id="1202893516%2FClasslikes%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-user-ready-exception/index.html"><span>User</span><wbr></wbr><span>Ready</span><wbr></wbr><span><span>Exception</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1202893516%2FClasslikes%2F133022281"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1202893516%2FClasslikes%2F-1834219614"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker:dokkaHtml/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-user-ready-exception/index.html">UserReadyException</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">message<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span><span class="token punctuation">, </span></span><span class="parameter ">source<span class="token operator">: </span><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Exception.html">Exception</a><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span> : <a href="-action-exception/index.html">ActionException</a></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-user-ready-exception/index.html">UserReadyException</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">message<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span><span class="token punctuation">, </span></span><span class="parameter ">source<span class="token operator">: </span><a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Exception.html">Exception</a><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span> : <a href="-action-exception/index.html">ActionException</a></div></div></div>
                 </div>
               </div>
             </div>
@@ -406,11 +449,16 @@
     </div>
   </div>
 </div>
-      <div class="footer">
-        <span class="go-to-top-icon"><a href="#content" id="go-to-top-link"></a></span><span>© 2025 Copyright</span><span
-                class="pull-right"><span>Generated by </span><a
-                href="https://github.com/Kotlin/dokka"><span>dokka</span><span class="padded-icon"></span></a></span>
-      </div>
+    <div class="footer">
+        <a href="#content" id="go-to-top-link" class="footer--button footer--button_go-to-top"></a>
+        <span>© 2025 Copyright</span>
+        <span class="pull-right">
+            <span>Generated by </span>
+            <a class="footer--link footer--link_external" href="https://github.com/Kotlin/dokka">
+                <span>dokka</span>
+            </a>
+        </span>
+    </div>
             </div>
         </div>
     </div>

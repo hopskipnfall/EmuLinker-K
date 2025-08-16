@@ -26,63 +26,106 @@
 <link href="../../../styles/prism.css" rel="Stylesheet">
 <link href="../../../styles/logo-styles.css" rel="Stylesheet">
 <link href="../../../styles/font-jb-sans-auto.css" rel="Stylesheet">
+<link href="../../../ui-kit/ui-kit.min.css" rel="Stylesheet">
 <script type="text/javascript" src="../../../scripts/clipboard.js" async="async"></script>
 <script type="text/javascript" src="../../../scripts/navigation-loader.js" async="async"></script>
 <script type="text/javascript" src="../../../scripts/platform-content-handler.js" async="async"></script>
 <script type="text/javascript" src="../../../scripts/main.js" defer="defer"></script>
 <script type="text/javascript" src="../../../scripts/prism.js" async="async"></script>
+<script type="text/javascript" src="../../../ui-kit/ui-kit.min.js" defer="defer"></script>
 <script type="text/javascript" src="../../../scripts/symbol-parameters-wrapper_deferred.js" defer="defer"></script>
 </head>
 <body>
     <div class="root">
-<nav class="navigation" id="navigation-wrapper">
-    <div class="navigation--inner">
-        <div class="navigation-title">
-            <button class="menu-toggle" id="menu-toggle" type="button">toggle menu</button>
-            <div class="library-name">
-                    <a class="library-name--link" href="../../../index.html">
-                            emulinker
-                    </a>
+    <nav class="navigation theme-dark" id="navigation-wrapper">
+            <a class="library-name--link" href="../../../index.html">
+                    emulinker
+            </a>
+        <button class="navigation-controls--btn navigation-controls--btn_toc ui-kit_mobile-only" id="toc-toggle"
+                type="button">Toggle table of contents
+        </button>
+        <div class="navigation-controls--break ui-kit_mobile-only"></div>
+        <div class="library-version" id="library-version">
+0.15.0        </div>
+        <div class="navigation-controls">
+        <div class="filter-section filter-section_loading" id="filter-section">
+                <button class="platform-tag platform-selector jvm-like" data-active=""
+                        data-filter=":emulinker/main">jvm</button>
+            <div class="dropdown filter-section--dropdown" data-role="dropdown" id="filter-section-dropdown">
+                <button class="button button_dropdown filter-section--dropdown-toggle" role="combobox"
+                        data-role="dropdown-toggle"
+                        aria-controls="platform-tags-listbox"
+                        aria-haspopup="listbox"
+                        aria-expanded="false"
+                        aria-label="Toggle source sets"
+                ></button>
+                <ul role="listbox" id="platform-tags-listbox" class="dropdown--list" data-role="dropdown-listbox">
+                    <div class="dropdown--header"><span>Platform filter</span>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close platform filter">
+                            <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                        </button>
+                    </div>
+                        <li role="option" class="dropdown--option platform-selector-option jvm-like" tabindex="0">
+                            <label class="checkbox">
+                                <input type="checkbox" class="checkbox--input" id=":emulinker/main"
+                                       data-filter=":emulinker/main"/>
+                                <span class="checkbox--icon"></span>
+                                jvm
+                            </label>
+                        </li>
+                </ul>
+                <div class="dropdown--overlay"></div>
             </div>
-            <div class="library-version">
-0.15.0            </div>
         </div>
-        <div class="filter-section" id="filter-section">
-                <button class="platform-tag platform-selector jvm-like" data-active="" data-filter=":emulinker:dokkaHtml/main">jvm</button>
+            <button class="navigation-controls--btn navigation-controls--btn_theme" id="theme-toggle-button"
+                    type="button">Switch theme
+            </button>
+            <div class="navigation-controls--btn navigation-controls--btn_search" id="searchBar" role="button">Search in
+                API
+            </div>
         </div>
-    </div>
-    <div class="navigation-controls">
-        <button class="navigation-controls--btn navigation-controls--theme" id="theme-toggle-button" type="button">switch theme</button>
-        <div class="navigation-controls--btn navigation-controls--search" id="searchBar" role="button">search in API</div>
-    </div>
-</nav>
+    </nav>
         <div id="container">
             <div class="sidebar" id="leftColumn">
-                <div class="sidebar--inner" id="sideMenu"></div>
+                <div class="dropdown theme-dark_mobile" data-role="dropdown" id="toc-dropdown">
+                    <ul role="listbox" id="toc-listbox" class="dropdown--list dropdown--list_toc-list"
+                        data-role="dropdown-listbox">
+                        <div class="dropdown--header">
+                            <span>
+                                    emulinker
+                            </span>
+                            <button class="button" data-role="dropdown-toggle" aria-label="Close table of contents">
+                                <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                            </button>
+                        </div>
+                        <div class="sidebar--inner" id="sideMenu"></div>
+                    </ul>
+                    <div class="dropdown--overlay"></div>
+                </div>
             </div>
             <div id="main">
-<div class="main-content" data-page-type="classlike" id="content" pageIds="emulinker::org.emulinker.kaillera.model.impl/PlayerActionQueue///PointingToDeclaration//133022281">
+<div class="main-content" data-page-type="classlike" id="content" pageIds="emulinker::org.emulinker.kaillera.model.impl/PlayerActionQueue///PointingToDeclaration//-1834219614">
   <div class="breadcrumbs"><a href="../../../index.html">emulinker</a><span class="delimiter">/</span><a href="../index.html">org.emulinker.kaillera.model.impl</a><span class="delimiter">/</span><span class="current">PlayerActionQueue</span></div>
   <div class="cover ">
     <h1 class="cover"><span>Player</span><wbr></wbr><span>Action</span><wbr></wbr><span><span>Queue</span></span></h1>
-    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker:dokkaHtml/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="index.html">PlayerActionQueue</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>playerNumber<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>player<span class="token operator">: </span><a href="../../org.emulinker.kaillera.model/-kaillera-user/index.html">KailleraUser</a><span class="token punctuation">, </span></span><span class="parameter ">numPlayers<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter ">gameBufferSize<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-int/index.html">Int</a></span></span><span class="token punctuation">)</span></div></div></div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="index.html">PlayerActionQueue</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>playerNumber<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>player<span class="token operator">: </span><a href="../../org.emulinker.kaillera.model/-kaillera-user/index.html">KailleraUser</a><span class="token punctuation">, </span></span><span class="parameter ">numPlayers<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter ">gameBufferSize<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a></span></span><span class="token punctuation">)</span></div></div></div>
   </div>
   <div class="tabbedcontent">
     <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION">Members</button></div>
     <div class="tabs-section-body">
       <div data-togglable="CONSTRUCTOR">
         <h2 class="">Constructors</h2>
-        <div class="table"><a data-name="237676064%2FConstructors%2F133022281" anchor-label="PlayerActionQueue" id="237676064%2FConstructors%2F133022281" data-filterable-set=":emulinker:dokkaHtml/main"></a>
-          <div class="table-row" data-togglable="CONSTRUCTOR" data-filterable-current=":emulinker:dokkaHtml/main" data-filterable-set=":emulinker:dokkaHtml/main">
+        <div class="table"><a data-name="237676064%2FConstructors%2F-1834219614" anchor-label="PlayerActionQueue" id="237676064%2FConstructors%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+          <div class="table-row" data-togglable="CONSTRUCTOR" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-player-action-queue.html"><span>Player</span><wbr></wbr><span>Action</span><wbr></wbr><span><span>Queue</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="237676064%2FConstructors%2F133022281"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="237676064%2FConstructors%2F-1834219614"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker:dokkaHtml/main"><div class="symbol monospace"><span class="token keyword">constructor</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">playerNumber<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter ">player<span class="token operator">: </span><a href="../../org.emulinker.kaillera.model/-kaillera-user/index.html">KailleraUser</a><span class="token punctuation">, </span></span><span class="parameter ">numPlayers<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter ">gameBufferSize<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-int/index.html">Int</a></span></span><span class="token punctuation">)</span></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">constructor</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">playerNumber<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter ">player<span class="token operator">: </span><a href="../../org.emulinker.kaillera.model/-kaillera-user/index.html">KailleraUser</a><span class="token punctuation">, </span></span><span class="parameter ">numPlayers<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter ">gameBufferSize<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a></span></span><span class="token punctuation">)</span></div></div></div>
                 </div>
               </div>
             </div>
@@ -91,62 +134,62 @@
       </div>
       <div data-togglable="PROPERTY">
         <h2 class="">Properties</h2>
-        <div class="table"><a data-name="-1285031192%2FProperties%2F133022281" anchor-label="lastTimeout" id="-1285031192%2FProperties%2F133022281" data-filterable-set=":emulinker:dokkaHtml/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker:dokkaHtml/main" data-filterable-set=":emulinker:dokkaHtml/main">
+        <div class="table"><a data-name="-1285031192%2FProperties%2F-1834219614" anchor-label="lastTimeout" id="-1285031192%2FProperties%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="last-timeout.html"><span>last</span><wbr></wbr><span><span>Timeout</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1285031192%2FProperties%2F133022281"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1285031192%2FProperties%2F-1834219614"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker:dokkaHtml/main"><div class="symbol monospace"><span class="token keyword">var </span><a href="last-timeout.html">lastTimeout</a><span class="token operator">: </span><a href="../-player-timeout-exception/index.html">PlayerTimeoutException</a><span class="token operator">?</span></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">var </span><a href="last-timeout.html">lastTimeout</a><span class="token operator">: </span><a href="../-player-timeout-exception/index.html">PlayerTimeoutException</a><span class="token operator">?</span></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="293648262%2FProperties%2F133022281" anchor-label="player" id="293648262%2FProperties%2F133022281" data-filterable-set=":emulinker:dokkaHtml/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker:dokkaHtml/main" data-filterable-set=":emulinker:dokkaHtml/main">
+<a data-name="293648262%2FProperties%2F-1834219614" anchor-label="player" id="293648262%2FProperties%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="player.html"><span><span>player</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="293648262%2FProperties%2F133022281"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="293648262%2FProperties%2F-1834219614"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker:dokkaHtml/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="player.html">player</a><span class="token operator">: </span><a href="../../org.emulinker.kaillera.model/-kaillera-user/index.html">KailleraUser</a></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="player.html">player</a><span class="token operator">: </span><a href="../../org.emulinker.kaillera.model/-kaillera-user/index.html">KailleraUser</a></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="1921920381%2FProperties%2F133022281" anchor-label="playerNumber" id="1921920381%2FProperties%2F133022281" data-filterable-set=":emulinker:dokkaHtml/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker:dokkaHtml/main" data-filterable-set=":emulinker:dokkaHtml/main">
+<a data-name="1921920381%2FProperties%2F-1834219614" anchor-label="playerNumber" id="1921920381%2FProperties%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="player-number.html"><span>player</span><wbr></wbr><span><span>Number</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1921920381%2FProperties%2F133022281"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1921920381%2FProperties%2F-1834219614"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker:dokkaHtml/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="player-number.html">playerNumber</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-int/index.html">Int</a></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="player-number.html">playerNumber</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="-1506462707%2FProperties%2F133022281" anchor-label="synced" id="-1506462707%2FProperties%2F133022281" data-filterable-set=":emulinker:dokkaHtml/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker:dokkaHtml/main" data-filterable-set=":emulinker:dokkaHtml/main">
+<a data-name="-1506462707%2FProperties%2F-1834219614" anchor-label="synced" id="-1506462707%2FProperties%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="synced.html"><span><span>synced</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1506462707%2FProperties%2F133022281"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1506462707%2FProperties%2F-1834219614"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker:dokkaHtml/main"><div class="symbol monospace"><span class="token keyword">var </span><a href="synced.html">synced</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Whether the queue is synced with the <a href="../-kaillera-game-impl/index.html">KailleraGameImpl</a>.</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">var </span><a href="synced.html">synced</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Whether the queue is synced with the <a href="../-kaillera-game-impl/index.html">KailleraGameImpl</a>.</p></div></div></div>
                 </div>
               </div>
             </div>
@@ -155,77 +198,77 @@
       </div>
       <div data-togglable="FUNCTION">
         <h2 class="">Functions</h2>
-        <div class="table"><a data-name="-1978926393%2FFunctions%2F133022281" anchor-label="addActions" id="-1978926393%2FFunctions%2F133022281" data-filterable-set=":emulinker:dokkaHtml/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker:dokkaHtml/main" data-filterable-set=":emulinker:dokkaHtml/main">
+        <div class="table"><a data-name="-1978926393%2FFunctions%2F-1834219614" anchor-label="addActions" id="-1978926393%2FFunctions%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="add-actions.html"><span>add</span><wbr></wbr><span><span>Actions</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1978926393%2FFunctions%2F133022281"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1978926393%2FFunctions%2F-1834219614"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker:dokkaHtml/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="add-actions.html"><span class="token function">addActions</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">actions<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-byte-array/index.html">ByteArray</a></span></span><span class="token punctuation">)</span></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="add-actions.html"><span class="token function">addActions</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">actions<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-byte-array/index.html">ByteArray</a></span></span><span class="token punctuation">)</span></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="-902440105%2FFunctions%2F133022281" anchor-label="containsNewDataForPlayer" id="-902440105%2FFunctions%2F133022281" data-filterable-set=":emulinker:dokkaHtml/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker:dokkaHtml/main" data-filterable-set=":emulinker:dokkaHtml/main">
+<a data-name="-902440105%2FFunctions%2F-1834219614" anchor-label="containsNewDataForPlayer" id="-902440105%2FFunctions%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="contains-new-data-for-player.html"><span>contains</span><wbr></wbr><span>New</span><wbr></wbr><span>Data</span><wbr></wbr><span>For</span><wbr></wbr><span><span>Player</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-902440105%2FFunctions%2F133022281"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-902440105%2FFunctions%2F-1834219614"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker:dokkaHtml/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="contains-new-data-for-player.html"><span class="token function">containsNewDataForPlayer</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">playerIndex<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter ">actionLength<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-int/index.html">Int</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="contains-new-data-for-player.html"><span class="token function">containsNewDataForPlayer</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">playerIndex<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter ">actionLength<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="-342699808%2FFunctions%2F133022281" anchor-label="getActionAndWriteToArray" id="-342699808%2FFunctions%2F133022281" data-filterable-set=":emulinker:dokkaHtml/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker:dokkaHtml/main" data-filterable-set=":emulinker:dokkaHtml/main">
+<a data-name="-342699808%2FFunctions%2F-1834219614" anchor-label="getActionAndWriteToArray" id="-342699808%2FFunctions%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="get-action-and-write-to-array.html"><span>get</span><wbr></wbr><span>Action</span><wbr></wbr><span>And</span><wbr></wbr><span>Write</span><wbr></wbr><span>To</span><wbr></wbr><span><span>Array</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-342699808%2FFunctions%2F133022281"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-342699808%2FFunctions%2F-1834219614"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker:dokkaHtml/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="get-action-and-write-to-array.html"><span class="token function">getActionAndWriteToArray</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">playerIndex<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter ">writeToArray<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-byte-array/index.html">ByteArray</a><span class="token punctuation">, </span></span><span class="parameter ">writeAtIndex<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter ">actionLength<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-int/index.html">Int</a></span></span><span class="token punctuation">)</span></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="get-action-and-write-to-array.html"><span class="token function">getActionAndWriteToArray</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">playerIndex<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter ">writeToArray<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-byte-array/index.html">ByteArray</a><span class="token punctuation">, </span></span><span class="parameter ">writeAtIndex<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter ">actionLength<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a></span></span><span class="token punctuation">)</span></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="-1696936289%2FFunctions%2F133022281" anchor-label="markDesynced" id="-1696936289%2FFunctions%2F133022281" data-filterable-set=":emulinker:dokkaHtml/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker:dokkaHtml/main" data-filterable-set=":emulinker:dokkaHtml/main">
+<a data-name="-1696936289%2FFunctions%2F-1834219614" anchor-label="markDesynced" id="-1696936289%2FFunctions%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="mark-desynced.html"><span>mark</span><wbr></wbr><span><span>Desynced</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1696936289%2FFunctions%2F133022281"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1696936289%2FFunctions%2F-1834219614"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker:dokkaHtml/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="mark-desynced.html"><span class="token function">markDesynced</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="mark-desynced.html"><span class="token function">markDesynced</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="50116224%2FFunctions%2F133022281" anchor-label="markSynced" id="50116224%2FFunctions%2F133022281" data-filterable-set=":emulinker:dokkaHtml/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker:dokkaHtml/main" data-filterable-set=":emulinker:dokkaHtml/main">
+<a data-name="50116224%2FFunctions%2F-1834219614" anchor-label="markSynced" id="50116224%2FFunctions%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="mark-synced.html"><span>mark</span><wbr></wbr><span><span>Synced</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="50116224%2FFunctions%2F133022281"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="50116224%2FFunctions%2F-1834219614"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker:dokkaHtml/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="mark-synced.html"><span class="token function">markSynced</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="mark-synced.html"><span class="token function">markSynced</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
                 </div>
               </div>
             </div>
@@ -235,11 +278,16 @@
     </div>
   </div>
 </div>
-      <div class="footer">
-        <span class="go-to-top-icon"><a href="#content" id="go-to-top-link"></a></span><span>© 2025 Copyright</span><span
-                class="pull-right"><span>Generated by </span><a
-                href="https://github.com/Kotlin/dokka"><span>dokka</span><span class="padded-icon"></span></a></span>
-      </div>
+    <div class="footer">
+        <a href="#content" id="go-to-top-link" class="footer--button footer--button_go-to-top"></a>
+        <span>© 2025 Copyright</span>
+        <span class="pull-right">
+            <span>Generated by </span>
+            <a class="footer--link footer--link_external" href="https://github.com/Kotlin/dokka">
+                <span>dokka</span>
+            </a>
+        </span>
+    </div>
             </div>
         </div>
     </div>

@@ -26,54 +26,97 @@
 <link href="styles/prism.css" rel="Stylesheet">
 <link href="styles/logo-styles.css" rel="Stylesheet">
 <link href="styles/font-jb-sans-auto.css" rel="Stylesheet">
+<link href="ui-kit/ui-kit.min.css" rel="Stylesheet">
 <script type="text/javascript" src="scripts/clipboard.js" async="async"></script>
 <script type="text/javascript" src="scripts/navigation-loader.js" async="async"></script>
 <script type="text/javascript" src="scripts/platform-content-handler.js" async="async"></script>
 <script type="text/javascript" src="scripts/main.js" defer="defer"></script>
 <script type="text/javascript" src="scripts/prism.js" async="async"></script>
+<script type="text/javascript" src="ui-kit/ui-kit.min.js" defer="defer"></script>
 <script type="text/javascript" src="scripts/symbol-parameters-wrapper_deferred.js" defer="defer"></script>
 </head>
 <body>
     <div class="root">
-<nav class="navigation" id="navigation-wrapper">
-    <div class="navigation--inner">
-        <div class="navigation-title">
-            <button class="menu-toggle" id="menu-toggle" type="button">toggle menu</button>
-            <div class="library-name">
-                    <a class="library-name--link" href="index.html">
-                            emulinker
-                    </a>
+    <nav class="navigation theme-dark" id="navigation-wrapper">
+            <a class="library-name--link" href="index.html">
+                    emulinker
+            </a>
+        <button class="navigation-controls--btn navigation-controls--btn_toc ui-kit_mobile-only" id="toc-toggle"
+                type="button">Toggle table of contents
+        </button>
+        <div class="navigation-controls--break ui-kit_mobile-only"></div>
+        <div class="library-version" id="library-version">
+0.15.0        </div>
+        <div class="navigation-controls">
+        <div class="filter-section filter-section_loading" id="filter-section">
+                <button class="platform-tag platform-selector jvm-like" data-active=""
+                        data-filter=":emulinker/main">jvm</button>
+            <div class="dropdown filter-section--dropdown" data-role="dropdown" id="filter-section-dropdown">
+                <button class="button button_dropdown filter-section--dropdown-toggle" role="combobox"
+                        data-role="dropdown-toggle"
+                        aria-controls="platform-tags-listbox"
+                        aria-haspopup="listbox"
+                        aria-expanded="false"
+                        aria-label="Toggle source sets"
+                ></button>
+                <ul role="listbox" id="platform-tags-listbox" class="dropdown--list" data-role="dropdown-listbox">
+                    <div class="dropdown--header"><span>Platform filter</span>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close platform filter">
+                            <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                        </button>
+                    </div>
+                        <li role="option" class="dropdown--option platform-selector-option jvm-like" tabindex="0">
+                            <label class="checkbox">
+                                <input type="checkbox" class="checkbox--input" id=":emulinker/main"
+                                       data-filter=":emulinker/main"/>
+                                <span class="checkbox--icon"></span>
+                                jvm
+                            </label>
+                        </li>
+                </ul>
+                <div class="dropdown--overlay"></div>
             </div>
-            <div class="library-version">
-0.15.0            </div>
         </div>
-        <div class="filter-section" id="filter-section">
-                <button class="platform-tag platform-selector jvm-like" data-active="" data-filter=":emulinker:dokkaHtml/main">jvm</button>
+            <button class="navigation-controls--btn navigation-controls--btn_theme" id="theme-toggle-button"
+                    type="button">Switch theme
+            </button>
+            <div class="navigation-controls--btn navigation-controls--btn_search" id="searchBar" role="button">Search in
+                API
+            </div>
         </div>
-    </div>
-    <div class="navigation-controls">
-        <button class="navigation-controls--btn navigation-controls--theme" id="theme-toggle-button" type="button">switch theme</button>
-        <div class="navigation-controls--btn navigation-controls--search" id="searchBar" role="button">search in API</div>
-    </div>
-</nav>
+    </nav>
         <div id="container">
             <div class="sidebar" id="leftColumn">
-                <div class="sidebar--inner" id="sideMenu"></div>
+                <div class="dropdown theme-dark_mobile" data-role="dropdown" id="toc-dropdown">
+                    <ul role="listbox" id="toc-listbox" class="dropdown--list dropdown--list_toc-list"
+                        data-role="dropdown-listbox">
+                        <div class="dropdown--header">
+                            <span>
+                                    emulinker
+                            </span>
+                            <button class="button" data-role="dropdown-toggle" aria-label="Close table of contents">
+                                <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                            </button>
+                        </div>
+                        <div class="sidebar--inner" id="sideMenu"></div>
+                    </ul>
+                    <div class="dropdown--overlay"></div>
+                </div>
             </div>
             <div id="main">
-<div class="main-content" id="content" pageIds="emulinker::////PointingToDeclaration//133022281">
+<div class="main-content" id="content" pageIds="emulinker::////PointingToDeclaration//-1834219614">
   <div class="breadcrumbs"></div>
   <div class="cover ">
     <h1 class="cover"><span><span>emulinker</span></span></h1>
   </div>
   <h2 class="">Packages</h2>
-  <div class="table"><a data-name="-2094654360%2FPackages%2F133022281" anchor-label="org.emulinker.config" id="-2094654360%2FPackages%2F133022281" data-filterable-set=":emulinker:dokkaHtml/main"></a>
-    <div class="table-row" data-filterable-current=":emulinker:dokkaHtml/main" data-filterable-set=":emulinker:dokkaHtml/main">
+  <div class="table"><a data-name="-2094654360%2FPackages%2F-1834219614" anchor-label="org.emulinker.config" id="-2094654360%2FPackages%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+    <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
       <div>
         <div class="main-subrow ">
           <div class=""><span class="inline-flex">
               <div><a href="emulinker/org.emulinker.config/index.html">org.emulinker.config</a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-2094654360%2FPackages%2F133022281"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-2094654360%2FPackages%2F-1834219614"></span>
                 <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
               </span></span></div>
           <div class="pull-right">
@@ -85,13 +128,13 @@
         <div></div>
       </div>
     </div>
-<a data-name="-546425489%2FPackages%2F133022281" anchor-label="org.emulinker.kaillera.access" id="-546425489%2FPackages%2F133022281" data-filterable-set=":emulinker:dokkaHtml/main"></a>
-    <div class="table-row" data-filterable-current=":emulinker:dokkaHtml/main" data-filterable-set=":emulinker:dokkaHtml/main">
+<a data-name="-546425489%2FPackages%2F-1834219614" anchor-label="org.emulinker.kaillera.access" id="-546425489%2FPackages%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+    <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
       <div>
         <div class="main-subrow ">
           <div class=""><span class="inline-flex">
               <div><a href="emulinker/org.emulinker.kaillera.access/index.html">org.emulinker.kaillera.access</a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-546425489%2FPackages%2F133022281"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-546425489%2FPackages%2F-1834219614"></span>
                 <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
               </span></span></div>
           <div class="pull-right">
@@ -103,13 +146,13 @@
         <div></div>
       </div>
     </div>
-<a data-name="83284263%2FPackages%2F133022281" anchor-label="org.emulinker.kaillera.controller" id="83284263%2FPackages%2F133022281" data-filterable-set=":emulinker:dokkaHtml/main"></a>
-    <div class="table-row" data-filterable-current=":emulinker:dokkaHtml/main" data-filterable-set=":emulinker:dokkaHtml/main">
+<a data-name="83284263%2FPackages%2F-1834219614" anchor-label="org.emulinker.kaillera.controller" id="83284263%2FPackages%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+    <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
       <div>
         <div class="main-subrow ">
           <div class=""><span class="inline-flex">
               <div><a href="emulinker/org.emulinker.kaillera.controller/index.html">org.emulinker.kaillera.controller</a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="83284263%2FPackages%2F133022281"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="83284263%2FPackages%2F-1834219614"></span>
                 <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
               </span></span></div>
           <div class="pull-right">
@@ -121,13 +164,13 @@
         <div></div>
       </div>
     </div>
-<a data-name="777964075%2FPackages%2F133022281" anchor-label="org.emulinker.kaillera.controller.connectcontroller.protocol" id="777964075%2FPackages%2F133022281" data-filterable-set=":emulinker:dokkaHtml/main"></a>
-    <div class="table-row" data-filterable-current=":emulinker:dokkaHtml/main" data-filterable-set=":emulinker:dokkaHtml/main">
+<a data-name="777964075%2FPackages%2F-1834219614" anchor-label="org.emulinker.kaillera.controller.connectcontroller.protocol" id="777964075%2FPackages%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+    <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
       <div>
         <div class="main-subrow ">
           <div class=""><span class="inline-flex">
               <div><a href="emulinker/org.emulinker.kaillera.controller.connectcontroller.protocol/index.html">org.emulinker.kaillera.controller.connectcontroller.protocol</a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="777964075%2FPackages%2F133022281"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="777964075%2FPackages%2F-1834219614"></span>
                 <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
               </span></span></div>
           <div class="pull-right">
@@ -139,13 +182,13 @@
         <div></div>
       </div>
     </div>
-<a data-name="-472262147%2FPackages%2F133022281" anchor-label="org.emulinker.kaillera.controller.messaging" id="-472262147%2FPackages%2F133022281" data-filterable-set=":emulinker:dokkaHtml/main"></a>
-    <div class="table-row" data-filterable-current=":emulinker:dokkaHtml/main" data-filterable-set=":emulinker:dokkaHtml/main">
+<a data-name="-472262147%2FPackages%2F-1834219614" anchor-label="org.emulinker.kaillera.controller.messaging" id="-472262147%2FPackages%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+    <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
       <div>
         <div class="main-subrow ">
           <div class=""><span class="inline-flex">
               <div><a href="emulinker/org.emulinker.kaillera.controller.messaging/index.html">org.emulinker.kaillera.controller.messaging</a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-472262147%2FPackages%2F133022281"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-472262147%2FPackages%2F-1834219614"></span>
                 <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
               </span></span></div>
           <div class="pull-right">
@@ -157,13 +200,13 @@
         <div></div>
       </div>
     </div>
-<a data-name="1321523299%2FPackages%2F133022281" anchor-label="org.emulinker.kaillera.controller.v086" id="1321523299%2FPackages%2F133022281" data-filterable-set=":emulinker:dokkaHtml/main"></a>
-    <div class="table-row" data-filterable-current=":emulinker:dokkaHtml/main" data-filterable-set=":emulinker:dokkaHtml/main">
+<a data-name="1321523299%2FPackages%2F-1834219614" anchor-label="org.emulinker.kaillera.controller.v086" id="1321523299%2FPackages%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+    <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
       <div>
         <div class="main-subrow ">
           <div class=""><span class="inline-flex">
               <div><a href="emulinker/org.emulinker.kaillera.controller.v086/index.html">org.emulinker.kaillera.controller.v086</a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1321523299%2FPackages%2F133022281"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1321523299%2FPackages%2F-1834219614"></span>
                 <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
               </span></span></div>
           <div class="pull-right">
@@ -175,13 +218,13 @@
         <div></div>
       </div>
     </div>
-<a data-name="1131046181%2FPackages%2F133022281" anchor-label="org.emulinker.kaillera.controller.v086.action" id="1131046181%2FPackages%2F133022281" data-filterable-set=":emulinker:dokkaHtml/main"></a>
-    <div class="table-row" data-filterable-current=":emulinker:dokkaHtml/main" data-filterable-set=":emulinker:dokkaHtml/main">
+<a data-name="1131046181%2FPackages%2F-1834219614" anchor-label="org.emulinker.kaillera.controller.v086.action" id="1131046181%2FPackages%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+    <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
       <div>
         <div class="main-subrow ">
           <div class=""><span class="inline-flex">
               <div><a href="emulinker/org.emulinker.kaillera.controller.v086.action/index.html">org.emulinker.kaillera.controller.v086.action</a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1131046181%2FPackages%2F133022281"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1131046181%2FPackages%2F-1834219614"></span>
                 <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
               </span></span></div>
           <div class="pull-right">
@@ -193,13 +236,13 @@
         <div></div>
       </div>
     </div>
-<a data-name="136228807%2FPackages%2F133022281" anchor-label="org.emulinker.kaillera.controller.v086.protocol" id="136228807%2FPackages%2F133022281" data-filterable-set=":emulinker:dokkaHtml/main"></a>
-    <div class="table-row" data-filterable-current=":emulinker:dokkaHtml/main" data-filterable-set=":emulinker:dokkaHtml/main">
+<a data-name="136228807%2FPackages%2F-1834219614" anchor-label="org.emulinker.kaillera.controller.v086.protocol" id="136228807%2FPackages%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+    <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
       <div>
         <div class="main-subrow ">
           <div class=""><span class="inline-flex">
               <div><a href="emulinker/org.emulinker.kaillera.controller.v086.protocol/index.html">org.emulinker.kaillera.controller.v086.protocol</a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="136228807%2FPackages%2F133022281"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="136228807%2FPackages%2F-1834219614"></span>
                 <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
               </span></span></div>
           <div class="pull-right">
@@ -211,13 +254,13 @@
         <div></div>
       </div>
     </div>
-<a data-name="507425795%2FPackages%2F133022281" anchor-label="org.emulinker.kaillera.lookingforgame" id="507425795%2FPackages%2F133022281" data-filterable-set=":emulinker:dokkaHtml/main"></a>
-    <div class="table-row" data-filterable-current=":emulinker:dokkaHtml/main" data-filterable-set=":emulinker:dokkaHtml/main">
+<a data-name="507425795%2FPackages%2F-1834219614" anchor-label="org.emulinker.kaillera.lookingforgame" id="507425795%2FPackages%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+    <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
       <div>
         <div class="main-subrow ">
           <div class=""><span class="inline-flex">
               <div><a href="emulinker/org.emulinker.kaillera.lookingforgame/index.html">org.emulinker.kaillera.lookingforgame</a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="507425795%2FPackages%2F133022281"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="507425795%2FPackages%2F-1834219614"></span>
                 <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
               </span></span></div>
           <div class="pull-right">
@@ -229,13 +272,13 @@
         <div></div>
       </div>
     </div>
-<a data-name="697911533%2FPackages%2F133022281" anchor-label="org.emulinker.kaillera.master" id="697911533%2FPackages%2F133022281" data-filterable-set=":emulinker:dokkaHtml/main"></a>
-    <div class="table-row" data-filterable-current=":emulinker:dokkaHtml/main" data-filterable-set=":emulinker:dokkaHtml/main">
+<a data-name="697911533%2FPackages%2F-1834219614" anchor-label="org.emulinker.kaillera.master" id="697911533%2FPackages%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+    <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
       <div>
         <div class="main-subrow ">
           <div class=""><span class="inline-flex">
               <div><a href="emulinker/org.emulinker.kaillera.master/index.html">org.emulinker.kaillera.master</a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="697911533%2FPackages%2F133022281"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="697911533%2FPackages%2F-1834219614"></span>
                 <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
               </span></span></div>
           <div class="pull-right">
@@ -247,13 +290,13 @@
         <div></div>
       </div>
     </div>
-<a data-name="1544821424%2FPackages%2F133022281" anchor-label="org.emulinker.kaillera.master.client" id="1544821424%2FPackages%2F133022281" data-filterable-set=":emulinker:dokkaHtml/main"></a>
-    <div class="table-row" data-filterable-current=":emulinker:dokkaHtml/main" data-filterable-set=":emulinker:dokkaHtml/main">
+<a data-name="1544821424%2FPackages%2F-1834219614" anchor-label="org.emulinker.kaillera.master.client" id="1544821424%2FPackages%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+    <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
       <div>
         <div class="main-subrow ">
           <div class=""><span class="inline-flex">
               <div><a href="emulinker/org.emulinker.kaillera.master.client/index.html">org.emulinker.kaillera.master.client</a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1544821424%2FPackages%2F133022281"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1544821424%2FPackages%2F-1834219614"></span>
                 <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
               </span></span></div>
           <div class="pull-right">
@@ -265,13 +308,13 @@
         <div></div>
       </div>
     </div>
-<a data-name="-1116717694%2FPackages%2F133022281" anchor-label="org.emulinker.kaillera.model" id="-1116717694%2FPackages%2F133022281" data-filterable-set=":emulinker:dokkaHtml/main"></a>
-    <div class="table-row" data-filterable-current=":emulinker:dokkaHtml/main" data-filterable-set=":emulinker:dokkaHtml/main">
+<a data-name="-1116717694%2FPackages%2F-1834219614" anchor-label="org.emulinker.kaillera.model" id="-1116717694%2FPackages%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+    <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
       <div>
         <div class="main-subrow ">
           <div class=""><span class="inline-flex">
               <div><a href="emulinker/org.emulinker.kaillera.model/index.html">org.emulinker.kaillera.model</a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1116717694%2FPackages%2F133022281"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1116717694%2FPackages%2F-1834219614"></span>
                 <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
               </span></span></div>
           <div class="pull-right">
@@ -283,13 +326,13 @@
         <div></div>
       </div>
     </div>
-<a data-name="-550124114%2FPackages%2F133022281" anchor-label="org.emulinker.kaillera.model.event" id="-550124114%2FPackages%2F133022281" data-filterable-set=":emulinker:dokkaHtml/main"></a>
-    <div class="table-row" data-filterable-current=":emulinker:dokkaHtml/main" data-filterable-set=":emulinker:dokkaHtml/main">
+<a data-name="-550124114%2FPackages%2F-1834219614" anchor-label="org.emulinker.kaillera.model.event" id="-550124114%2FPackages%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+    <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
       <div>
         <div class="main-subrow ">
           <div class=""><span class="inline-flex">
               <div><a href="emulinker/org.emulinker.kaillera.model.event/index.html">org.emulinker.kaillera.model.event</a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-550124114%2FPackages%2F133022281"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-550124114%2FPackages%2F-1834219614"></span>
                 <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
               </span></span></div>
           <div class="pull-right">
@@ -301,13 +344,13 @@
         <div></div>
       </div>
     </div>
-<a data-name="1219432995%2FPackages%2F133022281" anchor-label="org.emulinker.kaillera.model.exception" id="1219432995%2FPackages%2F133022281" data-filterable-set=":emulinker:dokkaHtml/main"></a>
-    <div class="table-row" data-filterable-current=":emulinker:dokkaHtml/main" data-filterable-set=":emulinker:dokkaHtml/main">
+<a data-name="1219432995%2FPackages%2F-1834219614" anchor-label="org.emulinker.kaillera.model.exception" id="1219432995%2FPackages%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+    <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
       <div>
         <div class="main-subrow ">
           <div class=""><span class="inline-flex">
               <div><a href="emulinker/org.emulinker.kaillera.model.exception/index.html">org.emulinker.kaillera.model.exception</a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1219432995%2FPackages%2F133022281"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1219432995%2FPackages%2F-1834219614"></span>
                 <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
               </span></span></div>
           <div class="pull-right">
@@ -319,13 +362,13 @@
         <div></div>
       </div>
     </div>
-<a data-name="1957678608%2FPackages%2F133022281" anchor-label="org.emulinker.kaillera.model.impl" id="1957678608%2FPackages%2F133022281" data-filterable-set=":emulinker:dokkaHtml/main"></a>
-    <div class="table-row" data-filterable-current=":emulinker:dokkaHtml/main" data-filterable-set=":emulinker:dokkaHtml/main">
+<a data-name="1957678608%2FPackages%2F-1834219614" anchor-label="org.emulinker.kaillera.model.impl" id="1957678608%2FPackages%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+    <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
       <div>
         <div class="main-subrow ">
           <div class=""><span class="inline-flex">
               <div><a href="emulinker/org.emulinker.kaillera.model.impl/index.html">org.emulinker.kaillera.model.impl</a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1957678608%2FPackages%2F133022281"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1957678608%2FPackages%2F-1834219614"></span>
                 <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
               </span></span></div>
           <div class="pull-right">
@@ -337,13 +380,13 @@
         <div></div>
       </div>
     </div>
-<a data-name="1948981040%2FPackages%2F133022281" anchor-label="org.emulinker.kaillera.pico" id="1948981040%2FPackages%2F133022281" data-filterable-set=":emulinker:dokkaHtml/main"></a>
-    <div class="table-row" data-filterable-current=":emulinker:dokkaHtml/main" data-filterable-set=":emulinker:dokkaHtml/main">
+<a data-name="1948981040%2FPackages%2F-1834219614" anchor-label="org.emulinker.kaillera.pico" id="1948981040%2FPackages%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+    <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
       <div>
         <div class="main-subrow ">
           <div class=""><span class="inline-flex">
               <div><a href="emulinker/org.emulinker.kaillera.pico/index.html">org.emulinker.kaillera.pico</a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1948981040%2FPackages%2F133022281"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1948981040%2FPackages%2F-1834219614"></span>
                 <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
               </span></span></div>
           <div class="pull-right">
@@ -355,13 +398,13 @@
         <div></div>
       </div>
     </div>
-<a data-name="-1885973782%2FPackages%2F133022281" anchor-label="org.emulinker.kaillera.relay" id="-1885973782%2FPackages%2F133022281" data-filterable-set=":emulinker:dokkaHtml/main"></a>
-    <div class="table-row" data-filterable-current=":emulinker:dokkaHtml/main" data-filterable-set=":emulinker:dokkaHtml/main">
+<a data-name="-1885973782%2FPackages%2F-1834219614" anchor-label="org.emulinker.kaillera.relay" id="-1885973782%2FPackages%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+    <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
       <div>
         <div class="main-subrow ">
           <div class=""><span class="inline-flex">
               <div><a href="emulinker/org.emulinker.kaillera.relay/index.html">org.emulinker.kaillera.relay</a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1885973782%2FPackages%2F133022281"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1885973782%2FPackages%2F-1834219614"></span>
                 <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
               </span></span></div>
           <div class="pull-right">
@@ -373,13 +416,13 @@
         <div></div>
       </div>
     </div>
-<a data-name="-483975392%2FPackages%2F133022281" anchor-label="org.emulinker.kaillera.release" id="-483975392%2FPackages%2F133022281" data-filterable-set=":emulinker:dokkaHtml/main"></a>
-    <div class="table-row" data-filterable-current=":emulinker:dokkaHtml/main" data-filterable-set=":emulinker:dokkaHtml/main">
+<a data-name="-483975392%2FPackages%2F-1834219614" anchor-label="org.emulinker.kaillera.release" id="-483975392%2FPackages%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+    <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
       <div>
         <div class="main-subrow ">
           <div class=""><span class="inline-flex">
               <div><a href="emulinker/org.emulinker.kaillera.release/index.html">org.emulinker.kaillera.release</a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-483975392%2FPackages%2F133022281"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-483975392%2FPackages%2F-1834219614"></span>
                 <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
               </span></span></div>
           <div class="pull-right">
@@ -391,13 +434,13 @@
         <div></div>
       </div>
     </div>
-<a data-name="737865723%2FPackages%2F133022281" anchor-label="org.emulinker.net" id="737865723%2FPackages%2F133022281" data-filterable-set=":emulinker:dokkaHtml/main"></a>
-    <div class="table-row" data-filterable-current=":emulinker:dokkaHtml/main" data-filterable-set=":emulinker:dokkaHtml/main">
+<a data-name="737865723%2FPackages%2F-1834219614" anchor-label="org.emulinker.net" id="737865723%2FPackages%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+    <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
       <div>
         <div class="main-subrow ">
           <div class=""><span class="inline-flex">
               <div><a href="emulinker/org.emulinker.net/index.html">org.emulinker.net</a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="737865723%2FPackages%2F133022281"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="737865723%2FPackages%2F-1834219614"></span>
                 <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
               </span></span></div>
           <div class="pull-right">
@@ -409,13 +452,31 @@
         <div></div>
       </div>
     </div>
-<a data-name="-1869612504%2FPackages%2F133022281" anchor-label="org.emulinker.util" id="-1869612504%2FPackages%2F133022281" data-filterable-set=":emulinker:dokkaHtml/main"></a>
-    <div class="table-row" data-filterable-current=":emulinker:dokkaHtml/main" data-filterable-set=":emulinker:dokkaHtml/main">
+<a data-name="1738930566%2FPackages%2F-1834219614" anchor-label="org.emulinker.proto" id="1738930566%2FPackages%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+    <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+      <div>
+        <div class="main-subrow ">
+          <div class=""><span class="inline-flex">
+              <div><a href="emulinker/org.emulinker.proto/index.html">org.emulinker.proto</a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1738930566%2FPackages%2F-1834219614"></span>
+                <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+              </span></span></div>
+          <div class="pull-right">
+            <div class="platform-tags no-gutters">
+              <div class="platform-tag jvm-like">jvm</div>
+            </div>
+          </div>
+        </div>
+        <div></div>
+      </div>
+    </div>
+<a data-name="-1869612504%2FPackages%2F-1834219614" anchor-label="org.emulinker.util" id="-1869612504%2FPackages%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+    <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
       <div>
         <div class="main-subrow ">
           <div class=""><span class="inline-flex">
               <div><a href="emulinker/org.emulinker.util/index.html">org.emulinker.util</a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1869612504%2FPackages%2F133022281"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1869612504%2FPackages%2F-1834219614"></span>
                 <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
               </span></span></div>
           <div class="pull-right">
@@ -429,11 +490,16 @@
     </div>
   </div>
 </div>
-      <div class="footer">
-        <span class="go-to-top-icon"><a href="#content" id="go-to-top-link"></a></span><span>© 2025 Copyright</span><span
-                class="pull-right"><span>Generated by </span><a
-                href="https://github.com/Kotlin/dokka"><span>dokka</span><span class="padded-icon"></span></a></span>
-      </div>
+    <div class="footer">
+        <a href="#content" id="go-to-top-link" class="footer--button footer--button_go-to-top"></a>
+        <span>© 2025 Copyright</span>
+        <span class="pull-right">
+            <span>Generated by </span>
+            <a class="footer--link footer--link_external" href="https://github.com/Kotlin/dokka">
+                <span>dokka</span>
+            </a>
+        </span>
+    </div>
             </div>
         </div>
     </div>

@@ -1,1 +1,1 @@
-sourceset_dependencies='{":emulinker:dokkaHtml/main":[]}'
+sourceset_dependencies='{":emulinker/main":[]}'

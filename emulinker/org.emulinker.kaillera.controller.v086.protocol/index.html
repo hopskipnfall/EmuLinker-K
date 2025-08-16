@@ -26,42 +26,85 @@
 <link href="../../styles/prism.css" rel="Stylesheet">
 <link href="../../styles/logo-styles.css" rel="Stylesheet">
 <link href="../../styles/font-jb-sans-auto.css" rel="Stylesheet">
+<link href="../../ui-kit/ui-kit.min.css" rel="Stylesheet">
 <script type="text/javascript" src="../../scripts/clipboard.js" async="async"></script>
 <script type="text/javascript" src="../../scripts/navigation-loader.js" async="async"></script>
 <script type="text/javascript" src="../../scripts/platform-content-handler.js" async="async"></script>
 <script type="text/javascript" src="../../scripts/main.js" defer="defer"></script>
 <script type="text/javascript" src="../../scripts/prism.js" async="async"></script>
+<script type="text/javascript" src="../../ui-kit/ui-kit.min.js" defer="defer"></script>
 <script type="text/javascript" src="../../scripts/symbol-parameters-wrapper_deferred.js" defer="defer"></script>
 </head>
 <body>
     <div class="root">
-<nav class="navigation" id="navigation-wrapper">
-    <div class="navigation--inner">
-        <div class="navigation-title">
-            <button class="menu-toggle" id="menu-toggle" type="button">toggle menu</button>
-            <div class="library-name">
-                    <a class="library-name--link" href="../../index.html">
-                            emulinker
-                    </a>
+    <nav class="navigation theme-dark" id="navigation-wrapper">
+            <a class="library-name--link" href="../../index.html">
+                    emulinker
+            </a>
+        <button class="navigation-controls--btn navigation-controls--btn_toc ui-kit_mobile-only" id="toc-toggle"
+                type="button">Toggle table of contents
+        </button>
+        <div class="navigation-controls--break ui-kit_mobile-only"></div>
+        <div class="library-version" id="library-version">
+0.15.0        </div>
+        <div class="navigation-controls">
+        <div class="filter-section filter-section_loading" id="filter-section">
+                <button class="platform-tag platform-selector jvm-like" data-active=""
+                        data-filter=":emulinker/main">jvm</button>
+            <div class="dropdown filter-section--dropdown" data-role="dropdown" id="filter-section-dropdown">
+                <button class="button button_dropdown filter-section--dropdown-toggle" role="combobox"
+                        data-role="dropdown-toggle"
+                        aria-controls="platform-tags-listbox"
+                        aria-haspopup="listbox"
+                        aria-expanded="false"
+                        aria-label="Toggle source sets"
+                ></button>
+                <ul role="listbox" id="platform-tags-listbox" class="dropdown--list" data-role="dropdown-listbox">
+                    <div class="dropdown--header"><span>Platform filter</span>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close platform filter">
+                            <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                        </button>
+                    </div>
+                        <li role="option" class="dropdown--option platform-selector-option jvm-like" tabindex="0">
+                            <label class="checkbox">
+                                <input type="checkbox" class="checkbox--input" id=":emulinker/main"
+                                       data-filter=":emulinker/main"/>
+                                <span class="checkbox--icon"></span>
+                                jvm
+                            </label>
+                        </li>
+                </ul>
+                <div class="dropdown--overlay"></div>
             </div>
-            <div class="library-version">
-0.15.0            </div>
         </div>
-        <div class="filter-section" id="filter-section">
-                <button class="platform-tag platform-selector jvm-like" data-active="" data-filter=":emulinker:dokkaHtml/main">jvm</button>
+            <button class="navigation-controls--btn navigation-controls--btn_theme" id="theme-toggle-button"
+                    type="button">Switch theme
+            </button>
+            <div class="navigation-controls--btn navigation-controls--btn_search" id="searchBar" role="button">Search in
+                API
+            </div>
         </div>
-    </div>
-    <div class="navigation-controls">
-        <button class="navigation-controls--btn navigation-controls--theme" id="theme-toggle-button" type="button">switch theme</button>
-        <div class="navigation-controls--btn navigation-controls--search" id="searchBar" role="button">search in API</div>
-    </div>
-</nav>
+    </nav>
         <div id="container">
             <div class="sidebar" id="leftColumn">
-                <div class="sidebar--inner" id="sideMenu"></div>
+                <div class="dropdown theme-dark_mobile" data-role="dropdown" id="toc-dropdown">
+                    <ul role="listbox" id="toc-listbox" class="dropdown--list dropdown--list_toc-list"
+                        data-role="dropdown-listbox">
+                        <div class="dropdown--header">
+                            <span>
+                                    emulinker
+                            </span>
+                            <button class="button" data-role="dropdown-toggle" aria-label="Close table of contents">
+                                <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                            </button>
+                        </div>
+                        <div class="sidebar--inner" id="sideMenu"></div>
+                    </ul>
+                    <div class="dropdown--overlay"></div>
+                </div>
             </div>
             <div id="main">
-<div class="main-content" data-page-type="package" id="content" pageIds="emulinker::org.emulinker.kaillera.controller.v086.protocol////PointingToDeclaration//133022281">
+<div class="main-content" data-page-type="package" id="content" pageIds="emulinker::org.emulinker.kaillera.controller.v086.protocol////PointingToDeclaration//-1834219614">
   <div class="breadcrumbs"><a href="../../index.html">emulinker</a><span class="delimiter">/</span><span class="current">org.emulinker.kaillera.controller.v086.protocol</span></div>
   <div class="cover ">
     <h1 class="cover"><span><span>Package-level</span></span> <span><span>declarations</span></span></h1>
@@ -71,692 +114,692 @@
     <div class="tabs-section-body">
       <div data-togglable="TYPE">
         <h2 class="">Types</h2>
-        <div class="table"><a data-name="2100405394%2FClasslikes%2F133022281" anchor-label="Ack" id="2100405394%2FClasslikes%2F133022281" data-filterable-set=":emulinker:dokkaHtml/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker:dokkaHtml/main" data-filterable-set=":emulinker:dokkaHtml/main">
+        <div class="table"><a data-name="2100405394%2FClasslikes%2F-1834219614" anchor-label="Ack" id="2100405394%2FClasslikes%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-ack/index.html"><span><span>Ack</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="2100405394%2FClasslikes%2F133022281"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="2100405394%2FClasslikes%2F-1834219614"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker:dokkaHtml/main"><div class="symbol monospace"><span class="token keyword">sealed </span><span class="token keyword">class </span><a href="-ack/index.html">Ack</a> : <a href="-v086-message/index.html">V086Message</a></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">sealed </span><span class="token keyword">class </span><a href="-ack/index.html">Ack</a> : <a href="-v086-message/index.html">V086Message</a></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="2140119909%2FClasslikes%2F133022281" anchor-label="AllReady" id="2140119909%2FClasslikes%2F133022281" data-filterable-set=":emulinker:dokkaHtml/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker:dokkaHtml/main" data-filterable-set=":emulinker:dokkaHtml/main">
+<a data-name="2140119909%2FClasslikes%2F-1834219614" anchor-label="AllReady" id="2140119909%2FClasslikes%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-all-ready/index.html"><span>All</span><wbr></wbr><span><span>Ready</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="2140119909%2FClasslikes%2F133022281"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="2140119909%2FClasslikes%2F-1834219614"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker:dokkaHtml/main"><div class="symbol monospace"><span class="token keyword">data </span><span class="token keyword">class </span><a href="-all-ready/index.html">AllReady</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>messageNumber<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-int/index.html">Int</a></span></span><span class="token punctuation">)</span> : <a href="-v086-message/index.html">V086Message</a>, <a href="-server-message/index.html">ServerMessage</a>, <a href="-client-message/index.html">ClientMessage</a></div><div class="brief "><p class="paragraph">Message sent by both client and server to indicate that they are ready for the game to start.</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">data </span><span class="token keyword">class </span><a href="-all-ready/index.html">AllReady</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>messageNumber<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a></span></span><span class="token punctuation">)</span> : <a href="-v086-message/index.html">V086Message</a>, <a href="-server-message/index.html">ServerMessage</a>, <a href="-client-message/index.html">ClientMessage</a></div><div class="brief "><p class="paragraph">Message sent by both client and server to indicate that they are ready for the game to start.</p></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="1602885865%2FClasslikes%2F133022281" anchor-label="CachedGameData" id="1602885865%2FClasslikes%2F133022281" data-filterable-set=":emulinker:dokkaHtml/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker:dokkaHtml/main" data-filterable-set=":emulinker:dokkaHtml/main">
+<a data-name="1602885865%2FClasslikes%2F-1834219614" anchor-label="CachedGameData" id="1602885865%2FClasslikes%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-cached-game-data/index.html"><span>Cached</span><wbr></wbr><span>Game</span><wbr></wbr><span><span>Data</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1602885865%2FClasslikes%2F133022281"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1602885865%2FClasslikes%2F-1834219614"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker:dokkaHtml/main"><div class="symbol monospace"><span class="token keyword">data </span><span class="token keyword">class </span><a href="-cached-game-data/index.html">CachedGameData</a> <span class="token keyword">constructor</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>messageNumber<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>key<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-int/index.html">Int</a></span></span><span class="token punctuation">)</span> : <a href="-v086-message/index.html">V086Message</a>, <a href="-server-message/index.html">ServerMessage</a>, <a href="-client-message/index.html">ClientMessage</a></div><div class="brief "><p class="paragraph">Fills the same function as <a href="-game-data/index.html">GameData</a> but encodes a 0-based cache index (<a href="-cached-game-data/key.html">key</a>) corresponding to game data that has already been sent.</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">data </span><span class="token keyword">class </span><a href="-cached-game-data/index.html">CachedGameData</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>messageNumber<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>key<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a></span></span><span class="token punctuation">)</span> : <a href="-v086-message/index.html">V086Message</a>, <a href="-server-message/index.html">ServerMessage</a>, <a href="-client-message/index.html">ClientMessage</a></div><div class="brief "><p class="paragraph">Fills the same function as <a href="-game-data/index.html">GameData</a> but encodes a 0-based cache index (<a href="-cached-game-data/key.html">key</a>) corresponding to game data that has already been sent.</p></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="-275725233%2FClasslikes%2F133022281" anchor-label="Chat" id="-275725233%2FClasslikes%2F133022281" data-filterable-set=":emulinker:dokkaHtml/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker:dokkaHtml/main" data-filterable-set=":emulinker:dokkaHtml/main">
+<a data-name="-275725233%2FClasslikes%2F-1834219614" anchor-label="Chat" id="-275725233%2FClasslikes%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-chat/index.html"><span><span>Chat</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-275725233%2FClasslikes%2F133022281"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-275725233%2FClasslikes%2F-1834219614"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker:dokkaHtml/main"><div class="symbol monospace"><span class="token keyword">sealed </span><span class="token keyword">class </span><a href="-chat/index.html">Chat</a> : <a href="-v086-message/index.html">V086Message</a></div><div class="brief "><p class="paragraph">Message type ID: <code class="lang-kotlin">0x07</code>.</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">sealed </span><span class="token keyword">class </span><a href="-chat/index.html">Chat</a> : <a href="-v086-message/index.html">V086Message</a></div><div class="brief "><p class="paragraph">Message type ID: <code class="lang-kotlin">0x07</code>.</p></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="1915346084%2FClasslikes%2F133022281" anchor-label="ChatNotification" id="1915346084%2FClasslikes%2F133022281" data-filterable-set=":emulinker:dokkaHtml/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker:dokkaHtml/main" data-filterable-set=":emulinker:dokkaHtml/main">
+<a data-name="1915346084%2FClasslikes%2F-1834219614" anchor-label="ChatNotification" id="1915346084%2FClasslikes%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-chat-notification/index.html"><span>Chat</span><wbr></wbr><span><span>Notification</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1915346084%2FClasslikes%2F133022281"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1915346084%2FClasslikes%2F-1834219614"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker:dokkaHtml/main"><div class="symbol monospace"><span class="token keyword">data </span><span class="token keyword">class </span><a href="-chat-notification/index.html">ChatNotification</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>messageNumber<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>username<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>message<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-string/index.html">String</a></span></span><span class="token punctuation">)</span> : <a href="-chat/index.html">Chat</a>, <a href="-server-message/index.html">ServerMessage</a></div><div class="brief "><p class="paragraph">Message sent by the server containing a server chat message.</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">data </span><span class="token keyword">class </span><a href="-chat-notification/index.html">ChatNotification</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>messageNumber<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>username<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>message<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></span></span><span class="token punctuation">)</span> : <a href="-chat/index.html">Chat</a>, <a href="-server-message/index.html">ServerMessage</a></div><div class="brief "><p class="paragraph">Message sent by the server containing a server chat message.</p></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="-2137904444%2FClasslikes%2F133022281" anchor-label="ChatRequest" id="-2137904444%2FClasslikes%2F133022281" data-filterable-set=":emulinker:dokkaHtml/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker:dokkaHtml/main" data-filterable-set=":emulinker:dokkaHtml/main">
+<a data-name="-2137904444%2FClasslikes%2F-1834219614" anchor-label="ChatRequest" id="-2137904444%2FClasslikes%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-chat-request/index.html"><span>Chat</span><wbr></wbr><span><span>Request</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-2137904444%2FClasslikes%2F133022281"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-2137904444%2FClasslikes%2F-1834219614"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker:dokkaHtml/main"><div class="symbol monospace"><span class="token keyword">data </span><span class="token keyword">class </span><a href="-chat-request/index.html">ChatRequest</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>messageNumber<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>message<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-string/index.html">String</a></span></span><span class="token punctuation">)</span> : <a href="-chat/index.html">Chat</a>, <a href="-client-message/index.html">ClientMessage</a></div><div class="brief "><p class="paragraph">Message sent by the client containing a server chat message.</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">data </span><span class="token keyword">class </span><a href="-chat-request/index.html">ChatRequest</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>messageNumber<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>message<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></span></span><span class="token punctuation">)</span> : <a href="-chat/index.html">Chat</a>, <a href="-client-message/index.html">ClientMessage</a></div><div class="brief "><p class="paragraph">Message sent by the client containing a server chat message.</p></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="187604605%2FClasslikes%2F133022281" anchor-label="ClientAck" id="187604605%2FClasslikes%2F133022281" data-filterable-set=":emulinker:dokkaHtml/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker:dokkaHtml/main" data-filterable-set=":emulinker:dokkaHtml/main">
+<a data-name="187604605%2FClasslikes%2F-1834219614" anchor-label="ClientAck" id="187604605%2FClasslikes%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-client-ack/index.html"><span>Client</span><wbr></wbr><span><span>Ack</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="187604605%2FClasslikes%2F133022281"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="187604605%2FClasslikes%2F-1834219614"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker:dokkaHtml/main"><div class="symbol monospace"><span class="token keyword">data </span><span class="token keyword">class </span><a href="-client-ack/index.html">ClientAck</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>messageNumber<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-int/index.html">Int</a></span></span><span class="token punctuation">)</span> : <a href="-ack/index.html">Ack</a>, <a href="-client-message/index.html">ClientMessage</a></div><div class="brief "><p class="paragraph">This is effectively a ping response sent by the client when it receives a <a href="-server-ack/index.html">ServerAck</a>.</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">data </span><span class="token keyword">class </span><a href="-client-ack/index.html">ClientAck</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>messageNumber<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a></span></span><span class="token punctuation">)</span> : <a href="-ack/index.html">Ack</a>, <a href="-client-message/index.html">ClientMessage</a></div><div class="brief "><p class="paragraph">This is effectively a ping response sent by the client when it receives a <a href="-server-ack/index.html">ServerAck</a>.</p></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="-303661505%2FClasslikes%2F133022281" anchor-label="ClientMessage" id="-303661505%2FClasslikes%2F133022281" data-filterable-set=":emulinker:dokkaHtml/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker:dokkaHtml/main" data-filterable-set=":emulinker:dokkaHtml/main">
+<a data-name="-303661505%2FClasslikes%2F-1834219614" anchor-label="ClientMessage" id="-303661505%2FClasslikes%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-client-message/index.html"><span>Client</span><wbr></wbr><span><span>Message</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-303661505%2FClasslikes%2F133022281"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-303661505%2FClasslikes%2F-1834219614"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker:dokkaHtml/main"><div class="symbol monospace"><span class="token keyword">sealed </span><span class="token keyword">interface </span><a href="-client-message/index.html">ClientMessage</a></div><div class="brief "><p class="paragraph"><a href="-v086-message/index.html">V086Message</a> that is sent from clients to the server.</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">sealed </span><span class="token keyword">interface </span><a href="-client-message/index.html">ClientMessage</a></div><div class="brief "><p class="paragraph"><a href="-v086-message/index.html">V086Message</a> that is sent from clients to the server.</p></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="1679916721%2FClasslikes%2F133022281" anchor-label="CloseGame" id="1679916721%2FClasslikes%2F133022281" data-filterable-set=":emulinker:dokkaHtml/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker:dokkaHtml/main" data-filterable-set=":emulinker:dokkaHtml/main">
+<a data-name="1679916721%2FClasslikes%2F-1834219614" anchor-label="CloseGame" id="1679916721%2FClasslikes%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-close-game/index.html"><span>Close</span><wbr></wbr><span><span>Game</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1679916721%2FClasslikes%2F133022281"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1679916721%2FClasslikes%2F-1834219614"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker:dokkaHtml/main"><div class="symbol monospace"><span class="token keyword">data </span><span class="token keyword">class </span><a href="-close-game/index.html">CloseGame</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>messageNumber<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>gameId<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>val1<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-int/index.html">Int</a></span></span><span class="token punctuation">)</span> : <a href="-v086-message/index.html">V086Message</a>, <a href="-server-message/index.html">ServerMessage</a></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">data </span><span class="token keyword">class </span><a href="-close-game/index.html">CloseGame</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>messageNumber<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>gameId<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>val1<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a></span></span><span class="token punctuation">)</span> : <a href="-v086-message/index.html">V086Message</a>, <a href="-server-message/index.html">ServerMessage</a></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="-122419157%2FClasslikes%2F133022281" anchor-label="ConnectionRejected" id="-122419157%2FClasslikes%2F133022281" data-filterable-set=":emulinker:dokkaHtml/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker:dokkaHtml/main" data-filterable-set=":emulinker:dokkaHtml/main">
+<a data-name="-122419157%2FClasslikes%2F-1834219614" anchor-label="ConnectionRejected" id="-122419157%2FClasslikes%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-connection-rejected/index.html"><span>Connection</span><wbr></wbr><span><span>Rejected</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-122419157%2FClasslikes%2F133022281"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-122419157%2FClasslikes%2F-1834219614"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker:dokkaHtml/main"><div class="symbol monospace"><span class="token keyword">data </span><span class="token keyword">class </span><a href="-connection-rejected/index.html">ConnectionRejected</a> <span class="token keyword">constructor</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>messageNumber<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>username<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>userId<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>message<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-string/index.html">String</a></span></span><span class="token punctuation">)</span> : <a href="-v086-message/index.html">V086Message</a>, <a href="-server-message/index.html">ServerMessage</a></div><div class="brief "><p class="paragraph">Message sent from the server to indicate that the client is not allowed to join the server, including a <a href="-connection-rejected/message.html">message</a> to be displayed to the user.</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">data </span><span class="token keyword">class </span><a href="-connection-rejected/index.html">ConnectionRejected</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>messageNumber<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>username<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>userId<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>message<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></span></span><span class="token punctuation">)</span> : <a href="-v086-message/index.html">V086Message</a>, <a href="-server-message/index.html">ServerMessage</a></div><div class="brief "><p class="paragraph">Message sent from the server to indicate that the client is not allowed to join the server, including a <a href="-connection-rejected/message.html">message</a> to be displayed to the user.</p></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="-1899914023%2FClasslikes%2F133022281" anchor-label="CreateGame" id="-1899914023%2FClasslikes%2F133022281" data-filterable-set=":emulinker:dokkaHtml/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker:dokkaHtml/main" data-filterable-set=":emulinker:dokkaHtml/main">
+<a data-name="-1899914023%2FClasslikes%2F-1834219614" anchor-label="CreateGame" id="-1899914023%2FClasslikes%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-create-game/index.html"><span>Create</span><wbr></wbr><span><span>Game</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1899914023%2FClasslikes%2F133022281"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1899914023%2FClasslikes%2F-1834219614"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker:dokkaHtml/main"><div class="symbol monospace"><span class="token keyword">sealed </span><span class="token keyword">class </span><a href="-create-game/index.html">CreateGame</a> : <a href="-v086-message/index.html">V086Message</a></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">sealed </span><span class="token keyword">class </span><a href="-create-game/index.html">CreateGame</a> : <a href="-v086-message/index.html">V086Message</a></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="-377997778%2FClasslikes%2F133022281" anchor-label="CreateGameNotification" id="-377997778%2FClasslikes%2F133022281" data-filterable-set=":emulinker:dokkaHtml/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker:dokkaHtml/main" data-filterable-set=":emulinker:dokkaHtml/main">
+<a data-name="-377997778%2FClasslikes%2F-1834219614" anchor-label="CreateGameNotification" id="-377997778%2FClasslikes%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-create-game-notification/index.html"><span>Create</span><wbr></wbr><span>Game</span><wbr></wbr><span><span>Notification</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-377997778%2FClasslikes%2F133022281"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-377997778%2FClasslikes%2F-1834219614"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker:dokkaHtml/main"><div class="symbol monospace"><span class="token keyword">data </span><span class="token keyword">class </span><a href="-create-game-notification/index.html">CreateGameNotification</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>messageNumber<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>username<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>romName<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>clientType<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>gameId<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>val1<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-int/index.html">Int</a></span></span><span class="token punctuation">)</span> : <a href="-create-game/index.html">CreateGame</a>, <a href="-server-message/index.html">ServerMessage</a></div><div class="brief "><p class="paragraph">Server message indicating that a new game has been created.</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">data </span><span class="token keyword">class </span><a href="-create-game-notification/index.html">CreateGameNotification</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>messageNumber<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>username<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>romName<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>clientType<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>gameId<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>val1<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a></span></span><span class="token punctuation">)</span> : <a href="-create-game/index.html">CreateGame</a>, <a href="-server-message/index.html">ServerMessage</a></div><div class="brief "><p class="paragraph">Server message indicating that a new game has been created.</p></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="1755349754%2FClasslikes%2F133022281" anchor-label="CreateGameRequest" id="1755349754%2FClasslikes%2F133022281" data-filterable-set=":emulinker:dokkaHtml/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker:dokkaHtml/main" data-filterable-set=":emulinker:dokkaHtml/main">
+<a data-name="1755349754%2FClasslikes%2F-1834219614" anchor-label="CreateGameRequest" id="1755349754%2FClasslikes%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-create-game-request/index.html"><span>Create</span><wbr></wbr><span>Game</span><wbr></wbr><span><span>Request</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1755349754%2FClasslikes%2F133022281"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1755349754%2FClasslikes%2F-1834219614"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker:dokkaHtml/main"><div class="symbol monospace"><span class="token keyword">data </span><span class="token keyword">class </span><a href="-create-game-request/index.html">CreateGameRequest</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>messageNumber<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>romName<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-string/index.html">String</a></span></span><span class="token punctuation">)</span> : <a href="-create-game/index.html">CreateGame</a>, <a href="-client-message/index.html">ClientMessage</a></div><div class="brief "><p class="paragraph">Client message requesting to create a new game.</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">data </span><span class="token keyword">class </span><a href="-create-game-request/index.html">CreateGameRequest</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>messageNumber<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>romName<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></span></span><span class="token punctuation">)</span> : <a href="-create-game/index.html">CreateGame</a>, <a href="-client-message/index.html">ClientMessage</a></div><div class="brief "><p class="paragraph">Client message requesting to create a new game.</p></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="506321533%2FClasslikes%2F133022281" anchor-label="GameChat" id="506321533%2FClasslikes%2F133022281" data-filterable-set=":emulinker:dokkaHtml/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker:dokkaHtml/main" data-filterable-set=":emulinker:dokkaHtml/main">
+<a data-name="506321533%2FClasslikes%2F-1834219614" anchor-label="GameChat" id="506321533%2FClasslikes%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-game-chat/index.html"><span>Game</span><wbr></wbr><span><span>Chat</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="506321533%2FClasslikes%2F133022281"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="506321533%2FClasslikes%2F-1834219614"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker:dokkaHtml/main"><div class="symbol monospace"><span class="token keyword">sealed </span><span class="token keyword">class </span><a href="-game-chat/index.html">GameChat</a> : <a href="-v086-message/index.html">V086Message</a></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">sealed </span><span class="token keyword">class </span><a href="-game-chat/index.html">GameChat</a> : <a href="-v086-message/index.html">V086Message</a></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="-1151263278%2FClasslikes%2F133022281" anchor-label="GameChatNotification" id="-1151263278%2FClasslikes%2F133022281" data-filterable-set=":emulinker:dokkaHtml/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker:dokkaHtml/main" data-filterable-set=":emulinker:dokkaHtml/main">
+<a data-name="-1151263278%2FClasslikes%2F-1834219614" anchor-label="GameChatNotification" id="-1151263278%2FClasslikes%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-game-chat-notification/index.html"><span>Game</span><wbr></wbr><span>Chat</span><wbr></wbr><span><span>Notification</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1151263278%2FClasslikes%2F133022281"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1151263278%2FClasslikes%2F-1834219614"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker:dokkaHtml/main"><div class="symbol monospace"><span class="token keyword">data </span><span class="token keyword">class </span><a href="-game-chat-notification/index.html">GameChatNotification</a> <span class="token keyword">constructor</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>messageNumber<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>username<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>message<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-string/index.html">String</a></span></span><span class="token punctuation">)</span> : <a href="-game-chat/index.html">GameChat</a>, <a href="-server-message/index.html">ServerMessage</a></div><div class="brief "><p class="paragraph">Message sent by the server containing a game chat message.</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">data </span><span class="token keyword">class </span><a href="-game-chat-notification/index.html">GameChatNotification</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>messageNumber<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>username<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>message<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></span></span><span class="token punctuation">)</span> : <a href="-game-chat/index.html">GameChat</a>, <a href="-server-message/index.html">ServerMessage</a></div><div class="brief "><p class="paragraph">Message sent by the server containing a game chat message.</p></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="463889622%2FClasslikes%2F133022281" anchor-label="GameChatRequest" id="463889622%2FClasslikes%2F133022281" data-filterable-set=":emulinker:dokkaHtml/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker:dokkaHtml/main" data-filterable-set=":emulinker:dokkaHtml/main">
+<a data-name="463889622%2FClasslikes%2F-1834219614" anchor-label="GameChatRequest" id="463889622%2FClasslikes%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-game-chat-request/index.html"><span>Game</span><wbr></wbr><span>Chat</span><wbr></wbr><span><span>Request</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="463889622%2FClasslikes%2F133022281"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="463889622%2FClasslikes%2F-1834219614"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker:dokkaHtml/main"><div class="symbol monospace"><span class="token keyword">data </span><span class="token keyword">class </span><a href="-game-chat-request/index.html">GameChatRequest</a> <span class="token keyword">constructor</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>messageNumber<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>message<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-string/index.html">String</a></span></span><span class="token punctuation">)</span> : <a href="-game-chat/index.html">GameChat</a>, <a href="-client-message/index.html">ClientMessage</a></div><div class="brief "><p class="paragraph">Message sent by the client containing a game chat message.</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">data </span><span class="token keyword">class </span><a href="-game-chat-request/index.html">GameChatRequest</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>messageNumber<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>message<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></span></span><span class="token punctuation">)</span> : <a href="-game-chat/index.html">GameChat</a>, <a href="-client-message/index.html">ClientMessage</a></div><div class="brief "><p class="paragraph">Message sent by the client containing a game chat message.</p></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="-810967445%2FClasslikes%2F133022281" anchor-label="GameData" id="-810967445%2FClasslikes%2F133022281" data-filterable-set=":emulinker:dokkaHtml/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker:dokkaHtml/main" data-filterable-set=":emulinker:dokkaHtml/main">
+<a data-name="-810967445%2FClasslikes%2F-1834219614" anchor-label="GameData" id="-810967445%2FClasslikes%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-game-data/index.html"><span>Game</span><wbr></wbr><span><span>Data</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-810967445%2FClasslikes%2F133022281"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-810967445%2FClasslikes%2F-1834219614"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker:dokkaHtml/main"><div class="symbol monospace"><span class="token keyword">data </span><span class="token keyword">class </span><a href="-game-data/index.html">GameData</a> <span class="token keyword">constructor</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>messageNumber<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>gameData<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-byte-array/index.html">ByteArray</a></span></span><span class="token punctuation">)</span> : <a href="-v086-message/index.html">V086Message</a>, <a href="-client-message/index.html">ClientMessage</a>, <a href="-server-message/index.html">ServerMessage</a></div><div class="brief "><p class="paragraph">A message sent by both the client and server, which contains game input data as a <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-byte-array/index.html">ByteArray</a>.</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">data </span><span class="token keyword">class </span><a href="-game-data/index.html">GameData</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>messageNumber<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>gameData<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-byte-array/index.html">ByteArray</a></span></span><span class="token punctuation">)</span> : <a href="-v086-message/index.html">V086Message</a>, <a href="-client-message/index.html">ClientMessage</a>, <a href="-server-message/index.html">ServerMessage</a></div><div class="brief "><p class="paragraph">A message sent by both the client and server, which contains game input data as a <a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-byte-array/index.html">ByteArray</a>.</p></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="-1149486257%2FClasslikes%2F133022281" anchor-label="GameKick" id="-1149486257%2FClasslikes%2F133022281" data-filterable-set=":emulinker:dokkaHtml/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker:dokkaHtml/main" data-filterable-set=":emulinker:dokkaHtml/main">
+<a data-name="-1149486257%2FClasslikes%2F-1834219614" anchor-label="GameKick" id="-1149486257%2FClasslikes%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-game-kick/index.html"><span>Game</span><wbr></wbr><span><span>Kick</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1149486257%2FClasslikes%2F133022281"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1149486257%2FClasslikes%2F-1834219614"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker:dokkaHtml/main"><div class="symbol monospace"><span class="token keyword">data </span><span class="token keyword">class </span><a href="-game-kick/index.html">GameKick</a> <span class="token keyword">constructor</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>messageNumber<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>userId<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-int/index.html">Int</a></span></span><span class="token punctuation">)</span> : <a href="-v086-message/index.html">V086Message</a>, <a href="-client-message/index.html">ClientMessage</a></div><div class="brief "><p class="paragraph">Message sent to kick a user by <a href="-game-kick/user-id.html">userId</a> from a game.</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">data </span><span class="token keyword">class </span><a href="-game-kick/index.html">GameKick</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>messageNumber<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>userId<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a></span></span><span class="token punctuation">)</span> : <a href="-v086-message/index.html">V086Message</a>, <a href="-client-message/index.html">ClientMessage</a></div><div class="brief "><p class="paragraph">Message sent to kick a user by <a href="-game-kick/user-id.html">userId</a> from a game.</p></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="2024769059%2FClasslikes%2F133022281" anchor-label="GameStatus" id="2024769059%2FClasslikes%2F133022281" data-filterable-set=":emulinker:dokkaHtml/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker:dokkaHtml/main" data-filterable-set=":emulinker:dokkaHtml/main">
+<a data-name="2024769059%2FClasslikes%2F-1834219614" anchor-label="GameStatus" id="2024769059%2FClasslikes%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-game-status/index.html"><span>Game</span><wbr></wbr><span><span>Status</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="2024769059%2FClasslikes%2F133022281"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="2024769059%2FClasslikes%2F-1834219614"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker:dokkaHtml/main"><div class="symbol monospace"><span class="token keyword">data </span><span class="token keyword">class </span><a href="-game-status/index.html">GameStatus</a> <span class="token keyword">constructor</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>messageNumber<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>gameId<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>val1<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>gameStatus<span class="token operator">: </span><a href="../org.emulinker.kaillera.model/-game-status/index.html">GameStatus</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>numPlayers<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-byte/index.html">Byte</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>maxPlayers<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-byte/index.html">Byte</a></span></span><span class="token punctuation">)</span> : <a href="-v086-message/index.html">V086Message</a>, <a href="-server-message/index.html">ServerMessage</a></div><div class="brief "><p class="paragraph">Message sent by the server to notify all clients that a game's status has changed.</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">data </span><span class="token keyword">class </span><a href="-game-status/index.html">GameStatus</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>messageNumber<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>gameId<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>val1<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>gameStatus<span class="token operator">: </span><a href="../org.emulinker.kaillera.model/-game-status/index.html">GameStatus</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>numPlayers<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-byte/index.html">Byte</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>maxPlayers<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-byte/index.html">Byte</a></span></span><span class="token punctuation">)</span> : <a href="-v086-message/index.html">V086Message</a>, <a href="-server-message/index.html">ServerMessage</a></div><div class="brief "><p class="paragraph">Message sent by the server to notify all clients that a game's status has changed.</p></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="1819733324%2FClasslikes%2F133022281" anchor-label="InformationMessage" id="1819733324%2FClasslikes%2F133022281" data-filterable-set=":emulinker:dokkaHtml/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker:dokkaHtml/main" data-filterable-set=":emulinker:dokkaHtml/main">
+<a data-name="1819733324%2FClasslikes%2F-1834219614" anchor-label="InformationMessage" id="1819733324%2FClasslikes%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-information-message/index.html"><span>Information</span><wbr></wbr><span><span>Message</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1819733324%2FClasslikes%2F133022281"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1819733324%2FClasslikes%2F-1834219614"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker:dokkaHtml/main"><div class="symbol monospace"><span class="token keyword">data </span><span class="token keyword">class </span><a href="-information-message/index.html">InformationMessage</a> <span class="token keyword">constructor</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>messageNumber<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>source<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>message<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-string/index.html">String</a></span></span><span class="token punctuation">)</span> : <a href="-v086-message/index.html">V086Message</a>, <a href="-server-message/index.html">ServerMessage</a></div><div class="brief "><p class="paragraph">A message from the server containing text to be displayed to the user, including a source.</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">data </span><span class="token keyword">class </span><a href="-information-message/index.html">InformationMessage</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>messageNumber<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>source<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>message<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></span></span><span class="token punctuation">)</span> : <a href="-v086-message/index.html">V086Message</a>, <a href="-server-message/index.html">ServerMessage</a></div><div class="brief "><p class="paragraph">A message from the server containing text to be displayed to the user, including a source.</p></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="1616952555%2FClasslikes%2F133022281" anchor-label="JoinGame" id="1616952555%2FClasslikes%2F133022281" data-filterable-set=":emulinker:dokkaHtml/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker:dokkaHtml/main" data-filterable-set=":emulinker:dokkaHtml/main">
+<a data-name="1616952555%2FClasslikes%2F-1834219614" anchor-label="JoinGame" id="1616952555%2FClasslikes%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-join-game/index.html"><span>Join</span><wbr></wbr><span><span>Game</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1616952555%2FClasslikes%2F133022281"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1616952555%2FClasslikes%2F-1834219614"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker:dokkaHtml/main"><div class="symbol monospace"><span class="token keyword">sealed </span><span class="token keyword">class </span><a href="-join-game/index.html">JoinGame</a> : <a href="-v086-message/index.html">V086Message</a></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">sealed </span><span class="token keyword">class </span><a href="-join-game/index.html">JoinGame</a> : <a href="-v086-message/index.html">V086Message</a></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="1788726080%2FClasslikes%2F133022281" anchor-label="JoinGameNotification" id="1788726080%2FClasslikes%2F133022281" data-filterable-set=":emulinker:dokkaHtml/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker:dokkaHtml/main" data-filterable-set=":emulinker:dokkaHtml/main">
+<a data-name="1788726080%2FClasslikes%2F-1834219614" anchor-label="JoinGameNotification" id="1788726080%2FClasslikes%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-join-game-notification/index.html"><span>Join</span><wbr></wbr><span>Game</span><wbr></wbr><span><span>Notification</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1788726080%2FClasslikes%2F133022281"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1788726080%2FClasslikes%2F-1834219614"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker:dokkaHtml/main"><div class="symbol monospace"><span class="token keyword">data </span><span class="token keyword">class </span><a href="-join-game-notification/index.html">JoinGameNotification</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>messageNumber<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>gameId<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>val1<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>username<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>ping<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin.time/-duration/index.html">Duration</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>userId<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>connectionType<span class="token operator">: </span><a href="../org.emulinker.kaillera.model/-connection-type/index.html">ConnectionType</a></span></span><span class="token punctuation">)</span> : <a href="-join-game/index.html">JoinGame</a>, <a href="-server-message/index.html">ServerMessage</a></div><div class="brief "><p class="paragraph">Server message indiciating a user successfully joined a game.</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">data </span><span class="token keyword">class </span><a href="-join-game-notification/index.html">JoinGameNotification</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>messageNumber<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>gameId<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>val1<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>username<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>ping<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.time/-duration/index.html">Duration</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>userId<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>connectionType<span class="token operator">: </span><a href="../org.emulinker.kaillera.model/-connection-type/index.html">ConnectionType</a></span></span><span class="token punctuation">)</span> : <a href="-join-game/index.html">JoinGame</a>, <a href="-server-message/index.html">ServerMessage</a></div><div class="brief "><p class="paragraph">Server message indiciating a user successfully joined a game.</p></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="-913143128%2FClasslikes%2F133022281" anchor-label="JoinGameRequest" id="-913143128%2FClasslikes%2F133022281" data-filterable-set=":emulinker:dokkaHtml/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker:dokkaHtml/main" data-filterable-set=":emulinker:dokkaHtml/main">
+<a data-name="-913143128%2FClasslikes%2F-1834219614" anchor-label="JoinGameRequest" id="-913143128%2FClasslikes%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-join-game-request/index.html"><span>Join</span><wbr></wbr><span>Game</span><wbr></wbr><span><span>Request</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-913143128%2FClasslikes%2F133022281"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-913143128%2FClasslikes%2F-1834219614"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker:dokkaHtml/main"><div class="symbol monospace"><span class="token keyword">data </span><span class="token keyword">class </span><a href="-join-game-request/index.html">JoinGameRequest</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>messageNumber<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>gameId<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>connectionType<span class="token operator">: </span><a href="../org.emulinker.kaillera.model/-connection-type/index.html">ConnectionType</a></span></span><span class="token punctuation">)</span> : <a href="-join-game/index.html">JoinGame</a>, <a href="-client-message/index.html">ClientMessage</a></div><div class="brief "><p class="paragraph">Client message from a user requesting to join a game.</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">data </span><span class="token keyword">class </span><a href="-join-game-request/index.html">JoinGameRequest</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>messageNumber<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>gameId<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>connectionType<span class="token operator">: </span><a href="../org.emulinker.kaillera.model/-connection-type/index.html">ConnectionType</a></span></span><span class="token punctuation">)</span> : <a href="-join-game/index.html">JoinGame</a>, <a href="-client-message/index.html">ClientMessage</a></div><div class="brief "><p class="paragraph">Client message from a user requesting to join a game.</p></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="-1237165517%2FClasslikes%2F133022281" anchor-label="KeepAlive" id="-1237165517%2FClasslikes%2F133022281" data-filterable-set=":emulinker:dokkaHtml/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker:dokkaHtml/main" data-filterable-set=":emulinker:dokkaHtml/main">
+<a data-name="-1237165517%2FClasslikes%2F-1834219614" anchor-label="KeepAlive" id="-1237165517%2FClasslikes%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-keep-alive/index.html"><span>Keep</span><wbr></wbr><span><span>Alive</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1237165517%2FClasslikes%2F133022281"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1237165517%2FClasslikes%2F-1834219614"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker:dokkaHtml/main"><div class="symbol monospace"><span class="token keyword">data </span><span class="token keyword">class </span><a href="-keep-alive/index.html">KeepAlive</a> <span class="token keyword">constructor</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>messageNumber<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>value<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-short/index.html">Short</a></span></span><span class="token punctuation">)</span> : <a href="-v086-message/index.html">V086Message</a>, <a href="-client-message/index.html">ClientMessage</a></div><div class="brief "><p class="paragraph">Message periodically sent by the client so the server knows it is still connected on that port.</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">data </span><span class="token keyword">class </span><a href="-keep-alive/index.html">KeepAlive</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>messageNumber<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>value<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-short/index.html">Short</a></span></span><span class="token punctuation">)</span> : <a href="-v086-message/index.html">V086Message</a>, <a href="-client-message/index.html">ClientMessage</a></div><div class="brief "><p class="paragraph">Message periodically sent by the client so the server knows it is still connected on that port.</p></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="1836194978%2FClasslikes%2F133022281" anchor-label="MessageSerializer" id="1836194978%2FClasslikes%2F133022281" data-filterable-set=":emulinker:dokkaHtml/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker:dokkaHtml/main" data-filterable-set=":emulinker:dokkaHtml/main">
+<a data-name="1836194978%2FClasslikes%2F-1834219614" anchor-label="MessageSerializer" id="1836194978%2FClasslikes%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-message-serializer/index.html"><span>Message</span><wbr></wbr><span><span>Serializer</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1836194978%2FClasslikes%2F133022281"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1836194978%2FClasslikes%2F-1834219614"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker:dokkaHtml/main"><div class="symbol monospace"><span class="token keyword">sealed </span><span class="token keyword">interface </span><a href="-message-serializer/index.html">MessageSerializer</a><span class="token operator">&lt;</span><a href="-message-serializer/index.html">E</a><span class="token operator"> : </span><a href="-v086-message/index.html">V086Message</a><span class="token operator">&gt;</span></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">sealed </span><span class="token keyword">interface </span><a href="-message-serializer/index.html">MessageSerializer</a><span class="token operator">&lt;</span><a href="-message-serializer/index.html">E</a><span class="token operator"> : </span><a href="-v086-message/index.html">V086Message</a><span class="token operator">&gt;</span></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="-29930313%2FClasslikes%2F133022281" anchor-label="PlayerDrop" id="-29930313%2FClasslikes%2F133022281" data-filterable-set=":emulinker:dokkaHtml/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker:dokkaHtml/main" data-filterable-set=":emulinker:dokkaHtml/main">
+<a data-name="-29930313%2FClasslikes%2F-1834219614" anchor-label="PlayerDrop" id="-29930313%2FClasslikes%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-player-drop/index.html"><span>Player</span><wbr></wbr><span><span>Drop</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-29930313%2FClasslikes%2F133022281"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-29930313%2FClasslikes%2F-1834219614"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker:dokkaHtml/main"><div class="symbol monospace"><span class="token keyword">sealed </span><span class="token keyword">class </span><a href="-player-drop/index.html">PlayerDrop</a> : <a href="-v086-message/index.html">V086Message</a></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">sealed </span><span class="token keyword">class </span><a href="-player-drop/index.html">PlayerDrop</a> : <a href="-v086-message/index.html">V086Message</a></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="947849484%2FClasslikes%2F133022281" anchor-label="PlayerDropNotification" id="947849484%2FClasslikes%2F133022281" data-filterable-set=":emulinker:dokkaHtml/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker:dokkaHtml/main" data-filterable-set=":emulinker:dokkaHtml/main">
+<a data-name="947849484%2FClasslikes%2F-1834219614" anchor-label="PlayerDropNotification" id="947849484%2FClasslikes%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-player-drop-notification/index.html"><span>Player</span><wbr></wbr><span>Drop</span><wbr></wbr><span><span>Notification</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="947849484%2FClasslikes%2F133022281"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="947849484%2FClasslikes%2F-1834219614"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker:dokkaHtml/main"><div class="symbol monospace"><span class="token keyword">data </span><span class="token keyword">class </span><a href="-player-drop-notification/index.html">PlayerDropNotification</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>messageNumber<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>username<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>playerNumber<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-byte/index.html">Byte</a></span></span><span class="token punctuation">)</span> : <a href="-player-drop/index.html">PlayerDrop</a>, <a href="-server-message/index.html">ServerMessage</a></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">data </span><span class="token keyword">class </span><a href="-player-drop-notification/index.html">PlayerDropNotification</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>messageNumber<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>username<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>playerNumber<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-byte/index.html">Byte</a></span></span><span class="token punctuation">)</span> : <a href="-player-drop/index.html">PlayerDrop</a>, <a href="-server-message/index.html">ServerMessage</a></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="-1635984036%2FClasslikes%2F133022281" anchor-label="PlayerDropRequest" id="-1635984036%2FClasslikes%2F133022281" data-filterable-set=":emulinker:dokkaHtml/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker:dokkaHtml/main" data-filterable-set=":emulinker:dokkaHtml/main">
+<a data-name="-1635984036%2FClasslikes%2F-1834219614" anchor-label="PlayerDropRequest" id="-1635984036%2FClasslikes%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-player-drop-request/index.html"><span>Player</span><wbr></wbr><span>Drop</span><wbr></wbr><span><span>Request</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1635984036%2FClasslikes%2F133022281"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1635984036%2FClasslikes%2F-1834219614"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker:dokkaHtml/main"><div class="symbol monospace"><span class="token keyword">data </span><span class="token keyword">class </span><a href="-player-drop-request/index.html">PlayerDropRequest</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>messageNumber<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-int/index.html">Int</a></span></span><span class="token punctuation">)</span> : <a href="-player-drop/index.html">PlayerDrop</a>, <a href="-client-message/index.html">ClientMessage</a></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">data </span><span class="token keyword">class </span><a href="-player-drop-request/index.html">PlayerDropRequest</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>messageNumber<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a></span></span><span class="token punctuation">)</span> : <a href="-player-drop/index.html">PlayerDrop</a>, <a href="-client-message/index.html">ClientMessage</a></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="-260317616%2FClasslikes%2F133022281" anchor-label="PlayerInformation" id="-260317616%2FClasslikes%2F133022281" data-filterable-set=":emulinker:dokkaHtml/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker:dokkaHtml/main" data-filterable-set=":emulinker:dokkaHtml/main">
+<a data-name="-260317616%2FClasslikes%2F-1834219614" anchor-label="PlayerInformation" id="-260317616%2FClasslikes%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-player-information/index.html"><span>Player</span><wbr></wbr><span><span>Information</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-260317616%2FClasslikes%2F133022281"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-260317616%2FClasslikes%2F-1834219614"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker:dokkaHtml/main"><div class="symbol monospace"><span class="token keyword">data </span><span class="token keyword">class </span><a href="-player-information/index.html">PlayerInformation</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>messageNumber<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>players<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="-player-information/-player/index.html">PlayerInformation.Player</a><span class="token operator">&gt;</span></span></span><span class="token punctuation">)</span> : <a href="-v086-message/index.html">V086Message</a>, <a href="-server-message/index.html">ServerMessage</a></div><div class="brief "><p class="paragraph">Message sent by the server when a user joins a game, which lists all of the players in that game.</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">data </span><span class="token keyword">class </span><a href="-player-information/index.html">PlayerInformation</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>messageNumber<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>players<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="-player-information/-player/index.html">PlayerInformation.Player</a><span class="token operator">&gt;</span></span></span><span class="token punctuation">)</span> : <a href="-v086-message/index.html">V086Message</a>, <a href="-server-message/index.html">ServerMessage</a></div><div class="brief "><p class="paragraph">Message sent by the server when a user joins a game, which lists all of the players in that game.</p></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="924133688%2FClasslikes%2F133022281" anchor-label="Quit" id="924133688%2FClasslikes%2F133022281" data-filterable-set=":emulinker:dokkaHtml/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker:dokkaHtml/main" data-filterable-set=":emulinker:dokkaHtml/main">
+<a data-name="924133688%2FClasslikes%2F-1834219614" anchor-label="Quit" id="924133688%2FClasslikes%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-quit/index.html"><span><span>Quit</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="924133688%2FClasslikes%2F133022281"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="924133688%2FClasslikes%2F-1834219614"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker:dokkaHtml/main"><div class="symbol monospace"><span class="token keyword">sealed </span><span class="token keyword">class </span><a href="-quit/index.html">Quit</a> : <a href="-v086-message/index.html">V086Message</a></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">sealed </span><span class="token keyword">class </span><a href="-quit/index.html">Quit</a> : <a href="-v086-message/index.html">V086Message</a></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="108291558%2FClasslikes%2F133022281" anchor-label="QuitGame" id="108291558%2FClasslikes%2F133022281" data-filterable-set=":emulinker:dokkaHtml/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker:dokkaHtml/main" data-filterable-set=":emulinker:dokkaHtml/main">
+<a data-name="108291558%2FClasslikes%2F-1834219614" anchor-label="QuitGame" id="108291558%2FClasslikes%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-quit-game/index.html"><span>Quit</span><wbr></wbr><span><span>Game</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="108291558%2FClasslikes%2F133022281"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="108291558%2FClasslikes%2F-1834219614"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker:dokkaHtml/main"><div class="symbol monospace"><span class="token keyword">sealed </span><span class="token keyword">class </span><a href="-quit-game/index.html">QuitGame</a> : <a href="-v086-message/index.html">V086Message</a></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">sealed </span><span class="token keyword">class </span><a href="-quit-game/index.html">QuitGame</a> : <a href="-v086-message/index.html">V086Message</a></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="1659687867%2FClasslikes%2F133022281" anchor-label="QuitGameNotification" id="1659687867%2FClasslikes%2F133022281" data-filterable-set=":emulinker:dokkaHtml/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker:dokkaHtml/main" data-filterable-set=":emulinker:dokkaHtml/main">
+<a data-name="1659687867%2FClasslikes%2F-1834219614" anchor-label="QuitGameNotification" id="1659687867%2FClasslikes%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-quit-game-notification/index.html"><span>Quit</span><wbr></wbr><span>Game</span><wbr></wbr><span><span>Notification</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1659687867%2FClasslikes%2F133022281"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1659687867%2FClasslikes%2F-1834219614"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker:dokkaHtml/main"><div class="symbol monospace"><span class="token keyword">data </span><span class="token keyword">class </span><a href="-quit-game-notification/index.html">QuitGameNotification</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>messageNumber<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>username<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>userId<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-int/index.html">Int</a></span></span><span class="token punctuation">)</span> : <a href="-quit-game/index.html">QuitGame</a>, <a href="-server-message/index.html">ServerMessage</a></div><div class="brief "><p class="paragraph">Message sent by the server to notify that a user has left the game.</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">data </span><span class="token keyword">class </span><a href="-quit-game-notification/index.html">QuitGameNotification</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>messageNumber<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>username<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>userId<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a></span></span><span class="token punctuation">)</span> : <a href="-quit-game/index.html">QuitGame</a>, <a href="-server-message/index.html">ServerMessage</a></div><div class="brief "><p class="paragraph">Message sent by the server to notify that a user has left the game.</p></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="1465442637%2FClasslikes%2F133022281" anchor-label="QuitGameRequest" id="1465442637%2FClasslikes%2F133022281" data-filterable-set=":emulinker:dokkaHtml/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker:dokkaHtml/main" data-filterable-set=":emulinker:dokkaHtml/main">
+<a data-name="1465442637%2FClasslikes%2F-1834219614" anchor-label="QuitGameRequest" id="1465442637%2FClasslikes%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-quit-game-request/index.html"><span>Quit</span><wbr></wbr><span>Game</span><wbr></wbr><span><span>Request</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1465442637%2FClasslikes%2F133022281"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1465442637%2FClasslikes%2F-1834219614"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker:dokkaHtml/main"><div class="symbol monospace"><span class="token keyword">data </span><span class="token keyword">class </span><a href="-quit-game-request/index.html">QuitGameRequest</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>messageNumber<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-int/index.html">Int</a></span></span><span class="token punctuation">)</span> : <a href="-quit-game/index.html">QuitGame</a>, <a href="-client-message/index.html">ClientMessage</a></div><div class="brief "><p class="paragraph">Message sent by the client to request to leave a game.</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">data </span><span class="token keyword">class </span><a href="-quit-game-request/index.html">QuitGameRequest</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>messageNumber<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a></span></span><span class="token punctuation">)</span> : <a href="-quit-game/index.html">QuitGame</a>, <a href="-client-message/index.html">ClientMessage</a></div><div class="brief "><p class="paragraph">Message sent by the client to request to leave a game.</p></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="-679924723%2FClasslikes%2F133022281" anchor-label="QuitNotification" id="-679924723%2FClasslikes%2F133022281" data-filterable-set=":emulinker:dokkaHtml/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker:dokkaHtml/main" data-filterable-set=":emulinker:dokkaHtml/main">
+<a data-name="-679924723%2FClasslikes%2F-1834219614" anchor-label="QuitNotification" id="-679924723%2FClasslikes%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-quit-notification/index.html"><span>Quit</span><wbr></wbr><span><span>Notification</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-679924723%2FClasslikes%2F133022281"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-679924723%2FClasslikes%2F-1834219614"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker:dokkaHtml/main"><div class="symbol monospace"><span class="token keyword">data </span><span class="token keyword">class </span><a href="-quit-notification/index.html">QuitNotification</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>messageNumber<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>username<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>userId<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>message<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-string/index.html">String</a></span></span><span class="token punctuation">)</span> : <a href="-quit/index.html">Quit</a></div><div class="brief "><p class="paragraph">Message sent by the server to notify all clients that the user left the server.</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">data </span><span class="token keyword">class </span><a href="-quit-notification/index.html">QuitNotification</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>messageNumber<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>username<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>userId<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>message<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></span></span><span class="token punctuation">)</span> : <a href="-quit/index.html">Quit</a></div><div class="brief "><p class="paragraph">Message sent by the server to notify all clients that the user left the server.</p></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="-33088069%2FClasslikes%2F133022281" anchor-label="QuitRequest" id="-33088069%2FClasslikes%2F133022281" data-filterable-set=":emulinker:dokkaHtml/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker:dokkaHtml/main" data-filterable-set=":emulinker:dokkaHtml/main">
+<a data-name="-33088069%2FClasslikes%2F-1834219614" anchor-label="QuitRequest" id="-33088069%2FClasslikes%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-quit-request/index.html"><span>Quit</span><wbr></wbr><span><span>Request</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-33088069%2FClasslikes%2F133022281"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-33088069%2FClasslikes%2F-1834219614"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker:dokkaHtml/main"><div class="symbol monospace"><span class="token keyword">data </span><span class="token keyword">class </span><a href="-quit-request/index.html">QuitRequest</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>messageNumber<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>message<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-string/index.html">String</a></span></span><span class="token punctuation">)</span> : <a href="-quit/index.html">Quit</a></div><div class="brief "><p class="paragraph">Message sent by the client before leaving the server.</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">data </span><span class="token keyword">class </span><a href="-quit-request/index.html">QuitRequest</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>messageNumber<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>message<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></span></span><span class="token punctuation">)</span> : <a href="-quit/index.html">Quit</a></div><div class="brief "><p class="paragraph">Message sent by the client before leaving the server.</p></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="1085961717%2FClasslikes%2F133022281" anchor-label="ServerAck" id="1085961717%2FClasslikes%2F133022281" data-filterable-set=":emulinker:dokkaHtml/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker:dokkaHtml/main" data-filterable-set=":emulinker:dokkaHtml/main">
+<a data-name="1085961717%2FClasslikes%2F-1834219614" anchor-label="ServerAck" id="1085961717%2FClasslikes%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-server-ack/index.html"><span>Server</span><wbr></wbr><span><span>Ack</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1085961717%2FClasslikes%2F133022281"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1085961717%2FClasslikes%2F-1834219614"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker:dokkaHtml/main"><div class="symbol monospace"><span class="token keyword">data </span><span class="token keyword">class </span><a href="-server-ack/index.html">ServerAck</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>messageNumber<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-int/index.html">Int</a></span></span><span class="token punctuation">)</span> : <a href="-ack/index.html">Ack</a>, <a href="-server-message/index.html">ServerMessage</a></div><div class="brief "><p class="paragraph">A message the server sends to the client, from which it expects a <a href="-client-ack/index.html">ClientAck</a> in response.</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">data </span><span class="token keyword">class </span><a href="-server-ack/index.html">ServerAck</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>messageNumber<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a></span></span><span class="token punctuation">)</span> : <a href="-ack/index.html">Ack</a>, <a href="-server-message/index.html">ServerMessage</a></div><div class="brief "><p class="paragraph">A message the server sends to the client, from which it expects a <a href="-client-ack/index.html">ClientAck</a> in response.</p></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="1112136119%2FClasslikes%2F133022281" anchor-label="ServerMessage" id="1112136119%2FClasslikes%2F133022281" data-filterable-set=":emulinker:dokkaHtml/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker:dokkaHtml/main" data-filterable-set=":emulinker:dokkaHtml/main">
+<a data-name="1112136119%2FClasslikes%2F-1834219614" anchor-label="ServerMessage" id="1112136119%2FClasslikes%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-server-message/index.html"><span>Server</span><wbr></wbr><span><span>Message</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1112136119%2FClasslikes%2F133022281"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1112136119%2FClasslikes%2F-1834219614"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker:dokkaHtml/main"><div class="symbol monospace"><span class="token keyword">sealed </span><span class="token keyword">interface </span><a href="-server-message/index.html">ServerMessage</a></div><div class="brief "><p class="paragraph"><a href="-v086-message/index.html">V086Message</a> that is sent from the server to clients.</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">sealed </span><span class="token keyword">interface </span><a href="-server-message/index.html">ServerMessage</a></div><div class="brief "><p class="paragraph"><a href="-v086-message/index.html">V086Message</a> that is sent from the server to clients.</p></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="195416882%2FClasslikes%2F133022281" anchor-label="ServerStatus" id="195416882%2FClasslikes%2F133022281" data-filterable-set=":emulinker:dokkaHtml/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker:dokkaHtml/main" data-filterable-set=":emulinker:dokkaHtml/main">
+<a data-name="195416882%2FClasslikes%2F-1834219614" anchor-label="ServerStatus" id="195416882%2FClasslikes%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-server-status/index.html"><span>Server</span><wbr></wbr><span><span>Status</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="195416882%2FClasslikes%2F133022281"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="195416882%2FClasslikes%2F-1834219614"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker:dokkaHtml/main"><div class="symbol monospace"><span class="token keyword">data </span><span class="token keyword">class </span><a href="-server-status/index.html">ServerStatus</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>messageNumber<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>users<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="-server-status/-user/index.html">ServerStatus.User</a><span class="token operator">&gt;</span><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>games<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="-server-status/-game/index.html">ServerStatus.Game</a><span class="token operator">&gt;</span></span></span><span class="token punctuation">)</span> : <a href="-v086-message/index.html">V086Message</a>, <a href="-server-message/index.html">ServerMessage</a></div><div class="brief "><p class="paragraph">Message sent by the server when the user joins, listing all of the users and games.</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">data </span><span class="token keyword">class </span><a href="-server-status/index.html">ServerStatus</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>messageNumber<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>users<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="-server-status/-user/index.html">ServerStatus.User</a><span class="token operator">&gt;</span><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>games<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="-server-status/-game/index.html">ServerStatus.Game</a><span class="token operator">&gt;</span></span></span><span class="token punctuation">)</span> : <a href="-v086-message/index.html">V086Message</a>, <a href="-server-message/index.html">ServerMessage</a></div><div class="brief "><p class="paragraph">Message sent by the server when the user joins, listing all of the users and games.</p></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="-1486002041%2FClasslikes%2F133022281" anchor-label="StartGame" id="-1486002041%2FClasslikes%2F133022281" data-filterable-set=":emulinker:dokkaHtml/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker:dokkaHtml/main" data-filterable-set=":emulinker:dokkaHtml/main">
+<a data-name="-1486002041%2FClasslikes%2F-1834219614" anchor-label="StartGame" id="-1486002041%2FClasslikes%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-start-game/index.html"><span>Start</span><wbr></wbr><span><span>Game</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1486002041%2FClasslikes%2F133022281"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1486002041%2FClasslikes%2F-1834219614"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker:dokkaHtml/main"><div class="symbol monospace"><span class="token keyword">sealed </span><span class="token keyword">class </span><a href="-start-game/index.html">StartGame</a> : <a href="-v086-message/index.html">V086Message</a></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">sealed </span><span class="token keyword">class </span><a href="-start-game/index.html">StartGame</a> : <a href="-v086-message/index.html">V086Message</a></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="1557785820%2FClasslikes%2F133022281" anchor-label="StartGameNotification" id="1557785820%2FClasslikes%2F133022281" data-filterable-set=":emulinker:dokkaHtml/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker:dokkaHtml/main" data-filterable-set=":emulinker:dokkaHtml/main">
+<a data-name="1557785820%2FClasslikes%2F-1834219614" anchor-label="StartGameNotification" id="1557785820%2FClasslikes%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-start-game-notification/index.html"><span>Start</span><wbr></wbr><span>Game</span><wbr></wbr><span><span>Notification</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1557785820%2FClasslikes%2F133022281"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1557785820%2FClasslikes%2F-1834219614"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker:dokkaHtml/main"><div class="symbol monospace"><span class="token keyword">data </span><span class="token keyword">class </span><a href="-start-game-notification/index.html">StartGameNotification</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>messageNumber<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>val1<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>playerNumber<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-short/index.html">Short</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>numPlayers<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-short/index.html">Short</a></span></span><span class="token punctuation">)</span> : <a href="-start-game/index.html">StartGame</a>, <a href="-server-message/index.html">ServerMessage</a></div><div class="brief "><p class="paragraph">Message sent from the server to all clients, informing that a game has started.</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">data </span><span class="token keyword">class </span><a href="-start-game-notification/index.html">StartGameNotification</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>messageNumber<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>val1<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>playerNumber<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-short/index.html">Short</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>numPlayers<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-short/index.html">Short</a></span></span><span class="token punctuation">)</span> : <a href="-start-game/index.html">StartGame</a>, <a href="-server-message/index.html">ServerMessage</a></div><div class="brief "><p class="paragraph">Message sent from the server to all clients, informing that a game has started.</p></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="1932973964%2FClasslikes%2F133022281" anchor-label="StartGameRequest" id="1932973964%2FClasslikes%2F133022281" data-filterable-set=":emulinker:dokkaHtml/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker:dokkaHtml/main" data-filterable-set=":emulinker:dokkaHtml/main">
+<a data-name="1932973964%2FClasslikes%2F-1834219614" anchor-label="StartGameRequest" id="1932973964%2FClasslikes%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-start-game-request/index.html"><span>Start</span><wbr></wbr><span>Game</span><wbr></wbr><span><span>Request</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1932973964%2FClasslikes%2F133022281"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1932973964%2FClasslikes%2F-1834219614"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker:dokkaHtml/main"><div class="symbol monospace"><span class="token keyword">data </span><span class="token keyword">class </span><a href="-start-game-request/index.html">StartGameRequest</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>messageNumber<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-int/index.html">Int</a></span></span><span class="token punctuation">)</span> : <a href="-start-game/index.html">StartGame</a>, <a href="-client-message/index.html">ClientMessage</a></div><div class="brief "><p class="paragraph">Message sent from the client to request that a game starts.</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">data </span><span class="token keyword">class </span><a href="-start-game-request/index.html">StartGameRequest</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>messageNumber<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a></span></span><span class="token punctuation">)</span> : <a href="-start-game/index.html">StartGame</a>, <a href="-client-message/index.html">ClientMessage</a></div><div class="brief "><p class="paragraph">Message sent from the client to request that a game starts.</p></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="559893690%2FClasslikes%2F133022281" anchor-label="UserInformation" id="559893690%2FClasslikes%2F133022281" data-filterable-set=":emulinker:dokkaHtml/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker:dokkaHtml/main" data-filterable-set=":emulinker:dokkaHtml/main">
+<a data-name="559893690%2FClasslikes%2F-1834219614" anchor-label="UserInformation" id="559893690%2FClasslikes%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-user-information/index.html"><span>User</span><wbr></wbr><span><span>Information</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="559893690%2FClasslikes%2F133022281"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="559893690%2FClasslikes%2F-1834219614"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker:dokkaHtml/main"><div class="symbol monospace"><span class="token keyword">data </span><span class="token keyword">class </span><a href="-user-information/index.html">UserInformation</a> <span class="token keyword">constructor</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>messageNumber<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>username<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>clientType<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>connectionType<span class="token operator">: </span><a href="../org.emulinker.kaillera.model/-connection-type/index.html">ConnectionType</a></span></span><span class="token punctuation">)</span> : <a href="-v086-message/index.html">V086Message</a>, <a href="-client-message/index.html">ClientMessage</a></div><div class="brief "><p class="paragraph">Message sent from the client when a user joins the server to indicate <a href="-user-information/username.html">username</a>, <a href="-user-information/client-type.html">clientType</a>, and <a href="-user-information/connection-type.html">connectionType</a>.</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">data </span><span class="token keyword">class </span><a href="-user-information/index.html">UserInformation</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>messageNumber<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>username<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>clientType<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>connectionType<span class="token operator">: </span><a href="../org.emulinker.kaillera.model/-connection-type/index.html">ConnectionType</a></span></span><span class="token punctuation">)</span> : <a href="-v086-message/index.html">V086Message</a>, <a href="-client-message/index.html">ClientMessage</a></div><div class="brief "><p class="paragraph">Message sent from the client when a user joins the server to indicate <a href="-user-information/username.html">username</a>, <a href="-user-information/client-type.html">clientType</a>, and <a href="-user-information/connection-type.html">connectionType</a>.</p></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="-1783049293%2FClasslikes%2F133022281" anchor-label="UserJoined" id="-1783049293%2FClasslikes%2F133022281" data-filterable-set=":emulinker:dokkaHtml/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker:dokkaHtml/main" data-filterable-set=":emulinker:dokkaHtml/main">
+<a data-name="-1783049293%2FClasslikes%2F-1834219614" anchor-label="UserJoined" id="-1783049293%2FClasslikes%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-user-joined/index.html"><span>User</span><wbr></wbr><span><span>Joined</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1783049293%2FClasslikes%2F133022281"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1783049293%2FClasslikes%2F-1834219614"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker:dokkaHtml/main"><div class="symbol monospace"><span class="token keyword">data </span><span class="token keyword">class </span><a href="-user-joined/index.html">UserJoined</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>messageNumber<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>username<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>userId<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>ping<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin.time/-duration/index.html">Duration</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>connectionType<span class="token operator">: </span><a href="../org.emulinker.kaillera.model/-connection-type/index.html">ConnectionType</a></span></span><span class="token punctuation">)</span> : <a href="-v086-message/index.html">V086Message</a></div><div class="brief "><p class="paragraph">Message sent from the server to all clients to give information about a new client that has joined the server.</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">data </span><span class="token keyword">class </span><a href="-user-joined/index.html">UserJoined</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>messageNumber<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>username<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>userId<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>ping<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.time/-duration/index.html">Duration</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>connectionType<span class="token operator">: </span><a href="../org.emulinker.kaillera.model/-connection-type/index.html">ConnectionType</a></span></span><span class="token punctuation">)</span> : <a href="-v086-message/index.html">V086Message</a></div><div class="brief "><p class="paragraph">Message sent from the server to all clients to give information about a new client that has joined the server.</p></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="1229059021%2FClasslikes%2F133022281" anchor-label="V086Bundle" id="1229059021%2FClasslikes%2F133022281" data-filterable-set=":emulinker:dokkaHtml/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker:dokkaHtml/main" data-filterable-set=":emulinker:dokkaHtml/main">
+<a data-name="1229059021%2FClasslikes%2F-1834219614" anchor-label="V086Bundle" id="1229059021%2FClasslikes%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-v086-bundle/index.html"><span><span>V086Bundle</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1229059021%2FClasslikes%2F133022281"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1229059021%2FClasslikes%2F-1834219614"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker:dokkaHtml/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-v086-bundle/index.html">V086Bundle</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>messages<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-array/index.html">Array</a><span class="token operator">&lt;</span><a href="-v086-message/index.html">V086Message</a><span class="token operator">?</span><span class="token operator">&gt;</span><span class="token punctuation">, </span></span><span class="parameter ">numToWrite<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token operator"> = </span>Int.MAX_VALUE</span></span><span class="token punctuation">)</span> : <a href="../org.emulinker.kaillera.controller.messaging/-byte-buffer-message/index.html">ByteBufferMessage</a></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-v086-bundle/index.html">V086Bundle</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>messages<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-array/index.html">Array</a><span class="token operator">&lt;</span><a href="-v086-message/index.html">V086Message</a><span class="token operator">?</span><span class="token operator">&gt;</span><span class="token punctuation">, </span></span><span class="parameter ">numToWrite<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token operator"> = </span>Int.MAX_VALUE</span></span><span class="token punctuation">)</span> : <a href="../org.emulinker.kaillera.controller.messaging/-byte-buffer-message/index.html">ByteBufferMessage</a></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="-1327514083%2FClasslikes%2F133022281" anchor-label="V086BundleFormatException" id="-1327514083%2FClasslikes%2F133022281" data-filterable-set=":emulinker:dokkaHtml/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker:dokkaHtml/main" data-filterable-set=":emulinker:dokkaHtml/main">
+<a data-name="-1327514083%2FClasslikes%2F-1834219614" anchor-label="V086BundleFormatException" id="-1327514083%2FClasslikes%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-v086-bundle-format-exception/index.html"><span>V086Bundle</span><wbr></wbr><span>Format</span><wbr></wbr><span><span>Exception</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1327514083%2FClasslikes%2F133022281"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1327514083%2FClasslikes%2F-1834219614"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker:dokkaHtml/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-v086-bundle-format-exception/index.html">V086BundleFormatException</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">msg<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span><span class="token punctuation">, </span></span><span class="parameter ">cause<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-throwable/index.html">Throwable</a><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span> : <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Exception.html">Exception</a></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-v086-bundle-format-exception/index.html">V086BundleFormatException</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">msg<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span><span class="token punctuation">, </span></span><span class="parameter ">cause<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-throwable/index.html">Throwable</a><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span> : <a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Exception.html">Exception</a></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="-729874452%2FClasslikes%2F133022281" anchor-label="V086Message" id="-729874452%2FClasslikes%2F133022281" data-filterable-set=":emulinker:dokkaHtml/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker:dokkaHtml/main" data-filterable-set=":emulinker:dokkaHtml/main">
+<a data-name="-729874452%2FClasslikes%2F-1834219614" anchor-label="V086Message" id="-729874452%2FClasslikes%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-v086-message/index.html"><span><span>V086Message</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-729874452%2FClasslikes%2F133022281"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-729874452%2FClasslikes%2F-1834219614"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker:dokkaHtml/main"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">class </span><a href="-v086-message/index.html">V086Message</a> : <a href="../org.emulinker.kaillera.controller.messaging/-byte-buffer-message/index.html">ByteBufferMessage</a></div><div class="brief "><p class="paragraph">A message in the v086 Kaillera protocol.</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">class </span><a href="-v086-message/index.html">V086Message</a> : <a href="../org.emulinker.kaillera.controller.messaging/-byte-buffer-message/index.html">ByteBufferMessage</a></div><div class="brief "><p class="paragraph">A message in the v086 Kaillera protocol.</p></div></div></div>
                 </div>
               </div>
             </div>
@@ -765,17 +808,17 @@
       </div>
       <div data-togglable="FUNCTION">
         <h2 class="">Functions</h2>
-        <div class="table"><a data-name="-294445309%2FFunctions%2F133022281" anchor-label="parseFailure" id="-294445309%2FFunctions%2F133022281" data-filterable-set=":emulinker:dokkaHtml/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker:dokkaHtml/main" data-filterable-set=":emulinker:dokkaHtml/main">
+        <div class="table"><a data-name="-294445309%2FFunctions%2F-1834219614" anchor-label="parseFailure" id="-294445309%2FFunctions%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="parse-failure.html"><span>parse</span><wbr></wbr><span><span>Failure</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-294445309%2FFunctions%2F133022281"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-294445309%2FFunctions%2F-1834219614"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker:dokkaHtml/main"><div class="symbol monospace"><span class="token keyword">fun </span><span class="token operator">&lt;</span><a href="parse-failure.html">T</a><span class="token operator"> : </span><a href="-v086-message/index.html">V086Message</a><span class="token operator">&gt; </span><a href="parse-failure.html"><span class="token function">parseFailure</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">string<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-string/index.html">String</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-result/index.html">Result</a><span class="token operator">&lt;</span><a href="parse-failure.html">T</a><span class="token operator">&gt;</span></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">fun </span><span class="token operator">&lt;</span><a href="parse-failure.html">T</a><span class="token operator"> : </span><a href="-v086-message/index.html">V086Message</a><span class="token operator">&gt; </span><a href="parse-failure.html"><span class="token function">parseFailure</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">string<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-result/index.html">Result</a><span class="token operator">&lt;</span><a href="parse-failure.html">T</a><span class="token operator">&gt;</span></div></div></div>
                 </div>
               </div>
             </div>
@@ -785,11 +828,16 @@
     </div>
   </div>
 </div>
-      <div class="footer">
-        <span class="go-to-top-icon"><a href="#content" id="go-to-top-link"></a></span><span>© 2025 Copyright</span><span
-                class="pull-right"><span>Generated by </span><a
-                href="https://github.com/Kotlin/dokka"><span>dokka</span><span class="padded-icon"></span></a></span>
-      </div>
+    <div class="footer">
+        <a href="#content" id="go-to-top-link" class="footer--button footer--button_go-to-top"></a>
+        <span>© 2025 Copyright</span>
+        <span class="pull-right">
+            <span>Generated by </span>
+            <a class="footer--link footer--link_external" href="https://github.com/Kotlin/dokka">
+                <span>dokka</span>
+            </a>
+        </span>
+    </div>
             </div>
         </div>
     </div>
