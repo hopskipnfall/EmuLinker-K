@@ -15,8 +15,6 @@ import org.emulinker.util.EmuLang
 import org.emulinker.util.EmuUtil.threadSleep
 
 class GameOwnerCommandAction : V086Action<GameChat> {
-  override val actionPerformedCount = 0
-
   override fun toString() = "GameOwnerCommandAction"
 
   fun isValidCommand(chat: String): Boolean =

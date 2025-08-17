@@ -15,17 +15,10 @@ import org.emulinker.util.EmuUtil.threadSleep
 
 class QuitGameAction(private val lookingForGameReporter: TwitterBroadcaster) :
   V086Action<QuitGameRequest>, V086GameEventHandler<UserQuitGameEvent> {
-  override var actionPerformedCount = 0
-    private set
-
-  override var handledEventCount = 0
-    private set
-
   override fun toString() = "QuitGameAction"
 
   @Throws(FatalActionException::class)
   override fun performAction(message: QuitGameRequest, clientHandler: V086ClientHandler) {
-    actionPerformedCount++
     try {
       clientHandler.user.quitGame()
       lookingForGameReporter.cancelActionsForUser(clientHandler.user.id)
@@ -40,7 +33,6 @@ class QuitGameAction(private val lookingForGameReporter: TwitterBroadcaster) :
   }
 
   override fun handleEvent(event: UserQuitGameEvent, clientHandler: V086ClientHandler) {
-    handledEventCount++
     val thisUser = clientHandler.user
     try {
       val user = event.user

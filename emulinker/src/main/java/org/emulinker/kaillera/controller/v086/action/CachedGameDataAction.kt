@@ -11,8 +11,6 @@ import org.emulinker.kaillera.controller.v086.protocol.GameData.Companion.create
 import org.emulinker.kaillera.model.exception.GameDataException
 
 object CachedGameDataAction : V086Action<CachedGameData> {
-  override val actionPerformedCount = 0
-
   override fun toString() = "CachedGameDataAction"
 
   @Throws(FatalActionException::class)

@@ -36,12 +36,6 @@ class GameChatAction(
   private val flags: RuntimeFlags,
   private val clock: Clock,
 ) : V086Action<GameChatRequest>, V086GameEventHandler<GameChatEvent> {
-  override var actionPerformedCount = 0
-    private set
-
-  override var handledEventCount = 0
-    private set
-
   override fun toString() = "GameChatAction"
 
   @Throws(FatalActionException::class)
@@ -60,7 +54,6 @@ class GameChatAction(
         logger.atWarning().withCause(e).log("GameOwner command failed")
       }
     }
-    actionPerformedCount++
     try {
       clientHandler.user.gameChat(message.message, message.messageNumber)
     } catch (e: GameChatException) {
@@ -567,7 +560,6 @@ class GameChatAction(
   }
 
   override fun handleEvent(gameChatEvent: GameChatEvent, clientHandler: V086ClientHandler) {
-    handledEventCount++
     try {
       if (
         clientHandler.user.searchIgnoredUsers(

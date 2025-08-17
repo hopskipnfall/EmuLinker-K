@@ -8,13 +8,9 @@ import org.emulinker.kaillera.model.event.GameDesynchEvent
 import org.emulinker.util.EmuLang
 
 class GameDesynchAction : V086GameEventHandler<GameDesynchEvent> {
-  override var handledEventCount = 0
-    private set
-
   override fun toString() = "GameDesynchAction"
 
   override fun handleEvent(event: GameDesynchEvent, clientHandler: V086ClientHandler) {
-    handledEventCount++
     try {
       clientHandler.send(
         GameChatNotification(
