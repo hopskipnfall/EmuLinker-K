@@ -456,6 +456,7 @@ class KailleraUser(
             GameDataException(
               EmuLang.getString("KailleraUserImpl.GameDataErrorNotInGame"),
               data,
+              // This will be zero if the user is DISABLED.. Rewrite all of this.
               actionsPerMessage = connectionType.byteValue.toInt(),
               playerNumber = 1,
               numPlayers = 1,
@@ -472,11 +473,11 @@ class KailleraUser(
           response[i] = 0
         }
         lostInput.add(data)
-        queueEvent(GameDataEvent(game as KailleraGameImpl, response))
+        queueEvent(GameDataEvent(game, response))
         frameCount++
       } else {
         // lostInput.add(data);
-        if (lostInput.size > 0) {
+        if (lostInput.isNotEmpty()) {
           game.addData(this, playerNumber, lostInput[0]).onFailure {
             return Result.failure(it)
           }
