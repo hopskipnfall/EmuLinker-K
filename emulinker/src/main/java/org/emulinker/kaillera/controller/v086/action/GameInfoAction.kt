@@ -7,13 +7,9 @@ import org.emulinker.kaillera.controller.v086.protocol.GameChatNotification
 import org.emulinker.kaillera.model.event.GameInfoEvent
 
 class GameInfoAction : V086GameEventHandler<GameInfoEvent> {
-  override var handledEventCount = 0
-    private set
-
   override fun toString() = "GameInfoAction"
 
   override fun handleEvent(event: GameInfoEvent, clientHandler: V086ClientHandler) {
-    handledEventCount++
     if (event.toUser != null) {
       if (event.toUser !== clientHandler.user) return
     }

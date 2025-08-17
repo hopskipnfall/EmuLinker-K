@@ -9,17 +9,10 @@ import org.emulinker.kaillera.model.event.UserQuitEvent
 import org.emulinker.kaillera.model.exception.ActionException
 
 class QuitAction : V086Action<QuitRequest>, V086ServerEventHandler<UserQuitEvent> {
-  override var actionPerformedCount = 0
-    private set
-
-  override var handledEventCount = 0
-    private set
-
   override fun toString() = "QuitAction"
 
   @Throws(FatalActionException::class)
   override fun performAction(message: QuitRequest, clientHandler: V086ClientHandler) {
-    actionPerformedCount++
     try {
       clientHandler.user.quit(message.message)
     } catch (e: ActionException) {
@@ -28,7 +21,6 @@ class QuitAction : V086Action<QuitRequest>, V086ServerEventHandler<UserQuitEvent
   }
 
   override fun handleEvent(event: UserQuitEvent, clientHandler: V086ClientHandler) {
-    handledEventCount++
     try {
       val user = event.user
       clientHandler.send(

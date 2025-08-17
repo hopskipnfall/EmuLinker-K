@@ -1,42 +1,12 @@
 package org.emulinker.kaillera.model.exception
 
 import org.emulinker.util.VariableSizeByteArray
+import com.google.common.flogger.FluentLogger
 
 class GameDataException : ActionException {
-  //	private boolean	reflectData	= true;
-  //	private int numBytes = 0;
-  //	private static byte[] DESYNCH_DATA = new byte[1000];
   var response: VariableSizeByteArray? = null
     private set
 
-  /*
-  	public GameDataException(String message)
-  	{
-  		super(message);
-  	}
-
-  	public GameDataException(String message, boolean reflectData)
-  	{
-  		super(message);
-  		this.reflectData = reflectData;
-  	}
-
-  	public GameDataException(String message, Exception source)
-  	{
-  		super(message, source);
-  	}
-
-  	public GameDataException(String message, Exception source, boolean reflectData)
-  	{
-  		super(message, source);
-  		this.reflectData = reflectData;
-  	}
-  	public GameDataException(String message, int numBytes)
-  	{
-  		super(message);
-  		this.numBytes = numBytes;
-  	}
-  */
   constructor(message: String?) : super(message)
 
   constructor(
@@ -46,6 +16,10 @@ class GameDataException : ActionException {
     playerNumber: Int,
     numPlayers: Int,
   ) : super(message) {
+    if (actionsPerMessage == 0) {
+      logger.atWarning().log("Avoided divide by zero error..")
+      return
+    }
     val bytesPerAction = data.size / actionsPerMessage
     val arraySize = numPlayers * actionsPerMessage * bytesPerAction
     val r = VariableSizeByteArray(ByteArray(arraySize))
@@ -62,15 +36,7 @@ class GameDataException : ActionException {
     response = r
   }
 
-  /*
-  	public boolean getReflectData()
-  	{
-  		return reflectData;
-  	}
-
-  	public void setReflectData(boolean reflectData)
-  	{
-  		this.reflectData = reflectData;
-  	}
-  */
+  companion object {
+    private val logger = FluentLogger.forEnclosingClass()
+  }
 }

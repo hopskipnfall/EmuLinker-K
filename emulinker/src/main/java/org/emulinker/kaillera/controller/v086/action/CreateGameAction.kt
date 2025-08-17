@@ -20,17 +20,10 @@ class CreateGameAction :
   V086Action<CreateGame>, V086ServerEventHandler<GameCreatedEvent>, KoinComponent {
   private val joinGameMessages: List<String> by inject(named("joinGameMessages"))
 
-  override var actionPerformedCount = 0
-    private set
-
-  override var handledEventCount = 0
-    private set
-
   override fun toString() = "CreateGameAction"
 
   @Throws(FatalActionException::class)
   override fun performAction(message: CreateGame, clientHandler: V086ClientHandler) {
-    actionPerformedCount++
     try {
       val game = clientHandler.user.createGame(message.romName)
 
@@ -52,10 +45,12 @@ class CreateGameAction :
             EmuLang.getString("CreateGameAction.CreateGameDenied", e.message),
           )
         )
+        // TODO(nue): If clientHandler.user.name == null (meaning the user is not logged in) do we
+        // need to send this?
         clientHandler.send(
           QuitGameNotification(
             clientHandler.nextMessageNumber,
-            clientHandler.user.name!!,
+            clientHandler.user.name ?: "",
             clientHandler.user.id,
           )
         )
@@ -75,10 +70,12 @@ class CreateGameAction :
             EmuLang.getString("CreateGameAction.CreateGameDeniedFloodControl"),
           )
         )
+        // TODO(nue): If clientHandler.user.name == null (meaning the user is not logged in) do we
+        // need to send this?
         clientHandler.send(
           QuitGameNotification(
             clientHandler.nextMessageNumber,
-            clientHandler.user.name!!,
+            clientHandler.user.name ?: "",
             clientHandler.user.id,
           )
         )
@@ -89,7 +86,6 @@ class CreateGameAction :
   }
 
   override fun handleEvent(event: GameCreatedEvent, clientHandler: V086ClientHandler) {
-    handledEventCount++
     try {
       val game = event.game
       val owner = game.owner

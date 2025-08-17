@@ -1,7 +1,7 @@
 package org.emulinker.kaillera.pico
 
 import com.codahale.metrics.MetricRegistry
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 import org.apache.commons.configuration.Configuration
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.controller.CombinedKailleraController

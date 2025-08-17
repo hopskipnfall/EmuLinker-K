@@ -7,13 +7,9 @@ import org.emulinker.kaillera.controller.v086.protocol.CloseGame
 import org.emulinker.kaillera.model.event.GameClosedEvent
 
 class CloseGameAction : V086ServerEventHandler<GameClosedEvent> {
-  override var handledEventCount = 0
-    private set
-
   override fun toString() = "CloseGameAction"
 
   override fun handleEvent(event: GameClosedEvent, clientHandler: V086ClientHandler) {
-    handledEventCount++
     try {
       clientHandler.send(CloseGame(clientHandler.nextMessageNumber, event.game.id, 0))
     } catch (e: MessageFormatException) {

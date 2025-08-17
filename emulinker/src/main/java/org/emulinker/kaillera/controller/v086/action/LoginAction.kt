@@ -12,17 +12,10 @@ import org.emulinker.kaillera.model.KailleraUser
 import org.emulinker.kaillera.model.event.UserJoinedEvent
 
 class LoginAction : V086Action<UserInformation>, V086ServerEventHandler<UserJoinedEvent> {
-  override var actionPerformedCount = 0
-    private set
-
-  override var handledEventCount = 0
-    private set
-
   override fun toString() = "LoginAction"
 
   @Throws(FatalActionException::class)
   override fun performAction(message: UserInformation, clientHandler: V086ClientHandler) {
-    actionPerformedCount++
     val user: KailleraUser = clientHandler.user
     user.name = message.username
     user.clientType = message.clientType
@@ -37,7 +30,6 @@ class LoginAction : V086Action<UserInformation>, V086ServerEventHandler<UserJoin
   }
 
   override fun handleEvent(event: UserJoinedEvent, clientHandler: V086ClientHandler) {
-    handledEventCount++
     try {
       val user = event.user
       clientHandler.send(

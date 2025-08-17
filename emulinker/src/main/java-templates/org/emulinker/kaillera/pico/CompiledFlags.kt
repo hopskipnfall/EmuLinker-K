@@ -1,6 +1,6 @@
 package org.emulinker.kaillera.pico
 
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 
 /** Constants inserted at compile time. */
 object CompiledFlags {

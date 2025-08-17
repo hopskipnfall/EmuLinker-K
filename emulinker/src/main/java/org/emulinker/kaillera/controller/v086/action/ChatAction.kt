@@ -19,12 +19,6 @@ private const val ADMIN_COMMAND_ESCAPE_STRING = "/"
 
 class ChatAction(private val adminCommandAction: AdminCommandAction) :
   V086Action<ChatRequest>, V086ServerEventHandler<ChatEvent> {
-  override var actionPerformedCount = 0
-    private set
-
-  override var handledEventCount = 0
-    private set
-
   override fun toString() = "ChatAction"
 
   @Throws(FatalActionException::class)
@@ -48,7 +42,6 @@ class ChatAction(private val adminCommandAction: AdminCommandAction) :
       checkCommands(message, clientHandler)
       return
     }
-    actionPerformedCount++
     try {
       clientHandler.user.chat(message.message)
     } catch (e: ActionException) {
@@ -699,7 +692,6 @@ class ChatAction(private val adminCommandAction: AdminCommandAction) :
   }
 
   override fun handleEvent(event: ChatEvent, clientHandler: V086ClientHandler) {
-    handledEventCount++
     try {
       if (
         clientHandler.user.searchIgnoredUsers(event.user.connectSocketAddress.address.hostAddress)

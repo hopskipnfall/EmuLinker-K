@@ -8,14 +8,10 @@ import org.emulinker.kaillera.controller.v086.protocol.GameKick
 import org.emulinker.kaillera.model.exception.GameKickException
 
 class GameKickAction : V086Action<GameKick> {
-  override var actionPerformedCount = 0
-    private set
-
   override fun toString() = "GameKickAction"
 
   @Throws(FatalActionException::class)
   override fun performAction(message: GameKick, clientHandler: V086ClientHandler) {
-    actionPerformedCount++
     try {
       clientHandler.user.gameKick(message.userId)
     } catch (e: GameKickException) {

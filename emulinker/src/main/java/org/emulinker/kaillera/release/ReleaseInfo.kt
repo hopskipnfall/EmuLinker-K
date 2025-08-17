@@ -1,6 +1,6 @@
 package org.emulinker.kaillera.release
 
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 import org.emulinker.kaillera.pico.CompiledFlags
 import org.emulinker.kaillera.pico.CompiledFlags.BUILD_DATE
 import org.emulinker.kaillera.pico.CompiledFlags.PROJECT_NAME

@@ -7,13 +7,9 @@ import org.emulinker.kaillera.controller.v086.protocol.InformationMessage
 import org.emulinker.kaillera.model.event.InfoMessageEvent
 
 class InfoMessageAction : V086UserEventHandler<InfoMessageEvent> {
-  override var handledEventCount = 0
-    private set
-
   override fun toString() = "InfoMessageAction"
 
   override fun handleEvent(event: InfoMessageEvent, clientHandler: V086ClientHandler) {
-    handledEventCount++
     try {
       clientHandler.send(
         InformationMessage(clientHandler.nextMessageNumber, "server", event.message)

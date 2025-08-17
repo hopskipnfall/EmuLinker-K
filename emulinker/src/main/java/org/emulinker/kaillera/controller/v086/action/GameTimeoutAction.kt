@@ -5,13 +5,9 @@ import org.emulinker.kaillera.controller.v086.V086ClientHandler
 import org.emulinker.kaillera.model.event.GameTimeoutEvent
 
 class GameTimeoutAction : V086GameEventHandler<GameTimeoutEvent> {
-  override var handledEventCount = 0
-    private set
-
   override fun toString() = "GameTimeoutAction"
 
   override fun handleEvent(event: GameTimeoutEvent, clientHandler: V086ClientHandler) {
-    handledEventCount++
     val player = event.user
     val user = clientHandler.user
     if (player == user) {

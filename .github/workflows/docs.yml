@@ -22,7 +22,7 @@ jobs:
       - name: Build with Gradle
         uses: gradle/gradle-build-action@v2
         with:
-          arguments: dokkaHtml
+          arguments: dokkaGenerate
       - name: Publish documentation
         uses: JamesIves/github-pages-deploy-action@v4
         with:

@@ -12,9 +12,6 @@ import org.emulinker.kaillera.pico.CompiledFlags
 import org.emulinker.util.VariableSizeByteArray
 
 object GameDataAction : V086Action<GameData>, V086GameEventHandler<GameDataEvent> {
-  override val actionPerformedCount = 0
-  override val handledEventCount = 0
-
   override fun toString() = "GameDataAction"
 
   @Throws(FatalActionException::class)

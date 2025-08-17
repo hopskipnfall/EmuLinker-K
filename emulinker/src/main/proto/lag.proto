@@ -1,0 +1,80 @@
+// How to use protos: https://protobuf.dev/programming-guides/editions
+edition = "2023";
+
+package org.emulinker.proto;
+
+import "google/protobuf/timestamp.proto";
+
+option java_multiple_files = true;
+
+enum Player {
+  // Note: In some languages having multiple enum values with the same
+  // name causes issues so it's good to prefix with the name.
+  PLAYER_UNSPECIFIED = 0;
+  PLAYER_ONE = 1;
+  PLAYER_TWO = 2;
+  PLAYER_THREE = 3;
+  PLAYER_FOUR = 4;
+}
+
+message Event {
+  // Number of nanoseconds from an arbitrary point of time in the past.
+  // This can be used to check elapsed time between events for a single
+  // game, but not necessarily between events between two games.
+  int64 timestamp_ns = 1;
+
+  message GameStart {
+    message PlayerDetails {
+      Player player_number = 1;
+
+      // User's average ping when they joined the server.
+      double ping_ms = 2;
+
+      int32 frame_delay = 3;
+    }
+
+    repeated PlayerDetails players = 1;
+
+    google.protobuf.Timestamp timestamp = 2;
+  }
+
+  message ReceivedGameData {
+    Player received_from = 1;
+  }
+
+  // Server has collected data from all parties for the frame and will
+  // now combine and broadcast them back out to each player.
+  message FanOut {}
+
+  // It might be useful to know what the /lagstat command would say
+  // as a point of comparison.
+  message LagstatSummary {
+    // The duration over which lag is being measured.
+    int32 window_duration_ms = 1;
+
+    // The measured drift over the window
+    double game_lag_ms = 2;
+
+    message PlayerAttributedLag {
+      Player player = 1;
+
+      // How much of the drift can be reliably attributed to the
+      // player.
+      double attributed_lag_ms = 2;
+    }
+
+    repeated PlayerAttributedLag player_attributed_lags = 3;
+  }
+
+  oneof event_type {
+    GameStart game_start = 2;
+    ReceivedGameData received_game_data = 3;
+    FanOut fan_out = 4;
+    LagstatSummary lagstat_summary = 5;
+  }
+}
+
+// All metadata stored about the game.
+message GameLog {
+  repeated Event events = 1;
+}

@@ -6,12 +6,12 @@ import java.util.ArrayList
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.ThreadPoolExecutor
 import kotlin.Throws
+import kotlin.time.Clock
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.nanoseconds
 import kotlin.time.Duration.Companion.seconds
-import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.access.AccessManager
 import org.emulinker.kaillera.model.event.GameDataEvent
@@ -78,7 +78,10 @@ class KailleraUser(
   private var totalDriftNs = 0.seconds.inWholeNanoseconds
   private val totalDriftCache =
     TimeOffsetCache(delay = flags.lagstatDuration, resolution = 5.seconds)
-  private var receivedGameDataNs: Long? = null
+
+  /** Time we received the latest game data from the user for lag measurement purposes. */
+  var receivedGameDataNs: Long? = null
+    private set
 
   /** The last time we heard from this player for lag detection purposes. */
   private var lastUpdateNs = System.nanoTime()
@@ -446,6 +449,7 @@ class KailleraUser(
             GameDataException(
               toString() + " " + EmuLang.getString("KailleraUserImpl.GameDataErrorNotInGame"),
               data,
+              // This will be zero if the user is DISABLED.. Rewrite all of this.
               actionsPerMessage = connectionType.byteValue.toInt(),
               playerNumber = 1,
               numPlayers = 1,
@@ -462,7 +466,7 @@ class KailleraUser(
         frameCount++
       } else {
         // lostInput.add(data);
-        if (lostInput.size > 0) {
+        if (lostInput.isNotEmpty()) {
           game.addData(this, playerNumber, lostInput[0]).onFailure {
             return Result.failure(it)
           }

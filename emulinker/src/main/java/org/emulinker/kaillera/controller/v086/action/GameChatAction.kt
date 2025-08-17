@@ -3,14 +3,13 @@ package org.emulinker.kaillera.controller.v086.action
 import com.google.common.flogger.FluentLogger
 import java.util.*
 import kotlin.math.roundToInt
+import kotlin.time.Clock
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
-import kotlin.time.Duration.Companion.nanoseconds
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.DurationUnit.MINUTES
 import kotlin.time.DurationUnit.SECONDS
-import kotlinx.datetime.Clock
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.access.AccessManager
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
@@ -22,6 +21,7 @@ import org.emulinker.kaillera.model.event.GameChatEvent
 import org.emulinker.kaillera.model.exception.ActionException
 import org.emulinker.kaillera.model.exception.GameChatException
 import org.emulinker.kaillera.model.impl.KailleraGameImpl
+import org.emulinker.proto.GameLog
 import org.emulinker.util.EmuLang
 import org.emulinker.util.EmuLang.getStringOrNull
 import org.emulinker.util.EmuUtil.min
@@ -36,12 +36,6 @@ class GameChatAction(
   private val flags: RuntimeFlags,
   private val clock: Clock,
 ) : V086Action<GameChatRequest>, V086GameEventHandler<GameChatEvent> {
-  override var actionPerformedCount = 0
-    private set
-
-  override var handledEventCount = 0
-    private set
-
   override fun toString() = "GameChatAction"
 
   @Throws(FatalActionException::class)
@@ -60,7 +54,6 @@ class GameChatAction(
         logger.atWarning().withCause(e).log("GameOwner command failed")
       }
     }
-    actionPerformedCount++
     try {
       clientHandler.user.gameChat(message.message, message.messageNumber)
     } catch (e: GameChatException) {
@@ -475,10 +468,7 @@ class GameChatAction(
           } else {
             lagstatDuration.toLocalizedString(MINUTES, 1)
           }
-        val gameLag =
-          (game.totalDriftNs - (game.totalDriftCache.getDelayedValue() ?: 0))
-            .nanoseconds
-            .absoluteValue
+        val gameLag = game.currentGameLag
         game.announce(
           EmuLang.getString(
             "Lagstat.TotalGameLagSummary",
@@ -500,7 +490,7 @@ class GameChatAction(
         // TODO(nue): Expand this to more connection types.
         val p1 = game.players.firstOrNull()
         if (p1 != null && p1.connectionType == ConnectionType.LAN && lagstatDuration > 10.seconds) {
-          val lagPerDuration = gameLag / lagstatDuration
+          val lagPerDuration = game.currentGameLag / lagstatDuration
           if (lagPerDuration > 0.5.seconds / 1.minutes) {
             val laggiestPlayer = game.players.maxBy { it.lagAttributedToUser() }
             if (laggiestPlayer.lagAttributedToUser() > Duration.ZERO) {
@@ -549,6 +539,15 @@ class GameChatAction(
         val newFps = message.message.removePrefix("/fps ").toDouble()
         game.setGameFps(newFps)
         game.announce(EmuLang.getString("Fps.NewFpsMeasurement", newFps))
+      } else if (
+        clientHandler.user.accessLevel >= AccessManager.ACCESS_ADMIN &&
+          message.message.trim() == "/loggame"
+      ) {
+        game.chat(clientHandler.user, message.message)
+        if (game.gameLogBuilder == null) {
+          game.gameLogBuilder = GameLog.newBuilder()
+          game.announce("Enabled logging for session.")
+        }
       } else {
         game.announce(
           EmuLang.getString("ChatAction.UnrecognizedCommand", message.message),
@@ -561,7 +560,6 @@ class GameChatAction(
   }
 
   override fun handleEvent(gameChatEvent: GameChatEvent, clientHandler: V086ClientHandler) {
-    handledEventCount++
     try {
       if (
         clientHandler.user.searchIgnoredUsers(

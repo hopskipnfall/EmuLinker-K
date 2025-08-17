@@ -8,17 +8,10 @@ import org.emulinker.kaillera.model.event.GameEvent
 import org.emulinker.kaillera.model.exception.UserReadyException
 
 class UserReadyAction : V086Action<AllReady>, V086GameEventHandler<GameEvent> {
-  override var actionPerformedCount = 0
-    private set
-
-  override var handledEventCount = 0
-    private set
-
   override fun toString() = "UserReadyAction"
 
   @Throws(FatalActionException::class)
   override fun performAction(message: AllReady, clientHandler: V086ClientHandler) {
-    actionPerformedCount++
     try {
       clientHandler.user.playerReady()
     } catch (e: UserReadyException) {
@@ -27,7 +20,6 @@ class UserReadyAction : V086Action<AllReady>, V086GameEventHandler<GameEvent> {
   }
 
   override fun handleEvent(event: GameEvent, clientHandler: V086ClientHandler) {
-    handledEventCount++
     clientHandler.resetGameDataCache()
     try {
       clientHandler.send(AllReady(clientHandler.nextMessageNumber))

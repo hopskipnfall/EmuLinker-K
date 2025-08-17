@@ -17,17 +17,10 @@ class JoinGameAction :
   V086Action<JoinGameRequest>, V086GameEventHandler<UserJoinedGameEvent>, KoinComponent {
   private val joinGameMessages: List<String> by inject(named("joinGameMessages"))
 
-  override var actionPerformedCount = 0
-    private set
-
-  override var handledEventCount = 0
-    private set
-
   override fun toString() = "JoinGameAction"
 
   @Throws(FatalActionException::class)
   override fun performAction(message: JoinGameRequest, clientHandler: V086ClientHandler) {
-    actionPerformedCount++
     try {
       val game = clientHandler.user.joinGame(message.gameId)
 
@@ -47,7 +40,7 @@ class JoinGameAction :
         clientHandler.send(
           QuitGameNotification(
             clientHandler.nextMessageNumber,
-            clientHandler.user.name!!,
+            clientHandler.user.name ?: "(empty username)",
             clientHandler.user.id,
           )
         )
@@ -58,7 +51,6 @@ class JoinGameAction :
   }
 
   override fun handleEvent(event: UserJoinedGameEvent, clientHandler: V086ClientHandler) {
-    handledEventCount++
     val thisUser = clientHandler.user
     try {
       val game = event.game
