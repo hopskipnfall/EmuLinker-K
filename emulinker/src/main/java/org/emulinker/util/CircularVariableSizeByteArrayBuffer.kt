@@ -9,12 +9,12 @@ class CircularVariableSizeByteArrayBuffer(
   private var index = 0
 
   /** Claims an object from the pool. If the pool is empty, a new one is allocated. */
-  fun claim(): VariableSizeByteArray {
+  fun borrow(): VariableSizeByteArray {
     while (true) {
       incrementIndex()
       val next = pool[index]
-      if (next.inUse) continue
-      next.inUse = true
+      if (next.isBorrowed || next.isInCache || next.inTemporaryUse) continue
+      next.isBorrowed = true
       return next
     }
   }
@@ -25,6 +25,6 @@ class CircularVariableSizeByteArrayBuffer(
 
   /** Returns an object to the pool. */
   fun recycle(v: VariableSizeByteArray) {
-    v.inUse = false
+    v.isBorrowed = false
   }
 }

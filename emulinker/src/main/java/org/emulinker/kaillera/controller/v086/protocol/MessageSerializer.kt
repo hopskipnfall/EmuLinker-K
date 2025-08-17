@@ -4,13 +4,11 @@ import io.netty.buffer.ByteBuf
 import java.nio.ByteBuffer
 import kotlinx.io.Source
 import org.emulinker.kaillera.controller.messaging.ParseException
-import org.emulinker.kaillera.model.KailleraUser
-import org.emulinker.util.CircularVariableSizeByteArrayBuffer
 
 sealed interface MessageSerializer<E : V086Message> {
   val messageTypeId: Byte
 
-  fun read(buffer: ByteBuffer, messageNumber: Int, arrayBuffer: CircularVariableSizeByteArrayBuffer?): Result<E>
+  fun read(buffer: ByteBuffer, messageNumber: Int): Result<E>
 
   fun read(buffer: ByteBuf, messageNumber: Int): Result<E>
 

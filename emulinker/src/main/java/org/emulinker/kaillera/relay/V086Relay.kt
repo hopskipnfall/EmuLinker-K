@@ -30,7 +30,7 @@ class V086Relay(listenPort: Int, serverSocketAddress: InetSocketAddress) :
     val inBundle: V086Bundle =
       try {
         // inBundle = V086Bundle.parse(receiveBuffer, lastClientMessageNumber);
-        parse(receiveBuffer, -1)
+        parse(receiveBuffer, -1, arrayBuffer = null)
       } catch (e: ParseException) {
         receiveBuffer.rewind()
         logger.atWarning().withCause(e).log("Failed to parse: %s", dumpBuffer(receiveBuffer))

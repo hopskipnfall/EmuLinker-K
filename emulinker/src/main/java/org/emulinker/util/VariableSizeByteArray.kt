@@ -4,14 +4,18 @@ import java.nio.ByteBuffer
 import java.util.Arrays
 
 interface Borrowable {
-  var inUse: Boolean
+  var isBorrowed: Boolean
+  var isInCache: Boolean
+  var inTemporaryUse: Boolean
 }
 
 class VariableSizeByteArray(initialData: ByteArray = EMPTY_DATA) : Borrowable {
   var bytes = initialData
     private set
 
-  override var inUse: Boolean = false
+  override var isBorrowed: Boolean = false
+  override var isInCache: Boolean = false
+  override var inTemporaryUse: Boolean = false
 
   var size = initialData.size
     set(newVal) {

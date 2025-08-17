@@ -41,9 +41,9 @@ class ServerGameDataCache(size: Int) : GameDataCache {
     return i?.let { unconvert(it) } ?: -1
   }
 
-  override fun get(index: Int): VariableSizeByteArray? {
+  override fun get(index: Int): VariableSizeByteArray {
     rangeCheck(index)
-    return array[convert(index)]
+    return array[convert(index)]!!
   }
 
   // This method is the main reason we re-wrote the class.

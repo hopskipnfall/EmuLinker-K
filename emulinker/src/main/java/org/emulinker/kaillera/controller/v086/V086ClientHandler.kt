@@ -191,7 +191,7 @@ class V086ClientHandler(
       } else {
         val newBuffer: ByteBuffer = buffer.nioBuffer()
         try {
-          parse(newBuffer, lastMessageNumber)
+          parse(newBuffer, lastMessageNumber, arrayBuffer = null)
         } catch (e: ParseException) {
           newBuffer.position(0)
           logger

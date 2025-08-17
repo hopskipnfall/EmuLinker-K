@@ -10,7 +10,7 @@ import org.emulinker.kaillera.controller.messaging.ByteBufferMessage
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.messaging.ParseException
 import org.emulinker.kaillera.controller.v086.protocol.V086Message.Companion.parse
-import org.emulinker.kaillera.model.KailleraUser
+import org.emulinker.util.CircularVariableSizeByteArrayBuffer
 import org.emulinker.util.EmuUtil
 import org.emulinker.util.UnsignedUtil.getUnsignedShort
 import org.emulinker.util.UnsignedUtil.readUnsignedShortLittleEndian
@@ -66,7 +66,11 @@ class V086Bundle(val messages: Array<V086Message?>, numToWrite: Int = Int.MAX_VA
   companion object {
 
     @Throws(ParseException::class, V086BundleFormatException::class, MessageFormatException::class)
-    fun parse(buffer: ByteBuffer, lastMessageID: Int = -1, user: KailleraUser? = null): V086Bundle {
+    fun parse(
+      buffer: ByteBuffer,
+      lastMessageID: Int = -1,
+      arrayBuffer: CircularVariableSizeByteArrayBuffer? = null,
+    ): V086Bundle {
       buffer.order(ByteOrder.LITTLE_ENDIAN)
       if (buffer.limit() < 5) {
         throw V086BundleFormatException("Invalid buffer length: " + buffer.limit())
@@ -99,7 +103,7 @@ class V086Bundle(val messages: Array<V086Message?>, numToWrite: Int = Int.MAX_VA
         if (messageLength !in 2..buffer.remaining()) {
           throw ParseException("Invalid message length: $messageLength")
         }
-        messages[parsedCount] = parse(messageNumber, messageLength.toInt(), buffer)
+        messages[parsedCount] = parse(messageNumber, messageLength.toInt(), buffer, arrayBuffer)
         parsedCount++
       } else {
         messages = arrayOfNulls(messageCount)
@@ -120,7 +124,7 @@ class V086Bundle(val messages: Array<V086Message?>, numToWrite: Int = Int.MAX_VA
           if (messageLength < 2 || messageLength > buffer.remaining()) {
             throw ParseException("Invalid message length: $messageLength")
           }
-          messages[parsedCount] = parse(messageNumber, messageLength.toInt(), buffer)
+          messages[parsedCount] = parse(messageNumber, messageLength.toInt(), buffer, arrayBuffer)
           parsedCount++
         }
       }

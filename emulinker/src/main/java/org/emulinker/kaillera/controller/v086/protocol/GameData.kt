@@ -112,7 +112,15 @@ constructor(override var messageNumber: Int, var gameData: VariableSizeByteArray
       return Result.success(GameData(messageNumber, VariableSizeByteArray(gameData)))
     }
 
-    override fun read(buffer: ByteBuffer, messageNumber: Int, arrayBuffer: CircularVariableSizeByteArrayBuffer?): Result<GameData> {
+    override fun read(buffer: ByteBuffer, messageNumber: Int): Result<GameData> {
+      return read(buffer, messageNumber, arrayBuffer = null)
+    }
+
+    fun read(
+      buffer: ByteBuffer,
+      messageNumber: Int,
+      arrayBuffer: CircularVariableSizeByteArrayBuffer?,
+    ): Result<GameData> {
       if (buffer.remaining() < 4) {
         return parseFailure("Failed byte count validation!")
       }
@@ -121,11 +129,9 @@ constructor(override var messageNumber: Int, var gameData: VariableSizeByteArray
       if (dataSize <= 0 || dataSize > buffer.remaining()) {
         return parseFailure("Invalid Game Data format: dataSize = $dataSize")
       }
-      val gameData =
-        if (CompiledFlags.USE_BYTE_ARRAY_POOL) {
-          VariableSizeByteArray.pool.claim()
-        } else if (CompiledFlags.USE_UNSAFE_BUFFER) {
-          arrayBuffer!!.claim()
+      val gameData: VariableSizeByteArray =
+        if (CompiledFlags.USE_UNSAFE_BUFFER && arrayBuffer != null) {
+          arrayBuffer.borrow()
         } else {
           VariableSizeByteArray()
         }

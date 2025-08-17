@@ -1,12 +1,11 @@
 package org.emulinker.util
 
 import java.lang.IndexOutOfBoundsException
-import org.emulinker.kaillera.pico.CompiledFlags
 
 class GameDataCacheImpl(capacity: Int) : GameDataCache {
   private var lastRetrievedIndex = -1
 
-  private var array: Array<VariableSizeByteArray?> = Array(capacity) { VariableSizeByteArray() }
+  private var array: Array<VariableSizeByteArray?> = arrayOfNulls(capacity)
 
   // head points to the first logical element in the array, and
   // tail points to the element following the last. This means
@@ -57,11 +56,9 @@ class GameDataCacheImpl(capacity: Int) : GameDataCache {
   override fun remove(index: Int) {
     rangeCheck(index)
     val pos = convert(index)
-    if (CompiledFlags.USE_BYTE_ARRAY_POOL) {
-      array[pos]!!.size = 0 // It's effectively deleted.
-    } else {
-      array[pos] = null
-    }
+    val entry = array[pos]
+    entry?.isInCache = false
+    array[pos] = null
 
     // optimized for FIFO access, i.e. adding to back and
     // removing from front
@@ -87,7 +84,8 @@ class GameDataCacheImpl(capacity: Int) : GameDataCache {
 
   override fun clear() {
     for (i in 0 until size) {
-      array[convert(i)]!!.size = 0
+      array[convert(i)]?.isInCache = false
+      array[convert(i)] = null
     }
     size = 0
     tail = size
@@ -97,11 +95,8 @@ class GameDataCacheImpl(capacity: Int) : GameDataCache {
   override fun add(data: VariableSizeByteArray): Int {
     if (size == array.size) remove(0)
     val pos = tail
-    if (CompiledFlags.USE_BYTE_ARRAY_POOL) {
-      data.copyTo(array[tail]!!)
-    } else {
-      array[tail] = data
-    }
+    data.isInCache = true
+    array[tail] = data
 
     // tail = ((tail + 1) % array.length);
     tail++

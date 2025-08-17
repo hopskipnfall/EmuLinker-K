@@ -17,11 +17,14 @@ object CachedGameDataAction : V086Action<CachedGameData> {
   override fun performAction(message: CachedGameData, clientHandler: V086ClientHandler) {
     val user = clientHandler.user
     val data = clientHandler.clientGameDataCache[message.key]
-    if (data == null) {
-      logger.atFine().log("Game Cache Error: null data")
-      return
-    }
-    user.addGameData(data).onFailure { e ->
+    data.inTemporaryUse = true
+    val addGameDataResult =
+      try {
+        user.addGameData(data)
+      } finally {
+        data.inTemporaryUse = false
+      }
+    addGameDataResult.onFailure { e ->
       when (e) {
         is GameDataException -> {
           logger.atFine().withCause(e).log("Game data error")
