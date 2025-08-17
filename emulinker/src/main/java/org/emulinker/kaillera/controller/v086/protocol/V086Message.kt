@@ -7,7 +7,9 @@ import kotlinx.io.Source
 import org.emulinker.kaillera.controller.messaging.ByteBufferMessage
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.messaging.ParseException
+import org.emulinker.kaillera.model.KailleraUser
 import org.emulinker.kaillera.pico.AppModule
+import org.emulinker.util.CircularVariableSizeByteArrayBuffer
 import org.emulinker.util.UnsignedUtil.putUnsignedShort
 
 /**
@@ -129,7 +131,7 @@ abstract class V086Message : ByteBufferMessage() {
     }
 
     @Throws(ParseException::class, MessageFormatException::class)
-    fun parse(messageNumber: Int, messageLength: Int, buffer: ByteBuffer): V086Message {
+    fun parse(messageNumber: Int, messageLength: Int, buffer: ByteBuffer, arrayBuffer: CircularVariableSizeByteArrayBuffer?): V086Message {
       val messageType = buffer.get()
 
       val serializer =
@@ -139,7 +141,7 @@ abstract class V086Message : ByteBufferMessage() {
           else -> checkNotNull(SERIALIZERS[messageType]) { "Unrecognized message ID: $messageType" }
         }
 
-      var parseResult: Result<V086Message> = serializer.read(buffer, messageNumber)
+      var parseResult: Result<V086Message> = serializer.read(buffer, messageNumber, arrayBuffer)
       parseResult.onSuccess { parseResult = it.validateMessageNumber() }
 
       val message =

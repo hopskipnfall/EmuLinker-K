@@ -23,6 +23,7 @@ import org.emulinker.kaillera.model.event.UserQuitEvent
 import org.emulinker.kaillera.model.event.UserQuitGameEvent
 import org.emulinker.kaillera.model.exception.*
 import org.emulinker.kaillera.model.impl.KailleraGameImpl
+import org.emulinker.util.CircularVariableSizeByteArrayBuffer
 import org.emulinker.util.EmuLang
 import org.emulinker.util.TimeOffsetCache
 import org.emulinker.util.VariableSizeByteArray
@@ -60,6 +61,15 @@ class KailleraUser(
   var ping = 0.milliseconds // TODO(nue): This probably shouldn't have a default.
   var socketAddress: InetSocketAddress? = null
   var status = UserStatus.PLAYING // TODO(nue): This probably shouldn't have a default value..
+
+  /** A non-threadsafe cache of [VariableSizeByteArray] instances. */
+  val circularVariableSizeByteArrayBuffer =
+    CircularVariableSizeByteArrayBuffer(
+      // The GameDataCache has 256 so we should have something significantly larger.
+      size = 1_000
+    ) {
+      VariableSizeByteArray()
+    }
 
   /**
    * Level of access that the user has.

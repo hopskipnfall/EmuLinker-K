@@ -21,4 +21,7 @@ object CompiledFlags {
 
   /** Use a shared object pool instead of creating ByteArrays every time. */
   const val USE_BYTE_ARRAY_POOL: Boolean = ${useByteArrayPool}
+
+  /** Use a shared object pool instead of creating ByteArrays every time. */
+  const val USE_UNSAFE_BUFFER: Boolean = ${useUnsafeBuffer}
 }

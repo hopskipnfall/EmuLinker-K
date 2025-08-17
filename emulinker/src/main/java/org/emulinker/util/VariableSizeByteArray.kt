@@ -3,9 +3,15 @@ package org.emulinker.util
 import java.nio.ByteBuffer
 import java.util.Arrays
 
-class VariableSizeByteArray(initialData: ByteArray = EMPTY_DATA) {
+interface Borrowable {
+  var inUse: Boolean
+}
+
+class VariableSizeByteArray(initialData: ByteArray = EMPTY_DATA) : Borrowable {
   var bytes = initialData
     private set
+
+  override var inUse: Boolean = false
 
   var size = initialData.size
     set(newVal) {

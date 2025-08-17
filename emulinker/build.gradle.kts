@@ -101,7 +101,8 @@ tasks.processResources {
             val prerelease = properties["prerelease"]
           },
         "useBytereadpacketInsteadOfBytebuffer" to false,
-        "useByteArrayPool" to true,
+        "useByteArrayPool" to false,
+        "useUnsafeBuffer" to true,
       )
     )
   }

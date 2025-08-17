@@ -8,6 +8,7 @@ import kotlinx.io.Source
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.kaillera.pico.CompiledFlags
+import org.emulinker.util.CircularVariableSizeByteArrayBuffer
 import org.emulinker.util.UnsignedUtil.getUnsignedShort
 import org.emulinker.util.UnsignedUtil.putUnsignedShort
 import org.emulinker.util.UnsignedUtil.readUnsignedShortLittleEndian
@@ -111,7 +112,7 @@ constructor(override var messageNumber: Int, var gameData: VariableSizeByteArray
       return Result.success(GameData(messageNumber, VariableSizeByteArray(gameData)))
     }
 
-    override fun read(buffer: ByteBuffer, messageNumber: Int): Result<GameData> {
+    override fun read(buffer: ByteBuffer, messageNumber: Int, arrayBuffer: CircularVariableSizeByteArrayBuffer?): Result<GameData> {
       if (buffer.remaining() < 4) {
         return parseFailure("Failed byte count validation!")
       }
@@ -123,6 +124,8 @@ constructor(override var messageNumber: Int, var gameData: VariableSizeByteArray
       val gameData =
         if (CompiledFlags.USE_BYTE_ARRAY_POOL) {
           VariableSizeByteArray.pool.claim()
+        } else if (CompiledFlags.USE_UNSAFE_BUFFER) {
+          arrayBuffer!!.claim()
         } else {
           VariableSizeByteArray()
         }
