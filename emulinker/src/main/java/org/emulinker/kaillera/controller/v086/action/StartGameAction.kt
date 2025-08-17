@@ -12,16 +12,9 @@ import org.emulinker.kaillera.model.exception.StartGameException
 
 class StartGameAction(private val lookingForGameReporter: TwitterBroadcaster) :
   V086Action<StartGameRequest>, V086GameEventHandler<GameStartedEvent> {
-  override var actionPerformedCount = 0
-    private set
-
-  override var handledEventCount = 0
-    private set
-
   override fun toString() = "StartGameAction"
 
   override fun performAction(message: StartGameRequest, clientHandler: V086ClientHandler) {
-    actionPerformedCount++
     try {
       clientHandler.user.startGame()
     } catch (e: StartGameException) {
@@ -37,7 +30,6 @@ class StartGameAction(private val lookingForGameReporter: TwitterBroadcaster) :
   }
 
   override fun handleEvent(event: GameStartedEvent, clientHandler: V086ClientHandler) {
-    handledEventCount++
     try {
       val game = event.game
       clientHandler.user.tempDelay = game.highestUserFrameDelay - clientHandler.user.frameDelay

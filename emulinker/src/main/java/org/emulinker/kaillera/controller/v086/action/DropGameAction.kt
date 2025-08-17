@@ -9,17 +9,10 @@ import org.emulinker.kaillera.model.event.UserDroppedGameEvent
 import org.emulinker.kaillera.model.exception.DropGameException
 
 class DropGameAction : V086Action<PlayerDropRequest>, V086GameEventHandler<UserDroppedGameEvent> {
-  override var actionPerformedCount = 0
-    private set
-
-  override var handledEventCount = 0
-    private set
-
   override fun toString() = "DropGameAction"
 
   @Throws(FatalActionException::class)
   override fun performAction(message: PlayerDropRequest, clientHandler: V086ClientHandler) {
-    actionPerformedCount++
     try {
       clientHandler.user.dropGame()
     } catch (e: DropGameException) {
@@ -28,7 +21,6 @@ class DropGameAction : V086Action<PlayerDropRequest>, V086GameEventHandler<UserD
   }
 
   override fun handleEvent(event: UserDroppedGameEvent, clientHandler: V086ClientHandler) {
-    handledEventCount++
     try {
       val user = event.user
       val playerNumber = event.playerNumber

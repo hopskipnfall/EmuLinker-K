@@ -15,17 +15,10 @@ import org.emulinker.kaillera.model.exception.*
 import org.emulinker.util.EmuUtil.threadSleep
 
 class ACKAction : V086Action<ClientAck>, V086UserEventHandler<UserEvent> {
-  override var actionPerformedCount = 0
-    private set
-
-  override var handledEventCount = 0
-    private set
-
   override fun toString() = "ACKAction"
 
   @Throws(FatalActionException::class)
   override fun performAction(message: ClientAck, clientHandler: V086ClientHandler) {
-    actionPerformedCount++
     val user = clientHandler.user
     if (user.loggedIn) {
       return
@@ -73,7 +66,6 @@ class ACKAction : V086Action<ClientAck>, V086UserEventHandler<UserEvent> {
   }
 
   override fun handleEvent(event: UserEvent, clientHandler: V086ClientHandler) {
-    handledEventCount++
     val connectedEvent = event as ConnectedEvent
     val server = connectedEvent.server
     val thisUser = connectedEvent.user

@@ -7,13 +7,9 @@ import org.emulinker.kaillera.controller.v086.protocol.GameStatus
 import org.emulinker.kaillera.model.event.GameStatusChangedEvent
 
 class GameStatusAction : V086ServerEventHandler<GameStatusChangedEvent> {
-  override var handledEventCount = 0
-    private set
-
   override fun toString() = "GameStatusAction"
 
   override fun handleEvent(event: GameStatusChangedEvent, clientHandler: V086ClientHandler) {
-    handledEventCount++
     try {
       val game = event.game
       val visiblePlayers = game.players.count { !it.inStealthMode }

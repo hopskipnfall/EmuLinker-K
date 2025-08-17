@@ -22,8 +22,6 @@ import org.emulinker.util.EmuUtil.toSimpleUtcDatetime
 import org.emulinker.util.WildcardStringPattern
 
 class AdminCommandAction : V086Action<Chat> {
-  override val actionPerformedCount = 0
-
   override fun toString() = "AdminCommandAction"
 
   fun isValidCommand(chat: String): Boolean {
