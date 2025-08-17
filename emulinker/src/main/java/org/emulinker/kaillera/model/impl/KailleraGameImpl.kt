@@ -44,6 +44,7 @@ import org.emulinker.kaillera.model.exception.JoinGameException
 import org.emulinker.kaillera.model.exception.QuitGameException
 import org.emulinker.kaillera.model.exception.StartGameException
 import org.emulinker.kaillera.model.exception.UserReadyException
+import org.emulinker.kaillera.pico.CompiledFlags
 import org.emulinker.proto.EventKt.GameStartKt.playerDetails
 import org.emulinker.proto.EventKt.LagstatSummaryKt.playerAttributedLag
 import org.emulinker.proto.EventKt.fanOut
@@ -57,7 +58,6 @@ import org.emulinker.proto.Player.PLAYER_ONE
 import org.emulinker.proto.Player.PLAYER_THREE
 import org.emulinker.proto.Player.PLAYER_TWO
 import org.emulinker.proto.event
-import org.emulinker.kaillera.pico.CompiledFlags
 import org.emulinker.util.EmuLang
 import org.emulinker.util.EmuUtil.threadSleep
 import org.emulinker.util.EmuUtil.toMillisDouble

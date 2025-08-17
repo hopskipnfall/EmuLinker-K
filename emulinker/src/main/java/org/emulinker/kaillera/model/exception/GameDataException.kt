@@ -1,7 +1,7 @@
 package org.emulinker.kaillera.model.exception
 
-import org.emulinker.util.VariableSizeByteArray
 import com.google.common.flogger.FluentLogger
+import org.emulinker.util.VariableSizeByteArray
 
 class GameDataException : ActionException {
   var response: VariableSizeByteArray? = null
