@@ -48,7 +48,7 @@ sealed class Quit : V086Message() {
       if (buffer.readableBytes() < 3) {
         return parseFailure("Failed byte count validation!")
       }
-      val userID = buffer.readShortLE().toInt()
+      val userID = buffer.readUnsignedShortLE()
       val message = buffer.readString()
       return Result.success(
         if (userName.isBlank() && userID == REQUEST_USER_ID) {

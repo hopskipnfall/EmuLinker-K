@@ -100,7 +100,7 @@ tasks.processResources {
             val url = properties["url"]
             val prerelease = properties["prerelease"]
           },
-        "useBytebufInsteadOfBytebuffer" to false,
+        "useBytebufInsteadOfBytebuffer" to true,
         "useByteArrayPool" to false,
         "useUnsafeBuffer" to false,
       )

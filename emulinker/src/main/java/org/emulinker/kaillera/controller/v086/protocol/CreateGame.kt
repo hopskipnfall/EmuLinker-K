@@ -1,6 +1,5 @@
 package org.emulinker.kaillera.controller.v086.protocol
 
-import io.ktor.utils.io.core.remaining
 import io.netty.buffer.ByteBuf
 import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.v086.V086Utils
@@ -41,8 +40,8 @@ sealed class CreateGame : V086Message() {
       if (buffer.readableBytes() < 4) {
         return parseFailure("Failed byte count validation!")
       }
-      val gameID = buffer.readShortLE().toInt()
-      val val1 = buffer.readShortLE().toInt()
+      val gameID = buffer.readUnsignedShortLE()
+      val val1 = buffer.readUnsignedShortLE()
       return Result.success(
         if (userName == REQUEST_USERNAME && gameID == REQUEST_GAME_ID && val1 == REQUEST_VAL1)
           CreateGameRequest(messageNumber, romName)

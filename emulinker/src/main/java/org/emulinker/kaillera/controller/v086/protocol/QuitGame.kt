@@ -46,7 +46,7 @@ sealed class QuitGame : V086Message() {
       if (buffer.readableBytes() < 2) {
         return parseFailure("Failed byte count validation!")
       }
-      val userID = buffer.getUnsignedShort()
+      val userID = buffer.readUnsignedShortLE()
       return Result.success(
         if (userName == REQUEST_USERNAME && userID == REQUEST_USER_ID) {
           QuitGameRequest(messageNumber)

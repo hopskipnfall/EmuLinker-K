@@ -25,7 +25,6 @@ object UnsignedUtil {
   // ---------------------------------------------------------------
   fun ByteBuffer.getUnsignedShort(): Int = this.short.toInt() and 0xffff
 
-  // This is actually used sometimes..
   fun ByteBuf.getUnsignedShort(): Int = this.readShort().toInt() and 0xffff
 
   fun ByteBuffer.putUnsignedShort(value: Int) {

@@ -1,6 +1,5 @@
 package org.emulinker.kaillera.controller.v086.protocol
 
-import io.ktor.utils.io.core.remaining
 import io.netty.buffer.ByteBuf
 import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.v086.V086Utils
@@ -46,17 +45,19 @@ sealed class StartGame : V086Message() {
       if (b.toInt() != 0x00) {
         return parseFailure("Failed byte count validation!")
       }
-      val val1 = buffer.readShortLE().toInt()
-      val playerNumber = buffer.getUnsignedByte()
+      val val1 = buffer.readUnsignedShortLE()
+      val playerNumber = buffer.readUnsignedByte()
       val numPlayers = buffer.getUnsignedByte()
       return Result.success(
         if (
           val1 == REQUEST_VAL1 &&
             playerNumber == REQUEST_PLAYER_NUMBER &&
             numPlayers == REQUEST_NUM_PLAYERS
-        )
+        ) {
           StartGameRequest(messageNumber)
-        else StartGameNotification(messageNumber, val1, playerNumber, numPlayers)
+        } else {
+          StartGameNotification(messageNumber, val1, playerNumber, numPlayers)
+        }
       )
     }
 

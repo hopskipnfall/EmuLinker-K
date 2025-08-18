@@ -71,8 +71,7 @@ sealed class JoinGame : V086Message() {
         return parseFailure("Failed byte count validation!")
       }
       val ping = buffer.readIntLE()
-      // TOOD(nue): I am not at all sure this is correct.
-      val userID = buffer.getUnsignedShort()
+      val userID = buffer.readUnsignedShortLE()
       val connectionType = buffer.readByte()
       return Result.success(
         if (userName.isBlank() && ping == 0 && userID == 0xFFFF)
