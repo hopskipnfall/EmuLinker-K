@@ -3,6 +3,7 @@ package org.emulinker.kaillera.controller.v086.protocol
 import io.ktor.utils.io.core.remaining
 import io.netty.buffer.ByteBuf
 import java.nio.ByteBuffer
+import kotlin.math.roundToInt
 import kotlin.math.roundToLong
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
@@ -54,8 +55,8 @@ data class PlayerInformation(override val messageNumber: Int, val players: List<
 
     fun writeTo(buffer: ByteBuf) {
       EmuUtil.writeString(buffer, username)
-      buffer.putUnsignedInt(ping.toMillisDouble().roundToLong())
-      buffer.putUnsignedShort(userId)
+      buffer.writeIntLE(ping.toMillisDouble().roundToInt())
+      buffer.writeShortLE(userId)
       buffer.writeByte(connectionType.byteValue.toInt())
     }
 
@@ -97,7 +98,7 @@ data class PlayerInformation(override val messageNumber: Int, val players: List<
           "Invalid Player Information format: byte 0 = ${EmuUtil.byteToHex(b)}"
         )
       }
-      val numPlayers = buffer.readInt()
+      val numPlayers = buffer.readIntLE()
       val minLen = numPlayers * 9
       if (buffer.readableBytes() < minLen) {
         return parseFailure("Failed byte count validation!")
@@ -111,8 +112,8 @@ data class PlayerInformation(override val messageNumber: Int, val players: List<
           if (buffer.readableBytes() < 7) {
             return parseFailure("Failed byte count validation!")
           }
-          val ping = buffer.getUnsignedInt()
-          val userID = buffer.getUnsignedShort()
+          val ping = buffer.readIntLE()
+          val userID = buffer.readShortLE().toInt()
           val connectionType = buffer.readByte()
           Player(userName, ping.milliseconds, userID, ConnectionType.fromByteValue(connectionType))
         }
@@ -153,7 +154,7 @@ data class PlayerInformation(override val messageNumber: Int, val players: List<
 
     override fun write(buffer: ByteBuf, message: PlayerInformation) {
       buffer.writeByte(0x00)
-      buffer.writeInt(message.players.size)
+      buffer.writeIntLE(message.players.size)
       message.players.forEach { it.writeTo(buffer) }
     }
 

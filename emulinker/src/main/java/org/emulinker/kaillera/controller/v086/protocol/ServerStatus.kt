@@ -3,6 +3,7 @@ package org.emulinker.kaillera.controller.v086.protocol
 import io.ktor.utils.io.core.remaining
 import io.netty.buffer.ByteBuf
 import java.nio.ByteBuffer
+import kotlin.math.roundToInt
 import kotlin.math.roundToLong
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
@@ -84,9 +85,9 @@ data class ServerStatus(
 
     fun writeTo(buffer: ByteBuf) {
       EmuUtil.writeString(buffer, username)
-      buffer.putUnsignedInt(ping.toMillisDouble().roundToLong())
+      buffer.writeIntLE(ping.toMillisDouble().roundToInt())
       buffer.writeByte(status.byteValue.toInt())
-      buffer.putUnsignedShort(userId)
+      buffer.writeShortLE(userId)
       buffer.writeByte(connectionType.byteValue.toInt())
     }
 
@@ -132,7 +133,7 @@ data class ServerStatus(
 
     fun writeTo(buffer: ByteBuf) {
       EmuUtil.writeString(buffer, romName)
-      buffer.writeInt(gameId)
+      buffer.writeIntLE(gameId)
       EmuUtil.writeString(buffer, clientType)
       EmuUtil.writeString(buffer, username)
       EmuUtil.writeString(buffer, playerCountOutOfMax)
@@ -164,8 +165,8 @@ data class ServerStatus(
       if (b.toInt() != 0x00) {
         throw MessageFormatException("Invalid Server Status format: byte 0 = " + b.toHexString())
       }
-      val numUsers = buffer.readInt()
-      val numGames = buffer.readInt()
+      val numUsers = buffer.readIntLE()
+      val numGames = buffer.readIntLE()
       val minLen = numUsers * 10 + numGames * 13
       if (buffer.readableBytes() < minLen) {
         return parseFailure("Failed byte count validation!")
@@ -179,9 +180,9 @@ data class ServerStatus(
           if (buffer.readableBytes() < 8) {
             return parseFailure("Failed byte count validation!")
           }
-          val ping: Long = buffer.getUnsignedInt()
+          val ping: Int = buffer.readIntLE()
           val status: Byte = buffer.readByte()
-          val userID: Int = buffer.getUnsignedShort()
+          val userID: Int = buffer.readShortLE().toInt()
           val connectionType: Byte = buffer.readByte()
           User(
             userName,
@@ -200,7 +201,7 @@ data class ServerStatus(
           if (buffer.readableBytes() < 10) {
             return parseFailure("Failed byte count validation!")
           }
-          val gameID = buffer.readInt()
+          val gameID = buffer.readIntLE()
           val clientType = buffer.readString()
           if (buffer.readableBytes() < 5) {
             return parseFailure("Failed byte count validation!")
@@ -284,8 +285,8 @@ data class ServerStatus(
 
     override fun write(buffer: ByteBuf, message: ServerStatus) {
       buffer.writeByte(0x00)
-      buffer.writeInt(message.users.size)
-      buffer.writeInt(message.games.size)
+      buffer.writeIntLE(message.users.size)
+      buffer.writeIntLE(message.games.size)
       message.users.forEach { it.writeTo(buffer) }
       message.games.forEach { it.writeTo(buffer) }
     }

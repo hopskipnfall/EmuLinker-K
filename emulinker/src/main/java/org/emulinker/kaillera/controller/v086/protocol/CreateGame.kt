@@ -41,8 +41,8 @@ sealed class CreateGame : V086Message() {
       if (buffer.readableBytes() < 4) {
         return parseFailure("Failed byte count validation!")
       }
-      val gameID = buffer.getUnsignedShort()
-      val val1 = buffer.getUnsignedShort()
+      val gameID = buffer.readShortLE().toInt()
+      val val1 = buffer.readShortLE().toInt()
       return Result.success(
         if (userName == REQUEST_USERNAME && gameID == REQUEST_GAME_ID && val1 == REQUEST_VAL1)
           CreateGameRequest(messageNumber, romName)
@@ -91,13 +91,13 @@ sealed class CreateGame : V086Message() {
           is CreateGameNotification -> message.clientType
         },
       )
-      buffer.putUnsignedShort(
+      buffer.writeShortLE(
         when (message) {
           is CreateGameRequest -> REQUEST_GAME_ID
           is CreateGameNotification -> message.gameId
         }
       )
-      buffer.putUnsignedShort(
+      buffer.writeShortLE(
         when (message) {
           is CreateGameRequest -> REQUEST_VAL1
           is CreateGameNotification -> message.val1

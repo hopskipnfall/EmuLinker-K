@@ -1,8 +1,8 @@
 package org.emulinker.kaillera.controller.v086.protocol
 
-import io.ktor.utils.io.core.remaining
 import io.netty.buffer.ByteBuf
 import java.nio.ByteBuffer
+import kotlin.math.roundToInt
 import kotlin.math.roundToLong
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
@@ -64,17 +64,18 @@ sealed class JoinGame : V086Message() {
       val b = buffer.readByte()
       if (b.toInt() != 0x00)
         throw MessageFormatException("Invalid format: byte 0 = " + EmuUtil.byteToHex(b))
-      val gameID = buffer.getUnsignedShort()
-      val val1 = buffer.getUnsignedShort()
+      val gameID = buffer.readShortLE().toInt()
+      val val1 = buffer.readShortLE().toInt()
       val userName = buffer.readString()
       if (buffer.readableBytes() < 7) {
         return parseFailure("Failed byte count validation!")
       }
-      val ping = buffer.getUnsignedInt()
+      val ping = buffer.readIntLE()
+      // TOOD(nue): I am not at all sure this is correct.
       val userID = buffer.getUnsignedShort()
       val connectionType = buffer.readByte()
       return Result.success(
-        if (userName.isBlank() && ping == 0L && userID == 0xFFFF)
+        if (userName.isBlank() && ping == 0 && userID == 0xFFFF)
           JoinGameRequest(messageNumber, gameID, ConnectionType.fromByteValue(connectionType))
         else
           JoinGameNotification(
@@ -123,8 +124,8 @@ sealed class JoinGame : V086Message() {
 
     override fun write(buffer: ByteBuf, message: JoinGame) {
       buffer.writeByte(0x00)
-      buffer.putUnsignedShort(message.gameId)
-      buffer.putUnsignedShort(
+      buffer.writeShortLE(message.gameId)
+      buffer.writeShortLE(
         when (message) {
           is JoinGameRequest -> REQUEST_VAL1
           is JoinGameNotification -> message.val1
@@ -137,15 +138,15 @@ sealed class JoinGame : V086Message() {
           is JoinGameNotification -> message.username
         },
       )
-      buffer.putUnsignedInt(
+      buffer.writeIntLE(
         when (message) {
             is JoinGameRequest -> REQUEST_PING
             is JoinGameNotification -> message.ping
           }
           .toMillisDouble()
-          .roundToLong()
+          .roundToInt()
       )
-      buffer.putUnsignedShort(
+      buffer.writeShortLE(
         when (message) {
           is JoinGameRequest -> REQUEST_USER_ID
           is JoinGameNotification -> message.userId

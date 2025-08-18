@@ -43,7 +43,6 @@ class V086Bundle(val messages: Array<V086Message?>, numToWrite: Int = Int.MAX_VA
   }
 
   override fun writeTo(buffer: ByteBuf) {
-    buffer.order(ByteOrder.LITTLE_ENDIAN)
     buffer.writeByte(numMessages)
     for (i in 0 until numMessages) {
       val message = messages[i] ?: break

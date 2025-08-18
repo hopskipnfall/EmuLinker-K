@@ -60,9 +60,9 @@ abstract class V086Message : ByteBufferMessage() {
           "Ran out of output buffer space, consider increasing the controllers.v086.bufferSize setting!"
         )
     } else {
-      buffer.putUnsignedShort(messageNumber)
+      buffer.writeShortLE(messageNumber)
       // there no realistic reason to use unsigned here since a single packet can't be that large
-      buffer.putUnsignedShort(len)
+      buffer.writeShortLE(len)
       buffer.writeByte(messageTypeId.toInt())
       writeBodyTo(buffer)
     }

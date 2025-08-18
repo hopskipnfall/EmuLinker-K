@@ -62,8 +62,8 @@ constructor(
       }
       val b = buffer.readByte()
       require(b.toInt() == 0x00) { "Invalid Game Status format: byte 0 = " + EmuUtil.byteToHex(b) }
-      val gameID = buffer.getUnsignedShort()
-      val val1 = buffer.getUnsignedShort()
+      val gameID = buffer.readShortLE().toInt()
+      val val1 = buffer.readShortLE().toInt()
       val gameStatus = buffer.readByte()
       val numPlayers = buffer.readByte()
       val maxPlayers = buffer.readByte()
@@ -104,8 +104,8 @@ constructor(
 
     override fun write(buffer: ByteBuf, message: GameStatus) {
       buffer.writeByte(0x00)
-      buffer.putUnsignedShort(message.gameId)
-      buffer.putUnsignedShort(message.val1)
+      buffer.writeShortLE(message.gameId)
+      buffer.writeShortLE(message.val1)
       buffer.writeByte(message.gameStatus.byteValue.toInt())
       buffer.writeByte(message.numPlayers.toInt())
       buffer.writeByte(message.maxPlayers.toInt())

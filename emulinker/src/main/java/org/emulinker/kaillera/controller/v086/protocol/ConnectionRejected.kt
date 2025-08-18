@@ -60,13 +60,13 @@ constructor(
       if (buffer.readableBytes() < 4) {
         return parseFailure("Failed byte count validation!")
       }
-      val userID = buffer.getUnsignedShort()
+      val userID = buffer.readShortLE()
       if (buffer.readableBytes() < 2) {
         return parseFailure("Failed byte count validation!")
       }
 
       val message = buffer.readString()
-      return Result.success(ConnectionRejected(messageNumber, userName, userID, message))
+      return Result.success(ConnectionRejected(messageNumber, userName, userID.toInt(), message))
     }
 
     override fun read(buffer: ByteBuffer, messageNumber: Int): Result<ConnectionRejected> {
@@ -88,7 +88,7 @@ constructor(
 
     override fun write(buffer: ByteBuf, message: ConnectionRejected) {
       EmuUtil.writeString(buffer, message.username)
-      buffer.putUnsignedShort(message.userId)
+      buffer.writeShortLE(message.userId)
       EmuUtil.writeString(buffer, message.message)
     }
 

@@ -46,7 +46,7 @@ sealed class StartGame : V086Message() {
       if (b.toInt() != 0x00) {
         return parseFailure("Failed byte count validation!")
       }
-      val val1 = buffer.getUnsignedShort()
+      val val1 = buffer.readShortLE().toInt()
       val playerNumber = buffer.getUnsignedByte()
       val numPlayers = buffer.getUnsignedByte()
       return Result.success(
@@ -84,7 +84,7 @@ sealed class StartGame : V086Message() {
 
     override fun write(buffer: ByteBuf, message: StartGame) {
       buffer.writeByte(0x00)
-      buffer.putUnsignedShort(
+      buffer.writeShortLE(
         when (message) {
           is StartGameRequest -> REQUEST_VAL1
           is StartGameNotification -> message.val1

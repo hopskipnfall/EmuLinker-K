@@ -101,12 +101,12 @@ constructor(override var messageNumber: Int, var gameData: VariableSizeByteArray
         return parseFailure("Failed byte count validation!")
       }
       buffer.readByte() // This is always 0x00.
-      val dataSize = buffer.getUnsignedShort()
+      val dataSize = buffer.readShortLE().toInt()
       if (dataSize <= 0 || dataSize > buffer.readableBytes()) {
         return parseFailure("Invalid Game Data format: dataSize = $dataSize")
       }
       val gameData = ByteArray(dataSize)
-      buffer.readBytes(gameData) // THIS IS PROBABLY SAFE
+      buffer.readBytes(gameData)
       return Result.success(GameData(messageNumber, VariableSizeByteArray(gameData)))
     }
 
@@ -140,7 +140,7 @@ constructor(override var messageNumber: Int, var gameData: VariableSizeByteArray
 
     override fun write(buffer: ByteBuf, message: GameData) {
       buffer.writeByte(0x00)
-      buffer.putUnsignedShort(message.gameData.size)
+      buffer.writeShortLE(message.gameData.size)
       buffer.writeBytes(message.gameData.toByteArray())
     }
 

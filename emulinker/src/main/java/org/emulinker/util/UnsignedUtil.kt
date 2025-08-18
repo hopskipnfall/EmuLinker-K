@@ -25,12 +25,14 @@ object UnsignedUtil {
   // ---------------------------------------------------------------
   fun ByteBuffer.getUnsignedShort(): Int = this.short.toInt() and 0xffff
 
+  // This is actually used sometimes..
   fun ByteBuf.getUnsignedShort(): Int = this.readShort().toInt() and 0xffff
 
   fun ByteBuffer.putUnsignedShort(value: Int) {
     this.putShort((value and 0xffff).toShort())
   }
 
+  @Deprecated("", ReplaceWith("this.writeShortLE(value)"))
   fun ByteBuf.putUnsignedShort(value: Int) {
     this.writeShort((value and 0xffff))
   }
@@ -44,6 +46,7 @@ object UnsignedUtil {
   // ---------------------------------------------------------------
   fun ByteBuffer.getUnsignedInt(): Long = this.int.toLong() and 0xffffffffL
 
+  @Deprecated("", ReplaceWith("this.readIntLE()"))
   fun ByteBuf.getUnsignedInt(): Long = this.readInt().toLong() and 0xffffffffL
 
   fun ByteBuffer.putUnsignedInt(value: Long) {

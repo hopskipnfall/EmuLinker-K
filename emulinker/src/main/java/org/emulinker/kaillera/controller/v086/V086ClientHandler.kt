@@ -379,11 +379,7 @@ class V086ClientHandler(
   fun send(outMessage: V086Message, numToSend: Int = 5) {
     synchronized(sendMutex) {
       var numToSend = numToSend
-      val buf =
-        combinedKailleraController.nettyChannel
-          .alloc()
-          .directBuffer(flags.v086BufferSize)
-          .order(ByteOrder.LITTLE_ENDIAN)
+      val buf = combinedKailleraController.nettyChannel.alloc().directBuffer(flags.v086BufferSize)
       lastMessageBuffer.add(outMessage)
       numToSend = lastMessageBuffer.fill(outMessages, numToSend)
       val outBundle = V086Bundle(outMessages, numToSend)

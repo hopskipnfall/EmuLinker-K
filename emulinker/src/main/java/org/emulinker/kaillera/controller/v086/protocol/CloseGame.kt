@@ -48,8 +48,8 @@ data class CloseGame(
       val b = buffer.readByte()
       if (b.toInt() != 0x00)
         throw MessageFormatException("Invalid Close Game format: byte 0 = " + EmuUtil.byteToHex(b))
-      val gameID = buffer.getUnsignedShort()
-      val val1 = buffer.getUnsignedShort()
+      val gameID = buffer.readShortLE().toInt()
+      val val1 = buffer.readShortLE().toInt()
       return Result.success(CloseGame(messageNumber, gameID, val1))
     }
 

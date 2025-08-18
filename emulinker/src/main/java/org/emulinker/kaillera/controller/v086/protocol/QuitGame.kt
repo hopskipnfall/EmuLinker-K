@@ -82,7 +82,7 @@ sealed class QuitGame : V086Message() {
           is QuitGameNotification -> message.username
         },
       )
-      buffer.putUnsignedShort(
+      buffer.writeShortLE(
         when (message) {
           is QuitGameRequest -> REQUEST_USER_ID
           is QuitGameNotification -> message.userId

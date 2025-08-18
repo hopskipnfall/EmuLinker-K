@@ -3,6 +3,7 @@ package org.emulinker.kaillera.controller.v086.protocol
 import io.ktor.utils.io.core.remaining
 import io.netty.buffer.ByteBuf
 import java.nio.ByteBuffer
+import kotlin.math.roundToInt
 import kotlin.math.roundToLong
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
@@ -68,8 +69,8 @@ data class UserJoined(
       if (buffer.readableBytes() < 7) {
         return parseFailure("Failed byte count validation!")
       }
-      val userID = buffer.getUnsignedShort()
-      val ping = buffer.getUnsignedInt()
+      val userID = buffer.readShortLE().toInt()
+      val ping = buffer.readIntLE()
       val connectionType = buffer.readByte()
       return Result.success(
         UserJoined(
@@ -106,8 +107,8 @@ data class UserJoined(
 
     override fun write(buffer: ByteBuf, message: UserJoined) {
       EmuUtil.writeString(buffer, message.username)
-      buffer.putUnsignedShort(message.userId)
-      buffer.putUnsignedInt(message.ping.toMillisDouble().roundToLong())
+      buffer.writeShortLE(message.userId)
+      buffer.writeIntLE(message.ping.toMillisDouble().roundToInt())
       buffer.writeByte(message.connectionType.byteValue.toInt())
     }
 
