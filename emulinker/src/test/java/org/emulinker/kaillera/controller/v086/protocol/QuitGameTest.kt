@@ -1,9 +1,6 @@
 package org.emulinker.kaillera.controller.v086.protocol
 
 import com.google.common.truth.Truth.assertThat
-import io.ktor.utils.io.core.ByteReadPacket
-import io.ktor.utils.io.core.endOfInput
-import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.kaillera.controller.v086.protocol.MessageTestUtils.assertBufferContainsExactly
 import org.junit.Test
@@ -16,14 +13,6 @@ class QuitGameTest : ProtocolBaseTest() {
   }
 
   @Test
-  fun quitGameNotification_byteReadPacket_deserializeBody() {
-    val packet = ByteReadPacket(V086Utils.hexStringToByteBuffer(QUIT_GAME_NOTIFICATION_BODY_BYTES))
-    assertThat(QuitGame.QuitGameSerializer.read(packet, MESSAGE_NUMBER).getOrThrow())
-      .isEqualTo(QUIT_GAME_NOTIFICATION)
-    assertThat(packet.endOfInput).isTrue()
-  }
-
-  @Test
   fun quitGameNotification_deserializeBody() {
     val buffer = V086Utils.hexStringToByteBuffer(QUIT_GAME_NOTIFICATION_BODY_BYTES)
     assertThat(QuitGame.QuitGameSerializer.read(buffer, MESSAGE_NUMBER).getOrThrow())
@@ -33,7 +22,7 @@ class QuitGameTest : ProtocolBaseTest() {
 
   @Test
   fun quitGameNotification_serializeBody() {
-    val buffer = ByteBuffer.allocateDirect(4096)
+    val buffer = allocateByteBuffer()
     QUIT_GAME_NOTIFICATION.writeBodyTo(buffer)
 
     assertThat(buffer.position()).isEqualTo(QUIT_GAME_NOTIFICATION.bodyBytes)
@@ -46,14 +35,6 @@ class QuitGameTest : ProtocolBaseTest() {
   }
 
   @Test
-  fun quitGameRequest_byteReadPacket_deserializeBody() {
-    val packet = ByteReadPacket(V086Utils.hexStringToByteBuffer(QUIT_GAME_REQUEST_BODY_BYTES))
-    assertThat(QuitGame.QuitGameSerializer.read(packet, MESSAGE_NUMBER).getOrThrow())
-      .isEqualTo(QUIT_GAME_REQUEST)
-    assertThat(packet.endOfInput).isTrue()
-  }
-
-  @Test
   fun quitGameRequest_deserializeBody() {
     val buffer = V086Utils.hexStringToByteBuffer(QUIT_GAME_REQUEST_BODY_BYTES)
     assertThat(QuitGame.QuitGameSerializer.read(buffer, MESSAGE_NUMBER).getOrThrow())
@@ -63,7 +44,7 @@ class QuitGameTest : ProtocolBaseTest() {
 
   @Test
   fun quitGameRequest_serializeBody() {
-    val buffer = ByteBuffer.allocateDirect(4096)
+    val buffer = allocateByteBuffer()
     QUIT_GAME_REQUEST.writeBodyTo(buffer)
 
     assertThat(buffer.position()).isEqualTo(QUIT_GAME_REQUEST.bodyBytes)
@@ -73,7 +54,7 @@ class QuitGameTest : ProtocolBaseTest() {
   companion object {
     private const val MESSAGE_NUMBER = 42
     private const val QUIT_GAME_REQUEST_BODY_BYTES = "00, FF, FF"
-    private const val QUIT_GAME_NOTIFICATION_BODY_BYTES = "6E, 75, 65, 00, 00, 0D"
+    private const val QUIT_GAME_NOTIFICATION_BODY_BYTES = "6E, 75, 65, 00, 0D, 00"
 
     private val QUIT_GAME_NOTIFICATION =
       QuitGameNotification(messageNumber = MESSAGE_NUMBER, username = "nue", userId = 13)

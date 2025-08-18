@@ -1,11 +1,9 @@
 package org.emulinker.kaillera.controller.v086.protocol
 
-import io.ktor.utils.io.core.readShortLittleEndian
 import io.ktor.utils.io.core.remaining
 import io.netty.buffer.ByteBuf
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
-import kotlinx.io.Source
 import org.emulinker.kaillera.controller.messaging.ByteBufferMessage
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.messaging.ParseException
@@ -13,7 +11,6 @@ import org.emulinker.kaillera.controller.v086.protocol.V086Message.Companion.par
 import org.emulinker.util.CircularVariableSizeByteArrayBuffer
 import org.emulinker.util.EmuUtil
 import org.emulinker.util.UnsignedUtil.getUnsignedShort
-import org.emulinker.util.UnsignedUtil.readUnsignedShortLittleEndian
 
 class V086Bundle(val messages: Array<V086Message?>, numToWrite: Int = Int.MAX_VALUE) :
   ByteBufferMessage() {
@@ -194,74 +191,6 @@ class V086Bundle(val messages: Array<V086Message?>, numToWrite: Int = Int.MAX_VA
             throw ParseException("Invalid message length: $messageLength")
           }
           messages[parsedCount] = parse(messageNumber, messageLength.toInt(), buf)
-          parsedCount++
-        }
-      }
-      return V086Bundle(messages, parsedCount)
-    }
-
-    @Throws(ParseException::class, V086BundleFormatException::class, MessageFormatException::class)
-    fun parse(packet: Source, lastMessageID: Int = -1): V086Bundle {
-      if (packet.remaining < 5) {
-        throw V086BundleFormatException("Invalid buffer length: " + packet.remaining)
-      }
-
-      // again no real need for unsigned
-      // int messageCount = UnsignedUtil.getUnsignedByte(buffer);
-      var messageCount = packet.readByte().toInt()
-      if (messageCount <= 0 || messageCount > 32) {
-        throw V086BundleFormatException("Invalid message count: $messageCount")
-      }
-      if (packet.remaining < 1 + messageCount * 6) {
-        throw V086BundleFormatException("Invalid bundle length: " + packet.remaining)
-      }
-      var parsedCount = 0
-      val messages: Array<V086Message?>
-      // buffer.getShort(1); - mistake. max value of short is 0x7FFF but we need 0xFFFF
-
-      val firstMessageNumber = packet.readShortLittleEndian().toInt()
-      //      if (1 + 1 == 2) throw ParseException("The answer is $msgNum, message length =
-      // $messageCount")
-      if (
-        firstMessageNumber - 1 == lastMessageID ||
-          firstMessageNumber == 0 && lastMessageID == 0xFFFF
-      ) { // exception for 0 and 0xFFFF
-        messageCount = 1
-        messages = arrayOfNulls(messageCount)
-        val messageLength = packet.readShortLittleEndian()
-        if (messageLength !in 2..packet.remaining) {
-          throw ParseException("Invalid message length: $messageLength")
-        }
-        messages[parsedCount] = parse(firstMessageNumber, messageLength.toInt(), packet)
-        parsedCount++
-      } else {
-        messages = arrayOfNulls(messageCount)
-        parsedCount = 0
-        var usedFirstMessageNumberAlready = false
-        while (parsedCount < messageCount) {
-          val messageNumber =
-            if (usedFirstMessageNumberAlready) {
-              packet.readUnsignedShortLittleEndian()
-            } else {
-              usedFirstMessageNumberAlready = true
-              firstMessageNumber
-            }
-
-          if (messageNumber <= lastMessageID) {
-            if (messageNumber < 0x20 && lastMessageID > 0xFFDF) {
-              // exception when messageNumber with lower value is greater do nothing
-            } else {
-              break
-            }
-          } else if (messageNumber > 0xFFBF && lastMessageID < 0x40) {
-            // exception when disorder messageNumber greater that lastMessageID
-            break
-          }
-          val messageLength = packet.readShortLittleEndian()
-          if (messageLength < 2 || messageLength > packet.remaining) {
-            throw ParseException("Invalid message length: $messageLength")
-          }
-          messages[parsedCount] = parse(messageNumber, messageLength.toInt(), packet)
           parsedCount++
         }
       }

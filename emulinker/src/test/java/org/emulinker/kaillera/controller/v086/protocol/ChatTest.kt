@@ -1,10 +1,7 @@
 package org.emulinker.kaillera.controller.v086.protocol
 
 import com.google.common.truth.Truth.assertThat
-import io.ktor.utils.io.core.ByteReadPacket
-import io.ktor.utils.io.core.endOfInput
 import io.netty.buffer.Unpooled
-import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.v086.V086Utils.hexStringToByteBuffer
 import org.emulinker.kaillera.controller.v086.protocol.MessageTestUtils.assertBufferContainsExactly
 import org.junit.Test
@@ -25,16 +22,8 @@ class ChatTest : ProtocolBaseTest() {
   }
 
   @Test
-  fun chatNotification_byteReadPacket_deserializeBody() {
-    val packet = ByteReadPacket(hexStringToByteBuffer(CHAT_NOTIFICATION_BODY_BYTES))
-    assertThat(Chat.ChatSerializer.read(packet, MESSAGE_NUMBER).getOrThrow())
-      .isEqualTo(CHAT_NOTIFICATION)
-    assertThat(packet.endOfInput).isTrue()
-  }
-
-  @Test
   fun chatNotification_serializeBody() {
-    val buffer = ByteBuffer.allocateDirect(4096)
+    val buffer = allocateByteBuffer()
     CHAT_NOTIFICATION.writeBodyTo(buffer)
 
     assertThat(buffer.position()).isEqualTo(CHAT_NOTIFICATION.bodyBytes)
@@ -64,16 +53,8 @@ class ChatTest : ProtocolBaseTest() {
   }
 
   @Test
-  fun byteReadPacket_deserializeBody() {
-    val packet = ByteReadPacket(hexStringToByteBuffer(CHAT_REQUEST_BODY_BYTES))
-    assertThat(Chat.ChatSerializer.read(packet, MESSAGE_NUMBER).getOrThrow())
-      .isEqualTo(CHAT_REQUEST)
-    assertThat(packet.endOfInput).isTrue()
-  }
-
-  @Test
   fun serializeBody() {
-    val buffer = ByteBuffer.allocateDirect(4096)
+    val buffer = allocateByteBuffer()
     CHAT_REQUEST.writeBodyTo(buffer)
 
     assertThat(buffer.position()).isEqualTo(CHAT_REQUEST.bodyBytes)

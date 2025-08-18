@@ -15,6 +15,8 @@ class CircularVariableSizeByteArrayBuffer(
       val next = pool[index]
       if (next.isBorrowed || next.isInCache || next.inTemporaryUse) continue
       next.isBorrowed = true
+      // Effectively clear the data.
+      next.size = 0
       return next
     }
   }
@@ -23,7 +25,12 @@ class CircularVariableSizeByteArrayBuffer(
     index = (index + 1) % size
   }
 
-  /** Returns an object to the pool. */
+  /**
+   * Returns an object to the pool.
+   *
+   * It will not be available for re-use until [VariableSizeByteArray.isInCache] and
+   * [VariableSizeByteArray.inTemporaryUse] are also false.
+   */
   fun recycle(v: VariableSizeByteArray) {
     v.isBorrowed = false
   }

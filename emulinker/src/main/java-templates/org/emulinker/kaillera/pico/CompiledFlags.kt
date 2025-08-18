@@ -14,7 +14,7 @@ object CompiledFlags {
 
   val BUILD_DATE: Instant = Instant.fromEpochSeconds(${buildTimestampSeconds})
 
-  const val USE_BYTEREADPACKET_INSTEAD_OF_BYTEBUFFER: Boolean = ${useBytereadpacketInsteadOfBytebuffer}
+  const val USE_BYTEBUF_INSTEAD_OF_BYTEBUFFER: Boolean = ${useBytebufInsteadOfBytebuffer}
 
   /** Indicates a build still in development (and lacking a unique version number). */
   const val PRERELEASE_BUILD: Boolean = ${project.prerelease}

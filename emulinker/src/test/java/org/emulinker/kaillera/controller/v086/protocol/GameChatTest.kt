@@ -1,9 +1,6 @@
 package org.emulinker.kaillera.controller.v086.protocol
 
 import com.google.common.truth.Truth.assertThat
-import io.ktor.utils.io.core.ByteReadPacket
-import io.ktor.utils.io.core.endOfInput
-import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.kaillera.controller.v086.protocol.MessageTestUtils.assertBufferContainsExactly
 import org.junit.Test
@@ -16,14 +13,6 @@ class GameChatTest : ProtocolBaseTest() {
   }
 
   @Test
-  fun gameChatNotification_byteReadPacket_deserializeBody() {
-    val packet = ByteReadPacket(V086Utils.hexStringToByteBuffer(NOTIFICATION_BODY_BYTES))
-    assertThat(GameChat.GameChatSerializer.read(packet, MESSAGE_NUMBER).getOrThrow())
-      .isEqualTo(GAME_CHAT_NOTIFICATION)
-    assertThat(packet.endOfInput).isTrue()
-  }
-
-  @Test
   fun gameChatNotification_deserializeBody() {
     val buffer = V086Utils.hexStringToByteBuffer(NOTIFICATION_BODY_BYTES)
     assertThat(GameChat.GameChatSerializer.read(buffer, MESSAGE_NUMBER).getOrThrow())
@@ -33,7 +22,7 @@ class GameChatTest : ProtocolBaseTest() {
 
   @Test
   fun gameChatNotification_serializeBody() {
-    val buffer = ByteBuffer.allocateDirect(4096)
+    val buffer = allocateByteBuffer()
     GAME_CHAT_NOTIFICATION.writeBodyTo(buffer)
 
     assertThat(buffer.position()).isEqualTo(GAME_CHAT_NOTIFICATION.bodyBytes)
@@ -46,14 +35,6 @@ class GameChatTest : ProtocolBaseTest() {
   }
 
   @Test
-  fun gameChatRequest_byteReadPacket_deserializeBody() {
-    val packet = ByteReadPacket(V086Utils.hexStringToByteBuffer(REQUEST_BODY_BYTES))
-    assertThat(GameChat.GameChatSerializer.read(packet, MESSAGE_NUMBER).getOrThrow())
-      .isEqualTo(GAME_CHAT_REQUEST)
-    assertThat(packet.endOfInput).isTrue()
-  }
-
-  @Test
   fun gameChatRequest_deserializeBody() {
     val buffer = V086Utils.hexStringToByteBuffer(REQUEST_BODY_BYTES)
     assertThat(GameChat.GameChatSerializer.read(buffer, MESSAGE_NUMBER).getOrThrow())
@@ -63,7 +44,7 @@ class GameChatTest : ProtocolBaseTest() {
 
   @Test
   fun gameChatRequest_serializeBody() {
-    val buffer = ByteBuffer.allocateDirect(4096)
+    val buffer = allocateByteBuffer()
     GAME_CHAT_REQUEST.writeBodyTo(buffer)
 
     assertThat(buffer.position()).isEqualTo(GAME_CHAT_REQUEST.bodyBytes)

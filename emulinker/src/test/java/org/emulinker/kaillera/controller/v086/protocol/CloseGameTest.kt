@@ -1,10 +1,7 @@
 package org.emulinker.kaillera.controller.v086.protocol
 
 import com.google.common.truth.Truth.assertThat
-import io.ktor.utils.io.core.ByteReadPacket
-import io.ktor.utils.io.core.endOfInput
 import io.netty.buffer.Unpooled
-import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.kaillera.controller.v086.protocol.MessageTestUtils.assertBufferContainsExactly
 import org.junit.Test
@@ -17,14 +14,6 @@ class CloseGameTest : ProtocolBaseTest() {
   }
 
   @Test
-  fun byteReadPacket_deserializeBody() {
-    val packet = ByteReadPacket(V086Utils.hexStringToByteBuffer(BODY_BYTES))
-    assertThat(CloseGame.CloseGameSerializer.read(packet, MESSAGE_NUMBER).getOrThrow())
-      .isEqualTo(CLOSE_GAME)
-    assertThat(packet.endOfInput).isTrue()
-  }
-
-  @Test
   fun deserializeBody() {
     val buffer = V086Utils.hexStringToByteBuffer(BODY_BYTES)
     assertThat(CloseGame.CloseGameSerializer.read(buffer, MESSAGE_NUMBER).getOrThrow())
@@ -34,7 +23,7 @@ class CloseGameTest : ProtocolBaseTest() {
 
   @Test
   fun serializeBody() {
-    val buffer = ByteBuffer.allocateDirect(4096)
+    val buffer = allocateByteBuffer()
     CLOSE_GAME.writeBodyTo(buffer)
 
     assertThat(buffer.position()).isEqualTo(CLOSE_GAME.bodyBytes)
@@ -52,7 +41,7 @@ class CloseGameTest : ProtocolBaseTest() {
 
   companion object {
     private const val MESSAGE_NUMBER = 42
-    private const val BODY_BYTES = "00, 00, 0A, 03, E7"
+    private const val BODY_BYTES = "00, 0A, 00, E7, 03"
 
     private val CLOSE_GAME = CloseGame(messageNumber = MESSAGE_NUMBER, gameId = 10, val1 = 999)
   }

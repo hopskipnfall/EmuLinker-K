@@ -154,8 +154,7 @@ class V086ClientHandler(
 
   private fun handleReceivedInternal(buffer: ByteBuf) {
     val inBundle: V086Bundle =
-      if (CompiledFlags.USE_BYTEREADPACKET_INSTEAD_OF_BYTEBUFFER) {
-        // Note: This is currently DISABLED as it's unstable (see tests marked as @Ignore).
+      if (CompiledFlags.USE_BYTEBUF_INSTEAD_OF_BYTEBUFFER) {
         try {
           parse(buffer, lastMessageNumber)
         } catch (e: ParseException) {
@@ -380,7 +379,6 @@ class V086ClientHandler(
   fun send(outMessage: V086Message, numToSend: Int = 5) {
     synchronized(sendMutex) {
       var numToSend = numToSend
-
       val buf =
         combinedKailleraController.nettyChannel
           .alloc()

@@ -6,7 +6,6 @@ import java.nio.ByteBuffer
 import kotlin.math.roundToLong
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
-import kotlinx.io.Source
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.kaillera.controller.v086.V086Utils.getNumBytesPlusStopByte
@@ -18,8 +17,6 @@ import org.emulinker.util.UnsignedUtil.getUnsignedInt
 import org.emulinker.util.UnsignedUtil.getUnsignedShort
 import org.emulinker.util.UnsignedUtil.putUnsignedInt
 import org.emulinker.util.UnsignedUtil.putUnsignedShort
-import org.emulinker.util.UnsignedUtil.readUnsignedInt
-import org.emulinker.util.UnsignedUtil.readUnsignedShort
 
 /**
  * Message sent from the server to all clients to give information about a new client that has
@@ -96,28 +93,6 @@ data class UserJoined(
       val userID = buffer.getUnsignedShort()
       val ping = buffer.getUnsignedInt()
       val connectionType = buffer.get()
-      return Result.success(
-        UserJoined(
-          messageNumber,
-          userName,
-          userID,
-          ping.milliseconds,
-          ConnectionType.fromByteValue(connectionType),
-        )
-      )
-    }
-
-    override fun read(packet: Source, messageNumber: Int): Result<UserJoined> {
-      if (packet.remaining < 9) {
-        return parseFailure("Failed byte count validation!")
-      }
-      val userName = packet.readString()
-      if (packet.remaining < 7) {
-        return parseFailure("Failed byte count validation!")
-      }
-      val userID = packet.readUnsignedShort()
-      val ping = packet.readUnsignedInt()
-      val connectionType = packet.readByte()
       return Result.success(
         UserJoined(
           messageNumber,

@@ -6,7 +6,6 @@ import java.nio.ByteBuffer
 import kotlin.math.roundToLong
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
-import kotlinx.io.Source
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.kaillera.controller.v086.V086Utils.getNumBytesPlusStopByte
@@ -21,8 +20,6 @@ import org.emulinker.util.UnsignedUtil.getUnsignedInt
 import org.emulinker.util.UnsignedUtil.getUnsignedShort
 import org.emulinker.util.UnsignedUtil.putUnsignedInt
 import org.emulinker.util.UnsignedUtil.putUnsignedShort
-import org.emulinker.util.UnsignedUtil.readUnsignedInt
-import org.emulinker.util.UnsignedUtil.readUnsignedShort
 
 /**
  * Message sent by the server when the user joins, listing all of the users and games.
@@ -280,69 +277,6 @@ data class ServerStatus(
             return parseFailure("Failed byte count validation!")
           }
           val status = buffer.get()
-          Game(romName, gameID, clientType, userName, players, GameStatus.fromByteValue(status))
-        }
-      return Result.success(ServerStatus(messageNumber, users, games))
-    }
-
-    override fun read(packet: Source, messageNumber: Int): Result<ServerStatus> {
-      if (packet.remaining < 9) {
-        return parseFailure("Failed byte count validation!")
-      }
-      val b = packet.readByte()
-      if (b.toInt() != 0x00) {
-        throw MessageFormatException("Invalid Server Status format: byte 0 = " + b.toHexString())
-      }
-      val numUsers = packet.readInt()
-      val numGames = packet.readInt()
-      val minLen = numUsers * 10 + numGames * 13
-      if (packet.remaining < minLen) {
-        return parseFailure("Failed byte count validation!")
-      }
-      val users: List<User> =
-        (0 until numUsers).map {
-          if (packet.remaining < 9) {
-            return parseFailure("Failed byte count validation!")
-          }
-          val userName = packet.readString()
-          if (packet.remaining < 8) {
-            return parseFailure("Failed byte count validation!")
-          }
-          val ping: Long = packet.readUnsignedInt()
-          val status: Byte = packet.readByte()
-          val userID: Int = packet.readUnsignedShort()
-          val connectionType: Byte = packet.readByte()
-          User(
-            userName,
-            ping.milliseconds,
-            UserStatus.fromByteValue(status),
-            userID,
-            ConnectionType.fromByteValue(connectionType),
-          )
-        }
-      val games: List<Game> =
-        (0 until numGames).map {
-          if (packet.remaining < 13) {
-            return parseFailure("Failed byte count validation!")
-          }
-          val romName = packet.readString()
-          if (packet.remaining < 10) {
-            return parseFailure("Failed byte count validation!")
-          }
-          val gameID = packet.readInt()
-          val clientType = packet.readString()
-          if (packet.remaining < 5) {
-            return parseFailure("Failed byte count validation!")
-          }
-          val userName = packet.readString()
-          if (packet.remaining < 3) {
-            return parseFailure("Failed byte count validation!")
-          }
-          val players = packet.readString()
-          if (packet.remaining < 1) {
-            return parseFailure("Failed byte count validation!")
-          }
-          val status = packet.readByte()
           Game(romName, gameID, clientType, userName, players, GameStatus.fromByteValue(status))
         }
       return Result.success(ServerStatus(messageNumber, users, games))

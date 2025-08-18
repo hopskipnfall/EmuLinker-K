@@ -1,9 +1,6 @@
 package org.emulinker.kaillera.controller.v086.protocol
 
 import com.google.common.truth.Truth.assertThat
-import io.ktor.utils.io.core.ByteReadPacket
-import io.ktor.utils.io.core.endOfInput
-import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.kaillera.controller.v086.protocol.MessageTestUtils.assertBufferContainsExactly
 import org.junit.Test
@@ -13,16 +10,6 @@ class InformationMessageTest : ProtocolBaseTest() {
   @Test
   fun bodyLength() {
     assertThat(INFORMATION_MESSAGE.bodyBytes).isEqualTo(31)
-  }
-
-  @Test
-  fun byteReadPacket_deserializeBody() {
-    val packet = ByteReadPacket(V086Utils.hexStringToByteBuffer(BODY_BYTES))
-    assertThat(
-        InformationMessage.InformationMessageSerializer.read(packet, MESSAGE_NUMBER).getOrThrow()
-      )
-      .isEqualTo(INFORMATION_MESSAGE)
-    assertThat(packet.endOfInput).isTrue()
   }
 
   @Test
@@ -37,7 +24,7 @@ class InformationMessageTest : ProtocolBaseTest() {
 
   @Test
   fun serializeBody() {
-    val buffer = ByteBuffer.allocateDirect(4096)
+    val buffer = allocateByteBuffer()
     INFORMATION_MESSAGE.writeBodyTo(buffer)
 
     assertThat(buffer.position()).isEqualTo(INFORMATION_MESSAGE.bodyBytes)

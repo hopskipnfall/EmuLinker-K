@@ -1,9 +1,6 @@
 package org.emulinker.kaillera.controller.v086.protocol
 
 import com.google.common.truth.Truth.assertThat
-import io.ktor.utils.io.core.ByteReadPacket
-import io.ktor.utils.io.core.endOfInput
-import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.kaillera.controller.v086.protocol.MessageTestUtils.assertBufferContainsExactly
 import org.junit.Test
@@ -13,16 +10,6 @@ class ConnectionRejectedTest : ProtocolBaseTest() {
   @Test
   fun bodyLength() {
     assertThat(CONNECTION_REJECTED.bodyBytes).isEqualTo(25)
-  }
-
-  @Test
-  fun byteReadPacket_deserializeBody() {
-    val packet = ByteReadPacket(V086Utils.hexStringToByteBuffer(BODY_BYTES))
-    assertThat(
-        ConnectionRejected.ConnectionRejectedSerializer.read(packet, MESSAGE_NUMBER).getOrThrow()
-      )
-      .isEqualTo(CONNECTION_REJECTED)
-    assertThat(packet.endOfInput).isTrue()
   }
 
   @Test
@@ -37,7 +24,7 @@ class ConnectionRejectedTest : ProtocolBaseTest() {
 
   @Test
   fun serializeBody() {
-    val buffer = ByteBuffer.allocateDirect(4096)
+    val buffer = allocateByteBuffer()
     CONNECTION_REJECTED.writeBodyTo(buffer)
 
     assertThat(buffer.position()).isEqualTo(CONNECTION_REJECTED.bodyBytes)
@@ -47,7 +34,7 @@ class ConnectionRejectedTest : ProtocolBaseTest() {
   companion object {
     private const val MESSAGE_NUMBER = 42
     private const val BODY_BYTES =
-      "6E, 75, 65, 00, 00, 64, 54, 68, 69, 73, 20, 69, 73, 20, 61, 20, 6D, 65, 73, 73, 61, 67, 65, 21, 00"
+      "6E, 75, 65, 00, 64, 00, 54, 68, 69, 73, 20, 69, 73, 20, 61, 20, 6D, 65, 73, 73, 61, 67, 65, 21, 00"
 
     private val CONNECTION_REJECTED =
       ConnectionRejected(

@@ -1,17 +1,14 @@
 package org.emulinker.kaillera.controller.v086.protocol
 
-import io.ktor.utils.io.core.readAvailable
 import io.ktor.utils.io.core.remaining
 import io.netty.buffer.ByteBuf
 import java.nio.ByteBuffer
-import kotlinx.io.Source
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.kaillera.pico.CompiledFlags
 import org.emulinker.util.CircularVariableSizeByteArrayBuffer
 import org.emulinker.util.UnsignedUtil.getUnsignedShort
 import org.emulinker.util.UnsignedUtil.putUnsignedShort
-import org.emulinker.util.UnsignedUtil.readUnsignedShortLittleEndian
 import org.emulinker.util.VariableSizeByteArray
 import org.emulinker.util.get
 import org.emulinker.util.put
@@ -32,7 +29,8 @@ constructor(override var messageNumber: Int, var gameData: VariableSizeByteArray
   V086Message(), ClientMessage, ServerMessage {
   override val messageTypeId = ID
 
-  override val bodyBytes = V086Utils.Bytes.SINGLE_BYTE + V086Utils.Bytes.SHORT + gameData.size
+  override val bodyBytes
+    get() = V086Utils.Bytes.SINGLE_BYTE + V086Utils.Bytes.SHORT + gameData.size
 
   override fun writeBodyTo(buffer: ByteBuffer) {
     GameDataSerializer.write(buffer, this)
@@ -138,20 +136,6 @@ constructor(override var messageNumber: Int, var gameData: VariableSizeByteArray
       gameData.size = dataSize
       buffer.get(gameData)
       return Result.success(GameData(messageNumber, gameData))
-    }
-
-    override fun read(packet: Source, messageNumber: Int): Result<GameData> {
-      if (packet.remaining < 4) {
-        return parseFailure("Failed byte count validation!")
-      }
-      packet.readByte() // This is always 0x00.
-      val dataSize = packet.readUnsignedShortLittleEndian()
-      if (dataSize <= 0 || dataSize > packet.remaining) {
-        return parseFailure("Invalid Game Data format: dataSize = $dataSize")
-      }
-      val gameData = ByteArray(dataSize)
-      packet.readAvailable(gameData) // TODO(nue): This might not work?
-      return Result.success(GameData(messageNumber, VariableSizeByteArray(gameData)))
     }
 
     override fun write(buffer: ByteBuf, message: GameData) {

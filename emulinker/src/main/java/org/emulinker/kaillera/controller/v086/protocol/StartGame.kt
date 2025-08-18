@@ -3,14 +3,11 @@ package org.emulinker.kaillera.controller.v086.protocol
 import io.ktor.utils.io.core.remaining
 import io.netty.buffer.ByteBuf
 import java.nio.ByteBuffer
-import kotlinx.io.Source
 import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.util.UnsignedUtil.getUnsignedByte
 import org.emulinker.util.UnsignedUtil.getUnsignedShort
 import org.emulinker.util.UnsignedUtil.putUnsignedByte
 import org.emulinker.util.UnsignedUtil.putUnsignedShort
-import org.emulinker.util.UnsignedUtil.readUnsignedByte
-import org.emulinker.util.UnsignedUtil.readUnsignedShort
 
 sealed class StartGame : V086Message() {
   override val messageTypeId = ID
@@ -74,28 +71,6 @@ sealed class StartGame : V086Message() {
       val val1 = buffer.getUnsignedShort()
       val playerNumber = buffer.getUnsignedByte()
       val numPlayers = buffer.getUnsignedByte()
-      return Result.success(
-        if (
-          val1 == REQUEST_VAL1 &&
-            playerNumber == REQUEST_PLAYER_NUMBER &&
-            numPlayers == REQUEST_NUM_PLAYERS
-        )
-          StartGameRequest(messageNumber)
-        else StartGameNotification(messageNumber, val1, playerNumber, numPlayers)
-      )
-    }
-
-    override fun read(packet: Source, messageNumber: Int): Result<StartGame> {
-      if (packet.remaining < 5) {
-        return parseFailure("Failed byte count validation!")
-      }
-      val b = packet.readByte()
-      if (b.toInt() != 0x00) {
-        return parseFailure("Failed byte count validation!")
-      }
-      val val1 = packet.readUnsignedShort()
-      val playerNumber = packet.readUnsignedByte()
-      val numPlayers = packet.readUnsignedByte()
       return Result.success(
         if (
           val1 == REQUEST_VAL1 &&

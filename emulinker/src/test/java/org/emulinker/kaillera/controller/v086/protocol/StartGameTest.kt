@@ -1,9 +1,6 @@
 package org.emulinker.kaillera.controller.v086.protocol
 
 import com.google.common.truth.Truth.assertThat
-import io.ktor.utils.io.core.ByteReadPacket
-import io.ktor.utils.io.core.endOfInput
-import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.kaillera.controller.v086.protocol.MessageTestUtils.assertBufferContainsExactly
 import org.junit.Test
@@ -16,14 +13,6 @@ class StartGameTest : ProtocolBaseTest() {
   }
 
   @Test
-  fun startGameNotification_byteReadPacket_deserializeBody() {
-    val packet = ByteReadPacket(V086Utils.hexStringToByteBuffer(NOTIFICATION_BODY_BYTES))
-    assertThat(StartGame.StartGameSerializer.read(packet, MESSAGE_NUMBER).getOrThrow())
-      .isEqualTo(START_GAME_NOTIFICATION)
-    assertThat(packet.endOfInput).isTrue()
-  }
-
-  @Test
   fun startGameNotification_deserializeBody() {
     val buffer = V086Utils.hexStringToByteBuffer(NOTIFICATION_BODY_BYTES)
     assertThat(StartGame.StartGameSerializer.read(buffer, MESSAGE_NUMBER).getOrThrow())
@@ -33,7 +22,7 @@ class StartGameTest : ProtocolBaseTest() {
 
   @Test
   fun startGameNotification_serializeBody() {
-    val buffer = ByteBuffer.allocateDirect(4096)
+    val buffer = allocateByteBuffer()
     START_GAME_NOTIFICATION.writeBodyTo(buffer)
 
     assertThat(buffer.position()).isEqualTo(START_GAME_NOTIFICATION.bodyBytes)
@@ -46,14 +35,6 @@ class StartGameTest : ProtocolBaseTest() {
   }
 
   @Test
-  fun startGameRequest_byteReadPacket_deserializeBody() {
-    val packet = ByteReadPacket(V086Utils.hexStringToByteBuffer(REQUEST_BODY_BYTES))
-    assertThat(StartGame.StartGameSerializer.read(packet, MESSAGE_NUMBER).getOrThrow())
-      .isEqualTo(START_GAME_REQUEST)
-    assertThat(packet.endOfInput).isTrue()
-  }
-
-  @Test
   fun startGameRequest_deserializeBody() {
     val buffer = V086Utils.hexStringToByteBuffer(REQUEST_BODY_BYTES)
     assertThat(StartGame.StartGameSerializer.read(buffer, MESSAGE_NUMBER).getOrThrow())
@@ -63,7 +44,7 @@ class StartGameTest : ProtocolBaseTest() {
 
   @Test
   fun startGameRequest_serializeBody() {
-    val buffer = ByteBuffer.allocateDirect(4096)
+    val buffer = allocateByteBuffer()
     START_GAME_REQUEST.writeBodyTo(buffer)
 
     assertThat(buffer.position()).isEqualTo(START_GAME_REQUEST.bodyBytes)
@@ -72,7 +53,7 @@ class StartGameTest : ProtocolBaseTest() {
 
   companion object {
     private const val MESSAGE_NUMBER = 42
-    private const val NOTIFICATION_BODY_BYTES = "00, 07, D0, 2A, 04"
+    private const val NOTIFICATION_BODY_BYTES = "00, D0, 07, 2A, 04"
     private const val REQUEST_BODY_BYTES = "00, FF, FF, FF, FF"
 
     private val START_GAME_NOTIFICATION =

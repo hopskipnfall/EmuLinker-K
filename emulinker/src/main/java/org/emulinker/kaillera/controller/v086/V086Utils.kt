@@ -1,6 +1,7 @@
 package org.emulinker.kaillera.controller.v086
 
 import java.nio.ByteBuffer
+import java.nio.ByteOrder.LITTLE_ENDIAN
 import org.emulinker.kaillera.pico.AppModule
 
 /** Util methods mostly for dealing ByteBuffers. */
@@ -19,6 +20,7 @@ object V086Utils {
     hex = hex.replace(", ", "").replace(",", "").replace(" ", "").lowercase()
     val bytes = hexStringToByteArray2(hex)
     val buffer = ByteBuffer.allocate(bytes.size)
+    buffer.order(LITTLE_ENDIAN)
     buffer.put(bytes)
     buffer.position(0)
     //    buffer.limit(hex.length / 2)

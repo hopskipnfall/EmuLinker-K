@@ -3,7 +3,6 @@ package org.emulinker.kaillera.controller.v086.protocol
 import com.google.common.flogger.FluentLogger
 import io.netty.buffer.ByteBuf
 import java.nio.ByteBuffer
-import kotlinx.io.Source
 import org.emulinker.kaillera.controller.messaging.ByteBufferMessage
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.messaging.ParseException
@@ -186,40 +185,6 @@ abstract class V086Message : ByteBufferMessage() {
         checkNotNull(SERIALIZERS[messageType]) { "Unrecognized message ID: $messageType" }
 
       var parseResult: Result<V086Message> = serializer.read(buf, messageNumber)
-      parseResult.onSuccess { parseResult = it.validateMessageNumber() }
-
-      val message =
-        when {
-          // TODO(nue): Return this up the stack instead of throwing an exception.
-          parseResult.isSuccess -> parseResult.getOrThrow()
-          else -> throw MessageFormatException(parseResult.toString())
-        }
-
-      // removed to improve speed
-      if (message.bodyBytesPlusMessageIdType != messageLength) {
-        //			throw new ParseException("Bundle contained length " + messageLength + " !=  parsed
-        // lengthy
-        // " + message.getLength());
-        logger
-          .atFine()
-          .log(
-            "Bundle contained length %d != parsed length %d",
-            messageLength,
-            message.bodyBytesPlusMessageIdType,
-          )
-      }
-      return message
-    }
-
-    @Deprecated("This isn't working")
-    @Throws(ParseException::class, MessageFormatException::class)
-    fun parse(messageNumber: Int, messageLength: Int, packet: Source): V086Message {
-      val messageType = packet.readByte()
-
-      val serializer =
-        checkNotNull(SERIALIZERS[messageType]) { "Unrecognized message ID: $messageType" }
-
-      var parseResult: Result<V086Message> = serializer.read(packet, messageNumber)
       parseResult.onSuccess { parseResult = it.validateMessageNumber() }
 
       val message =

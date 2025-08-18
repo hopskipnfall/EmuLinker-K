@@ -1,9 +1,6 @@
 package org.emulinker.kaillera.controller.v086.protocol
 
 import com.google.common.truth.Truth.assertThat
-import io.ktor.utils.io.core.ByteReadPacket
-import io.ktor.utils.io.core.endOfInput
-import java.nio.ByteBuffer
 import kotlin.time.Duration.Companion.milliseconds
 import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.kaillera.controller.v086.protocol.MessageTestUtils.assertBufferContainsExactly
@@ -20,14 +17,6 @@ class ServerStatusTest : ProtocolBaseTest() {
   }
 
   @Test
-  fun byteReadPacket_deserializeBody() {
-    val packet = ByteReadPacket(V086Utils.hexStringToByteBuffer(BODY_BYTES))
-    assertThat(ServerStatus.ServerStatusSerializer.read(packet, MESSAGE_NUMBER).getOrThrow())
-      .isEqualTo(SERVER_STATUS)
-    assertThat(packet.endOfInput).isTrue()
-  }
-
-  @Test
   fun deserializeBody() {
     val buffer = V086Utils.hexStringToByteBuffer(BODY_BYTES)
     assertThat(ServerStatus.ServerStatusSerializer.read(buffer, MESSAGE_NUMBER).getOrThrow())
@@ -37,7 +26,7 @@ class ServerStatusTest : ProtocolBaseTest() {
 
   @Test
   fun serializeBody() {
-    val buffer = ByteBuffer.allocateDirect(4096)
+    val buffer = allocateByteBuffer()
     SERVER_STATUS.writeBodyTo(buffer)
 
     assertThat(buffer.position()).isEqualTo(SERVER_STATUS.bodyBytes)
@@ -47,7 +36,7 @@ class ServerStatusTest : ProtocolBaseTest() {
   companion object {
     private const val MESSAGE_NUMBER = 42
     private const val BODY_BYTES =
-      "00, 00, 00, 00, 07, 00, 00, 00, 04, 6E, 75, 65, 00, 00, 00, 00, 64, 02, 00, 0D, 01, 6E, 75, 65, 31, 00, 00, 00, 00, 64, 01, 00, 0E, 01, 6E, 75, 65, 32, 00, 00, 00, 00, 64, 00, 00, 12, 04, 6E, 75, 65, 33, 00, 00, 00, 00, 64, 02, 00, C8, 01, 6E, 75, 65, 34, 00, 00, 00, 00, 64, 00, 00, 0C, 01, 6E, 75, 65, 35, 00, 00, 00, 00, 64, 02, 00, 08, 06, 6E, 75, 65, 36, 00, 00, 00, 00, 64, 01, 00, 03, 06, 4D, 79, 20, 52, 4F, 4D, 00, 00, 00, 00, 64, 4D, 79, 20, 4E, 36, 34, 20, 45, 6D, 75, 6C, 61, 74, 6F, 72, 00, 6E, 75, 65, 00, 32, 2F, 34, 00, 02, 4D, 79, 20, 52, 4F, 4D, 00, 00, 00, 00, 7B, 4D, 79, 20, 4E, 36, 34, 20, 45, 6D, 75, 6C, 61, 74, 6F, 72, 00, 6E, 75, 65, 32, 00, 32, 2F, 34, 00, 02, 4D, 79, 20, 52, 4F, 4D, 00, 00, 00, 00, 16, 4D, 79, 20, 4E, 36, 34, 20, 45, 6D, 75, 6C, 61, 74, 6F, 72, 00, 6E, 75, 65, 33, 00, 32, 2F, 34, 00, 01, 4D, 79, 20, 52, 4F, 4D, 00, 00, 00, 00, 05, 4D, 79, 20, 4E, 36, 34, 20, 45, 6D, 75, 6C, 61, 74, 6F, 72, 00, 6E, 75, 65, 34, 00, 32, 2F, 34, 00, 00"
+      "00, 07, 00, 00, 00, 04, 00, 00, 00, 6E, 75, 65, 00, 64, 00, 00, 00, 02, 0D, 00, 01, 6E, 75, 65, 31, 00, 64, 00, 00, 00, 01, 0E, 00, 01, 6E, 75, 65, 32, 00, 64, 00, 00, 00, 00, 12, 00, 04, 6E, 75, 65, 33, 00, 64, 00, 00, 00, 02, C8, 00, 01, 6E, 75, 65, 34, 00, 64, 00, 00, 00, 00, 0C, 00, 01, 6E, 75, 65, 35, 00, 64, 00, 00, 00, 02, 08, 00, 06, 6E, 75, 65, 36, 00, 64, 00, 00, 00, 01, 03, 00, 06, 4D, 79, 20, 52, 4F, 4D, 00, 64, 00, 00, 00, 4D, 79, 20, 4E, 36, 34, 20, 45, 6D, 75, 6C, 61, 74, 6F, 72, 00, 6E, 75, 65, 00, 32, 2F, 34, 00, 02, 4D, 79, 20, 52, 4F, 4D, 00, 7B, 00, 00, 00, 4D, 79, 20, 4E, 36, 34, 20, 45, 6D, 75, 6C, 61, 74, 6F, 72, 00, 6E, 75, 65, 32, 00, 32, 2F, 34, 00, 02, 4D, 79, 20, 52, 4F, 4D, 00, 16, 00, 00, 00, 4D, 79, 20, 4E, 36, 34, 20, 45, 6D, 75, 6C, 61, 74, 6F, 72, 00, 6E, 75, 65, 33, 00, 32, 2F, 34, 00, 01, 4D, 79, 20, 52, 4F, 4D, 00, 05, 00, 00, 00, 4D, 79, 20, 4E, 36, 34, 20, 45, 6D, 75, 6C, 61, 74, 6F, 72, 00, 6E, 75, 65, 34, 00, 32, 2F, 34, 00, 00"
 
     private val SERVER_STATUS =
       ServerStatus(

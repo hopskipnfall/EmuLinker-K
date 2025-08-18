@@ -23,19 +23,6 @@ class ExtendedBundleTest {
 
       val oldBundle = V086Bundle.parse(V086Utils.hexStringToByteBuffer(byteString))
       println(oldBundle)
-
-      //      println("Parsing new way")
-      //
-      //      val newBundle =
-      //        V086Bundle.parse(
-      //          ByteReadPacket(V086Utils.hexStringToByteBuffer(byteString)),
-      //         // lastMessageID = 0
-      //        )
-      //
-      //      assertThat(oldBundle.numMessages).isEqualTo(newBundle.numMessages)
-      //      assertThat(oldBundle.messages.asList())
-      //        .containsExactlyElementsIn(newBundle.messages)
-      //        .inOrder()
     }
   }
 }

@@ -4,7 +4,6 @@ import io.ktor.utils.io.core.*
 import java.nio.ByteBuffer
 import kotlin.Result.Companion.failure
 import kotlin.Result.Companion.success
-import kotlinx.io.Source
 import org.emulinker.kaillera.controller.messaging.ByteBufferMessage
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.pico.AppModule
@@ -57,40 +56,6 @@ sealed class ConnectMessage : ByteBufferMessage() {
           buffer.rewind()
           return failure(MessageFormatException("Unrecognized connect message"))
         }
-      }
-    }
-
-    @Throws(MessageFormatException::class)
-    fun parse(packet: Source): ConnectMessage {
-      val messageStr =
-        try {
-          //            val stringDecoder = charset.newDecoder()
-          packet.readText(AppModule.charsetDoNotUse)
-          //            stringDecoder.decode(byteReadPacket).toString()
-        } catch (e: CharacterCodingException) {
-          throw MessageFormatException("Invalid bytes received: failed to decode to a string!", e)
-        }
-
-      when {
-        messageStr.startsWith(ConnectMessage_TOO.ID) -> {
-          return ConnectMessage_TOO.parse(messageStr)
-        }
-        messageStr.startsWith(RequestPrivateKailleraPortResponse.ID) -> {
-          return RequestPrivateKailleraPortResponse.parse(messageStr)
-        }
-        messageStr.startsWith(RequestPrivateKailleraPortRequest.ID) -> {
-          return RequestPrivateKailleraPortRequest.parse(messageStr)
-        }
-        messageStr.startsWith(ConnectMessage_PING.ID) -> {
-          return ConnectMessage_PING.parse(messageStr)
-        }
-        messageStr.startsWith(ConnectMessage_PONG.ID) -> {
-          return ConnectMessage_PONG.parse(messageStr)
-        }
-        //      byteReadPacket.rewind()
-        else ->
-          // TODO(nue): Figure out how to dump all bytes from Sources.
-          throw MessageFormatException("Unrecognized connect message: TODO")
       }
     }
   }

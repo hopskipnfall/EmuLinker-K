@@ -3,14 +3,12 @@ package org.emulinker.kaillera.controller.v086.protocol
 import io.ktor.utils.io.core.remaining
 import io.netty.buffer.ByteBuf
 import java.nio.ByteBuffer
-import kotlinx.io.Source
 import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.kaillera.controller.v086.V086Utils.getNumBytesPlusStopByte
 import org.emulinker.util.EmuUtil
 import org.emulinker.util.EmuUtil.readString
 import org.emulinker.util.UnsignedUtil.getUnsignedShort
 import org.emulinker.util.UnsignedUtil.putUnsignedShort
-import org.emulinker.util.UnsignedUtil.readUnsignedShort
 
 sealed class QuitGame : V086Message() {
   override val messageTypeId = ID
@@ -67,24 +65,6 @@ sealed class QuitGame : V086Message() {
         return parseFailure("Failed byte count validation!")
       }
       val userID = buffer.getUnsignedShort()
-      return Result.success(
-        if (userName == REQUEST_USERNAME && userID == REQUEST_USER_ID) {
-          QuitGameRequest(messageNumber)
-        } else {
-          QuitGameNotification(messageNumber, userName, userID)
-        }
-      )
-    }
-
-    override fun read(packet: Source, messageNumber: Int): Result<QuitGame> {
-      if (packet.remaining < 3) {
-        return parseFailure("Failed byte count validation!")
-      }
-      val userName = packet.readString()
-      if (packet.remaining < 2) {
-        return parseFailure("Failed byte count validation!")
-      }
-      val userID = packet.readUnsignedShort()
       return Result.success(
         if (userName == REQUEST_USERNAME && userID == REQUEST_USER_ID) {
           QuitGameRequest(messageNumber)

@@ -1,9 +1,6 @@
 package org.emulinker.kaillera.controller.v086.protocol
 
 import com.google.common.truth.Truth.assertThat
-import io.ktor.utils.io.core.ByteReadPacket
-import io.ktor.utils.io.core.endOfInput
-import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.kaillera.controller.v086.protocol.MessageTestUtils.assertBufferContainsExactly
 import org.junit.Test
@@ -16,14 +13,6 @@ class CreateGameTest : ProtocolBaseTest() {
   }
 
   @Test
-  fun createGameNotification_byteReadPacket_deserializeBody() {
-    val packet = ByteReadPacket(V086Utils.hexStringToByteBuffer(NOTIFICATION_BODY_BYTES))
-    assertThat(CreateGame.CreateGameSerializer.read(packet, MESSAGE_NUMBER).getOrThrow())
-      .isEqualTo(CREATE_GAME_NOTIFICATION)
-    assertThat(packet.endOfInput).isTrue()
-  }
-
-  @Test
   fun createGameNotification_deserializeBody() {
     val buffer = V086Utils.hexStringToByteBuffer(NOTIFICATION_BODY_BYTES)
     assertThat(CreateGame.CreateGameSerializer.read(buffer, MESSAGE_NUMBER).getOrThrow())
@@ -33,7 +22,7 @@ class CreateGameTest : ProtocolBaseTest() {
 
   @Test
   fun createGameNotification_serializeBody() {
-    val buffer = ByteBuffer.allocateDirect(4096)
+    val buffer = allocateByteBuffer()
     CREATE_GAME_NOTIFICATION.writeBodyTo(buffer)
 
     assertThat(buffer.position()).isEqualTo(CREATE_GAME_NOTIFICATION.bodyBytes)
@@ -46,14 +35,6 @@ class CreateGameTest : ProtocolBaseTest() {
   }
 
   @Test
-  fun createGameRequest_byteReadPacket_deserializeBody() {
-    val packet = ByteReadPacket(V086Utils.hexStringToByteBuffer(REQUEST_BODY_BYTES))
-    assertThat(CreateGame.CreateGameSerializer.read(packet, MESSAGE_NUMBER).getOrThrow())
-      .isEqualTo(CREATE_GAME_REQUEST)
-    assertThat(packet.endOfInput).isTrue()
-  }
-
-  @Test
   fun createGameRequest_deserializeBody() {
     val buffer = V086Utils.hexStringToByteBuffer(REQUEST_BODY_BYTES)
     assertThat(CreateGame.CreateGameSerializer.read(buffer, MESSAGE_NUMBER).getOrThrow())
@@ -63,7 +44,7 @@ class CreateGameTest : ProtocolBaseTest() {
 
   @Test
   fun createGameRequest_serializeBody() {
-    val buffer = ByteBuffer.allocateDirect(4096)
+    val buffer = allocateByteBuffer()
     CREATE_GAME_REQUEST.writeBodyTo(buffer)
 
     assertThat(buffer.position()).isEqualTo(CREATE_GAME_REQUEST.bodyBytes)
@@ -74,7 +55,7 @@ class CreateGameTest : ProtocolBaseTest() {
     private const val MESSAGE_NUMBER = 42
     private const val REQUEST_BODY_BYTES = "00, 4D, 79, 20, 47, 61, 6D, 65, 00, 00, FF, FF, FF, FF"
     private const val NOTIFICATION_BODY_BYTES =
-      "6E, 75, 65, 00, 4D, 79, 20, 47, 61, 6D, 65, 00, 4D, 79, 20, 4E, 36, 34, 20, 45, 6D, 75, 6C, 61, 74, 6F, 72, 00, 00, 64, 10, 92"
+      "6E, 75, 65, 00, 4D, 79, 20, 47, 61, 6D, 65, 00, 4D, 79, 20, 4E, 36, 34, 20, 45, 6D, 75, 6C, 61, 74, 6F, 72, 00, 64, 00, 92, 10"
 
     private val CREATE_GAME_NOTIFICATION =
       CreateGameNotification(

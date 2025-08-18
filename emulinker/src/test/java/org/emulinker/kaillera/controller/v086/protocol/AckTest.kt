@@ -1,10 +1,7 @@
 package org.emulinker.kaillera.controller.v086.protocol
 
 import com.google.common.truth.Truth.assertThat
-import io.ktor.utils.io.core.ByteReadPacket
-import io.ktor.utils.io.core.endOfInput
 import io.netty.buffer.Unpooled
-import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.kaillera.controller.v086.protocol.MessageTestUtils.assertBufferContainsExactly
 import org.junit.Test
@@ -25,16 +22,8 @@ class AckTest : ProtocolBaseTest() {
   }
 
   @Test
-  fun clientAck_byteReadPacket_deserializeBody() {
-    val packet = ByteReadPacket(V086Utils.hexStringToByteBuffer(ACK_BODY_BYTES))
-    assertThat(Ack.ClientAckSerializer.read(packet, MESSAGE_NUMBER).getOrThrow())
-      .isEqualTo(CLIENT_ACK)
-    assertThat(packet.endOfInput).isTrue()
-  }
-
-  @Test
   fun clientAck_serializeBody() {
-    val buffer = ByteBuffer.allocate(4096)
+    val buffer = allocateByteBuffer()
     CLIENT_ACK.writeBodyTo(buffer)
 
     assertThat(buffer.position()).isEqualTo(CLIENT_ACK.bodyBytes)
@@ -57,24 +46,8 @@ class AckTest : ProtocolBaseTest() {
   }
 
   @Test
-  fun serverAck_deserializeBody() {
-    val buffer = V086Utils.hexStringToByteBuffer(ACK_BODY_BYTES)
-    assertThat(Ack.ServerAckSerializer.read(buffer, MESSAGE_NUMBER).getOrThrow())
-      .isEqualTo(SERVER_ACK)
-    assertThat(buffer.hasRemaining()).isFalse()
-  }
-
-  @Test
-  fun serverAck_byteReadPacket_deserializeBody() {
-    val packet = ByteReadPacket(V086Utils.hexStringToByteBuffer(ACK_BODY_BYTES))
-    assertThat(Ack.ServerAckSerializer.read(packet, MESSAGE_NUMBER).getOrThrow())
-      .isEqualTo(SERVER_ACK)
-    assertThat(packet.endOfInput).isTrue()
-  }
-
-  @Test
   fun serverAck_serializeBody() {
-    val buffer = ByteBuffer.allocateDirect(4096)
+    val buffer = allocateByteBuffer()
     SERVER_ACK.writeBodyTo(buffer)
 
     assertThat(buffer.position()).isEqualTo(SERVER_ACK.bodyBytes)
@@ -95,7 +68,8 @@ class AckTest : ProtocolBaseTest() {
 
     // The body bytes are identical, but the message type IDs (which is not included in the body)
     // are different.
-    private const val ACK_BODY_BYTES = "00,00,00,00,00,00,00,00,01,00,00,00,02,00,00,00,03"
+    private const val ACK_BODY_BYTES =
+      "00, 00, 00, 00, 00, 01, 00, 00, 00, 02, 00, 00, 00, 03, 00, 00, 00"
 
     private val CLIENT_ACK = ClientAck(MESSAGE_NUMBER)
     private val SERVER_ACK = ServerAck(MESSAGE_NUMBER)

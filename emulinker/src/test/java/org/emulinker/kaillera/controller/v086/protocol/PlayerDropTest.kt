@@ -1,26 +1,15 @@
 package org.emulinker.kaillera.controller.v086.protocol
 
 import com.google.common.truth.Truth.assertThat
-import io.ktor.utils.io.core.ByteReadPacket
-import io.ktor.utils.io.core.endOfInput
-import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.kaillera.controller.v086.protocol.MessageTestUtils.assertBufferContainsExactly
 import org.junit.Test
 
-class PlayerDropTest {
+class PlayerDropTest : ProtocolBaseTest() {
 
   @Test
   fun playerDropNotification_bodyLength() {
     assertThat(PLAYER_DROP_NOTIFICATION.bodyBytes).isEqualTo(5)
-  }
-
-  @Test
-  fun playerDropNotification_byteReadPacket_deserializeBody() {
-    val packet = ByteReadPacket(V086Utils.hexStringToByteBuffer(NOTIFICATION_BODY_BYTES))
-    assertThat(PlayerDrop.PlayerDropSerializer.read(packet, MESSAGE_NUMBER).getOrThrow())
-      .isEqualTo(PLAYER_DROP_NOTIFICATION)
-    assertThat(packet.endOfInput).isTrue()
   }
 
   @Test
@@ -33,7 +22,7 @@ class PlayerDropTest {
 
   @Test
   fun playerDropNotification_serializeBody() {
-    val buffer = ByteBuffer.allocateDirect(4096)
+    val buffer = allocateByteBuffer()
     PLAYER_DROP_NOTIFICATION.writeBodyTo(buffer)
 
     assertThat(buffer.position()).isEqualTo(PLAYER_DROP_NOTIFICATION.bodyBytes)
@@ -46,14 +35,6 @@ class PlayerDropTest {
   }
 
   @Test
-  fun playerDropRequest_byteReadPacket_deserializeBody() {
-    val packet = ByteReadPacket(V086Utils.hexStringToByteBuffer(REQUEST_BODY_BYTES))
-    assertThat(PlayerDrop.PlayerDropSerializer.read(packet, MESSAGE_NUMBER).getOrThrow())
-      .isEqualTo(PLAYER_DROP_REQUEST)
-    assertThat(packet.endOfInput).isTrue()
-  }
-
-  @Test
   fun playerDropRequest_deserializeBody() {
     val buffer = V086Utils.hexStringToByteBuffer(REQUEST_BODY_BYTES)
     assertThat(PlayerDrop.PlayerDropSerializer.read(buffer, MESSAGE_NUMBER).getOrThrow())
@@ -63,7 +44,7 @@ class PlayerDropTest {
 
   @Test
   fun playerDropRequest_serializeBody() {
-    val buffer = ByteBuffer.allocateDirect(4096)
+    val buffer = allocateByteBuffer()
     PLAYER_DROP_REQUEST.writeBodyTo(buffer)
 
     assertThat(buffer.position()).isEqualTo(PLAYER_DROP_REQUEST.bodyBytes)
