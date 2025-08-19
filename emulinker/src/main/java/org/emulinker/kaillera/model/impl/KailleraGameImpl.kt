@@ -705,7 +705,6 @@ class KailleraGameImpl(
    * Adds data and suspends until all data is available, at which time it returns the sends new data
    * back to the client.
    */
-  // Pretty sure this is most of the lag.
   @Throws(GameDataException::class)
   override fun addData(
     user: KailleraUser,
@@ -750,7 +749,6 @@ class KailleraGameImpl(
   }
 
   /** @param data Only used for logging. */
-  // HERE!
   fun maybeSendData(user: KailleraUser, data: ByteArray = byteArrayOf()): Result<Unit> {
     val playerActionQueuesCopy = checkNotNull(playerActionQueues)
 

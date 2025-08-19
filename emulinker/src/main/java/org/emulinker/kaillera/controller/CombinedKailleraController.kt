@@ -25,6 +25,7 @@ import org.emulinker.kaillera.controller.v086.V086ClientHandler
 import org.emulinker.kaillera.model.KailleraServer
 import org.emulinker.kaillera.model.exception.NewConnectionException
 import org.emulinker.kaillera.model.exception.ServerFullException
+import org.emulinker.kaillera.pico.CompiledFlags
 import org.emulinker.util.EmuUtil.formatSocketAddress
 
 class CombinedKailleraController(
@@ -120,7 +121,12 @@ class CombinedKailleraController(
     if (handler == null) {
       // User is new. It's either a ConnectMessage or it's the user's first message after
       // reconnecting to the server via the dictated port.
-      val connectMessageResult: Result<ConnectMessage> = ConnectMessage.parse(buffer.nioBuffer())
+      val connectMessageResult: Result<ConnectMessage> =
+        if (CompiledFlags.USE_BYTEBUF_INSTEAD_OF_BYTEBUFFER) {
+          ConnectMessage.parse(buffer)
+        } else {
+          ConnectMessage.parse(buffer.nioBuffer())
+        }
       if (connectMessageResult.isSuccess) {
         when (val connectMessage = connectMessageResult.getOrThrow()) {
           is ConnectMessage_PING -> {

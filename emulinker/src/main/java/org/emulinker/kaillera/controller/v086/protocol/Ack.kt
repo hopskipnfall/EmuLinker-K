@@ -38,10 +38,10 @@ sealed class Ack : V086Message() {
         )
       }
       // We skip the comparisons for time.
-      buffer.getUnsignedInt() // 0L
-      buffer.getUnsignedInt() // 1L
-      buffer.getUnsignedInt() // 2L
-      buffer.getUnsignedInt() // 3L
+      buffer.readIntLE()
+      buffer.readIntLE()
+      buffer.readIntLE()
+      buffer.readIntLE()
       return Result.success(ClientAck(messageNumber))
     }
 
@@ -91,11 +91,11 @@ sealed class Ack : V086Message() {
       if (b.toInt() != 0x00) {
         throw MessageFormatException("byte 0 = " + EmuUtil.byteToHex(b))
       }
-      val val1 = buffer.getUnsignedInt()
-      val val2 = buffer.getUnsignedInt()
-      val val3 = buffer.getUnsignedInt()
-      val val4 = buffer.getUnsignedInt()
-      if (val1 != 0L || val2 != 1L || val3 != 2L || val4 != 3L)
+      val val1 = buffer.readIntLE()
+      val val2 = buffer.readIntLE()
+      val val3 = buffer.readIntLE()
+      val val4 = buffer.readIntLE()
+      if (val1 != 0 || val2 != 1 || val3 != 2 || val4 != 3)
         throw MessageFormatException(
           "Invalid Server to Client ACK format: bytes do not match acceptable format!"
         )

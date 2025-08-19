@@ -491,14 +491,7 @@ class KailleraUser(
       return Result.success(Unit)
     }
 
-    val result: Result<Unit>
-
-    //    measureTime {
-    result = doTheThing()
-    //    }.let {
-    //      if (it > 2.milliseconds)
-    //        logger.atWarning().log("IT TOOK TOO LONG 99: %f ms", it.toMillisDouble())
-    //    }
+    val result = doTheThing()
     result.onFailure { e ->
       when (e) {
         is GameDataException -> {
@@ -567,6 +560,7 @@ class KailleraUser(
         while (!stopFlag) {
           val event = eventQueue.poll()
           if (event == null) {
+            // This is supposedly preferable to Thread.yield() but I can't remember why.
             Thread.sleep(1)
             continue
           } else if (event is StopFlagEvent) {
