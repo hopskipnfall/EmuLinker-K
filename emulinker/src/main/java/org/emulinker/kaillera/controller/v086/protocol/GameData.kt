@@ -1,6 +1,5 @@
 package org.emulinker.kaillera.controller.v086.protocol
 
-import io.ktor.utils.io.core.remaining
 import io.netty.buffer.ByteBuf
 import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
@@ -128,7 +127,7 @@ constructor(override var messageNumber: Int, var gameData: VariableSizeByteArray
         return parseFailure("Invalid Game Data format: dataSize = $dataSize")
       }
       val gameData: VariableSizeByteArray =
-        if (CompiledFlags.USE_UNSAFE_BUFFER && arrayBuffer != null) {
+        if (CompiledFlags.USE_CIRCULAR_BYTE_ARRAY_BUFFER && arrayBuffer != null) {
           arrayBuffer.borrow()
         } else {
           VariableSizeByteArray()

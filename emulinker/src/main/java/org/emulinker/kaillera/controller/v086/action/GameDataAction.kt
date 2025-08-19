@@ -38,7 +38,7 @@ object GameDataAction : V086Action<GameData>, V086GameEventHandler<GameDataEvent
         }
       }
     } finally {
-      if (CompiledFlags.USE_BYTE_ARRAY_POOL)
+      if (CompiledFlags.USE_CIRCULAR_BYTE_ARRAY_BUFFER)
         clientHandler.user.circularVariableSizeByteArrayBuffer.recycle(data)
     }
   }
@@ -62,7 +62,7 @@ object GameDataAction : V086Action<GameData>, V086GameEventHandler<GameDataEvent
         }
       }
     } finally {
-      if (CompiledFlags.USE_BYTE_ARRAY_POOL)
+      if (CompiledFlags.USE_CIRCULAR_BYTE_ARRAY_BUFFER)
         clientHandler.user.circularVariableSizeByteArrayBuffer.recycle(data)
     }
   }

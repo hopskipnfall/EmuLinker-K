@@ -62,9 +62,7 @@ class VariableSizeByteArray(initialData: ByteArray = EMPTY_DATA) : Borrowable {
   }
 
   companion object {
-    val EMPTY_DATA = byteArrayOf()
-
-    val pool = ObjectPool<VariableSizeByteArray>(initialSize = 100) { VariableSizeByteArray() }
+    private val EMPTY_DATA = byteArrayOf()
   }
 }
 

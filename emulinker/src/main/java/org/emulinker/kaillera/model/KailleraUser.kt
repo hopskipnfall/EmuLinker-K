@@ -66,7 +66,7 @@ class KailleraUser(
   val circularVariableSizeByteArrayBuffer =
     CircularVariableSizeByteArrayBuffer(
       // The GameDataCache has 256 so we should have something significantly larger.
-      size = 1_000
+      capacity = 2_000
     ) {
       VariableSizeByteArray()
     }

@@ -773,8 +773,8 @@ class KailleraGameImpl(
       ) {
         waitingOnData = false
         val response =
-          if (CompiledFlags.USE_BYTE_ARRAY_POOL) {
-            VariableSizeByteArray.pool.claim()
+          if (CompiledFlags.USE_CIRCULAR_BYTE_ARRAY_BUFFER) {
+            user.circularVariableSizeByteArrayBuffer.borrow()
           } else {
             VariableSizeByteArray()
           }

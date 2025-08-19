@@ -20,8 +20,5 @@ object CompiledFlags {
   const val PRERELEASE_BUILD: Boolean = ${project.prerelease}
 
   /** Use a shared object pool instead of creating ByteArrays every time. */
-  const val USE_BYTE_ARRAY_POOL: Boolean = ${useByteArrayPool}
-
-  /** Use a shared object pool instead of creating ByteArrays every time. */
-  const val USE_UNSAFE_BUFFER: Boolean = ${useUnsafeBuffer}
+  const val USE_CIRCULAR_BYTE_ARRAY_BUFFER: Boolean = ${useCircularByteArrayBuffer}
 }
