@@ -3,12 +3,10 @@ package org.emulinker.kaillera.controller.v086.protocol
 import io.ktor.utils.io.core.remaining
 import io.netty.buffer.ByteBuf
 import java.nio.ByteBuffer
-import kotlinx.io.Source
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.util.UnsignedUtil.getUnsignedShort
 import org.emulinker.util.UnsignedUtil.putUnsignedShort
-import org.emulinker.util.UnsignedUtil.readUnsignedShort
 
 /**
  * Message sent to kick a user by [userId] from a game.
@@ -46,7 +44,7 @@ constructor(override val messageNumber: Int, val userId: Int) : V086Message(), C
         return parseFailure("Failed byte count validation!")
       }
       buffer.readByte() // Skip over 0x00 byte.
-      return Result.success(GameKick(messageNumber, buffer.getUnsignedShort()))
+      return Result.success(GameKick(messageNumber, buffer.readShortLE().toInt()))
     }
 
     override fun read(buffer: ByteBuffer, messageNumber: Int): Result<GameKick> {
@@ -57,17 +55,9 @@ constructor(override val messageNumber: Int, val userId: Int) : V086Message(), C
       return Result.success(GameKick(messageNumber, buffer.getUnsignedShort()))
     }
 
-    override fun read(packet: Source, messageNumber: Int): Result<GameKick> {
-      if (packet.remaining < 3) {
-        return parseFailure("Failed byte count validation!")
-      }
-      packet.readByte() // This is always 0x00.
-      return Result.success(GameKick(messageNumber, packet.readUnsignedShort()))
-    }
-
     override fun write(buffer: ByteBuf, message: GameKick) {
       buffer.writeByte(0x00)
-      buffer.putUnsignedShort(message.userId)
+      buffer.writeShortLE(message.userId)
     }
 
     override fun write(buffer: ByteBuffer, message: GameKick) {

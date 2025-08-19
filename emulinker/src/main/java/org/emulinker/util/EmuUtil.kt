@@ -1,7 +1,6 @@
 package org.emulinker.util
 
 import com.codahale.metrics.Timer
-import io.ktor.utils.io.core.endOfInput
 import io.ktor.utils.io.core.remaining
 import io.netty.buffer.ByteBuf
 import java.io.File
@@ -25,7 +24,6 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.format.DateTimeComponents
 import kotlinx.datetime.format.format
 import kotlinx.datetime.offsetIn
-import kotlinx.io.Source
 import org.emulinker.kaillera.pico.AppModule
 
 object EmuUtil {
@@ -237,19 +235,6 @@ object EmuUtil {
   ): String {
     val tempBuffer = ByteBuffer.allocate(this.readableBytes())
     while (this.readableBytes() > 0) {
-      var b: Byte
-      if (this.readByte().also { b = it }.toInt() == stopByte) break
-      tempBuffer.put(b)
-    }
-    return charset.decode(tempBuffer.flip() as ByteBuffer).toString()
-  }
-
-  fun Source.readString(
-    stopByte: Int = 0x00,
-    charset: Charset = AppModule.charsetDoNotUse,
-  ): String {
-    val tempBuffer = ByteBuffer.allocate(this.remaining.toInt())
-    while (!this.endOfInput) {
       var b: Byte
       if (this.readByte().also { b = it }.toInt() == stopByte) break
       tempBuffer.put(b)

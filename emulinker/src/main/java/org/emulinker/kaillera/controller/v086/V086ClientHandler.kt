@@ -65,9 +65,9 @@ class V086ClientHandler(
       this.remoteSocketAddress = remoteSocketAddress
     } else if (remoteSocketAddress != this.remoteSocketAddress) {
       logger
-        .atWarning()
+        .atSevere()
         .log(
-          "Rejecting packet received from wrong address: %s != %s",
+          "Rejecting packet received from wrong address: %s != %s. This should not be possible!",
           EmuUtil.formatSocketAddress(remoteSocketAddress),
           EmuUtil.formatSocketAddress(this.remoteSocketAddress!!),
         )
@@ -154,8 +154,7 @@ class V086ClientHandler(
 
   private fun handleReceivedInternal(buffer: ByteBuf) {
     val inBundle: V086Bundle =
-      if (CompiledFlags.USE_BYTEREADPACKET_INSTEAD_OF_BYTEBUFFER) {
-        // Note: This is currently DISABLED as it's unstable (see tests marked as @Ignore).
+      if (CompiledFlags.USE_BYTEBUF_INSTEAD_OF_BYTEBUFFER) {
         try {
           parse(buffer, lastMessageNumber)
         } catch (e: ParseException) {
@@ -191,7 +190,7 @@ class V086ClientHandler(
       } else {
         val newBuffer: ByteBuffer = buffer.nioBuffer()
         try {
-          parse(newBuffer, lastMessageNumber)
+          parse(newBuffer, lastMessageNumber, arrayBuffer = null)
         } catch (e: ParseException) {
           newBuffer.position(0)
           logger
@@ -380,12 +379,7 @@ class V086ClientHandler(
   fun send(outMessage: V086Message, numToSend: Int = 5) {
     synchronized(sendMutex) {
       var numToSend = numToSend
-
-      val buf =
-        combinedKailleraController.nettyChannel
-          .alloc()
-          .directBuffer(flags.v086BufferSize)
-          .order(ByteOrder.LITTLE_ENDIAN)
+      val buf = combinedKailleraController.nettyChannel.alloc().directBuffer(flags.v086BufferSize)
       lastMessageBuffer.add(outMessage)
       numToSend = lastMessageBuffer.fill(outMessages, numToSend)
       val outBundle = V086Bundle(outMessages, numToSend)

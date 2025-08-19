@@ -9,6 +9,7 @@ import org.emulinker.kaillera.model.KailleraGame
 import org.emulinker.kaillera.model.KailleraUser
 import org.emulinker.util.EmuLang.getString
 import org.emulinker.util.EmuUtil
+import org.emulinker.util.VariableSizeByteArray
 
 class AutoFireScanner2(private var game: KailleraGame, sensitivity: Int) : AutoFireDetector {
   override var sensitivity = 0
@@ -47,7 +48,7 @@ class AutoFireScanner2(private var game: KailleraGame, sensitivity: Int) : AutoF
     scanningJobs?.forEach { it?.stop() }
   }
 
-  override fun addData(playerNumber: Int, data: ByteArray, bytesPerAction: Int) {
+  override fun addData(playerNumber: Int, data: VariableSizeByteArray, bytesPerAction: Int) {
     if (sensitivity <= 0) return
     scanningJobs?.get(playerNumber - 1)?.addData(data, bytesPerAction)
   }
@@ -66,7 +67,9 @@ class AutoFireScanner2(private var game: KailleraGame, sensitivity: Int) : AutoF
     private var stopFlag = false
 
     @Synchronized
-    fun addData(data: ByteArray, bytesPerAction: Int) {
+    fun addData(data: VariableSizeByteArray, bytesPerAction: Int) {
+      // TODO(nue): Don't make a deep copy.
+      val data = data.toByteArray()
       if (pos + data.size >= sizeLimit) {
         val firstSize = sizeLimit - pos
         System.arraycopy(data, 0, buffer[tail], pos, firstSize)

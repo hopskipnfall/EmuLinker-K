@@ -3,14 +3,12 @@ package org.emulinker.kaillera.controller.v086.protocol
 import io.ktor.utils.io.core.remaining
 import io.netty.buffer.ByteBuf
 import java.nio.ByteBuffer
-import kotlinx.io.Source
 import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.kaillera.controller.v086.V086Utils.getNumBytesPlusStopByte
 import org.emulinker.util.EmuUtil
 import org.emulinker.util.EmuUtil.readString
 import org.emulinker.util.UnsignedUtil.getUnsignedShort
 import org.emulinker.util.UnsignedUtil.putUnsignedShort
-import org.emulinker.util.UnsignedUtil.readUnsignedShort
 
 sealed class Quit : V086Message() {
   override val messageTypeId = ID
@@ -50,7 +48,7 @@ sealed class Quit : V086Message() {
       if (buffer.readableBytes() < 3) {
         return parseFailure("Failed byte count validation!")
       }
-      val userID = buffer.getUnsignedShort()
+      val userID = buffer.readUnsignedShortLE()
       val message = buffer.readString()
       return Result.success(
         if (userName.isBlank() && userID == REQUEST_USER_ID) {
@@ -80,25 +78,6 @@ sealed class Quit : V086Message() {
       )
     }
 
-    override fun read(packet: Source, messageNumber: Int): Result<Quit> {
-      if (packet.remaining < 5) {
-        return parseFailure("Failed byte count validation!")
-      }
-      val userName = packet.readString()
-      if (packet.remaining < 3) {
-        return parseFailure("Failed byte count validation!")
-      }
-      val userID = packet.readUnsignedShort()
-      val message = packet.readString()
-      return Result.success(
-        if (userName.isBlank() && userID == REQUEST_USER_ID) {
-          QuitRequest(messageNumber, message)
-        } else {
-          QuitNotification(messageNumber, userName, userID, message)
-        }
-      )
-    }
-
     override fun write(buffer: ByteBuf, message: Quit) {
       EmuUtil.writeString(
         buffer,
@@ -107,7 +86,7 @@ sealed class Quit : V086Message() {
           is QuitNotification -> message.username
         },
       )
-      buffer.putUnsignedShort(
+      buffer.writeShortLE(
         when (message) {
           is QuitRequest -> REQUEST_USER_ID
           is QuitNotification -> message.userId

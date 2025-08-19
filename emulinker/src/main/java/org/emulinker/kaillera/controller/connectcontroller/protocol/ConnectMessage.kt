@@ -1,10 +1,9 @@
 package org.emulinker.kaillera.controller.connectcontroller.protocol
 
-import io.ktor.utils.io.core.*
+import io.netty.buffer.ByteBuf
 import java.nio.ByteBuffer
 import kotlin.Result.Companion.failure
 import kotlin.Result.Companion.success
-import kotlinx.io.Source
 import org.emulinker.kaillera.controller.messaging.ByteBufferMessage
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.pico.AppModule
@@ -18,8 +17,8 @@ import org.emulinker.kaillera.pico.AppModule
  *   allocated for that client.
  *
  * After that point the client never interacts with the connect server. There are other subtypes
- * [ConnectMessage_TOO], [ConnectMessage_PING], and [ConnectMessage_PONG] which I do not believe are
- * used by the connect server and probably shouldn't inherit from this class.
+ * [ConnectMessage_ServerFull], [ConnectMessage_PING], and [ConnectMessage_PONG] which I do not
+ * believe are used by the connect server and probably shouldn't inherit from this class.
  */
 sealed class ConnectMessage : ByteBufferMessage() {
   protected abstract val iD: String?
@@ -38,8 +37,8 @@ sealed class ConnectMessage : ByteBufferMessage() {
         }
 
       when {
-        messageStr.startsWith(ConnectMessage_TOO.ID) -> {
-          return success(ConnectMessage_TOO.parse(messageStr))
+        messageStr.startsWith(ConnectMessage_ServerFull.ID) -> {
+          return success(ConnectMessage_ServerFull.parse(messageStr))
         }
         messageStr.startsWith(RequestPrivateKailleraPortResponse.ID) -> {
           return success(RequestPrivateKailleraPortResponse.parse(messageStr))
@@ -60,37 +59,36 @@ sealed class ConnectMessage : ByteBufferMessage() {
       }
     }
 
-    @Throws(MessageFormatException::class)
-    fun parse(packet: Source): ConnectMessage {
+    fun parse(buffer: ByteBuf): Result<ConnectMessage> {
       val messageStr =
         try {
-          //            val stringDecoder = charset.newDecoder()
-          packet.readText(AppModule.charsetDoNotUse)
-          //            stringDecoder.decode(byteReadPacket).toString()
+          buffer.readString(buffer.readableBytes(), AppModule.charsetDoNotUse)
         } catch (e: CharacterCodingException) {
-          throw MessageFormatException("Invalid bytes received: failed to decode to a string!", e)
+          return failure(
+            MessageFormatException("Invalid bytes received: failed to decode to a string!", e)
+          )
         }
 
       when {
-        messageStr.startsWith(ConnectMessage_TOO.ID) -> {
-          return ConnectMessage_TOO.parse(messageStr)
+        messageStr.startsWith(ConnectMessage_ServerFull.ID) -> {
+          return success(ConnectMessage_ServerFull.parse(messageStr))
         }
         messageStr.startsWith(RequestPrivateKailleraPortResponse.ID) -> {
-          return RequestPrivateKailleraPortResponse.parse(messageStr)
+          return success(RequestPrivateKailleraPortResponse.parse(messageStr))
         }
         messageStr.startsWith(RequestPrivateKailleraPortRequest.ID) -> {
-          return RequestPrivateKailleraPortRequest.parse(messageStr)
+          return success(RequestPrivateKailleraPortRequest.parse(messageStr))
         }
         messageStr.startsWith(ConnectMessage_PING.ID) -> {
-          return ConnectMessage_PING.parse(messageStr)
+          return success(ConnectMessage_PING.parse(messageStr))
         }
         messageStr.startsWith(ConnectMessage_PONG.ID) -> {
-          return ConnectMessage_PONG.parse(messageStr)
+          return success(ConnectMessage_PONG.parse(messageStr))
         }
-        //      byteReadPacket.rewind()
-        else ->
-          // TODO(nue): Figure out how to dump all bytes from Sources.
-          throw MessageFormatException("Unrecognized connect message: TODO")
+        else -> {
+          buffer.resetReaderIndex()
+          return failure(MessageFormatException("Unrecognized connect message"))
+        }
       }
     }
   }

@@ -10,25 +10,25 @@ class GameDataCacheTest {
   fun `empty cache`() {
     assertThat(cache.isEmpty()).isTrue()
     assertThat(cache.toList()).isEmpty()
-    assertThat(cache.contains(byteArrayOf(1))).isFalse()
+    assertThat(cache.contains(VariableSizeByteArray(byteArrayOf(1)))).isFalse()
   }
 
   @Test
   fun `full cache`() {
-    repeat(7) { index -> cache.add(byteArrayOf(index.toByte())) }
+    repeat(7) { index -> cache.add(VariableSizeByteArray(byteArrayOf(index.toByte()))) }
 
     assertThat(cache.size).isEqualTo(5)
-    assertThat(cache.map { it.single().toInt() }).containsExactly(2, 3, 4, 5, 6)
+    assertThat(cache.map { it.toByteArray().single().toInt() }).containsExactly(2, 3, 4, 5, 6)
     for ((index, value) in (2..6).withIndex()) {
-      assertThat(cache.contains(byteArrayOf(value.toByte()))).isTrue()
-      assertThat(cache.indexOf(byteArrayOf(value.toByte()))).isEqualTo(index)
-      assertThat(cache[index]!!.single().toInt()).isEqualTo(value)
+      assertThat(cache.contains(VariableSizeByteArray(byteArrayOf(value.toByte())))).isTrue()
+      assertThat(cache.indexOf(VariableSizeByteArray(byteArrayOf(value.toByte())))).isEqualTo(index)
+      assertThat(cache[index].toByteArray().single().toInt()).isEqualTo(value)
     }
   }
 
   @Test
   fun `clear cache`() {
-    repeat(7) { index -> cache.add(byteArrayOf(index.toByte())) }
+    repeat(7) { index -> cache.add(VariableSizeByteArray(byteArrayOf(index.toByte()))) }
 
     cache.clear()
 

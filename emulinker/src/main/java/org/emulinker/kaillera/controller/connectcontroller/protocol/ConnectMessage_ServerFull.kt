@@ -6,9 +6,8 @@ import kotlin.Throws
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.util.EmuUtil
 
-// TODO(nue): Turn into a data class?
 /** Server Full Response. */
-class ConnectMessage_TOO : ConnectMessage() {
+object ConnectMessage_ServerFull : ConnectMessage() {
   override val iD = ID
 
   override fun toString() = "Server Full Response"
@@ -24,16 +23,13 @@ class ConnectMessage_TOO : ConnectMessage() {
     EmuUtil.writeString(buffer, ID)
   }
 
-  companion object {
-    const val ID = "TOO"
+  const val ID = "TOO"
 
-    @Throws(MessageFormatException::class)
-    fun parse(msg: String): ConnectMessage {
-      if (msg.length != ID.length + 1) throw MessageFormatException("Invalid message length!")
-      if (!msg.startsWith(ID)) throw MessageFormatException("Invalid message identifier!")
-      if (msg[msg.length - 1].code != 0x00)
-        throw MessageFormatException("Invalid message stop byte!")
-      return ConnectMessage_TOO()
-    }
+  @Throws(MessageFormatException::class)
+  fun parse(msg: String): ConnectMessage {
+    if (msg.length != ID.length + 1) throw MessageFormatException("Invalid message length!")
+    if (!msg.startsWith(ID)) throw MessageFormatException("Invalid message identifier!")
+    if (msg[msg.length - 1].code != 0x00) throw MessageFormatException("Invalid message stop byte!")
+    return ConnectMessage_ServerFull
   }
 }

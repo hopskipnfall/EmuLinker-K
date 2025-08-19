@@ -3,13 +3,11 @@ package org.emulinker.kaillera.controller.v086.protocol
 import io.ktor.utils.io.core.remaining
 import io.netty.buffer.ByteBuf
 import java.nio.ByteBuffer
-import kotlinx.io.Source
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.util.EmuUtil
 import org.emulinker.util.UnsignedUtil.getUnsignedShort
 import org.emulinker.util.UnsignedUtil.putUnsignedShort
-import org.emulinker.util.UnsignedUtil.readUnsignedShort
 
 data class CloseGame(
   override val messageNumber: Int,
@@ -50,8 +48,8 @@ data class CloseGame(
       val b = buffer.readByte()
       if (b.toInt() != 0x00)
         throw MessageFormatException("Invalid Close Game format: byte 0 = " + EmuUtil.byteToHex(b))
-      val gameID = buffer.getUnsignedShort()
-      val val1 = buffer.getUnsignedShort()
+      val gameID = buffer.readShortLE().toInt()
+      val val1 = buffer.readShortLE().toInt()
       return Result.success(CloseGame(messageNumber, gameID, val1))
     }
 
@@ -67,22 +65,10 @@ data class CloseGame(
       return Result.success(CloseGame(messageNumber, gameID, val1))
     }
 
-    override fun read(packet: Source, messageNumber: Int): Result<CloseGame> {
-      if (packet.remaining < 5) {
-        return parseFailure("Failed byte count validation!")
-      }
-      val b = packet.readByte()
-      if (b.toInt() != 0x00)
-        throw MessageFormatException("Invalid Close Game format: byte 0 = " + EmuUtil.byteToHex(b))
-      val gameID = packet.readUnsignedShort()
-      val val1 = packet.readUnsignedShort()
-      return Result.success(CloseGame(messageNumber, gameID, val1))
-    }
-
     override fun write(buffer: ByteBuf, message: CloseGame) {
       buffer.writeByte(0x00)
-      buffer.putUnsignedShort(message.gameId)
-      buffer.putUnsignedShort(message.val1)
+      buffer.writeShortLE(message.gameId)
+      buffer.writeShortLE(message.val1)
     }
 
     override fun write(buffer: ByteBuffer, message: CloseGame) {

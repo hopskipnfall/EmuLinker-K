@@ -3,10 +3,10 @@ package org.emulinker.kaillera.controller.v086.protocol
 import io.ktor.utils.io.core.remaining
 import io.netty.buffer.ByteBuf
 import java.nio.ByteBuffer
+import kotlin.math.roundToInt
 import kotlin.math.roundToLong
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
-import kotlinx.io.Source
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.kaillera.controller.v086.V086Utils.getNumBytesPlusStopByte
@@ -18,8 +18,6 @@ import org.emulinker.util.UnsignedUtil.getUnsignedInt
 import org.emulinker.util.UnsignedUtil.getUnsignedShort
 import org.emulinker.util.UnsignedUtil.putUnsignedInt
 import org.emulinker.util.UnsignedUtil.putUnsignedShort
-import org.emulinker.util.UnsignedUtil.readUnsignedInt
-import org.emulinker.util.UnsignedUtil.readUnsignedShort
 
 /**
  * Message sent by the server when a user joins a game, which lists all of the players in that game.
@@ -57,8 +55,8 @@ data class PlayerInformation(override val messageNumber: Int, val players: List<
 
     fun writeTo(buffer: ByteBuf) {
       EmuUtil.writeString(buffer, username)
-      buffer.putUnsignedInt(ping.toMillisDouble().roundToLong())
-      buffer.putUnsignedShort(userId)
+      buffer.writeIntLE(ping.toMillisDouble().roundToInt())
+      buffer.writeShortLE(userId)
       buffer.writeByte(connectionType.byteValue.toInt())
     }
 
@@ -100,7 +98,7 @@ data class PlayerInformation(override val messageNumber: Int, val players: List<
           "Invalid Player Information format: byte 0 = ${EmuUtil.byteToHex(b)}"
         )
       }
-      val numPlayers = buffer.readInt()
+      val numPlayers = buffer.readIntLE()
       val minLen = numPlayers * 9
       if (buffer.readableBytes() < minLen) {
         return parseFailure("Failed byte count validation!")
@@ -114,8 +112,8 @@ data class PlayerInformation(override val messageNumber: Int, val players: List<
           if (buffer.readableBytes() < 7) {
             return parseFailure("Failed byte count validation!")
           }
-          val ping = buffer.getUnsignedInt()
-          val userID = buffer.getUnsignedShort()
+          val ping = buffer.readIntLE()
+          val userID = buffer.readShortLE().toInt()
           val connectionType = buffer.readByte()
           Player(userName, ping.milliseconds, userID, ConnectionType.fromByteValue(connectionType))
         }
@@ -154,41 +152,9 @@ data class PlayerInformation(override val messageNumber: Int, val players: List<
       return Result.success(PlayerInformation(messageNumber, players))
     }
 
-    override fun read(packet: Source, messageNumber: Int): Result<PlayerInformation> {
-      if (packet.remaining < 5) {
-        return parseFailure("Failed byte count validation!")
-      }
-      val b = packet.readByte()
-      if (b.toInt() != 0x00) {
-        throw MessageFormatException(
-          "Invalid Player Information format: byte 0 = ${EmuUtil.byteToHex(b)}"
-        )
-      }
-      val numPlayers = packet.readInt()
-      val minLen = numPlayers * 9
-      if (packet.remaining < minLen) {
-        return parseFailure("Failed byte count validation!")
-      }
-      val players: List<Player> =
-        (0 until numPlayers).map {
-          if (packet.remaining < 9) {
-            return parseFailure("Failed byte count validation!")
-          }
-          val userName = packet.readString()
-          if (packet.remaining < 7) {
-            return parseFailure("Failed byte count validation!")
-          }
-          val ping = packet.readUnsignedInt()
-          val userID = packet.readUnsignedShort()
-          val connectionType = packet.readByte()
-          Player(userName, ping.milliseconds, userID, ConnectionType.fromByteValue(connectionType))
-        }
-      return Result.success(PlayerInformation(messageNumber, players))
-    }
-
     override fun write(buffer: ByteBuf, message: PlayerInformation) {
       buffer.writeByte(0x00)
-      buffer.writeInt(message.players.size)
+      buffer.writeIntLE(message.players.size)
       message.players.forEach { it.writeTo(buffer) }
     }
 

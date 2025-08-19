@@ -25,6 +25,7 @@ import org.emulinker.kaillera.controller.v086.V086ClientHandler
 import org.emulinker.kaillera.model.KailleraServer
 import org.emulinker.kaillera.model.exception.NewConnectionException
 import org.emulinker.kaillera.model.exception.ServerFullException
+import org.emulinker.kaillera.pico.CompiledFlags
 import org.emulinker.util.EmuUtil.formatSocketAddress
 
 class CombinedKailleraController(
@@ -54,6 +55,7 @@ class CombinedKailleraController(
     port: Int
   ): EmbeddedServer<NettyApplicationEngine, NettyApplicationEngine.Configuration> =
     embeddedServer(Netty, port = port) {
+        // Note: This is a fixed number of threads.
         val group = NioEventLoopGroup(flags.nettyFlags)
 
         Runtime.getRuntime()
@@ -113,16 +115,23 @@ class CombinedKailleraController(
     remoteSocketAddress: InetSocketAddress,
     ctx: ChannelHandlerContext,
   ) {
+    // Note: The the port also has to match. Users relaunching their kaillera clients and connecting
+    // again will most likely be connecting from a different port.
     var handler = clientHandlers[remoteSocketAddress]
     if (handler == null) {
       // User is new. It's either a ConnectMessage or it's the user's first message after
       // reconnecting to the server via the dictated port.
-      val connectMessageResult: Result<ConnectMessage> = ConnectMessage.parse(buffer.nioBuffer())
+      val connectMessageResult: Result<ConnectMessage> =
+        if (CompiledFlags.USE_BYTEBUF_INSTEAD_OF_BYTEBUFFER) {
+          ConnectMessage.parse(buffer)
+        } else {
+          ConnectMessage.parse(buffer.nioBuffer())
+        }
       if (connectMessageResult.isSuccess) {
         when (val connectMessage = connectMessageResult.getOrThrow()) {
           is ConnectMessage_PING -> {
             val buf = nettyChannel.alloc().buffer(bufferSize)
-            ConnectMessage_PONG().writeTo(buf)
+            ConnectMessage_PONG.writeTo(buf)
             ctx.writeAndFlush(DatagramPacket(buf, remoteSocketAddress))
           }
           is RequestPrivateKailleraPortRequest -> {
@@ -179,8 +188,9 @@ class CombinedKailleraController(
           return
         }
 
-      clientHandlers[remoteSocketAddress] = handler!!
+      clientHandlers[remoteSocketAddress] = handler
     }
+    // I do not like blocking on a request thread.
     synchronized(handler.requestHandlerMutex) {
       handler.handleReceived(buffer, remoteSocketAddress)
     }
@@ -201,7 +211,7 @@ class CombinedKailleraController(
     // This is only used by tests right now.
     if (!this::nettyChannel.isInitialized) this.nettyChannel = ctx.channel()
 
-    logger.atInfo().log("Ready to accept connections on port")
+    logger.atInfo().log("Ready to accept connections on port %d", flags.serverPort)
     super.channelRegistered(ctx)
   }
 

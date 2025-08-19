@@ -29,7 +29,6 @@ dependencies {
   implementation("io.insert-koin:koin-core")
   testImplementation("io.insert-koin:koin-test")
   testImplementation("io.insert-koin:koin-test-junit4")
-  //  testImplementation("io.insert-koin:koin-test-junit5")
 
   implementation("com.google.protobuf:protobuf-kotlin:4.31.1")
   implementation("com.google.protobuf:protobuf-java:4.31.1")
@@ -100,7 +99,8 @@ tasks.processResources {
             val url = properties["url"]
             val prerelease = properties["prerelease"]
           },
-        "useBytereadpacketInsteadOfBytebuffer" to false,
+        "useBytebufInsteadOfBytebuffer" to true,
+        "useCircularByteArrayBuffer" to true,
       )
     )
   }

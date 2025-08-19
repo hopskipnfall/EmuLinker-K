@@ -1,15 +1,13 @@
 package org.emulinker.util
 
-interface GameDataCache : Collection<ByteArray> {
-  operator fun get(index: Int): ByteArray?
+interface GameDataCache : Collection<VariableSizeByteArray> {
+  operator fun get(index: Int): VariableSizeByteArray
 
-  operator fun set(index: Int, data: ByteArray): ByteArray?
+  fun add(data: VariableSizeByteArray): Int
 
-  fun add(data: ByteArray): Int
-
-  fun indexOf(data: ByteArray): Int
+  fun indexOf(data: VariableSizeByteArray): Int
 
   fun clear()
 
-  fun remove(index: Int): ByteArray?
+  fun remove(index: Int)
 }

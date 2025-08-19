@@ -3,10 +3,8 @@ package org.emulinker.kaillera.model
 import com.google.common.flogger.FluentLogger
 import java.net.InetSocketAddress
 import java.util.ArrayList
-import java.util.concurrent.BlockingQueue
-import java.util.concurrent.LinkedBlockingQueue
+import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.ThreadPoolExecutor
-import java.util.concurrent.TimeUnit
 import kotlin.Throws
 import kotlin.time.Clock
 import kotlin.time.Duration
@@ -25,8 +23,10 @@ import org.emulinker.kaillera.model.event.UserQuitEvent
 import org.emulinker.kaillera.model.event.UserQuitGameEvent
 import org.emulinker.kaillera.model.exception.*
 import org.emulinker.kaillera.model.impl.KailleraGameImpl
+import org.emulinker.util.CircularVariableSizeByteArrayBuffer
 import org.emulinker.util.EmuLang
 import org.emulinker.util.TimeOffsetCache
+import org.emulinker.util.VariableSizeByteArray
 
 /**
  * Represents a user in the server.
@@ -61,6 +61,15 @@ class KailleraUser(
   var ping = 0.milliseconds // TODO(nue): This probably shouldn't have a default.
   var socketAddress: InetSocketAddress? = null
   var status = UserStatus.PLAYING // TODO(nue): This probably shouldn't have a default value..
+
+  /** A non-threadsafe cache of [VariableSizeByteArray] instances. */
+  val circularVariableSizeByteArrayBuffer =
+    CircularVariableSizeByteArrayBuffer(
+      // The GameDataCache has 256 so we should have something significantly larger.
+      capacity = 2_000
+    ) {
+      VariableSizeByteArray()
+    }
 
   /**
    * Level of access that the user has.
@@ -141,10 +150,10 @@ class KailleraUser(
   var lastMsgID = -1
   var isMuted = false
 
-  private val lostInput: MutableList<ByteArray> = ArrayList()
+  private val lostInput: MutableList<VariableSizeByteArray> = ArrayList()
 
   /** Note that this is a different type from lostInput. */
-  fun getLostInput(): ByteArray {
+  fun getLostInput(): VariableSizeByteArray {
     return lostInput[0]
   }
 
@@ -154,7 +163,7 @@ class KailleraUser(
   private var threadIsActive = false
 
   private var stopFlag = false
-  private val eventQueue: BlockingQueue<KailleraEvent> = LinkedBlockingQueue()
+  private val eventQueue = ConcurrentLinkedQueue<KailleraEvent>()
 
   var tempDelay = 0
 
@@ -192,14 +201,7 @@ class KailleraUser(
 
   var loggedIn = false
 
-  override fun toString(): String {
-    val n = name
-    return if (n == null) {
-      "User$id(${connectSocketAddress.address.hostAddress})"
-    } else {
-      "User$id(${if (n.length > 15) n.take(15) + "..." else n}/${connectSocketAddress.address.hostAddress})"
-    }
-  }
+  override fun toString(): String = "User[id=$id name=$name]"
 
   var name: String? = null
 
@@ -447,14 +449,15 @@ class KailleraUser(
     game.ready(this, playerNumber)
   }
 
-  fun addGameData(data: ByteArray): Result<Unit> {
+  // Current source of the lag.
+  fun addGameData(data: VariableSizeByteArray): Result<Unit> {
     receivedGameDataNs = System.nanoTime()
     fun doTheThing(): Result<Unit> {
       val game =
         this.game
           ?: return Result.failure(
             GameDataException(
-              EmuLang.getString("KailleraUserImpl.GameDataErrorNotInGame"),
+              toString() + " " + EmuLang.getString("KailleraUserImpl.GameDataErrorNotInGame"),
               data,
               // This will be zero if the user is DISABLED.. Rewrite all of this.
               actionsPerMessage = connectionType.byteValue.toInt(),
@@ -468,12 +471,8 @@ class KailleraUser(
       if (frameCount < totalDelay) {
         bytesPerAction = data.size / connectionType.byteValue
         arraySize = game.playerActionQueues!!.size * connectionType.byteValue * bytesPerAction
-        val response = ByteArray(arraySize)
-        for (i in response.indices) {
-          response[i] = 0
-        }
         lostInput.add(data)
-        queueEvent(GameDataEvent(game, response))
+        queueEvent(GameDataEvent(game, VariableSizeByteArray(ByteArray(arraySize) { 0 })))
         frameCount++
       } else {
         // lostInput.add(data);
@@ -559,8 +558,10 @@ class KailleraUser(
       logger.atFine().log("%s thread running...", this)
       try {
         while (!stopFlag) {
-          val event = eventQueue.poll(200, TimeUnit.SECONDS)
+          val event = eventQueue.poll()
           if (event == null) {
+            // This is supposedly preferable to Thread.yield() but I can't remember why.
+            Thread.sleep(1)
             continue
           } else if (event is StopFlagEvent) {
             break

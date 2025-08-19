@@ -7,7 +7,7 @@ import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086ClientHandler
 import org.emulinker.kaillera.controller.v086.protocol.CachedGameData
 import org.emulinker.kaillera.controller.v086.protocol.GameChatNotification
-import org.emulinker.kaillera.controller.v086.protocol.GameData.Companion.create
+import org.emulinker.kaillera.controller.v086.protocol.GameData.Companion.createAndMakeDeepCopy
 import org.emulinker.kaillera.model.exception.GameDataException
 
 object CachedGameDataAction : V086Action<CachedGameData> {
@@ -17,17 +17,22 @@ object CachedGameDataAction : V086Action<CachedGameData> {
   override fun performAction(message: CachedGameData, clientHandler: V086ClientHandler) {
     val user = clientHandler.user
     val data = clientHandler.clientGameDataCache[message.key]
-    if (data == null) {
-      logger.atFine().log("Game Cache Error: null data")
-      return
-    }
-    user.addGameData(data).onFailure { e ->
+    data.inTemporaryUse = true
+    val addGameDataResult =
+      try {
+        user.addGameData(data)
+      } finally {
+        data.inTemporaryUse = false
+      }
+    addGameDataResult.onFailure { e ->
       when (e) {
         is GameDataException -> {
           logger.atFine().withCause(e).log("Game data error")
           if (e.response != null) {
             try {
-              clientHandler.send(create(clientHandler.nextMessageNumber, e.response!!))
+              clientHandler.send(
+                createAndMakeDeepCopy(clientHandler.nextMessageNumber, e.response!!)
+              )
             } catch (e2: MessageFormatException) {
               logger.atSevere().withCause(e2).log("Failed to construct GameData message")
             }

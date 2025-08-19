@@ -1,16 +1,17 @@
 package org.emulinker.kaillera.model.exception
 
 import com.google.common.flogger.FluentLogger
+import org.emulinker.util.VariableSizeByteArray
 
 class GameDataException : ActionException {
-  var response: ByteArray? = null
+  var response: VariableSizeByteArray? = null
     private set
 
   constructor(message: String?) : super(message)
 
   constructor(
     message: String?,
-    data: ByteArray,
+    data: VariableSizeByteArray,
     actionsPerMessage: Int,
     playerNumber: Int,
     numPlayers: Int,
@@ -21,16 +22,18 @@ class GameDataException : ActionException {
     }
     val bytesPerAction = data.size / actionsPerMessage
     val arraySize = numPlayers * actionsPerMessage * bytesPerAction
-    response = ByteArray(arraySize)
+    val r = VariableSizeByteArray(ByteArray(arraySize))
+
     for (actionCounter in 0 until actionsPerMessage) {
       System.arraycopy(
-        data,
+        data.toByteArray(),
         0,
-        response,
+        r.bytes,
         actionCounter * (numPlayers * bytesPerAction) + (playerNumber - 1) * bytesPerAction,
         bytesPerAction,
       )
     }
+    response = r
   }
 
   companion object {

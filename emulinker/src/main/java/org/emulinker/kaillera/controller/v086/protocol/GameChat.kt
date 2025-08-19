@@ -3,7 +3,6 @@ package org.emulinker.kaillera.controller.v086.protocol
 import io.ktor.utils.io.core.remaining
 import io.netty.buffer.ByteBuf
 import java.nio.ByteBuffer
-import kotlinx.io.Source
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086Utils.getNumBytesPlusStopByte
 import org.emulinker.util.EmuUtil
@@ -64,24 +63,6 @@ sealed class GameChat : V086Message() {
         return parseFailure("Failed byte count validation!")
       }
       val message = buffer.readString()
-      return Result.success(
-        if (userName == REQUEST_USERNAME) {
-          GameChatRequest(messageNumber, message)
-        } else {
-          GameChatNotification(messageNumber, userName, message)
-        }
-      )
-    }
-
-    override fun read(packet: Source, messageNumber: Int): Result<GameChat> {
-      if (packet.remaining < 3) {
-        return parseFailure("Failed byte count validation!")
-      }
-      val userName = packet.readString()
-      if (packet.remaining < 2) {
-        return parseFailure("Failed byte count validation!")
-      }
-      val message = packet.readString()
       return Result.success(
         if (userName == REQUEST_USERNAME) {
           GameChatRequest(messageNumber, message)
