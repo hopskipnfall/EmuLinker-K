@@ -73,13 +73,6 @@ sealed interface V086Bundle : ByteBufferMessage {
         message.writeTo(buffer)
       }
     }
-
-    init {
-      numMessages = messages.size
-      if (numToWrite < numMessages) {
-        numMessages = numToWrite
-      }
-    }
   }
 
   companion object {
