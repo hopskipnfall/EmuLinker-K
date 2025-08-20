@@ -854,6 +854,7 @@ $dokka.location:org.emulinker.kaillera.controller.v086/V086ClientHandler/speedMe
 $dokka.location:org.emulinker.kaillera.controller.v086/V086ClientHandler/start/#org.emulinker.kaillera.model.KailleraUser/PointingToDeclaration/emulinker/org.emulinker.kaillera.controller.v086/-v086-client-handler/start.html
 $dokka.location:org.emulinker.kaillera.controller.v086/V086ClientHandler/startSpeedTest/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.controller.v086/-v086-client-handler/start-speed-test.html
 $dokka.location:org.emulinker.kaillera.controller.v086/V086ClientHandler/stop/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.controller.v086/-v086-client-handler/stop.html
+$dokka.location:org.emulinker.kaillera.controller.v086/V086ClientHandler/toString/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.controller.v086/-v086-client-handler/to-string.html
 $dokka.location:org.emulinker.kaillera.controller.v086/V086ClientHandler/user/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.controller.v086/-v086-client-handler/user.html
 $dokka.location:org.emulinker.kaillera.controller.v086/V086Controller.Companion///PointingToDeclaration/emulinker/org.emulinker.kaillera.controller.v086/-v086-controller/-companion/index.html
 $dokka.location:org.emulinker.kaillera.controller.v086/V086Controller.Companion/MAX_BUNDLE_SIZE/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.controller.v086/-v086-controller/-companion/-m-a-x_-b-u-n-d-l-e_-s-i-z-e.html
