@@ -158,13 +158,14 @@ class V086ClientHandler(
         try {
           parse(buffer, lastMessageNumber, user.circularVariableSizeByteArrayBuffer)
         } catch (e: ParseException) {
-          // TODO(nue): datagram.packet.toString() doesn't provide any useful information.
+          buffer.resetReaderIndex()
           logger
             .atWarning()
             .withCause(e)
             .log("%s failed to parse: %s", this, buffer.dumpToByteArray().toHexString())
           null
         } catch (e: V086BundleFormatException) {
+          buffer.resetReaderIndex()
           logger
             .atWarning()
             .withCause(e)
