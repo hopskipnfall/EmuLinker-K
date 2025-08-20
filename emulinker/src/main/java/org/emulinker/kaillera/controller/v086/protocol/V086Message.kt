@@ -19,7 +19,7 @@ import org.emulinker.util.UnsignedUtil.putUnsignedShort
  * 3. The ID of the message type (1 byte)
  * 4. All body bytes written by [writeBodyTo] ([bodyBytes] bytes)
  */
-abstract class V086Message : ByteBufferMessage() {
+abstract class V086Message : ByteBufferMessage {
   /**
    * The 0-based enumeration indicating the order in which this message was sent/received for each
    * server.

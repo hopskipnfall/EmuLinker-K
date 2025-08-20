@@ -366,7 +366,7 @@ class CombinedKailleraControllerTest : ProtocolBaseTest(), KoinTest {
   /** Send message to the server. */
   private fun send(message: V086Message, fromPort: Int) {
     val buf = channel.alloc().buffer().order(ByteOrder.LITTLE_ENDIAN)
-    V086Bundle(arrayOf(message)).writeTo(buf)
+    V086Bundle.Single(message).writeTo(buf)
     channel.writeInbound(datagramPacket(buf, fromPort = fromPort))
   }
 
@@ -414,26 +414,39 @@ class CombinedKailleraControllerTest : ProtocolBaseTest(), KoinTest {
         var lastMessageId =
           portToLastServerMessageId.getOrPut(receivedPacket.recipient().port) { -1 }
 
-        val bundle = V086Bundle.parse(receivedPacket.content().nioBuffer())
-        val messages =
-          bundle.messages
-            .filter { it!!.messageNumber > lastMessageId }
-            .sortedBy { it!!.messageNumber }
-        expect
-          .withMessage(
-            "It would be strange to receive a bundle of no new messages. Raw bundle: $bundle"
-          )
-          .that(messages)
-          .isNotEmpty()
-        for (message in messages) {
-          expect.that(message!!.messageNumber).isEqualTo(lastMessageId + 1)
+        when (val bundle = V086Bundle.parse(receivedPacket.content().nioBuffer())) {
+          is V086Bundle.Single -> {
+            val message = bundle.message
+            expect.that(message.messageNumber).isEqualTo(lastMessageId + 1)
 
-          portToMessages
-            .getOrPut(receivedPacket.recipient().port) { mutableListOf() }
-            .add(message.zeroMessageNumber().zeroDurationFields())
-          portToLastServerMessageId[receivedPacket.recipient().port] = message.messageNumber
-          lastMessageId++
-          taken++
+            portToMessages
+              .getOrPut(receivedPacket.recipient().port) { mutableListOf() }
+              .add(message.zeroMessageNumber().zeroDurationFields())
+            portToLastServerMessageId[receivedPacket.recipient().port] = message.messageNumber
+            taken++
+          }
+          is V086Bundle.Multi -> {
+            val messages =
+              bundle.messages
+                .filter { it!!.messageNumber > lastMessageId }
+                .sortedBy { it!!.messageNumber }
+            expect
+              .withMessage(
+                "It would be strange to receive a bundle of no new messages. Raw bundle: $bundle"
+              )
+              .that(messages)
+              .isNotEmpty()
+            for (message in messages) {
+              expect.that(message!!.messageNumber).isEqualTo(lastMessageId + 1)
+
+              portToMessages
+                .getOrPut(receivedPacket.recipient().port) { mutableListOf() }
+                .add(message.zeroMessageNumber().zeroDurationFields())
+              portToLastServerMessageId[receivedPacket.recipient().port] = message.messageNumber
+              lastMessageId++
+              taken++
+            }
+          }
         }
       }
     }
