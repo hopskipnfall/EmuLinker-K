@@ -152,6 +152,8 @@ class V086ClientHandler(
     combinedKailleraController.clientHandlers.remove(remoteSocketAddress)
   }
 
+  override fun toString(): String = "[V086ClientHandler $user]"
+
   private fun handleReceivedInternal(buffer: ByteBuf) {
     val inBundle: V086Bundle =
       if (CompiledFlags.USE_BYTEBUF_INSTEAD_OF_BYTEBUFFER) {
