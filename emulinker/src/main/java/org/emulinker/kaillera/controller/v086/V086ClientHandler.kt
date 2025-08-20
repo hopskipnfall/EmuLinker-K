@@ -13,12 +13,14 @@ import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.controller.CombinedKailleraController
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.messaging.ParseException
+import org.emulinker.kaillera.controller.v086.action.CachedGameDataAction
 import org.emulinker.kaillera.controller.v086.action.FatalActionException
 import org.emulinker.kaillera.controller.v086.action.GameDataAction
 import org.emulinker.kaillera.controller.v086.action.V086Action
 import org.emulinker.kaillera.controller.v086.action.V086GameEventHandler
 import org.emulinker.kaillera.controller.v086.action.V086ServerEventHandler
 import org.emulinker.kaillera.controller.v086.action.V086UserEventHandler
+import org.emulinker.kaillera.controller.v086.protocol.CachedGameData
 import org.emulinker.kaillera.controller.v086.protocol.GameData
 import org.emulinker.kaillera.controller.v086.protocol.V086Bundle
 import org.emulinker.kaillera.controller.v086.protocol.V086Bundle.Companion.parse
@@ -217,10 +219,19 @@ class V086ClientHandler(
       } ?: return
 
     stripFromProdBinary {
-      logger.atFinest().log("<- FROM P%d: %s", user.id, inBundle.messages.firstOrNull())
+      logger
+        .atFinest()
+        .log(
+          "<- FROM P%d: %s",
+          user.id,
+          when (inBundle) {
+            is V086Bundle.Single -> inBundle.message
+            is V086Bundle.Multi -> inBundle.messages.firstOrNull()
+          },
+        )
     }
     clientRetryCount =
-      if (inBundle.numMessages == 0) {
+      if (inBundle is V086Bundle.Multi && inBundle.numMessages == 0) {
         logger
           .atFine()
           .log("%s received bundle of %d messages from %s", this, inBundle.numMessages, user)
@@ -231,61 +242,65 @@ class V086ClientHandler(
         0
       }
     try {
-      val messages = inBundle.messages
-      // TODO(nue): Combine these two cases? This seems unnecessary.
-      if (inBundle.numMessages == 1) {
-        val m: V086Message = messages[0]!!
-        lastMessageNumber = m.messageNumber
-        val messageTypeId = m.messageTypeId
-
-        val action: V086Action<out V086Message>? =
-          // Checking for GameData first is a speed optimization.
-          if (messageTypeId == GameData.ID) {
-            GameDataAction
-          } else {
-            controller.actions[m.messageTypeId.toInt()]
-          }
-        if (action == null) {
-          logger
-            .atSevere()
-            .log("No action defined to handle client message: %s", messages.firstOrNull())
-          return
-        }
-        (action as V086Action<V086Message>).performAction(m, this)
-      } else {
-        // read the bundle from back to front to process the oldest messages first
-        for (i in inBundle.numMessages - 1 downTo 0) {
-          /**
-           * already extracts messages with higher numbers when parsing, it does not need to be
-           * checked and this causes an error if messageNumber is 0 and lastMessageNumber is 0xFFFF
-           * if (messages [i].getNumber() > lastMessageNumber)
-           */
-          prevMessageNumber = lastMessageNumber
-          val m: V086Message = messages[i]!!
+      when (inBundle) {
+        is V086Bundle.Single -> {
+          val m = inBundle.message
           lastMessageNumber = m.messageNumber
-          if (prevMessageNumber + 1 != lastMessageNumber) {
-            if (prevMessageNumber == 0xFFFF && lastMessageNumber == 0) {
-              // exception; do nothing
-            } else {
-              logger
-                .atWarning()
-                .log("%s dropped a packet! (%d to %d)", user, prevMessageNumber, lastMessageNumber)
-              user.droppedPacket()
-            }
-          }
-          val messageTypeId = m.messageTypeId
           val action: V086Action<out V086Message>? =
             // Checking for GameData first is a speed optimization.
-            if (messageTypeId == GameData.ID) {
-              GameDataAction
-            } else {
-              controller.actions[m.messageTypeId.toInt()]
+            when (m.messageTypeId) {
+              GameData.ID -> GameDataAction
+              CachedGameData.ID -> CachedGameDataAction
+              else -> controller.actions[m.messageTypeId.toInt()]
             }
           if (action == null) {
-            logger.atSevere().log("No action defined to handle client message: %s", messages[i])
-          } else {
-            // logger.atFine().log(user + " -> " + message);
-            (action as V086Action<V086Message>).performAction(m, this)
+            logger
+              .atSevere()
+              .log("No action defined to handle client message: %s", inBundle.message)
+            return
+          }
+          (action as V086Action<V086Message>).performAction(m, this)
+        }
+        is V086Bundle.Multi -> {
+          val messages = inBundle.messages
+          // read the bundle from back to front to process the oldest messages first
+          for (i in inBundle.numMessages - 1 downTo 0) {
+            /**
+             * already extracts messages with higher numbers when parsing, it does not need to be
+             * checked and this causes an error if messageNumber is 0 and lastMessageNumber is
+             * 0xFFFF if (messages [i].getNumber() > lastMessageNumber)
+             */
+            prevMessageNumber = lastMessageNumber
+            val m: V086Message = messages[i]!!
+            lastMessageNumber = m.messageNumber
+            if (prevMessageNumber + 1 != lastMessageNumber) {
+              if (prevMessageNumber == 0xFFFF && lastMessageNumber == 0) {
+                // exception; do nothing
+              } else {
+                logger
+                  .atWarning()
+                  .log(
+                    "%s dropped a packet! (%d to %d)",
+                    user,
+                    prevMessageNumber,
+                    lastMessageNumber,
+                  )
+                user.droppedPacket()
+              }
+            }
+            val action: V086Action<out V086Message>? =
+              // Checking for GameData first is a speed optimization.
+              when (m.messageTypeId) {
+                GameData.ID -> GameDataAction
+                CachedGameData.ID -> CachedGameDataAction
+                else -> controller.actions[m.messageTypeId.toInt()]
+              }
+            if (action == null) {
+              logger.atSevere().log("No action defined to handle client message: %s", messages[i])
+            } else {
+              // logger.atFine().log(user + " -> " + message);
+              (action as V086Action<V086Message>).performAction(m, this)
+            }
           }
         }
       }
@@ -362,7 +377,7 @@ class V086ClientHandler(
 
       val buf = combinedKailleraController.nettyChannel.alloc().directBuffer(flags.v086BufferSize)
       numToSend = lastMessageBuffer.fill(outMessages, numToSend)
-      val outBundle = V086Bundle(outMessages, numToSend)
+      val outBundle = V086Bundle.Multi(outMessages, numToSend)
       stripFromProdBinary { logger.atFinest().log("<- TO P%d: (RESEND)", user.id) }
       outBundle.writeTo(buf)
       combinedKailleraController.send(DatagramPacket(buf, remoteSocketAddress!!))
@@ -375,7 +390,7 @@ class V086ClientHandler(
       val buf = combinedKailleraController.nettyChannel.alloc().directBuffer(flags.v086BufferSize)
       lastMessageBuffer.add(outMessage)
       numToSend = lastMessageBuffer.fill(outMessages, numToSend)
-      val outBundle = V086Bundle(outMessages, numToSend)
+      val outBundle = V086Bundle.Multi(outMessages, numToSend)
       stripFromProdBinary { logger.atFinest().log("<- TO P%d: %s", user.id, outMessage) }
       outBundle.writeTo(buf)
       combinedKailleraController.send(DatagramPacket(buf, remoteSocketAddress!!))

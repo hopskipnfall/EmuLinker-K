@@ -20,7 +20,7 @@ import org.emulinker.kaillera.pico.AppModule
  * [ConnectMessage_ServerFull], [ConnectMessage_PING], and [ConnectMessage_PONG] which I do not
  * believe are used by the connect server and probably shouldn't inherit from this class.
  */
-sealed class ConnectMessage : ByteBufferMessage() {
+sealed class ConnectMessage : ByteBufferMessage {
   protected abstract val iD: String?
 
   companion object {
