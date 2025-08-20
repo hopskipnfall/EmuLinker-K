@@ -1,5 +1,6 @@
 package org.emulinker.util
 
+import io.netty.buffer.ByteBuf
 import java.nio.ByteBuffer
 import java.util.Arrays
 
@@ -45,6 +46,8 @@ class VariableSizeByteArray(initialData: ByteArray = EMPTY_DATA) : Borrowable {
     return result
   }
 
+  override fun toString(): String = bytes.toHexString()
+
   fun copyTo(other: VariableSizeByteArray) {
     other.size = size
     System.arraycopy(this.bytes, 0, other.bytes, 0, size)
@@ -72,4 +75,8 @@ fun ByteBuffer.put(o: VariableSizeByteArray) {
 
 fun ByteBuffer.get(o: VariableSizeByteArray) {
   this.get(o.bytes, 0, o.size)
+}
+
+fun ByteBuf.get(o: VariableSizeByteArray) {
+  this.readBytes(/* dst= */ o.bytes, /* dstIndex= */ 0, /* length= */ o.size)
 }

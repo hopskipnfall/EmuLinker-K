@@ -63,7 +63,7 @@ sealed class JoinGame : V086Message() {
       }
       val b = buffer.readByte()
       if (b.toInt() != 0x00)
-        throw MessageFormatException("Invalid format: byte 0 = " + EmuUtil.byteToHex(b))
+        throw MessageFormatException("Invalid format: byte 0 = " + b.toHexString())
       val gameID = buffer.readShortLE().toInt()
       val val1 = buffer.readShortLE().toInt()
       val userName = buffer.readString()
@@ -95,7 +95,7 @@ sealed class JoinGame : V086Message() {
       }
       val b = buffer.get()
       if (b.toInt() != 0x00)
-        throw MessageFormatException("Invalid format: byte 0 = " + EmuUtil.byteToHex(b))
+        throw MessageFormatException("Invalid format: byte 0 = " + b.toHexString())
       val gameID = buffer.getUnsignedShort()
       val val1 = buffer.getUnsignedShort()
       val userName = buffer.readString()

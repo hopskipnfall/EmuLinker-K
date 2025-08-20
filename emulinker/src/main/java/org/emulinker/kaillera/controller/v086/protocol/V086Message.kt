@@ -177,14 +177,28 @@ abstract class V086Message : ByteBufferMessage() {
     }
 
     @Throws(ParseException::class, MessageFormatException::class)
-    fun parse(messageNumber: Int, messageLength: Int, buf: ByteBuf): V086Message {
-
+    fun parse(
+      messageNumber: Int,
+      messageLength: Int,
+      buf: ByteBuf,
+      arrayBuffer: CircularVariableSizeByteArrayBuffer?,
+    ): V086Message {
       val messageType = buf.readByte()
 
-      val serializer =
-        checkNotNull(SERIALIZERS[messageType]) { "Unrecognized message ID: $messageType" }
+      var parseResult =
+        if (messageType == GameData.ID) {
+          GameData.GameDataSerializer.read(buf, messageNumber, arrayBuffer)
+        } else {
+          val serializer =
+            when (messageType) {
+              CachedGameData.ID -> CachedGameData.CachedGameDataSerializer
+              else ->
+                checkNotNull(SERIALIZERS[messageType]) { "Unrecognized message ID: $messageType" }
+            }
 
-      var parseResult: Result<V086Message> = serializer.read(buf, messageNumber)
+          serializer.read(buf, messageNumber)
+        }
+
       parseResult.onSuccess { parseResult = it.validateMessageNumber() }
 
       val message =
