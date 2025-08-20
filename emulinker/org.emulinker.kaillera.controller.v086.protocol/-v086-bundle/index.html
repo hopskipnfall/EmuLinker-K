@@ -108,30 +108,11 @@
   <div class="breadcrumbs"><a href="../../../index.html">emulinker</a><span class="delimiter">/</span><a href="../index.html">org.emulinker.kaillera.controller.v086.protocol</a><span class="delimiter">/</span><span class="current">V086Bundle</span></div>
   <div class="cover ">
     <h1 class="cover"><span><span>V086Bundle</span></span></h1>
-    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="index.html">V086Bundle</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>messages<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-array/index.html">Array</a><span class="token operator">&lt;</span><a href="../-v086-message/index.html">V086Message</a><span class="token operator">?</span><span class="token operator">&gt;</span><span class="token punctuation">, </span></span><span class="parameter ">numToWrite<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token operator"> = </span>Int.MAX_VALUE</span></span><span class="token punctuation">)</span> : <a href="../../org.emulinker.kaillera.controller.messaging/-byte-buffer-message/index.html">ByteBufferMessage</a></div></div></div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">sealed </span><span class="token keyword">interface </span><a href="index.html">V086Bundle</a> : <a href="../../org.emulinker.kaillera.controller.messaging/-byte-buffer-message/index.html">ByteBufferMessage</a></div><h4 class="">Inheritors</h4><div class="table"><div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><a href="-single/index.html">Single</a></div></span></div><div></div></div></div><div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><a href="-multi/index.html">Multi</a></div></span></div><div></div></div></div></div></div></div>
   </div>
   <div class="tabbedcontent">
     <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION">Members</button></div>
     <div class="tabs-section-body">
-      <div data-togglable="CONSTRUCTOR">
-        <h2 class="">Constructors</h2>
-        <div class="table"><a data-name="587462362%2FConstructors%2F-1834219614" anchor-label="V086Bundle" id="587462362%2FConstructors%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-togglable="CONSTRUCTOR" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
-            <div class="main-subrow keyValue ">
-              <div class=""><span class="inline-flex">
-                  <div><a href="-v086-bundle.html"><span><span>V086Bundle</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="587462362%2FConstructors%2F-1834219614"></span>
-                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
-                  </span></span></div>
-              <div>
-                <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">constructor</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">messages<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-array/index.html">Array</a><span class="token operator">&lt;</span><a href="../-v086-message/index.html">V086Message</a><span class="token operator">?</span><span class="token operator">&gt;</span><span class="token punctuation">, </span></span><span class="parameter ">numToWrite<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token operator"> = </span>Int.MAX_VALUE</span></span><span class="token punctuation">)</span></div></div></div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
       <div data-togglable="TYPE">
         <h2 class="">Types</h2>
         <div class="table"><a data-name="-541854705%2FClasslikes%2F-1834219614" anchor-label="Companion" id="-541854705%2FClasslikes%2F-1834219614" data-filterable-set=":emulinker/main"></a>
@@ -149,51 +130,51 @@
               </div>
             </div>
           </div>
+<a data-name="-990305406%2FClasslikes%2F-1834219614" anchor-label="Multi" id="-990305406%2FClasslikes%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-multi/index.html"><span><span>Multi</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-990305406%2FClasslikes%2F-1834219614"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-multi/index.html">Multi</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>messages<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-array/index.html">Array</a><span class="token operator">&lt;</span><a href="../-v086-message/index.html">V086Message</a><span class="token operator">?</span><span class="token operator">&gt;</span><span class="token punctuation">, </span></span><span class="parameter ">numToWrite<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token operator"> = </span>Int.MAX_VALUE</span></span><span class="token punctuation">)</span> : <a href="index.html">V086Bundle</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-188399681%2FClasslikes%2F-1834219614" anchor-label="Single" id="-188399681%2FClasslikes%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-single/index.html"><span><span>Single</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-188399681%2FClasslikes%2F-1834219614"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.jvm/-jvm-inline/index.html"><span class="token annotation builtin">JvmInline</span></a></div></div><span class="token keyword">value </span><span class="token keyword">class </span><a href="-single/index.html">Single</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>message<span class="token operator">: </span><a href="../-v086-message/index.html">V086Message</a></span></span><span class="token punctuation">)</span> : <a href="index.html">V086Bundle</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
       <div data-togglable="PROPERTY">
         <h2 class="">Properties</h2>
-        <div class="table"><a data-name="-1766530887%2FProperties%2F-1834219614" anchor-label="bodyBytesPlusMessageIdType" id="-1766530887%2FProperties%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+        <div class="table"><a data-name="-1792002176%2FProperties%2F-1834219614" anchor-label="bodyBytesPlusMessageIdType" id="-1792002176%2FProperties%2F-1834219614" data-filterable-set=":emulinker/main"></a>
           <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
-                  <div><a href="body-bytes-plus-message-id-type.html"><span>body</span><wbr></wbr><span>Bytes</span><wbr></wbr><span>Plus</span><wbr></wbr><span>Message</span><wbr></wbr><span>Id</span><wbr></wbr><span><span>Type</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1766530887%2FProperties%2F-1834219614"></span>
+                  <div><a href="../../org.emulinker.kaillera.controller.messaging/-byte-buffer-message/body-bytes-plus-message-id-type.html"><span>body</span><wbr></wbr><span>Bytes</span><wbr></wbr><span>Plus</span><wbr></wbr><span>Message</span><wbr></wbr><span>Id</span><wbr></wbr><span><span>Type</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1792002176%2FProperties%2F-1834219614"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">var </span><a href="body-bytes-plus-message-id-type.html">bodyBytesPlusMessageIdType</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a></div></div></div>
-                </div>
-              </div>
-            </div>
-          </div>
-<a data-name="-1151769722%2FProperties%2F-1834219614" anchor-label="messages" id="-1151769722%2FProperties%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
-            <div class="main-subrow keyValue ">
-              <div class=""><span class="inline-flex">
-                  <div><a href="messages.html"><span><span>messages</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1151769722%2FProperties%2F-1834219614"></span>
-                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
-                  </span></span></div>
-              <div>
-                <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="messages.html">messages</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-array/index.html">Array</a><span class="token operator">&lt;</span><a href="../-v086-message/index.html">V086Message</a><span class="token operator">?</span><span class="token operator">&gt;</span></div></div></div>
-                </div>
-              </div>
-            </div>
-          </div>
-<a data-name="-1138805418%2FProperties%2F-1834219614" anchor-label="numMessages" id="-1138805418%2FProperties%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
-            <div class="main-subrow keyValue ">
-              <div class=""><span class="inline-flex">
-                  <div><a href="num-messages.html"><span>num</span><wbr></wbr><span><span>Messages</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1138805418%2FProperties%2F-1834219614"></span>
-                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
-                  </span></span></div>
-              <div>
-                <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">var </span><a href="num-messages.html">numMessages</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">val </span><a href="../../org.emulinker.kaillera.controller.messaging/-byte-buffer-message/body-bytes-plus-message-id-type.html">bodyBytesPlusMessageIdType</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a></div></div></div>
                 </div>
               </div>
             </div>
@@ -202,47 +183,17 @@
       </div>
       <div data-togglable="FUNCTION">
         <h2 class="">Functions</h2>
-        <div class="table"><a data-name="1009938334%2FFunctions%2F-1834219614" anchor-label="toBuffer" id="1009938334%2FFunctions%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+        <div class="table"><a data-name="2147226383%2FFunctions%2F-1834219614" anchor-label="writeTo" id="2147226383%2FFunctions%2F-1834219614" data-filterable-set=":emulinker/main"></a>
           <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
-                  <div><a href="../../org.emulinker.kaillera.controller.messaging/-byte-buffer-message/to-buffer.html"><span>to</span><wbr></wbr><span><span>Buffer</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1009938334%2FFunctions%2F-1834219614"></span>
+                  <div><a href="../../org.emulinker.kaillera.controller.messaging/-byte-buffer-message/write-to.html"><span>write</span><wbr></wbr><span><span>To</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="2147226383%2FFunctions%2F-1834219614"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="../../org.emulinker.kaillera.controller.messaging/-byte-buffer-message/to-buffer.html"><span class="token function"><strike>toBuffer</strike></span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/nio/ByteBuffer.html">ByteBuffer</a></div></div></div>
-                </div>
-              </div>
-            </div>
-          </div>
-<a data-name="1867486822%2FFunctions%2F-1834219614" anchor-label="toString" id="1867486822%2FFunctions%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
-            <div class="main-subrow keyValue ">
-              <div class=""><span class="inline-flex">
-                  <div><a href="to-string.html"><span>to</span><wbr></wbr><span><span>String</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1867486822%2FFunctions%2F-1834219614"></span>
-                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
-                  </span></span></div>
-              <div>
-                <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">fun </span><a href="to-string.html"><span class="token function">toString</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></div></div></div>
-                </div>
-              </div>
-            </div>
-          </div>
-<a data-name="-1451003331%2FFunctions%2F-1834219614" anchor-label="writeTo" id="-1451003331%2FFunctions%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
-            <div class="main-subrow keyValue ">
-              <div class=""><span class="inline-flex">
-                  <div><a href="write-to.html"><span>write</span><wbr></wbr><span><span>To</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1451003331%2FFunctions%2F-1834219614"></span>
-                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
-                  </span></span></div>
-              <div>
-                <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">fun </span><a href="write-to.html"><span class="token function">writeTo</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">buffer<span class="token operator">: </span><span data-unresolved-link="io.netty.buffer/ByteBuf///PointingToDeclaration/">ByteBuf</span></span></span><span class="token punctuation">)</span></div><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">fun </span><a href="write-to.html"><span class="token function">writeTo</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">buffer<span class="token operator">: </span><a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/nio/ByteBuffer.html">ByteBuffer</a></span></span><span class="token punctuation">)</span></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">fun </span><a href="../../org.emulinker.kaillera.controller.messaging/-byte-buffer-message/write-to.html"><span class="token function">writeTo</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">buffer<span class="token operator">: </span><span data-unresolved-link="io.netty.buffer/ByteBuf///PointingToDeclaration/">ByteBuf</span></span></span><span class="token punctuation">)</span></div><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">fun </span><a href="../../org.emulinker.kaillera.controller.messaging/-byte-buffer-message/write-to.html"><span class="token function">writeTo</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">buffer<span class="token operator">: </span><a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/nio/ByteBuffer.html">ByteBuffer</a></span></span><span class="token punctuation">)</span></div></div></div>
                 </div>
               </div>
             </div>

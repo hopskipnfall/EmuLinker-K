@@ -145,12 +145,8 @@ $dokka.location:org.emulinker.kaillera.controller.connectcontroller.protocol/Req
 $dokka.location:org.emulinker.kaillera.controller.connectcontroller.protocol/RequestPrivateKailleraPortResponse/writeTo/#io.netty.buffer.ByteBuf/PointingToDeclaration/emulinker/org.emulinker.kaillera.controller.connectcontroller.protocol/-request-private-kaillera-port-response/write-to.html
 $dokka.location:org.emulinker.kaillera.controller.connectcontroller.protocol/RequestPrivateKailleraPortResponse/writeTo/#java.nio.ByteBuffer/PointingToDeclaration/emulinker/org.emulinker.kaillera.controller.connectcontroller.protocol/-request-private-kaillera-port-response/write-to.html
 $dokka.location:org.emulinker.kaillera.controller.messaging////PointingToDeclaration/emulinker/org.emulinker.kaillera.controller.messaging/index.html
-$dokka.location:org.emulinker.kaillera.controller.messaging/ByteBufferMessage.Companion///PointingToDeclaration/emulinker/org.emulinker.kaillera.controller.messaging/-byte-buffer-message/-companion/index.html
-$dokka.location:org.emulinker.kaillera.controller.messaging/ByteBufferMessage.Companion/getBuffer/#kotlin.Int/PointingToDeclaration/emulinker/org.emulinker.kaillera.controller.messaging/-byte-buffer-message/-companion/get-buffer.html
 $dokka.location:org.emulinker.kaillera.controller.messaging/ByteBufferMessage///PointingToDeclaration/emulinker/org.emulinker.kaillera.controller.messaging/-byte-buffer-message/index.html
-$dokka.location:org.emulinker.kaillera.controller.messaging/ByteBufferMessage/ByteBufferMessage/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.controller.messaging/-byte-buffer-message/-byte-buffer-message.html
 $dokka.location:org.emulinker.kaillera.controller.messaging/ByteBufferMessage/bodyBytesPlusMessageIdType/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.controller.messaging/-byte-buffer-message/body-bytes-plus-message-id-type.html
-$dokka.location:org.emulinker.kaillera.controller.messaging/ByteBufferMessage/toBuffer/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.controller.messaging/-byte-buffer-message/to-buffer.html
 $dokka.location:org.emulinker.kaillera.controller.messaging/ByteBufferMessage/writeTo/#io.netty.buffer.ByteBuf/PointingToDeclaration/emulinker/org.emulinker.kaillera.controller.messaging/-byte-buffer-message/write-to.html
 $dokka.location:org.emulinker.kaillera.controller.messaging/ByteBufferMessage/writeTo/#java.nio.ByteBuffer/PointingToDeclaration/emulinker/org.emulinker.kaillera.controller.messaging/-byte-buffer-message/write-to.html
 $dokka.location:org.emulinker.kaillera.controller.messaging/MessageFormatException///PointingToDeclaration/emulinker/org.emulinker.kaillera.controller.messaging/-message-format-exception/index.html
@@ -802,14 +798,22 @@ $dokka.location:org.emulinker.kaillera.controller.v086.protocol/UserJoined/write
 $dokka.location:org.emulinker.kaillera.controller.v086.protocol/V086Bundle.Companion///PointingToDeclaration/emulinker/org.emulinker.kaillera.controller.v086.protocol/-v086-bundle/-companion/index.html
 $dokka.location:org.emulinker.kaillera.controller.v086.protocol/V086Bundle.Companion/parse/#io.netty.buffer.ByteBuf#kotlin.Int#org.emulinker.util.CircularVariableSizeByteArrayBuffer?/PointingToDeclaration/emulinker/org.emulinker.kaillera.controller.v086.protocol/-v086-bundle/-companion/parse.html
 $dokka.location:org.emulinker.kaillera.controller.v086.protocol/V086Bundle.Companion/parse/#java.nio.ByteBuffer#kotlin.Int#org.emulinker.util.CircularVariableSizeByteArrayBuffer?/PointingToDeclaration/emulinker/org.emulinker.kaillera.controller.v086.protocol/-v086-bundle/-companion/parse.html
+$dokka.location:org.emulinker.kaillera.controller.v086.protocol/V086Bundle.Multi///PointingToDeclaration/emulinker/org.emulinker.kaillera.controller.v086.protocol/-v086-bundle/-multi/index.html
+$dokka.location:org.emulinker.kaillera.controller.v086.protocol/V086Bundle.Multi/Multi/#kotlin.Array[org.emulinker.kaillera.controller.v086.protocol.V086Message?]#kotlin.Int/PointingToDeclaration/emulinker/org.emulinker.kaillera.controller.v086.protocol/-v086-bundle/-multi/-multi.html
+$dokka.location:org.emulinker.kaillera.controller.v086.protocol/V086Bundle.Multi/bodyBytesPlusMessageIdType/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.controller.v086.protocol/-v086-bundle/-multi/body-bytes-plus-message-id-type.html
+$dokka.location:org.emulinker.kaillera.controller.v086.protocol/V086Bundle.Multi/messages/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.controller.v086.protocol/-v086-bundle/-multi/messages.html
+$dokka.location:org.emulinker.kaillera.controller.v086.protocol/V086Bundle.Multi/numMessages/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.controller.v086.protocol/-v086-bundle/-multi/num-messages.html
+$dokka.location:org.emulinker.kaillera.controller.v086.protocol/V086Bundle.Multi/toString/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.controller.v086.protocol/-v086-bundle/-multi/to-string.html
+$dokka.location:org.emulinker.kaillera.controller.v086.protocol/V086Bundle.Multi/writeTo/#io.netty.buffer.ByteBuf/PointingToDeclaration/emulinker/org.emulinker.kaillera.controller.v086.protocol/-v086-bundle/-multi/write-to.html
+$dokka.location:org.emulinker.kaillera.controller.v086.protocol/V086Bundle.Multi/writeTo/#java.nio.ByteBuffer/PointingToDeclaration/emulinker/org.emulinker.kaillera.controller.v086.protocol/-v086-bundle/-multi/write-to.html
+$dokka.location:org.emulinker.kaillera.controller.v086.protocol/V086Bundle.Single///PointingToDeclaration/emulinker/org.emulinker.kaillera.controller.v086.protocol/-v086-bundle/-single/index.html
+$dokka.location:org.emulinker.kaillera.controller.v086.protocol/V086Bundle.Single/Single/#org.emulinker.kaillera.controller.v086.protocol.V086Message/PointingToDeclaration/emulinker/org.emulinker.kaillera.controller.v086.protocol/-v086-bundle/-single/-single.html
+$dokka.location:org.emulinker.kaillera.controller.v086.protocol/V086Bundle.Single/bodyBytesPlusMessageIdType/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.controller.v086.protocol/-v086-bundle/-single/body-bytes-plus-message-id-type.html
+$dokka.location:org.emulinker.kaillera.controller.v086.protocol/V086Bundle.Single/message/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.controller.v086.protocol/-v086-bundle/-single/message.html
+$dokka.location:org.emulinker.kaillera.controller.v086.protocol/V086Bundle.Single/toString/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.controller.v086.protocol/-v086-bundle/-single/to-string.html
+$dokka.location:org.emulinker.kaillera.controller.v086.protocol/V086Bundle.Single/writeTo/#io.netty.buffer.ByteBuf/PointingToDeclaration/emulinker/org.emulinker.kaillera.controller.v086.protocol/-v086-bundle/-single/write-to.html
+$dokka.location:org.emulinker.kaillera.controller.v086.protocol/V086Bundle.Single/writeTo/#java.nio.ByteBuffer/PointingToDeclaration/emulinker/org.emulinker.kaillera.controller.v086.protocol/-v086-bundle/-single/write-to.html
 $dokka.location:org.emulinker.kaillera.controller.v086.protocol/V086Bundle///PointingToDeclaration/emulinker/org.emulinker.kaillera.controller.v086.protocol/-v086-bundle/index.html
-$dokka.location:org.emulinker.kaillera.controller.v086.protocol/V086Bundle/V086Bundle/#kotlin.Array[org.emulinker.kaillera.controller.v086.protocol.V086Message?]#kotlin.Int/PointingToDeclaration/emulinker/org.emulinker.kaillera.controller.v086.protocol/-v086-bundle/-v086-bundle.html
-$dokka.location:org.emulinker.kaillera.controller.v086.protocol/V086Bundle/bodyBytesPlusMessageIdType/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.controller.v086.protocol/-v086-bundle/body-bytes-plus-message-id-type.html
-$dokka.location:org.emulinker.kaillera.controller.v086.protocol/V086Bundle/messages/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.controller.v086.protocol/-v086-bundle/messages.html
-$dokka.location:org.emulinker.kaillera.controller.v086.protocol/V086Bundle/numMessages/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.controller.v086.protocol/-v086-bundle/num-messages.html
-$dokka.location:org.emulinker.kaillera.controller.v086.protocol/V086Bundle/toString/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.controller.v086.protocol/-v086-bundle/to-string.html
-$dokka.location:org.emulinker.kaillera.controller.v086.protocol/V086Bundle/writeTo/#io.netty.buffer.ByteBuf/PointingToDeclaration/emulinker/org.emulinker.kaillera.controller.v086.protocol/-v086-bundle/write-to.html
-$dokka.location:org.emulinker.kaillera.controller.v086.protocol/V086Bundle/writeTo/#java.nio.ByteBuffer/PointingToDeclaration/emulinker/org.emulinker.kaillera.controller.v086.protocol/-v086-bundle/write-to.html
 $dokka.location:org.emulinker.kaillera.controller.v086.protocol/V086BundleFormatException///PointingToDeclaration/emulinker/org.emulinker.kaillera.controller.v086.protocol/-v086-bundle-format-exception/index.html
 $dokka.location:org.emulinker.kaillera.controller.v086.protocol/V086BundleFormatException/V086BundleFormatException/#kotlin.String?#kotlin.Throwable?/PointingToDeclaration/emulinker/org.emulinker.kaillera.controller.v086.protocol/-v086-bundle-format-exception/-v086-bundle-format-exception.html
 $dokka.location:org.emulinker.kaillera.controller.v086.protocol/V086Message.Companion///PointingToDeclaration/emulinker/org.emulinker.kaillera.controller.v086.protocol/-v086-message/-companion/index.html
@@ -1425,11 +1429,6 @@ $dokka.location:org.emulinker.kaillera.pico/NewAppComponent/kailleraServerContro
 $dokka.location:org.emulinker.kaillera.pico/NewAppComponent/masterListUpdater/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.pico/-new-app-component/master-list-updater.html
 $dokka.location:org.emulinker.kaillera.pico/NewAppComponent/metricRegistry/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.pico/-new-app-component/metric-registry.html
 $dokka.location:org.emulinker.kaillera.pico/NewAppComponent/releaseInfo/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.pico/-new-app-component/release-info.html
-$dokka.location:org.emulinker.kaillera.relay////PointingToDeclaration/emulinker/org.emulinker.kaillera.relay/index.html
-$dokka.location:org.emulinker.kaillera.relay/V086Relay.Companion///PointingToDeclaration/emulinker/org.emulinker.kaillera.relay/-v086-relay/-companion/index.html
-$dokka.location:org.emulinker.kaillera.relay/V086Relay///PointingToDeclaration/emulinker/org.emulinker.kaillera.relay/-v086-relay/index.html
-$dokka.location:org.emulinker.kaillera.relay/V086Relay/V086Relay/#kotlin.Int#java.net.InetSocketAddress/PointingToDeclaration/emulinker/org.emulinker.kaillera.relay/-v086-relay/-v086-relay.html
-$dokka.location:org.emulinker.kaillera.relay/V086Relay/toString/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.relay/-v086-relay/to-string.html
 $dokka.location:org.emulinker.kaillera.release////PointingToDeclaration/emulinker/org.emulinker.kaillera.release/index.html
 $dokka.location:org.emulinker.kaillera.release/ReleaseInfo///PointingToDeclaration/emulinker/org.emulinker.kaillera.release/-release-info/index.html
 $dokka.location:org.emulinker.kaillera.release/ReleaseInfo/ReleaseInfo/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.release/-release-info/-release-info.html
@@ -2368,7 +2367,6 @@ org.emulinker.kaillera.model.event
 org.emulinker.kaillera.model.exception
 org.emulinker.kaillera.model.impl
 org.emulinker.kaillera.pico
-org.emulinker.kaillera.relay
 org.emulinker.kaillera.release
 org.emulinker.net
 org.emulinker.proto
