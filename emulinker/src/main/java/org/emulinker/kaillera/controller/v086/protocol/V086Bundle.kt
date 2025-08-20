@@ -151,7 +151,7 @@ sealed interface V086Bundle : ByteBufferMessage {
       if (messageCount <= 0 || messageCount > 32) {
         throw V086BundleFormatException("Invalid message count: $messageCount")
       }
-      if (buffer.readableBytes() < 1 + messageCount * 6) {
+      if (buffer.readableBytes() < messageCount * 6) {
         throw V086BundleFormatException(
           "Invalid bundle length: ${buffer.readableBytes()} pos = ${buffer.readerIndex()} messageCount=$messageCount"
         )

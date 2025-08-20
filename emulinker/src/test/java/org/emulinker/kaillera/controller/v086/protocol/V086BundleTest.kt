@@ -268,6 +268,16 @@ class V086BundleTestShiftJis {
             ),
           lastMessageNumber = -1,
         ),
+        Params(
+          hexString = "03,07,00,02,00,09,00,06,00,02,00,09,00,05,00,02,00,09,00",
+          expectedMessages =
+            listOf(
+              KeepAlive(messageNumber = 7, value = 0),
+              KeepAlive(messageNumber = 6, value = 0),
+              KeepAlive(messageNumber = 5, value = 0),
+            ),
+          lastMessageNumber = -1,
+        ),
       )
     }
   }
