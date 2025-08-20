@@ -152,19 +152,22 @@ class V086ClientHandler(
     combinedKailleraController.clientHandlers.remove(remoteSocketAddress)
   }
 
+  override fun toString(): String = "[V086ClientHandler $user]"
+
   private fun handleReceivedInternal(buffer: ByteBuf) {
     val inBundle: V086Bundle =
       if (CompiledFlags.USE_BYTEBUF_INSTEAD_OF_BYTEBUFFER) {
         try {
           parse(buffer, lastMessageNumber, user.circularVariableSizeByteArrayBuffer)
         } catch (e: ParseException) {
-          // TODO(nue): datagram.packet.toString() doesn't provide any useful information.
+          buffer.resetReaderIndex()
           logger
             .atWarning()
             .withCause(e)
             .log("%s failed to parse: %s", this, buffer.dumpToByteArray().toHexString())
           null
         } catch (e: V086BundleFormatException) {
+          buffer.resetReaderIndex()
           logger
             .atWarning()
             .withCause(e)
