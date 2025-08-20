@@ -1,10 +1,8 @@
 package org.emulinker.kaillera.controller.v086.protocol
 
-import io.ktor.utils.io.core.remaining
 import io.netty.buffer.ByteBuf
 import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.v086.V086Utils
-import org.emulinker.util.EmuUtil
 
 /**
  * Message sent by both client and server to indicate that they are ready for the game to start.
@@ -41,7 +39,9 @@ data class AllReady(override val messageNumber: Int) : V086Message(), ServerMess
 
       val b = buffer.readByte()
       if (b.toInt() != 0x00) {
-        return parseFailure("Invalid All Ready Signal format: byte 0 = " + EmuUtil.byteToHex(b))
+        return parseFailure(
+          "Invalid All Ready Signal format: byte 0 = " + b.toHexString(HexFormat.UpperCase)
+        )
       }
       return Result.success(AllReady(messageNumber))
     }
@@ -53,7 +53,9 @@ data class AllReady(override val messageNumber: Int) : V086Message(), ServerMess
 
       val b = buffer.get()
       if (b.toInt() != 0x00) {
-        return parseFailure("Invalid All Ready Signal format: byte 0 = " + EmuUtil.byteToHex(b))
+        return parseFailure(
+          "Invalid All Ready Signal format: byte 0 = " + b.toHexString(HexFormat.UpperCase)
+        )
       }
       return Result.success(AllReady(messageNumber))
     }

@@ -1,6 +1,5 @@
 package org.emulinker.kaillera.controller.v086.protocol
 
-import io.ktor.utils.io.core.remaining
 import io.netty.buffer.ByteBuf
 import java.nio.ByteBuffer
 import kotlin.math.roundToInt
@@ -95,7 +94,7 @@ data class PlayerInformation(override val messageNumber: Int, val players: List<
       val b = buffer.readByte()
       if (b.toInt() != 0x00) {
         throw MessageFormatException(
-          "Invalid Player Information format: byte 0 = ${EmuUtil.byteToHex(b)}"
+          "Invalid Player Information format: byte 0 = ${b.toHexString()}"
         )
       }
       val numPlayers = buffer.readIntLE()
@@ -127,7 +126,7 @@ data class PlayerInformation(override val messageNumber: Int, val players: List<
       val b = buffer.get()
       if (b.toInt() != 0x00) {
         throw MessageFormatException(
-          "Invalid Player Information format: byte 0 = ${EmuUtil.byteToHex(b)}"
+          "Invalid Player Information format: byte 0 = ${b.toHexString(HexFormat.UpperCase)}"
         )
       }
       val numPlayers = buffer.int

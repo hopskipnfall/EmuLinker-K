@@ -4,7 +4,6 @@ import io.netty.buffer.ByteBuf
 import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086Utils
-import org.emulinker.util.EmuUtil
 import org.emulinker.util.UnsignedUtil.getUnsignedInt
 import org.emulinker.util.UnsignedUtil.putUnsignedInt
 
@@ -34,7 +33,7 @@ sealed class Ack : V086Message() {
       val b = buffer.readByte()
       if (b.toInt() != 0x00) {
         throw MessageFormatException(
-          "Invalid Client to Server ACK format: byte 0 = ${EmuUtil.byteToHex(b)}"
+          "Invalid Client to Server ACK format: byte 0 = ${b.toHexString(HexFormat.UpperCase)}"
         )
       }
       // We skip the comparisons for time.
@@ -52,7 +51,7 @@ sealed class Ack : V086Message() {
       val b = buffer.get()
       if (b.toInt() != 0x00) {
         throw MessageFormatException(
-          "Invalid Client to Server ACK format: byte 0 = ${EmuUtil.byteToHex(b)}"
+          "Invalid Client to Server ACK format: byte 0 = ${b.toHexString(HexFormat.UpperCase)}"
         )
       }
       // We skip the comparisons for time.
@@ -89,7 +88,7 @@ sealed class Ack : V086Message() {
       }
       val b = buffer.readByte()
       if (b.toInt() != 0x00) {
-        throw MessageFormatException("byte 0 = " + EmuUtil.byteToHex(b))
+        throw MessageFormatException("byte 0 = " + b.toHexString(HexFormat.UpperCase))
       }
       val val1 = buffer.readIntLE()
       val val2 = buffer.readIntLE()
@@ -108,7 +107,7 @@ sealed class Ack : V086Message() {
       }
       val b = buffer.get()
       if (b.toInt() != 0x00) {
-        throw MessageFormatException("byte 0 = " + EmuUtil.byteToHex(b))
+        throw MessageFormatException("byte 0 = " + b.toHexString(HexFormat.UpperCase))
       }
       val val1 = buffer.getUnsignedInt()
       val val2 = buffer.getUnsignedInt()

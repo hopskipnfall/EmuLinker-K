@@ -6,7 +6,7 @@ import io.netty.buffer.ByteBuf
 import io.netty.channel.socket.DatagramPacket
 import java.net.InetSocketAddress
 import java.nio.ByteBuffer
-import java.nio.ByteOrder
+import java.nio.ByteOrder.LITTLE_ENDIAN
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.nanoseconds
 import org.emulinker.config.RuntimeFlags
@@ -34,7 +34,7 @@ import org.emulinker.kaillera.model.event.StopFlagEvent
 import org.emulinker.kaillera.model.event.UserEvent
 import org.emulinker.kaillera.pico.CompiledFlags
 import org.emulinker.util.EmuUtil
-import org.emulinker.util.EmuUtil.dumpBufferFromBeginning
+import org.emulinker.util.EmuUtil.dumpToByteArray
 import org.emulinker.util.EmuUtil.timeKt
 import org.emulinker.util.GameDataCache
 import org.emulinker.util.GameDataCacheImpl
@@ -156,13 +156,13 @@ class V086ClientHandler(
     val inBundle: V086Bundle =
       if (CompiledFlags.USE_BYTEBUF_INSTEAD_OF_BYTEBUFFER) {
         try {
-          parse(buffer, lastMessageNumber)
+          parse(buffer, lastMessageNumber, user.circularVariableSizeByteArrayBuffer)
         } catch (e: ParseException) {
           // TODO(nue): datagram.packet.toString() doesn't provide any useful information.
           logger
             .atWarning()
             .withCause(e)
-            .log("%s failed to parse: %s", this, buffer.nioBuffer().dumpBufferFromBeginning())
+            .log("%s failed to parse: %s", this, buffer.dumpToByteArray().toHexString())
           null
         } catch (e: V086BundleFormatException) {
           logger
@@ -171,26 +171,20 @@ class V086ClientHandler(
             .log(
               "%s received invalid message bundle: %s",
               this,
-              buffer.nioBuffer().dumpBufferFromBeginning(),
+              buffer.dumpToByteArray().toHexString(),
             )
           null
         } catch (e: MessageFormatException) {
           logger
             .atWarning()
             .withCause(e)
-            .log(
-              "%s received invalid message: %s}",
-              this,
-              buffer.nioBuffer().dumpBufferFromBeginning(),
-            )
+            .log("%s received invalid message: %s}", this, buffer.dumpToByteArray().toHexString())
           null
-        } finally {
-          //             TODO:   datagram.packet.release()
         }
       } else {
-        val newBuffer: ByteBuffer = buffer.nioBuffer()
+        val newBuffer: ByteBuffer = buffer.nioBuffer().order(LITTLE_ENDIAN)
         try {
-          parse(newBuffer, lastMessageNumber, arrayBuffer = null)
+          parse(newBuffer, lastMessageNumber, user.circularVariableSizeByteArrayBuffer)
         } catch (e: ParseException) {
           newBuffer.position(0)
           logger
@@ -363,11 +357,7 @@ class V086ClientHandler(
     synchronized(sendMutex) {
       var numToSend = numToSend
 
-      val buf =
-        combinedKailleraController.nettyChannel
-          .alloc()
-          .directBuffer(flags.v086BufferSize)
-          .order(ByteOrder.LITTLE_ENDIAN)
+      val buf = combinedKailleraController.nettyChannel.alloc().directBuffer(flags.v086BufferSize)
       numToSend = lastMessageBuffer.fill(outMessages, numToSend)
       val outBundle = V086Bundle(outMessages, numToSend)
       stripFromProdBinary { logger.atFinest().log("<- TO P%d: (RESEND)", user.id) }

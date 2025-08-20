@@ -1,6 +1,5 @@
 package org.emulinker.kaillera.controller.v086.protocol
 
-import io.ktor.utils.io.core.remaining
 import io.netty.buffer.ByteBuf
 import java.nio.ByteBuffer
 import kotlin.math.roundToInt
@@ -15,7 +14,6 @@ import org.emulinker.kaillera.model.GameStatus
 import org.emulinker.kaillera.model.UserStatus
 import org.emulinker.util.EmuUtil
 import org.emulinker.util.EmuUtil.readString
-import org.emulinker.util.EmuUtil.toHexString
 import org.emulinker.util.EmuUtil.toMillisDouble
 import org.emulinker.util.UnsignedUtil.getUnsignedInt
 import org.emulinker.util.UnsignedUtil.getUnsignedShort

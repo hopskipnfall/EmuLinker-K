@@ -125,7 +125,7 @@ class CombinedKailleraController(
         if (CompiledFlags.USE_BYTEBUF_INSTEAD_OF_BYTEBUFFER) {
           ConnectMessage.parse(buffer)
         } else {
-          ConnectMessage.parse(buffer.nioBuffer())
+          ConnectMessage.parse(buffer.nioBuffer().order(ByteOrder.LITTLE_ENDIAN))
         }
       if (connectMessageResult.isSuccess) {
         when (val connectMessage = connectMessageResult.getOrThrow()) {
@@ -204,7 +204,7 @@ class CombinedKailleraController(
   }
 
   override fun channelRead0(ctx: ChannelHandlerContext, packet: DatagramPacket) {
-    handleReceived(packet.content().order(ByteOrder.LITTLE_ENDIAN), packet.sender(), ctx)
+    handleReceived(packet.content(), packet.sender(), ctx)
   }
 
   override fun channelRegistered(ctx: ChannelHandlerContext) {

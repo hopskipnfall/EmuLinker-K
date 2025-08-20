@@ -1,11 +1,9 @@
 package org.emulinker.kaillera.controller.v086.protocol
 
-import io.ktor.utils.io.core.remaining
 import io.netty.buffer.ByteBuf
 import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086Utils
-import org.emulinker.util.EmuUtil
 import org.emulinker.util.UnsignedUtil.getUnsignedShort
 import org.emulinker.util.UnsignedUtil.putUnsignedShort
 
@@ -61,7 +59,9 @@ constructor(
         return parseFailure("Failed byte count validation!")
       }
       val b = buffer.readByte()
-      require(b.toInt() == 0x00) { "Invalid Game Status format: byte 0 = " + EmuUtil.byteToHex(b) }
+      require(b.toInt() == 0x00) {
+        "Invalid Game Status format: byte 0 = " + b.toHexString(HexFormat.UpperCase)
+      }
       val gameID = buffer.readShortLE().toInt()
       val val1 = buffer.readShortLE().toInt()
       val gameStatus = buffer.readByte()
@@ -84,7 +84,9 @@ constructor(
         return parseFailure("Failed byte count validation!")
       }
       val b = buffer.get()
-      require(b.toInt() == 0x00) { "Invalid Game Status format: byte 0 = " + EmuUtil.byteToHex(b) }
+      require(b.toInt() == 0x00) {
+        "Invalid Game Status format: byte 0 = " + b.toHexString(HexFormat.UpperCase)
+      }
       val gameID = buffer.getUnsignedShort()
       val val1 = buffer.getUnsignedShort()
       val gameStatus = buffer.get()
