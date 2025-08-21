@@ -3,9 +3,9 @@ package org.emulinker.kaillera.model
 import org.emulinker.kaillera.model.impl.KailleraGameImpl
 
 enum class UserStatus(val byteValue: Byte, private val readableName: String) {
-  PLAYING(0, "Playing"),
+  PLAYING(2, "Playing"),
   IDLE(1, "Idle"),
-  CONNECTING(2, "Connecting");
+  CONNECTING(0, "Connecting");
 
   override fun toString() = readableName
 
@@ -19,8 +19,8 @@ enum class UserStatus(val byteValue: Byte, private val readableName: String) {
 
 enum class GameStatus(val byteValue: Byte, private val readableName: String) {
   WAITING(0, "Waiting"),
-  SYNCHRONIZING(1, "Synchronizing"),
-  PLAYING(2, "Playing");
+  PLAYING(1, "Playing"),
+  SYNCHRONIZING(2, "Synchronizing");
 
   override fun toString() = readableName
 
