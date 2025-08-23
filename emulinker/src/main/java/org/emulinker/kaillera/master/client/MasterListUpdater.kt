@@ -5,6 +5,7 @@ import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.master.StatsCollector
+import org.emulinker.monitoring.JfrEvent
 import org.emulinker.util.TaskScheduler
 
 class MasterListUpdater(
@@ -34,14 +35,26 @@ class MasterListUpdater(
           initialDelay = 10.seconds,
           period = LIST_REPORTING_INTERVAL,
         ) {
-          if (flags.touchEmulinker) emuLinkerMasterUpdateTask.reportStatus()
-          if (flags.touchKaillera) kailleraMasterUpdateTask.reportStatus()
+          val e = JfrEvent.MasterListCheckin()
+          e.begin()
+          try {
+            if (flags.touchEmulinker) emuLinkerMasterUpdateTask.reportStatus()
+            if (flags.touchKaillera) kailleraMasterUpdateTask.reportStatus()
+          } finally {
+            e.commit()
+          }
           statsCollector.clearStartedGamesList()
         }
     }
     serverCheckinJob =
       taskScheduler.scheduleRepeating(initialDelay = 10.seconds, period = CHECKIN_INTERVAL) {
-        serverCheckinTask.reportStatus()
+        val e = JfrEvent.ElkCheckin()
+        e.begin()
+        try {
+          serverCheckinTask.reportStatus()
+        } finally {
+          e.commit()
+        }
       }
   }
 

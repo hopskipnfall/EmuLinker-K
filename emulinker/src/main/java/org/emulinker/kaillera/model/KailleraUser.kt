@@ -23,6 +23,7 @@ import org.emulinker.kaillera.model.event.UserQuitEvent
 import org.emulinker.kaillera.model.event.UserQuitGameEvent
 import org.emulinker.kaillera.model.exception.*
 import org.emulinker.kaillera.model.impl.KailleraGameImpl
+import org.emulinker.monitoring.JfrEvent
 import org.emulinker.util.CircularVariableSizeByteArrayBuffer
 import org.emulinker.util.EmuLang
 import org.emulinker.util.TimeOffsetCache
@@ -44,6 +45,9 @@ class KailleraUser(
   private val clock: Clock,
 ) {
   var inStealthMode = false
+
+  private val loginJfrEvent: JfrEvent.UserLogin =
+    JfrEvent.UserLogin(userId = id, ip = connectSocketAddress.toString()).also { it.begin() }
 
   /** Example: "Project 64k 0.13 (01 Aug 2003)" */
   var clientType: String? = null
@@ -250,7 +254,11 @@ class KailleraUser(
   @Synchronized
   fun login(): Result<Unit> {
     updateLastActivity()
-    return server.login(this)
+    val result = server.login(this)
+    loginJfrEvent.username = name ?: ""
+    loginJfrEvent.successful = result.isSuccess
+    loginJfrEvent.commit()
+    return result
   }
 
   @Throws(ChatException::class, FloodException::class)
@@ -271,25 +279,28 @@ class KailleraUser(
   }
 
   @Throws(CreateGameException::class, FloodException::class)
-  fun createGame(romName: String?): KailleraGame? {
-    updateLastActivity()
-    if (server.getUser(id) == null) {
-      logger.atSevere().log("%s create game failed: User don't exist!", this)
-      return null
+  fun createGame(romName: String?): KailleraGame? =
+    JfrEvent.CreateGame().record {
+      updateLastActivity()
+      if (server.getUser(id) == null) {
+        logger.atSevere().log("%s create game failed: User don't exist!", this)
+        return null
+      }
+      if (status == UserStatus.PLAYING) {
+        logger.atWarning().log("%s create game failed: User status is Playing!", this)
+        throw CreateGameException(
+          EmuLang.getString("KailleraUserImpl.CreateGameErrorAlreadyInGame")
+        )
+      } else if (status == UserStatus.CONNECTING) {
+        logger.atWarning().log("%s create game failed: User status is Connecting!", this)
+        throw CreateGameException(
+          EmuLang.getString("KailleraUserImpl.CreateGameErrorNotFullyConnected")
+        )
+      }
+      val game = server.createGame(this, romName)
+      lastCreateGameTime = System.currentTimeMillis()
+      return game
     }
-    if (status == UserStatus.PLAYING) {
-      logger.atWarning().log("%s create game failed: User status is Playing!", this)
-      throw CreateGameException(EmuLang.getString("KailleraUserImpl.CreateGameErrorAlreadyInGame"))
-    } else if (status == UserStatus.CONNECTING) {
-      logger.atWarning().log("%s create game failed: User status is Connecting!", this)
-      throw CreateGameException(
-        EmuLang.getString("KailleraUserImpl.CreateGameErrorNotFullyConnected")
-      )
-    }
-    val game = server.createGame(this, romName)
-    lastCreateGameTime = System.currentTimeMillis()
-    return game
-  }
 
   @Synchronized
   @Throws(
@@ -298,11 +309,12 @@ class KailleraUser(
     QuitGameException::class,
     CloseGameException::class,
   )
-  fun quit(message: String?) {
-    updateLastActivity()
-    server.quit(this, message)
-    loggedIn = false
-  }
+  fun quit(message: String?) =
+    JfrEvent.QuitServer().record {
+      updateLastActivity()
+      server.quit(this, message)
+      loggedIn = false
+    }
 
   fun lagAttributedToUser(): Duration =
     (totalDriftNs - (totalDriftCache.getDelayedValue() ?: 0)).nanoseconds.absoluteValue
@@ -418,16 +430,17 @@ class KailleraUser(
 
   @Synchronized
   @Throws(StartGameException::class)
-  fun startGame() {
-    resetLag()
-    updateLastActivity()
-    val game = this.game
-    if (game == null) {
-      logger.atWarning().log("%s start game failed: Not in a game", this)
-      throw StartGameException(EmuLang.getString("KailleraUserImpl.StartGameErrorNotInGame"))
+  fun startGame() =
+    JfrEvent.GameStart(gameId = id).record {
+      resetLag()
+      updateLastActivity()
+      val game = this.game
+      if (game == null) {
+        logger.atWarning().log("%s start game failed: Not in a game", this)
+        throw StartGameException(EmuLang.getString("KailleraUserImpl.StartGameErrorNotInGame"))
+      }
+      game.start(this)
     }
-    game.start(this)
-  }
 
   @Synchronized
   @Throws(UserReadyException::class)
