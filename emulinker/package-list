@@ -2295,7 +2295,7 @@ $dokka.location:org.emulinker.util/ServerGameDataCache/size/#/PointingToDeclarat
 $dokka.location:org.emulinker.util/TaskScheduler///PointingToDeclaration/emulinker/org.emulinker.util/-task-scheduler/index.html
 $dokka.location:org.emulinker.util/TaskScheduler/TaskScheduler/#/PointingToDeclaration/emulinker/org.emulinker.util/-task-scheduler/-task-scheduler.html
 $dokka.location:org.emulinker.util/TaskScheduler/schedule/#kotlin.time.Duration#kotlin.Function0[kotlin.Unit]/PointingToDeclaration/emulinker/org.emulinker.util/-task-scheduler/schedule.html
-$dokka.location:org.emulinker.util/TaskScheduler/scheduleRepeating/#kotlin.time.Duration#kotlin.time.Duration#kotlin.Function0[kotlin.Unit]/PointingToDeclaration/emulinker/org.emulinker.util/-task-scheduler/schedule-repeating.html
+$dokka.location:org.emulinker.util/TaskScheduler/scheduleRepeating/#kotlin.time.Duration#kotlin.time.Duration#kotlin.String#kotlin.Function0[kotlin.Unit]/PointingToDeclaration/emulinker/org.emulinker.util/-task-scheduler/schedule-repeating.html
 $dokka.location:org.emulinker.util/TimeOffsetCache///PointingToDeclaration/emulinker/org.emulinker.util/-time-offset-cache/index.html
 $dokka.location:org.emulinker.util/TimeOffsetCache/TimeOffsetCache/#kotlin.time.Duration#kotlin.time.Duration/PointingToDeclaration/emulinker/org.emulinker.util/-time-offset-cache/-time-offset-cache.html
 $dokka.location:org.emulinker.util/TimeOffsetCache/clear/#/PointingToDeclaration/emulinker/org.emulinker.util/-time-offset-cache/clear.html
