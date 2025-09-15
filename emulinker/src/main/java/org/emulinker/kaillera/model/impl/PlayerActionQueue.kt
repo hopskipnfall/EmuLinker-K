@@ -45,13 +45,29 @@ class PlayerActionQueue(
   /** Adds "actions" at the [tail] position, and increments [tail]. */
   fun addActions(actions: VariableSizeByteArray) {
     if (!synced) return
-    for (i in actions.indices) {
-      // TODO(nue): Can probably optimize this a little with System.arraycopy or something.
-      data[tail] = actions[i]
-      // tail = ((tail + 1) % gameBufferSize);
-      tail++
-      if (tail == gameBufferSize) tail = 0
+
+    if (tail + actions.size <= gameBufferSize) {
+      // This can be done in one pass.
+      actions.writeDataOutTo(copyTo = data, writeAtIndex = tail, 0, actions.size)
+    } else {
+      // this has to be done in two steps because the array wraps around.
+      val initialReadSize = gameBufferSize - tail
+      actions.writeDataOutTo(
+        copyTo = data,
+        writeAtIndex = tail,
+        srcIndex = 0,
+        // Read the remaining bytes until the end.
+        writeLength = initialReadSize,
+      )
+      actions.writeDataOutTo(
+        copyTo = data,
+        writeAtIndex = 0,
+        srcIndex = initialReadSize,
+        // Read the remaining bytes until the end.
+        writeLength = actions.size - initialReadSize,
+      )
     }
+    tail = (tail + actions.size) % gameBufferSize
     lastTimeout = null
   }
 
@@ -91,20 +107,20 @@ class PlayerActionQueue(
   ) {
     if (readStartIndex + readLength <= gameBufferSize) {
       // This can be done in one pass.
-      writeTo.nativeCopyDataFrom(data, writeAtIndex, readStartIndex, readLength)
+      writeTo.importDataFrom(data, writeAtIndex, readStartIndex, readLength)
       return
     }
 
     // this has to be done in two steps because the array wraps around.
     val initialReadSize = gameBufferSize - readStartIndex
-    writeTo.nativeCopyDataFrom(
+    writeTo.importDataFrom(
       copyFrom = data,
       writeAtIndex,
       readStartIndex,
       // Read the remaining bytes until the end.
       readLength = initialReadSize,
     )
-    writeTo.nativeCopyDataFrom(
+    writeTo.importDataFrom(
       data,
       writeAtIndex = writeAtIndex + initialReadSize,
       readStartIndex = 0,

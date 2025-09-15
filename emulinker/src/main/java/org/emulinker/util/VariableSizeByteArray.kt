@@ -58,12 +58,7 @@ class VariableSizeByteArray(initialData: ByteArray = EMPTY_DATA) : Borrowable {
     bytes.fill(0x00, fromIndex, untilIndexExclusive)
   }
 
-  fun nativeCopyDataFrom(
-    copyFrom: ByteArray,
-    writeAtIndex: Int,
-    readStartIndex: Int,
-    readLength: Int,
-  ) {
+  fun importDataFrom(copyFrom: ByteArray, writeAtIndex: Int, readStartIndex: Int, readLength: Int) {
     require(writeAtIndex + readLength <= size) { "Write length out of bounds!" }
     System.arraycopy(
       /* src= */ copyFrom,
@@ -71,6 +66,17 @@ class VariableSizeByteArray(initialData: ByteArray = EMPTY_DATA) : Borrowable {
       /* dest= */ bytes,
       /* destPos= */ writeAtIndex,
       /* length= */ readLength,
+    )
+  }
+
+  fun writeDataOutTo(copyTo: ByteArray, writeAtIndex: Int, srcIndex: Int, writeLength: Int) {
+    require(srcIndex + writeLength <= size) { "Write length out of bounds!" }
+    System.arraycopy(
+      /* src= */ bytes,
+      /* srcPos= */ srcIndex,
+      /* dest= */ copyTo,
+      /* destPos= */ writeAtIndex,
+      /* length= */ writeLength,
     )
   }
 
