@@ -454,7 +454,11 @@ class AccessManager2(private val flags: RuntimeFlags, private val taskScheduler:
     loadAccess()
 
     timerTasks.add(
-      taskScheduler.scheduleRepeating(initialDelay = 1.minutes, period = 1.minutes) {
+      taskScheduler.scheduleRepeating(
+        initialDelay = 1.minutes,
+        period = 1.minutes,
+        taskName = "refresh DNS",
+      ) {
         logger.atFine().log("Refreshing DNS for all users and addresses")
         userList.forEach { it.refreshDNS() }
         addressList.forEach { it.refreshDNS() }

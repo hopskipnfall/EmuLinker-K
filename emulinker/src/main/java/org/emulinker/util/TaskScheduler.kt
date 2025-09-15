@@ -29,14 +29,18 @@ class TaskScheduler {
   fun scheduleRepeating(
     period: Duration,
     initialDelay: Duration = 0.seconds,
+    taskName: String,
     action: () -> Unit,
   ): TimerTask =
     timer.schedule(delay = initialDelay.inWholeMilliseconds, period = period.inWholeMilliseconds) {
       // Wrap the action in a try/catch to prevent exceptions from killing the timer.
       try {
+        logger.atFine().log("Starting scheduled task: %s", taskName)
         action()
       } catch (e: Exception) {
         logger.atSevere().withCause(e).log("Exception in scheduled task!")
+      } finally {
+        logger.atFine().log("Completed scheduled task: %s", taskName)
       }
     }
 
