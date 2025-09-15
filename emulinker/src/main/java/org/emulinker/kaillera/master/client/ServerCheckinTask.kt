@@ -73,6 +73,8 @@ class ServerCheckinTask(
     connection.setRequestMethod("POST")
     connection.setRequestProperty("Content-Type", "application/json")
     connection.setDoOutput(true) // idk if we need this
+    connection.connectTimeout = 2_000 // milliseconds
+    connection.readTimeout = 2_000 // milliseconds
 
     val request =
       CheckinRequest(
