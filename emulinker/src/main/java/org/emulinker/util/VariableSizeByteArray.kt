@@ -53,9 +53,30 @@ class VariableSizeByteArray(initialData: ByteArray = EMPTY_DATA) : Borrowable {
     System.arraycopy(this.bytes, 0, other.bytes, 0, size)
   }
 
+  /** Sets a range of values to zero. */
+  fun setZeroesForRange(fromIndex: Int, untilIndexExclusive: Int) {
+    bytes.fill(0x00, fromIndex, untilIndexExclusive)
+  }
+
+  fun nativeCopyDataFrom(
+    copyFrom: ByteArray,
+    writeAtIndex: Int,
+    readStartIndex: Int,
+    readLength: Int,
+  ) {
+    require(writeAtIndex + readLength <= size) { "Write length out of bounds!" }
+    System.arraycopy(
+      /* src= */ copyFrom,
+      /* srcPos= */ readStartIndex,
+      /* dest= */ bytes,
+      /* destPos= */ writeAtIndex,
+      /* length= */ readLength,
+    )
+  }
+
   fun clone(): VariableSizeByteArray = VariableSizeByteArray(bytes.clone())
 
-  val indices
+  val indices: IntRange
     get() = 0 until this.size
 
   operator fun get(index: Int): Byte = bytes[index]

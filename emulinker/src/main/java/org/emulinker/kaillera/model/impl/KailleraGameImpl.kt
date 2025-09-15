@@ -178,10 +178,7 @@ class KailleraGameImpl(
     get() = players.asSequence().filter { it.status == UserStatus.PLAYING }.count()
 
   private val synchedCount: Int
-    get() {
-      if (playerActionQueues == null) return 0
-      return playerActionQueues!!.count { it.synced }
-    }
+    get() = playerActionQueues?.count { it.synced } ?: 0
 
   private fun addEventForAllPlayers(event: GameEvent) {
     for (player in players) player.queueEvent(event)
@@ -460,24 +457,24 @@ class KailleraGameImpl(
     logger.atInfo().log("%s started: %s", user, this)
     status = GameStatus.SYNCHRONIZING
     autoFireDetector.start(players.size)
-    val actionQueueBuilder: Array<PlayerActionQueue?> = arrayOfNulls(players.size)
+    val actionQueueBuilder = mutableListOf<PlayerActionQueue>()
     startTimeout = false
     highestUserFrameDelay = 1
     if (server.usersMap.values.size > 60) {
       ignoringUnnecessaryServerActivity = true
     }
-    for (i in players.indices) {
-      val player = players[i]
+    for ((i, player) in players.withIndex()) {
       val playerNumber = i + 1
       if (!swap) player.playerNumber = playerNumber
       player.frameCount = 0
-      actionQueueBuilder[i] =
+      actionQueueBuilder.add(
         PlayerActionQueue(
           playerNumber = playerNumber,
           player,
           numPlayers = players.size,
           gameBufferSize = bufferSize,
         )
+      )
       val delayVal =
         GAME_FPS.toDouble() / player.connectionType.byteValue *
           (player.ping.toMillisDouble() / 1000.0) + 1.0
@@ -495,7 +492,7 @@ class KailleraGameImpl(
       logger.atFine().log("%s: %s is player number %s", this, player, playerNumber)
       autoFireDetector.addPlayer(player, playerNumber)
     }
-    playerActionQueues = actionQueueBuilder.map { it!! }.toTypedArray()
+    playerActionQueues = actionQueueBuilder.toTypedArray()
     statsCollector?.markGameAsStarted(server, this)
     gameLogBuilder?.addEvents(
       event {
@@ -779,24 +776,20 @@ class KailleraGameImpl(
         response.size = user.arraySize
         for (actionCounter in 0 until actionsPerMessage) {
           for (playerActionQueueIndex in playerActionQueuesCopy.indices) {
-            // TODO(nue): Consider removing this loop, I'm fairly certain it isn't needed.
-            while (isSynched) {
-              try {
-                playerActionQueuesCopy[playerActionQueueIndex].getActionAndWriteToArray(
-                  playerIndex = playerNumber - 1,
-                  writeToArray = response,
-                  writeAtIndex =
-                    actionCounter * (playerActionQueuesCopy.size * user.bytesPerAction) +
-                      playerActionQueueIndex * user.bytesPerAction,
-                  actionLength = user.bytesPerAction,
-                )
-                break
-              } catch (e: PlayerTimeoutException) {
-                // Note: this code only executes when we have data for all users, I think timeouts
-                // never happen anymore.
-                e.timeoutNumber = ++timeoutCounter
-                handleTimeout(e)
-              }
+            try {
+              playerActionQueuesCopy[playerActionQueueIndex].getActionAndWriteToArray(
+                readingPlayerIndex = playerNumber - 1,
+                writeTo = response,
+                writeAtIndex =
+                  actionCounter * (playerActionQueuesCopy.size * user.bytesPerAction) +
+                    playerActionQueueIndex * user.bytesPerAction,
+                actionLength = user.bytesPerAction,
+              )
+            } catch (e: PlayerTimeoutException) {
+              // Note: this code only executes when we have data for all users, I think timeouts
+              // never happen anymore.
+              e.timeoutNumber = ++timeoutCounter
+              handleTimeout(e)
             }
           }
         }
