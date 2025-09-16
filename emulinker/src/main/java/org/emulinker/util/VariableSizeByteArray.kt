@@ -48,11 +48,6 @@ class VariableSizeByteArray(initialData: ByteArray = EMPTY_DATA) : Borrowable {
 
   override fun toString(): String = bytes.toHexString()
 
-  fun copyTo(other: VariableSizeByteArray) {
-    other.size = size
-    System.arraycopy(this.bytes, 0, other.bytes, 0, size)
-  }
-
   /** Sets a range of values to zero. */
   fun setZeroesForRange(fromIndex: Int, untilIndexExclusive: Int) {
     bytes.fill(0x00, fromIndex, untilIndexExclusive)

@@ -1,6 +1,5 @@
 package org.emulinker.kaillera.model.impl
 
-import kotlin.Throws
 import org.emulinker.kaillera.model.KailleraUser
 import org.emulinker.util.VariableSizeByteArray
 
@@ -71,32 +70,29 @@ class PlayerActionQueue(
     lastTimeout = null
   }
 
-  @Throws(PlayerTimeoutException::class)
   fun getActionAndWriteToArray(
     readingPlayerIndex: Int,
     writeTo: VariableSizeByteArray,
     writeAtIndex: Int,
     actionLength: Int,
   ) {
-    if (synced && !containsNewDataForPlayer(readingPlayerIndex, actionLength)) {
-      throw AssertionError("I think this is impossible")
+    when {
+      !synced -> {
+        // If the player is no longer synced (e.g. if they left the game), make sure the target
+        // range
+        // is set to 0.
+        writeTo.setZeroesForRange(
+          fromIndex = writeAtIndex,
+          untilIndexExclusive = writeAtIndex + actionLength,
+        )
+      }
+      containsNewDataForPlayer(readingPlayerIndex, actionLength) -> {
+        val head = heads[readingPlayerIndex]
+        copyTo(writeTo, writeAtIndex, readStartIndex = head, readLength = actionLength)
+        heads[readingPlayerIndex] = (head + actionLength) % gameBufferSize
+      }
+      else -> throw IllegalStateException("There is no data available for this synced user!")
     }
-    if (getSize(readingPlayerIndex) >= actionLength) {
-      val head = heads[readingPlayerIndex]
-      copyTo(writeTo, writeAtIndex, readStartIndex = head, readLength = actionLength)
-      heads[readingPlayerIndex] = (head + actionLength) % gameBufferSize
-      return
-    }
-    if (!synced) {
-      // If the player is no longer synced (e.g. if they left the game), make sure the target range
-      // is set to 0.
-      writeTo.setZeroesForRange(
-        fromIndex = writeAtIndex,
-        untilIndexExclusive = writeAtIndex + actionLength,
-      )
-      return
-    }
-    throw PlayerTimeoutException(this.playerNumber, timeoutNumber = -1, player)
   }
 
   private fun copyTo(
