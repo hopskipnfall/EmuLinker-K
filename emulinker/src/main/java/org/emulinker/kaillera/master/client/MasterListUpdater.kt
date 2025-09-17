@@ -33,6 +33,7 @@ class MasterListUpdater(
           // Give a few seconds to allow the server to bind ports etc.
           initialDelay = 10.seconds,
           period = LIST_REPORTING_INTERVAL,
+          taskName = "Master list reporting",
         ) {
           if (flags.touchEmulinker) emuLinkerMasterUpdateTask.reportStatus()
           if (flags.touchKaillera) kailleraMasterUpdateTask.reportStatus()
@@ -40,7 +41,11 @@ class MasterListUpdater(
         }
     }
     serverCheckinJob =
-      taskScheduler.scheduleRepeating(initialDelay = 10.seconds, period = CHECKIN_INTERVAL) {
+      taskScheduler.scheduleRepeating(
+        initialDelay = 10.seconds,
+        period = CHECKIN_INTERVAL,
+        taskName = "ELK Server Checkin",
+      ) {
         serverCheckinTask.reportStatus()
       }
   }

@@ -38,6 +38,8 @@ class EmuLinkerMasterUpdateTask(
 
     val connection: HttpURLConnection = URL(url.buildString()).openConnection() as HttpURLConnection
     connection.setRequestMethod("GET")
+    connection.connectTimeout = 2_000 // milliseconds
+    connection.readTimeout = 2_000 // milliseconds
     connection.setRequestProperty(
       "Waiting-games",
       kailleraServer.gamesMap.values

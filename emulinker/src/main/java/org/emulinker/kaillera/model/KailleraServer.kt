@@ -106,7 +106,13 @@ class KailleraServer(
   @Synchronized
   fun start() {
     timerTask =
-      taskScheduler.scheduleRepeating(period = 1.minutes, initialDelay = 1.minutes) { run() }
+      taskScheduler.scheduleRepeating(
+        period = 1.minutes,
+        initialDelay = 1.minutes,
+        taskName = "run()",
+      ) {
+        run()
+      }
   }
 
   @Synchronized
