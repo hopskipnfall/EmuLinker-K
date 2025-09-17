@@ -30,7 +30,6 @@ import org.emulinker.kaillera.model.event.GameEvent
 import org.emulinker.kaillera.model.event.GameInfoEvent
 import org.emulinker.kaillera.model.event.GameStartedEvent
 import org.emulinker.kaillera.model.event.GameStatusChangedEvent
-import org.emulinker.kaillera.model.event.GameTimeoutEvent
 import org.emulinker.kaillera.model.event.PlayerDesynchEvent
 import org.emulinker.kaillera.model.event.UserDroppedGameEvent
 import org.emulinker.kaillera.model.event.UserJoinedGameEvent
@@ -142,14 +141,12 @@ class KailleraGameImpl(
   private var lastAddressCount = 0
   private var isSynched = false
 
-  private val desynchTimeouts = 120
-
   private val statsCollector: StatsCollector? = server.statsCollector
   private val kickedUsers: MutableList<String> = ArrayList()
 
   private val actionsPerMessage = owner.connectionType.byteValue.toInt()
 
-  override var playerActionQueues: Array<PlayerActionQueue>? = null
+  override lateinit var playerActionQueues: Array<PlayerActionQueue>
     private set
 
   override val clientType: String?
@@ -178,10 +175,8 @@ class KailleraGameImpl(
     get() = players.asSequence().filter { it.status == UserStatus.PLAYING }.count()
 
   private val synchedCount: Int
-    get() {
-      if (playerActionQueues == null) return 0
-      return playerActionQueues!!.count { it.synced }
-    }
+    get() =
+      if (this::playerActionQueues.isInitialized) playerActionQueues.count { it.synced } else 0
 
   private fun addEventForAllPlayers(event: GameEvent) {
     for (player in players) player.queueEvent(event)
@@ -460,24 +455,24 @@ class KailleraGameImpl(
     logger.atInfo().log("%s started: %s", user, this)
     status = GameStatus.SYNCHRONIZING
     autoFireDetector.start(players.size)
-    val actionQueueBuilder: Array<PlayerActionQueue?> = arrayOfNulls(players.size)
+    val actionQueueBuilder = mutableListOf<PlayerActionQueue>()
     startTimeout = false
     highestUserFrameDelay = 1
     if (server.usersMap.values.size > 60) {
       ignoringUnnecessaryServerActivity = true
     }
-    for (i in players.indices) {
-      val player = players[i]
+    for ((i, player) in players.withIndex()) {
       val playerNumber = i + 1
       if (!swap) player.playerNumber = playerNumber
       player.frameCount = 0
-      actionQueueBuilder[i] =
+      actionQueueBuilder.add(
         PlayerActionQueue(
           playerNumber = playerNumber,
           player,
           numPlayers = players.size,
           gameBufferSize = bufferSize,
         )
+      )
       val delayVal =
         GAME_FPS.toDouble() / player.connectionType.byteValue *
           (player.ping.toMillisDouble() / 1000.0) + 1.0
@@ -495,7 +490,7 @@ class KailleraGameImpl(
       logger.atFine().log("%s: %s is player number %s", this, player, playerNumber)
       autoFireDetector.addPlayer(player, playerNumber)
     }
-    playerActionQueues = actionQueueBuilder.map { it!! }.toTypedArray()
+    playerActionQueues = actionQueueBuilder.toTypedArray()
     statsCollector?.markGameAsStarted(server, this)
     gameLogBuilder?.addEvents(
       event {
@@ -533,12 +528,14 @@ class KailleraGameImpl(
       logger.atWarning().log("%s ready failed: %s status is %s", user, this, status)
       throw UserReadyException(EmuLang.getString("KailleraGameImpl.ReadyGameErrorIncorrectState"))
     }
-    if (playerActionQueues == null) {
-      logger.atSevere().log("%s ready failed: %s playerActionQueues == null!", user, this)
+    if (!this::playerActionQueues.isInitialized) {
+      logger
+        .atSevere()
+        .log("%s ready failed: %s playerActionQueues is not initialized!", user, this)
       throw UserReadyException(EmuLang.getString("KailleraGameImpl.ReadyGameErrorInternalError"))
     }
     logger.atFine().log("%s (player %s) is ready to play: %s", user, playerNumber, this)
-    playerActionQueues!![playerNumber - 1].markSynced()
+    playerActionQueues[playerNumber - 1].markSynced()
     if (synchedCount == players.size) {
       logger.atFine().log("%s all players are ready: starting...", this)
       status = GameStatus.PLAYING
@@ -550,7 +547,7 @@ class KailleraGameImpl(
         announce("This game's delay is: $highestUserFrameDelay ($frameDelay frame delay)")
       } else {
         var i = 0
-        while (i < playerActionQueues!!.size && i < players.size) {
+        while (i < playerActionQueues.size && i < players.size) {
           val player = players[i]
           // do not show delay if stealth mode
           if (!player.inStealthMode) {
@@ -570,17 +567,17 @@ class KailleraGameImpl(
       logger.atWarning().log("%s drop game failed: not in %s", user, this)
       throw DropGameException(EmuLang.getString("KailleraGameImpl.DropGameErrorNotInGame"))
     }
-    if (playerActionQueues == null) {
-      logger.atSevere().log("%s drop failed: %s playerActionQueues == null!", user, this)
+    if (!this::playerActionQueues.isInitialized) {
+      logger.atSevere().log("%s drop failed: %s playerActionQueues is not initialized!", user, this)
       throw DropGameException(EmuLang.getString("KailleraGameImpl.DropGameErrorInternalError"))
     }
     logger.atInfo().log("%s dropped: %s", user, this)
-    if (playerNumber - 1 < playerActionQueues!!.size) {
-      playerActionQueues!![playerNumber - 1].markDesynced()
+    if (playerNumber - 1 < playerActionQueues.size) {
+      playerActionQueues[playerNumber - 1].markDesynced()
     }
     if (synchedCount < 2 && isSynched) {
       isSynched = false
-      for (q in playerActionQueues!!) {
+      for (q in playerActionQueues) {
         q.markDesynced()
       }
       logger.atInfo().log("%s: game desynched: less than 2 players playing!", this)
@@ -637,9 +634,8 @@ class KailleraGameImpl(
     }
     if (isSynched) {
       isSynched = false
-      for (q in playerActionQueues!!) {
-        q.markDesynced()
-      }
+      for (q in playerActionQueues) q.markDesynced()
+
       logger.atInfo().log("%s: game desynched: game closed!", this)
     }
     players.forEach {
@@ -674,7 +670,7 @@ class KailleraGameImpl(
   override fun droppedPacket(user: KailleraUser) {
     if (!isSynched) return
     val playerNumber = user.playerNumber
-    if (user.playerNumber > playerActionQueues!!.size) {
+    if (user.playerNumber > playerActionQueues.size) {
       logger
         .atInfo()
         .log(
@@ -683,8 +679,8 @@ class KailleraGameImpl(
           user,
         )
     }
-    if (playerActionQueues != null && playerActionQueues!![playerNumber - 1].synced) {
-      playerActionQueues!![playerNumber - 1].markDesynced()
+    if (playerActionQueues[playerNumber - 1].synced) {
+      playerActionQueues[playerNumber - 1].markDesynced()
       logger.atInfo().log("%s: %s: player desynched: dropped a packet!", this, user)
       addEventForAllPlayers(
         PlayerDesynchEvent(
@@ -695,7 +691,7 @@ class KailleraGameImpl(
       )
       if (synchedCount < 2 && isSynched) {
         isSynched = false
-        for (q in playerActionQueues!!) q.markDesynced()
+        for (q in playerActionQueues) q.markDesynced()
         logger.atInfo().log("%s: game desynched: less than 2 players synched!", this)
       }
     }
@@ -711,8 +707,6 @@ class KailleraGameImpl(
     playerNumber: Int,
     data: VariableSizeByteArray,
   ): Result<Unit> {
-    val playerActionQueuesCopy = playerActionQueues ?: return Result.success(Unit)
-
     gameLogBuilder?.addEvents(
       event {
         timestampNs = checkNotNull(user.receivedGameDataNs) { "user.receivedGameDataNs is null!" }
@@ -736,32 +730,33 @@ class KailleraGameImpl(
           data,
           actionsPerMessage,
           playerNumber,
-          playerActionQueuesCopy.size,
+          playerActionQueues.size,
         )
       )
     }
     // Add the data for the user to their own player queue.
-    playerActionQueuesCopy[playerNumber - 1].addActions(data)
+    playerActionQueues[playerNumber - 1].addActions(data)
 
     autoFireDetector.addData(playerNumber, data, user.bytesPerAction)
 
     return maybeSendData(user)
   }
 
-  /** @param data Only used for logging. */
-  fun maybeSendData(user: KailleraUser, data: ByteArray = byteArrayOf()): Result<Unit> {
-    val playerActionQueuesCopy = checkNotNull(playerActionQueues)
-
+  /**
+   * Checks if any user has a full set of new data to send.
+   *
+   * @param user The user who initiated this call.
+   */
+  // TODO(nue): This is probably not threadsafe but is being called from multiple threads.
+  fun maybeSendData(user: KailleraUser): Result<Unit> {
     // TODO(nue): This works for 2P but what about more? This probably results in unnecessary
     // messages.
-    var timeoutCounter = 0
     for (player in players) {
       val playerNumber = player.playerNumber
 
-      // If all are either desynced or have their own information (meaning they have submitted
-      // their own data i guess)
+      // If there is new information about all synced players.
       if (
-        playerActionQueuesCopy.all {
+        playerActionQueues.all {
           !it.synced ||
             it.containsNewDataForPlayer(
               playerIndex = playerNumber - 1,
@@ -770,48 +765,37 @@ class KailleraGameImpl(
         }
       ) {
         waitingOnData = false
-        val response =
+        val joinedGameData =
           if (CompiledFlags.USE_CIRCULAR_BYTE_ARRAY_BUFFER) {
             user.circularVariableSizeByteArrayBuffer.borrow()
           } else {
             VariableSizeByteArray()
           }
-        response.size = user.arraySize
+        joinedGameData.size = user.arraySize
         for (actionCounter in 0 until actionsPerMessage) {
-          for (playerActionQueueIndex in playerActionQueuesCopy.indices) {
-            // TODO(nue): Consider removing this loop, I'm fairly certain it isn't needed.
-            while (isSynched) {
-              try {
-                playerActionQueuesCopy[playerActionQueueIndex].getActionAndWriteToArray(
-                  playerIndex = playerNumber - 1,
-                  writeToArray = response,
-                  writeAtIndex =
-                    actionCounter * (playerActionQueuesCopy.size * user.bytesPerAction) +
-                      playerActionQueueIndex * user.bytesPerAction,
-                  actionLength = user.bytesPerAction,
-                )
-                break
-              } catch (e: PlayerTimeoutException) {
-                // Note: this code only executes when we have data for all users, I think timeouts
-                // never happen anymore.
-                e.timeoutNumber = ++timeoutCounter
-                handleTimeout(e)
-              }
-            }
+          for (playerActionQueueIndex in playerActionQueues.indices) {
+            playerActionQueues[playerActionQueueIndex].getActionAndWriteToArray(
+              readingPlayerIndex = playerNumber - 1,
+              writeTo = joinedGameData,
+              writeAtIndex =
+                actionCounter * (playerActionQueues.size * user.bytesPerAction) +
+                  playerActionQueueIndex * user.bytesPerAction,
+              actionLength = user.bytesPerAction,
+            )
           }
         }
         if (!isSynched) {
           return Result.failure(
             GameDataException(
               EmuLang.getString("KailleraGameImpl.DesynchedWarning"),
-              VariableSizeByteArray(data),
+              VariableSizeByteArray(),
               user.bytesPerAction,
               playerNumber,
-              playerActionQueuesCopy.size,
+              playerActionQueues.size,
             )
           )
         }
-        player.queueEvent(GameDataEvent(this, response))
+        player.queueEvent(GameDataEvent(this, joinedGameData))
         player.updateUserDrift()
         val firstPlayer = players.firstOrNull()
         if (firstPlayer != null && firstPlayer.id == player.id) {
@@ -819,7 +803,7 @@ class KailleraGameImpl(
         }
       } else {
         waitingOnData = true
-        playerActionQueuesCopy.forEach {
+        playerActionQueues.forEach {
           waitingOnPlayerNumber[it.playerNumber - 1] =
             it.synced &&
               !it.containsNewDataForPlayer(
@@ -899,42 +883,6 @@ class KailleraGameImpl(
     }
     totalDriftCache.update(totalDriftNs, nowNs = nowNs)
     lastFrameNs = nowNs
-  }
-
-  // it's very important this method is synchronized
-  @Synchronized
-  private fun handleTimeout(e: PlayerTimeoutException) {
-    if (!isSynched) return
-    val playerNumber = e.playerNumber
-    val timeoutNumber = e.timeoutNumber
-    val playerActionQueue = playerActionQueues!![playerNumber - 1]
-    if (!playerActionQueue.synced || e == playerActionQueue.lastTimeout) return
-    playerActionQueue.lastTimeout = e
-    val player: KailleraUser = e.player!!
-    if (timeoutNumber < desynchTimeouts) {
-      if (timeoutNumber % 12 == 0) {
-        logger.atInfo().log("%s: %s: Timeout #%d", this, player, timeoutNumber / 12)
-        addEventForAllPlayers(GameTimeoutEvent(this, player, timeoutNumber / 12))
-      }
-    } else {
-      logger.atInfo().log("%s: %s: Timeout #%d", this, player, timeoutNumber / 12)
-      playerActionQueue.markDesynced()
-      logger.atInfo().log("%s: %s: player desynched: Lagged!", this, player)
-      addEventForAllPlayers(
-        PlayerDesynchEvent(
-          this,
-          player,
-          EmuLang.getString("KailleraGameImpl.DesynchDetectedPlayerLagged", player.name),
-        )
-      )
-      if (synchedCount < 2) {
-        isSynched = false
-        for (q in this.playerActionQueues!!) {
-          q.markDesynced()
-        }
-        logger.atInfo().log("%s: game desynched: less than 2 players synched!", this)
-      }
-    }
   }
 
   companion object {

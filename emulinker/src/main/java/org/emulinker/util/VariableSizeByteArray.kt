@@ -48,14 +48,36 @@ class VariableSizeByteArray(initialData: ByteArray = EMPTY_DATA) : Borrowable {
 
   override fun toString(): String = bytes.toHexString()
 
-  fun copyTo(other: VariableSizeByteArray) {
-    other.size = size
-    System.arraycopy(this.bytes, 0, other.bytes, 0, size)
+  /** Sets a range of values to zero. */
+  fun setZeroesForRange(fromIndex: Int, untilIndexExclusive: Int) {
+    bytes.fill(0x00, fromIndex, untilIndexExclusive)
+  }
+
+  fun importDataFrom(copyFrom: ByteArray, writeAtIndex: Int, readStartIndex: Int, readLength: Int) {
+    require(writeAtIndex + readLength <= size) { "Write length out of bounds!" }
+    System.arraycopy(
+      /* src= */ copyFrom,
+      /* srcPos= */ readStartIndex,
+      /* dest= */ bytes,
+      /* destPos= */ writeAtIndex,
+      /* length= */ readLength,
+    )
+  }
+
+  fun writeDataOutTo(copyTo: ByteArray, writeAtIndex: Int, srcIndex: Int, writeLength: Int) {
+    require(srcIndex + writeLength <= size) { "Write length out of bounds!" }
+    System.arraycopy(
+      /* src= */ bytes,
+      /* srcPos= */ srcIndex,
+      /* dest= */ copyTo,
+      /* destPos= */ writeAtIndex,
+      /* length= */ writeLength,
+    )
   }
 
   fun clone(): VariableSizeByteArray = VariableSizeByteArray(bytes.clone())
 
-  val indices
+  val indices: IntRange
     get() = 0 until this.size
 
   operator fun get(index: Int): Byte = bytes[index]
