@@ -1,21 +1,28 @@
 package org.emulinker.kaillera.controller.v086.action
 
 import com.google.common.flogger.FluentLogger
+import com.google.common.flogger.LazyArg
 import kotlin.time.Duration.Companion.milliseconds
+import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086ClientHandler
 import org.emulinker.kaillera.controller.v086.protocol.ClientAck
 import org.emulinker.kaillera.controller.v086.protocol.ConnectionRejected
 import org.emulinker.kaillera.controller.v086.protocol.ServerAck
 import org.emulinker.kaillera.controller.v086.protocol.ServerStatus
+import org.emulinker.kaillera.model.CLIENT_WITH_BYTE_ID_BUG
 import org.emulinker.kaillera.model.UserStatus
 import org.emulinker.kaillera.model.event.ConnectedEvent
 import org.emulinker.kaillera.model.event.UserEvent
 import org.emulinker.kaillera.model.exception.*
 import org.emulinker.util.EmuUtil.threadSleep
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 
-class ACKAction : V086Action<ClientAck>, V086UserEventHandler<UserEvent> {
+class ACKAction : V086Action<ClientAck>, V086UserEventHandler<UserEvent>, KoinComponent {
   override fun toString() = "ACKAction"
+
+  private val flags: RuntimeFlags by inject()
 
   @Throws(FatalActionException::class)
   override fun performAction(message: ClientAck, clientHandler: V086ClientHandler) {
@@ -71,37 +78,34 @@ class ACKAction : V086Action<ClientAck>, V086UserEventHandler<UserEvent> {
     val thisUser = connectedEvent.user
     val users = mutableListOf<ServerStatus.User>()
     val games = mutableListOf<ServerStatus.Game>()
-    try {
-      for (user in server.usersMap.values) {
-        if (user.status != UserStatus.CONNECTING && user != thisUser)
-          users.add(
-            ServerStatus.User(user.name!!, user.ping, user.status, user.id, user.connectionType)
-          )
-      }
-    } catch (e: MessageFormatException) {
-      logger.atSevere().withCause(e).log("Failed to construct new ServerStatus.User")
-      return
-    }
-    try {
-      for (game in server.gamesMap.values) {
-        var num = 0
-        for (user in game.players) {
-          if (!user.inStealthMode) num++
-        }
-        games.add(
-          ServerStatus.Game(
-            game.romName,
-            game.id,
-            game.clientType!!,
-            game.owner.name!!,
-            "$num/${game.maxUsers}",
-            game.status,
+    val switchStatuses: Boolean =
+      flags.switchStatusBytesForBuggyClient &&
+        clientHandler.user.clientType == CLIENT_WITH_BYTE_ID_BUG
+
+    for (user in server.usersMap.values) {
+      if (user.status != UserStatus.CONNECTING && user != thisUser)
+        users.add(
+          ServerStatus.User(
+            user.name!!,
+            user.ping,
+            if (switchStatuses) user.status.toValueForBrokenClient() else user.status,
+            user.id,
+            user.connectionType,
           )
         )
-      }
-    } catch (e: MessageFormatException) {
-      logger.atSevere().withCause(e).log("Failed to construct new ServerStatus.User")
-      return
+    }
+    for (game in server.gamesMap.values) {
+      val num = game.players.count { !it.inStealthMode }
+      games.add(
+        ServerStatus.Game(
+          game.romName,
+          game.id,
+          game.clientType!!,
+          game.owner.name!!,
+          "$num/${game.maxUsers}",
+          if (switchStatuses) game.status.toValueForBrokenClient() else game.status,
+        )
+      )
     }
 
     // Here I am attempting to fix the inherent Kaillera protocol bug that occurs when there are a
@@ -121,8 +125,7 @@ class ACKAction : V086Action<ClientAck>, V086UserEventHandler<UserEvent> {
     var usersSubList = mutableListOf<ServerStatus.User>()
     var gamesSubList = mutableListOf<ServerStatus.Game>()
     while (users.isNotEmpty()) {
-      val user = users[0]
-      users.removeAt(0)
+      val user = users.removeFirst()
       if (counter + user.numBytes >= 300) {
         sendServerStatus(clientHandler, usersSubList, gamesSubList, counter)
         usersSubList = mutableListOf()
@@ -135,8 +138,7 @@ class ACKAction : V086Action<ClientAck>, V086UserEventHandler<UserEvent> {
       usersSubList.add(user)
     }
     while (games.isNotEmpty()) {
-      val game = games[0]
-      games.removeAt(0)
+      val game = games.removeFirst()
       if (counter + game.numBytes >= 300) {
         sendServerStatus(clientHandler, usersSubList, gamesSubList, counter)
         usersSubList = mutableListOf()
@@ -148,8 +150,9 @@ class ACKAction : V086Action<ClientAck>, V086UserEventHandler<UserEvent> {
       counter += game.numBytes
       gamesSubList.add(game)
     }
-    if (usersSubList.size > 0 || gamesSubList.size > 0 || !sent)
+    if (usersSubList.isNotEmpty() || gamesSubList.isNotEmpty() || !sent) {
       sendServerStatus(clientHandler, usersSubList, gamesSubList, counter)
+    }
   }
 
   private fun sendServerStatus(
@@ -166,7 +169,7 @@ class ACKAction : V086Action<ClientAck>, V086UserEventHandler<UserEvent> {
         users.size,
         games.size,
         counter,
-        games.map { it.gameId },
+        LazyArg { games.map { it.gameId } },
       )
     try {
       clientHandler.send(ServerStatus(clientHandler.nextMessageNumber, users, games))

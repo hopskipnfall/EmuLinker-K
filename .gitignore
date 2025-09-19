@@ -37,3 +37,4 @@ metrics/
 .idea/jarRepositories.xml
 .idea/AndroidProjectSystem.xml
 .idea/deviceManager.xml
+.idea/misc.xml

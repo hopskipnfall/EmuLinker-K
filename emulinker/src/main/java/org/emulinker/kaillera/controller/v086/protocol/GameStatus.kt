@@ -106,6 +106,8 @@ constructor(
 
     override fun write(buffer: ByteBuf, message: GameStatus) {
       buffer.writeByte(0x00)
+      // Note: I think val0 is always 00, meaning that this could just be
+      // buffer.writeIntLE(message.gameId) removing val1 entirely.
       buffer.writeShortLE(message.gameId)
       buffer.writeShortLE(message.val1)
       buffer.writeByte(message.gameStatus.byteValue.toInt())

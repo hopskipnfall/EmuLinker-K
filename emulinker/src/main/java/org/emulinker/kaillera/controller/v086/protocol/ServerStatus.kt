@@ -60,11 +60,11 @@ data class ServerStatus(
   ) {
 
     init {
-      if (ping < 0.milliseconds || ping > 2048.milliseconds)
+      if (ping !in 0.milliseconds..2048.milliseconds)
         throw MessageFormatException(
           "Invalid Server Status format: ping out of acceptable range: $ping"
         )
-      if (userId < 0 || userId > 65535)
+      if (userId !in 0..65535)
         throw MessageFormatException(
           "Invalid Server Status format: userID out of acceptable range: $userId"
         )
