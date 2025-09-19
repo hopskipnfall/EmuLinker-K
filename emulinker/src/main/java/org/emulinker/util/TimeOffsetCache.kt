@@ -29,15 +29,9 @@ class TimeOffsetCache(delay: Duration, resolution: Duration) {
   @Synchronized
   fun getDelayedValue(): Long? =
     when {
-      size == 0 -> {
-        null
-      }
-      size < cacheSize -> {
-        cache[0]!!
-      }
-      else -> {
-        cache[(last + 1) % cacheSize]!!
-      }
+      size == 0 -> null
+      size < cacheSize -> cache[0]!!
+      else -> cache[(last + 1) % cacheSize]!!
     }
 
   @Synchronized

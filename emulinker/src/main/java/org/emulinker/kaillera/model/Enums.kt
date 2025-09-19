@@ -2,12 +2,22 @@ package org.emulinker.kaillera.model
 
 import org.emulinker.kaillera.model.impl.KailleraGameImpl
 
+const val CLIENT_WITH_BYTE_ID_BUG = "Project 64k 0.13 (01 Aug 2003)"
+
 enum class UserStatus(val byteValue: Byte, private val readableName: String) {
-  PLAYING(2, "Playing"),
+  PLAYING(0, "Playing"),
   IDLE(1, "Idle"),
-  CONNECTING(0, "Connecting");
+  CONNECTING(2, "Connecting");
 
   override fun toString() = readableName
+
+  fun toValueForBrokenClient(): UserStatus =
+    when (this) {
+      // CONNECTING and IDLE might be backwards.
+      PLAYING -> CONNECTING
+      IDLE -> IDLE
+      CONNECTING -> PLAYING
+    }
 
   companion object {
     fun fromByteValue(byteValue: Byte): UserStatus {
@@ -19,10 +29,17 @@ enum class UserStatus(val byteValue: Byte, private val readableName: String) {
 
 enum class GameStatus(val byteValue: Byte, private val readableName: String) {
   WAITING(0, "Waiting"),
-  PLAYING(1, "Playing"),
-  SYNCHRONIZING(2, "Synchronizing");
+  SYNCHRONIZING(1, "Synchronizing"),
+  PLAYING(2, "Playing");
 
   override fun toString() = readableName
+
+  fun toValueForBrokenClient(): GameStatus =
+    when (this) {
+      WAITING -> WAITING
+      PLAYING -> SYNCHRONIZING
+      SYNCHRONIZING -> PLAYING
+    }
 
   companion object {
     fun fromByteValue(byteValue: Byte): GameStatus {

@@ -123,6 +123,8 @@ val koinModule = module {
         serverName = config.getString("masterList.serverName", "Emulinker Server"),
         serverPort = config.getInt("controllers.connect.port"),
         serverWebsite = config.getString("masterList.serverWebsite", ""),
+        switchStatusBytesForBuggyClient =
+          config.getBoolean("server.switchStatusBytesForBuggyClient", false),
         touchEmulinker = config.getBoolean("masterList.touchEmulinker", false),
         touchKaillera = config.getBoolean("masterList.touchKaillera", false),
         twitterBroadcastDelay = config.getInt("twitter.broadcastDelaySeconds", 15).seconds,

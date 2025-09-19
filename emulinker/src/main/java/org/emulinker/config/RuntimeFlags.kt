@@ -39,6 +39,7 @@ data class RuntimeFlags(
   val serverName: String,
   val serverPort: Int,
   val serverWebsite: String,
+  val switchStatusBytesForBuggyClient: Boolean,
   val touchEmulinker: Boolean,
   val touchKaillera: Boolean,
   val twitterBroadcastDelay: Duration,
