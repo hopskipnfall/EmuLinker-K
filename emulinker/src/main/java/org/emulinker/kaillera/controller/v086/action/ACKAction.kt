@@ -79,7 +79,8 @@ class ACKAction : V086Action<ClientAck>, V086UserEventHandler<UserEvent>, KoinCo
     val users = mutableListOf<ServerStatus.User>()
     val games = mutableListOf<ServerStatus.Game>()
     val switchStatuses: Boolean =
-      flags.switchStatusBytesForBuggyClient && clientHandler.user.clientType == CLIENT_WITH_BYTE_ID_BUG
+      flags.switchStatusBytesForBuggyClient &&
+        clientHandler.user.clientType == CLIENT_WITH_BYTE_ID_BUG
 
     for (user in server.usersMap.values) {
       if (user.status != UserStatus.CONNECTING && user != thisUser)
