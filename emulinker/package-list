@@ -2,7 +2,7 @@ $dokka.format:html-v1
 $dokka.linkExtension:html
 $dokka.location:org.emulinker.config////PointingToDeclaration/emulinker/org.emulinker.config/index.html
 $dokka.location:org.emulinker.config/RuntimeFlags///PointingToDeclaration/emulinker/org.emulinker.config/-runtime-flags/index.html
-$dokka.location:org.emulinker.config/RuntimeFlags/RuntimeFlags/#kotlin.Boolean#kotlin.Boolean#java.nio.charset.Charset#kotlin.Int#kotlin.collections.List[kotlin.String]#kotlin.collections.List[kotlin.String]#kotlin.Int#kotlin.Int#kotlin.Int#kotlin.Int#kotlin.Int#kotlin.time.Duration#kotlin.time.Duration#kotlin.time.Duration#kotlin.time.Duration#kotlin.Int#kotlin.Int#kotlin.Int#kotlin.Int#kotlin.Int#kotlin.time.Duration#kotlin.Int#kotlin.Int#kotlin.Int#kotlin.Boolean#kotlin.time.Duration#kotlin.Int#kotlin.String#kotlin.String#kotlin.String#kotlin.Int#kotlin.String#kotlin.Boolean#kotlin.Boolean#kotlin.time.Duration#kotlin.Boolean#kotlin.Boolean#kotlin.String#kotlin.String#kotlin.String#kotlin.String#kotlin.collections.List[kotlin.String]#kotlin.Int/PointingToDeclaration/emulinker/org.emulinker.config/-runtime-flags/-runtime-flags.html
+$dokka.location:org.emulinker.config/RuntimeFlags/RuntimeFlags/#kotlin.Boolean#kotlin.Boolean#java.nio.charset.Charset#kotlin.Int#kotlin.collections.List[kotlin.String]#kotlin.collections.List[kotlin.String]#kotlin.Int#kotlin.Int#kotlin.Int#kotlin.Int#kotlin.Int#kotlin.time.Duration#kotlin.time.Duration#kotlin.time.Duration#kotlin.time.Duration#kotlin.Int#kotlin.Int#kotlin.Int#kotlin.Int#kotlin.Int#kotlin.time.Duration#kotlin.Int#kotlin.Int#kotlin.Int#kotlin.Boolean#kotlin.time.Duration#kotlin.Int#kotlin.String#kotlin.String#kotlin.String#kotlin.Int#kotlin.String#kotlin.Boolean#kotlin.Boolean#kotlin.Boolean#kotlin.time.Duration#kotlin.Boolean#kotlin.Boolean#kotlin.String#kotlin.String#kotlin.String#kotlin.String#kotlin.collections.List[kotlin.String]#kotlin.Int/PointingToDeclaration/emulinker/org.emulinker.config/-runtime-flags/-runtime-flags.html
 $dokka.location:org.emulinker.config/RuntimeFlags/allowMultipleConnections/#/PointingToDeclaration/emulinker/org.emulinker.config/-runtime-flags/allow-multiple-connections.html
 $dokka.location:org.emulinker.config/RuntimeFlags/allowSinglePlayer/#/PointingToDeclaration/emulinker/org.emulinker.config/-runtime-flags/allow-single-player.html
 $dokka.location:org.emulinker.config/RuntimeFlags/charset/#/PointingToDeclaration/emulinker/org.emulinker.config/-runtime-flags/charset.html
@@ -35,6 +35,7 @@ $dokka.location:org.emulinker.config/RuntimeFlags/serverLocation/#/PointingToDec
 $dokka.location:org.emulinker.config/RuntimeFlags/serverName/#/PointingToDeclaration/emulinker/org.emulinker.config/-runtime-flags/server-name.html
 $dokka.location:org.emulinker.config/RuntimeFlags/serverPort/#/PointingToDeclaration/emulinker/org.emulinker.config/-runtime-flags/server-port.html
 $dokka.location:org.emulinker.config/RuntimeFlags/serverWebsite/#/PointingToDeclaration/emulinker/org.emulinker.config/-runtime-flags/server-website.html
+$dokka.location:org.emulinker.config/RuntimeFlags/switchStatusBytesForBuggyClient/#/PointingToDeclaration/emulinker/org.emulinker.config/-runtime-flags/switch-status-bytes-for-buggy-client.html
 $dokka.location:org.emulinker.config/RuntimeFlags/touchEmulinker/#/PointingToDeclaration/emulinker/org.emulinker.config/-runtime-flags/touch-emulinker.html
 $dokka.location:org.emulinker.config/RuntimeFlags/touchKaillera/#/PointingToDeclaration/emulinker/org.emulinker.config/-runtime-flags/touch-kaillera.html
 $dokka.location:org.emulinker.config/RuntimeFlags/twitterBroadcastDelay/#/PointingToDeclaration/emulinker/org.emulinker.config/-runtime-flags/twitter-broadcast-delay.html
@@ -1246,6 +1247,7 @@ $dokka.location:org.emulinker.kaillera.model.impl/Trivia/setQuestionTime/#kotlin
 $dokka.location:org.emulinker.kaillera.model.impl/Trivia/setTriviaPaused/#kotlin.Boolean/PointingToDeclaration/emulinker/org.emulinker.kaillera.model.impl/-trivia/set-trivia-paused.html
 $dokka.location:org.emulinker.kaillera.model.impl/Trivia/updateIP/#kotlin.String#kotlin.String/PointingToDeclaration/emulinker/org.emulinker.kaillera.model.impl/-trivia/update-i-p.html
 $dokka.location:org.emulinker.kaillera.model////PointingToDeclaration/emulinker/org.emulinker.kaillera.model/index.html
+$dokka.location:org.emulinker.kaillera.model//CLIENT_WITH_BYTE_ID_BUG/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-c-l-i-e-n-t_-w-i-t-h_-b-y-t-e_-i-d_-b-u-g.html
 $dokka.location:org.emulinker.kaillera.model/ConnectionType.AVERAGE///PointingToDeclaration/{"org.jetbrains.dokka.links.EnumEntryDRIExtra":{"key":"org.jetbrains.dokka.links.EnumEntryDRIExtra"}}emulinker/org.emulinker.kaillera.model/-connection-type/-a-v-e-r-a-g-e/index.html
 $dokka.location:org.emulinker.kaillera.model/ConnectionType.BAD///PointingToDeclaration/{"org.jetbrains.dokka.links.EnumEntryDRIExtra":{"key":"org.jetbrains.dokka.links.EnumEntryDRIExtra"}}emulinker/org.emulinker.kaillera.model/-connection-type/-b-a-d/index.html
 $dokka.location:org.emulinker.kaillera.model/ConnectionType.Companion///PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-connection-type/-companion/index.html
@@ -1273,6 +1275,7 @@ $dokka.location:org.emulinker.kaillera.model/GameStatus///PointingToDeclaration/
 $dokka.location:org.emulinker.kaillera.model/GameStatus/byteValue/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-game-status/byte-value.html
 $dokka.location:org.emulinker.kaillera.model/GameStatus/entries/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-game-status/entries.html
 $dokka.location:org.emulinker.kaillera.model/GameStatus/toString/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-game-status/to-string.html
+$dokka.location:org.emulinker.kaillera.model/GameStatus/toValueForBrokenClient/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-game-status/to-value-for-broken-client.html
 $dokka.location:org.emulinker.kaillera.model/GameStatus/valueOf/#kotlin.String/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-game-status/value-of.html
 $dokka.location:org.emulinker.kaillera.model/GameStatus/values/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-game-status/values.html
 $dokka.location:org.emulinker.kaillera.model/KailleraGame///PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-kaillera-game/index.html
@@ -1404,6 +1407,7 @@ $dokka.location:org.emulinker.kaillera.model/UserStatus///PointingToDeclaration/
 $dokka.location:org.emulinker.kaillera.model/UserStatus/byteValue/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-user-status/byte-value.html
 $dokka.location:org.emulinker.kaillera.model/UserStatus/entries/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-user-status/entries.html
 $dokka.location:org.emulinker.kaillera.model/UserStatus/toString/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-user-status/to-string.html
+$dokka.location:org.emulinker.kaillera.model/UserStatus/toValueForBrokenClient/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-user-status/to-value-for-broken-client.html
 $dokka.location:org.emulinker.kaillera.model/UserStatus/valueOf/#kotlin.String/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-user-status/value-of.html
 $dokka.location:org.emulinker.kaillera.model/UserStatus/values/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-user-status/values.html
 $dokka.location:org.emulinker.kaillera.pico////PointingToDeclaration/emulinker/org.emulinker.kaillera.pico/index.html
