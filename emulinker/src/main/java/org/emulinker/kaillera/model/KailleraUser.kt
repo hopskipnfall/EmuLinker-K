@@ -254,9 +254,9 @@ class KailleraUser(
   }
 
   @Throws(ChatException::class, FloodException::class)
-  fun chat(message: String?) {
+  fun chat(message: String) {
     updateLastActivity()
-    server.chat(this, message)
+    server.chat(to = this, message)
     lastChatTime = clock.now()
   }
 
@@ -298,7 +298,7 @@ class KailleraUser(
     QuitGameException::class,
     CloseGameException::class,
   )
-  fun quit(message: String?) {
+  fun quit(message: String) {
     updateLastActivity()
     server.quit(this, message)
     loggedIn = false

@@ -183,13 +183,13 @@ class KailleraGameImpl(
   }
 
   @Throws(GameChatException::class)
-  override fun chat(user: KailleraUser, message: String?) {
-    if (!players.contains(user)) {
+  override fun chat(user: KailleraUser, message: String) {
+    if (user !in players) {
       logger.atWarning().log("%s game chat denied: not in %s", user, this)
       throw GameChatException(EmuLang.getString("KailleraGameImpl.GameChatErrorNotInGame"))
     }
     if (user.accessLevel == AccessManager.ACCESS_NORMAL) {
-      if (server.maxGameChatLength > 0 && message!!.length > server.maxGameChatLength) {
+      if (server.maxGameChatLength > 0 && message.length > server.maxGameChatLength) {
         logger
           .atWarning()
           .log("%s gamechat denied: Message Length > %d", user, server.maxGameChatLength)
@@ -204,7 +204,7 @@ class KailleraGameImpl(
       }
     }
     logger.atInfo().log("%s, %s gamechat: %s", user, this, message)
-    addEventForAllPlayers(GameChatEvent(this, user, message!!))
+    addEventForAllPlayers(GameChatEvent(this, user, message))
   }
 
   fun announce(announcement: String, toUser: KailleraUser? = null) {
@@ -519,8 +519,8 @@ class KailleraGameImpl(
 
   @Synchronized
   @Throws(UserReadyException::class)
-  override fun ready(user: KailleraUser?, playerNumber: Int) {
-    if (!players.contains(user)) {
+  override fun ready(user: KailleraUser, playerNumber: Int) {
+    if (user !in players) {
       logger.atWarning().log("%s ready game failed: not in %s", user, this)
       throw UserReadyException(EmuLang.getString("KailleraGameImpl.ReadyGameErrorNotInGame"))
     }
@@ -563,7 +563,7 @@ class KailleraGameImpl(
   @Synchronized
   @Throws(DropGameException::class)
   override fun drop(user: KailleraUser, playerNumber: Int) {
-    if (!players.contains(user)) {
+    if (user !in players) {
       logger.atWarning().log("%s drop game failed: not in %s", user, this)
       throw DropGameException(EmuLang.getString("KailleraGameImpl.DropGameErrorNotInGame"))
     }

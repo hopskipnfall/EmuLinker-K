@@ -41,13 +41,13 @@ interface KailleraGame {
 
   @Throws(JoinGameException::class) fun join(user: KailleraUser): Int
 
-  @Throws(GameChatException::class) fun chat(user: KailleraUser, message: String?)
+  @Throws(GameChatException::class) fun chat(user: KailleraUser, message: String)
 
   @Throws(GameKickException::class) fun kick(requester: KailleraUser, userID: Int)
 
   @Throws(StartGameException::class) fun start(user: KailleraUser)
 
-  @Throws(UserReadyException::class) fun ready(user: KailleraUser?, playerNumber: Int)
+  @Throws(UserReadyException::class) fun ready(user: KailleraUser, playerNumber: Int)
 
   fun addData(user: KailleraUser, playerNumber: Int, data: VariableSizeByteArray): Result<Unit>
 

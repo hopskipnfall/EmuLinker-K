@@ -34,7 +34,7 @@ interface AccessManager : Closeable {
    *
    * @param emulator Emulator name of client
    */
-  fun isEmulatorAllowed(emulator: String?): Boolean
+  fun isEmulatorAllowed(emulator: String): Boolean
 
   /**
    * Checks if client's game (ROM) is allowed (not filtered)

@@ -3,7 +3,7 @@ package org.emulinker.util
 import java.util.LinkedList
 import java.util.StringTokenizer
 
-class WildcardStringPattern(pattern: String?) {
+class WildcardStringPattern(pattern: String) {
   private var equals = false
   private var startsWith = false
   private var endsWith = false
@@ -65,7 +65,7 @@ class WildcardStringPattern(pattern: String?) {
   }
 
   init {
-    if (pattern == null || pattern == "") {
+    if (pattern.isEmpty()) {
       // match() function will always return true.
     } else {
       val elements = LinkedList<String>()
