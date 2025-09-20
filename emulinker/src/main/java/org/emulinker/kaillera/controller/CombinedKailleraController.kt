@@ -104,7 +104,11 @@ class CombinedKailleraController(
   }
 
   /** Map of protocol name (e.g. "0.86") to [KailleraServerController]. */
-  private val controllersMap = ConcurrentHashMap<String, KailleraServerController>()
+  // TODO(nue): Since there is only one, we could just remove this for now..
+  private var controllersMap =
+    ConcurrentHashMap<String, KailleraServerController>().also {
+      it.putAll(kailleraServerController.clientTypes.associateWith { kailleraServerController })
+    }
 
   val clientHandlers = ConcurrentHashMap<InetSocketAddress, V086ClientHandler>()
 
@@ -193,13 +197,6 @@ class CombinedKailleraController(
     // I do not like blocking on a request thread.
     synchronized(handler.requestHandlerMutex) {
       handler.handleReceived(buffer, remoteSocketAddress)
-    }
-  }
-
-  init {
-    val clientTypes = kailleraServerController.clientTypes
-    for (j in clientTypes.indices) {
-      controllersMap[clientTypes[j]] = kailleraServerController
     }
   }
 

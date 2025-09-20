@@ -9,6 +9,7 @@ import java.util.concurrent.SynchronousQueue
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 import kotlin.time.Clock
+import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
@@ -28,6 +29,7 @@ import org.emulinker.kaillera.master.client.KailleraMasterUpdateTask
 import org.emulinker.kaillera.master.client.MasterListUpdateTask
 import org.emulinker.kaillera.master.client.MasterListUpdater
 import org.emulinker.kaillera.master.client.ServerCheckinTask
+import org.emulinker.kaillera.model.ConnectionType
 import org.emulinker.kaillera.model.KailleraServer
 import org.emulinker.kaillera.model.impl.AutoFireDetectorFactory
 import org.emulinker.kaillera.model.impl.AutoFireDetectorFactoryImpl
@@ -89,39 +91,43 @@ val koinModule = module {
     val config = get<Configuration>()
     val flags =
       RuntimeFlags(
-        allowMultipleConnections = config.getBoolean("server.allowMultipleConnections"),
+        allowMultipleConnections = config.getBoolean("server.allowMultipleConnections", true),
         allowSinglePlayer = config.getBoolean("server.allowSinglePlayer", true),
         charset = Charset.forName(config.getString("emulinker.charset")),
-        chatFloodTime = config.getInt("server.chatFloodTime"),
-        clientTypes = config.getStringArray("controllers.v086.clientTypes.clientType").toList(),
-        connectionTypes = config.getList("server.allowedConnectionTypes") as List<String>,
+        chatFloodTime = config.getInt("server.chatFloodTime", 2).seconds,
+        allowedProtocols =
+          config.getStringArray("controllers.v086.clientTypes.clientType").toList(),
+        allowedConnectionTypes =
+          config
+            .getStringArray("server.allowedConnectionTypes")
+            .ifEmpty {
+              ConnectionType.entries.map { it.byteValue.toInt().toString() }.toTypedArray()
+            }
+            .toList(),
         coreThreadPoolSize = config.getInt("server.coreThreadpoolSize", 5),
-        createGameFloodTime = config.getInt("server.createGameFloodTime"),
-        gameAutoFireSensitivity = config.getInt("game.defaultAutoFireSensitivity"),
+        createGameFloodTime = config.getInt("server.createGameFloodTime", 2).seconds,
+        gameAutoFireSensitivity = config.getInt("game.defaultAutoFireSensitivity", 0),
         gameBufferSize = config.getInt("game.bufferSize"),
-        gameDesynchTimeouts = config.getInt("game.desynchTimeouts"),
-        gameTimeout = config.getInt("game.timeoutMillis").milliseconds,
-        idleTimeout = config.getInt("server.idleTimeout").seconds,
-        keepAliveTimeout = config.getInt("server.keepAliveTimeout").seconds,
+        idleTimeout = config.getInt("server.idleTimeout", 1.hours.inWholeSeconds.toInt()).seconds,
+        keepAliveTimeout = config.getInt("server.keepAliveTimeout", 190).seconds,
         lagstatDuration =
           config.getInt("server.lagstatDurationSeconds", 1.minutes.inWholeSeconds.toInt()).seconds,
-        maxChatLength = config.getInt("server.maxChatLength"),
-        maxClientNameLength = config.getInt("server.maxClientNameLength"),
-        maxGameChatLength = config.getInt("server.maxGameChatLength"),
-        maxGameNameLength = config.getInt("server.maxGameNameLength"),
-        maxGames = config.getInt("server.maxGames"),
+        maxChatLength = config.getInt("server.maxChatLength", 150),
+        maxClientNameLength = config.getInt("server.maxClientNameLength", 127),
+        maxGameChatLength = config.getInt("server.maxGameChatLength", 320),
+        maxGameNameLength = config.getInt("server.maxGameNameLength", 127),
+        maxGames = config.getInt("server.maxGames", 0),
         maxPing = config.getInt("server.maxPing").milliseconds,
-        maxQuitMessageLength = config.getInt("server.maxQuitMessageLength"),
-        maxUserNameLength = config.getInt("server.maxUserNameLength"),
-        maxUsers = config.getInt("server.maxUsers"),
+        maxQuitMessageLength = config.getInt("server.maxQuitMessageLength", 100),
+        maxUserNameLength = config.getInt("server.maxUserNameLength", 30),
+        maxUsers = config.getInt("server.maxUsers", 0),
         metricsEnabled = config.getBoolean("metrics.enabled", false),
         metricsLoggingFrequency = config.getInt("metrics.loggingFrequencySeconds", 30).seconds,
-        // TODO(nue): This default works well, but maybe we can experiment further.
         nettyFlags = config.getInt("server.nettyThreadpoolSize", 30),
         serverAddress = config.getString("masterList.serverConnectAddress", ""),
         serverLocation = config.getString("masterList.serverLocation", "Unknown"),
-        serverName = config.getString("masterList.serverName", "Emulinker Server"),
-        serverPort = config.getInt("controllers.connect.port"),
+        serverName = config.getString("masterList.serverName", "New ELK Server"),
+        serverPort = config.getInt("controllers.connect.port", 27888),
         serverWebsite = config.getString("masterList.serverWebsite", ""),
         switchStatusBytesForBuggyClient =
           config.getBoolean("server.switchStatusBytesForBuggyClient", false),

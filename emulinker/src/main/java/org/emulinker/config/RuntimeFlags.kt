@@ -3,22 +3,20 @@ package org.emulinker.config
 import java.nio.charset.Charset
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
+import org.emulinker.kaillera.model.ConnectionType
 
 /** Configuration flags that are set at startup and do not change until the job is restarted. */
 data class RuntimeFlags(
   val allowMultipleConnections: Boolean,
   val allowSinglePlayer: Boolean,
   val charset: Charset,
-  val chatFloodTime: Int,
-  // tbh I have no idea what this does.
-  val clientTypes: List<String>,
-  val connectionTypes: List<String>,
+  val chatFloodTime: Duration,
+  val allowedProtocols: List<String>,
+  val allowedConnectionTypes: List<String>,
   val coreThreadPoolSize: Int,
-  val createGameFloodTime: Int,
+  val createGameFloodTime: Duration,
   val gameAutoFireSensitivity: Int,
   val gameBufferSize: Int,
-  val gameDesynchTimeouts: Int,
-  val gameTimeout: Duration,
   val idleTimeout: Duration,
   val keepAliveTimeout: Duration,
   val lagstatDuration: Duration,
@@ -57,23 +55,19 @@ data class RuntimeFlags(
     // Note: this used to be max 30, but for some reason we had 31 set as the default in the config.
     // Setting this to max 31 so we don't break existing users.
     // TODO(nue): Just remove this restriction as it seems unhelpful?
-    require(maxUserNameLength <= 31) { "server.maxUserNameLength must be <= 31" }
-    require(maxGameNameLength <= 127) { "server.maxGameNameLength must be <= 127" }
-    require(maxClientNameLength <= 127) { "server.maxClientNameLength must be <= 127" }
+    require(maxUserNameLength in 0..31) { "server.maxUserNameLength must be <= 31" }
+    require(maxGameNameLength in 0..127) { "server.maxGameNameLength must be <= 127" }
+    require(maxClientNameLength in 0..127) { "server.maxClientNameLength must be <= 127" }
     require(maxPing in 1.milliseconds..1000.milliseconds) { "server.maxPing must be in 1..1000" }
-    require(keepAliveTimeout.isPositive()) {
-      "server.keepAliveTimeout must be > 0 (190 is recommended)"
-    }
+    require(keepAliveTimeout.isPositive()) { "server.keepAliveTimeout must be > 0" }
     require(lagstatDuration.isPositive()) { "server.lagstatDurationSeconds must be positive" }
     require(gameBufferSize > 0) { "game.bufferSize can not be <= 0" }
-    require(gameTimeout.isPositive()) { "game.timeoutMillis can not be <= 0" }
     require(gameAutoFireSensitivity in 0..5) { "game.defaultAutoFireSensitivity must be 0-5" }
-    for (s in connectionTypes) {
-      try {
-        val ct = s.toInt()
-        require(ct in 1..6) { "Invalid connectionType: $s" }
-      } catch (e: NumberFormatException) {
-        throw IllegalStateException("Invalid connectionType: $s", e)
+    for (s in allowedConnectionTypes) {
+      val asInt = s.toIntOrNull()
+      requireNotNull(asInt) { "server.allowedConnectionTypes must all be integers" }
+      require(asInt in ConnectionType.entries.map { it.byteValue.toInt() }) {
+        "Invalid connectionType: $s"
       }
     }
   }
