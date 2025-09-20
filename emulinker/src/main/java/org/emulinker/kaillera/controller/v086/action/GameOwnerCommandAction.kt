@@ -8,9 +8,9 @@ import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086ClientHandler
 import org.emulinker.kaillera.controller.v086.protocol.GameChat
 import org.emulinker.kaillera.model.GameStatus
+import org.emulinker.kaillera.model.KailleraGame
 import org.emulinker.kaillera.model.KailleraUser
 import org.emulinker.kaillera.model.exception.ActionException
-import org.emulinker.kaillera.model.impl.KailleraGameImpl
 import org.emulinker.util.EmuLang
 import org.emulinker.util.EmuUtil.threadSleep
 
@@ -57,7 +57,7 @@ class GameOwnerCommandAction : V086Action<GameChat> {
         chat == COMMAND_START -> processStart(game, user)
         chat.startsWith(COMMAND_STARTN) -> processStartN(chat, game, user, clientHandler)
         chat.startsWith(COMMAND_MUTE) -> processMute(chat, game, user, clientHandler)
-        chat.startsWith(COMMAND_EMU) -> processEmu(chat, game, user, clientHandler)
+        chat.startsWith(COMMAND_EMU) -> processEmu(chat, game, user)
         chat.startsWith(COMMAND_CONN) -> processConn(chat, game, user)
         chat.startsWith(COMMAND_UNMUTE) -> processUnmute(chat, game, user, clientHandler)
         chat.startsWith(COMMAND_SWAP) -> processSwap(chat, game, user)
@@ -78,7 +78,7 @@ class GameOwnerCommandAction : V086Action<GameChat> {
   }
 
   @Throws(ActionException::class, MessageFormatException::class)
-  private fun processHelp(game: KailleraGameImpl, admin: KailleraUser) {
+  private fun processHelp(game: KailleraGame, admin: KailleraUser) {
     if (admin != game.owner && admin.accessLevel < AccessManager.ACCESS_SUPERADMIN) return
     // game.setIndividualGameAnnounce(admin.getPlayerNumber());
     // game.announce(EmuLang.getString("GameOwnerCommandAction.AvailableCommands"));
@@ -121,7 +121,7 @@ class GameOwnerCommandAction : V086Action<GameChat> {
     threadSleep(20.milliseconds)
   }
 
-  private fun autoFireHelp(game: KailleraGameImpl, admin: KailleraUser) {
+  private fun autoFireHelp(game: KailleraGame, admin: KailleraUser) {
     val cur = game.autoFireDetector.sensitivity
     game.announce(EmuLang.getString("GameOwnerCommandAction.HelpSensitivity"), admin)
     threadSleep(20.milliseconds)
@@ -135,7 +135,7 @@ class GameOwnerCommandAction : V086Action<GameChat> {
   }
 
   @Throws(ActionException::class, MessageFormatException::class)
-  private fun processDetectAutoFire(message: String, game: KailleraGameImpl, admin: KailleraUser) {
+  private fun processDetectAutoFire(message: String, game: KailleraGame, admin: KailleraUser) {
     if (game.status != GameStatus.WAITING) {
       game.announce(EmuLang.getString("GameOwnerCommandAction.AutoFireChangeDeniedInGame"), admin)
       return
@@ -165,9 +165,8 @@ class GameOwnerCommandAction : V086Action<GameChat> {
   @Throws(ActionException::class, MessageFormatException::class)
   private fun processEmu(
     message: String,
-    game: KailleraGameImpl,
+    game: KailleraGame,
     admin: KailleraUser,
-    clientHandler: V086ClientHandler,
   ) {
     var emu = game.owner.clientType
     if (message == "/setemu any") {
@@ -180,7 +179,7 @@ class GameOwnerCommandAction : V086Action<GameChat> {
 
   // new gameowner command /setconn
   @Throws(ActionException::class, MessageFormatException::class)
-  private fun processConn(message: String, game: KailleraGameImpl, admin: KailleraUser) {
+  private fun processConn(message: String, game: KailleraGame, admin: KailleraUser) {
     var conn = game.owner.connectionType.readableName
     if (message == "/setconn any") {
       conn = "any"
@@ -191,12 +190,12 @@ class GameOwnerCommandAction : V086Action<GameChat> {
   }
 
   @Throws(ActionException::class, MessageFormatException::class)
-  private fun processNum(game: KailleraGameImpl, admin: KailleraUser) {
+  private fun processNum(game: KailleraGame, admin: KailleraUser) {
     admin.game!!.announce("${game.players.size} in the room!", admin)
   }
 
   @Throws(ActionException::class, MessageFormatException::class)
-  private fun processSameDelay(message: String, game: KailleraGameImpl, admin: KailleraUser) {
+  private fun processSameDelay(message: String, game: KailleraGame, admin: KailleraUser) {
     if (message == "/samedelay true") {
       game.sameDelay = true
       admin.game!!.announce("Players will have the same delay when game starts (restarts)!")
@@ -209,7 +208,7 @@ class GameOwnerCommandAction : V086Action<GameChat> {
   @Throws(ActionException::class, MessageFormatException::class)
   private fun processMute(
     message: String,
-    game: KailleraGameImpl,
+    game: KailleraGame,
     admin: KailleraUser,
     clientHandler: V086ClientHandler,
   ) {
@@ -262,7 +261,7 @@ class GameOwnerCommandAction : V086Action<GameChat> {
   @Throws(ActionException::class, MessageFormatException::class)
   private fun processUnmute(
     message: String,
-    game: KailleraGameImpl,
+    game: KailleraGame,
     admin: KailleraUser,
     clientHandler: V086ClientHandler,
   ) {
@@ -307,7 +306,7 @@ class GameOwnerCommandAction : V086Action<GameChat> {
   @Throws(ActionException::class, MessageFormatException::class)
   private fun processStartN(
     message: String,
-    game: KailleraGameImpl,
+    game: KailleraGame,
     admin: KailleraUser,
     clientHandler: V086ClientHandler,
   ) {
@@ -327,7 +326,7 @@ class GameOwnerCommandAction : V086Action<GameChat> {
   }
 
   @Throws(ActionException::class, MessageFormatException::class)
-  private fun processSwap(message: String, game: KailleraGameImpl, admin: KailleraUser) {
+  private fun processSwap(message: String, game: KailleraGame, admin: KailleraUser) {
     /*if(game.getStatus() != KailleraGame.STATUS_PLAYING){
     	game.announce("Failed: wap Players can only be used during gameplay!", admin);
     	return;
@@ -387,14 +386,14 @@ class GameOwnerCommandAction : V086Action<GameChat> {
   }
 
   @Throws(ActionException::class, MessageFormatException::class)
-  private fun processStart(game: KailleraGameImpl, admin: KailleraUser) {
+  private fun processStart(game: KailleraGame, admin: KailleraUser) {
     game.start(admin)
   }
 
   @Throws(ActionException::class, MessageFormatException::class)
   private fun processKick(
     message: String,
-    game: KailleraGameImpl,
+    game: KailleraGame,
     admin: KailleraUser,
     clientHandler: V086ClientHandler,
   ) {
@@ -429,7 +428,7 @@ class GameOwnerCommandAction : V086Action<GameChat> {
   }
 
   @Throws(ActionException::class, MessageFormatException::class)
-  private fun processMaxUsers(message: String, game: KailleraGameImpl, admin: KailleraUser) {
+  private fun processMaxUsers(message: String, game: KailleraGame, admin: KailleraUser) {
     if (System.currentTimeMillis() - lastMaxUserChange <= 3000) {
       game.announce("Max User Command Spam Detection...Please Wait!", admin)
       lastMaxUserChange = System.currentTimeMillis()
@@ -453,7 +452,7 @@ class GameOwnerCommandAction : V086Action<GameChat> {
   }
 
   @Throws(ActionException::class, MessageFormatException::class)
-  private fun processMaxPing(message: String, game: KailleraGameImpl, admin: KailleraUser) {
+  private fun processMaxPing(message: String, game: KailleraGame, admin: KailleraUser) {
     val scanner = Scanner(message).useDelimiter(" ")
     try {
       scanner.next()
