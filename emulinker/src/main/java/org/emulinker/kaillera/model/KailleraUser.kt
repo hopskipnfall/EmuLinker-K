@@ -2,10 +2,8 @@ package org.emulinker.kaillera.model
 
 import com.google.common.flogger.FluentLogger
 import java.net.InetSocketAddress
-import java.util.ArrayList
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.ThreadPoolExecutor
-import kotlin.Throws
 import kotlin.time.Clock
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
@@ -21,8 +19,19 @@ import org.emulinker.kaillera.model.event.KailleraEventListener
 import org.emulinker.kaillera.model.event.StopFlagEvent
 import org.emulinker.kaillera.model.event.UserQuitEvent
 import org.emulinker.kaillera.model.event.UserQuitGameEvent
-import org.emulinker.kaillera.model.exception.*
-import org.emulinker.kaillera.model.impl.KailleraGameImpl
+import org.emulinker.kaillera.model.exception.ChatException
+import org.emulinker.kaillera.model.exception.CloseGameException
+import org.emulinker.kaillera.model.exception.CreateGameException
+import org.emulinker.kaillera.model.exception.DropGameException
+import org.emulinker.kaillera.model.exception.FloodException
+import org.emulinker.kaillera.model.exception.GameChatException
+import org.emulinker.kaillera.model.exception.GameDataException
+import org.emulinker.kaillera.model.exception.GameKickException
+import org.emulinker.kaillera.model.exception.JoinGameException
+import org.emulinker.kaillera.model.exception.QuitException
+import org.emulinker.kaillera.model.exception.QuitGameException
+import org.emulinker.kaillera.model.exception.StartGameException
+import org.emulinker.kaillera.model.exception.UserReadyException
 import org.emulinker.util.CircularVariableSizeByteArrayBuffer
 import org.emulinker.util.EmuLang
 import org.emulinker.util.TimeOffsetCache
@@ -209,7 +218,7 @@ class KailleraUser(
     lastKeepAlive = clock.now()
   }
 
-  var game: KailleraGameImpl? = null
+  var game: KailleraGame? = null
     set(value) {
       if (value == null) {
         playerNumber = -1
@@ -254,9 +263,9 @@ class KailleraUser(
   }
 
   @Throws(ChatException::class, FloodException::class)
-  fun chat(message: String?) {
+  fun chat(message: String) {
     updateLastActivity()
-    server.chat(this, message)
+    server.chat(to = this, message)
     lastChatTime = clock.now()
   }
 
@@ -298,7 +307,7 @@ class KailleraUser(
     QuitGameException::class,
     CloseGameException::class,
   )
-  fun quit(message: String?) {
+  fun quit(message: String) {
     updateLastActivity()
     server.quit(this, message)
     loggedIn = false
@@ -343,7 +352,7 @@ class KailleraUser(
     //
     // }
     playerNumber = game.join(this)
-    this.game = game as KailleraGameImpl
+    this.game = game
     gameDataErrorTime = -1
     return game
   }

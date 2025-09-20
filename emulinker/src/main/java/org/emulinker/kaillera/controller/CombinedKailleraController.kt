@@ -20,7 +20,11 @@ import java.util.concurrent.ConcurrentHashMap
 import kotlin.concurrent.thread
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.access.AccessManager
-import org.emulinker.kaillera.controller.connectcontroller.protocol.*
+import org.emulinker.kaillera.controller.connectcontroller.protocol.ConnectMessage
+import org.emulinker.kaillera.controller.connectcontroller.protocol.ConnectMessage_PING
+import org.emulinker.kaillera.controller.connectcontroller.protocol.ConnectMessage_PONG
+import org.emulinker.kaillera.controller.connectcontroller.protocol.RequestPrivateKailleraPortRequest
+import org.emulinker.kaillera.controller.connectcontroller.protocol.RequestPrivateKailleraPortResponse
 import org.emulinker.kaillera.controller.v086.V086ClientHandler
 import org.emulinker.kaillera.model.KailleraServer
 import org.emulinker.kaillera.model.exception.NewConnectionException

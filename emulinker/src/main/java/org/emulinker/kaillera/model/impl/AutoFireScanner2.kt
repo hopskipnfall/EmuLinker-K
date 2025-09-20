@@ -1,8 +1,6 @@
 package org.emulinker.kaillera.model.impl
 
 import com.google.common.flogger.FluentLogger
-import java.lang.Exception
-import java.lang.Runnable
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import org.emulinker.kaillera.model.KailleraGame
@@ -53,7 +51,7 @@ class AutoFireScanner2(private var game: KailleraGame, sensitivity: Int) : AutoF
     scanningJobs?.get(playerNumber - 1)?.addData(data, bytesPerAction)
   }
 
-  inner class ScanningJob(private val user: KailleraUser?, private val playerNumber: Int) :
+  inner class ScanningJob(private val user: KailleraUser, private val playerNumber: Int) :
     Runnable {
     private var bytesPerAction = -1
     private val sizeLimit: Int = (maxDelay + 1) * minReps * 5
@@ -122,7 +120,7 @@ class AutoFireScanner2(private var game: KailleraGame, sensitivity: Int) : AutoF
           var lastBSequence = 0
           var bSequenceCount = 0
           for (i in 0 until actionCount) {
-            data?.let { System.arraycopy(it, i * bytesPerAction, thisAction, 0, bytesPerAction) }
+            System.arraycopy(data, i * bytesPerAction, thisAction, 0, bytesPerAction)
             //						logger.atFine().log("thisAction=" + EmuUtil.bytesToHex(thisAction) + " actionA="
             // +
             // EmuUtil.bytesToHex(actionA) + " aCount=" + aCount + " actionB=" +
@@ -179,7 +177,7 @@ class AutoFireScanner2(private var game: KailleraGame, sensitivity: Int) : AutoF
             // bSequenceCount);
             //						}
             if (aSequenceCount >= minReps && bSequenceCount >= minReps && !stopFlag) {
-              val gameImpl = game as KailleraGameImpl
+              val gameImpl = game
               gameImpl.announce(getString("AutoFireScanner2.AutoFireDetected", user!!.name))
               logger
                 .atInfo()
@@ -207,7 +205,7 @@ class AutoFireScanner2(private var game: KailleraGame, sensitivity: Int) : AutoF
   companion object {
     private val logger = FluentLogger.forEnclosingClass()
 
-    // MAX DELAY, MIN REPEITIONS
+    // MAX DELAY, MIN REPETITIONS
     private val SENSITIVITY_TABLE =
       arrayOf(
         intArrayOf(0, 0),
@@ -217,7 +215,7 @@ class AutoFireScanner2(private var game: KailleraGame, sensitivity: Int) : AutoF
         intArrayOf(5, 7),
         intArrayOf(6, 5),
       )
-    protected var executor: ExecutorService = Executors.newCachedThreadPool()
+    private var executor: ExecutorService = Executors.newCachedThreadPool()
   }
 
   init {

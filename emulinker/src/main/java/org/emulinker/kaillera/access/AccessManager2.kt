@@ -216,7 +216,7 @@ class AccessManager2(private val flags: RuntimeFlags, private val taskScheduler:
   }
 
   @Synchronized
-  override fun isEmulatorAllowed(emulator: String?): Boolean {
+  override fun isEmulatorAllowed(emulator: String): Boolean {
     checkReload()
     return emulatorList.firstOrNull { it.matches(emulator) }?.access ?: true
   }
@@ -379,9 +379,9 @@ class AccessManager2(private val flags: RuntimeFlags, private val taskScheduler:
 
     private var patterns: MutableList<WildcardStringPattern>
 
-    fun matches(emulator: String?): Boolean {
+    fun matches(emulator: String): Boolean {
       for (pattern in patterns) {
-        if (pattern.match(emulator!!.lowercase(Locale.getDefault()))) return true
+        if (pattern.match(emulator.lowercase(Locale.getDefault()))) return true
       }
       return false
     }

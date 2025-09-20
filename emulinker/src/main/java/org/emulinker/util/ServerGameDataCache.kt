@@ -1,7 +1,5 @@
 package org.emulinker.util
 
-import java.lang.IndexOutOfBoundsException
-
 @Deprecated("This has promise but indexOf does not work reliably!", level = DeprecationLevel.ERROR)
 class ServerGameDataCache(size: Int) : GameDataCache {
   // array holds the elements

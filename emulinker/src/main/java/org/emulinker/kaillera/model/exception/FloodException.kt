@@ -1,7 +1,5 @@
 package org.emulinker.kaillera.model.exception
 
-import java.lang.Exception
-
 class FloodException : ActionException {
   constructor() : super()
 

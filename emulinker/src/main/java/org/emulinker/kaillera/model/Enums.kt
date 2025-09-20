@@ -1,7 +1,5 @@
 package org.emulinker.kaillera.model
 
-import org.emulinker.kaillera.model.impl.KailleraGameImpl
-
 const val CLIENT_WITH_BYTE_ID_BUG = "Project 64k 0.13 (01 Aug 2003)"
 
 enum class UserStatus(val byteValue: Byte, private val readableName: String) {
@@ -69,7 +67,7 @@ enum class ConnectionType(
 
   override fun toString() = readableName
 
-  fun getUpdatesPerSecond(gameFps: Int = KailleraGameImpl.GAME_FPS): Double =
+  fun getUpdatesPerSecond(gameFps: Int = KailleraGame.GAME_FPS): Double =
     getUpdatesPerSecond(gameFps.toDouble())
 
   fun getUpdatesPerSecond(gameFps: Double): Double =

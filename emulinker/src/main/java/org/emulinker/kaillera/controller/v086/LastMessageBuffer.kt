@@ -10,13 +10,12 @@ import org.emulinker.kaillera.controller.v086.protocol.V086Message
  * operates like a circular buffer, but adds messages from back to front. By doing this, we can use
  * System.aray copy to efficiently copy messages out, start with the newest first.
  */
-class LastMessageBuffer(max: Int) {
-  private val max: Int
+class LastMessageBuffer(private val max: Int) {
   private var next: Int
   private var size = 0
-  private val array: Array<V086Message?>
+  private val array: Array<V086Message?> = arrayOfNulls(max)
 
-  fun add(o: V086Message?) {
+  fun add(o: V086Message) {
     array[next] = o
     if (--next < 0) next = max - 1
     if (size < max) size++
@@ -40,8 +39,6 @@ class LastMessageBuffer(max: Int) {
   }
 
   init {
-    array = arrayOfNulls(max)
-    this.max = max
     next = max - 1
   }
 }

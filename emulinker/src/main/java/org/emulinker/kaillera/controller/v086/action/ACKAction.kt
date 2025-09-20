@@ -14,7 +14,7 @@ import org.emulinker.kaillera.model.CLIENT_WITH_BYTE_ID_BUG
 import org.emulinker.kaillera.model.UserStatus
 import org.emulinker.kaillera.model.event.ConnectedEvent
 import org.emulinker.kaillera.model.event.UserEvent
-import org.emulinker.kaillera.model.exception.*
+import org.emulinker.kaillera.model.exception.LoginException
 import org.emulinker.util.EmuUtil.threadSleep
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject

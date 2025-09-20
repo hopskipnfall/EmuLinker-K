@@ -1,7 +1,5 @@
 package org.emulinker.util
 
-import java.lang.IndexOutOfBoundsException
-
 class GameDataCacheImpl(capacity: Int) : GameDataCache {
   private var lastRetrievedIndex = -1
 

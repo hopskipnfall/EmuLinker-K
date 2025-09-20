@@ -8,7 +8,6 @@ import java.util.Locale
 import java.util.TimerTask
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ThreadPoolExecutor
-import kotlin.Throws
 import kotlin.time.Clock
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
@@ -31,10 +30,21 @@ import org.emulinker.kaillera.model.event.KailleraEvent
 import org.emulinker.kaillera.model.event.KailleraEventListener
 import org.emulinker.kaillera.model.event.UserJoinedEvent
 import org.emulinker.kaillera.model.event.UserQuitEvent
-import org.emulinker.kaillera.model.exception.*
+import org.emulinker.kaillera.model.exception.ChatException
+import org.emulinker.kaillera.model.exception.ClientAddressException
+import org.emulinker.kaillera.model.exception.CloseGameException
+import org.emulinker.kaillera.model.exception.CreateGameException
+import org.emulinker.kaillera.model.exception.DropGameException
+import org.emulinker.kaillera.model.exception.FloodException
+import org.emulinker.kaillera.model.exception.LoginException
+import org.emulinker.kaillera.model.exception.NewConnectionException
+import org.emulinker.kaillera.model.exception.PingTimeException
+import org.emulinker.kaillera.model.exception.QuitException
+import org.emulinker.kaillera.model.exception.QuitGameException
+import org.emulinker.kaillera.model.exception.ServerFullException
+import org.emulinker.kaillera.model.exception.UserNameException
 import org.emulinker.kaillera.model.impl.AutoFireDetector
 import org.emulinker.kaillera.model.impl.AutoFireDetectorFactory
-import org.emulinker.kaillera.model.impl.KailleraGameImpl
 import org.emulinker.kaillera.model.impl.Trivia
 import org.emulinker.kaillera.pico.AppModule
 import org.emulinker.kaillera.pico.CompiledFlags
@@ -73,7 +83,7 @@ class KailleraServer(
 
   val usersMap: MutableMap<Int, KailleraUser> = ConcurrentHashMap(flags.maxUsers)
 
-  var gamesMap: MutableMap<Int, KailleraGameImpl> = ConcurrentHashMap(flags.maxGames)
+  var gamesMap: MutableMap<Int, KailleraGame> = ConcurrentHashMap(flags.maxGames)
 
   var trivia: Trivia? = null
 
@@ -135,9 +145,8 @@ class KailleraServer(
     return gameCounter++
   }
 
-  fun getAutoFireDetector(game: KailleraGame?): AutoFireDetector {
-    return autoFireDetectorFactory.getInstance(game!!, flags.gameAutoFireSensitivity)
-  }
+  fun getAutoFireDetector(game: KailleraGame): AutoFireDetector =
+    autoFireDetectorFactory.getInstance(game, flags.gameAutoFireSensitivity)
 
   @Synchronized
   @Throws(ServerFullException::class, NewConnectionException::class)
@@ -358,7 +367,7 @@ class KailleraServer(
       )
     }
     if (
-      access == AccessManager.ACCESS_NORMAL && !accessManager.isEmulatorAllowed(user.clientType)
+      access == AccessManager.ACCESS_NORMAL && !accessManager.isEmulatorAllowed(user.clientType!!)
     ) {
       logger
         .atInfo()
@@ -512,7 +521,7 @@ class KailleraServer(
     QuitGameException::class,
     CloseGameException::class,
   )
-  fun quit(user: KailleraUser, message: String?) = withLock {
+  fun quit(user: KailleraUser, message: String) = withLock {
     lookingForGameReporter.cancelActionsForUser(user.id)
     if (!user.loggedIn) {
       usersMap.remove(user.id)
@@ -523,7 +532,7 @@ class KailleraServer(
       logger.atSevere().log("%s quit failed: not in user list", user)
     val userGame = user.game
     if (userGame != null) user.quitGame()
-    var quitMsg = message!!.trim { it <= ' ' }
+    var quitMsg = message.trim { it <= ' ' }
     if (
       quitMsg.isBlank() ||
         (flags.maxQuitMessageLength > 0 && quitMsg.length > flags.maxQuitMessageLength)
@@ -538,51 +547,51 @@ class KailleraServer(
 
   @Synchronized
   @Throws(ChatException::class, FloodException::class)
-  fun chat(user: KailleraUser?, message: String?) {
+  fun chat(to: KailleraUser, message: String) {
     var message = message
-    if (!user!!.loggedIn) {
-      logger.atSevere().log("%s chat failed: Not logged in", user)
+    if (!to.loggedIn) {
+      logger.atSevere().log("%s chat failed: Not logged in", to)
       throw ChatException(EmuLang.getString("KailleraServerImpl.NotLoggedIn"))
     }
-    val access = accessManager.getAccess(user.socketAddress!!.address)
+    val access = accessManager.getAccess(to.socketAddress!!.address)
     if (
       access < AccessManager.ACCESS_SUPERADMIN &&
-        accessManager.isSilenced(user.socketAddress!!.address)
+        accessManager.isSilenced(to.socketAddress!!.address)
     ) {
-      logger.atWarning().log("%s chat denied: Silenced: %s", user, message)
+      logger.atWarning().log("%s chat denied: Silenced: %s", to, message)
       throw ChatException(EmuLang.getString("KailleraServerImpl.ChatDeniedSilenced"))
     }
     if (
       access == AccessManager.ACCESS_NORMAL &&
         flags.chatFloodTime > Duration.ZERO &&
-        clock.now() - user.lastChatTime < flags.chatFloodTime
+        clock.now() - to.lastChatTime < flags.chatFloodTime
     ) {
-      logger.atWarning().log("%s chat denied: Flood: %s", user, message)
+      logger.atWarning().log("%s chat denied: Flood: %s", to, message)
       throw FloodException(EmuLang.getString("KailleraServerImpl.ChatDeniedFloodControl"))
     }
     if (message == ":USER_COMMAND") {
       return
     }
-    message = message!!.trim { it <= ' ' }
+    message = message.trim { it <= ' ' }
     if (message.isBlank() || message.startsWith("�") || message.startsWith("�")) return
     if (access == AccessManager.ACCESS_NORMAL) {
       val chars = message.toCharArray()
       for (i in chars.indices) {
         if (chars[i].code < 32) {
-          logger.atWarning().log("%s chat denied: Illegal characters in message", user)
+          logger.atWarning().log("%s chat denied: Illegal characters in message", to)
           throw ChatException(EmuLang.getString("KailleraServerImpl.ChatDeniedIllegalCharacters"))
         }
       }
       if (flags.maxChatLength > 0 && message.length > flags.maxChatLength) {
-        logger.atWarning().log("%s chat denied: Message Length > %d", user, flags.maxChatLength)
+        logger.atWarning().log("%s chat denied: Message Length > %d", to, flags.maxChatLength)
         throw ChatException(EmuLang.getString("KailleraServerImpl.ChatDeniedMessageTooLong"))
       }
     }
-    logger.atInfo().log("%s chat: %s", user, message)
-    addEvent(ChatEvent(this, user, message))
+    logger.atInfo().log("%s chat: %s", to, message)
+    addEvent(ChatEvent(this, to, message))
     if (switchTrivia) {
       if (!trivia!!.isAnswered && trivia!!.isCorrect(message)) {
-        trivia!!.addScore(user.name!!, user.socketAddress!!.address.hostAddress, message)
+        trivia!!.addScore(to.name!!, to.socketAddress!!.address.hostAddress, message)
       }
     }
   }
@@ -652,18 +661,9 @@ class KailleraServer(
         )
       }
     }
-    val game: KailleraGameImpl?
+    val game: KailleraGame?
     val gameID = getNextGameID()
-    game =
-      KailleraGameImpl(
-        gameID,
-        romName,
-        (user as KailleraUser?)!!,
-        this,
-        flags.gameBufferSize,
-        flags,
-        clock,
-      )
+    game = KailleraGame(gameID, romName, owner = user, this, flags.gameBufferSize, flags, clock)
     gamesMap[gameID] = game
     addEvent(GameCreatedEvent(this, game))
     logger.atInfo().log("%s created: %s: %s", user, game, game.romName)
@@ -710,7 +710,7 @@ class KailleraServer(
       logger.atSevere().log("%s close %s failed: not in list: %s", user, game, game)
       return
     }
-    (game as KailleraGameImpl).close(user)
+    game.close(user)
     gamesMap.remove(game.id)
     logger.atInfo().log("%s closed: %s", user, game)
     addEvent(GameClosedEvent(this, game))
@@ -909,7 +909,7 @@ class KailleraServer(
         } else if (
           user.loggedIn &&
             access == AccessManager.ACCESS_NORMAL &&
-            !accessManager.isEmulatorAllowed(user.clientType)
+            !accessManager.isEmulatorAllowed(user.clientType!!)
         ) {
           logger.atInfo().log("%s: emulator restricted!", user)
           try {
