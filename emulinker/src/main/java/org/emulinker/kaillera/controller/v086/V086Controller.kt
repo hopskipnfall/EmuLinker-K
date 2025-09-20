@@ -100,7 +100,7 @@ class V086Controller(
   infoMessageAction: InfoMessageAction,
   flags: RuntimeFlags,
 ) : KailleraServerController, KoinComponent {
-  override val clientTypes: Array<String> = flags.clientTypes.toTypedArray()
+  override val clientTypes: Array<String> = flags.allowedProtocols.toTypedArray()
 
   var clientHandlers: MutableMap<Int, V086ClientHandler> = ConcurrentHashMap()
 

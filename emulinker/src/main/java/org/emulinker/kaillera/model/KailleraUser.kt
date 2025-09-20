@@ -123,7 +123,7 @@ class KailleraUser(
   var lastChatTime: Instant = initTime
     private set
 
-  var lastCreateGameTime: Long = 0
+  var lastCreateGameTime: Instant = initTime
     private set
 
   var frameCount = 0
@@ -271,7 +271,7 @@ class KailleraUser(
   }
 
   @Throws(CreateGameException::class, FloodException::class)
-  fun createGame(romName: String?): KailleraGame? {
+  fun createGame(romName: String): KailleraGame? {
     updateLastActivity()
     if (server.getUser(id) == null) {
       logger.atSevere().log("%s create game failed: User don't exist!", this)
@@ -287,7 +287,7 @@ class KailleraUser(
       )
     }
     val game = server.createGame(this, romName)
-    lastCreateGameTime = System.currentTimeMillis()
+    lastCreateGameTime = clock.now()
     return game
   }
 

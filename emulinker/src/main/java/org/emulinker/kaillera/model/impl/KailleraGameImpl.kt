@@ -399,7 +399,7 @@ class KailleraGameImpl(
       logger.atWarning().log("%s start game failed: %s status is %s", user, this, status)
       throw StartGameException(EmuLang.getString("KailleraGameImpl.StartGameErrorStatusIsPlaying"))
     }
-    if (access == AccessManager.ACCESS_NORMAL && players.size < 2 && !server.allowSinglePlayer) {
+    if (access == AccessManager.ACCESS_NORMAL && players.size < 2 && !flags.allowSinglePlayer) {
       logger.atWarning().log("%s start game denied: %s needs at least 2 players", user, this)
       throw StartGameException(
         EmuLang.getString("KailleraGameImpl.StartGameDeniedSinglePlayerNotAllowed")

@@ -10,6 +10,7 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ThreadPoolExecutor
 import kotlin.Throws
 import kotlin.time.Clock
+import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
@@ -88,7 +89,6 @@ class KailleraServer(
     return gamesMap[gameID]
   }
 
-  val allowSinglePlayer = flags.allowSinglePlayer
   private val maxUserNameLength: Int = flags.maxUserNameLength
   val maxGameChatLength = flags.maxGameChatLength
   private val maxClientNameLength: Int = flags.maxClientNameLength
@@ -554,9 +554,8 @@ class KailleraServer(
     }
     if (
       access == AccessManager.ACCESS_NORMAL &&
-        flags.chatFloodTime > 0 &&
-        (clock.now() - (user as KailleraUser?)!!.lastChatTime <
-          (flags.chatFloodTime * 1000).milliseconds)
+        flags.chatFloodTime > Duration.ZERO &&
+        clock.now() - user.lastChatTime < flags.chatFloodTime
     ) {
       logger.atWarning().log("%s chat denied: Flood: %s", user, message)
       throw FloodException(EmuLang.getString("KailleraServerImpl.ChatDeniedFloodControl"))
@@ -589,28 +588,26 @@ class KailleraServer(
   }
 
   @Throws(CreateGameException::class, FloodException::class)
-  fun createGame(user: KailleraUser?, romName: String?): KailleraGame = withLock {
-    if (!user!!.loggedIn) {
+  fun createGame(user: KailleraUser, romName: String): KailleraGame = withLock {
+    if (!user.loggedIn) {
       logger.atSevere().log("%s create game failed: Not logged in", user)
       throw CreateGameException(EmuLang.getString("KailleraServerImpl.NotLoggedIn"))
     }
-    if ((user as KailleraUser?)!!.game != null) {
-      logger
-        .atSevere()
-        .log("%s create game failed: already in game: %s", user, (user as KailleraUser?)!!.game)
+    if (user.game != null) {
+      logger.atSevere().log("%s create game failed: already in game: %s", user, user.game)
       throw CreateGameException(
         EmuLang.getString("KailleraServerImpl.CreateGameErrorAlreadyInGame")
       )
     }
     if (
-      flags.maxGameNameLength > 0 && romName!!.trim { it <= ' ' }.length > flags.maxGameNameLength
+      flags.maxGameNameLength > 0 && romName.trim { it <= ' ' }.length > flags.maxGameNameLength
     ) {
       logger
         .atWarning()
         .log("%s create game denied: Rom Name Length > %d", user, flags.maxGameNameLength)
       throw CreateGameException(EmuLang.getString("KailleraServerImpl.CreateGameDeniedNameTooLong"))
     }
-    if (romName!!.lowercase(Locale.getDefault()).contains("|")) {
+    if (romName.lowercase(Locale.getDefault()).contains("|")) {
       logger.atWarning().log("%s create game denied: Illegal characters in ROM name", user)
       throw CreateGameException(
         EmuLang.getString("KailleraServerImpl.CreateGameDeniedIllegalCharacters")
@@ -619,9 +616,8 @@ class KailleraServer(
     val access = accessManager.getAccess(user.socketAddress!!.address)
     if (access == AccessManager.ACCESS_NORMAL) {
       if (
-        flags.createGameFloodTime > 0 &&
-          System.currentTimeMillis() - (user as KailleraUser?)!!.lastCreateGameTime <
-            flags.createGameFloodTime * 1000
+        flags.createGameFloodTime > Duration.ZERO &&
+          clock.now() - user.lastCreateGameTime < flags.createGameFloodTime
       ) {
         logger.atWarning().log("%s create game denied: Flood: %s", user, romName)
         throw FloodException(EmuLang.getString("KailleraServerImpl.CreateGameDeniedFloodControl"))
@@ -939,7 +935,7 @@ class KailleraServer(
       i++
     }
     loginMessages = loginMessagesBuilder
-    flags.connectionTypes.forEach { type ->
+    flags.allowedConnectionTypes.forEach { type ->
       val ct = type.toInt()
       allowedConnectionTypes[ct] = true
     }
