@@ -86,9 +86,7 @@ With these settings, users whose name ends in @waiting (meaning they are waiting
 
 ### emulinker.cfg
 
-Here's the same information formatted as a markdown table:
-
-Here's the markdown table without the "Property" column:
+Here is a full list of supported options to set in emulinker.cfg:
 
 | Config Key                              | Default Value  | Description                                                                                                                                                                                                                                                                                                                                                            |
 |-----------------------------------------|----------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
