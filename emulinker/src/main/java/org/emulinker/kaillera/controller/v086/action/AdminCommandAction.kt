@@ -2,7 +2,8 @@ package org.emulinker.kaillera.controller.v086.action
 
 import com.google.common.flogger.FluentLogger
 import java.net.InetAddress
-import java.util.*
+import java.util.Locale
+import java.util.Scanner
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
 import org.emulinker.kaillera.access.AccessManager

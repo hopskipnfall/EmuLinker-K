@@ -1,8 +1,6 @@
 package org.emulinker.kaillera.model.impl
 
 import com.google.common.flogger.FluentLogger
-import java.lang.Exception
-import java.lang.Runnable
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import org.emulinker.kaillera.model.KailleraGame

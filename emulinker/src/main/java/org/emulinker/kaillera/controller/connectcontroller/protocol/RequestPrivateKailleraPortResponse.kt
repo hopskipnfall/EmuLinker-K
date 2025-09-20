@@ -1,9 +1,7 @@
 package org.emulinker.kaillera.controller.connectcontroller.protocol
 
 import io.netty.buffer.ByteBuf
-import java.lang.NumberFormatException
 import java.nio.ByteBuffer
-import kotlin.Throws
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.pico.AppModule
 import org.emulinker.util.EmuUtil

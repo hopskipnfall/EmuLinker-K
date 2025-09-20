@@ -10,7 +10,6 @@ import java.net.URL
 import java.util.Locale
 import java.util.concurrent.TimeUnit.HOURS
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.master.PublicServerInformation

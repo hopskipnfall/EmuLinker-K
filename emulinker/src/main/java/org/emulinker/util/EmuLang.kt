@@ -1,7 +1,6 @@
 package org.emulinker.util
 
 import com.google.common.flogger.FluentLogger
-import java.lang.Exception
 import java.text.MessageFormat
 import java.util.MissingResourceException
 import java.util.ResourceBundle

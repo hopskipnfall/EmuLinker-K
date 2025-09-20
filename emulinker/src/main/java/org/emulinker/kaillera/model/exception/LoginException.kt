@@ -1,7 +1,5 @@
 package org.emulinker.kaillera.model.exception
 
-import java.lang.Exception
-
 open class LoginException : ActionException {
   constructor(message: String?) : super(message)
 

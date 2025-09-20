@@ -3,11 +3,9 @@ package org.emulinker.kaillera.model
 import com.google.common.flogger.FluentLogger
 import com.google.protobuf.util.Timestamps
 import java.io.FileOutputStream
-import java.lang.Exception
 import java.util.Date
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.zip.GZIPOutputStream
-import kotlin.Throws
 import kotlin.io.path.createTempDirectory
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.milliseconds

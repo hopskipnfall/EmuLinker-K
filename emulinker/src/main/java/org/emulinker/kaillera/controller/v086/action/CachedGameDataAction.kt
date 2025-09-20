@@ -1,8 +1,6 @@
 package org.emulinker.kaillera.controller.v086.action
 
 import com.google.common.flogger.FluentLogger
-import java.lang.IndexOutOfBoundsException
-import kotlin.Throws
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086ClientHandler
 import org.emulinker.kaillera.controller.v086.protocol.CachedGameData

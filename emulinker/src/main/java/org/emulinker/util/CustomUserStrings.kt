@@ -1,6 +1,5 @@
 package org.emulinker.util
 
-import java.lang.Exception
 import java.text.MessageFormat
 import java.util.ResourceBundle
 

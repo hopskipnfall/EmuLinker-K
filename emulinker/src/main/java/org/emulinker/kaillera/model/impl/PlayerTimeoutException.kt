@@ -1,6 +1,5 @@
 package org.emulinker.kaillera.model.impl
 
-import java.lang.Exception
 import org.emulinker.kaillera.model.KailleraUser
 
 data class PlayerTimeoutException(

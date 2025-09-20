@@ -1,7 +1,8 @@
 package org.emulinker.kaillera.controller.v086.action
 
 import com.google.common.flogger.FluentLogger
-import java.util.*
+import java.util.Scanner
+import java.util.StringTokenizer
 import kotlin.time.Duration.Companion.milliseconds
 import org.emulinker.kaillera.access.AccessManager
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
@@ -163,11 +164,7 @@ class GameOwnerCommandAction : V086Action<GameChat> {
   }
 
   @Throws(ActionException::class, MessageFormatException::class)
-  private fun processEmu(
-    message: String,
-    game: KailleraGame,
-    admin: KailleraUser,
-  ) {
+  private fun processEmu(message: String, game: KailleraGame, admin: KailleraUser) {
     var emu = game.owner.clientType
     if (message == "/setemu any") {
       emu = "any"
