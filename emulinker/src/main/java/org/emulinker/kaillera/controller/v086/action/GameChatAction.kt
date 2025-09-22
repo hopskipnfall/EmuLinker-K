@@ -495,7 +495,7 @@ class GameChatAction(
         val p1 = game.players.firstOrNull()
         if (p1 != null && p1.connectionType == ConnectionType.LAN && lagstatDuration > 10.seconds) {
           val lagPerDuration = game.currentGameLag / lagstatDuration
-          if (lagPerDuration > 0.5.seconds / 1.minutes) {
+          if (lagPerDuration > 0.3.seconds / 1.minutes) {
             val laggiestPlayer = game.players.maxBy { it.lagAttributedToUser() }
             if (laggiestPlayer.lagAttributedToUser() > Duration.ZERO) {
               val targetFrameDelay = laggiestPlayer.frameDelay + 1
