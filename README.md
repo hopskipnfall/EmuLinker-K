@@ -20,7 +20,55 @@ Feel free to file bugs and feature requests on this repository, or find our chan
 
 ## Setting up a new server
 
-Download the latest version from the [Releases](https://github.com/hopskipnfall/EmuLinker-K/releases/latest) page. After unzipping, make sure Java 17 or above is installed before run the following commands:
+### Prerequisites
+
+Ensure Java 17 is installed.
+
+On Debian/Ubuntu:
+
+```bash
+java --version
+```
+
+If Java 17 is not installed, then run
+
+```bash
+sudo apt update
+sudo apt install openjdk-17-jdk openjdk-17-jre
+```
+
+Ensure unzip is installed.
+
+```bash
+sudo apt install unzip
+```
+
+### Installation of the server
+
+Download the latest version from the [Releases](https://github.com/hopskipnfall/EmuLinker-K/releases/latest) page.
+
+
+Copy the link of the .zip in the page linked above, then download it.
+
+On Debian/ubuntu:
+
+```bash
+wget https://github.com/hopskipnfall/EmuLinker-K/releases/download/0.15/EmuLinker-K-0.15.0.zip
+```
+
+Unzip it.
+
+On Debian/ubuntu:
+
+```bash
+unzip EmuLinker-K-0.15.0.zip
+```
+
+Go to `EmuLinker-K` folder.
+
+```bash
+cd EmuLinker-K/
+```
 
 1. Allow scripts to be executed:
 
@@ -28,13 +76,84 @@ Download the latest version from the [Releases](https://github.com/hopskipnfall/
 chmod +x *.sh
 ```
 
-2. Run the server:
+2. Configure your server
+
+Configure at least the name which will appear in Kaillera clients:
 
 ```bash
-./start_server.sh
+nano conf/emulinker.cfg
+```
+
+```ini
+ # MASTER LIST CONFIGURATION
+ # =========================
+ # Server name to display in the master lists
+masterList.serverName=John Doe Server
+ # Location of the server to display in the master lists
+masterList.serverLocation=Chateauneuf-du-Faou
+```
+
+3. Run the server
+
+Option 1 - deamon mode (will remain open as long as you don't restart your machine)
+
+```bash
+./start-server.sh
+```
+
+Option 2 - simple mode (will be closed if you close the process).
+
+This option may be preferable if you don't want to let your server open after your game session.
+
+```bash
+./server.sh
 ```
 
 The server should now be running on port `27888`.
+
+If your server is installed on a VPS, open the port.
+
+On Debian/Ubuntu, if ufw is installed to managed ports (recommended):
+
+```bash
+sudo ufw allow 27888
+```
+
+## Running a game
+
+The best way to know if your server is running as expected is to run a game.
+
+Here is an example of how to run a N64 game (remember you are not allowed to run emulated game unless you possess an original one).
+
+To do on ALL the PCs: 
+
+1. Download and unzip [RetroaArch with Kaillera support](https://kaillerareborn.github.io/)
+2. Run `retroarch.exe` (execute anyway if Windows displays a warning)
+3. Load a core > Download a core > Select your favorite emulator
+4. Configure your controller 1 if needed (it's the one used in Netplay even if you are not the 1st player)
+5. Download the rom you want to play (must be the same on all PCs)
+6. Run it once in Retroarch (Load content > browse to your rom file)
+7. From Retroarch main menu, click on "Kaillera Netplay"
+8. Click on "Add"
+8. Set the name you want and enter the IP to the server's one followed by the port (example `123.456.78.90:27888`)
+9. Validate with "Add", and the server should now appear in your favorites
+
+Once done on all PCs, the player 1 must, ALONE:
+* connect to the server
+
+He should see something like this:
+![Kaillera Client 1st connection](docs/assets/client-connection.png)
+
+* Click on "new game" > if "no games in list", close kaillera client, run your game once, close the game, then try again.
+* DO NOT start the game YET
+
+Now, all the other players can connect to the server.
+* Instead of clicking on "new game", they will join the player 1 by double-clicking on the line
+![Join game](docs/assets/join-game.png)
+
+Once everyone is here, the 1st player can click on "Start".
+
+Enjoy!
 
 ## Features
 
