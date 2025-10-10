@@ -9,6 +9,7 @@ import java.net.HttpURLConnection
 import java.net.URL
 import java.util.Locale
 import java.util.concurrent.TimeUnit.HOURS
+import kotlin.String
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import org.emulinker.config.RuntimeFlags
@@ -28,6 +29,10 @@ data class ServerInfo(
   val version: String,
   val isDevBuild: Boolean,
   val defaultLocale: String,
+  val osName: String,
+  val javaVersion: String,
+  val javaVendor: String,
+  val availableProcessors: Int,
 )
 
 @Serializable data class CheckinRequest(val serverInfo: ServerInfo)
@@ -87,6 +92,10 @@ class ServerCheckinTask(
           version = releaseInfo.versionWithElkPrefix,
           isDevBuild = CompiledFlags.DEBUG_BUILD,
           defaultLocale = Locale.getDefault().toString(),
+          osName = System.getProperty("os.name"),
+          javaVersion = System.getProperty("java.version"),
+          javaVendor = System.getProperty("java.vendor"),
+          availableProcessors = Runtime.getRuntime().availableProcessors(),
         )
       )
 
