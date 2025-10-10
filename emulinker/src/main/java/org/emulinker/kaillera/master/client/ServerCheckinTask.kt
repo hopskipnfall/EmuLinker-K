@@ -16,6 +16,7 @@ import org.emulinker.kaillera.master.PublicServerInformation
 import org.emulinker.kaillera.pico.AppModule
 import org.emulinker.kaillera.pico.CompiledFlags
 import org.emulinker.kaillera.release.ReleaseInfo
+import kotlin.String
 
 @Serializable
 data class ServerInfo(
@@ -28,6 +29,10 @@ data class ServerInfo(
   val version: String,
   val isDevBuild: Boolean,
   val defaultLocale: String,
+  val osName: String,
+  val javaVersion: String,
+  val javaVendor: String,
+  val availableProcessors: Int,
 )
 
 @Serializable data class CheckinRequest(val serverInfo: ServerInfo)
@@ -87,6 +92,10 @@ class ServerCheckinTask(
           version = releaseInfo.versionWithElkPrefix,
           isDevBuild = CompiledFlags.DEBUG_BUILD,
           defaultLocale = Locale.getDefault().toString(),
+          osName = System.getProperty("os.name"),
+          javaVersion = System.getProperty("java.version"),
+          javaVendor = System.getProperty("java.vendor"),
+          availableProcessors = Runtime.getRuntime().availableProcessors(),
         )
       )
 
