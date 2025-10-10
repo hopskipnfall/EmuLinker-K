@@ -9,6 +9,7 @@ import java.net.HttpURLConnection
 import java.net.URL
 import java.util.Locale
 import java.util.concurrent.TimeUnit.HOURS
+import kotlin.String
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import org.emulinker.config.RuntimeFlags
@@ -16,7 +17,6 @@ import org.emulinker.kaillera.master.PublicServerInformation
 import org.emulinker.kaillera.pico.AppModule
 import org.emulinker.kaillera.pico.CompiledFlags
 import org.emulinker.kaillera.release.ReleaseInfo
-import kotlin.String
 
 @Serializable
 data class ServerInfo(
