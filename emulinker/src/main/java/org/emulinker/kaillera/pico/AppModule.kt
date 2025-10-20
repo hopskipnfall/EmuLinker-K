@@ -1,6 +1,7 @@
 package org.emulinker.kaillera.pico
 
 import java.nio.charset.Charset
+import java.util.Locale
 
 abstract class AppModule {
 
@@ -9,6 +10,7 @@ abstract class AppModule {
     // NOTE: This is NOT marked final and there are race conditions involved. Inject @RuntimeFlags
     // instead!
     lateinit var charsetDoNotUse: Charset
+    lateinit var locale: Locale
 
     // TODO(nue): Clean this up.
     /**

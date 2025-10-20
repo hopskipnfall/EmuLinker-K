@@ -4,6 +4,7 @@ import com.codahale.metrics.MetricRegistry
 import io.github.redouane59.twitter.TwitterClient
 import io.github.redouane59.twitter.signature.TwitterCredentials
 import java.nio.charset.Charset
+import java.util.Locale
 import java.util.Timer
 import java.util.concurrent.SynchronousQueue
 import java.util.concurrent.ThreadPoolExecutor
@@ -33,7 +34,6 @@ import org.emulinker.kaillera.model.ConnectionType
 import org.emulinker.kaillera.model.KailleraServer
 import org.emulinker.kaillera.model.impl.AutoFireDetectorFactory
 import org.emulinker.kaillera.model.impl.AutoFireDetectorFactoryImpl
-import org.emulinker.kaillera.pico.AppModule.Companion.charsetDoNotUse
 import org.emulinker.kaillera.release.ReleaseInfo
 import org.emulinker.util.CustomUserStrings
 import org.emulinker.util.EmuLinkerPropertiesConfig
@@ -112,6 +112,11 @@ val koinModule = module {
         keepAliveTimeout = config.getInt("server.keepAliveTimeout", 190).seconds,
         lagstatDuration =
           config.getInt("server.lagstatDurationSeconds", 1.minutes.inWholeSeconds.toInt()).seconds,
+        locale =
+          when (val locale = config.getString("server.locale", "").lowercase().trim()) {
+            "" -> Locale.getDefault()
+            else -> Locale.forLanguageTag(locale)
+          },
         maxChatLength = config.getInt("server.maxChatLength", 150),
         maxClientNameLength = config.getInt("server.maxClientNameLength", 127),
         maxGameChatLength = config.getInt("server.maxGameChatLength", 320),
@@ -145,7 +150,9 @@ val koinModule = module {
         v086BufferSize = config.getInt("controllers.v086.bufferSize", 4096),
       )
 
-    charsetDoNotUse = flags.charset
+    AppModule.charsetDoNotUse = flags.charset
+    AppModule.locale = flags.locale
+
     flags
   }
 

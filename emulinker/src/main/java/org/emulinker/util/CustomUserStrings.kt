@@ -2,11 +2,12 @@ package org.emulinker.util
 
 import java.text.MessageFormat
 import java.util.ResourceBundle
+import org.emulinker.kaillera.pico.AppModule
 
 object CustomUserStrings {
   private const val BUNDLE_NAME = "language"
 
-  private val RESOURCE_BUNDLE = ResourceBundle.getBundle(BUNDLE_NAME)
+  private val RESOURCE_BUNDLE = ResourceBundle.getBundle(BUNDLE_NAME, AppModule.locale)
 
   /*
   	public static void reload()
