@@ -7,6 +7,7 @@ import io.netty.channel.socket.DatagramPacket
 import java.net.InetSocketAddress
 import java.nio.ByteBuffer
 import java.nio.ByteOrder.LITTLE_ENDIAN
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.nanoseconds
@@ -235,7 +236,8 @@ class V086ClientHandler(
       if (inBundle is V086Bundle.Multi && inBundle.numMessages == 0) {
         logger
           .atFine()
-          .log("%s received bundle of %d messages from %s", this, inBundle.numMessages, user)
+          .atMostEvery(1, TimeUnit.SECONDS)
+          .log("%s received bundle of %d messages from %s", this, user)
         clientRetryCount++
         resend(clientRetryCount)
         return
