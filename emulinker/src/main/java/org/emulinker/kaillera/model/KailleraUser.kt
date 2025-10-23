@@ -440,8 +440,8 @@ class KailleraUser(
       throw UserReadyException(EmuLang.getString("KailleraUserImpl.PlayerReadyErrorNotInGame"))
     }
     if (
-      playerNumber > game.playerActionQueues!!.size ||
-        game.playerActionQueues!![playerNumber - 1].synced
+      playerNumber > game.playerActionQueues.size ||
+        game.playerActionQueues[playerNumber - 1].synced
     ) {
       return
     }
@@ -473,7 +473,7 @@ class KailleraUser(
         bytesPerAction = data.size / connectionType.byteValue
         arraySize = game.playerActionQueues.size * connectionType.byteValue * bytesPerAction
         lostInput.add(data)
-        queueEvent(GameDataEvent(game, VariableSizeByteArray(ByteArray(arraySize) { 0 })))
+        doEvent(GameDataEvent(game, VariableSizeByteArray(ByteArray(arraySize) { 0 })))
         frameCount++
       } else {
         // lostInput.add(data);

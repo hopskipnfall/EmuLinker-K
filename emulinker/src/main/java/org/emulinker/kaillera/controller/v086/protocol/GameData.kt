@@ -24,7 +24,7 @@ import org.emulinker.util.put
  */
 data class GameData
 @Throws(MessageFormatException::class)
-constructor(override val messageNumber: Int, val gameData: VariableSizeByteArray) :
+constructor(override var messageNumber: Int, val gameData: VariableSizeByteArray) :
   V086Message(), ClientMessage, ServerMessage {
   override val messageTypeId = ID
 

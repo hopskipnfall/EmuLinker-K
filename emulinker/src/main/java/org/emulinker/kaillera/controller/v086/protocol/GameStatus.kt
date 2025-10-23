@@ -15,7 +15,7 @@ import org.emulinker.util.UnsignedUtil.putUnsignedShort
 data class GameStatus
 @Throws(MessageFormatException::class)
 constructor(
-  override val messageNumber: Int,
+  override var messageNumber: Int,
   val gameId: Int,
   val val1: Int,
   val gameStatus: org.emulinker.kaillera.model.GameStatus,

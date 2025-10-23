@@ -102,7 +102,7 @@ sealed class GameChat : V086Message() {
  */
 data class GameChatNotification
 @Throws(MessageFormatException::class)
-constructor(override val messageNumber: Int, val username: String, override val message: String) :
+constructor(override var messageNumber: Int, val username: String, override val message: String) :
   GameChat(), ServerMessage
 
 /**
@@ -112,5 +112,5 @@ constructor(override val messageNumber: Int, val username: String, override val 
  */
 data class GameChatRequest
 @Throws(MessageFormatException::class)
-constructor(override val messageNumber: Int, override val message: String) :
+constructor(override var messageNumber: Int, override val message: String) :
   GameChat(), ClientMessage

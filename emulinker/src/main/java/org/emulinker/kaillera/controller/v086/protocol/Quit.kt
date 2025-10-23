@@ -119,7 +119,7 @@ sealed class Quit : V086Message() {
  * Shares a message type ID with [QuitRequest]: `0x01`.
  */
 data class QuitNotification(
-  override val messageNumber: Int,
+  override var messageNumber: Int,
   val username: String,
   val userId: Int,
   override val message: String,
@@ -136,4 +136,4 @@ data class QuitNotification(
  *
  * Shares a message type ID with [QuitNotification]: `0x01`.
  */
-data class QuitRequest(override val messageNumber: Int, override val message: String) : Quit()
+data class QuitRequest(override var messageNumber: Int, override val message: String) : Quit()

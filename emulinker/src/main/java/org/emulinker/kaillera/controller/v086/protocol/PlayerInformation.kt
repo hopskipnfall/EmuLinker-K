@@ -23,7 +23,7 @@ import org.emulinker.util.UnsignedUtil.putUnsignedShort
  *
  * Message type ID: `0x0D`.
  */
-data class PlayerInformation(override val messageNumber: Int, val players: List<Player>) :
+data class PlayerInformation(override var messageNumber: Int, val players: List<Player>) :
   V086Message(), ServerMessage {
   override val messageTypeId = ID
 

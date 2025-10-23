@@ -19,7 +19,7 @@ import org.emulinker.util.UnsignedUtil.putUnsignedShort
 data class ConnectionRejected
 @Throws(MessageFormatException::class)
 constructor(
-  override val messageNumber: Int,
+  override var messageNumber: Int,
   val username: String,
   val userId: Int,
   val message: String,

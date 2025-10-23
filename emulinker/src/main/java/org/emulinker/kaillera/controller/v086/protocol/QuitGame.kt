@@ -112,7 +112,7 @@ sealed class QuitGame : V086Message() {
  *
  * Shares a message type ID with [QuitGameNotification]: `0x0B`.
  */
-data class QuitGameRequest(override val messageNumber: Int) : QuitGame(), ClientMessage
+data class QuitGameRequest(override var messageNumber: Int) : QuitGame(), ClientMessage
 
 /**
  * Message sent by the server to notify that a user has left the game.
@@ -120,7 +120,7 @@ data class QuitGameRequest(override val messageNumber: Int) : QuitGame(), Client
  * Shares a message type ID with [QuitGameRequest]: `0x0B`.
  */
 data class QuitGameNotification(
-  override val messageNumber: Int,
+  override var messageNumber: Int,
   val username: String,
   val userId: Int,
 ) : QuitGame(), ServerMessage {

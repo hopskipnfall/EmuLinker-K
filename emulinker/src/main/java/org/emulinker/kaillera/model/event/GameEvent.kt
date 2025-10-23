@@ -30,12 +30,6 @@ data class GameDataEvent(override val game: KailleraGame, val data: VariableSize
 
 data class GameStartedEvent(override val game: KailleraGame) : GameEvent
 
-data class GameTimeoutEvent(
-  override val game: KailleraGame,
-  val user: KailleraUser,
-  val timeoutNumber: Int,
-) : GameEvent
-
 data class UserJoinedGameEvent(override val game: KailleraGame, val user: KailleraUser) : GameEvent
 
 // If game is null, I think that means the user quit the whole server.

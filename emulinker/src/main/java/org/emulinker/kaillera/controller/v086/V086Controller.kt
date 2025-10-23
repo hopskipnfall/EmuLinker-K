@@ -18,7 +18,6 @@ import org.emulinker.kaillera.controller.v086.action.GameDesynchAction
 import org.emulinker.kaillera.controller.v086.action.GameInfoAction
 import org.emulinker.kaillera.controller.v086.action.GameKickAction
 import org.emulinker.kaillera.controller.v086.action.GameStatusAction
-import org.emulinker.kaillera.controller.v086.action.GameTimeoutAction
 import org.emulinker.kaillera.controller.v086.action.InfoMessageAction
 import org.emulinker.kaillera.controller.v086.action.JoinGameAction
 import org.emulinker.kaillera.controller.v086.action.KeepAliveAction
@@ -61,7 +60,6 @@ import org.emulinker.kaillera.model.event.GameEvent
 import org.emulinker.kaillera.model.event.GameInfoEvent
 import org.emulinker.kaillera.model.event.GameStartedEvent
 import org.emulinker.kaillera.model.event.GameStatusChangedEvent
-import org.emulinker.kaillera.model.event.GameTimeoutEvent
 import org.emulinker.kaillera.model.event.InfoMessageEvent
 import org.emulinker.kaillera.model.event.PlayerDesynchEvent
 import org.emulinker.kaillera.model.event.ServerEvent
@@ -96,7 +94,6 @@ class V086Controller(
   gameDesynchAction: GameDesynchAction,
   playerDesynchAction: PlayerDesynchAction,
   gameInfoAction: GameInfoAction,
-  gameTimeoutAction: GameTimeoutAction,
   infoMessageAction: InfoMessageAction,
   flags: RuntimeFlags,
 ) : KailleraServerController, KoinComponent {
@@ -125,7 +122,6 @@ class V086Controller(
       GameDesynchEvent::class to gameDesynchAction,
       PlayerDesynchEvent::class to playerDesynchAction,
       GameInfoEvent::class to gameInfoAction,
-      GameTimeoutEvent::class to gameTimeoutAction,
     )
   val userEventHandlers: Map<KClass<out UserEvent>, V086UserEventHandler<Nothing>> =
     mapOf(ConnectedEvent::class to ackAction, InfoMessageEvent::class to infoMessageAction)

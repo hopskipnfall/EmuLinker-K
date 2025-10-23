@@ -8,7 +8,10 @@ import java.util.Locale
 import java.util.TimerTask
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentLinkedQueue
+import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.ThreadPoolExecutor
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.time.Clock
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
@@ -83,7 +86,7 @@ class KailleraServer(
    * We could also try handling all [GameDataEvent] in the same thread instead of fanning out into a
    * queue.
    */
-  private val eventQueue = ConcurrentLinkedQueue<Pair<KailleraUser, KailleraEvent>>()
+  private val eventQueue = LinkedBlockingQueue<Pair<KailleraUser, KailleraEvent>>()
 
   fun queueEvent(user: KailleraUser, event: KailleraEvent) {
     // TODO(nue): ignoringUnnecessaryServerActivity.
@@ -152,7 +155,7 @@ class KailleraServer(
 
   @Synchronized
   fun stop() {
-    stopFlag = true
+    stopFlag.set(true)
     usersMap.clear()
     gamesMap.clear()
     timerTask?.cancel()
@@ -971,25 +974,28 @@ class KailleraServer(
     userActionsExecutor.submit {
       logger.atFine().log("Waiting for KailleraEvents")
       try {
-        while (!stopFlag) {
-          val userToEvent: Pair<KailleraUser, KailleraEvent>? = eventQueue.poll()
+        while (!stopFlag.get()) {
+          val userToEvent: Pair<KailleraUser, KailleraEvent>? = eventQueue.poll(5, TimeUnit.SECONDS)
           if (userToEvent == null) {
-            Thread.yield()
+            if (Thread.interrupted()) break
+
             continue
           }
-          userToEvent.first.doEvent(userToEvent.second)
+          try {
+            userToEvent.first.doEvent(userToEvent.second)
+          } catch (e: RuntimeException) {
+            logger.atSevere().withCause(e).log("%s thread caught unexpected exception!", this)
+          }
         }
       } catch (e: InterruptedException) {
         logger.atSevere().withCause(e).log("%s thread interrupted!", this)
-      } catch (e: Exception) {
-        logger.atSevere().withCause(e).log("%s thread caught unexpected exception!", this)
       } finally {
         logger.atFine().log("Done waiting for KailleraEvents")
       }
     }
   }
 
-  private var stopFlag = false
+  private var stopFlag = AtomicBoolean(false)
 
   private val o = Object()
 
