@@ -12,6 +12,7 @@ import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.access.AccessManager
 import org.emulinker.kaillera.model.event.GameDataEvent
 import org.emulinker.kaillera.model.event.GameStartedEvent
+import org.emulinker.kaillera.model.event.InfoMessageEvent
 import org.emulinker.kaillera.model.event.KailleraEvent
 import org.emulinker.kaillera.model.event.KailleraEventListener
 import org.emulinker.kaillera.model.event.StopFlagEvent
@@ -506,7 +507,6 @@ class KailleraUser(
             // give the user time to close the game
             if (System.currentTimeMillis() - gameDataErrorTime > 30000) {
               // this should be warn level, but it creates tons of lines in the log
-              // TODO(nue): Look into why this gets logged so much.
               logger.atFine().log("%s: error game data exceeds drop timeout!", this)
               return Result.failure(GameDataException(e.message))
             } else {
@@ -549,7 +549,14 @@ class KailleraUser(
     server.queueEvent(this, event)
   }
 
+  /** Acts on an event in realtime. */
   fun doEvent(event: KailleraEvent) {
+    if (
+      status != UserStatus.IDLE && ignoringUnnecessaryServerActivity && event is InfoMessageEvent
+    ) {
+      return
+    }
+
     listener.actionPerformed(event)
     if (event is GameStartedEvent) {
       status = UserStatus.PLAYING

@@ -77,7 +77,6 @@ class KailleraServer(
   private val eventQueue = LinkedBlockingQueue<Pair<KailleraUser, KailleraEvent>>()
 
   fun queueEvent(user: KailleraUser, event: KailleraEvent) {
-    // TODO(nue): ignoringUnnecessaryServerActivity.
     eventQueue.offer(user to event)
   }
 
