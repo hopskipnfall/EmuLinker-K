@@ -28,7 +28,7 @@ import org.emulinker.util.UnsignedUtil.putUnsignedShort
  * Message type ID: `0x04`.
  */
 data class ServerStatus(
-  override val messageNumber: Int,
+  override var messageNumber: Int,
   val users: List<User>,
   val games: List<Game>,
 ) : V086Message(), ServerMessage {

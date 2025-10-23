@@ -18,7 +18,7 @@ import org.emulinker.util.EmuUtil.readString
 data class UserInformation
 @Throws(MessageFormatException::class)
 constructor(
-  override val messageNumber: Int,
+  override var messageNumber: Int,
   val username: String,
   val clientType: String,
   val connectionType: ConnectionType,

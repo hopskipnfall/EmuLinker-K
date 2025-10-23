@@ -99,7 +99,7 @@ sealed class Chat : V086Message() {
  * This shares a message type ID with [ChatRequest]: `0x07`.
  */
 data class ChatNotification(
-  override val messageNumber: Int,
+  override var messageNumber: Int,
   val username: String,
   override val message: String,
 ) : Chat(), ServerMessage
@@ -109,5 +109,5 @@ data class ChatNotification(
  *
  * This shares a message type ID with [ChatNotification]: `0x07`.
  */
-data class ChatRequest(override val messageNumber: Int, override val message: String) :
+data class ChatRequest(override var messageNumber: Int, override val message: String) :
   Chat(), ClientMessage

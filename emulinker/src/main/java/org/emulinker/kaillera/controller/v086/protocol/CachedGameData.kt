@@ -17,7 +17,7 @@ import org.emulinker.util.UnsignedUtil.putUnsignedByte
  */
 data class CachedGameData
 @Throws(MessageFormatException::class)
-constructor(override val messageNumber: Int, val key: Int) :
+constructor(override var messageNumber: Int, val key: Int) :
   V086Message(), ServerMessage, ClientMessage {
   override val messageTypeId = ID
 

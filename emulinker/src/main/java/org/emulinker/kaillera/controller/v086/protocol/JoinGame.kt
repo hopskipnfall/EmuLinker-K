@@ -195,7 +195,7 @@ sealed class JoinGame : V086Message() {
  * This shares a message type ID with [JoinGameRequest]: `0x0C`.
  */
 data class JoinGameNotification(
-  override val messageNumber: Int,
+  override var messageNumber: Int,
   override val gameId: Int,
   val val1: Int,
   val username: String,
@@ -218,7 +218,7 @@ data class JoinGameNotification(
  * This shares a message type ID with [JoinGameNotification]: `0x0C`.
  */
 data class JoinGameRequest(
-  override val messageNumber: Int,
+  override var messageNumber: Int,
   override val gameId: Int,
   override val connectionType: ConnectionType,
 ) : JoinGame(), ClientMessage {

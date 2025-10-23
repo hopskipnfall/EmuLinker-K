@@ -137,7 +137,7 @@ sealed class StartGame : V086Message() {
  * @param playerNumber The player that triggered the game to start.
  */
 data class StartGameNotification(
-  override val messageNumber: Int,
+  override var messageNumber: Int,
   val val1: Int,
   val playerNumber: Short,
   val numPlayers: Short,
@@ -155,4 +155,4 @@ data class StartGameNotification(
  *
  * Shares a message type ID with [StartGameNotification]: `0x11`.
  */
-data class StartGameRequest(override val messageNumber: Int) : StartGame(), ClientMessage
+data class StartGameRequest(override var messageNumber: Int) : StartGame(), ClientMessage

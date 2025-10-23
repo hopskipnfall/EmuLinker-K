@@ -15,6 +15,7 @@ import java.util.Locale
 import java.util.StringTokenizer
 import java.util.TimerTask
 import java.util.concurrent.CopyOnWriteArrayList
+import java.util.concurrent.TimeUnit
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
 import org.emulinker.config.RuntimeFlags
@@ -229,7 +230,7 @@ class AccessManager2(private val flags: RuntimeFlags, private val taskScheduler:
 
   private class UserAccess(st: StringTokenizer) {
     private var hostNames: MutableList<String>
-    private var resolvedAddresses: MutableList<String>
+    private var resolvedAddresses: List<String>
     var access = 0
       private set
 
@@ -238,30 +239,31 @@ class AccessManager2(private val flags: RuntimeFlags, private val taskScheduler:
 
     @Synchronized
     fun refreshDNS() {
-      resolvedAddresses.clear()
-      hostNames.forEach { hostName ->
-        try {
-          val address = InetAddress.getByName(hostName)
-          resolvedAddresses.add(address.hostAddress)
-        } catch (e: Exception) {
-          logger
-            .atFine()
-            .withCause(e)
-            .log("Failed to resolve DNS entry to an address: %s", hostName)
+      resolvedAddresses =
+        hostNames.mapNotNull { hostname ->
+          try {
+            InetAddress.getByName(hostname).hostAddress
+          } catch (e: Exception) {
+            logger
+              .atWarning()
+              .atMostEvery(1, TimeUnit.HOURS)
+              .withCause(e)
+              .log("Failed to resolve DNS entry to an address: %s", hostname)
+            null
+          }
         }
-      }
     }
 
     private var patterns: MutableList<WildcardStringPattern>
 
     @Synchronized
-    fun matches(address: String): Boolean {
-      return patterns.any { it.match(address) } || resolvedAddresses.any { it == address }
-    }
+    fun matches(address: String): Boolean =
+      patterns.any { it.match(address) } || resolvedAddresses.any { it == address }
 
     init {
-      if (st.countTokens() < 2 || st.countTokens() > 3)
+      if (st.countTokens() !in 2..3) {
         throw Exception("Wrong number of tokens: " + st.countTokens())
+      }
       val accessStr = st.nextToken().lowercase(Locale.getDefault())
       access =
         when (accessStr) {
@@ -457,9 +459,8 @@ class AccessManager2(private val flags: RuntimeFlags, private val taskScheduler:
       taskScheduler.scheduleRepeating(
         initialDelay = 1.minutes,
         period = 1.minutes,
-        taskName = "refresh DNS",
+        taskName = "Refresh DNS",
       ) {
-        logger.atFine().log("Refreshing DNS for all users and addresses")
         userList.forEach { it.refreshDNS() }
         addressList.forEach { it.refreshDNS() }
       }

@@ -7,6 +7,8 @@ import io.netty.channel.socket.DatagramPacket
 import java.net.InetSocketAddress
 import java.nio.ByteBuffer
 import java.nio.ByteOrder.LITTLE_ENDIAN
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicInteger
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.nanoseconds
 import org.emulinker.config.RuntimeFlags
@@ -85,8 +87,6 @@ class V086ClientHandler(
   lateinit var user: KailleraUser
     private set
 
-  private var messageNumberCounter = 0
-
   // TODO(nue): Add this to RuntimeFlags and increase to at least 5.
   val numAcksForSpeedTest = 3
 
@@ -114,12 +114,13 @@ class V086ClientHandler(
   private val clientRequestTimer =
     metrics.timer(MetricRegistry.name(this.javaClass, "V086ClientRequests"))
 
-  @get:Synchronized
-  val nextMessageNumber: Int
-    get() {
-      if (messageNumberCounter > 0xFFFF) messageNumberCounter = 0
-      return messageNumberCounter++
-    }
+  // TODO(nue): This no longer fulfills any purpose. Remove.
+  val nextMessageNumber = 0
+
+  private val lastSendMessageNumber = AtomicInteger(0)
+
+  private fun getAndIncrementSendMessageNumber(): Int =
+    lastSendMessageNumber.getAndUpdate { (if (it > 0xFFFF) 0 else it) + 1 }
 
   fun resetGameDataCache() {
     clientGameDataCache.clear()
@@ -156,6 +157,7 @@ class V086ClientHandler(
 
   override fun toString(): String = "[V086ClientHandler $user]"
 
+  // TODO(nue): This probably needs to be synchronized because of the last read number.
   private fun handleReceivedInternal(buffer: ByteBuf) {
     val inBundle: V086Bundle =
       if (CompiledFlags.USE_BYTEBUF_INSTEAD_OF_BYTEBUFFER) {
@@ -234,7 +236,8 @@ class V086ClientHandler(
       if (inBundle is V086Bundle.Multi && inBundle.numMessages == 0) {
         logger
           .atFine()
-          .log("%s received bundle of %d messages from %s", this, inBundle.numMessages, user)
+          .atMostEvery(1, TimeUnit.SECONDS)
+          .log("%s received bundle of %d messages from %s", this, user)
         clientRetryCount++
         resend(clientRetryCount)
         return
@@ -386,6 +389,7 @@ class V086ClientHandler(
 
   fun send(outMessage: V086Message, numToSend: Int = 5) {
     synchronized(sendMutex) {
+      outMessage.messageNumber = getAndIncrementSendMessageNumber()
       var numToSend = numToSend
       val buf = combinedKailleraController.nettyChannel.alloc().directBuffer(flags.v086BufferSize)
       lastMessageBuffer.add(outMessage)

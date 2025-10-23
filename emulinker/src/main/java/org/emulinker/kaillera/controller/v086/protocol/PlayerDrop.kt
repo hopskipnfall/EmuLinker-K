@@ -96,7 +96,7 @@ sealed class PlayerDrop : V086Message() {
 }
 
 data class PlayerDropNotification(
-  override val messageNumber: Int,
+  override var messageNumber: Int,
   val username: String,
   /** The port number, not the player ID. */
   val playerNumber: Byte,
@@ -108,4 +108,4 @@ data class PlayerDropNotification(
   }
 }
 
-data class PlayerDropRequest(override val messageNumber: Int) : PlayerDrop(), ClientMessage
+data class PlayerDropRequest(override var messageNumber: Int) : PlayerDrop(), ClientMessage

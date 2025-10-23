@@ -788,7 +788,7 @@ class KailleraGame(
             )
           )
         }
-        player.queueEvent(GameDataEvent(this, joinedGameData))
+        player.doEvent(GameDataEvent(this, joinedGameData))
         player.updateUserDrift()
         val firstPlayer = players.firstOrNull()
         if (firstPlayer != null && firstPlayer.id == player.id) {

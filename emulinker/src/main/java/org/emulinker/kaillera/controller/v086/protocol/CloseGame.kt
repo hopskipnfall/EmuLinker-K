@@ -8,7 +8,7 @@ import org.emulinker.util.UnsignedUtil.getUnsignedShort
 import org.emulinker.util.UnsignedUtil.putUnsignedShort
 
 data class CloseGame(
-  override val messageNumber: Int,
+  override var messageNumber: Int,
   val gameId: Int,
   // TODO(nue): Figure out what [val1] represents..
   val val1: Int,

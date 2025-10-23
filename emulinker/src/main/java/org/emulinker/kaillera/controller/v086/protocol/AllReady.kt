@@ -12,7 +12,7 @@ import org.emulinker.kaillera.controller.v086.V086Utils
  *
  * Message type ID: `0x15`.
  */
-data class AllReady(override val messageNumber: Int) : V086Message(), ServerMessage, ClientMessage {
+data class AllReady(override var messageNumber: Int) : V086Message(), ServerMessage, ClientMessage {
   override val messageTypeId = ID
 
   override val bodyBytes = V086Utils.Bytes.SINGLE_BYTE

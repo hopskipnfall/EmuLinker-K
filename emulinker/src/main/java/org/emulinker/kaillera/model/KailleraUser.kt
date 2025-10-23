@@ -2,8 +2,6 @@ package org.emulinker.kaillera.model
 
 import com.google.common.flogger.FluentLogger
 import java.net.InetSocketAddress
-import java.util.concurrent.ConcurrentLinkedQueue
-import java.util.concurrent.ThreadPoolExecutor
 import kotlin.time.Clock
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
@@ -14,6 +12,7 @@ import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.access.AccessManager
 import org.emulinker.kaillera.model.event.GameDataEvent
 import org.emulinker.kaillera.model.event.GameStartedEvent
+import org.emulinker.kaillera.model.event.InfoMessageEvent
 import org.emulinker.kaillera.model.event.KailleraEvent
 import org.emulinker.kaillera.model.event.KailleraEventListener
 import org.emulinker.kaillera.model.event.StopFlagEvent
@@ -49,7 +48,6 @@ class KailleraUser(
   private val listener: KailleraEventListener,
   val server: KailleraServer,
   private val flags: RuntimeFlags,
-  threadpoolExecutor: ThreadPoolExecutor,
   private val clock: Clock,
 ) {
   var inStealthMode = false
@@ -172,7 +170,6 @@ class KailleraUser(
   private var threadIsActive = false
 
   private var stopFlag = false
-  private val eventQueue = ConcurrentLinkedQueue<KailleraEvent>()
 
   var tempDelay = 0
 
@@ -228,10 +225,6 @@ class KailleraUser(
 
   val accessStr: String
     get() = AccessManager.ACCESS_NAMES[accessLevel]
-
-  override fun equals(other: Any?): Boolean {
-    return other is KailleraUser && other.id == id
-  }
 
   fun stop() {
     if (!threadIsActive) {
@@ -448,8 +441,8 @@ class KailleraUser(
       throw UserReadyException(EmuLang.getString("KailleraUserImpl.PlayerReadyErrorNotInGame"))
     }
     if (
-      playerNumber > game.playerActionQueues!!.size ||
-        game.playerActionQueues!![playerNumber - 1].synced
+      playerNumber > game.playerActionQueues.size ||
+        game.playerActionQueues[playerNumber - 1].synced
     ) {
       return
     }
@@ -479,9 +472,9 @@ class KailleraUser(
       // totalDelay = (game.getDelay() + tempDelay + 5)
       if (frameCount < totalDelay) {
         bytesPerAction = data.size / connectionType.byteValue
-        arraySize = game.playerActionQueues!!.size * connectionType.byteValue * bytesPerAction
+        arraySize = game.playerActionQueues.size * connectionType.byteValue * bytesPerAction
         lostInput.add(data)
-        queueEvent(GameDataEvent(game, VariableSizeByteArray(ByteArray(arraySize) { 0 })))
+        doEvent(GameDataEvent(game, VariableSizeByteArray(ByteArray(arraySize) { 0 })))
         frameCount++
       } else {
         // lostInput.add(data);
@@ -553,45 +546,37 @@ class KailleraUser(
   }
 
   fun queueEvent(event: KailleraEvent) {
-    if (status != UserStatus.IDLE) {
-      if (ignoringUnnecessaryServerActivity) {
-        if (event.toString() == "InfoMessageEvent") return
-      }
-    }
-    eventQueue.offer(event)
+    server.queueEvent(this, event)
   }
 
-  init {
-    threadpoolExecutor.submit {
-      threadIsActive = true
-      logger.atFine().log("%s thread running...", this)
-      try {
-        while (!stopFlag) {
-          val event = eventQueue.poll()
-          if (event == null) {
-            // This is supposedly preferable to Thread.yield() but I can't remember why.
-            Thread.sleep(1)
-            continue
-          } else if (event is StopFlagEvent) {
-            break
-          }
-          listener.actionPerformed(event)
-          if (event is GameStartedEvent) {
-            status = UserStatus.PLAYING
-            lastUpdateNs = System.nanoTime()
-          } else if (event is UserQuitEvent && event.user == this) {
-            stop()
-          }
-        }
-      } catch (e: InterruptedException) {
-        logger.atSevere().withCause(e).log("%s thread interrupted!", this)
-      } catch (e: Throwable) {
-        logger.atSevere().withCause(e).log("%s thread caught unexpected exception!", this)
-      } finally {
-        threadIsActive = false
-        logger.atFine().log("%s thread exiting...", this)
-      }
+  /** Acts on an event in realtime. */
+  fun doEvent(event: KailleraEvent) {
+    if (
+      status != UserStatus.IDLE && ignoringUnnecessaryServerActivity && event is InfoMessageEvent
+    ) {
+      return
     }
+
+    listener.actionPerformed(event)
+    if (event is GameStartedEvent) {
+      status = UserStatus.PLAYING
+      lastUpdateNs = System.nanoTime()
+    } else if (event is UserQuitEvent && event.user == this) {
+      stop()
+    }
+  }
+
+  override fun equals(other: Any?): Boolean {
+    if (this === other) return true
+    if (javaClass != other?.javaClass) return false
+
+    other as KailleraUser
+
+    return id == other.id
+  }
+
+  override fun hashCode(): Int {
+    return id
   }
 
   companion object {

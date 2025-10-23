@@ -14,7 +14,7 @@ import org.emulinker.util.EmuUtil.readString
  */
 data class InformationMessage
 @Throws(MessageFormatException::class)
-constructor(override val messageNumber: Int, val source: String, val message: String) :
+constructor(override var messageNumber: Int, val source: String, val message: String) :
   V086Message(), ServerMessage {
 
   override val messageTypeId = ID

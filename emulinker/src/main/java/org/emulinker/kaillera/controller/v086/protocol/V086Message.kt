@@ -33,7 +33,7 @@ abstract class V086Message : ByteBufferMessage {
    * This rule is sometimes broken. For instance, ConnectMessage_HELLO and ConnectMessage_HELLOD00D
    * are not included in this count.
    */
-  abstract val messageNumber: Int
+  abstract var messageNumber: Int
 
   // TODO(nue): Think about this:
   //  @Deprecated("We should try to use a sealed class instead of relying on this messageId field")

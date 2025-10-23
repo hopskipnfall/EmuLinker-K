@@ -14,7 +14,7 @@ import org.emulinker.util.UnsignedUtil.putUnsignedShort
  */
 data class GameKick
 @Throws(MessageFormatException::class)
-constructor(override val messageNumber: Int, val userId: Int) : V086Message(), ClientMessage {
+constructor(override var messageNumber: Int, val userId: Int) : V086Message(), ClientMessage {
   override val messageTypeId = ID
 
   override val bodyBytes = V086Utils.Bytes.SINGLE_BYTE + V086Utils.Bytes.SHORT

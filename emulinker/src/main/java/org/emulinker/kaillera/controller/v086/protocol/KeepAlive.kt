@@ -14,7 +14,7 @@ import org.emulinker.util.UnsignedUtil.putUnsignedByte
  */
 data class KeepAlive
 @Throws(MessageFormatException::class)
-constructor(override val messageNumber: Int, val value: Short) : V086Message(), ClientMessage {
+constructor(override var messageNumber: Int, val value: Short) : V086Message(), ClientMessage {
   override val messageTypeId = ID
 
   override val bodyBytes = V086Utils.Bytes.SINGLE_BYTE

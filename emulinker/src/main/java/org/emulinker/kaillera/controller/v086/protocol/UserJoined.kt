@@ -25,7 +25,7 @@ import org.emulinker.util.UnsignedUtil.putUnsignedShort
  * Message type ID: `0x02`.
  */
 data class UserJoined(
-  override val messageNumber: Int,
+  override var messageNumber: Int,
   val username: String,
   val userId: Int,
   val ping: Duration,
