@@ -7,7 +7,6 @@ import java.net.InetSocketAddress
 import java.util.Locale
 import java.util.TimerTask
 import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
@@ -75,17 +74,6 @@ class KailleraServer(
   private val clock: Clock,
 ) : KoinComponent {
 
-  /**
-   * [ConcurrentLinkedQueue] may not be the optimal choice here. We consume it in an infinite loop
-   * and `Thread.yield()` instead of blocking. We could use
-   * [java.util.concurrent.LinkedBlockingQueue] but that is again probably slower (confirmed in some
-   * informal tests) because of synchronization across many threads into one queue.
-   *
-   * We could consider having separate blocking queues for each game.
-   *
-   * We could also try handling all [GameDataEvent] in the same thread instead of fanning out into a
-   * queue.
-   */
   private val eventQueue = LinkedBlockingQueue<Pair<KailleraUser, KailleraEvent>>()
 
   fun queueEvent(user: KailleraUser, event: KailleraEvent) {
