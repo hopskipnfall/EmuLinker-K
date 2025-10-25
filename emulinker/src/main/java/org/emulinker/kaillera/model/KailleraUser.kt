@@ -130,7 +130,7 @@ class KailleraUser(
   var lastChatTime: Instant = initTime
     private set
 
-  var lastCreateGameTime: Instant = initTime
+  var lastCreateGameTime: Instant? = null
     private set
 
   var frameCount = 0

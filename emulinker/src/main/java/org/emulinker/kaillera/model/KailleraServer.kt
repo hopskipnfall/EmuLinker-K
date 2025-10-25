@@ -630,9 +630,11 @@ class KailleraServer(
     }
     val access = accessManager.getAccess(user.socketAddress!!.address)
     if (access == AccessManager.ACCESS_NORMAL) {
+      val lastCreateGameTime = user.lastCreateGameTime
       if (
-        flags.createGameFloodTime > Duration.ZERO &&
-          clock.now() - user.lastCreateGameTime < flags.createGameFloodTime
+        lastCreateGameTime != null &&
+          flags.createGameFloodTime > Duration.ZERO &&
+          clock.now() - lastCreateGameTime < flags.createGameFloodTime
       ) {
         logger.atWarning().log("%s create game denied: Flood: %s", user, romName)
         throw FloodException(EmuLang.getString("KailleraServerImpl.CreateGameDeniedFloodControl"))
