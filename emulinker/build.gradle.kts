@@ -34,8 +34,9 @@ dependencies {
   implementation("com.google.protobuf:protobuf-java:4.31.1")
   implementation("com.google.protobuf:protobuf-java-util:4.31.1")
 
-  api("io.dropwizard.metrics:metrics-core:4.2.3")
-  api("io.dropwizard.metrics:metrics-jvm:4.2.3")
+  val dropwizardMetricsVersion = "4.2.37"
+  api("io.dropwizard.metrics:metrics-core:$dropwizardMetricsVersion")
+  api("io.dropwizard.metrics:metrics-jvm:$dropwizardMetricsVersion")
 
   val floggerVersion = "0.9"
   api("com.google.flogger:flogger:$floggerVersion")

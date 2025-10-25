@@ -1,6 +1,8 @@
 package org.emulinker.kaillera.controller.v086
 
+import com.codahale.metrics.Meter
 import com.codahale.metrics.MetricRegistry
+import com.codahale.metrics.Timer
 import com.google.common.flogger.FluentLogger
 import io.netty.buffer.ByteBuf
 import io.netty.channel.socket.DatagramPacket
@@ -32,9 +34,7 @@ import org.emulinker.kaillera.model.KailleraUser
 import org.emulinker.kaillera.model.event.GameDataEvent
 import org.emulinker.kaillera.model.event.GameEvent
 import org.emulinker.kaillera.model.event.KailleraEvent
-import org.emulinker.kaillera.model.event.KailleraEventListener
 import org.emulinker.kaillera.model.event.ServerEvent
-import org.emulinker.kaillera.model.event.StopFlagEvent
 import org.emulinker.kaillera.model.event.UserEvent
 import org.emulinker.kaillera.pico.CompiledFlags
 import org.emulinker.util.EmuUtil
@@ -53,7 +53,7 @@ class V086ClientHandler(
   val controller: V086Controller,
   /** The [CombinedKailleraController] that created this instance. */
   private val combinedKailleraController: CombinedKailleraController,
-) : KailleraEventListener, KoinComponent {
+) : KoinComponent {
   private val metrics: MetricRegistry by inject()
   private val flags: RuntimeFlags by inject()
 
@@ -77,7 +77,7 @@ class V086ClientHandler(
         )
       return
     }
-    if (flags.metricsEnabled) {
+    if (clientRequestTimer != null) {
       clientRequestTimer.timeKt { handleReceivedInternal(buf) }
     } else {
       handleReceivedInternal(buf)
@@ -111,8 +111,19 @@ class V086ClientHandler(
   private var clientRetryCount = 0
   private var lastResend = 0L
 
-  private val clientRequestTimer =
-    metrics.timer(MetricRegistry.name(this.javaClass, "V086ClientRequests"))
+  private val clientRequestTimer: Timer? =
+    if (flags.metricsEnabled) {
+      metrics.timer(MetricRegistry.name(this.javaClass, "InboundRequests"))
+    } else {
+      null
+    }
+
+  private val clientResponseMeter: Meter? =
+    if (flags.metricsEnabled) {
+      metrics.meter(MetricRegistry.name(this.javaClass, "OutboundRequests"))
+    } else {
+      null
+    }
 
   // TODO(nue): This no longer fulfills any purpose. Remove.
   val nextMessageNumber = 0
@@ -150,7 +161,7 @@ class V086ClientHandler(
     controller.clientHandlers[user.id] = this
   }
 
-  override fun stop() {
+  fun stop() {
     controller.clientHandlers.remove(user.id)
     combinedKailleraController.clientHandlers.remove(remoteSocketAddress)
   }
@@ -237,7 +248,7 @@ class V086ClientHandler(
         logger
           .atFine()
           .atMostEvery(1, TimeUnit.SECONDS)
-          .log("%s received bundle of %d messages from %s", this, user)
+          .log("%s received bundle of messages from %s", this, user)
         clientRetryCount++
         resend(clientRetryCount)
         return
@@ -313,7 +324,7 @@ class V086ClientHandler(
     }
   }
 
-  override fun actionPerformed(event: KailleraEvent) {
+  fun actionPerformed(event: KailleraEvent) {
     when (event) {
       // Check for GameDataEvent first to avoid map lookup slowness.
       is GameDataEvent -> {
@@ -353,7 +364,6 @@ class V086ClientHandler(
         }
         (eventHandler as V086UserEventHandler<UserEvent>).handleEvent(event, this)
       }
-      is StopFlagEvent -> {}
     }
   }
 
@@ -366,11 +376,14 @@ class V086ClientHandler(
       // int numToSend = (3+timeoutCounter);
       var numToSend = 3 * timeoutCounter
       if (numToSend > V086Controller.MAX_BUNDLE_SIZE) numToSend = V086Controller.MAX_BUNDLE_SIZE
-      logger.atFine().log("%s: resending last %d messages", this, numToSend)
+
+      stripFromProdBinary {
+        logger.atFinest().log("%s: resending last %d messages", this, numToSend)
+      }
       resendFromCache(numToSend)
       lastResend = System.currentTimeMillis()
     } else {
-      logger.atFine().log("Skipping resend...")
+      stripFromProdBinary { logger.atFinest().log("Skipping resend...") }
     }
   }
 
@@ -384,6 +397,7 @@ class V086ClientHandler(
       stripFromProdBinary { logger.atFinest().log("<- TO P%d: (RESEND)", user.id) }
       outBundle.writeTo(buf)
       combinedKailleraController.send(DatagramPacket(buf, remoteSocketAddress!!))
+      clientResponseMeter?.mark()
     }
   }
 
@@ -398,6 +412,7 @@ class V086ClientHandler(
       stripFromProdBinary { logger.atFinest().log("<- TO P%d: %s", user.id, outMessage) }
       outBundle.writeTo(buf)
       combinedKailleraController.send(DatagramPacket(buf, remoteSocketAddress!!))
+      clientResponseMeter?.mark()
     }
   }
 

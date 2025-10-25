@@ -10,12 +10,11 @@ import kotlin.time.Duration.Companion.seconds
 import kotlin.time.Instant
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.access.AccessManager
+import org.emulinker.kaillera.controller.v086.V086ClientHandler
 import org.emulinker.kaillera.model.event.GameDataEvent
 import org.emulinker.kaillera.model.event.GameStartedEvent
 import org.emulinker.kaillera.model.event.InfoMessageEvent
 import org.emulinker.kaillera.model.event.KailleraEvent
-import org.emulinker.kaillera.model.event.KailleraEventListener
-import org.emulinker.kaillera.model.event.StopFlagEvent
 import org.emulinker.kaillera.model.event.UserQuitEvent
 import org.emulinker.kaillera.model.event.UserQuitGameEvent
 import org.emulinker.kaillera.model.exception.ChatException
@@ -45,7 +44,7 @@ class KailleraUser(
   val id: Int,
   val protocol: String,
   val connectSocketAddress: InetSocketAddress,
-  private val listener: KailleraEventListener,
+  private val clientHandler: V086ClientHandler,
   val server: KailleraServer,
   private val flags: RuntimeFlags,
   private val clock: Clock,
@@ -167,8 +166,6 @@ class KailleraUser(
   private val ignoredUsers: MutableList<String> = ArrayList()
   private var gameDataErrorTime: Long = -1
 
-  private var threadIsActive = false
-
   private var stopFlag = false
 
   var tempDelay = 0
@@ -227,17 +224,12 @@ class KailleraUser(
     get() = AccessManager.ACCESS_NAMES[accessLevel]
 
   fun stop() {
-    if (!threadIsActive) {
-      logger.atFine().log("%s  thread stop request ignored: not running!", this)
-      return
-    }
     if (stopFlag) {
       logger.atFine().log("%s  thread stop request ignored: already stopping!", this)
       return
     }
     stopFlag = true
-    queueEvent(StopFlagEvent())
-    listener.stop()
+    clientHandler.stop()
   }
 
   fun droppedPacket() {
@@ -455,18 +447,8 @@ class KailleraUser(
   fun addGameData(data: VariableSizeByteArray): Result<Unit> {
     receivedGameDataNs = System.nanoTime()
     fun doTheThing(): Result<Unit> {
-      val game =
-        this.game
-          ?: return Result.failure(
-            GameDataException(
-              toString() + " " + EmuLang.getString("KailleraUserImpl.GameDataErrorNotInGame"),
-              data,
-              // This will be zero if the user is DISABLED.. Rewrite all of this.
-              actionsPerMessage = connectionType.byteValue.toInt(),
-              playerNumber = 1,
-              numPlayers = 1,
-            )
-          )
+      // Returning success when the game doesn't exist might not be correct?
+      val game = this.game ?: return Result.success(Unit)
 
       // Initial Delay
       // totalDelay = (game.getDelay() + tempDelay + 5)
@@ -479,13 +461,17 @@ class KailleraUser(
       } else {
         // lostInput.add(data);
         if (lostInput.isNotEmpty()) {
-          game.addData(this, playerNumber, lostInput[0]).onFailure {
-            return Result.failure(it)
+          when (val r = game.addData(this, playerNumber, lostInput[0])) {
+            AddDataResult.Success -> {}
+            AddDataResult.IgnoringDesynched -> {}
+            is AddDataResult.Failure -> return Result.failure(r.exception)
           }
           lostInput.removeAt(0)
         } else {
-          game.addData(this, playerNumber, data).onFailure {
-            return Result.failure(it)
+          when (val r = game.addData(this, playerNumber, data)) {
+            AddDataResult.Success -> {}
+            AddDataResult.IgnoringDesynched -> {}
+            is AddDataResult.Failure -> return Result.failure(r.exception)
           }
         }
       }
@@ -557,7 +543,7 @@ class KailleraUser(
       return
     }
 
-    listener.actionPerformed(event)
+    clientHandler.actionPerformed(event)
     if (event is GameStartedEvent) {
       status = UserStatus.PLAYING
       lastUpdateNs = System.nanoTime()
