@@ -34,9 +34,7 @@ import org.emulinker.kaillera.model.KailleraUser
 import org.emulinker.kaillera.model.event.GameDataEvent
 import org.emulinker.kaillera.model.event.GameEvent
 import org.emulinker.kaillera.model.event.KailleraEvent
-import org.emulinker.kaillera.model.event.KailleraEventListener
 import org.emulinker.kaillera.model.event.ServerEvent
-import org.emulinker.kaillera.model.event.StopFlagEvent
 import org.emulinker.kaillera.model.event.UserEvent
 import org.emulinker.kaillera.pico.CompiledFlags
 import org.emulinker.util.EmuUtil
@@ -55,7 +53,7 @@ class V086ClientHandler(
   val controller: V086Controller,
   /** The [CombinedKailleraController] that created this instance. */
   private val combinedKailleraController: CombinedKailleraController,
-) : KailleraEventListener, KoinComponent {
+) : KoinComponent {
   private val metrics: MetricRegistry by inject()
   private val flags: RuntimeFlags by inject()
 
@@ -163,7 +161,7 @@ class V086ClientHandler(
     controller.clientHandlers[user.id] = this
   }
 
-  override fun stop() {
+  fun stop() {
     controller.clientHandlers.remove(user.id)
     combinedKailleraController.clientHandlers.remove(remoteSocketAddress)
   }
@@ -326,7 +324,7 @@ class V086ClientHandler(
     }
   }
 
-  override fun actionPerformed(event: KailleraEvent) {
+  fun actionPerformed(event: KailleraEvent) {
     when (event) {
       // Check for GameDataEvent first to avoid map lookup slowness.
       is GameDataEvent -> {
@@ -366,7 +364,6 @@ class V086ClientHandler(
         }
         (eventHandler as V086UserEventHandler<UserEvent>).handleEvent(event, this)
       }
-      is StopFlagEvent -> {}
     }
   }
 

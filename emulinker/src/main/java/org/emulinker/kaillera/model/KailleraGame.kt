@@ -30,7 +30,6 @@ import org.emulinker.kaillera.model.event.UserQuitGameEvent
 import org.emulinker.kaillera.model.exception.CloseGameException
 import org.emulinker.kaillera.model.exception.DropGameException
 import org.emulinker.kaillera.model.exception.GameChatException
-import org.emulinker.kaillera.model.exception.GameDataException
 import org.emulinker.kaillera.model.exception.GameKickException
 import org.emulinker.kaillera.model.exception.JoinGameException
 import org.emulinker.kaillera.model.exception.QuitGameException
@@ -573,11 +572,13 @@ class KailleraGame(
       playerActionQueues[playerNumber - 1].markDesynced()
     }
     if (synchedCount < 2 && isSynched) {
-      isSynched = false
-      for (q in playerActionQueues) {
-        q.markDesynced()
-      }
-      logger.atInfo().log("%s: game desynched: less than 2 players playing!", this)
+      // Allow it to keep going?
+      //      isSynched = false
+      //      for (q in playerActionQueues) {
+      //        q.markDesynced()
+      // TODO(nue): Drop??
+      //      }
+      logger.atInfo().log("%s: game desynched: less than 2 players playing! ALLOWING", this)
     }
     autoFireDetector.stop(playerNumber)
     if (playingCount == 0) {
@@ -698,8 +699,9 @@ class KailleraGame(
    * Adds data and suspends until all data is available, at which time it returns the sends new data
    * back to the client.
    */
-  @Throws(GameDataException::class)
-  fun addData(user: KailleraUser, playerNumber: Int, data: VariableSizeByteArray): Result<Unit> {
+  fun addData(user: KailleraUser, playerNumber: Int, data: VariableSizeByteArray): AddDataResult {
+    if (!isSynched) return AddDataResult.IgnoringDesynched
+
     gameLogBuilder?.addEvents(
       event {
         timestampNs = checkNotNull(user.receivedGameDataNs) { "user.receivedGameDataNs is null!" }
@@ -714,19 +716,6 @@ class KailleraGame(
       }
     )
 
-    // int bytesPerAction = (data.length / actionsPerMessage);
-    // int arraySize = (playerActionQueues.length * actionsPerMessage * user.getBytesPerAction());
-    if (!isSynched) {
-      return Result.failure(
-        GameDataException(
-          EmuLang.getString("KailleraGameImpl.DesynchedWarning"),
-          data,
-          actionsPerMessage,
-          playerNumber,
-          playerActionQueues.size,
-        )
-      )
-    }
     // Add the data for the user to their own player queue.
     playerActionQueues[playerNumber - 1].addActions(data)
 
@@ -741,7 +730,7 @@ class KailleraGame(
    * @param user The user who initiated this call.
    */
   // TODO(nue): This is probably not threadsafe but is being called from multiple threads.
-  fun maybeSendData(user: KailleraUser): Result<Unit> {
+  fun maybeSendData(user: KailleraUser): AddDataResult {
     // TODO(nue): This works for 2P but what about more? This probably results in unnecessary
     // messages.
     for (player in players) {
@@ -777,17 +766,7 @@ class KailleraGame(
             )
           }
         }
-        if (!isSynched) {
-          return Result.failure(
-            GameDataException(
-              EmuLang.getString("KailleraGameImpl.DesynchedWarning"),
-              VariableSizeByteArray(),
-              user.bytesPerAction,
-              playerNumber,
-              playerActionQueues.size,
-            )
-          )
-        }
+        if (!isSynched) return AddDataResult.IgnoringDesynched
         player.doEvent(GameDataEvent(this, joinedGameData))
         player.updateUserDrift()
         val firstPlayer = players.firstOrNull()
@@ -806,7 +785,7 @@ class KailleraGame(
         }
       }
     }
-    return Result.success(Unit)
+    return AddDataResult.Success
   }
 
   fun resetLag() {

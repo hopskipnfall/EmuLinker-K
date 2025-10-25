@@ -19,6 +19,7 @@ import kotlin.time.Duration.Companion.seconds
 import kotlin.time.DurationUnit
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.access.AccessManager
+import org.emulinker.kaillera.controller.v086.V086ClientHandler
 import org.emulinker.kaillera.lookingforgame.LookingForGameEvent
 import org.emulinker.kaillera.lookingforgame.TwitterBroadcaster
 import org.emulinker.kaillera.master.StatsCollector
@@ -30,7 +31,6 @@ import org.emulinker.kaillera.model.event.GameDataEvent
 import org.emulinker.kaillera.model.event.GameStatusChangedEvent
 import org.emulinker.kaillera.model.event.InfoMessageEvent
 import org.emulinker.kaillera.model.event.KailleraEvent
-import org.emulinker.kaillera.model.event.KailleraEventListener
 import org.emulinker.kaillera.model.event.UserJoinedEvent
 import org.emulinker.kaillera.model.event.UserQuitEvent
 import org.emulinker.kaillera.model.exception.ChatException
@@ -169,7 +169,7 @@ class KailleraServer(
   fun newConnection(
     clientSocketAddress: InetSocketAddress,
     protocol: String,
-    listener: KailleraEventListener,
+    clientHandler: V086ClientHandler,
   ): KailleraUser {
     // we'll assume at this point that ConnectController has already asked AccessManager if this IP
     // is banned, so no need to do it again here
@@ -194,7 +194,8 @@ class KailleraServer(
       throw ServerFullException(EmuLang.getString("KailleraServerImpl.LoginDeniedServerFull"))
     }
     val userID = getNextUserID()
-    val user = KailleraUser(userID, protocol, clientSocketAddress, listener, this, flags, clock)
+    val user =
+      KailleraUser(userID, protocol, clientSocketAddress, clientHandler, this, flags, clock)
     user.status = UserStatus.CONNECTING
     logger
       .atFine()
