@@ -1,6 +1,7 @@
 package org.emulinker.config
 
 import java.nio.charset.Charset
+import java.util.Locale
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import org.emulinker.kaillera.model.ConnectionType
@@ -20,6 +21,7 @@ data class RuntimeFlags(
   val idleTimeout: Duration,
   val keepAliveTimeout: Duration,
   val lagstatDuration: Duration,
+  val locale: Locale,
   val maxChatLength: Int,
   val maxClientNameLength: Int,
   val maxGameChatLength: Int,
