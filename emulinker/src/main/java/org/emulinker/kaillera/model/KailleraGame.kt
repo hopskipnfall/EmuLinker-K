@@ -571,15 +571,6 @@ class KailleraGame(
     if (playerNumber - 1 < playerActionQueues.size) {
       playerActionQueues[playerNumber - 1].markDesynced()
     }
-    if (synchedCount < 2 && isSynched) {
-      // Allow it to keep going?
-      //      isSynched = false
-      //      for (q in playerActionQueues) {
-      //        q.markDesynced()
-      // TODO(nue): Drop??
-      //      }
-      logger.atInfo().log("%s: game desynched: less than 2 players playing! ALLOWING", this)
-    }
     autoFireDetector.stop(playerNumber)
     if (playingCount == 0) {
       if (startN != -1) {

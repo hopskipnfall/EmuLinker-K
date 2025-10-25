@@ -376,11 +376,14 @@ class V086ClientHandler(
       // int numToSend = (3+timeoutCounter);
       var numToSend = 3 * timeoutCounter
       if (numToSend > V086Controller.MAX_BUNDLE_SIZE) numToSend = V086Controller.MAX_BUNDLE_SIZE
-      logger.atFine().log("%s: resending last %d messages", this, numToSend)
+
+      stripFromProdBinary {
+        logger.atFinest().log("%s: resending last %d messages", this, numToSend)
+      }
       resendFromCache(numToSend)
       lastResend = System.currentTimeMillis()
     } else {
-      logger.atFine().log("Skipping resend...")
+      stripFromProdBinary { logger.atFinest().log("Skipping resend...") }
     }
   }
 
