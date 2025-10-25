@@ -1,6 +1,8 @@
 package org.emulinker.kaillera.controller.v086
 
+import com.codahale.metrics.Meter
 import com.codahale.metrics.MetricRegistry
+import com.codahale.metrics.Timer
 import com.google.common.flogger.FluentLogger
 import io.netty.buffer.ByteBuf
 import io.netty.channel.socket.DatagramPacket
@@ -77,7 +79,7 @@ class V086ClientHandler(
         )
       return
     }
-    if (flags.metricsEnabled) {
+    if (clientRequestTimer != null) {
       clientRequestTimer.timeKt { handleReceivedInternal(buf) }
     } else {
       handleReceivedInternal(buf)
@@ -111,8 +113,19 @@ class V086ClientHandler(
   private var clientRetryCount = 0
   private var lastResend = 0L
 
-  private val clientRequestTimer =
-    metrics.timer(MetricRegistry.name(this.javaClass, "V086ClientRequests"))
+  private val clientRequestTimer: Timer? =
+    if (flags.metricsEnabled) {
+      metrics.timer(MetricRegistry.name(this.javaClass, "InboundRequests"))
+    } else {
+      null
+    }
+
+  private val clientResponseMeter: Meter? =
+    if (flags.metricsEnabled) {
+      metrics.meter(MetricRegistry.name(this.javaClass, "OutboundRequests"))
+    } else {
+      null
+    }
 
   // TODO(nue): This no longer fulfills any purpose. Remove.
   val nextMessageNumber = 0
@@ -237,7 +250,7 @@ class V086ClientHandler(
         logger
           .atFine()
           .atMostEvery(1, TimeUnit.SECONDS)
-          .log("%s received bundle of %d messages from %s", this, user)
+          .log("%s received bundle of messages from %s", this, user)
         clientRetryCount++
         resend(clientRetryCount)
         return
@@ -384,6 +397,7 @@ class V086ClientHandler(
       stripFromProdBinary { logger.atFinest().log("<- TO P%d: (RESEND)", user.id) }
       outBundle.writeTo(buf)
       combinedKailleraController.send(DatagramPacket(buf, remoteSocketAddress!!))
+      clientResponseMeter?.mark()
     }
   }
 
@@ -398,6 +412,7 @@ class V086ClientHandler(
       stripFromProdBinary { logger.atFinest().log("<- TO P%d: %s", user.id, outMessage) }
       outBundle.writeTo(buf)
       combinedKailleraController.send(DatagramPacket(buf, remoteSocketAddress!!))
+      clientResponseMeter?.mark()
     }
   }
 
