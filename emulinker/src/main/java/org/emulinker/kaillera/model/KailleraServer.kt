@@ -249,7 +249,7 @@ class KailleraServer(
         flags.maxPing > 0.milliseconds &&
         user.ping > flags.maxPing
     ) {
-      logger.atInfo().log("%s login denied: Ping %d ms > %s", user, user.ping, flags.maxPing)
+      logger.atInfo().log("%s login denied: Ping %s ms > %s", user, user.ping, flags.maxPing)
       usersMap.remove(userListKey)
       return Result.failure(
         PingTimeException(

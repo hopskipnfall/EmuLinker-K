@@ -3,20 +3,21 @@ package org.emulinker.util
 import io.netty.buffer.ByteBuf
 import java.nio.ByteBuffer
 import java.util.Arrays
+import java.util.concurrent.atomic.AtomicBoolean
 
 interface Borrowable {
-  var isBorrowed: Boolean
-  var isInCache: Boolean
-  var inTemporaryUse: Boolean
+  var isBorrowed: AtomicBoolean
+  var isInCache: AtomicBoolean
+  var inTemporaryUse: AtomicBoolean
 }
 
 class VariableSizeByteArray(initialData: ByteArray = EMPTY_DATA) : Borrowable {
   var bytes = initialData
     private set
 
-  override var isBorrowed: Boolean = false
-  override var isInCache: Boolean = false
-  override var inTemporaryUse: Boolean = false
+  override var isBorrowed = AtomicBoolean(false)
+  override var isInCache = AtomicBoolean(false)
+  override var inTemporaryUse = AtomicBoolean(false)
 
   var size = initialData.size
     set(newVal) {
