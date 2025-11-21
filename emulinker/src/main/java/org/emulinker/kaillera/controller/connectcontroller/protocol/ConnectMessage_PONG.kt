@@ -1,7 +1,6 @@
 package org.emulinker.kaillera.controller.connectcontroller.protocol
 
 import io.netty.buffer.ByteBuf
-import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.pico.AppModule
 
@@ -16,11 +15,6 @@ object ConnectMessage_PONG : ConnectMessage() {
   override fun writeTo(buffer: ByteBuf) {
     buffer.writeBytes(AppModule.charsetDoNotUse.encode(ID))
     buffer.writeByte(0x00)
-  }
-
-  override fun writeTo(buffer: ByteBuffer) {
-    buffer.put(AppModule.charsetDoNotUse.encode(ID))
-    buffer.put(0x00.toByte())
   }
 
   const val ID = "PONG"

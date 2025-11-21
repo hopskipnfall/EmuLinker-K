@@ -35,23 +35,7 @@ class V086BundleTestShiftJis {
   @Parameterized.Parameter lateinit var params: Params
 
   @Test
-  fun parse_byteBuffer() {
-    val buffer = V086Utils.hexStringToByteBuffer(params.hexString)
-
-    when (val parsedBundle = V086Bundle.parse(buffer, params.lastMessageNumber)) {
-      is V086Bundle.Single -> {
-        assertThat(parsedBundle.message).isEqualTo(params.expectedMessages.single())
-      }
-      is V086Bundle.Multi -> {
-        assertThat(parsedBundle.messages.toList())
-          .containsExactlyElementsIn(params.expectedMessages)
-          .inOrder()
-      }
-    }
-  }
-
-  @Test
-  fun parse_byteBuf() {
+  fun parse() {
     val buf = Unpooled.buffer(4096)
     buf.writeBytes(V086Utils.hexStringToByteBuffer(params.hexString))
 
@@ -290,23 +274,7 @@ class V086BundleTestShiftUtf8 {
   @Parameterized.Parameter lateinit var params: Params
 
   @Test
-  fun parse_byteBuffer() {
-    val buffer = V086Utils.hexStringToByteBuffer(params.hexString)
-
-    when (val parsedBundle = V086Bundle.parse(buffer, params.lastMessageNumber)) {
-      is V086Bundle.Single -> {
-        assertThat(parsedBundle.message).isEqualTo(params.expectedMessages.single())
-      }
-      is V086Bundle.Multi -> {
-        assertThat(parsedBundle.messages.toList())
-          .containsExactlyElementsIn(params.expectedMessages)
-          .inOrder()
-      }
-    }
-  }
-
-  @Test
-  fun parse_byteBuf() {
+  fun parse() {
     val buf = Unpooled.buffer(4096)
     buf.writeBytes(V086Utils.hexStringToByteBuffer(params.hexString))
 

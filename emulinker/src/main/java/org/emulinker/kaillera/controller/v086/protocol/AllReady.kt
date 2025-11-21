@@ -46,25 +46,11 @@ data class AllReady(override var messageNumber: Int) : V086Message(), ServerMess
       return Result.success(AllReady(messageNumber))
     }
 
-    override fun read(buffer: ByteBuffer, messageNumber: Int): Result<AllReady> {
-      if (buffer.remaining() < 1) {
-        return parseFailure("Failed byte count validation!")
-      }
-
-      val b = buffer.get()
-      if (b.toInt() != 0x00) {
-        return parseFailure(
-          "Invalid All Ready Signal format: byte 0 = " + b.toHexString(HexFormat.UpperCase)
-        )
-      }
-      return Result.success(AllReady(messageNumber))
-    }
-
     override fun write(buffer: ByteBuf, message: AllReady) {
       buffer.writeByte(0x00)
     }
 
-    override fun write(buffer: ByteBuffer, message: AllReady) {
+    fun write(buffer: ByteBuffer, message: AllReady) {
       buffer.put(0x00.toByte())
     }
   }

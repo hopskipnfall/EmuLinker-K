@@ -7,8 +7,6 @@ import com.google.common.flogger.FluentLogger
 import io.netty.buffer.ByteBuf
 import io.netty.channel.socket.DatagramPacket
 import java.net.InetSocketAddress
-import java.nio.ByteBuffer
-import java.nio.ByteOrder.LITTLE_ENDIAN
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.time.Duration
@@ -27,7 +25,6 @@ import org.emulinker.kaillera.controller.v086.action.V086UserEventHandler
 import org.emulinker.kaillera.controller.v086.protocol.CachedGameData
 import org.emulinker.kaillera.controller.v086.protocol.GameData
 import org.emulinker.kaillera.controller.v086.protocol.V086Bundle
-import org.emulinker.kaillera.controller.v086.protocol.V086Bundle.Companion.parse
 import org.emulinker.kaillera.controller.v086.protocol.V086BundleFormatException
 import org.emulinker.kaillera.controller.v086.protocol.V086Message
 import org.emulinker.kaillera.model.KailleraUser
@@ -36,7 +33,6 @@ import org.emulinker.kaillera.model.event.GameEvent
 import org.emulinker.kaillera.model.event.KailleraEvent
 import org.emulinker.kaillera.model.event.ServerEvent
 import org.emulinker.kaillera.model.event.UserEvent
-import org.emulinker.kaillera.pico.CompiledFlags
 import org.emulinker.util.EmuUtil
 import org.emulinker.util.EmuUtil.dumpToByteArray
 import org.emulinker.util.EmuUtil.timeKt
@@ -171,64 +167,32 @@ class V086ClientHandler(
   // TODO(nue): This probably needs to be synchronized because of the last read number.
   private fun handleReceivedInternal(buffer: ByteBuf) {
     val inBundle: V086Bundle =
-      if (CompiledFlags.USE_BYTEBUF_INSTEAD_OF_BYTEBUFFER) {
-        try {
-          parse(buffer, lastMessageNumber, user.circularVariableSizeByteArrayBuffer)
-        } catch (e: ParseException) {
-          buffer.resetReaderIndex()
-          logger
-            .atWarning()
-            .withCause(e)
-            .log("%s failed to parse: %s", this, buffer.dumpToByteArray().toHexString())
-          null
-        } catch (e: V086BundleFormatException) {
-          buffer.resetReaderIndex()
-          logger
-            .atWarning()
-            .withCause(e)
-            .log(
-              "%s received invalid message bundle: %s",
-              this,
-              buffer.dumpToByteArray().toHexString(),
-            )
-          null
-        } catch (e: MessageFormatException) {
-          logger
-            .atWarning()
-            .withCause(e)
-            .log("%s received invalid message: %s}", this, buffer.dumpToByteArray().toHexString())
-          null
-        }
-      } else {
-        val newBuffer: ByteBuffer = buffer.nioBuffer().order(LITTLE_ENDIAN)
-        try {
-          parse(newBuffer, lastMessageNumber, user.circularVariableSizeByteArrayBuffer)
-        } catch (e: ParseException) {
-          newBuffer.position(0)
-          logger
-            .atWarning()
-            .withCause(e)
-            .log("%s failed to parse: %s", this, EmuUtil.dumpBuffer(buffer.nioBuffer()))
-          null
-        } catch (e: V086BundleFormatException) {
-          newBuffer.position(0)
-          logger
-            .atWarning()
-            .withCause(e)
-            .log(
-              "%s received invalid message bundle: %s",
-              this,
-              EmuUtil.dumpBuffer(buffer.nioBuffer()),
-            )
-          null
-        } catch (e: MessageFormatException) {
-          newBuffer.position(0)
-          logger
-            .atWarning()
-            .withCause(e)
-            .log("%s received invalid message: %s}", this, EmuUtil.dumpBuffer(newBuffer))
-          null
-        }
+      try {
+        V086Bundle.parse(buffer, lastMessageNumber, user.circularVariableSizeByteArrayBuffer)
+      } catch (e: ParseException) {
+        buffer.resetReaderIndex()
+        logger
+          .atWarning()
+          .withCause(e)
+          .log("%s failed to parse: %s", this, buffer.dumpToByteArray().toHexString())
+        null
+      } catch (e: V086BundleFormatException) {
+        buffer.resetReaderIndex()
+        logger
+          .atWarning()
+          .withCause(e)
+          .log(
+            "%s received invalid message bundle: %s",
+            this,
+            buffer.dumpToByteArray().toHexString(),
+          )
+        null
+      } catch (e: MessageFormatException) {
+        logger
+          .atWarning()
+          .withCause(e)
+          .log("%s received invalid message: %s}", this, buffer.dumpToByteArray().toHexString())
+        null
       } ?: return
 
     stripFromProdBinary {

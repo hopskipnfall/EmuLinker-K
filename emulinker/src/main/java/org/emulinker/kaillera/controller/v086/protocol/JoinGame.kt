@@ -13,8 +13,6 @@ import org.emulinker.kaillera.model.ConnectionType
 import org.emulinker.util.EmuUtil
 import org.emulinker.util.EmuUtil.readString
 import org.emulinker.util.EmuUtil.toMillisDouble
-import org.emulinker.util.UnsignedUtil.getUnsignedInt
-import org.emulinker.util.UnsignedUtil.getUnsignedShort
 import org.emulinker.util.UnsignedUtil.putUnsignedInt
 import org.emulinker.util.UnsignedUtil.putUnsignedShort
 
@@ -89,38 +87,6 @@ sealed class JoinGame : V086Message() {
       )
     }
 
-    override fun read(buffer: ByteBuffer, messageNumber: Int): Result<JoinGame> {
-      if (buffer.remaining() < 13) {
-        return parseFailure("Failed byte count validation!")
-      }
-      val b = buffer.get()
-      if (b.toInt() != 0x00)
-        throw MessageFormatException("Invalid format: byte 0 = " + b.toHexString())
-      val gameID = buffer.getUnsignedShort()
-      val val1 = buffer.getUnsignedShort()
-      val userName = buffer.readString()
-      if (buffer.remaining() < 7) {
-        return parseFailure("Failed byte count validation!")
-      }
-      val ping = buffer.getUnsignedInt()
-      val userID = buffer.getUnsignedShort()
-      val connectionType = buffer.get()
-      return Result.success(
-        if (userName.isBlank() && ping == 0L && userID == 0xFFFF)
-          JoinGameRequest(messageNumber, gameID, ConnectionType.fromByteValue(connectionType))
-        else
-          JoinGameNotification(
-            messageNumber,
-            gameID,
-            val1,
-            userName,
-            ping.milliseconds,
-            userID,
-            ConnectionType.fromByteValue(connectionType),
-          )
-      )
-    }
-
     override fun write(buffer: ByteBuf, message: JoinGame) {
       buffer.writeByte(0x00)
       buffer.writeShortLE(message.gameId)
@@ -154,7 +120,7 @@ sealed class JoinGame : V086Message() {
       buffer.writeByte(message.connectionType.byteValue.toInt())
     }
 
-    override fun write(buffer: ByteBuffer, message: JoinGame) {
+    fun write(buffer: ByteBuffer, message: JoinGame) {
       buffer.put(0x00.toByte())
       buffer.putUnsignedShort(message.gameId)
       buffer.putUnsignedShort(

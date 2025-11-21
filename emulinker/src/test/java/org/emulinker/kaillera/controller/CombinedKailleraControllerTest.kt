@@ -358,8 +358,7 @@ class CombinedKailleraControllerTest : ProtocolBaseTest(), KoinTest {
     expect.that(channel.outboundMessages()).hasSize(1)
     val receivedPacket = channel.readOutbound<DatagramPacket>()
 
-    val response: ConnectMessage =
-      ConnectMessage.parse(receivedPacket.content().nioBuffer()).getOrThrow()
+    val response: ConnectMessage = ConnectMessage.parse(receivedPacket.content()).getOrThrow()
     expect.that(response).isEqualTo(RequestPrivateKailleraPortResponse(27888))
   }
 
@@ -414,7 +413,7 @@ class CombinedKailleraControllerTest : ProtocolBaseTest(), KoinTest {
         var lastMessageId =
           portToLastServerMessageId.getOrPut(receivedPacket.recipient().port) { -1 }
 
-        when (val bundle = V086Bundle.parse(receivedPacket.content().nioBuffer())) {
+        when (val bundle = V086Bundle.parse(receivedPacket.content())) {
           is V086Bundle.Single -> {
             val message = bundle.message
             expect.that(message.messageNumber).isEqualTo(lastMessageId + 1)
