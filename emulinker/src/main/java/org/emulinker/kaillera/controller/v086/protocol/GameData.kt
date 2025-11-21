@@ -6,7 +6,6 @@ import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.kaillera.pico.CompiledFlags
 import org.emulinker.util.CircularVariableSizeByteArrayBuffer
-import org.emulinker.util.UnsignedUtil.getUnsignedShort
 import org.emulinker.util.UnsignedUtil.putUnsignedShort
 import org.emulinker.util.VariableSizeByteArray
 import org.emulinker.util.get
@@ -97,30 +96,6 @@ constructor(override var messageNumber: Int, val gameData: VariableSizeByteArray
 
     override fun read(buffer: ByteBuf, messageNumber: Int): Result<GameData> =
       read(buffer, messageNumber, arrayBuffer = null)
-
-    fun read(
-      buffer: ByteBuffer,
-      messageNumber: Int,
-      arrayBuffer: CircularVariableSizeByteArrayBuffer?,
-    ): Result<GameData> {
-      if (buffer.remaining() < 4) {
-        return parseFailure("Failed byte count validation!")
-      }
-      buffer.get() // This is always 0x00.
-      val dataSize = buffer.getUnsignedShort()
-      if (dataSize <= 0 || dataSize > buffer.remaining()) {
-        return parseFailure("Invalid Game Data format: dataSize = $dataSize")
-      }
-      val gameData: VariableSizeByteArray =
-        if (CompiledFlags.USE_CIRCULAR_BYTE_ARRAY_BUFFER && arrayBuffer != null) {
-          arrayBuffer.borrow()
-        } else {
-          VariableSizeByteArray()
-        }
-      gameData.size = dataSize
-      buffer.get(gameData)
-      return Result.success(GameData(messageNumber, gameData))
-    }
 
     fun read(
       buffer: ByteBuf,
