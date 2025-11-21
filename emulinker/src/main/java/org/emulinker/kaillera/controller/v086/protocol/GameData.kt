@@ -98,9 +98,6 @@ constructor(override var messageNumber: Int, val gameData: VariableSizeByteArray
     override fun read(buffer: ByteBuf, messageNumber: Int): Result<GameData> =
       read(buffer, messageNumber, arrayBuffer = null)
 
-    override fun read(buffer: ByteBuffer, messageNumber: Int): Result<GameData> =
-      read(buffer, messageNumber, arrayBuffer = null)
-
     fun read(
       buffer: ByteBuffer,
       messageNumber: Int,
@@ -155,7 +152,7 @@ constructor(override var messageNumber: Int, val gameData: VariableSizeByteArray
       buffer.writeBytes(message.gameData.toByteArray())
     }
 
-    override fun write(buffer: ByteBuffer, message: GameData) {
+    fun write(buffer: ByteBuffer, message: GameData) {
       buffer.put(0x00.toByte())
       buffer.putUnsignedShort(message.gameData.size)
       buffer.put(message.gameData)

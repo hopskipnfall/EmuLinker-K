@@ -68,7 +68,7 @@ abstract class V086Message : ByteBufferMessage {
     }
   }
 
-  override fun writeTo(buffer: ByteBuffer) {
+  fun writeTo(buffer: ByteBuffer) {
     val len = bodyBytesPlusMessageIdType
     if (len > buffer.remaining()) {
       logger
@@ -126,54 +126,6 @@ abstract class V086Message : ByteBufferMessage {
       } else {
         Result.success(this)
       }
-    }
-
-    @Throws(ParseException::class, MessageFormatException::class)
-    fun parse(
-      messageNumber: Int,
-      messageLength: Int,
-      buffer: ByteBuffer,
-      arrayBuffer: CircularVariableSizeByteArrayBuffer?,
-    ): V086Message {
-      val messageType = buffer.get()
-
-      var parseResult =
-        if (messageType == GameData.ID) {
-          GameData.GameDataSerializer.read(buffer, messageNumber, arrayBuffer)
-        } else {
-          val serializer =
-            when (messageType) {
-              CachedGameData.ID -> CachedGameData.CachedGameDataSerializer
-              else ->
-                checkNotNull(SERIALIZERS[messageType]) { "Unrecognized message ID: $messageType" }
-            }
-
-          serializer.read(buffer, messageNumber)
-        }
-
-      parseResult.onSuccess { parseResult = it.validateMessageNumber() }
-
-      val message =
-        when {
-          // TODO(nue): Return this up the stack instead of throwing an exception.
-          parseResult.isSuccess -> parseResult.getOrThrow()
-          else -> throw MessageFormatException(parseResult.toString())
-        }
-
-      // removed to improve speed
-      if (message.bodyBytesPlusMessageIdType != messageLength) {
-        //			throw new ParseException("Bundle contained length " + messageLength + " !=  parsed
-        // lengthy
-        // " + message.getLength());
-        logger
-          .atFine()
-          .log(
-            "Bundle contained length %d != parsed length %d",
-            messageLength,
-            message.bodyBytesPlusMessageIdType,
-          )
-      }
-      return message
     }
 
     @Throws(ParseException::class, MessageFormatException::class)

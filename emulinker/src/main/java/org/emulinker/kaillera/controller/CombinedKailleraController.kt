@@ -15,7 +15,6 @@ import io.netty.channel.nio.NioEventLoopGroup
 import io.netty.channel.socket.DatagramPacket
 import io.netty.channel.socket.nio.NioDatagramChannel
 import java.net.InetSocketAddress
-import java.nio.ByteOrder
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.concurrent.thread
 import org.emulinker.config.RuntimeFlags
@@ -29,7 +28,6 @@ import org.emulinker.kaillera.controller.v086.V086ClientHandler
 import org.emulinker.kaillera.model.KailleraServer
 import org.emulinker.kaillera.model.exception.NewConnectionException
 import org.emulinker.kaillera.model.exception.ServerFullException
-import org.emulinker.kaillera.pico.CompiledFlags
 import org.emulinker.util.EmuUtil.formatSocketAddress
 
 class CombinedKailleraController(
@@ -129,12 +127,7 @@ class CombinedKailleraController(
     if (handler == null) {
       // User is new. It's either a ConnectMessage or it's the user's first message after
       // reconnecting to the server via the dictated port.
-      val connectMessageResult: Result<ConnectMessage> =
-        if (CompiledFlags.USE_BYTEBUF_INSTEAD_OF_BYTEBUFFER) {
-          ConnectMessage.parse(buffer)
-        } else {
-          ConnectMessage.parse(buffer.nioBuffer().order(ByteOrder.LITTLE_ENDIAN))
-        }
+      val connectMessageResult: Result<ConnectMessage> = ConnectMessage.parse(buffer)
       if (connectMessageResult.isSuccess) {
         when (val connectMessage = connectMessageResult.getOrThrow()) {
           is ConnectMessage_PING -> {

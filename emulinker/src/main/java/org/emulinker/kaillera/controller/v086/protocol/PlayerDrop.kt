@@ -48,19 +48,6 @@ sealed class PlayerDrop : V086Message() {
       )
     }
 
-    override fun read(buffer: ByteBuffer, messageNumber: Int): Result<PlayerDrop> {
-      if (buffer.remaining() < 2) {
-        return parseFailure("Failed byte count validation!")
-      }
-      val userName = buffer.readString()
-      val playerNumber = buffer.get()
-      return Result.success(
-        if (userName == REQUEST_USERNAME && playerNumber == REQUEST_PLAYER_NUMBER) {
-          PlayerDropRequest(messageNumber)
-        } else PlayerDropNotification(messageNumber, userName, playerNumber)
-      )
-    }
-
     override fun write(buffer: ByteBuf, message: PlayerDrop) {
       EmuUtil.writeString(
         buffer,
@@ -77,7 +64,7 @@ sealed class PlayerDrop : V086Message() {
       )
     }
 
-    override fun write(buffer: ByteBuffer, message: PlayerDrop) {
+    fun write(buffer: ByteBuffer, message: PlayerDrop) {
       EmuUtil.writeString(
         buffer,
         when (message) {

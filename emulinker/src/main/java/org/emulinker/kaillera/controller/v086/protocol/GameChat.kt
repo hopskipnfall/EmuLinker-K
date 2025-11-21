@@ -53,24 +53,6 @@ sealed class GameChat : V086Message() {
       )
     }
 
-    override fun read(buffer: ByteBuffer, messageNumber: Int): Result<GameChat> {
-      if (buffer.remaining() < 3) {
-        return parseFailure("Failed byte count validation!")
-      }
-      val userName = buffer.readString()
-      if (buffer.remaining() < 2) {
-        return parseFailure("Failed byte count validation!")
-      }
-      val message = buffer.readString()
-      return Result.success(
-        if (userName == REQUEST_USERNAME) {
-          GameChatRequest(messageNumber, message)
-        } else {
-          GameChatNotification(messageNumber, userName, message)
-        }
-      )
-    }
-
     override fun write(buffer: ByteBuf, message: GameChat) {
       EmuUtil.writeString(
         buffer,
@@ -82,7 +64,7 @@ sealed class GameChat : V086Message() {
       EmuUtil.writeString(buffer, message.message)
     }
 
-    override fun write(buffer: ByteBuffer, message: GameChat) {
+    fun write(buffer: ByteBuffer, message: GameChat) {
       EmuUtil.writeString(
         buffer,
         when (message) {

@@ -1,7 +1,6 @@
 package org.emulinker.kaillera.controller.connectcontroller.protocol
 
 import io.netty.buffer.ByteBuf
-import java.nio.ByteBuffer
 import kotlin.Result.Companion.failure
 import kotlin.Result.Companion.success
 import org.emulinker.kaillera.controller.messaging.ByteBufferMessage
@@ -24,40 +23,6 @@ sealed class ConnectMessage : ByteBufferMessage {
   protected abstract val iD: String?
 
   companion object {
-
-    fun parse(buffer: ByteBuffer): Result<ConnectMessage> {
-      val messageStr =
-        try {
-          val stringDecoder = AppModule.charsetDoNotUse.newDecoder()
-          stringDecoder.decode(buffer).toString()
-        } catch (e: CharacterCodingException) {
-          return failure(
-            MessageFormatException("Invalid bytes received: failed to decode to a string!", e)
-          )
-        }
-
-      when {
-        messageStr.startsWith(ConnectMessage_ServerFull.ID) -> {
-          return success(ConnectMessage_ServerFull.parse(messageStr))
-        }
-        messageStr.startsWith(RequestPrivateKailleraPortResponse.ID) -> {
-          return success(RequestPrivateKailleraPortResponse.parse(messageStr))
-        }
-        messageStr.startsWith(RequestPrivateKailleraPortRequest.ID) -> {
-          return success(RequestPrivateKailleraPortRequest.parse(messageStr))
-        }
-        messageStr.startsWith(ConnectMessage_PING.ID) -> {
-          return success(ConnectMessage_PING.parse(messageStr))
-        }
-        messageStr.startsWith(ConnectMessage_PONG.ID) -> {
-          return success(ConnectMessage_PONG.parse(messageStr))
-        }
-        else -> {
-          buffer.rewind()
-          return failure(MessageFormatException("Unrecognized connect message"))
-        }
-      }
-    }
 
     fun parse(buffer: ByteBuf): Result<ConnectMessage> {
       val messageStr =

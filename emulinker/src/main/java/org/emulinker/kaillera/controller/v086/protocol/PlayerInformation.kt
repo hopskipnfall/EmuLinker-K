@@ -13,8 +13,6 @@ import org.emulinker.kaillera.model.ConnectionType
 import org.emulinker.util.EmuUtil
 import org.emulinker.util.EmuUtil.readString
 import org.emulinker.util.EmuUtil.toMillisDouble
-import org.emulinker.util.UnsignedUtil.getUnsignedInt
-import org.emulinker.util.UnsignedUtil.getUnsignedShort
 import org.emulinker.util.UnsignedUtil.putUnsignedInt
 import org.emulinker.util.UnsignedUtil.putUnsignedShort
 
@@ -119,45 +117,13 @@ data class PlayerInformation(override var messageNumber: Int, val players: List<
       return Result.success(PlayerInformation(messageNumber, players))
     }
 
-    override fun read(buffer: ByteBuffer, messageNumber: Int): Result<PlayerInformation> {
-      if (buffer.remaining() < 5) {
-        return parseFailure("Failed byte count validation!")
-      }
-      val b = buffer.get()
-      if (b.toInt() != 0x00) {
-        throw MessageFormatException(
-          "Invalid Player Information format: byte 0 = ${b.toHexString(HexFormat.UpperCase)}"
-        )
-      }
-      val numPlayers = buffer.int
-      val minLen = numPlayers * 9
-      if (buffer.remaining() < minLen) {
-        return parseFailure("Failed byte count validation!")
-      }
-      val players: List<Player> =
-        (0 until numPlayers).map {
-          if (buffer.remaining() < 9) {
-            return parseFailure("Failed byte count validation!")
-          }
-          val userName = buffer.readString()
-          if (buffer.remaining() < 7) {
-            return parseFailure("Failed byte count validation!")
-          }
-          val ping = buffer.getUnsignedInt()
-          val userID = buffer.getUnsignedShort()
-          val connectionType = buffer.get()
-          Player(userName, ping.milliseconds, userID, ConnectionType.fromByteValue(connectionType))
-        }
-      return Result.success(PlayerInformation(messageNumber, players))
-    }
-
     override fun write(buffer: ByteBuf, message: PlayerInformation) {
       buffer.writeByte(0x00)
       buffer.writeIntLE(message.players.size)
       message.players.forEach { it.writeTo(buffer) }
     }
 
-    override fun write(buffer: ByteBuffer, message: PlayerInformation) {
+    fun write(buffer: ByteBuffer, message: PlayerInformation) {
       buffer.put(0x00.toByte())
       buffer.putInt(message.players.size)
       message.players.forEach { it.writeTo(buffer) }

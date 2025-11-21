@@ -7,7 +7,6 @@ import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.kaillera.controller.v086.V086Utils.getNumBytesPlusStopByte
 import org.emulinker.util.EmuUtil
 import org.emulinker.util.EmuUtil.readString
-import org.emulinker.util.UnsignedUtil.getUnsignedShort
 import org.emulinker.util.UnsignedUtil.putUnsignedShort
 
 /**
@@ -68,30 +67,13 @@ constructor(
       return Result.success(ConnectionRejected(messageNumber, userName, userID.toInt(), message))
     }
 
-    override fun read(buffer: ByteBuffer, messageNumber: Int): Result<ConnectionRejected> {
-      if (buffer.remaining() < 6) {
-        return parseFailure("Failed byte count validation!")
-      }
-      val userName = buffer.readString()
-      if (buffer.remaining() < 4) {
-        return parseFailure("Failed byte count validation!")
-      }
-      val userID = buffer.getUnsignedShort()
-      if (buffer.remaining() < 2) {
-        return parseFailure("Failed byte count validation!")
-      }
-
-      val message = buffer.readString()
-      return Result.success(ConnectionRejected(messageNumber, userName, userID, message))
-    }
-
     override fun write(buffer: ByteBuf, message: ConnectionRejected) {
       EmuUtil.writeString(buffer, message.username)
       buffer.writeShortLE(message.userId)
       EmuUtil.writeString(buffer, message.message)
     }
 
-    override fun write(buffer: ByteBuffer, message: ConnectionRejected) {
+    fun write(buffer: ByteBuffer, message: ConnectionRejected) {
       EmuUtil.writeString(buffer, message.username)
       buffer.putUnsignedShort(message.userId)
       EmuUtil.writeString(buffer, message.message)
