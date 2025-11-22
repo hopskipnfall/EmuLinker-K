@@ -50,24 +50,12 @@ constructor(override var messageNumber: Int, val key: Int) :
       return Result.success(CachedGameData(messageNumber, buffer.getUnsignedByte().toInt()))
     }
 
-    override fun read(buffer: ByteBuffer, messageNumber: Int): Result<CachedGameData> {
-      if (buffer.remaining() < 2) {
-        return parseFailure("Failed byte count validation!")
-      }
-      val b = buffer.get()
-      // removed to increase speed
-      // if (b != 0x00)
-      // throw new MessageFormatException("Invalid " + DESC + " format: byte 0 = " +
-      // EmuUtil.byteToHex(b));
-      return Result.success(CachedGameData(messageNumber, buffer.getUnsignedByte().toInt()))
-    }
-
     override fun write(buffer: ByteBuf, message: CachedGameData) {
       buffer.writeByte(0x00)
       buffer.putUnsignedByte(message.key)
     }
 
-    override fun write(buffer: ByteBuffer, message: CachedGameData) {
+    fun write(buffer: ByteBuffer, message: CachedGameData) {
       buffer.put(0x00.toByte())
       buffer.putUnsignedByte(message.key)
     }

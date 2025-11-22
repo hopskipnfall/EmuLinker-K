@@ -1,5 +1,6 @@
 package org.emulinker.kaillera.controller.v086.protocol
 
+import io.netty.buffer.Unpooled
 import java.nio.charset.Charset
 import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.kaillera.pico.AppModule
@@ -21,7 +22,9 @@ class ExtendedBundleTest {
         "Parsing legacy way for first line ${byteString.split(" ").take(16).joinToString(" ")}"
       )
 
-      val oldBundle = V086Bundle.parse(V086Utils.hexStringToByteBuffer(byteString))
+      val buf = Unpooled.buffer(4096)
+      buf.writeBytes(V086Utils.hexStringToByteBuffer(byteString))
+      val oldBundle = V086Bundle.parse(buf)
       println(oldBundle)
     }
   }

@@ -45,18 +45,11 @@ constructor(override var messageNumber: Int, val value: Short) : V086Message(), 
       return Result.success(KeepAlive(messageNumber, buffer.getUnsignedByte()))
     }
 
-    override fun read(buffer: ByteBuffer, messageNumber: Int): Result<KeepAlive> {
-      if (buffer.remaining() < 1) {
-        return parseFailure("Failed byte count validation!")
-      }
-      return Result.success(KeepAlive(messageNumber, buffer.getUnsignedByte()))
-    }
-
     override fun write(buffer: ByteBuf, message: KeepAlive) {
       buffer.putUnsignedByte(message.value.toInt())
     }
 
-    override fun write(buffer: ByteBuffer, message: KeepAlive) {
+    fun write(buffer: ByteBuffer, message: KeepAlive) {
       buffer.putUnsignedByte(message.value.toInt())
     }
   }
