@@ -55,7 +55,7 @@ class GameDataCacheImpl(capacity: Int) : GameDataCache {
     rangeCheck(index)
     val pos = convert(index)
     val entry = array[pos]
-    entry?.isInCache = false
+    entry?.isInCache?.set(false)
     array[pos] = null
 
     // optimized for FIFO access, i.e. adding to back and
@@ -82,7 +82,7 @@ class GameDataCacheImpl(capacity: Int) : GameDataCache {
 
   override fun clear() {
     for (i in 0 until size) {
-      array[convert(i)]?.isInCache = false
+      array[convert(i)]?.isInCache?.set(false)
       array[convert(i)] = null
     }
     size = 0
@@ -93,7 +93,7 @@ class GameDataCacheImpl(capacity: Int) : GameDataCache {
   override fun add(data: VariableSizeByteArray): Int {
     if (size == array.size) remove(0)
     val pos = tail
-    data.isInCache = true
+    data.isInCache.set(true)
     array[tail] = data
 
     // tail = ((tail + 1) % array.length);

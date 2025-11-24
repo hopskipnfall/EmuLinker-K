@@ -204,6 +204,7 @@ class KailleraGame(
   }
 
   fun announce(announcement: String, toUser: KailleraUser? = null) {
+    logger.atInfo().log("[ %s ] Announcement to %s: %s", this, toUser ?: "all", announcement)
     addEventForAllPlayers(GameInfoEvent(this, announcement, toUser))
   }
 
@@ -740,7 +741,7 @@ class KailleraGame(
         waitingOnData = false
         val joinedGameData =
           if (CompiledFlags.USE_CIRCULAR_BYTE_ARRAY_BUFFER) {
-            user.circularVariableSizeByteArrayBuffer.borrow()
+            player.circularVariableSizeByteArrayBuffer.borrow()
           } else {
             VariableSizeByteArray()
           }

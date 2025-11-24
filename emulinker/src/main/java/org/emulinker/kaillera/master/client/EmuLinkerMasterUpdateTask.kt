@@ -3,6 +3,7 @@ package org.emulinker.kaillera.master.client
 import com.google.common.flogger.FluentLogger
 import io.ktor.http.URLBuilder
 import java.io.BufferedReader
+import java.io.IOException
 import java.io.InputStreamReader
 import java.net.HttpURLConnection
 import java.net.URL
@@ -49,28 +50,35 @@ class EmuLinkerMasterUpdateTask(
         },
     )
 
-    // Get response code
-    val responseCode: Int = connection.getResponseCode()
+    try {
+      // Get response code
+      val responseCode: Int = connection.getResponseCode()
 
-    // Process response
-    if (responseCode == HttpURLConnection.HTTP_OK) {
-      val response = StringBuilder()
-      var line: String?
-      val br = BufferedReader(InputStreamReader(connection.inputStream))
-      while ((br.readLine().also { line = it }) != null) {
-        response.append(line)
+      // Process response
+      if (responseCode == HttpURLConnection.HTTP_OK) {
+        val response = StringBuilder()
+        var line: String?
+        val br = BufferedReader(InputStreamReader(connection.inputStream))
+        while ((br.readLine().also { line = it }) != null) {
+          response.append(line)
+        }
+        br.close()
+        logger.atFine().log("Touching EmuLinker Master done: %s", response)
+      } else {
+        logger
+          .atWarning()
+          .atMostEvery(6, TimeUnit.HOURS)
+          .log("Failed to touch EmuLinker Master: %d", responseCode)
       }
-      br.close()
-      logger.atFine().log("Touching EmuLinker Master done: %s", response)
-    } else {
+    } catch (e: IOException) {
       logger
         .atWarning()
+        .withCause(e)
         .atMostEvery(6, TimeUnit.HOURS)
-        .log("Failed to touch EmuLinker Master: %d", responseCode)
+        .log("Failed to touch EmuLinker Master")
+    } finally {
+      connection.disconnect()
     }
-
-    // Disconnect the connection
-    connection.disconnect()
   }
 
   companion object {
