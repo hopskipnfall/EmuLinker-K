@@ -1,7 +1,9 @@
 package org.emulinker.kaillera.controller.v086.action
 
+import com.google.common.annotations.VisibleForTesting
 import com.google.common.flogger.FluentLogger
 import com.google.common.flogger.LazyArg
+import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
@@ -32,15 +34,22 @@ class ACKAction : V086Action<ClientAck>, V086UserEventHandler<UserEvent>, KoinCo
     }
     clientHandler.addSpeedMeasurement()
     if (clientHandler.speedMeasurementCount > clientHandler.numAcksForSpeedTest) {
-      user.ping = clientHandler.averageNetworkSpeed
-      logger
-        .atFine()
-        .log(
-          "Calculated %s ping time: average=%s, best=%d",
-          user,
-          clientHandler.averageNetworkSpeed,
-          clientHandler.bestNetworkSpeed,
-        )
+      val name = user.name
+      val fakePing = if (name == null) null else extractFakePingFromUsername(name)
+      if (fakePing != null) {
+        user.ping = fakePing
+        logger.atInfo().log("Using fake ping of %s for user %s", user.ping, user)
+      } else {
+        user.ping = clientHandler.averageNetworkSpeed
+        logger
+          .atFine()
+          .log(
+            "Calculated %s ping time: average=%s, best=%d",
+            user,
+            clientHandler.averageNetworkSpeed,
+            clientHandler.bestNetworkSpeed,
+          )
+      }
       user.login().onFailure { e ->
         when (e) {
           is LoginException -> {
@@ -180,5 +189,12 @@ class ACKAction : V086Action<ClientAck>, V086UserEventHandler<UserEvent>, KoinCo
 
   companion object {
     private val logger = FluentLogger.forEnclosingClass()
+
+    @VisibleForTesting
+    fun extractFakePingFromUsername(name: String): Duration? {
+      val pattern = """.*exp_fakeping=(\d{0,3})$""".toRegex(RegexOption.IGNORE_CASE)
+      val result = pattern.matchEntire(name) ?: return null
+      return result.groupValues[1].toInt().milliseconds
+    }
   }
 }
