@@ -2101,6 +2101,7 @@ $dokka.location:org.emulinker.util/Borrowable///PointingToDeclaration/emulinker
 $dokka.location:org.emulinker.util/Borrowable/inTemporaryUse/#/PointingToDeclaration/emulinker/org.emulinker.util/-borrowable/in-temporary-use.html
 $dokka.location:org.emulinker.util/Borrowable/isBorrowed/#/PointingToDeclaration/emulinker/org.emulinker.util/-borrowable/is-borrowed.html
 $dokka.location:org.emulinker.util/Borrowable/isInCache/#/PointingToDeclaration/emulinker/org.emulinker.util/-borrowable/is-in-cache.html
+$dokka.location:org.emulinker.util/CircularVariableSizeByteArrayBuffer.Companion///PointingToDeclaration/emulinker/org.emulinker.util/-circular-variable-size-byte-array-buffer/-companion/index.html
 $dokka.location:org.emulinker.util/CircularVariableSizeByteArrayBuffer///PointingToDeclaration/emulinker/org.emulinker.util/-circular-variable-size-byte-array-buffer/index.html
 $dokka.location:org.emulinker.util/CircularVariableSizeByteArrayBuffer/CircularVariableSizeByteArrayBuffer/#kotlin.Int#kotlin.Function0[org.emulinker.util.VariableSizeByteArray]/PointingToDeclaration/emulinker/org.emulinker.util/-circular-variable-size-byte-array-buffer/-circular-variable-size-byte-array-buffer.html
 $dokka.location:org.emulinker.util/CircularVariableSizeByteArrayBuffer/borrow/#/PointingToDeclaration/emulinker/org.emulinker.util/-circular-variable-size-byte-array-buffer/borrow.html
