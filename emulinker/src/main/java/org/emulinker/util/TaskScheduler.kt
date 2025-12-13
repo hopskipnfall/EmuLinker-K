@@ -37,8 +37,17 @@ class TaskScheduler {
       try {
         logger.atFine().log("Starting scheduled task: %s", taskName)
         action()
+      } catch (e: InterruptedException) {
+        // The server was probably told to shut down.
+        throw e
       } catch (e: Exception) {
-        logger.atSevere().withCause(e).log("Exception in scheduled task!")
+        logger.atSevere().withCause(e).log("Exception in scheduled task! Discarding.")
+      } catch (e: Throwable) {
+        // Some throwables such as IOException do not actually extend Exception and could break
+        // execution of the task
+        // scheduler. Allow it to break the scheduler, but log that it happened.
+        logger.atSevere().withCause(e).log("Throwable in scheduled task. Rethrowing!")
+        throw e
       } finally {
         logger.atFine().log("Completed scheduled task: %s", taskName)
       }

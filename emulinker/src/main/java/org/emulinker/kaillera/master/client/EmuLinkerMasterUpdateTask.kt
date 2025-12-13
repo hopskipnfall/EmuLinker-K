@@ -8,6 +8,7 @@ import java.io.InputStreamReader
 import java.net.HttpURLConnection
 import java.net.URL
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeUnit.HOURS
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.master.PublicServerInformation
 import org.emulinker.kaillera.model.GameStatus
@@ -37,7 +38,13 @@ class EmuLinkerMasterUpdateTask(
       this.append("version", releaseInfo.versionWithElkPrefix.take(30))
     }
 
-    val connection: HttpURLConnection = URL(url.buildString()).openConnection() as HttpURLConnection
+    val connection: HttpURLConnection =
+      try {
+        URL(url.buildString()).openConnection() as HttpURLConnection
+      } catch (e: IOException) {
+        logger.atWarning().withCause(e).atMostEvery(6, HOURS).log("Failed to open http connection")
+        return
+      }
     connection.setRequestMethod("GET")
     connection.connectTimeout = 2_000 // milliseconds
     connection.readTimeout = 2_000 // milliseconds

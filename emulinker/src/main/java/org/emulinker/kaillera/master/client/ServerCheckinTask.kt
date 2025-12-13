@@ -4,6 +4,7 @@ import com.google.common.flogger.FluentLogger
 import io.ktor.utils.io.charsets.name
 import java.io.BufferedReader
 import java.io.DataOutputStream
+import java.io.IOException
 import java.io.InputStreamReader
 import java.net.HttpURLConnection
 import java.net.URL
@@ -72,8 +73,13 @@ class ServerCheckinTask(
 
   /** @return Whether or not the RPC succeeded. */
   private fun touchMasterWithUrl(url: URL): CheckinResponse? {
-
-    val connection: HttpURLConnection = url.openConnection() as HttpURLConnection
+    val connection: HttpURLConnection =
+      try {
+        url.openConnection() as HttpURLConnection
+      } catch (e: IOException) {
+        logger.atWarning().withCause(e).atMostEvery(6, HOURS).log("Failed to open http connection")
+        return null
+      }
     connection.setRequestMethod("POST")
     connection.setRequestProperty("Content-Type", "application/json")
     connection.setDoOutput(true) // idk if we need this
