@@ -1,6 +1,6 @@
 package org.emulinker.kaillera.master.client
 
-import java.util.TimerTask
+import java.util.concurrent.ScheduledFuture
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 import org.emulinker.config.RuntimeFlags
@@ -15,14 +15,14 @@ class MasterListUpdater(
   private val kailleraMasterUpdateTask: KailleraMasterUpdateTask,
   private val taskScheduler: TaskScheduler,
 ) {
-  private var listReporterJob: TimerTask? = null
-  private var serverCheckinJob: TimerTask? = null
+  private var listReporterJob: ScheduledFuture<*>? = null
+  private var serverCheckinJob: ScheduledFuture<*>? = null
 
   fun stop() {
-    listReporterJob?.cancel()
+    listReporterJob?.cancel(/* mayInterruptIfRunning= */ false)
     listReporterJob = null
 
-    serverCheckinJob?.cancel()
+    serverCheckinJob?.cancel(/* mayInterruptIfRunning= */ false)
     serverCheckinJob = null
   }
 
