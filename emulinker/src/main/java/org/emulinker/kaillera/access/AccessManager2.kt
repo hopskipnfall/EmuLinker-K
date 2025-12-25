@@ -13,8 +13,8 @@ import java.net.URISyntaxException
 import java.security.Security
 import java.util.Locale
 import java.util.StringTokenizer
-import java.util.TimerTask
 import java.util.concurrent.CopyOnWriteArrayList
+import java.util.concurrent.ScheduledFuture
 import java.util.concurrent.TimeUnit
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
@@ -45,7 +45,7 @@ class AccessManager2(private val flags: RuntimeFlags, private val taskScheduler:
   private val tempElevatedList: MutableList<TempElevated> = CopyOnWriteArrayList()
   private val silenceList: MutableList<Silence> = CopyOnWriteArrayList()
 
-  private val timerTasks = mutableSetOf<TimerTask>()
+  private val timerTasks = mutableSetOf<ScheduledFuture<*>>()
 
   @Synchronized
   private fun checkReload() {
@@ -468,6 +468,6 @@ class AccessManager2(private val flags: RuntimeFlags, private val taskScheduler:
   }
 
   override fun close() {
-    timerTasks.forEach { it.cancel() }
+    timerTasks.forEach { it.cancel(/* mayInterruptIfRunning= */ false) }
   }
 }

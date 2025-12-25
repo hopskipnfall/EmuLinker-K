@@ -4,9 +4,9 @@ import com.google.common.flogger.FluentLogger
 import io.github.redouane59.twitter.TwitterClient
 import io.github.redouane59.twitter.dto.tweet.Tweet
 import io.github.redouane59.twitter.dto.tweet.TweetParameters
-import java.util.TimerTask
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentMap
+import java.util.concurrent.ScheduledFuture
 import kotlin.time.Duration.Companion.seconds
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.model.KailleraUser
@@ -25,7 +25,8 @@ class TwitterBroadcaster(
 ) : KoinComponent {
   private val twitter: TwitterClient? = if (flags.twitterEnabled) get<TwitterClient>() else null
 
-  private val pendingReports: ConcurrentMap<LookingForGameEvent, TimerTask> = ConcurrentHashMap()
+  private val pendingReports: ConcurrentMap<LookingForGameEvent, ScheduledFuture<*>> =
+    ConcurrentHashMap()
   private val postedTweets: ConcurrentMap<LookingForGameEvent, String> = ConcurrentHashMap()
 
   private var lastTweetContent: String = ""
@@ -94,7 +95,7 @@ class TwitterBroadcaster(
         val timerTask = pendingReports[event]
         if (timerTask != null) {
           try {
-            timerTask.cancel()
+            timerTask.cancel(/* mayInterruptIfRunning= */ false)
           } catch (e: Exception) {
             // Throws exceptions if already closed and there's no way to check if it's already been
             // closed..

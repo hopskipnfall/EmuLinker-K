@@ -5,9 +5,9 @@ import com.codahale.metrics.MetricRegistry
 import com.google.common.flogger.FluentLogger
 import java.net.InetSocketAddress
 import java.util.Locale
-import java.util.TimerTask
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.LinkedBlockingQueue
+import java.util.concurrent.ScheduledFuture
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
@@ -118,7 +118,7 @@ class KailleraServer(
   val maxGameChatLength = flags.maxGameChatLength
   private val maxClientNameLength: Int = flags.maxClientNameLength
 
-  private var timerTask: TimerTask? = null
+  private var timerTask: ScheduledFuture<*>? = null
 
   override fun toString(): String {
     return String.format(
@@ -145,7 +145,7 @@ class KailleraServer(
     stopFlag.set(true)
     usersMap.clear()
     gamesMap.clear()
-    timerTask?.cancel()
+    timerTask?.cancel(/* mayInterruptIfRunning= */ false)
     timerTask = null
   }
 
@@ -828,6 +828,7 @@ class KailleraServer(
               is GameStatusChangedEvent,
               is GameClosedEvent,
               is GameCreatedEvent -> continue
+
               else -> user.queueEvent(event)
             }
           } else {
