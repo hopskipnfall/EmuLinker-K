@@ -29,6 +29,8 @@ import org.emulinker.kaillera.model.KailleraServer
 import org.emulinker.kaillera.model.exception.NewConnectionException
 import org.emulinker.kaillera.model.exception.ServerFullException
 import org.emulinker.util.EmuUtil.formatSocketAddress
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeUnit.MINUTES
 
 class CombinedKailleraController(
   private val flags: RuntimeFlags,
@@ -40,7 +42,7 @@ class CombinedKailleraController(
 
   private var stopFlag = false
 
-  lateinit var nettyChannel: io.netty.channel.Channel
+  lateinit private var nettyChannel: io.netty.channel.Channel
     private set
 
   @Synchronized
@@ -96,14 +98,6 @@ class CombinedKailleraController(
         }
       }
       .start(true)
-
-  fun send(datagram: DatagramPacket) {
-    try {
-      this.nettyChannel.writeAndFlush(datagram)
-    } catch (e: Exception) {
-      logger.atSevere().withCause(e).log("Failed to send on port %s", boundPort)
-    }
-  }
 
   /** Map of protocol name (e.g. "0.86") to [KailleraServerController]. */
   // TODO(nue): Since there is only one, we could just remove this for now..
@@ -193,7 +187,7 @@ class CombinedKailleraController(
     }
     // I do not like blocking on a request thread.
     synchronized(handler.requestHandlerMutex) {
-      handler.handleReceived(buffer, remoteSocketAddress)
+      handler.handleReceived(buffer, remoteSocketAddress, ctx)
     }
   }
 

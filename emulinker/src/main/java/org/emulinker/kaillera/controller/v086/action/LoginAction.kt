@@ -1,6 +1,7 @@
 package org.emulinker.kaillera.controller.v086.action
 
 import com.google.common.flogger.FluentLogger
+import io.netty.channel.ChannelHandlerContext
 import org.emulinker.kaillera.access.AccessManager
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086ClientHandler
@@ -15,7 +16,7 @@ class LoginAction : V086Action<UserInformation>, V086ServerEventHandler<UserJoin
   override fun toString() = "LoginAction"
 
   @Throws(FatalActionException::class)
-  override fun performAction(message: UserInformation, clientHandler: V086ClientHandler) {
+  override fun performAction(message: UserInformation, ctx: ChannelHandlerContext, clientHandler: V086ClientHandler) {
     val user: KailleraUser = clientHandler.user
     user.name = message.username
     user.clientType = message.clientType

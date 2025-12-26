@@ -2,6 +2,7 @@ package org.emulinker.kaillera.controller.v086.action
 
 import com.google.common.flogger.FluentLogger
 import com.google.common.flogger.LazyArg
+import io.netty.channel.ChannelHandlerContext
 import kotlin.time.Duration.Companion.milliseconds
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
@@ -25,7 +26,7 @@ class ACKAction : V086Action<ClientAck>, V086UserEventHandler<UserEvent>, KoinCo
   private val flags: RuntimeFlags by inject()
 
   @Throws(FatalActionException::class)
-  override fun performAction(message: ClientAck, clientHandler: V086ClientHandler) {
+  override fun performAction(message: ClientAck, ctx: ChannelHandlerContext, clientHandler: V086ClientHandler) {
     val user = clientHandler.user
     if (user.loggedIn) {
       return
@@ -52,7 +53,7 @@ class ACKAction : V086Action<ClientAck>, V086UserEventHandler<UserEvent>, KoinCo
                   username = "server",
                   user.id,
                   e.message ?: "",
-                )
+                ), ctx
               )
             } catch (e2: MessageFormatException) {
               logger.atSevere().withCause(e2).log("Failed to construct new ConnectionRejected")
@@ -64,7 +65,7 @@ class ACKAction : V086Action<ClientAck>, V086UserEventHandler<UserEvent>, KoinCo
       }
     } else {
       try {
-        clientHandler.send(ServerAck(clientHandler.nextMessageNumber))
+        clientHandler.send(ServerAck(clientHandler.nextMessageNumber), ctx)
       } catch (e: MessageFormatException) {
         logger.atSevere().withCause(e).log("Failed to construct new ACK.ServerACK")
         return
@@ -72,7 +73,8 @@ class ACKAction : V086Action<ClientAck>, V086UserEventHandler<UserEvent>, KoinCo
     }
   }
 
-  override fun handleEvent(event: UserEvent, clientHandler: V086ClientHandler) {
+  override fun handleEvent(event: UserEvent, clientHandler: V086ClientHandler,
+                           ctx: ChannelHandlerContext) {
     val connectedEvent = event as ConnectedEvent
     val server = connectedEvent.server
     val thisUser = connectedEvent.user
@@ -127,7 +129,7 @@ class ACKAction : V086Action<ClientAck>, V086UserEventHandler<UserEvent>, KoinCo
     while (users.isNotEmpty()) {
       val user = users.removeFirst()
       if (counter + user.numBytes >= 300) {
-        sendServerStatus(clientHandler, usersSubList, gamesSubList, counter)
+        sendServerStatus(clientHandler, usersSubList, gamesSubList, counter, ctx)
         usersSubList = mutableListOf()
         gamesSubList = mutableListOf()
         counter = 0
@@ -140,7 +142,7 @@ class ACKAction : V086Action<ClientAck>, V086UserEventHandler<UserEvent>, KoinCo
     while (games.isNotEmpty()) {
       val game = games.removeFirst()
       if (counter + game.numBytes >= 300) {
-        sendServerStatus(clientHandler, usersSubList, gamesSubList, counter)
+        sendServerStatus(clientHandler, usersSubList, gamesSubList, counter, ctx)
         usersSubList = mutableListOf()
         gamesSubList = mutableListOf()
         counter = 0
@@ -151,7 +153,7 @@ class ACKAction : V086Action<ClientAck>, V086UserEventHandler<UserEvent>, KoinCo
       gamesSubList.add(game)
     }
     if (usersSubList.isNotEmpty() || gamesSubList.isNotEmpty() || !sent) {
-      sendServerStatus(clientHandler, usersSubList, gamesSubList, counter)
+      sendServerStatus(clientHandler, usersSubList, gamesSubList, counter, ctx)
     }
   }
 
@@ -160,6 +162,8 @@ class ACKAction : V086Action<ClientAck>, V086UserEventHandler<UserEvent>, KoinCo
     users: List<ServerStatus.User>,
     games: List<ServerStatus.Game>,
     counter: Int,
+
+    ctx: ChannelHandlerContext
   ) {
     logger
       .atFine()
@@ -172,7 +176,7 @@ class ACKAction : V086Action<ClientAck>, V086UserEventHandler<UserEvent>, KoinCo
         LazyArg { games.map { it.gameId } },
       )
     try {
-      clientHandler.send(ServerStatus(clientHandler.nextMessageNumber, users, games))
+      clientHandler.send(ServerStatus(clientHandler.nextMessageNumber, users, games), ctx)
     } catch (e: MessageFormatException) {
       logger.atSevere().withCause(e).log("Failed to construct new ServerStatus for users")
     }

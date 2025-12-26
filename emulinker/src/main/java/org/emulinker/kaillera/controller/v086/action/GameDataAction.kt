@@ -1,6 +1,7 @@
 package org.emulinker.kaillera.controller.v086.action
 
 import com.google.common.flogger.FluentLogger
+import io.netty.channel.ChannelHandlerContext
 import java.util.concurrent.TimeUnit
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086ClientHandler
@@ -14,7 +15,7 @@ object GameDataAction : V086Action<GameData>, V086GameEventHandler<GameDataEvent
   override fun toString() = "GameDataAction"
 
   @Throws(FatalActionException::class)
-  override fun performAction(message: GameData, clientHandler: V086ClientHandler) {
+  override fun performAction(message: GameData, ctx: ChannelHandlerContext, clientHandler: V086ClientHandler) {
     val user = clientHandler.user
     val data = message.gameData
     clientHandler.clientGameDataCache.add(data)

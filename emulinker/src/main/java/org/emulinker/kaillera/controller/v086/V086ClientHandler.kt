@@ -5,6 +5,7 @@ import com.codahale.metrics.MetricRegistry
 import com.codahale.metrics.Timer
 import com.google.common.flogger.FluentLogger
 import io.netty.buffer.ByteBuf
+import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.socket.DatagramPacket
 import java.net.InetSocketAddress
 import java.util.concurrent.TimeUnit
@@ -60,7 +61,8 @@ class V086ClientHandler(
   var remoteSocketAddress: InetSocketAddress? = null
     private set
 
-  fun handleReceived(buf: ByteBuf, remoteSocketAddress: InetSocketAddress) {
+  fun handleReceived(buf: ByteBuf, remoteSocketAddress: InetSocketAddress,
+                     ctx: ChannelHandlerContext,) {
     if (this.remoteSocketAddress == null) {
       this.remoteSocketAddress = remoteSocketAddress
     } else if (remoteSocketAddress != this.remoteSocketAddress) {
@@ -74,9 +76,9 @@ class V086ClientHandler(
       return
     }
     if (clientRequestTimer != null) {
-      clientRequestTimer.timeKt { handleReceivedInternal(buf) }
+      clientRequestTimer.timeKt { handleReceivedInternal(buf, ctx) }
     } else {
-      handleReceivedInternal(buf)
+      handleReceivedInternal(buf, ctx)
     }
   }
 
@@ -165,7 +167,7 @@ class V086ClientHandler(
   override fun toString(): String = "[V086ClientHandler $user]"
 
   // TODO(nue): This probably needs to be synchronized because of the last read number.
-  private fun handleReceivedInternal(buffer: ByteBuf) {
+  private fun handleReceivedInternal(buffer: ByteBuf, ctx: ChannelHandlerContext,) {
     val inBundle: V086Bundle =
       try {
         V086Bundle.parse(buffer, lastMessageNumber, user.circularVariableSizeByteArrayBuffer)
@@ -214,7 +216,7 @@ class V086ClientHandler(
           .atMostEvery(1, TimeUnit.SECONDS)
           .log("%s received bundle of messages from %s", this, user)
         clientRetryCount++
-        resend(clientRetryCount)
+        resend(ctx, clientRetryCount)
         return
       } else {
         0
@@ -237,7 +239,7 @@ class V086ClientHandler(
               .log("No action defined to handle client message: %s", inBundle.message)
             return
           }
-          (action as V086Action<V086Message>).performAction(m, this)
+          (action as V086Action<V086Message>).performAction(m,ctx, this)
         }
         is V086Bundle.Multi -> {
           val messages = inBundle.messages
@@ -277,7 +279,7 @@ class V086ClientHandler(
               logger.atSevere().log("No action defined to handle client message: %s", messages[i])
             } else {
               // logger.atFine().log(user + " -> " + message);
-              (action as V086Action<V086Message>).performAction(m, this)
+              (action as V086Action<V086Message>).performAction(m,ctx, this)
             }
           }
         }
@@ -288,7 +290,7 @@ class V086ClientHandler(
     }
   }
 
-  fun actionPerformed(event: KailleraEvent) {
+  fun actionPerformed(event: KailleraEvent, ctx: ChannelHandlerContext) {
     when (event) {
       // Check for GameDataEvent first to avoid map lookup slowness.
       is GameDataEvent -> {
@@ -316,7 +318,7 @@ class V086ClientHandler(
             )
           return
         }
-        (eventHandler as V086ServerEventHandler<ServerEvent>).handleEvent(event, this)
+        (eventHandler as V086ServerEventHandler<ServerEvent>).handleEvent(event, this, ctx)
       }
       is UserEvent -> {
         val eventHandler = controller.userEventHandlers[event::class]
@@ -326,7 +328,7 @@ class V086ClientHandler(
             .log("%s found no UserEventHandler registered to handle user event: ", this, event)
           return
         }
-        (eventHandler as V086UserEventHandler<UserEvent>).handleEvent(event, this)
+        (eventHandler as V086UserEventHandler<UserEvent>).handleEvent(event, this, ctx)
       }
     }
   }
@@ -334,7 +336,7 @@ class V086ClientHandler(
   // Caching here for speed.
   private val maxPingMs: Long = flags.maxPing.inWholeMilliseconds
 
-  fun resend(timeoutCounter: Int) {
+  fun resend( ctx: ChannelHandlerContext, timeoutCounter: Int) {
     // if ((System.currentTimeMillis() - lastResend) > (user.getPing()*3))
     if (System.currentTimeMillis() - lastResend > maxPingMs) {
       // int numToSend = (3+timeoutCounter);
@@ -344,38 +346,38 @@ class V086ClientHandler(
       stripFromProdBinary {
         logger.atFinest().log("%s: resending last %d messages", this, numToSend)
       }
-      resendFromCache(numToSend)
+      resendFromCache(ctx, numToSend)
       lastResend = System.currentTimeMillis()
     } else {
       stripFromProdBinary { logger.atFinest().log("Skipping resend...") }
     }
   }
 
-  private fun resendFromCache(numToSend: Int = 5) {
+  private fun resendFromCache(ctx: ChannelHandlerContext, numToSend: Int = 5) {
     synchronized(sendMutex) {
       var numToSend = numToSend
 
-      val buf = combinedKailleraController.nettyChannel.alloc().directBuffer(flags.v086BufferSize)
+      val buf = ctx.alloc().directBuffer(flags.v086BufferSize)
       numToSend = lastMessageBuffer.fill(outMessages, numToSend)
       val outBundle = V086Bundle.Multi(outMessages, numToSend)
       stripFromProdBinary { logger.atFinest().log("<- TO P%d: (RESEND)", user.id) }
       outBundle.writeTo(buf)
-      combinedKailleraController.send(DatagramPacket(buf, remoteSocketAddress!!))
+      ctx.writeAndFlush(DatagramPacket(buf, remoteSocketAddress!!))
       clientResponseMeter?.mark()
     }
   }
 
-  fun send(outMessage: V086Message, numToSend: Int = 5) {
+  fun send(outMessage: V086Message, ctx: ChannelHandlerContext, numToSend: Int = 5) {
     synchronized(sendMutex) {
       outMessage.messageNumber = getAndIncrementSendMessageNumber()
       var numToSend = numToSend
-      val buf = combinedKailleraController.nettyChannel.alloc().directBuffer(flags.v086BufferSize)
+      val buf = ctx.alloc().directBuffer(flags.v086BufferSize)
       lastMessageBuffer.add(outMessage)
       numToSend = lastMessageBuffer.fill(outMessages, numToSend)
       val outBundle = V086Bundle.Multi(outMessages, numToSend)
       stripFromProdBinary { logger.atFinest().log("<- TO P%d: %s", user.id, outMessage) }
       outBundle.writeTo(buf)
-      combinedKailleraController.send(DatagramPacket(buf, remoteSocketAddress!!))
+      ctx.writeAndFlush(DatagramPacket(buf, remoteSocketAddress!!))
       clientResponseMeter?.mark()
     }
   }

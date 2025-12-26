@@ -543,7 +543,7 @@ class KailleraUser(
       return
     }
 
-    clientHandler.actionPerformed(event)
+    clientHandler.actionPerformed(event,)
     if (event is GameStartedEvent) {
       status = UserStatus.PLAYING
       lastUpdateNs = System.nanoTime()

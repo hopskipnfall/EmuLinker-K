@@ -1,6 +1,7 @@
 package org.emulinker.kaillera.controller.v086.action
 
 import com.google.common.flogger.FluentLogger
+import io.netty.channel.ChannelHandlerContext
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086ClientHandler
 import org.emulinker.kaillera.controller.v086.protocol.GameChatNotification
@@ -11,7 +12,7 @@ class GameKickAction : V086Action<GameKick> {
   override fun toString() = "GameKickAction"
 
   @Throws(FatalActionException::class)
-  override fun performAction(message: GameKick, clientHandler: V086ClientHandler) {
+  override fun performAction(message: GameKick, ctx: ChannelHandlerContext, clientHandler: V086ClientHandler) {
     try {
       clientHandler.user.gameKick(message.userId)
     } catch (e: GameKickException) {
