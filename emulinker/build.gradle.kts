@@ -193,6 +193,10 @@ subprojects { apply(plugin = "org.jetbrains.dokka") }
 
 tasks.withType<JavaExec> { jvmArgs = listOf("-Xms512m", "-Xmx512m") }
 
+tasks.processJmhResources {
+  duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
 jmh {
   // Run with ./gradlew jmh -PjmhDryRun
   if (project.hasProperty("jmhDryRun")) {
