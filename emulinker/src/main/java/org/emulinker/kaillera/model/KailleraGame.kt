@@ -56,7 +56,6 @@ import org.emulinker.util.EmuUtil.threadSleep
 import org.emulinker.util.EmuUtil.toMillisDouble
 import org.emulinker.util.TimeOffsetCache
 import org.emulinker.util.VariableSizeByteArray
-import org.koin.core.component.KoinComponent
 
 class KailleraGame(
   val id: Int,
@@ -66,7 +65,7 @@ class KailleraGame(
   val bufferSize: Int,
   private val flags: RuntimeFlags,
   private val clock: Clock,
-) : KoinComponent {
+) {
 
   var highestUserFrameDelay = 0
   var maxPing = 1000
