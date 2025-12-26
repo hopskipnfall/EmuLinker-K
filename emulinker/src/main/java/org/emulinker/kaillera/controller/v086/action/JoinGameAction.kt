@@ -1,6 +1,7 @@
 package org.emulinker.kaillera.controller.v086.action
 
 import com.google.common.flogger.FluentLogger
+import io.netty.channel.ChannelHandlerContext
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086ClientHandler
 import org.emulinker.kaillera.controller.v086.protocol.InformationMessage
@@ -24,7 +25,7 @@ class JoinGameAction :
   override fun toString() = "JoinGameAction"
 
   @Throws(FatalActionException::class)
-  override fun performAction(message: JoinGameRequest, clientHandler: V086ClientHandler) {
+  override fun performAction(message: JoinGameRequest, ctx: ChannelHandlerContext, clientHandler: V086ClientHandler) {
     try {
       val game = clientHandler.user.joinGame(message.gameId)
 

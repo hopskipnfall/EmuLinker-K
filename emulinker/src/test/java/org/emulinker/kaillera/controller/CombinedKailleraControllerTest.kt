@@ -181,7 +181,7 @@ class CombinedKailleraControllerTest : ProtocolBaseTest(), KoinTest {
         ),
       )
 
-    send(JoinGameRequest(messageNumber = 5, gameId = 1, connectionType = LAN), fromPort = 2)
+    sendWithoutContext(JoinGameRequest(messageNumber = 5, gameId = 1, connectionType = LAN), fromPort = 2)
 
     expect
       .that(receiveAll(onPort = 1, take = 2))
@@ -246,7 +246,7 @@ class CombinedKailleraControllerTest : ProtocolBaseTest(), KoinTest {
   }
 
   private fun createGame(clientPort: Int) {
-    send(CreateGameRequest(messageNumber = 5, romName = "Test Game"), fromPort = clientPort)
+    sendWithoutContext(CreateGameRequest(messageNumber = 5, romName = "Test Game"), fromPort = clientPort)
 
     expect
       .that(receiveAll(onPort = clientPort, take = 3))
@@ -305,7 +305,7 @@ class CombinedKailleraControllerTest : ProtocolBaseTest(), KoinTest {
     existingUsers: List<ServerStatus.User>,
     existingGames: List<ServerStatus.Game>,
   ) {
-    send(
+    sendWithoutContext(
       UserInformation(
         messageNumber = 0,
         username = "tester$clientPort",
@@ -317,13 +317,13 @@ class CombinedKailleraControllerTest : ProtocolBaseTest(), KoinTest {
 
     // Timing handshake.
     expect.that(receive(onPort = clientPort)).isEqualTo(ServerAck(0))
-    send(ClientAck(1), fromPort = clientPort)
+    sendWithoutContext(ClientAck(1), fromPort = clientPort)
     expect.that(receive(onPort = clientPort)).isEqualTo(ServerAck(0))
-    send(ClientAck(2), fromPort = clientPort)
+    sendWithoutContext(ClientAck(2), fromPort = clientPort)
     expect.that(receive(onPort = clientPort)).isEqualTo(ServerAck(0))
-    send(ClientAck(3), fromPort = clientPort)
+    sendWithoutContext(ClientAck(3), fromPort = clientPort)
     expect.that(receive(onPort = clientPort)).isEqualTo(ServerAck(0))
-    send(ClientAck(4), fromPort = clientPort)
+    sendWithoutContext(ClientAck(4), fromPort = clientPort)
 
     expect
       .that(receiveAll(onPort = clientPort, take = 9))
@@ -387,7 +387,7 @@ class CombinedKailleraControllerTest : ProtocolBaseTest(), KoinTest {
   }
 
   /** Send message to the server. */
-  private fun send(message: V086Message, fromPort: Int) {
+  private fun sendWithoutContext(message: V086Message, fromPort: Int) {
     val buf = channel.alloc().buffer().order(ByteOrder.LITTLE_ENDIAN)
     V086Bundle.Single(message).writeTo(buf)
     channel.writeInbound(datagramPacket(buf, fromPort = fromPort))
