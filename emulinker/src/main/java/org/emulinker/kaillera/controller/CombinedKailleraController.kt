@@ -131,7 +131,7 @@ class CombinedKailleraController(
       if (connectMessageResult.isSuccess) {
         when (val connectMessage = connectMessageResult.getOrThrow()) {
           is ConnectMessage_PING -> {
-            val buf = nettyChannel.alloc().buffer(bufferSize)
+            val buf = ctx.alloc().buffer(bufferSize)
             ConnectMessage_PONG.writeTo(buf)
             ctx.writeAndFlush(DatagramPacket(buf, remoteSocketAddress))
           }
@@ -140,7 +140,7 @@ class CombinedKailleraController(
               "Client listed unsupported protocol! $connectMessage."
             }
 
-            val buf = nettyChannel.alloc().buffer(bufferSize)
+            val buf = ctx.alloc().buffer(bufferSize)
             RequestPrivateKailleraPortResponse(flags.serverPort).writeTo(buf)
             ctx.writeAndFlush(DatagramPacket(buf, remoteSocketAddress))
           }
