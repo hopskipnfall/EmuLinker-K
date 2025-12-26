@@ -123,6 +123,8 @@ sourceSets {
 
     resources { srcDirs("conf") }
   }
+
+  named("jmh") { resources { srcDir("src/jmh/resources") } }
 }
 
 tasks.named<KotlinCompilationTask<*>>("compileKotlin") {

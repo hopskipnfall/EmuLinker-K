@@ -17,6 +17,8 @@ object GameDataAction : V086Action<GameData>, V086GameEventHandler<GameDataEvent
   override fun performAction(message: GameData, clientHandler: V086ClientHandler) {
     val user = clientHandler.user
     val data = message.gameData
+    // SHOULDN'T WE BE CHECKING IF THE DATA IS IN THE CACHE FIRST?! this leaves two copies in the
+    // cache.
     clientHandler.clientGameDataCache.add(data)
     try {
       user.addGameData(data).onFailure { e ->
