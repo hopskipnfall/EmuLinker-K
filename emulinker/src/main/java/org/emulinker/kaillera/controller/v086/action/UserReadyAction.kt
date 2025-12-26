@@ -1,7 +1,6 @@
 package org.emulinker.kaillera.controller.v086.action
 
 import com.google.common.flogger.FluentLogger
-import io.netty.channel.ChannelHandlerContext
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086ClientHandler
 import org.emulinker.kaillera.controller.v086.protocol.AllReady
@@ -12,7 +11,7 @@ class UserReadyAction : V086Action<AllReady>, V086GameEventHandler<GameEvent> {
   override fun toString() = "UserReadyAction"
 
   @Throws(FatalActionException::class)
-  override fun performAction(message: AllReady, ctx: ChannelHandlerContext, clientHandler: V086ClientHandler) {
+  override fun performAction(message: AllReady, clientHandler: V086ClientHandler) {
     try {
       clientHandler.user.playerReady()
     } catch (e: UserReadyException) {

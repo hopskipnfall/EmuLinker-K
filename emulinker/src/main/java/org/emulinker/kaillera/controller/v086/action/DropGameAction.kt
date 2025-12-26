@@ -1,7 +1,6 @@
 package org.emulinker.kaillera.controller.v086.action
 
 import com.google.common.flogger.FluentLogger
-import io.netty.channel.ChannelHandlerContext
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086ClientHandler
 import org.emulinker.kaillera.controller.v086.protocol.PlayerDropNotification
@@ -13,7 +12,7 @@ class DropGameAction : V086Action<PlayerDropRequest>, V086GameEventHandler<UserD
   override fun toString() = "DropGameAction"
 
   @Throws(FatalActionException::class)
-  override fun performAction(message: PlayerDropRequest, ctx: ChannelHandlerContext, clientHandler: V086ClientHandler) {
+  override fun performAction(message: PlayerDropRequest, clientHandler: V086ClientHandler) {
     try {
       clientHandler.user.dropGame()
     } catch (e: DropGameException) {

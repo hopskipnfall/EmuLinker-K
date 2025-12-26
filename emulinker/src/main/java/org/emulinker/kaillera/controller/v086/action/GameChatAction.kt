@@ -1,7 +1,6 @@
 package org.emulinker.kaillera.controller.v086.action
 
 import com.google.common.flogger.FluentLogger
-import io.netty.channel.ChannelHandlerContext
 import java.util.Scanner
 import kotlin.math.roundToInt
 import kotlin.time.Clock
@@ -44,12 +43,12 @@ class GameChatAction(
   override fun toString() = "GameChatAction"
 
   @Throws(FatalActionException::class)
-  override fun performAction(message: GameChatRequest, ctx: ChannelHandlerContext, clientHandler: V086ClientHandler) {
+  override fun performAction(message: GameChatRequest, clientHandler: V086ClientHandler) {
     if (clientHandler.user.game == null) return
     if (message.message.startsWith(ADMIN_COMMAND_ESCAPE_STRING)) {
       try {
         if (gameOwnerCommandAction.isValidCommand((message as GameChat).message)) {
-          gameOwnerCommandAction.performAction(message,, clientHandler)
+          gameOwnerCommandAction.performAction(message, clientHandler)
           if ((message as GameChat).message == "/help") checkCommands(message, clientHandler)
         } else {
           checkCommands(message, clientHandler)

@@ -1,7 +1,6 @@
 package org.emulinker.kaillera.controller.v086.action
 
 import com.google.common.flogger.FluentLogger
-import io.netty.channel.ChannelHandlerContext
 import kotlin.time.Duration.Companion.milliseconds
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086ClientHandler
@@ -19,7 +18,7 @@ class QuitGameAction(private val lookingForGameReporter: TwitterBroadcaster) :
   override fun toString() = "QuitGameAction"
 
   @Throws(FatalActionException::class)
-  override fun performAction(message: QuitGameRequest, ctx: ChannelHandlerContext, clientHandler: V086ClientHandler) {
+  override fun performAction(message: QuitGameRequest, clientHandler: V086ClientHandler) {
     try {
       clientHandler.user.quitGame()
       lookingForGameReporter.cancelActionsForUser(clientHandler.user.id)

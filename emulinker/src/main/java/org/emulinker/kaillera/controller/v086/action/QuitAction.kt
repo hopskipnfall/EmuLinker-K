@@ -1,7 +1,6 @@
 package org.emulinker.kaillera.controller.v086.action
 
 import com.google.common.flogger.FluentLogger
-import io.netty.channel.ChannelHandlerContext
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086ClientHandler
 import org.emulinker.kaillera.controller.v086.protocol.QuitNotification
@@ -13,7 +12,7 @@ class QuitAction : V086Action<QuitRequest>, V086ServerEventHandler<UserQuitEvent
   override fun toString() = "QuitAction"
 
   @Throws(FatalActionException::class)
-  override fun performAction(message: QuitRequest, ctx: ChannelHandlerContext, clientHandler: V086ClientHandler) {
+  override fun performAction(message: QuitRequest, clientHandler: V086ClientHandler) {
     try {
       clientHandler.user.quit(message.message)
     } catch (e: ActionException) {

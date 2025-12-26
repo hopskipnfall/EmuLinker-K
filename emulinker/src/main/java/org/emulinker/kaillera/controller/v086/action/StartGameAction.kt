@@ -1,7 +1,6 @@
 package org.emulinker.kaillera.controller.v086.action
 
 import com.google.common.flogger.FluentLogger
-import io.netty.channel.ChannelHandlerContext
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086ClientHandler
 import org.emulinker.kaillera.controller.v086.protocol.GameChatNotification
@@ -15,7 +14,7 @@ class StartGameAction(private val lookingForGameReporter: TwitterBroadcaster) :
   V086Action<StartGameRequest>, V086GameEventHandler<GameStartedEvent> {
   override fun toString() = "StartGameAction"
 
-  override fun performAction(message: StartGameRequest, ctx: ChannelHandlerContext, clientHandler: V086ClientHandler) {
+  override fun performAction(message: StartGameRequest, clientHandler: V086ClientHandler) {
     try {
       clientHandler.user.startGame()
     } catch (e: StartGameException) {

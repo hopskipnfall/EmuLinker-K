@@ -1,7 +1,6 @@
 package org.emulinker.kaillera.controller.v086.action
 
 import com.google.common.flogger.FluentLogger
-import io.netty.channel.ChannelHandlerContext
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086ClientHandler
 import org.emulinker.kaillera.controller.v086.protocol.CreateGame
@@ -24,7 +23,7 @@ class CreateGameAction :
   override fun toString() = "CreateGameAction"
 
   @Throws(FatalActionException::class)
-  override fun performAction(message: CreateGame, ctx: ChannelHandlerContext, clientHandler: V086ClientHandler) {
+  override fun performAction(message: CreateGame, clientHandler: V086ClientHandler) {
     try {
       val game = clientHandler.user.createGame(message.romName)
 

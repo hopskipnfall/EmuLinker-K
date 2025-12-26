@@ -7,13 +7,17 @@ import io.ktor.server.netty.Netty
 import io.ktor.server.netty.NettyApplicationEngine
 import io.netty.bootstrap.Bootstrap
 import io.netty.buffer.ByteBuf
+import io.netty.buffer.ByteBufAllocator
 import io.netty.buffer.PooledByteBufAllocator
+import io.netty.channel.Channel
 import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.ChannelOption
 import io.netty.channel.SimpleChannelInboundHandler
 import io.netty.channel.nio.NioEventLoopGroup
 import io.netty.channel.socket.DatagramPacket
 import io.netty.channel.socket.nio.NioDatagramChannel
+import io.netty.util.concurrent.FastThreadLocal
+import io.netty.util.concurrent.FastThreadLocalThread
 import java.net.InetSocketAddress
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.concurrent.thread
@@ -29,8 +33,6 @@ import org.emulinker.kaillera.model.KailleraServer
 import org.emulinker.kaillera.model.exception.NewConnectionException
 import org.emulinker.kaillera.model.exception.ServerFullException
 import org.emulinker.util.EmuUtil.formatSocketAddress
-import java.util.concurrent.TimeUnit
-import java.util.concurrent.TimeUnit.MINUTES
 
 class CombinedKailleraController(
   private val flags: RuntimeFlags,
@@ -42,8 +44,13 @@ class CombinedKailleraController(
 
   private var stopFlag = false
 
-  lateinit private var nettyChannel: io.netty.channel.Channel
-    private set
+  private lateinit var nettyChannel: Channel
+
+  fun alloc(): ByteBufAllocator = SecurityContext.handlerContext?.alloc() ?: nettyChannel.alloc()
+
+  fun send(datagramPacket: DatagramPacket) {
+    (SecurityContext.handlerContext ?: nettyChannel).writeAndFlush(datagramPacket)
+  }
 
   @Synchronized
   fun stop() {
@@ -187,12 +194,21 @@ class CombinedKailleraController(
     }
     // I do not like blocking on a request thread.
     synchronized(handler.requestHandlerMutex) {
-      handler.handleReceived(buffer, remoteSocketAddress, ctx)
+      handler.handleReceived(buffer, remoteSocketAddress)
     }
   }
 
   override fun channelRead0(ctx: ChannelHandlerContext, packet: DatagramPacket) {
-    handleReceived(packet.content(), packet.sender(), ctx)
+    try {
+      SecurityContext.handlerContext = ctx
+      handleReceived(packet.content(), packet.sender(), ctx)
+
+      logger
+        .atInfo()
+        .log("Thread is a fast local thread: %b", Thread.currentThread() is FastThreadLocalThread)
+    } finally {
+      SecurityContext.remove()
+    }
   }
 
   override fun channelRegistered(ctx: ChannelHandlerContext) {
@@ -205,5 +221,17 @@ class CombinedKailleraController(
 
   private companion object {
     val logger = FluentLogger.forEnclosingClass()
+  }
+
+  private object SecurityContext {
+    private val CTX_HOLDER = FastThreadLocal<ChannelHandlerContext>()
+
+    var handlerContext: ChannelHandlerContext?
+      set(value) {
+        CTX_HOLDER.set(value)
+      }
+      get() = CTX_HOLDER.get()
+
+    fun remove() = CTX_HOLDER.remove()
   }
 }

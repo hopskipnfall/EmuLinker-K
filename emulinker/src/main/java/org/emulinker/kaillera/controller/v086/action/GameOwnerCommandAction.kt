@@ -1,7 +1,6 @@
 package org.emulinker.kaillera.controller.v086.action
 
 import com.google.common.flogger.FluentLogger
-import io.netty.channel.ChannelHandlerContext
 import java.util.Scanner
 import java.util.StringTokenizer
 import kotlin.time.Duration.Companion.milliseconds
@@ -36,7 +35,7 @@ class GameOwnerCommandAction : V086Action<GameChat> {
       chat.startsWith(COMMAND_NUM)
 
   @Throws(FatalActionException::class)
-  override fun performAction(message: GameChat, ctx: ChannelHandlerContext, clientHandler: V086ClientHandler) {
+  override fun performAction(message: GameChat, clientHandler: V086ClientHandler) {
     val chat = message.message
     val user = clientHandler.user
     val game =

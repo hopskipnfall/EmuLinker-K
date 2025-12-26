@@ -181,7 +181,10 @@ class CombinedKailleraControllerTest : ProtocolBaseTest(), KoinTest {
         ),
       )
 
-    sendWithoutContext(JoinGameRequest(messageNumber = 5, gameId = 1, connectionType = LAN), fromPort = 2)
+    sendWithoutContext(
+      JoinGameRequest(messageNumber = 5, gameId = 1, connectionType = LAN),
+      fromPort = 2,
+    )
 
     expect
       .that(receiveAll(onPort = 1, take = 2))
@@ -246,7 +249,10 @@ class CombinedKailleraControllerTest : ProtocolBaseTest(), KoinTest {
   }
 
   private fun createGame(clientPort: Int) {
-    sendWithoutContext(CreateGameRequest(messageNumber = 5, romName = "Test Game"), fromPort = clientPort)
+    sendWithoutContext(
+      CreateGameRequest(messageNumber = 5, romName = "Test Game"),
+      fromPort = clientPort,
+    )
 
     expect
       .that(receiveAll(onPort = clientPort, take = 3))

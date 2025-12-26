@@ -1,7 +1,6 @@
 package org.emulinker.kaillera.controller.v086.action
 
 import com.google.common.flogger.FluentLogger
-import io.netty.channel.ChannelHandlerContext
 import java.net.InetAddress
 import java.util.Locale
 import java.util.Scanner
@@ -48,7 +47,7 @@ class AdminCommandAction : V086Action<Chat> {
   }
 
   @Throws(FatalActionException::class)
-  override fun performAction(chatMessage: Chat, ctx: ChannelHandlerContext, clientHandler: V086ClientHandler) {
+  override fun performAction(chatMessage: Chat, clientHandler: V086ClientHandler) {
     val chat: String = chatMessage.message
     val server = clientHandler.controller.server
     val accessManager = server.accessManager
@@ -75,7 +74,7 @@ class AdminCommandAction : V086Action<Chat> {
               clientHandler.nextMessageNumber,
               "server",
               "Admin Command Error: You are not an admin!",
-            ), ctx
+            )
           )
         } catch (e: MessageFormatException) {}
         throw FatalActionException("Admin Command Denied: $user does not have Admin access: $chat")
@@ -85,13 +84,13 @@ class AdminCommandAction : V086Action<Chat> {
     try {
       when {
         chat.startsWith(COMMAND_HELP) -> {
-          processHelp(chat, server, user, clientHandler, ctx)
+          processHelp(chat, server, user, clientHandler)
         }
         chat.startsWith(COMMAND_FINDUSER) -> {
-          processFindUser(chat, server, user, clientHandler, ctx)
+          processFindUser(chat, server, user, clientHandler)
         }
         chat.startsWith(COMMAND_FINDGAME) -> {
-          processFindGame(chat, server, user, clientHandler, ctx)
+          processFindGame(chat, server, user, clientHandler)
         }
         chat.startsWith(COMMAND_CLOSEGAME) -> {
           processCloseGame(chat, server, user, clientHandler)
@@ -121,13 +120,13 @@ class AdminCommandAction : V086Action<Chat> {
           processTempAdmin(chat, server, user, clientHandler)
         }
         chat.startsWith(COMMAND_VERSION) -> {
-          processVersion(chat, server, user, clientHandler, ctx)
+          processVersion(chat, server, user, clientHandler)
         }
         chat.startsWith(COMMAND_CLEAR) -> {
-          processClear(chat, server, user, clientHandler, ctx)
+          processClear(chat, server, user, clientHandler)
         }
         chat.startsWith(COMMAND_STEALTH) -> {
-          processStealth(chat, server, user, clientHandler, ctx)
+          processStealth(chat, server, user, clientHandler)
         }
         chat.startsWith(COMMAND_TRIVIA) -> {
           processTrivia(chat, server, user, clientHandler)
@@ -142,7 +141,7 @@ class AdminCommandAction : V086Action<Chat> {
             clientHandler.nextMessageNumber,
             "server",
             EmuLang.getString("AdminCommandAction.Failed", e.message),
-          ), ctx
+          )
         )
       } catch (e2: MessageFormatException) {
         logger.atSevere().withCause(e2).log("Failed to construct InformationMessage message")
@@ -158,7 +157,6 @@ class AdminCommandAction : V086Action<Chat> {
     server: KailleraServer,
     admin: KailleraUser,
     clientHandler: V086ClientHandler?,
-    ctx: ChannelHandlerContext
   ) {
     if (admin.accessLevel == AccessManager.ACCESS_MODERATOR) return
     // clientHandler.send(InformationMessage(clientHandler.getNextMessageNumber(), "server",
@@ -169,7 +167,7 @@ class AdminCommandAction : V086Action<Chat> {
         clientHandler.nextMessageNumber,
         "server",
         EmuLang.getString("AdminCommandAction.HelpVersion"),
-      ), ctx
+      )
     )
     threadSleep(20.milliseconds)
     clientHandler.send(
@@ -177,7 +175,7 @@ class AdminCommandAction : V086Action<Chat> {
         clientHandler.nextMessageNumber,
         "server",
         EmuLang.getString("AdminCommandAction.HelpKick"),
-      ), ctx
+      )
     )
     threadSleep(20.milliseconds)
     clientHandler.send(
@@ -185,7 +183,7 @@ class AdminCommandAction : V086Action<Chat> {
         clientHandler.nextMessageNumber,
         "server",
         EmuLang.getString("AdminCommandAction.HelpSilence"),
-      ), ctx
+      )
     )
     threadSleep(20.milliseconds)
     clientHandler.send(
@@ -193,7 +191,7 @@ class AdminCommandAction : V086Action<Chat> {
         clientHandler.nextMessageNumber,
         "server",
         EmuLang.getString("AdminCommandAction.HelpBan"),
-      ), ctx
+      )
     )
     threadSleep(20.milliseconds)
     if (admin.accessLevel == AccessManager.ACCESS_ADMIN) {
@@ -202,7 +200,7 @@ class AdminCommandAction : V086Action<Chat> {
           clientHandler.nextMessageNumber,
           "server",
           EmuLang.getString("AdminCommandAction.HelpClear"),
-        ), ctx
+        )
       )
       threadSleep(20.milliseconds)
     }
@@ -211,7 +209,7 @@ class AdminCommandAction : V086Action<Chat> {
         clientHandler.nextMessageNumber,
         "server",
         EmuLang.getString("AdminCommandAction.HelpCloseGame"),
-      ), ctx
+      )
     )
     threadSleep(20.milliseconds)
     clientHandler.send(
@@ -219,7 +217,7 @@ class AdminCommandAction : V086Action<Chat> {
         clientHandler.nextMessageNumber,
         "server",
         EmuLang.getString("AdminCommandAction.HelpAnnounce"),
-      ), ctx
+      )
     )
     threadSleep(20.milliseconds)
     clientHandler.send(
@@ -227,7 +225,7 @@ class AdminCommandAction : V086Action<Chat> {
         clientHandler.nextMessageNumber,
         "server",
         EmuLang.getString("AdminCommandAction.HelpAnnounceAll"),
-      ), ctx
+      )
     )
     threadSleep(20.milliseconds)
     clientHandler.send(
@@ -235,7 +233,7 @@ class AdminCommandAction : V086Action<Chat> {
         clientHandler.nextMessageNumber,
         "server",
         EmuLang.getString("AdminCommandAction.HelpAnnounceGame"),
-      ), ctx
+      )
     )
     threadSleep(20.milliseconds)
     clientHandler.send(
@@ -243,7 +241,7 @@ class AdminCommandAction : V086Action<Chat> {
         clientHandler.nextMessageNumber,
         "server",
         EmuLang.getString("AdminCommandAction.HelpFindUser"),
-      ), ctx
+      )
     )
     threadSleep(20.milliseconds)
     clientHandler.send(
@@ -251,7 +249,7 @@ class AdminCommandAction : V086Action<Chat> {
         clientHandler.nextMessageNumber,
         "server",
         EmuLang.getString("AdminCommandAction.HelpFindGame"),
-      ), ctx
+      )
     )
     threadSleep(20.milliseconds)
     clientHandler.send(
@@ -259,7 +257,7 @@ class AdminCommandAction : V086Action<Chat> {
         clientHandler.nextMessageNumber,
         "server",
         "/triviaon to start the trivia bot- /triviapause to pause the bot- /triviaresume to resume the bot after pause- /triviasave to save the bot's scores- /triviatime <#> to change the question delay",
-      ), ctx
+      )
     )
     threadSleep(20.milliseconds)
     clientHandler.send(
@@ -267,7 +265,7 @@ class AdminCommandAction : V086Action<Chat> {
         clientHandler.nextMessageNumber,
         "server",
         "/triviaoff to stop the bot- /triviascores to show top 3 scores- /triviawin to show a winner- /triviaupdate <IP Address> <New IP Address> to update ip address",
-      ), ctx
+      )
     )
     threadSleep(20.milliseconds)
     clientHandler.send(
@@ -275,7 +273,7 @@ class AdminCommandAction : V086Action<Chat> {
         clientHandler.nextMessageNumber,
         "server",
         "/stealthon /stealthoff to join a room invisibly.",
-      ), ctx
+      )
     )
     threadSleep(20.milliseconds)
     if (admin.accessLevel == AccessManager.ACCESS_SUPERADMIN) {
@@ -284,7 +282,7 @@ class AdminCommandAction : V086Action<Chat> {
           clientHandler.nextMessageNumber,
           "server",
           "/tempelevated <UserID> <min> to give a user temporary elevated access.",
-        ), ctx
+        )
       )
       threadSleep(20.milliseconds)
       clientHandler.send(
@@ -292,7 +290,7 @@ class AdminCommandAction : V086Action<Chat> {
           clientHandler.nextMessageNumber,
           "server",
           "/tempmoderator <UserID> <min> to give a user temporary moderator access.",
-        ), ctx
+        )
       )
       threadSleep(20.milliseconds)
       clientHandler.send(
@@ -300,7 +298,7 @@ class AdminCommandAction : V086Action<Chat> {
           clientHandler.nextMessageNumber,
           "server",
           EmuLang.getString("AdminCommandAction.HelpTempAdmin"),
-        ), ctx
+        )
       )
       threadSleep(20.milliseconds)
       clientHandler.send(
@@ -308,7 +306,7 @@ class AdminCommandAction : V086Action<Chat> {
           clientHandler.nextMessageNumber,
           "server",
           "/clear <IP Address> to remove any temp ban, silence, elevated, moderator or admin.",
-        ), ctx
+        )
       )
       threadSleep(20.milliseconds)
     }
@@ -320,7 +318,6 @@ class AdminCommandAction : V086Action<Chat> {
     server: KailleraServer,
     admin: KailleraUser,
     clientHandler: V086ClientHandler?,
-    ctx: ChannelHandlerContext
   ) {
     val space = message!!.indexOf(' ')
     if (space < 0) throw ActionException(EmuLang.getString("AdminCommandAction.FindUserError"))
@@ -335,7 +332,7 @@ class AdminCommandAction : V086Action<Chat> {
         msg +=
           if (user.game == null) "" else ", GameID: ${user.game!!.id}, Game: ${user.game!!.romName}"
 
-        clientHandler!!.send(InformationMessage(clientHandler.nextMessageNumber, "server", msg), ctx)
+        clientHandler!!.send(InformationMessage(clientHandler.nextMessageNumber, "server", msg))
         foundCount++
       }
     }
@@ -345,7 +342,7 @@ class AdminCommandAction : V086Action<Chat> {
           clientHandler.nextMessageNumber,
           "server",
           EmuLang.getString("AdminCommandAction.NoUsersFound"),
-        ), ctx
+        )
       )
   }
 
@@ -355,8 +352,6 @@ class AdminCommandAction : V086Action<Chat> {
     server: KailleraServer,
     admin: KailleraUser,
     clientHandler: V086ClientHandler?,
-
-    ctx: ChannelHandlerContext
   ) {
     val space = message!!.indexOf(' ')
     if (space < 0) throw ActionException(EmuLang.getString("AdminCommandAction.FindGameError"))
@@ -372,7 +367,7 @@ class AdminCommandAction : V086Action<Chat> {
         sb.append(">, Game: ")
         sb.append(game.romName)
         clientHandler!!.send(
-          InformationMessage(clientHandler.nextMessageNumber, "server", sb.toString()), ctx
+          InformationMessage(clientHandler.nextMessageNumber, "server", sb.toString())
         )
         foundCount++
       }
@@ -383,7 +378,7 @@ class AdminCommandAction : V086Action<Chat> {
           clientHandler.nextMessageNumber,
           "server",
           EmuLang.getString("AdminCommandAction.NoGamesFound"),
-        ), ctx
+        )
       )
   }
 
@@ -660,25 +655,19 @@ class AdminCommandAction : V086Action<Chat> {
     server: KailleraServer,
     admin: KailleraUser,
     clientHandler: V086ClientHandler?,
-
-    ctx: ChannelHandlerContext
   ) {
     if (admin.game != null) throw ActionException("Can't use /stealth while in a gameroom.")
-    when (message) {
-      "/stealthon" -> {
-        admin.inStealthMode = true
-        clientHandler!!.send(
-          InformationMessage(clientHandler.nextMessageNumber, "server", "Stealth Mode is on."), ctx
-        )
-      }
-      "/stealthoff" -> {
-        admin.inStealthMode = false
-        clientHandler!!.send(
-          InformationMessage(clientHandler.nextMessageNumber, "server", "Stealth Mode is off."), ctx
-        )
-      }
-      else -> throw ActionException("Stealth Mode Error: /stealthon /stealthoff")
-    }
+    if (message == "/stealthon") {
+      admin.inStealthMode = true
+      clientHandler!!.send(
+        InformationMessage(clientHandler.nextMessageNumber, "server", "Stealth Mode is on.")
+      )
+    } else if (message == "/stealthoff") {
+      admin.inStealthMode = false
+      clientHandler!!.send(
+        InformationMessage(clientHandler.nextMessageNumber, "server", "Stealth Mode is off.")
+      )
+    } else throw ActionException("Stealth Mode Error: /stealthon /stealthoff")
   }
 
   @Throws(ActionException::class, MessageFormatException::class)
@@ -841,7 +830,6 @@ class AdminCommandAction : V086Action<Chat> {
     server: KailleraServer,
     admin: KailleraUser,
     clientHandler: V086ClientHandler?,
-    ctx: ChannelHandlerContext
   ) {
     val space = message.indexOf(' ')
     if (space < 0) throw ActionException(EmuLang.getString("AdminCommandAction.ClearError"))
@@ -863,7 +851,7 @@ class AdminCommandAction : V086Action<Chat> {
           clientHandler.nextMessageNumber,
           "server",
           EmuLang.getString("AdminCommandAction.ClearSuccess"),
-        ), ctx
+        )
       )
     else
       clientHandler!!.send(
@@ -871,7 +859,7 @@ class AdminCommandAction : V086Action<Chat> {
           clientHandler.nextMessageNumber,
           "server",
           EmuLang.getString("AdminCommandAction.ClearNotFound"),
-        ), ctx
+        )
       )
   }
 
@@ -881,7 +869,6 @@ class AdminCommandAction : V086Action<Chat> {
     server: KailleraServer,
     admin: KailleraUser,
     clientHandler: V086ClientHandler?,
-    ctx: ChannelHandlerContext
   ) {
     try {
       val releaseInfo = server.releaseInfo
@@ -895,7 +882,7 @@ class AdminCommandAction : V086Action<Chat> {
             releaseInfo.version +
             ": " +
             releaseInfo.buildDate.toSimpleUtcDatetime(),
-        ), ctx
+        )
       )
       threadSleep(20.milliseconds)
       if (admin.accessLevel >= AccessManager.ACCESS_ADMIN) {
@@ -905,7 +892,7 @@ class AdminCommandAction : V086Action<Chat> {
             clientHandler.nextMessageNumber,
             "server",
             "JAVAVER: " + props.getProperty("java.version"),
-          ), ctx
+          )
         )
         threadSleep(20.milliseconds)
         clientHandler.send(
@@ -913,7 +900,7 @@ class AdminCommandAction : V086Action<Chat> {
             clientHandler.nextMessageNumber,
             "server",
             "JAVAVEND: " + props.getProperty("java.vendor"),
-          ), ctx
+          )
         )
         threadSleep(20.milliseconds)
         clientHandler.send(
@@ -921,7 +908,7 @@ class AdminCommandAction : V086Action<Chat> {
             clientHandler.nextMessageNumber,
             "server",
             "OSNAME: " + props.getProperty("os.name"),
-          ), ctx
+          )
         )
         threadSleep(20.milliseconds)
         clientHandler.send(
@@ -929,7 +916,7 @@ class AdminCommandAction : V086Action<Chat> {
             clientHandler.nextMessageNumber,
             "server",
             "OSARCH: " + props.getProperty("os.arch"),
-          ), ctx
+          )
         )
         threadSleep(20.milliseconds)
         clientHandler.send(
@@ -937,7 +924,7 @@ class AdminCommandAction : V086Action<Chat> {
             clientHandler.nextMessageNumber,
             "server",
             "OSVER: " + props.getProperty("os.version"),
-          ), ctx
+          )
         )
         threadSleep(20.milliseconds)
         val runtime = Runtime.getRuntime()
@@ -946,7 +933,7 @@ class AdminCommandAction : V086Action<Chat> {
             clientHandler.nextMessageNumber,
             "server",
             "NUMPROCS: " + runtime.availableProcessors(),
-          ), ctx
+          )
         )
         threadSleep(20.milliseconds)
         clientHandler.send(
@@ -954,7 +941,7 @@ class AdminCommandAction : V086Action<Chat> {
             clientHandler.nextMessageNumber,
             "server",
             "FREEMEM: " + runtime.freeMemory(),
-          ), ctx
+          )
         )
         threadSleep(20.milliseconds)
         clientHandler.send(
@@ -962,7 +949,7 @@ class AdminCommandAction : V086Action<Chat> {
             clientHandler.nextMessageNumber,
             "server",
             "MAXMEM: " + runtime.maxMemory(),
-          ), ctx
+          )
         )
         threadSleep(20.milliseconds)
         clientHandler.send(
@@ -970,7 +957,7 @@ class AdminCommandAction : V086Action<Chat> {
             clientHandler.nextMessageNumber,
             "server",
             "TOTMEM: " + runtime.totalMemory(),
-          ), ctx
+          )
         )
         threadSleep(20.milliseconds)
         val env = System.getenv()
@@ -980,7 +967,7 @@ class AdminCommandAction : V086Action<Chat> {
               clientHandler.nextMessageNumber,
               "server",
               "COMPNAME: " + env["COMPUTERNAME"],
-            ), ctx
+            )
           )
           threadSleep(20.milliseconds)
           clientHandler.send(
@@ -988,7 +975,7 @@ class AdminCommandAction : V086Action<Chat> {
               clientHandler.nextMessageNumber,
               "server",
               "USER: " + env["USERNAME"],
-            ), ctx
+            )
           )
           threadSleep(20.milliseconds)
         } else {
@@ -997,7 +984,7 @@ class AdminCommandAction : V086Action<Chat> {
               clientHandler.nextMessageNumber,
               "server",
               "COMPNAME: " + env["HOSTNAME"],
-            ), ctx
+            )
           )
           threadSleep(20.milliseconds)
           clientHandler.send(
@@ -1005,7 +992,7 @@ class AdminCommandAction : V086Action<Chat> {
               clientHandler.nextMessageNumber,
               "server",
               "USER: " + env["USERNAME"],
-            ), ctx
+            )
           )
           threadSleep(20.milliseconds)
         }
