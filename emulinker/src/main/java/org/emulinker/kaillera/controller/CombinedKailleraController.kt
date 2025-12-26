@@ -7,13 +7,16 @@ import io.ktor.server.netty.Netty
 import io.ktor.server.netty.NettyApplicationEngine
 import io.netty.bootstrap.Bootstrap
 import io.netty.buffer.ByteBuf
+import io.netty.buffer.ByteBufAllocator
 import io.netty.buffer.PooledByteBufAllocator
+import io.netty.channel.Channel
 import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.ChannelOption
 import io.netty.channel.SimpleChannelInboundHandler
 import io.netty.channel.nio.NioEventLoopGroup
 import io.netty.channel.socket.DatagramPacket
 import io.netty.channel.socket.nio.NioDatagramChannel
+import io.netty.util.concurrent.FastThreadLocal
 import java.net.InetSocketAddress
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.concurrent.thread
@@ -40,8 +43,13 @@ class CombinedKailleraController(
 
   private var stopFlag = false
 
-  lateinit var nettyChannel: io.netty.channel.Channel
-    private set
+  private lateinit var nettyChannel: Channel
+
+  fun alloc(): ByteBufAllocator = SecurityContext.handlerContext?.alloc() ?: nettyChannel.alloc()
+
+  fun send(datagramPacket: DatagramPacket) {
+    (SecurityContext.handlerContext ?: nettyChannel).writeAndFlush(datagramPacket)
+  }
 
   @Synchronized
   fun stop() {
@@ -97,14 +105,6 @@ class CombinedKailleraController(
       }
       .start(true)
 
-  fun send(datagram: DatagramPacket) {
-    try {
-      this.nettyChannel.writeAndFlush(datagram)
-    } catch (e: Exception) {
-      logger.atSevere().withCause(e).log("Failed to send on port %s", boundPort)
-    }
-  }
-
   /** Map of protocol name (e.g. "0.86") to [KailleraServerController]. */
   // TODO(nue): Since there is only one, we could just remove this for now..
   private var controllersMap =
@@ -116,11 +116,7 @@ class CombinedKailleraController(
 
   val bufferSize: Int = flags.v086BufferSize
 
-  private fun handleReceived(
-    buffer: ByteBuf,
-    remoteSocketAddress: InetSocketAddress,
-    ctx: ChannelHandlerContext,
-  ) {
+  private fun handleReceived(buffer: ByteBuf, remoteSocketAddress: InetSocketAddress) {
     // Note: The the port also has to match. Users relaunching their kaillera clients and connecting
     // again will most likely be connecting from a different port.
     var handler = clientHandlers[remoteSocketAddress]
@@ -131,18 +127,18 @@ class CombinedKailleraController(
       if (connectMessageResult.isSuccess) {
         when (val connectMessage = connectMessageResult.getOrThrow()) {
           is ConnectMessage_PING -> {
-            val buf = nettyChannel.alloc().buffer(bufferSize)
+            val buf = alloc().buffer(bufferSize)
             ConnectMessage_PONG.writeTo(buf)
-            ctx.writeAndFlush(DatagramPacket(buf, remoteSocketAddress))
+            send(DatagramPacket(buf, remoteSocketAddress))
           }
           is RequestPrivateKailleraPortRequest -> {
             check(connectMessage.protocol == "0.83") {
               "Client listed unsupported protocol! $connectMessage."
             }
 
-            val buf = nettyChannel.alloc().buffer(bufferSize)
+            val buf = alloc().buffer(bufferSize)
             RequestPrivateKailleraPortResponse(flags.serverPort).writeTo(buf)
-            ctx.writeAndFlush(DatagramPacket(buf, remoteSocketAddress))
+            send(DatagramPacket(buf, remoteSocketAddress))
           }
           else -> {
             logger
@@ -198,7 +194,12 @@ class CombinedKailleraController(
   }
 
   override fun channelRead0(ctx: ChannelHandlerContext, packet: DatagramPacket) {
-    handleReceived(packet.content(), packet.sender(), ctx)
+    try {
+      SecurityContext.handlerContext = ctx
+      handleReceived(packet.content(), packet.sender())
+    } finally {
+      SecurityContext.remove()
+    }
   }
 
   override fun channelRegistered(ctx: ChannelHandlerContext) {
@@ -211,5 +212,17 @@ class CombinedKailleraController(
 
   private companion object {
     val logger = FluentLogger.forEnclosingClass()
+  }
+
+  private object SecurityContext {
+    private val CTX_HOLDER = FastThreadLocal<ChannelHandlerContext>()
+
+    var handlerContext: ChannelHandlerContext?
+      set(value) {
+        CTX_HOLDER.set(value)
+      }
+      get() = CTX_HOLDER.get()
+
+    fun remove() = CTX_HOLDER.remove()
   }
 }

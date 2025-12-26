@@ -9,8 +9,11 @@ import io.netty.channel.embedded.EmbeddedChannel
 import io.netty.channel.socket.DatagramPacket
 import java.net.InetSocketAddress
 import java.nio.ByteOrder
+import kotlin.test.assertNotNull
 import kotlin.time.Duration
 import org.emulinker.kaillera.controller.connectcontroller.protocol.ConnectMessage
+import org.emulinker.kaillera.controller.connectcontroller.protocol.ConnectMessage_PING
+import org.emulinker.kaillera.controller.connectcontroller.protocol.ConnectMessage_PONG
 import org.emulinker.kaillera.controller.connectcontroller.protocol.RequestPrivateKailleraPortRequest
 import org.emulinker.kaillera.controller.connectcontroller.protocol.RequestPrivateKailleraPortResponse
 import org.emulinker.kaillera.controller.v086.action.ActionModule
@@ -53,9 +56,28 @@ class CombinedKailleraControllerTest : ProtocolBaseTest(), KoinTest {
 
   private val releaseInfo: ReleaseInfo by inject()
 
-  // private val threadPoolExecutor: ThreadPoolExecutor by inject(named("userActionsExecutor"))
-
   private lateinit var channel: EmbeddedChannel
+
+  @Test
+  fun `test direct packet injection`() {
+    val sender = InetSocketAddress("127.0.0.1", 12345)
+    val recipient = InetSocketAddress("127.0.0.1", 27888)
+
+    // Create a PING packet
+    val buffer = Unpooled.buffer()
+    ConnectMessage_PING.writeTo(buffer)
+    val packet = DatagramPacket(buffer, recipient, sender)
+
+    // Write inbound
+    channel.writeInbound(packet)
+
+    val response: DatagramPacket = assertNotNull(channel.readOutbound<DatagramPacket>())
+    expect
+      .that(ConnectMessage.parse(response.content()))
+      .isEqualTo(Result.success(ConnectMessage_PONG))
+    expect.that(response.recipient().address.hostAddress).isEqualTo("127.0.0.1")
+    expect.that(response.recipient().port).isEqualTo(12345)
+  }
 
   @Before
   fun before() {
@@ -78,6 +100,8 @@ class CombinedKailleraControllerTest : ProtocolBaseTest(), KoinTest {
       expect.withMessage("Port $port should have no outstanding messages").that(messages).isEmpty()
     }
     expect.that(channel.inboundMessages()).isEmpty()
+
+    channel.close()
   }
 
   @Test
@@ -157,7 +181,10 @@ class CombinedKailleraControllerTest : ProtocolBaseTest(), KoinTest {
         ),
       )
 
-    send(JoinGameRequest(messageNumber = 5, gameId = 1, connectionType = LAN), fromPort = 2)
+    sendWithoutContext(
+      JoinGameRequest(messageNumber = 5, gameId = 1, connectionType = LAN),
+      fromPort = 2,
+    )
 
     expect
       .that(receiveAll(onPort = 1, take = 2))
@@ -222,7 +249,10 @@ class CombinedKailleraControllerTest : ProtocolBaseTest(), KoinTest {
   }
 
   private fun createGame(clientPort: Int) {
-    send(CreateGameRequest(messageNumber = 5, romName = "Test Game"), fromPort = clientPort)
+    sendWithoutContext(
+      CreateGameRequest(messageNumber = 5, romName = "Test Game"),
+      fromPort = clientPort,
+    )
 
     expect
       .that(receiveAll(onPort = clientPort, take = 3))
@@ -281,7 +311,7 @@ class CombinedKailleraControllerTest : ProtocolBaseTest(), KoinTest {
     existingUsers: List<ServerStatus.User>,
     existingGames: List<ServerStatus.Game>,
   ) {
-    send(
+    sendWithoutContext(
       UserInformation(
         messageNumber = 0,
         username = "tester$clientPort",
@@ -293,13 +323,13 @@ class CombinedKailleraControllerTest : ProtocolBaseTest(), KoinTest {
 
     // Timing handshake.
     expect.that(receive(onPort = clientPort)).isEqualTo(ServerAck(0))
-    send(ClientAck(1), fromPort = clientPort)
+    sendWithoutContext(ClientAck(1), fromPort = clientPort)
     expect.that(receive(onPort = clientPort)).isEqualTo(ServerAck(0))
-    send(ClientAck(2), fromPort = clientPort)
+    sendWithoutContext(ClientAck(2), fromPort = clientPort)
     expect.that(receive(onPort = clientPort)).isEqualTo(ServerAck(0))
-    send(ClientAck(3), fromPort = clientPort)
+    sendWithoutContext(ClientAck(3), fromPort = clientPort)
     expect.that(receive(onPort = clientPort)).isEqualTo(ServerAck(0))
-    send(ClientAck(4), fromPort = clientPort)
+    sendWithoutContext(ClientAck(4), fromPort = clientPort)
 
     expect
       .that(receiveAll(onPort = clientPort, take = 9))
@@ -363,7 +393,7 @@ class CombinedKailleraControllerTest : ProtocolBaseTest(), KoinTest {
   }
 
   /** Send message to the server. */
-  private fun send(message: V086Message, fromPort: Int) {
+  private fun sendWithoutContext(message: V086Message, fromPort: Int) {
     val buf = channel.alloc().buffer().order(ByteOrder.LITTLE_ENDIAN)
     V086Bundle.Single(message).writeTo(buf)
     channel.writeInbound(datagramPacket(buf, fromPort = fromPort))

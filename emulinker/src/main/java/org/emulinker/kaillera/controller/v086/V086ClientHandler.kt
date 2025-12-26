@@ -355,7 +355,7 @@ class V086ClientHandler(
     synchronized(sendMutex) {
       var numToSend = numToSend
 
-      val buf = combinedKailleraController.nettyChannel.alloc().directBuffer(flags.v086BufferSize)
+      val buf = combinedKailleraController.alloc().directBuffer(flags.v086BufferSize)
       numToSend = lastMessageBuffer.fill(outMessages, numToSend)
       val outBundle = V086Bundle.Multi(outMessages, numToSend)
       stripFromProdBinary { logger.atFinest().log("<- TO P%d: (RESEND)", user.id) }
@@ -369,7 +369,7 @@ class V086ClientHandler(
     synchronized(sendMutex) {
       outMessage.messageNumber = getAndIncrementSendMessageNumber()
       var numToSend = numToSend
-      val buf = combinedKailleraController.nettyChannel.alloc().directBuffer(flags.v086BufferSize)
+      val buf = combinedKailleraController.alloc().directBuffer(flags.v086BufferSize)
       lastMessageBuffer.add(outMessage)
       numToSend = lastMessageBuffer.fill(outMessages, numToSend)
       val outBundle = V086Bundle.Multi(outMessages, numToSend)
