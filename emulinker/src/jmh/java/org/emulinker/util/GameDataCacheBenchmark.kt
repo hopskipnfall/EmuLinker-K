@@ -51,7 +51,7 @@ open class GameDataCacheBenchmark {
   private companion object {
     val LINES: List<String> by lazy {
       val inputStream =
-        GameDataCacheBenchmark::class.java.getResourceAsStream("/ssb_p1_out.txt")
+        GameDataCacheBenchmark::class.java.getResourceAsStream("/ssb_p1_out42.txt")
           ?: throw java.io.FileNotFoundException("ssb_p1_out.txt not found in classpath")
       inputStream.bufferedReader().readLines()
     }
