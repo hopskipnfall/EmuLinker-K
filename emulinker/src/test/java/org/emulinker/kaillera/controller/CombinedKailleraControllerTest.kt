@@ -130,6 +130,7 @@ class CombinedKailleraControllerTest : ProtocolBaseTest(), KoinTest {
       existingGames = emptyList(),
     )
 
+    // Port 1 user was already in the server, so let's make sure they were notified.
     MessageVerifier().apply {
       expectMessage<UserJoined> {
         it ==
@@ -155,94 +156,125 @@ class CombinedKailleraControllerTest : ProtocolBaseTest(), KoinTest {
 
     createGame(clientPort = 1)
 
-    expect
-      .that(receiveAll(onPort = 2, take = 3))
-      .containsExactly(
-        CreateGameNotification(
-          messageNumber = 0,
-          username = "tester1",
-          romName = "Test Game",
-          clientType = "tester_tester",
-          gameId = 1,
-          val1 = 0,
-        ),
-        GameStatus(
-          messageNumber = 0,
-          gameId = 1,
-          val1 = 0,
-          gameStatus = WAITING,
-          numPlayers = 1,
-          maxPlayers = 8,
-        ),
-        InformationMessage(
-          messageNumber = 0,
-          source = "server",
-          message = "tester1 created game: Test Game",
-        ),
-      )
+    MessageVerifier().apply {
+      expectMessage<CreateGameNotification> {
+        it ==
+          CreateGameNotification(
+            messageNumber = 0,
+            username = "tester1",
+            romName = "Test Game",
+            clientType = "tester_tester",
+            gameId = 1,
+            val1 = 0,
+          )
+      }
+
+      expectMessage<GameStatus> {
+        it ==
+          GameStatus(
+            messageNumber = 0,
+            gameId = 1,
+            val1 = 0,
+            gameStatus = WAITING,
+            numPlayers = 1,
+            maxPlayers = 8,
+          )
+      }
+      expectMessage<InformationMessage> {
+        it ==
+          InformationMessage(
+            messageNumber = 0,
+            source = "server",
+            message = "tester1 created game: Test Game",
+          )
+      }
+
+      receiveAllMessages(receiveAll(onPort = 2))
+      flushExpectations()
+    }
 
     send(JoinGameRequest(messageNumber = 5, gameId = 1, connectionType = LAN), fromPort = 2)
 
-    expect
-      .that(receiveAll(onPort = 1, take = 2))
-      .containsExactly(
-        GameStatus(
-          messageNumber = 0,
-          gameId = 1,
-          val1 = 0,
-          gameStatus = WAITING,
-          numPlayers = 2,
-          maxPlayers = 8,
-        ),
-        JoinGameNotification(
-          messageNumber = 0,
-          gameId = 1,
-          val1 = 0,
-          username = "tester2",
-          ping = Duration.ZERO,
-          userId = 2,
-          connectionType = LAN,
-        ),
-      )
+    MessageVerifier().apply {
+      expectMessage<GameStatus> {
+        it ==
+          GameStatus(
+            messageNumber = 0,
+            gameId = 1,
+            val1 = 0,
+            gameStatus = WAITING,
+            numPlayers = 2,
+            maxPlayers = 8,
+          )
+      }
+      expectMessage<JoinGameNotification> {
+        it ==
+          JoinGameNotification(
+            messageNumber = 0,
+            gameId = 1,
+            val1 = 0,
+            username = "tester2",
+            ping = Duration.ZERO,
+            userId = 2,
+            connectionType = LAN,
+          )
+      }
 
-    expect
-      .that(receiveAll(onPort = 2, take = 4))
-      .containsExactly(
-        GameStatus(
-          messageNumber = 0,
-          gameId = 1,
-          val1 = 0,
-          gameStatus = WAITING,
-          numPlayers = 2,
-          maxPlayers = 8,
-        ),
-        PlayerInformation(
-          messageNumber = 0,
-          players =
-            listOf(
-              PlayerInformation.Player(
-                username = "tester1",
-                ping = Duration.ZERO,
-                userId = 1,
-                connectionType = LAN,
-              )
-            ),
-        ),
-        JoinGameNotification(
-          messageNumber = 0,
-          gameId = 1,
-          val1 = 0,
-          username = "tester2",
-          ping = Duration.ZERO,
-          userId = 2,
-          connectionType = LAN,
-        ),
-        GameChatNotification(
-          messageNumber = 0,
-          username = "Server",
-          message = "Message that appears when a user joins/starts a game!",
-        ),
-      )
+      receiveAllMessages(receiveAll(onPort = 1))
+      flushExpectations()
+    }
+
+    MessageVerifier().apply {
+      expectMessage<GameStatus> {
+        it ==
+          GameStatus(
+            messageNumber = 0,
+            gameId = 1,
+            val1 = 0,
+            gameStatus = WAITING,
+            numPlayers = 2,
+            maxPlayers = 8,
+          )
+      }
+      expectMessage<PlayerInformation> {
+        it ==
+          PlayerInformation(
+            messageNumber = 0,
+            players =
+              listOf(
+                PlayerInformation.Player(
+                  username = "tester1",
+                  ping = Duration.ZERO,
+                  userId = 1,
+                  connectionType = LAN,
+                )
+              ),
+          )
+      }
+      expectMessage<JoinGameNotification> {
+        it ==
+          JoinGameNotification(
+            messageNumber = 0,
+            gameId = 1,
+            val1 = 0,
+            username = "tester2",
+            ping = Duration.ZERO,
+            userId = 2,
+            connectionType = LAN,
+          )
+      }
+      expectMessage<GameChatNotification> {
+        it ==
+          GameChatNotification(
+            messageNumber = 0,
+            username = "Server",
+            message = "Message that appears when a user joins/starts a game!",
+          )
+      }
+
+      receiveAllMessages(receiveAll(onPort = 2))
+      flushExpectations()
+    }
   }
 
   private fun createGame(clientPort: Int) {
