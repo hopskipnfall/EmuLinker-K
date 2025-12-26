@@ -9,8 +9,11 @@ import io.netty.channel.embedded.EmbeddedChannel
 import io.netty.channel.socket.DatagramPacket
 import java.net.InetSocketAddress
 import java.nio.ByteOrder
+import kotlin.test.assertNotNull
 import kotlin.time.Duration
 import org.emulinker.kaillera.controller.connectcontroller.protocol.ConnectMessage
+import org.emulinker.kaillera.controller.connectcontroller.protocol.ConnectMessage_PING
+import org.emulinker.kaillera.controller.connectcontroller.protocol.ConnectMessage_PONG
 import org.emulinker.kaillera.controller.connectcontroller.protocol.RequestPrivateKailleraPortRequest
 import org.emulinker.kaillera.controller.connectcontroller.protocol.RequestPrivateKailleraPortResponse
 import org.emulinker.kaillera.controller.v086.action.ActionModule
@@ -53,9 +56,28 @@ class CombinedKailleraControllerTest : ProtocolBaseTest(), KoinTest {
 
   private val releaseInfo: ReleaseInfo by inject()
 
-  // private val threadPoolExecutor: ThreadPoolExecutor by inject(named("userActionsExecutor"))
-
   private lateinit var channel: EmbeddedChannel
+
+  @Test
+  fun `test direct packet injection`() {
+    val sender = InetSocketAddress("127.0.0.1", 12345)
+    val recipient = InetSocketAddress("127.0.0.1", 27888)
+
+    // Create a PING packet
+    val buffer = Unpooled.buffer()
+    ConnectMessage_PING.writeTo(buffer)
+    val packet = DatagramPacket(buffer, recipient, sender)
+
+    // Write inbound
+    channel.writeInbound(packet)
+
+    val response: DatagramPacket = assertNotNull(channel.readOutbound<DatagramPacket>())
+    expect
+      .that(ConnectMessage.parse(response.content()))
+      .isEqualTo(Result.success(ConnectMessage_PONG))
+    expect.that(response.recipient().address.hostAddress).isEqualTo("127.0.0.1")
+    expect.that(response.recipient().port).isEqualTo(12345)
+  }
 
   @Before
   fun before() {
@@ -78,6 +100,8 @@ class CombinedKailleraControllerTest : ProtocolBaseTest(), KoinTest {
       expect.withMessage("Port $port should have no outstanding messages").that(messages).isEmpty()
     }
     expect.that(channel.inboundMessages()).isEmpty()
+
+    channel.close()
   }
 
   @Test
