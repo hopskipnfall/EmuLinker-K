@@ -29,13 +29,14 @@ class GameDataCacheImpl(capacity: Int) : GameDataCache {
     // Often the state is exactly the same from call to call, so it helps to check the last index
     // returned first.
     if (lastRetrievedIndex >= 0) {
-      if (data == array[convert(lastRetrievedIndex)]) {
-        return lastRetrievedIndex
+      if (data == array[lastRetrievedIndex]) {
+        return toExternalIndex(lastRetrievedIndex)
       }
     }
     for (i in size - 1 downTo 0) {
-      if (data == array[convert(i)]) {
-        lastRetrievedIndex = i
+      val arrayIndex = toInternalIndex(i)
+      if (data == array[arrayIndex]) {
+        lastRetrievedIndex = arrayIndex
         return i
       }
     }
@@ -45,7 +46,7 @@ class GameDataCacheImpl(capacity: Int) : GameDataCache {
 
   override operator fun get(index: Int): VariableSizeByteArray {
     rangeCheck(index)
-    return array[convert(index)]!!
+    return array[toInternalIndex(index)]!!
   }
 
   // This method is the main reason we re-wrote the class.
@@ -53,7 +54,7 @@ class GameDataCacheImpl(capacity: Int) : GameDataCache {
   // but also allows you to remove in the middle of the list.
   override fun remove(index: Int) {
     rangeCheck(index)
-    val pos = convert(index)
+    val pos = toInternalIndex(index)
     val entry = array[pos]
     entry?.isInCache?.set(false)
     array[pos] = null
@@ -82,8 +83,8 @@ class GameDataCacheImpl(capacity: Int) : GameDataCache {
 
   override fun clear() {
     for (i in 0 until size) {
-      array[convert(i)]?.isInCache?.set(false)
-      array[convert(i)] = null
+      array[toInternalIndex(i)]?.isInCache?.set(false)
+      array[toInternalIndex(i)] = null
     }
     size = 0
     tail = size
@@ -100,13 +101,13 @@ class GameDataCacheImpl(capacity: Int) : GameDataCache {
     tail++
     if (tail == array.size) tail = 0
     size++
-    return unconvert(pos)
+    return toExternalIndex(pos)
   }
 
   /** Maps the external index to the index in [array]. */
-  private fun convert(index: Int): Int = (index + head) % array.size
+  private fun toInternalIndex(index: Int): Int = (index + head) % array.size
 
-  private fun unconvert(index: Int): Int =
+  private fun toExternalIndex(index: Int): Int =
     if (index >= head) index - head else array.size - head + index
 
   private fun rangeCheck(index: Int) {
