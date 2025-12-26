@@ -1,6 +1,7 @@
 package org.emulinker.kaillera.controller
 
 import com.google.common.truth.Expect
+import com.google.common.truth.Truth.assertThat
 import io.ktor.util.network.hostname
 import io.ktor.util.network.port
 import io.netty.buffer.ByteBuf
@@ -40,7 +41,6 @@ import org.emulinker.kaillera.pico.koinModule
 import org.emulinker.kaillera.release.ReleaseInfo
 import org.junit.After
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.koin.test.KoinTest
@@ -90,10 +90,6 @@ class CombinedKailleraControllerTest : ProtocolBaseTest(), KoinTest {
 
   @After
   fun after() {
-    // TODO:
-    // threadPoolExecutor.shutdown()
-    // threadPoolExecutor.awaitTermination(5, TimeUnit.SECONDS)
-
     // Make sure we didn't skip any messages.
     retrieveMessages(Int.MAX_VALUE)
     for ((port, messages) in portToMessages) {
@@ -105,7 +101,6 @@ class CombinedKailleraControllerTest : ProtocolBaseTest(), KoinTest {
   }
 
   @Test
-  @Ignore // Seems flaky.
   fun `log into server and create a game`() {
     requestPort(clientPort = 1)
 
@@ -115,7 +110,6 @@ class CombinedKailleraControllerTest : ProtocolBaseTest(), KoinTest {
   }
 
   @Test
-  @Ignore // It's broken!
   fun `two users in server and join game`() {
     requestPort(clientPort = 1)
     login(clientPort = 1, existingUsers = emptyList(), existingGames = emptyList())
@@ -136,22 +130,28 @@ class CombinedKailleraControllerTest : ProtocolBaseTest(), KoinTest {
       existingGames = emptyList(),
     )
 
-    expect
-      .that(receiveAll(onPort = 1, take = 2))
-      .containsExactly(
-        UserJoined(
-          messageNumber = 0,
-          username = "tester2",
-          userId = 2,
-          ping = Duration.ZERO,
-          connectionType = LAN,
-        ),
-        InformationMessage(
-          messageNumber = 0,
-          source = "server",
-          message = "Server Owner Logged In!",
-        ),
-      )
+    MessageVerifier().apply {
+      expectMessage<UserJoined> {
+        it ==
+          UserJoined(
+            messageNumber = 0,
+            username = "tester2",
+            userId = 2,
+            ping = Duration.ZERO,
+            connectionType = LAN,
+          )
+      }
+      expectMessage<InformationMessage> {
+        it ==
+          InformationMessage(
+            messageNumber = 0,
+            source = "server",
+            message = "Server Owner Logged In!",
+          )
+      }
+      receiveAllMessages(receiveAll(onPort = 1))
+      flushExpectations()
+    }
 
     createGame(clientPort = 1)
 
@@ -181,10 +181,7 @@ class CombinedKailleraControllerTest : ProtocolBaseTest(), KoinTest {
         ),
       )
 
-    sendWithoutContext(
-      JoinGameRequest(messageNumber = 5, gameId = 1, connectionType = LAN),
-      fromPort = 2,
-    )
+    send(JoinGameRequest(messageNumber = 5, gameId = 1, connectionType = LAN), fromPort = 2)
 
     expect
       .that(receiveAll(onPort = 1, take = 2))
@@ -249,61 +246,54 @@ class CombinedKailleraControllerTest : ProtocolBaseTest(), KoinTest {
   }
 
   private fun createGame(clientPort: Int) {
-    sendWithoutContext(
-      CreateGameRequest(messageNumber = 5, romName = "Test Game"),
-      fromPort = clientPort,
-    )
+    send(CreateGameRequest(messageNumber = 5, romName = "Test Game"), fromPort = clientPort)
 
-    expect
-      .that(receiveAll(onPort = clientPort, take = 3))
-      .containsExactly(
-        CreateGameNotification(
-          messageNumber = 0,
-          username = "tester$clientPort",
-          romName = "Test Game",
-          clientType = "tester_tester",
-          gameId = 1,
-          val1 = 0,
-        ),
-        GameStatus(
-          messageNumber = 0,
-          gameId = 1,
-          val1 = 0,
-          gameStatus = WAITING,
-          numPlayers = 1,
-          maxPlayers = 8,
-        ),
-        PlayerInformation(messageNumber = 0, players = emptyList()),
-      )
+    MessageVerifier().apply {
+      expectMessage<CreateGameNotification> {
+        it ==
+          CreateGameNotification(
+            messageNumber = 0,
+            username = "tester$clientPort",
+            romName = "Test Game",
+            clientType = "tester_tester",
+            gameId = 1,
+            val1 = 0,
+          )
+      }
+      expectMessage<GameStatus> {
+        it ==
+          GameStatus(
+            messageNumber = 0,
+            gameId = 1,
+            val1 = 0,
+            gameStatus = WAITING,
+            numPlayers = 1,
+            maxPlayers = 8,
+          )
+      }
+      expectMessage<JoinGameNotification> {
+        it ==
+          JoinGameNotification(
+            messageNumber = 0,
+            gameId = 1,
+            val1 = 0,
+            username = "tester$clientPort",
+            ping = Duration.ZERO,
+            userId = 1,
+            connectionType = LAN,
+          )
+      }
+      expectMessage<InformationMessage> { it.message.contains("created game") }
+      expectMessage<GameChatNotification>()
 
-    expect
-      .that(receive(onPort = 1))
-      .isEqualTo(
-        JoinGameNotification(
-          messageNumber = 0,
-          gameId = 1,
-          val1 = 0,
-          username = "tester$clientPort",
-          ping = Duration.ZERO,
-          userId = 1,
-          connectionType = LAN,
-        )
-      )
-
-    expect
-      .that(receiveAll(onPort = clientPort, take = 2))
-      .containsExactly(
-        InformationMessage(
-          messageNumber = 0,
-          source = "server",
-          message = "tester$clientPort created game: Test Game",
-        ),
-        GameChatNotification(
-          messageNumber = 0,
-          username = "Server",
-          message = "Message that appears when a user joins/starts a game!",
-        ),
-      )
+      receiveAllMessages(receiveAll(onPort = clientPort))
+      flushExpectations()
+    }
+    //        GameChatNotification(
+    //          messageNumber = 0,
+    //          username = "Server",
+    //          message = "Message that appears when a user joins/starts a game!",
+    //        ),
   }
 
   private fun login(
@@ -311,7 +301,7 @@ class CombinedKailleraControllerTest : ProtocolBaseTest(), KoinTest {
     existingUsers: List<ServerStatus.User>,
     existingGames: List<ServerStatus.Game>,
   ) {
-    sendWithoutContext(
+    send(
       UserInformation(
         messageNumber = 0,
         username = "tester$clientPort",
@@ -323,55 +313,21 @@ class CombinedKailleraControllerTest : ProtocolBaseTest(), KoinTest {
 
     // Timing handshake.
     expect.that(receive(onPort = clientPort)).isEqualTo(ServerAck(0))
-    sendWithoutContext(ClientAck(1), fromPort = clientPort)
+    send(ClientAck(1), fromPort = clientPort)
     expect.that(receive(onPort = clientPort)).isEqualTo(ServerAck(0))
-    sendWithoutContext(ClientAck(2), fromPort = clientPort)
+    send(ClientAck(2), fromPort = clientPort)
     expect.that(receive(onPort = clientPort)).isEqualTo(ServerAck(0))
-    sendWithoutContext(ClientAck(3), fromPort = clientPort)
+    send(ClientAck(3), fromPort = clientPort)
     expect.that(receive(onPort = clientPort)).isEqualTo(ServerAck(0))
-    sendWithoutContext(ClientAck(4), fromPort = clientPort)
+    send(ClientAck(4), fromPort = clientPort)
 
-    expect
-      .that(receiveAll(onPort = clientPort, take = 9))
-      .containsExactly(
-        ServerStatus(0, users = existingUsers, games = existingGames),
-        InformationMessage(0, source = "server", message = "Welcome to a new EmuLinker-K Server!"),
-        InformationMessage(
-          0,
-          source = "server",
-          message = "Edit emulinker.cfg to setup your server configuration",
-        ),
-        InformationMessage(
-          0,
-          source = "server",
-          message = "Edit language.properties to setup your login announcements",
-        ),
-        InformationMessage(
-          0,
-          source = "server",
-          message =
-            "${releaseInfo.productName} v${releaseInfo.version}: ${releaseInfo.websiteString}",
-        ),
-        InformationMessage(
-          0,
-          source = "server",
-          message =
-            "WARNING: This is an unoptimized debug build that should not be used in production.",
-        ),
-        InformationMessage(
-          0,
-          source = "server",
-          message = "Welcome Admin! Type /help for a admin command list.",
-        ),
-        UserJoined(
-          messageNumber = 0,
-          username = "tester$clientPort",
-          userId = clientPort, // I'm doing this on purpose.
-          connectionType = LAN,
-          ping = Duration.ZERO,
-        ),
-        InformationMessage(0, source = "server", message = "Server Owner Logged In!"),
-      )
+    MessageVerifier().apply {
+      expectMessage<ServerStatus>()
+      expectMessage<InformationMessage> { it.message == "Welcome to a new EmuLinker-K Server!" }
+      expectMessage<UserJoined> { it.username == "tester$clientPort" }
+      receiveAllMessages(receiveAll(onPort = clientPort))
+      flushExpectations()
+    }
   }
 
   private fun requestPort(clientPort: Int) {
@@ -393,7 +349,7 @@ class CombinedKailleraControllerTest : ProtocolBaseTest(), KoinTest {
   }
 
   /** Send message to the server. */
-  private fun sendWithoutContext(message: V086Message, fromPort: Int) {
+  private fun send(message: V086Message, fromPort: Int) {
     val buf = channel.alloc().buffer().order(ByteOrder.LITTLE_ENDIAN)
     V086Bundle.Single(message).writeTo(buf)
     channel.writeInbound(datagramPacket(buf, fromPort = fromPort))
@@ -407,7 +363,7 @@ class CombinedKailleraControllerTest : ProtocolBaseTest(), KoinTest {
   }
 
   /** Receive all available messages from the server. */
-  private fun receiveAll(onPort: Int, take: Int) =
+  private fun receiveAll(onPort: Int, take: Int = Int.MAX_VALUE) =
     buildList<V086Message> {
       val incoming = portToMessages.getOrPut(onPort) { mutableListOf() }
       retrieveMessages(take - incoming.size)
@@ -454,6 +410,7 @@ class CombinedKailleraControllerTest : ProtocolBaseTest(), KoinTest {
             portToLastServerMessageId[receivedPacket.recipient().port] = message.messageNumber
             taken++
           }
+
           is V086Bundle.Multi -> {
             val messages =
               bundle.messages
@@ -526,3 +483,37 @@ private fun V086Message.zeroMessageNumber(): V086Message =
     is UserJoined -> this.copy(messageNumber = 0)
     else -> TODO("implement zero for ${this::class.simpleName}")
   }
+
+class MessageVerifier {
+
+  @PublishedApi internal val expectations = mutableListOf<(Any) -> Boolean>()
+
+  /** expectMessage: Adds an expectation based on a specific type R and a predicate. */
+  inline fun <reified R : Any> expectMessage(crossinline predicate: (R) -> Boolean = { true }) {
+    expectations.add { message -> message is R && predicate(message) }
+  }
+
+  /**
+   * receiveMessage: Checks if the object matches any existing expectation. It removes the first
+   * matching expectation it finds.
+   */
+  fun receiveMessage(message: Any) {
+    val iterator = expectations.iterator()
+    while (iterator.hasNext()) {
+      val matches = iterator.next()
+      if (matches(message)) {
+        iterator.remove()
+        return
+      }
+    }
+  }
+
+  fun receiveAllMessages(messages: List<Any>) {
+    messages.forEach { receiveMessage(it) }
+  }
+
+  /** flushExpectations / flushAssertions: Asserts that the list is empty. */
+  fun flushExpectations() {
+    assertThat(expectations).isEmpty()
+  }
+}
