@@ -24,6 +24,7 @@ From the root directory, you can perform common tasks with the following command
 | `./gradlew spotlessCheck`        | Run the linter.                        |
 | `./gradlew spotlessApply`        | Run the formatter.                     |
 | `./gradlew tasks`                | See a full list of available commands. |
+| `./gradlew jmh`                  | Run benchmarks.                        |
 
 You do not need to have Gradle installed to run these commands. Incidentally, validating this gradle wrapper is a step in our [CI process](./.github/workflows/gradle.yml).
 

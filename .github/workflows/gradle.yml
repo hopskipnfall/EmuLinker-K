@@ -35,6 +35,10 @@ jobs:
         uses: gradle/gradle-build-action@v2
         with:
           arguments: test --info
+      - name: Dry run JMH benchmarks
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: jmh -PjmhDryRun
       - name: Check formatting
         uses: gradle/gradle-build-action@v2
         with:

@@ -35,4 +35,13 @@ class GameDataCacheTest {
     assertThat(cache.isEmpty()).isTrue()
     assertThat(cache.size).isEqualTo(0)
   }
+
+  @Test
+  /** The behavior of some clients requires this. */
+  fun `add to cache twice retains two copies`() {
+    cache.add(VariableSizeByteArray(byteArrayOf(1.toByte())))
+    cache.add(VariableSizeByteArray(byteArrayOf(1.toByte())))
+
+    assertThat(cache.size).isEqualTo(2)
+  }
 }

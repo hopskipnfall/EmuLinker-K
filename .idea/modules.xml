@@ -2,7 +2,9 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/EmuLinker-K.emulinker-k.iml" filepath="$PROJECT_DIR$/.idea/modules/EmuLinker-K.emulinker-k.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/emulinker-k.iml" filepath="$PROJECT_DIR$/.idea/modules/emulinker-k.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/emulinker/emulinker-k.emulinker.iml" filepath="$PROJECT_DIR$/.idea/modules/emulinker/emulinker-k.emulinker.iml" />
     </modules>
   </component>
 </project>

@@ -3,6 +3,8 @@
   <component name="AdditionalModuleElements">
     <content url="file://$MODULE_DIR$/../../../emulinker" dumb="true">
       <excludeFolder url="file://$MODULE_DIR$/../../../emulinker/bin" />
+      <excludeFolder url="file://$MODULE_DIR$/../../../emulinker/logs" />
+      <excludeFolder url="file://$MODULE_DIR$/../../../emulinker/metrics" />
     </content>
   </component>
 </module>
