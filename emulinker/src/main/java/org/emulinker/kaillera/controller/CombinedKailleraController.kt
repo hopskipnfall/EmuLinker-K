@@ -17,7 +17,6 @@ import io.netty.channel.nio.NioEventLoopGroup
 import io.netty.channel.socket.DatagramPacket
 import io.netty.channel.socket.nio.NioDatagramChannel
 import io.netty.util.concurrent.FastThreadLocal
-import io.netty.util.concurrent.FastThreadLocalThread
 import java.net.InetSocketAddress
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.concurrent.thread
@@ -117,11 +116,7 @@ class CombinedKailleraController(
 
   val bufferSize: Int = flags.v086BufferSize
 
-  private fun handleReceived(
-    buffer: ByteBuf,
-    remoteSocketAddress: InetSocketAddress,
-    ctx: ChannelHandlerContext,
-  ) {
+  private fun handleReceived(buffer: ByteBuf, remoteSocketAddress: InetSocketAddress) {
     // Note: The the port also has to match. Users relaunching their kaillera clients and connecting
     // again will most likely be connecting from a different port.
     var handler = clientHandlers[remoteSocketAddress]
@@ -132,18 +127,18 @@ class CombinedKailleraController(
       if (connectMessageResult.isSuccess) {
         when (val connectMessage = connectMessageResult.getOrThrow()) {
           is ConnectMessage_PING -> {
-            val buf = ctx.alloc().buffer(bufferSize)
+            val buf = alloc().buffer(bufferSize)
             ConnectMessage_PONG.writeTo(buf)
-            ctx.writeAndFlush(DatagramPacket(buf, remoteSocketAddress))
+            send(DatagramPacket(buf, remoteSocketAddress))
           }
           is RequestPrivateKailleraPortRequest -> {
             check(connectMessage.protocol == "0.83") {
               "Client listed unsupported protocol! $connectMessage."
             }
 
-            val buf = ctx.alloc().buffer(bufferSize)
+            val buf = alloc().buffer(bufferSize)
             RequestPrivateKailleraPortResponse(flags.serverPort).writeTo(buf)
-            ctx.writeAndFlush(DatagramPacket(buf, remoteSocketAddress))
+            send(DatagramPacket(buf, remoteSocketAddress))
           }
           else -> {
             logger
@@ -201,11 +196,7 @@ class CombinedKailleraController(
   override fun channelRead0(ctx: ChannelHandlerContext, packet: DatagramPacket) {
     try {
       SecurityContext.handlerContext = ctx
-      handleReceived(packet.content(), packet.sender(), ctx)
-
-      logger
-        .atInfo()
-        .log("Thread is a fast local thread: %b", Thread.currentThread() is FastThreadLocalThread)
+      handleReceived(packet.content(), packet.sender())
     } finally {
       SecurityContext.remove()
     }
