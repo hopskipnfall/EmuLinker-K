@@ -192,3 +192,15 @@ tasks.jar {
 subprojects { apply(plugin = "org.jetbrains.dokka") }
 
 tasks.withType<JavaExec> { jvmArgs = listOf("-Xms512m", "-Xmx512m") }
+
+jmh {
+  // Run with ./gradlew jmh -PjmhDryRun
+  if (project.hasProperty("jmhDryRun")) {
+    this@jmh.includes = listOf(".*")
+    warmupIterations = 0
+    iterations = 1
+    fork = 0
+    failOnError = true
+    benchmarkMode = listOf("ss") // "Single Shot" mode (runs method once, minimal timing overhead)
+  }
+}
