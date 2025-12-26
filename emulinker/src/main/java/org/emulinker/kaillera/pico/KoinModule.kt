@@ -49,7 +49,6 @@ val koinModule = module {
   singleOf(::V086Controller).bind<KailleraServerController>()
   singleOf(::TaskScheduler)
   singleOf(::MasterListUpdater)
-  singleOf(::V086Controller).bind<KailleraServerController>()
   singleOf(::MasterListStatsCollector).bind<StatsCollector>()
   singleOf(::EmuLinkerPropertiesConfig).bind<Configuration>()
   singleOf(::MetricRegistry)
@@ -96,7 +95,9 @@ val koinModule = module {
         charset = Charset.forName(config.getString("emulinker.charset")),
         chatFloodTime = config.getInt("server.chatFloodTime", 2).seconds,
         allowedProtocols =
-          config.getStringArray("controllers.v086.clientTypes.clientType").toList(),
+          config.getStringArray("controllers.v086.clientTypes.clientType").toList().ifEmpty {
+            listOf("v086")
+          },
         allowedConnectionTypes =
           config
             .getStringArray("server.allowedConnectionTypes")

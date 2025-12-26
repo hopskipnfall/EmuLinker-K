@@ -12,41 +12,49 @@ import org.openjdk.jmh.annotations.State
 import org.openjdk.jmh.infra.Blackhole
 
 @State(Scope.Benchmark)
-@BenchmarkMode(Mode.AverageTime)
-@OutputTimeUnit(TimeUnit.NANOSECONDS)
+@BenchmarkMode(Mode.Throughput)
+@OutputTimeUnit(TimeUnit.MILLISECONDS)
 open class GameDataCacheBenchmark {
-  @Setup(Level.Trial) fun setup() {}
+  private lateinit var inputs: Iterator<VariableSizeByteArray>
+  private lateinit var cache: GameDataCacheImpl
 
-  @Setup(Level.Invocation)
-  fun setupInvocation() {
-    // Reset cache for add-heavy tests if needed, or pre-fill for others
-    // For simplicity in this initial pass, we'll manage state per benchmark method logic
-  }
+  private fun buildIterator() =
+    iterator<VariableSizeByteArray> {
+      lateinit var previousLine: String
+      while (true) {
+        for (line in LINES) {
+          if (line.startsWith("x")) {
+            val times = line.removePrefix("x").toInt()
+            repeat(times) { yield(VariableSizeByteArray(previousLine.decodeHex())) }
+          } else {
+            yield(VariableSizeByteArray(line.decodeHex()))
+          }
+          previousLine = line
+        }
+      }
+    }
 
-  @Benchmark
-  fun practicalTest(blackhole: Blackhole) {
-    val cache = GameDataCacheImpl(capacity = 256)
+  @Setup(Level.Iteration)
+  fun setup() {
+    cache = GameDataCacheImpl(capacity = 256)
 
-    // Takes a sample of actual inputs and cycles them through the cache.
-    for (item in inputs) {
+    inputs = buildIterator()
+
+    repeat(6_000) {
+      val item = inputs.next()
+
       val cacheIndex = cache.indexOf(item)
       if (cacheIndex < 0) cache.add(item)
     }
+
+    inputs = buildIterator()
   }
 
-  private val inputs =
-    iterator<VariableSizeByteArray> {
-      lateinit var previousLine: String
-      for (line in LINES) {
-        if (line.startsWith("x")) {
-          val times = line.removePrefix("x").toInt()
-          repeat(times) { yield(VariableSizeByteArray(previousLine.decodeHex())) }
-        } else {
-          yield(VariableSizeByteArray(line.decodeHex()))
-        }
-        previousLine = line
-      }
-    }
+  @Benchmark
+  fun simulateNewInput(blackhole: Blackhole) {
+    val next = inputs.next()
+    if (cache.indexOf(next) < 0) cache.add(next)
+  }
 
   private companion object {
     val LINES: List<String> by lazy {

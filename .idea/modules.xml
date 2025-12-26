@@ -5,6 +5,7 @@
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/EmuLinker-K.emulinker-k.iml" filepath="$PROJECT_DIR$/.idea/modules/EmuLinker-K.emulinker-k.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/emulinker-k.iml" filepath="$PROJECT_DIR$/.idea/modules/emulinker-k.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/emulinker/emulinker-k.emulinker.iml" filepath="$PROJECT_DIR$/.idea/modules/emulinker/emulinker-k.emulinker.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/emulinker/emulinker-k.emulinker.jmh.iml" filepath="$PROJECT_DIR$/.idea/modules/emulinker/emulinker-k.emulinker.jmh.iml" />
     </modules>
   </component>
 </project>
