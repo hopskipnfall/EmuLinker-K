@@ -38,3 +38,5 @@ metrics/
 .idea/AndroidProjectSystem.xml
 .idea/deviceManager.xml
 .idea/misc.xml
+
+.kotlin

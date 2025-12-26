@@ -11,6 +11,7 @@ plugins {
 
   kotlin("jvm") version "2.2.10"
   kotlin("plugin.serialization") version "2.2.10"
+  id("me.champeau.jmh") version "0.7.2"
 }
 
 repositories {
