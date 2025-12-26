@@ -15,19 +15,18 @@ import org.openjdk.jmh.infra.Blackhole
 @BenchmarkMode(Mode.AverageTime)
 @OutputTimeUnit(TimeUnit.NANOSECONDS)
 open class GameDataCacheBenchmark {
-  private lateinit var cache: GameDataCacheImpl
-
   @Setup(Level.Trial) fun setup() {}
 
   @Setup(Level.Invocation)
   fun setupInvocation() {
-    cache = GameDataCacheImpl(capacity = 256)
     // Reset cache for add-heavy tests if needed, or pre-fill for others
     // For simplicity in this initial pass, we'll manage state per benchmark method logic
   }
 
   @Benchmark
   fun practicalTest(blackhole: Blackhole) {
+    val cache = GameDataCacheImpl(capacity = 256)
+
     // Takes a sample of actual inputs and cycles them through the cache.
     for (item in inputs) {
       val cacheIndex = cache.indexOf(item)
@@ -35,7 +34,7 @@ open class GameDataCacheBenchmark {
     }
   }
 
-  val inputs =
+  private val inputs =
     iterator<VariableSizeByteArray> {
       lateinit var previousLine: String
       for (line in LINES) {
