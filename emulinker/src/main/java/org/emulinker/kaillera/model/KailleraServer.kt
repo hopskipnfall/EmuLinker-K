@@ -437,10 +437,10 @@ class KailleraServer(
     user.loggedIn = true
     usersMap[userListKey] = user
     user.queueEvent(ConnectedEvent(this, user))
-    threadSleep(20.milliseconds)
+    threadSleep()
     for (loginMessage in loginMessages) {
       user.queueEvent(InfoMessageEvent(user, loginMessage))
-      threadSleep(20.milliseconds)
+      threadSleep()
     }
     user.queueEvent(
       InfoMessageEvent(
@@ -456,7 +456,7 @@ class KailleraServer(
         )
       )
     }
-    threadSleep(20.milliseconds)
+    threadSleep()
     if (access > AccessManager.ACCESS_NORMAL) {
       logger
         .atInfo()
@@ -496,26 +496,26 @@ class KailleraServer(
             sb = StringBuilder()
             sb.append(":USERINFO=")
             sbCount = 0
-            threadSleep(100.milliseconds)
+            threadSleep()
           }
         }
         if (sbCount > 0) user.queueEvent(InfoMessageEvent(user, sb.toString()))
-        threadSleep(100.milliseconds)
+        threadSleep()
       }
     }
-    threadSleep(20.milliseconds)
+    threadSleep()
     if (access >= AccessManager.ACCESS_ADMIN) {
       user.queueEvent(
         InfoMessageEvent(user, EmuLang.getString("KailleraServerImpl.AdminWelcomeMessage"))
       )
       // Display messages to admins if they exist.
       for (message in AppModule.messagesToAdmins) {
-        threadSleep(20.milliseconds)
+        threadSleep()
         user.queueEvent(InfoMessageEvent(user, message))
       }
     }
     addEvent(UserJoinedEvent(this, user))
-    threadSleep(20.milliseconds)
+    threadSleep()
     val announcement = accessManager.getAnnouncement(user.socketAddress!!.address)
     if (announcement != null) announce(announcement, false)
 

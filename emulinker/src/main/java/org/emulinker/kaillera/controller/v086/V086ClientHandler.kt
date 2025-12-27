@@ -54,7 +54,6 @@ class V086ClientHandler(
   private val flags: RuntimeFlags by inject()
 
   /** Mutex ensuring that only one packet is processed at a time for this [V086ClientHandler]. */
-  val requestHandlerMutex = Object()
   private val sendMutex = Object()
 
   var remoteSocketAddress: InetSocketAddress? = null

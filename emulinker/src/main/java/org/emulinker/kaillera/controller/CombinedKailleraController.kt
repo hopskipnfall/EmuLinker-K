@@ -12,8 +12,14 @@ import io.netty.buffer.PooledByteBufAllocator
 import io.netty.channel.Channel
 import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.ChannelOption
+import io.netty.channel.EventLoopGroup
+import io.netty.channel.MultiThreadIoEventLoopGroup
 import io.netty.channel.SimpleChannelInboundHandler
-import io.netty.channel.nio.NioEventLoopGroup
+import io.netty.channel.epoll.Epoll
+import io.netty.channel.epoll.EpollIoHandler
+import io.netty.channel.kqueue.KQueue
+import io.netty.channel.kqueue.KQueueIoHandler
+import io.netty.channel.nio.NioIoHandler
 import io.netty.channel.socket.DatagramPacket
 import io.netty.channel.socket.nio.NioDatagramChannel
 import io.netty.util.concurrent.FastThreadLocal
@@ -65,8 +71,23 @@ class CombinedKailleraController(
     port: Int
   ): EmbeddedServer<NettyApplicationEngine, NettyApplicationEngine.Configuration> =
     embeddedServer(Netty, port = port) {
-        // Note: This is a fixed number of threads.
-        val group = NioEventLoopGroup(flags.nettyFlags)
+        val group: EventLoopGroup =
+          MultiThreadIoEventLoopGroup(
+            when {
+              Epoll.isAvailable() -> {
+                logger.atInfo().log("Using Epoll (Linux native)")
+                EpollIoHandler.newFactory()
+              }
+              KQueue.isAvailable() -> {
+                logger.atInfo().log("Using KQueue (MacOS native)")
+                KQueueIoHandler.newFactory()
+              }
+              else -> {
+                logger.atInfo().log("Using NIO (Generic)")
+                NioIoHandler.newFactory()
+              }
+            }
+          )
 
         Runtime.getRuntime()
           .addShutdownHook(
@@ -187,10 +208,7 @@ class CombinedKailleraController(
 
       clientHandlers[remoteSocketAddress] = handler
     }
-    // I do not like blocking on a request thread.
-    synchronized(handler.requestHandlerMutex) {
-      handler.handleReceived(buffer, remoteSocketAddress)
-    }
+    handler.handleReceived(buffer, remoteSocketAddress)
   }
 
   override fun channelRead0(ctx: ChannelHandlerContext, packet: DatagramPacket) {

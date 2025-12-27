@@ -1,7 +1,6 @@
 package org.emulinker.kaillera.controller.v086.action
 
 import com.google.common.flogger.FluentLogger
-import kotlin.time.Duration.Companion.milliseconds
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086ClientHandler
 import org.emulinker.kaillera.controller.v086.protocol.QuitGameNotification
@@ -11,7 +10,6 @@ import org.emulinker.kaillera.model.event.UserQuitGameEvent
 import org.emulinker.kaillera.model.exception.CloseGameException
 import org.emulinker.kaillera.model.exception.DropGameException
 import org.emulinker.kaillera.model.exception.QuitGameException
-import org.emulinker.util.EmuUtil.threadSleep
 
 class QuitGameAction(private val lookingForGameReporter: TwitterBroadcaster) :
   V086Action<QuitGameRequest>, V086GameEventHandler<UserQuitGameEvent> {
@@ -29,7 +27,6 @@ class QuitGameAction(private val lookingForGameReporter: TwitterBroadcaster) :
     } catch (e: CloseGameException) {
       logger.atSevere().withCause(e).log("Action failed")
     }
-    threadSleep(100.milliseconds)
   }
 
   override fun handleEvent(event: UserQuitGameEvent, clientHandler: V086ClientHandler) {

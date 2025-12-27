@@ -9,8 +9,6 @@ import java.nio.file.Files
 import java.nio.file.Paths
 import java.util.Locale
 import java.util.Random
-import kotlin.time.Duration.Companion.milliseconds
-import kotlin.time.Duration.Companion.seconds
 import org.emulinker.kaillera.model.KailleraServer
 import org.emulinker.util.EmuUtil.threadSleep
 
@@ -59,7 +57,7 @@ class Trivia(private val server: KailleraServer) : Runnable {
       questionsCount = questionsNum[temp]
       questionsNum.removeAt(temp)
     }
-    threadSleep(10.seconds)
+    threadSleep()
     while (!exitThread) {
       if (!triviaPaused) {
         if (newQuestion) {
@@ -73,11 +71,11 @@ class Trivia(private val server: KailleraServer) : Runnable {
           hint2 = false
           server.announce("<Trivia> " + questions[questionsCount].question, false, null)
           if (!isAnswered) {
-            threadSleep(10.seconds)
+            threadSleep()
           }
           if (!isAnswered) {
             server.announce("<Trivia> " + "35 seconds left...", false, null)
-            threadSleep(5.seconds)
+            threadSleep()
           }
         }
         if (hint1 && !isAnswered) {
@@ -96,11 +94,11 @@ class Trivia(private val server: KailleraServer) : Runnable {
           answer = answer!!.replace("_", " _ ")
           server.announce("<Trivia> Hint1: $answer", false, null)
           if (!isAnswered) {
-            threadSleep(10.seconds)
+            threadSleep()
           }
           if (!isAnswered) {
             server.announce("<Trivia> " + "20 seconds left...", false, null)
-            threadSleep(5.seconds)
+            threadSleep()
           }
         }
         if (hint2 && !isAnswered) {
@@ -119,11 +117,11 @@ class Trivia(private val server: KailleraServer) : Runnable {
           answer = answer!!.replace("_", " _ ")
           server.announce("<Trivia> Hint2: $answer", false, null)
           if (!isAnswered) {
-            threadSleep(10.seconds)
+            threadSleep()
           }
           if (!isAnswered) {
             server.announce("<Trivia> " + "5 seconds left...", false, null)
-            threadSleep(5.seconds)
+            threadSleep()
           }
         }
         if (!isAnswered) {
@@ -154,7 +152,7 @@ class Trivia(private val server: KailleraServer) : Runnable {
           questionsCount = questionsNum[temp]
           questionsNum.removeAt(temp)
         }
-        threadSleep(5.seconds)
+        threadSleep()
         server.announce(
           "<Trivia> " +
             questionTime / 1000 +
@@ -165,13 +163,13 @@ class Trivia(private val server: KailleraServer) : Runnable {
           false,
           null,
         )
-        threadSleep(questionTime.milliseconds)
+        threadSleep()
         newQuestion = true
         hint1 = false
         hint2 = false
         isAnswered = false
       } else {
-        threadSleep(1.seconds)
+        threadSleep()
       }
     }
   }
@@ -272,14 +270,14 @@ class Trivia(private val server: KailleraServer) : Runnable {
         if (ipStreak == ip) {
           scoreStreak++
           if (scoreStreak > 1) {
-            threadSleep(20.milliseconds)
+            threadSleep()
             server.announce("<Trivia> ***$nick has won $scoreStreak in a row!***", false, null)
           }
         } else {
           scoreStreak = 1
           ipStreak = ip
         }
-        threadSleep(20.milliseconds)
+        threadSleep()
         if (s == 25) {
           server.announce("<Trivia> $nick, you're doing great. Keep it up tiger!", false, null)
         } else if (s == 50) {

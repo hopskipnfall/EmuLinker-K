@@ -3,7 +3,6 @@ package org.emulinker.kaillera.controller.v086.action
 import com.google.common.flogger.FluentLogger
 import java.util.Locale
 import java.util.Scanner
-import kotlin.time.Duration.Companion.milliseconds
 import org.emulinker.kaillera.access.AccessManager
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086ClientHandler
@@ -553,7 +552,7 @@ class ChatAction(private val adminCommandAction: AdminCommandAction) :
             )
           )
         } catch (e: Exception) {}
-        threadSleep(20.milliseconds)
+        threadSleep()
         try {
           clientHandler.send(
             InformationMessage(
@@ -563,7 +562,7 @@ class ChatAction(private val adminCommandAction: AdminCommandAction) :
             )
           )
         } catch (e: Exception) {}
-        threadSleep(20.milliseconds)
+        threadSleep()
         try {
           clientHandler.send(
             InformationMessage(
@@ -573,7 +572,7 @@ class ChatAction(private val adminCommandAction: AdminCommandAction) :
             )
           )
         } catch (e: Exception) {}
-        threadSleep(20.milliseconds)
+        threadSleep()
         try {
           clientHandler.send(
             InformationMessage(
@@ -583,7 +582,7 @@ class ChatAction(private val adminCommandAction: AdminCommandAction) :
             )
           )
         } catch (e: Exception) {}
-        threadSleep(20.milliseconds)
+        threadSleep()
         if (clientHandler.user.accessLevel == AccessManager.ACCESS_MODERATOR) {
           try {
             clientHandler.send(
@@ -594,7 +593,7 @@ class ChatAction(private val adminCommandAction: AdminCommandAction) :
               )
             )
           } catch (e: Exception) {}
-          threadSleep(20.milliseconds)
+          threadSleep()
           try {
             clientHandler.send(
               InformationMessage(
@@ -604,7 +603,7 @@ class ChatAction(private val adminCommandAction: AdminCommandAction) :
               )
             )
           } catch (e: Exception) {}
-          threadSleep(20.milliseconds)
+          threadSleep()
         }
         if (clientHandler.user.accessLevel < AccessManager.ACCESS_ADMIN) {
           try {
@@ -616,7 +615,7 @@ class ChatAction(private val adminCommandAction: AdminCommandAction) :
               )
             )
           } catch (e: Exception) {}
-          threadSleep(20.milliseconds)
+          threadSleep()
           try {
             clientHandler.send(
               InformationMessage(
@@ -626,7 +625,7 @@ class ChatAction(private val adminCommandAction: AdminCommandAction) :
               )
             )
           } catch (e: Exception) {}
-          threadSleep(20.milliseconds)
+          threadSleep()
           return
         }
       } else if (

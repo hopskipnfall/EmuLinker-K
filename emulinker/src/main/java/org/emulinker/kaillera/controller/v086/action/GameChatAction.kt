@@ -432,22 +432,22 @@ class GameChatAction(
           "/me <message> to make personal message eg. /me is bored ...SupraFast is bored.",
           clientHandler.user,
         )
-        threadSleep(20.milliseconds)
+        threadSleep()
         game.announce(
           "/msg <UserID> <msg> to PM somebody. /msgoff or /msgon to turn pm off | on.",
           clientHandler.user,
         )
-        threadSleep(20.milliseconds)
+        threadSleep()
         game.announce(
           "/ignore <UserID> or /unignore <UserID> or /ignoreall or /unignoreall to ignore users.",
           clientHandler.user,
         )
-        threadSleep(20.milliseconds)
+        threadSleep()
         game.announce(
           "/p2pon or /p2poff this option ignores all server activity during gameplay.",
           clientHandler.user,
         )
-        threadSleep(20.milliseconds)
+        threadSleep()
       } else if (message.message == "/stop") {
         if (lookingForGameReporter.cancelActionsForUser(clientHandler.user.id)) {
           game.announce(
