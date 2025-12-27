@@ -1,7 +1,7 @@
 package org.emulinker.util
 
 /** A [GameDataCache] implementation that uses hashing and a circular buffer. */
-class FastGameDataCache(private val capacity: Int) : GameDataCache {
+class FastGameDataCache(override val capacity: Int) : GameDataCache {
 
   // Circular buffer storage
   private val buffer = arrayOfNulls<VariableSizeByteArray>(capacity)
@@ -57,11 +57,11 @@ class FastGameDataCache(private val capacity: Int) : GameDataCache {
     val indices = indexMap[data] ?: return -1
     if (indices.isEmpty()) return -1
 
-    // The first element in the deque is the oldest occurrence
-    val firstAbsIndex = indices.last()
+    // The last element in the deque is the oldest occurrence
+    val lastAbsIndex = indices.last()
 
     // Convert Absolute Index -> Logical Index
-    return firstAbsIndex - head
+    return lastAbsIndex - head
   }
 
   override fun remove(index: Int) {
@@ -99,7 +99,7 @@ class FastGameDataCache(private val capacity: Int) : GameDataCache {
       entryIndices.remove(currentAbs)
       entryIndices.add(prevAbs)
       // Note: We use add() because we are conceptually appending the 'new' location
-      // However, since we scan strictly left-to-right, the relative order in the deque remains
+      // However, since we scan strictly right-to-left, the relative order in the deque remains
       // correct.
     }
 
