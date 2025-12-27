@@ -83,7 +83,6 @@ class CombinedKailleraControllerTest : ProtocolBaseTest(), KoinTest {
   fun before() {
     channel =
       EmbeddedChannel(
-        // io.netty.handler.logging.LoggingHandler(),
         server
       )
   }
