@@ -1,5 +1,6 @@
 package org.emulinker.kaillera.controller
 
+import com.google.common.flogger.FluentLogger
 import io.netty.buffer.Unpooled
 import io.netty.channel.embedded.EmbeddedChannel
 import io.netty.channel.socket.DatagramPacket
@@ -14,7 +15,16 @@ import org.emulinker.kaillera.controller.connectcontroller.protocol.ConnectMessa
 import org.emulinker.kaillera.controller.connectcontroller.protocol.RequestPrivateKailleraPortRequest
 import org.emulinker.kaillera.controller.connectcontroller.protocol.RequestPrivateKailleraPortResponse
 import org.emulinker.kaillera.controller.v086.action.ActionModule
+import org.emulinker.kaillera.controller.v086.protocol.ClientAck
+import org.emulinker.kaillera.controller.v086.protocol.ServerAck
+import org.emulinker.kaillera.controller.v086.protocol.UserInformation
+import org.emulinker.kaillera.controller.v086.protocol.V086Bundle
+import org.emulinker.kaillera.controller.v086.protocol.V086BundleFormatException
+import org.emulinker.kaillera.controller.v086.protocol.V086Message
+import org.emulinker.kaillera.model.ConnectionType
+import org.emulinker.kaillera.pico.AppModule
 import org.emulinker.kaillera.pico.koinModule
+import org.emulinker.util.EmuUtil.dumpToByteArray
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.get
 import org.koin.core.context.startKoin
@@ -36,82 +46,149 @@ import org.openjdk.jmh.infra.Blackhole
 @BenchmarkMode(Mode.Throughput)
 @OutputTimeUnit(TimeUnit.MILLISECONDS)
 open class LoginBenchmark : KoinComponent {
-    lateinit var channel: EmbeddedChannel
-    lateinit var controller: CombinedKailleraController
-    lateinit var userActionsExecutor: ThreadPoolExecutor
+  lateinit var channel: EmbeddedChannel
+  lateinit var controller: CombinedKailleraController
+  lateinit var userActionsExecutor: ThreadPoolExecutor
 
-    @Setup(Level.Trial)
-    fun setup() {
-        startKoin {
-            allowOverride(true)
-            modules(koinModule, ActionModule, module { single<AccessManager> { FakeAccessManager() } })
+  @Setup(Level.Trial)
+  fun setup() {
+    startKoin {
+      allowOverride(true)
+      modules(koinModule, ActionModule, module { single<AccessManager> { FakeAccessManager() } })
+    }
+    controller = get()
+    userActionsExecutor = get(named("userActionsExecutor"))
+    channel = EmbeddedChannel(controller)
+  }
+
+  @TearDown(Level.Trial)
+  fun teardown() {
+    channel.close()
+    controller.stop()
+    userActionsExecutor.shutdown()
+    stopKoin()
+  }
+
+  @Benchmark
+  fun login(blackhole: Blackhole) {
+    fun sendRequestPrivateKailleraPortRequest() {
+      val request = RequestPrivateKailleraPortRequest("0.83")
+      val buffer =
+        Unpooled.buffer(request.bodyBytesPlusMessageIdType).apply { request.writeTo(this) }
+      val packet = DatagramPacket(buffer, RECIPIENT, SENDER)
+
+      // Write inbound
+      channel.writeInbound(packet)
+    }
+    sendRequestPrivateKailleraPortRequest()
+
+    fun receiveRequestPrivateKailleraPortResponse(): RequestPrivateKailleraPortResponse {
+      val response: DatagramPacket = assertNotNull(channel.readOutbound<DatagramPacket>())
+      val message = ConnectMessage.parse(response.content()).getOrThrow()
+      response.release()
+
+      return message as RequestPrivateKailleraPortResponse
+    }
+    blackhole.consume(receiveRequestPrivateKailleraPortResponse())
+
+    fun sendBundle(bundle: V086Bundle) {
+      // TODO(nue): Add past messages to the bundle.
+      val buffer = Unpooled.buffer(1024).apply { bundle.writeTo(this) }
+      val packet = DatagramPacket(buffer, RECIPIENT, SENDER)
+
+      // Write inbound
+      channel.writeInbound(packet)
+    }
+    var lastMessageNumber = -1
+    var lastMessageNumberReceived = -1
+    sendBundle(
+      V086Bundle.Single(
+        UserInformation(
+          messageNumber = lastMessageNumber++,
+          username = "testUser",
+          clientType = "Test Client",
+          connectionType = ConnectionType.LAN,
+        )
+      )
+    )
+
+    fun receiveV086Message(): V086Message {
+      val response = assertNotNull(channel.readOutbound<DatagramPacket>())
+      val bundle =
+        try {
+          V086Bundle.parse(response.content(), lastMessageID = lastMessageNumberReceived)
+        } catch (e: V086BundleFormatException) {
+          val c = response.content()
+          c.resetReaderIndex()
+          logger
+            .atSevere()
+            .withCause(e)
+            .log(
+              "Failed to parse! ReadableBytes=%d asHexString=%s",
+              c.readableBytes(),
+              c.dumpToByteArray().toHexString(),
+            )
+          throw e
+        } finally {
+          response.release()
         }
-        controller = get()
-        userActionsExecutor = get(named("userActionsExecutor"))
-        channel = EmbeddedChannel(controller)
-    }
 
-    @TearDown(Level.Trial)
-    fun teardown() {
-        channel.close()
-        controller.stop()
-        userActionsExecutor.shutdown()
-        stopKoin()
-    }
-
-    @Benchmark
-    fun login(blackhole: Blackhole) {
-        val request = RequestPrivateKailleraPortRequest("0.83")
-        val buffer =
-            Unpooled.buffer(request.bodyBytesPlusMessageIdType).apply {
-                request.writeTo(this)
+      return checkNotNull(
+          when (bundle) {
+            is V086Bundle.Single -> bundle.message
+            is V086Bundle.Multi -> {
+              bundle.messages.maxBy { it!!.messageNumber }
             }
-        val packet = DatagramPacket(buffer, RECIPIENT, SENDER)
+          }
+        )
+        .also { lastMessageNumberReceived = it.messageNumber }
+    }
+    var message = receiveV086Message()
+    while (message is ServerAck) {
+      sendBundle(V086Bundle.Single(ClientAck(lastMessageNumber++)))
 
-        // Write inbound
-        channel.writeInbound(packet)
-
-        val response: DatagramPacket = assertNotNull(channel.readOutbound<DatagramPacket>())
-        val message = ConnectMessage.parse(response.content()).getOrThrow()
-
-        check(message is RequestPrivateKailleraPortResponse) {
-            "Wrong message type! Expected RequestPrivateKailleraPortResponse but got ${message::class.simpleName}"
-        }
-
-        response.release()
-        blackhole.consume(response)
+      message = receiveV086Message()
     }
 
-    private companion object {
-        val SENDER = InetSocketAddress("127.0.0.1", 12345)
-        val RECIPIENT = InetSocketAddress("127.0.0.1", 27888)
+    TODO("Handle UserJoined message, which $message should be")
+  }
+
+  private companion object {
+    init {
+      AppModule.charsetDoNotUse = Charsets.UTF_8
     }
 
-    class FakeAccessManager : AccessManager {
-        override fun isAddressAllowed(address: InetAddress): Boolean = true
+    val SENDER = InetSocketAddress("127.0.0.1", 12345)
+    val RECIPIENT = InetSocketAddress("127.0.0.1", 27888)
 
-        override fun isSilenced(address: InetAddress): Boolean = false
+    val logger = FluentLogger.forEnclosingClass()
+  }
 
-        override fun isEmulatorAllowed(emulator: String): Boolean = true
+  class FakeAccessManager : AccessManager {
+    override fun isAddressAllowed(address: InetAddress): Boolean = true
 
-        override fun isGameAllowed(game: String): Boolean = true
+    override fun isSilenced(address: InetAddress): Boolean = false
 
-        override fun getAccess(address: InetAddress): Int = AccessManager.ACCESS_ADMIN
+    override fun isEmulatorAllowed(emulator: String): Boolean = true
 
-        override fun getAnnouncement(address: InetAddress): String? = null
+    override fun isGameAllowed(game: String): Boolean = true
 
-        override fun addTempBan(addressPattern: String, duration: Duration) {}
+    override fun getAccess(address: InetAddress): Int = AccessManager.ACCESS_ADMIN
 
-        override fun addTempAdmin(addressPattern: String, duration: Duration) {}
+    override fun getAnnouncement(address: InetAddress): String? = null
 
-        override fun addTempModerator(addressPattern: String, duration: Duration) {}
+    override fun addTempBan(addressPattern: String, duration: Duration) {}
 
-        override fun addTempElevated(addressPattern: String, duration: Duration) {}
+    override fun addTempAdmin(addressPattern: String, duration: Duration) {}
 
-        override fun addSilenced(addressPattern: String, duration: Duration) {}
+    override fun addTempModerator(addressPattern: String, duration: Duration) {}
 
-        override fun clearTemp(address: InetAddress, clearAll: Boolean): Boolean = false
+    override fun addTempElevated(addressPattern: String, duration: Duration) {}
 
-        override fun close() {}
-    }
+    override fun addSilenced(addressPattern: String, duration: Duration) {}
+
+    override fun clearTemp(address: InetAddress, clearAll: Boolean): Boolean = false
+
+    override fun close() {}
+  }
 }
