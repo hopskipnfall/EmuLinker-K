@@ -16,7 +16,7 @@ import org.openjdk.jmh.infra.Blackhole
 @OutputTimeUnit(TimeUnit.MILLISECONDS)
 open class GameDataCacheBenchmark {
   private lateinit var inputs: Iterator<VariableSizeByteArray>
-  private lateinit var cache: GameDataCacheImpl
+  private lateinit var cache: GameDataCache
 
   private fun buildIterator() =
     iterator<VariableSizeByteArray> {
@@ -36,7 +36,7 @@ open class GameDataCacheBenchmark {
 
   @Setup(Level.Iteration)
   fun setup() {
-    cache = GameDataCacheImpl(capacity = 256)
+    cache = FastGameDataCache(capacity = 256)
 
     inputs = buildIterator()
 

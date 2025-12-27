@@ -15,4 +15,6 @@ interface GameDataCache : Collection<VariableSizeByteArray> {
   fun clear()
 
   fun remove(index: Int)
+
+  val capacity: Int
 }

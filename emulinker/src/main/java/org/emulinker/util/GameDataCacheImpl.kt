@@ -1,6 +1,6 @@
 package org.emulinker.util
 
-class GameDataCacheImpl(capacity: Int) : GameDataCache {
+class GameDataCacheImpl(override val capacity: Int) : GameDataCache {
   private var lastRetrievedIndex = -1
 
   private var array: Array<VariableSizeByteArray?> = arrayOfNulls(capacity)
@@ -20,8 +20,7 @@ class GameDataCacheImpl(capacity: Int) : GameDataCache {
 
   override fun isEmpty(): Boolean = size == 0
 
-  override fun iterator(): Iterator<VariableSizeByteArray> =
-    array.asSequence().filterNotNull().iterator()
+  override fun iterator() = iterator<VariableSizeByteArray> { repeat(size) { i -> yield(get(i)) } }
 
   override fun contains(element: VariableSizeByteArray): Boolean = indexOf(element) >= 0
 

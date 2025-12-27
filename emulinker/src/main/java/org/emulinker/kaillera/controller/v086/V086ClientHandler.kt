@@ -36,8 +36,8 @@ import org.emulinker.kaillera.model.event.UserEvent
 import org.emulinker.util.EmuUtil
 import org.emulinker.util.EmuUtil.dumpToByteArray
 import org.emulinker.util.EmuUtil.timeKt
+import org.emulinker.util.FastGameDataCache
 import org.emulinker.util.GameDataCache
-import org.emulinker.util.GameDataCacheImpl
 import org.emulinker.util.stripFromProdBinary
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -90,9 +90,9 @@ class V086ClientHandler(
 
   private var lastMessageNumber = -1
 
-  val clientGameDataCache: GameDataCache = GameDataCacheImpl(256)
+  val clientGameDataCache: GameDataCache = FastGameDataCache(256)
 
-  val serverGameDataCache: GameDataCache = GameDataCacheImpl(256)
+  val serverGameDataCache: GameDataCache = FastGameDataCache(256)
 
   private val lastMessageBuffer = LastMessageBuffer(V086Controller.MAX_BUNDLE_SIZE)
   private val outMessages = arrayOfNulls<V086Message>(V086Controller.MAX_BUNDLE_SIZE)
