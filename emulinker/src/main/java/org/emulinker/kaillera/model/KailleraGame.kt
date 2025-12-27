@@ -52,7 +52,6 @@ import org.emulinker.proto.Player.PLAYER_THREE
 import org.emulinker.proto.Player.PLAYER_TWO
 import org.emulinker.proto.event
 import org.emulinker.util.EmuLang
-import org.emulinker.util.EmuUtil.threadSleep
 import org.emulinker.util.EmuUtil.toMillisDouble
 import org.emulinker.util.TimeOffsetCache
 import org.emulinker.util.VariableSizeByteArray
@@ -327,7 +326,6 @@ class KailleraGame(
     // SF MOD - /startn
     if (startN != -1) {
       if (players.size >= startN) {
-        threadSleep(1.seconds)
         try {
           start(owner)
         } catch (e: Exception) {}
