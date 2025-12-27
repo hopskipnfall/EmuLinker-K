@@ -549,7 +549,7 @@ class KailleraServer(
     logger.atInfo().log("%s quit: %s", user, quitMsg)
     val quitEvent = UserQuitEvent(this, user, quitMsg)
     addEvent(quitEvent)
-    user.queueEvent(quitEvent)
+    user.doEvent(quitEvent)
   }
 
   @Synchronized

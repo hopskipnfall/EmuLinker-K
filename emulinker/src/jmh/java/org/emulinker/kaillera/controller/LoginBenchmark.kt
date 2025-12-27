@@ -8,6 +8,8 @@ import java.net.InetAddress
 import java.net.InetSocketAddress
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
+import kotlin.random.Random
+import kotlin.random.nextInt
 import kotlin.test.assertNotNull
 import kotlin.time.Duration
 import org.emulinker.kaillera.access.AccessManager
@@ -16,8 +18,11 @@ import org.emulinker.kaillera.controller.connectcontroller.protocol.RequestPriva
 import org.emulinker.kaillera.controller.connectcontroller.protocol.RequestPrivateKailleraPortResponse
 import org.emulinker.kaillera.controller.v086.action.ActionModule
 import org.emulinker.kaillera.controller.v086.protocol.ClientAck
+import org.emulinker.kaillera.controller.v086.protocol.QuitNotification
+import org.emulinker.kaillera.controller.v086.protocol.QuitRequest
 import org.emulinker.kaillera.controller.v086.protocol.ServerAck
 import org.emulinker.kaillera.controller.v086.protocol.UserInformation
+import org.emulinker.kaillera.controller.v086.protocol.UserJoined
 import org.emulinker.kaillera.controller.v086.protocol.V086Bundle
 import org.emulinker.kaillera.controller.v086.protocol.V086BundleFormatException
 import org.emulinker.kaillera.controller.v086.protocol.V086Message
@@ -71,11 +76,14 @@ open class LoginBenchmark : KoinComponent {
 
   @Benchmark
   fun login(blackhole: Blackhole) {
+    val port = Random.nextInt(1..1000)
+    val sender = InetSocketAddress("127.0.0.1", port)
+
     fun sendRequestPrivateKailleraPortRequest() {
       val request = RequestPrivateKailleraPortRequest("0.83")
       val buffer =
         Unpooled.buffer(request.bodyBytesPlusMessageIdType).apply { request.writeTo(this) }
-      val packet = DatagramPacket(buffer, RECIPIENT, SENDER)
+      val packet = DatagramPacket(buffer, RECIPIENT, sender)
 
       // Write inbound
       channel.writeInbound(packet)
@@ -83,23 +91,29 @@ open class LoginBenchmark : KoinComponent {
     sendRequestPrivateKailleraPortRequest()
 
     fun receiveRequestPrivateKailleraPortResponse(): RequestPrivateKailleraPortResponse {
-      val response: DatagramPacket = assertNotNull(channel.readOutbound<DatagramPacket>())
-      val message = ConnectMessage.parse(response.content()).getOrThrow()
-      response.release()
-
-      return message as RequestPrivateKailleraPortResponse
+      while (true) {
+        val response: DatagramPacket = assertNotNull(channel.readOutbound<DatagramPacket>())
+        try {
+          if (response.recipient().port != port) continue
+          val message = ConnectMessage.parse(response.content()).getOrThrow()
+          return message as RequestPrivateKailleraPortResponse
+        } finally {
+          response.release()
+        }
+      }
     }
     blackhole.consume(receiveRequestPrivateKailleraPortResponse())
 
     fun sendBundle(bundle: V086Bundle) {
       // TODO(nue): Add past messages to the bundle.
       val buffer = Unpooled.buffer(1024).apply { bundle.writeTo(this) }
-      val packet = DatagramPacket(buffer, RECIPIENT, SENDER)
+      val packet = DatagramPacket(buffer, RECIPIENT, sender)
 
       // Write inbound
       channel.writeInbound(packet)
     }
-    var lastMessageNumber = -1
+
+    var lastMessageNumber = 1
     var lastMessageNumberReceived = -1
     sendBundle(
       V086Bundle.Single(
@@ -112,45 +126,86 @@ open class LoginBenchmark : KoinComponent {
       )
     )
 
-    fun receiveV086Message(): V086Message {
-      val response = assertNotNull(channel.readOutbound<DatagramPacket>())
-      val bundle =
-        try {
-          V086Bundle.parse(response.content(), lastMessageID = lastMessageNumberReceived)
-        } catch (e: V086BundleFormatException) {
-          val c = response.content()
-          c.resetReaderIndex()
-          logger
-            .atSevere()
-            .withCause(e)
-            .log(
-              "Failed to parse! ReadableBytes=%d asHexString=%s",
-              c.readableBytes(),
-              c.dumpToByteArray().toHexString(),
-            )
-          throw e
-        } finally {
+    fun receiveV086Message(): V086Message? {
+      while (true) {
+        val response = channel.readOutbound<DatagramPacket>() ?: return null // No messages to read.
+        if (response.recipient().port != port) {
           response.release()
+          continue
         }
-
-      return checkNotNull(
-          when (bundle) {
-            is V086Bundle.Single -> bundle.message
-            is V086Bundle.Multi -> {
-              bundle.messages.maxBy { it!!.messageNumber }
+        val bundle =
+          try {
+            if (
+              response.content().readableBytes() == 1 &&
+                response.content().readByte() == 0x00.toByte()
+            ) {
+              return null
             }
+            V086Bundle.parse(response.content(), lastMessageID = lastMessageNumberReceived)
+          } catch (e: V086BundleFormatException) {
+            val c = response.content()
+            c.resetReaderIndex()
+            logger
+              .atSevere()
+              .withCause(e)
+              .log(
+                "Failed to parse! ReadableBytes=%d asHexString=%s",
+                c.readableBytes(),
+                c.dumpToByteArray().toHexString(),
+              )
+            throw e
+          } finally {
+            response.release()
           }
-        )
-        .also { lastMessageNumberReceived = it.messageNumber }
+
+        return checkNotNull(
+            when (bundle) {
+              is V086Bundle.Single -> bundle.message
+              is V086Bundle.Multi -> {
+                bundle.messages.maxBy { it!!.messageNumber }
+              }
+            }
+          )
+          .also { lastMessageNumberReceived = it.messageNumber }
+      }
     }
-    var message = receiveV086Message()
+
+    var message = checkNotNull(receiveV086Message())
     while (message is ServerAck) {
       sendBundle(V086Bundle.Single(ClientAck(lastMessageNumber++)))
 
-      message = receiveV086Message()
+      message = checkNotNull(receiveV086Message())
     }
 
-    TODO("Handle UserJoined message, which $message should be")
+    var sawUserJoined = false
+    for (i in 1..100) {
+      val message = receiveV086Message() ?: continue
+      logger.atInfo().log("Received: %s", message)
+      if (message is UserJoined) {
+        sawUserJoined = true
+        logger.atInfo().log("IT IS HERE!!!!")
+        break
+      }
+    }
+    check(sawUserJoined)
+    sendBundle(V086Bundle.Single(QuitRequest(lastMessageNumber++, message = "peace")))
+
+    var sawQuitNotification = false
+    for (i in 1..100) {
+      val message = receiveV086Message() ?: continue
+      logger.atInfo().log("Received while quitting: %s", message)
+      if (message is QuitNotification) {
+        sawQuitNotification = true
+        logger.atInfo().log("IT IS HERE22222!!!!")
+        break
+      }
+    }
+    check(sawQuitNotification)
+
+    while (true) {
+      if (receiveV086Message() == null) break
+      logger.atInfo().log("DONE")
+    }
   }
 
   private companion object {
@@ -158,7 +213,6 @@ open class LoginBenchmark : KoinComponent {
       AppModule.charsetDoNotUse = Charsets.UTF_8
     }
 
-    val SENDER = InetSocketAddress("127.0.0.1", 12345)
     val RECIPIENT = InetSocketAddress("127.0.0.1", 27888)
 
     val logger = FluentLogger.forEnclosingClass()
