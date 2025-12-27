@@ -5,6 +5,7 @@ import io.netty.channel.embedded.EmbeddedChannel
 import io.netty.channel.socket.DatagramPacket
 import java.net.InetAddress
 import java.net.InetSocketAddress
+import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 import kotlin.test.assertNotNull
 import kotlin.time.Duration
@@ -15,9 +16,10 @@ import org.emulinker.kaillera.controller.connectcontroller.protocol.ConnectMessa
 import org.emulinker.kaillera.controller.v086.action.ActionModule
 import org.emulinker.kaillera.pico.koinModule
 import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
+import org.koin.core.component.get
 import org.koin.core.context.startKoin
 import org.koin.core.context.stopKoin
+import org.koin.core.qualifier.named
 import org.koin.dsl.module
 import org.openjdk.jmh.annotations.Benchmark
 import org.openjdk.jmh.annotations.BenchmarkMode
@@ -35,7 +37,8 @@ import org.openjdk.jmh.infra.Blackhole
 @OutputTimeUnit(TimeUnit.MILLISECONDS)
 open class PingBenchmark : KoinComponent {
   lateinit var channel: EmbeddedChannel
-  private val controller: CombinedKailleraController by inject()
+  lateinit var controller: CombinedKailleraController
+  lateinit var userActionsExecutor: ThreadPoolExecutor
 
   @Setup(Level.Trial)
   fun setup() {
@@ -43,11 +46,16 @@ open class PingBenchmark : KoinComponent {
       allowOverride(true)
       modules(koinModule, ActionModule, module { single<AccessManager> { FakeAccessManager() } })
     }
+    controller = get()
+    userActionsExecutor = get(named("userActionsExecutor"))
     channel = EmbeddedChannel(controller)
   }
 
   @TearDown(Level.Trial)
   fun teardown() {
+    channel.close()
+    controller.stop()
+    userActionsExecutor.shutdown()
     stopKoin()
   }
 

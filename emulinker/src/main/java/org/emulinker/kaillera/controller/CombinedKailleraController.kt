@@ -57,6 +57,7 @@ class CombinedKailleraController(
     for (controller in controllersMap.values) {
       controller.stop()
     }
+    server.stop()
     stopFlag = true
   }
 
