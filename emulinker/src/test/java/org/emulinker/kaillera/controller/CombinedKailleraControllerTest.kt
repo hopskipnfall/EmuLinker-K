@@ -81,10 +81,7 @@ class CombinedKailleraControllerTest : ProtocolBaseTest(), KoinTest {
 
   @Before
   fun before() {
-    channel =
-      EmbeddedChannel(
-        server
-      )
+    channel = EmbeddedChannel(server)
   }
 
   @After
