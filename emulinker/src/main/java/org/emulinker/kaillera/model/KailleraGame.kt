@@ -167,7 +167,7 @@ class KailleraGame(
     "Game[id=$id name=${if (romName.length > 15) romName.take(15) + "..." else romName}]"
 
   private val playingCount: Int
-    get() = players.asSequence().filter { it.status == UserStatus.PLAYING }.count()
+    get() = players.count { it.status == UserStatus.PLAYING }
 
   private val synchedCount: Int
     get() =

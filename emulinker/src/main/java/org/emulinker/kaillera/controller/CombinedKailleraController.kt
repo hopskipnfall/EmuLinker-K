@@ -208,10 +208,7 @@ class CombinedKailleraController(
 
       clientHandlers[remoteSocketAddress] = handler
     }
-    // I do not like blocking on a request thread.
-    synchronized(handler.requestHandlerMutex) {
-      handler.handleReceived(buffer, remoteSocketAddress)
-    }
+    handler.handleReceived(buffer, remoteSocketAddress)
   }
 
   override fun channelRead0(ctx: ChannelHandlerContext, packet: DatagramPacket) {
