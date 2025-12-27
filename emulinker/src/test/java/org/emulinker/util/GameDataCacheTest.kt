@@ -4,7 +4,7 @@ import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 
 class GameDataCacheTest {
-  private val cache = GameDataCacheImpl(5)
+  private val cache = FastGameDataCache(5)
 
   @Test
   fun `empty cache`() {
@@ -43,5 +43,6 @@ class GameDataCacheTest {
     cache.add(VariableSizeByteArray(byteArrayOf(1.toByte())))
 
     assertThat(cache.size).isEqualTo(2)
+    assertThat(cache.indexOf(VariableSizeByteArray(byteArrayOf(1.toByte())))).isEqualTo(1)
   }
 }
