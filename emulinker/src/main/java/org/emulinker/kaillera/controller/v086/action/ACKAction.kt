@@ -28,13 +28,14 @@ class ACKAction : V086Action<ClientAck>, V086UserEventHandler<UserEvent>, KoinCo
   override fun performAction(message: ClientAck, clientHandler: V086ClientHandler) {
     val user = clientHandler.user
     if (user.loggedIn) {
+      logger.atSevere().log("USER ALREADY LOGGED IN")
       return
     }
     clientHandler.addSpeedMeasurement()
     if (clientHandler.speedMeasurementCount > clientHandler.numAcksForSpeedTest) {
       user.ping = clientHandler.averageNetworkSpeed
       logger
-        .atFine()
+        .atSevere()
         .log(
           "Calculated %s ping time: average=%s, best=%d",
           user,

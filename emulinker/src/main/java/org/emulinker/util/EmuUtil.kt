@@ -180,7 +180,7 @@ object EmuUtil {
     DeprecationLevel.WARNING,
   )
   fun threadSleep(d: Duration) {
-    Thread.yield()
+    //    Thread.yield()
   }
 
   fun min(a: Duration, b: Duration) = if (a <= b) a else b

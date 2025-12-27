@@ -436,7 +436,7 @@ class KailleraServer(
     user.status = UserStatus.IDLE
     user.loggedIn = true
     usersMap[userListKey] = user
-    user.queueEvent(ConnectedEvent(this, user))
+    user.doEvent(ConnectedEvent(this, user))
     threadSleep(20.milliseconds)
     for (loginMessage in loginMessages) {
       user.queueEvent(InfoMessageEvent(user, loginMessage))
@@ -514,7 +514,7 @@ class KailleraServer(
         user.queueEvent(InfoMessageEvent(user, message))
       }
     }
-    addEvent(UserJoinedEvent(this, user))
+    user.doEvent(UserJoinedEvent(this, user))
     threadSleep(20.milliseconds)
     val announcement = accessManager.getAnnouncement(user.socketAddress!!.address)
     if (announcement != null) announce(announcement, false)

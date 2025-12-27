@@ -38,6 +38,7 @@ import org.koin.core.qualifier.named
 import org.koin.dsl.module
 import org.openjdk.jmh.annotations.Benchmark
 import org.openjdk.jmh.annotations.BenchmarkMode
+import org.openjdk.jmh.annotations.Fork
 import org.openjdk.jmh.annotations.Level
 import org.openjdk.jmh.annotations.Mode
 import org.openjdk.jmh.annotations.OutputTimeUnit
@@ -50,10 +51,13 @@ import org.openjdk.jmh.infra.Blackhole
 @State(Scope.Benchmark)
 @BenchmarkMode(Mode.Throughput)
 @OutputTimeUnit(TimeUnit.MILLISECONDS)
+@Fork(value = 1)
 open class LoginBenchmark : KoinComponent {
   lateinit var channel: EmbeddedChannel
   lateinit var controller: CombinedKailleraController
   lateinit var userActionsExecutor: ThreadPoolExecutor
+
+  var succeeded = 0L
 
   @Setup(Level.Trial)
   fun setup() {
@@ -77,6 +81,7 @@ open class LoginBenchmark : KoinComponent {
   @Benchmark
   fun login(blackhole: Blackhole) {
     val port = Random.nextInt(1..1000)
+    logger.atInfo().log("starting login on port %d", port)
     val sender = InetSocketAddress("127.0.0.1", port)
 
     fun sendRequestPrivateKailleraPortRequest() {
@@ -113,13 +118,13 @@ open class LoginBenchmark : KoinComponent {
       channel.writeInbound(packet)
     }
 
-    var lastMessageNumber = 1
+    var lastMessageNumber = -1
     var lastMessageNumberReceived = -1
     sendBundle(
       V086Bundle.Single(
         UserInformation(
-          messageNumber = lastMessageNumber++,
-          username = "testUser",
+          messageNumber = ++lastMessageNumber,
+          username = "testUser$port",
           clientType = "Test Client",
           connectionType = ConnectionType.LAN,
         )
@@ -158,54 +163,61 @@ open class LoginBenchmark : KoinComponent {
             response.release()
           }
 
-        return checkNotNull(
-            when (bundle) {
-              is V086Bundle.Single -> bundle.message
-              is V086Bundle.Multi -> {
-                bundle.messages.maxBy { it!!.messageNumber }
-              }
-            }
-          )
-          .also { lastMessageNumberReceived = it.messageNumber }
+        return when (bundle) {
+          is V086Bundle.Single -> bundle.message
+          is V086Bundle.Multi -> {
+            bundle.messages.maxBy { it?.messageNumber ?: return null }
+          }
+        }.also {
+          if (it != null) lastMessageNumberReceived = it.messageNumber
+
+          logger.atInfo().log("Received: %s", it)
+        }
       }
     }
 
-    var message = checkNotNull(receiveV086Message())
-    while (message is ServerAck) {
-      sendBundle(V086Bundle.Single(ClientAck(lastMessageNumber++)))
-
-      message = checkNotNull(receiveV086Message())
-    }
-
+    var message: V086Message? = checkNotNull(receiveV086Message())
     var sawUserJoined = false
-    for (i in 1..100) {
-      val message = receiveV086Message() ?: continue
-      logger.atInfo().log("Received: %s", message)
-      if (message is UserJoined) {
-        sawUserJoined = true
-        logger.atInfo().log("IT IS HERE!!!!")
-        break
+    while (message != null) {
+      when (message) {
+        is ServerAck -> {
+          sendBundle(V086Bundle.Single(ClientAck(++lastMessageNumber)))
+        }
+
+        is UserJoined -> {
+          if (message.username == "testUser$port") sawUserJoined = true
+          else logger.atSevere().log("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+        }
+
+        else -> {}
       }
+      message = receiveV086Message()
     }
-    check(sawUserJoined)
-    sendBundle(V086Bundle.Single(QuitRequest(lastMessageNumber++, message = "peace")))
+    check(sawUserJoined) { "Expected to see UserJoined message" }
+
+    sendBundle(V086Bundle.Single(QuitRequest(++lastMessageNumber, message = "peace")))
 
     var sawQuitNotification = false
-    for (i in 1..100) {
-      val message = receiveV086Message() ?: continue
-      logger.atInfo().log("Received while quitting: %s", message)
-      if (message is QuitNotification) {
-        sawQuitNotification = true
-        logger.atInfo().log("IT IS HERE22222!!!!")
-        break
+    message = receiveV086Message()
+    while (message != null) {
+      when (message) {
+        is QuitNotification -> {
+          if (message.username == "testUser$port") {
+            sawQuitNotification = true
+            logger.atInfo().log("IT IS HERE22222!!!!")
+          } else {
+            logger.atSevere().log("!@$!@%!#$!@%!@$!@%!!!!")
+          }
+        }
+
+        else -> {}
       }
+      message = receiveV086Message()
     }
     check(sawQuitNotification)
 
-    while (true) {
-      if (receiveV086Message() == null) break
-      logger.atInfo().log("DONE")
-    }
+    succeeded++
+    logger.atInfo().log("DONE. Succeeded: %d", succeeded)
   }
 
   private companion object {
