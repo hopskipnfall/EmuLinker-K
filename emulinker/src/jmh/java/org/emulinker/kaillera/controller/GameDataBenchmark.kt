@@ -68,6 +68,8 @@ open class GameDataBenchmark : KoinComponent {
   private lateinit var sender: InetSocketAddress
   private lateinit var messageIterator: Iterator<V086Message?>
 
+  private lateinit var gameDataIterator: Iterator<VariableSizeByteArray>
+
   @Setup(Level.Trial)
   fun setup() {
     startKoin {
@@ -88,6 +90,8 @@ open class GameDataBenchmark : KoinComponent {
 
     login()
     createGame()
+
+    gameDataIterator = buildIterator()
     startGame()
     readyCheck()
   }
@@ -228,7 +232,7 @@ open class GameDataBenchmark : KoinComponent {
 
   @Benchmark
   fun benchmark(blackhole: Blackhole) {
-    val data = VariableSizeByteArray(byteArrayOf(1, 2, 3, 4))
+    val data = gameDataIterator.next()
     sendBundle(V086Bundle.Single(GameData(++lastMessageNumber, data)))
 
     var received = false
@@ -298,6 +302,29 @@ open class GameDataBenchmark : KoinComponent {
     val RECIPIENT = InetSocketAddress("127.0.0.1", 27888)
 
     val logger = FluentLogger.forEnclosingClass()
+
+    val LINES: List<String> by lazy {
+      val inputStream =
+        GameDataBenchmark::class.java.getResourceAsStream("/ssb_p1_out.txt")
+          ?: throw java.io.FileNotFoundException("ssb_p1_out.txt not found in classpath")
+      inputStream.bufferedReader().readLines()
+    }
+
+    private fun buildIterator() =
+      iterator<VariableSizeByteArray> {
+        lateinit var previousLine: String
+        while (true) {
+          for (line in LINES) {
+            if (line.startsWith("x")) {
+              val times = line.removePrefix("x").toInt()
+              repeat(times) { yield(VariableSizeByteArray(previousLine.decodeHex())) }
+            } else {
+              yield(VariableSizeByteArray(line.decodeHex()))
+            }
+            previousLine = line
+          }
+        }
+      }
   }
 
   class FakeAccessManager : AccessManager {
@@ -327,4 +354,11 @@ open class GameDataBenchmark : KoinComponent {
 
     override fun close() {}
   }
+}
+
+/** Turns a hex string into a [ByteArray]. */
+private fun String.decodeHex(): ByteArray {
+  check(length % 2 == 0) { "Must have an even length" }
+
+  return chunked(2).map { it.lowercase().toInt(16).toByte() }.toByteArray()
 }
