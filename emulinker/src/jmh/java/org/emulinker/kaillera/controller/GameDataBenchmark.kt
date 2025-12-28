@@ -6,6 +6,9 @@ import io.netty.channel.embedded.EmbeddedChannel
 import io.netty.channel.socket.DatagramPacket
 import java.net.InetAddress
 import java.net.InetSocketAddress
+import java.util.concurrent.ArrayBlockingQueue
+import java.util.concurrent.BlockingQueue
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 import kotlin.time.Duration
@@ -20,6 +23,8 @@ import org.emulinker.kaillera.controller.v086.protocol.ClientAck
 import org.emulinker.kaillera.controller.v086.protocol.CreateGameNotification
 import org.emulinker.kaillera.controller.v086.protocol.CreateGameRequest
 import org.emulinker.kaillera.controller.v086.protocol.GameData
+import org.emulinker.kaillera.controller.v086.protocol.JoinGameNotification
+import org.emulinker.kaillera.controller.v086.protocol.JoinGameRequest
 import org.emulinker.kaillera.controller.v086.protocol.QuitNotification
 import org.emulinker.kaillera.controller.v086.protocol.QuitRequest
 import org.emulinker.kaillera.controller.v086.protocol.ServerAck
@@ -62,13 +67,9 @@ open class GameDataBenchmark : KoinComponent {
 
   var succeeded = 0L
 
-  private var port = 0
-  private var lastMessageNumberReceived = -1
-  private var lastMessageNumber = -1
-  private lateinit var sender: InetSocketAddress
-  private lateinit var messageIterator: Iterator<V086Message?>
-
-  private lateinit var gameDataIterator: Iterator<VariableSizeByteArray>
+  private val clientQueues = ConcurrentHashMap<Int, BlockingQueue<OutgoingMsg>>()
+  private lateinit var client1: Client
+  private lateinit var client2: Client
 
   @Setup(Level.Trial)
   fun setup() {
@@ -80,26 +81,41 @@ open class GameDataBenchmark : KoinComponent {
     userActionsExecutor = get(named("userActionsExecutor"))
     channel = EmbeddedChannel(controller)
 
-    lastMessageNumberReceived = -1
-    lastMessageNumber = -1
-    port++
-    sender = InetSocketAddress("127.0.0.1", port)
-    logger.atInfo().log("Starting trial on port %d", port)
+    client1 = Client(1111, "User1")
+    client2 = Client(2222, "User2")
 
-    createMessageIterator()
+    // Advance client 2 iterator to desync
+    repeat(1000) { client2.gameDataIterator.next() }
 
-    login()
-    createGame()
+    logger.atInfo().log("Starting setup...")
 
-    gameDataIterator = buildIterator()
-    startGame()
-    readyCheck()
+    client1.login()
+    Thread.sleep(500)
+    client2.login()
+
+    val gameId = client1.createGame()
+    client2.consumeUntil { it is CreateGameNotification && it.gameId == gameId }
+
+    client2.joinGame(gameId)
+    client1.consumeUntil { it is JoinGameNotification && it.gameId == gameId }
+
+    client1.startGame()
+    client2.consumeUntil { it is StartGameNotification }
+
+    client1.sendReady()
+    client2.sendReady()
+
+    client1.waitForReady()
+    client2.waitForReady()
+
+    logger.atInfo().log("Setup complete.")
   }
 
   @TearDown(Level.Trial)
   fun teardown() {
     try {
-      logout()
+      client1.logout()
+      client2.logout()
     } catch (e: Exception) {
       logger.atWarning().withCause(e).log("Failed to logout cleanly")
     }
@@ -110,187 +126,222 @@ open class GameDataBenchmark : KoinComponent {
     stopKoin()
   }
 
-  private fun createMessageIterator() {
-    messageIterator = iterator {
-      while (true) {
-        when (val message = readOutgoing()) {
-          is OutgoingMessage.Bundle -> {
-            when (val msg = message.message) {
-              is V086Bundle.Single ->
-                yield(msg.message.also { lastMessageNumberReceived = it.messageNumber })
-
-              is V086Bundle.Multi -> {
-                for (m in msg.messages.filterNotNull().sortedBy { it.messageNumber }) {
-                  yield(m.also { lastMessageNumberReceived = it.messageNumber })
-                }
-              }
-            }
-          }
-
-          is OutgoingMessage.ConnectionMessage ->
-            throw IllegalStateException("Unexpected Connection message in stream")
-
-          OutgoingMessage.Null -> {
-            yield(null) // Yield null to indicate nothing read yet
-          }
-        }
-      }
-    }
-  }
-
-  private fun nextMessage(): V086Message {
-    while (true) {
-      val msg = messageIterator.next()
-      if (msg != null) return msg
-      Thread.yield()
-      if (Thread.interrupted()) throw InterruptedException()
-    }
-  }
-
-  private fun login() {
-    // 1. Request port
-    val request = RequestPrivateKailleraPortRequest("0.83")
-    val buffer = Unpooled.buffer(request.bodyBytesPlusMessageIdType).apply { request.writeTo(this) }
-    channel.writeInbound(DatagramPacket(buffer, RECIPIENT, sender))
-
-    // 2. Wait for response
-    while (true) {
-      when (val message = readOutgoing()) {
-        is OutgoingMessage.Bundle ->
-          throw IllegalStateException("Received bundle before being logged in")
-
-        is OutgoingMessage.ConnectionMessage -> break // Got it
-        OutgoingMessage.Null -> {
-          Thread.yield()
-          if (Thread.interrupted()) throw InterruptedException()
-        }
-      }
-    }
-
-    // 3. Send User Info
-    sendBundle(
-      V086Bundle.Single(
-        UserInformation(
-          messageNumber = ++lastMessageNumber,
-          username = "testUser$port",
-          clientType = "Test Client",
-          connectionType = ConnectionType.LAN,
-        )
-      )
-    )
-
-    // 4. Wait for UserJoined (handling ServerAck)
-    var joined = false
-    while (!joined) {
-      when (val msg = nextMessage()) {
-        is ServerAck -> sendBundle(V086Bundle.Single(ClientAck(++lastMessageNumber)))
-        is UserJoined -> if (msg.username == "testUser$port") joined = true
-        else -> {}
-      }
-    }
-  }
-
-  private fun createGame() {
-    sendBundle(V086Bundle.Single(CreateGameRequest(++lastMessageNumber, "Test Game")))
-    var created = false
-    while (!created) {
-      val msg = nextMessage()
-      if (msg is CreateGameNotification && msg.username == "testUser$port") {
-        created = true
-      }
-    }
-  }
-
-  private fun startGame() {
-    sendBundle(V086Bundle.Single(StartGameRequest(++lastMessageNumber)))
-    var started = false
-    while (!started) {
-      if (nextMessage() is StartGameNotification) started = true
-    }
-  }
-
-  private fun readyCheck() {
-    sendBundle(V086Bundle.Single(AllReady(++lastMessageNumber)))
-    var ready = false
-    while (!ready) {
-      if (nextMessage() is AllReady) ready = true
-    }
-  }
-
-  private fun logout() {
-    sendBundle(V086Bundle.Single(QuitRequest(++lastMessageNumber, "benchmark done")))
-    var quit = false
-    while (!quit) {
-      val msg = nextMessage()
-      if (msg is QuitNotification && msg.username == "testUser$port") {
-        quit = true
-      }
-      // If we see GameData here, we might want to ignore it or consume it, but ideally we shouldn't
-      // receive much else.
-    }
-  }
-
   @Benchmark
   fun benchmark(blackhole: Blackhole) {
-    val data = gameDataIterator.next()
-    sendBundle(V086Bundle.Single(GameData(++lastMessageNumber, data)))
+    client1.sendGameData()
+    client2.sendGameData()
 
-    var received = false
-    while (!received) {
-      val msg = messageIterator.next()
-      if (msg == null) {
-        Thread.yield()
-        if (Thread.interrupted()) throw InterruptedException()
-        continue
-      }
-      if (msg is GameData || msg is CachedGameData) {
-        received = true
-        blackhole.consume(msg)
-      }
-    }
+    client1.receiveGameData(blackhole)
+    client2.receiveGameData(blackhole)
+
     succeeded++
   }
 
-  fun sendBundle(bundle: V086Bundle) {
-    val buffer = Unpooled.buffer(1024).apply { bundle.writeTo(this) }
-    val packet = DatagramPacket(buffer, RECIPIENT, sender)
-    channel.writeInbound(packet)
-  }
-
-  sealed interface OutgoingMessage {
-    object Null : OutgoingMessage
-
-    @JvmInline value class Bundle(val message: V086Bundle) : OutgoingMessage
-
-    @JvmInline
-    value class ConnectionMessage(val message: RequestPrivateKailleraPortResponse) :
-      OutgoingMessage
-  }
-
-  fun readOutgoing(): OutgoingMessage {
+  private fun pump() {
     channel.runPendingTasks()
-    val response: DatagramPacket =
-      channel.readOutbound<DatagramPacket>() ?: return OutgoingMessage.Null
-    try {
-      if (response.recipient().port != port) {
-        logger.atInfo().log("INCORRECT PORT: %d", response.recipient().port)
-        return OutgoingMessage.Null
+    while (true) {
+      val response: DatagramPacket = channel.readOutbound<DatagramPacket>() ?: break
+
+      val port = response.recipient().port
+      val queue = clientQueues[port]
+      if (queue == null) {
+        logger.atWarning().log("Received message for unknown port: %d", port)
+        response.release()
+        continue
       }
-      val message = ConnectMessage.parse(response.content())
-      if (message.isSuccess) {
-        return OutgoingMessage.ConnectionMessage(
-          message.getOrThrow() as RequestPrivateKailleraPortResponse
-        )
-      }
+
       val content = response.content()
-      return try {
-        OutgoingMessage.Bundle(V086Bundle.parse(content, lastMessageID = lastMessageNumberReceived))
-      } catch (e: Exception) {
-        logger.atSevere().withCause(e).log("Failed to parse bundle")
-        OutgoingMessage.Null
+      val connectMessage = ConnectMessage.parse(content)
+      if (connectMessage.isSuccess) {
+        queue.add(
+          OutgoingMsg.ConnectionMessage(
+            connectMessage.getOrThrow() as RequestPrivateKailleraPortResponse
+          )
+        )
+        response.release()
+        continue
       }
-    } finally {
-      response.release()
+
+      content.resetReaderIndex()
+      val client = if (client1.port == port) client1 else client2
+      // Using helper to get last ID safely? The client object is accessible here.
+      val lastId = client.lastMessageNumberReceived
+
+      try {
+        val bundle = V086Bundle.parse(content, lastMessageID = lastId)
+        queue.add(OutgoingMsg.Bundle(bundle))
+      } catch (e: Exception) {
+        logger.atSevere().withCause(e).log("Failed to parse bundle for port %d", port)
+      } finally {
+        response.release()
+      }
+    }
+  }
+
+  sealed interface OutgoingMsg {
+    data class Bundle(val message: V086Bundle) : OutgoingMsg
+
+    data class ConnectionMessage(val message: RequestPrivateKailleraPortResponse) : OutgoingMsg
+  }
+
+  inner class Client(val port: Int, val username: String) {
+    var lastMessageNumberReceived = -1
+    var lastMessageNumber = -1
+    val sender = InetSocketAddress("127.0.0.1", port)
+    val gameDataIterator = buildIterator()
+
+    private val queue = ArrayBlockingQueue<OutgoingMsg>(100)
+
+    init {
+      clientQueues[port] = queue
+    }
+
+    // Helper to yield messages from the queue
+    private val messageIterator = iterator {
+      while (true) {
+        pump()
+
+        while (true) {
+          val msg = queue.poll() ?: break
+          when (msg) {
+            is OutgoingMsg.Bundle -> {
+              when (val inner = msg.message) {
+                is V086Bundle.Single ->
+                  yield(inner.message.also { lastMessageNumberReceived = it.messageNumber })
+                is V086Bundle.Multi -> {
+                  for (m in inner.messages.filterNotNull().sortedBy { it.messageNumber }) {
+                    yield(m.also { lastMessageNumberReceived = it.messageNumber })
+                  }
+                }
+              }
+            }
+
+            is OutgoingMsg.ConnectionMessage -> {
+              // ignored in this iterator
+            }
+          }
+        }
+
+        yield(null)
+      }
+    }
+
+    fun login() {
+      val request = RequestPrivateKailleraPortRequest("0.83")
+      val buffer =
+        Unpooled.buffer(request.bodyBytesPlusMessageIdType).apply { request.writeTo(this) }
+      channel.writeInbound(DatagramPacket(buffer, RECIPIENT, sender))
+
+      var loggedIn = false
+      while (!loggedIn) {
+        pump()
+        val msg = queue.poll()
+        if (msg is OutgoingMsg.ConnectionMessage) {
+          loggedIn = true
+        } else if (msg != null) {
+          // ignore
+        } else {
+          Thread.yield()
+        }
+      }
+
+      sendBundle(
+        V086Bundle.Single(
+          UserInformation(
+            messageNumber = ++lastMessageNumber,
+            username = username,
+            clientType = "Test Client",
+            connectionType = ConnectionType.LAN,
+          )
+        )
+      )
+
+      consumeUntil {
+        if (it is ServerAck) {
+          sendBundle(V086Bundle.Single(ClientAck(++lastMessageNumber)))
+          false
+        } else {
+          it is UserJoined && it.username == this.username
+        }
+      }
+    }
+
+    fun createGame(): Int {
+      sendBundle(V086Bundle.Single(CreateGameRequest(++lastMessageNumber, "Test Game")))
+      var gameId = -1
+      consumeUntil {
+        if (it is CreateGameNotification && it.username == this.username) {
+          gameId = it.gameId
+          true
+        } else false
+      }
+      return gameId
+    }
+
+    fun joinGame(gameId: Int) {
+      sendBundle(
+        V086Bundle.Single(JoinGameRequest(++lastMessageNumber, gameId, ConnectionType.LAN))
+      )
+      consumeUntil { it is JoinGameNotification && it.username == this.username }
+    }
+
+    fun startGame() {
+      sendBundle(V086Bundle.Single(StartGameRequest(++lastMessageNumber)))
+      consumeUntil { it is StartGameNotification }
+    }
+
+    fun sendReady() {
+      sendBundle(V086Bundle.Single(AllReady(++lastMessageNumber)))
+    }
+
+    fun waitForReady() {
+      consumeUntil { it is AllReady }
+    }
+
+    fun logout() {
+      sendBundle(V086Bundle.Single(QuitRequest(++lastMessageNumber, "benchmark done")))
+      consumeUntil { it is QuitNotification && it.username == this.username }
+    }
+
+    fun sendGameData() {
+      sendBundle(V086Bundle.Single(GameData(++lastMessageNumber, gameDataIterator.next())))
+    }
+
+    fun receiveGameData(blackhole: Blackhole) {
+      var received = false
+      while (!received) {
+        val msg = nextMessage()
+        if (msg == null) {
+          Thread.yield()
+          continue
+        }
+        if (msg is GameData || msg is CachedGameData) {
+          received = true
+          blackhole.consume(msg)
+        }
+      }
+    }
+
+    private fun nextMessage(): V086Message? {
+      return messageIterator.next() as? V086Message
+    }
+
+    fun consumeUntil(predicate: (V086Message) -> Boolean) {
+      while (true) {
+        val msg =
+          nextMessage()
+            ?: run {
+              Thread.yield()
+              null
+            }
+        if (msg != null && predicate(msg)) return
+      }
+    }
+
+    fun sendBundle(bundle: V086Bundle) {
+      val buffer = Unpooled.buffer(1024).apply { bundle.writeTo(this) }
+      val packet = DatagramPacket(buffer, RECIPIENT, sender)
+      channel.writeInbound(packet)
     }
   }
 
@@ -356,9 +407,7 @@ open class GameDataBenchmark : KoinComponent {
   }
 }
 
-/** Turns a hex string into a [ByteArray]. */
 private fun String.decodeHex(): ByteArray {
   check(length % 2 == 0) { "Must have an even length" }
-
   return chunked(2).map { it.lowercase().toInt(16).toByte() }.toByteArray()
 }
