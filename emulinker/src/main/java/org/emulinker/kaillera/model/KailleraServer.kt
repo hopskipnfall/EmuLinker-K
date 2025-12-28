@@ -439,17 +439,17 @@ class KailleraServer(
     user.doEvent(ConnectedEvent(this, user))
     threadSleep(20.milliseconds)
     for (loginMessage in loginMessages) {
-      user.queueEvent(InfoMessageEvent(user, loginMessage))
+      user.doEvent(InfoMessageEvent(user, loginMessage))
       threadSleep(20.milliseconds)
     }
-    user.queueEvent(
+    user.doEvent(
       InfoMessageEvent(
         user,
         "${releaseInfo.productName} v${releaseInfo.version}: ${releaseInfo.websiteString}",
       )
     )
     if (CompiledFlags.DEBUG_BUILD) {
-      user.queueEvent(
+      user.doEvent(
         InfoMessageEvent(
           user,
           "WARNING: This is an unoptimized debug build that should not be used in production.",
@@ -779,7 +779,6 @@ class KailleraServer(
 
           if (gamesAlso && kailleraUser.game != null) {
             kailleraUser.game!!.announce(message, kailleraUser)
-            Thread.yield()
           }
         }
     } else {

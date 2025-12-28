@@ -78,9 +78,11 @@ open class LoginBenchmark : KoinComponent {
     stopKoin()
   }
 
+  private var port = 0
+
   @Benchmark
   fun login(blackhole: Blackhole) {
-    val port = Random.nextInt(1..1000)
+    port++
     logger.atInfo().log("starting login on port %d", port)
     val sender = InetSocketAddress("127.0.0.1", port)
 
@@ -97,6 +99,7 @@ open class LoginBenchmark : KoinComponent {
 
     fun receiveRequestPrivateKailleraPortResponse(): RequestPrivateKailleraPortResponse {
       while (true) {
+        channel.flush()
         val response: DatagramPacket = assertNotNull(channel.readOutbound<DatagramPacket>())
         try {
           if (response.recipient().port != port) continue
@@ -131,75 +134,92 @@ open class LoginBenchmark : KoinComponent {
       )
     )
 
-    fun receiveV086Message(): V086Message? {
-      while (true) {
-        val response = channel.readOutbound<DatagramPacket>() ?: return null // No messages to read.
-        if (response.recipient().port != port) {
-          response.release()
-          continue
-        }
-        val bundle =
+    val messageIterator =
+      iterator<V086Message?> {
+        while (true) {
+          val packet: DatagramPacket? = channel.readOutbound<DatagramPacket>()
+          if (packet == null) {
+            yield(null)
+            continue
+          }
+
           try {
-            if (
-              response.content().readableBytes() == 1 &&
-                response.content().readByte() == 0x00.toByte()
-            ) {
-              return null
+            val content = packet.content()
+            if (content.readableBytes() <= 1) {
+              logger.atInfo().log("Single byte or less!")
+              yield(null)
+              continue
             }
-            V086Bundle.parse(response.content(), lastMessageID = lastMessageNumberReceived)
-          } catch (e: V086BundleFormatException) {
-            val c = response.content()
-            c.resetReaderIndex()
-            logger
-              .atSevere()
-              .withCause(e)
-              .log(
-                "Failed to parse! ReadableBytes=%d asHexString=%s",
-                c.readableBytes(),
-                c.dumpToByteArray().toHexString(),
-              )
-            throw e
+            if (packet.recipient().port != port) {
+              logger
+                .atSevere()
+                .log(
+                  "RECEIVED PACKET FOR WRONG USER: %d (me %d), message=%s",
+                  packet.recipient().port,
+                  port,
+                  V086Bundle.parse(packet.content())
+                )
+              continue
+            }
+
+            when (val bundle = V086Bundle.parse(content, lastMessageID = lastMessageNumberReceived)) {
+              is V086Bundle.Single ->
+                yield(bundle.message.also { lastMessageNumberReceived = it.messageNumber
+
+                  logger.atInfo().log("Received to %d message=%s", port, it)
+                })
+              is V086Bundle.Multi -> {
+                for (m in bundle.messages.sortedBy { it!!.messageNumber }) yield(
+                  m.also {
+                    lastMessageNumberReceived = it!!.messageNumber
+                    logger.atInfo().log("Received to %d message=%s", port, it)
+                  }
+                )
+              }
+            }
           } finally {
-            response.release()
+            packet.release()
           }
-
-        return when (bundle) {
-          is V086Bundle.Single -> bundle.message
-          is V086Bundle.Multi -> {
-            bundle.messages.maxBy { it?.messageNumber ?: return null }
-          }
-        }.also {
-          if (it != null) lastMessageNumberReceived = it.messageNumber
-
-          logger.atInfo().log("Received: %s", it)
         }
       }
-    }
 
-    var message: V086Message? = checkNotNull(receiveV086Message())
+    var message: V086Message? = checkNotNull(messageIterator.next())
     var sawUserJoined = false
-    while (message != null) {
+    while (!sawUserJoined) {
+      if (message == null ){
+        Thread.yield()
+        if (Thread.interrupted()) throw InterruptedException()
+      }
       when (message) {
         is ServerAck -> {
           sendBundle(V086Bundle.Single(ClientAck(++lastMessageNumber)))
         }
 
         is UserJoined -> {
-          if (message.username == "testUser$port") sawUserJoined = true
-          else logger.atSevere().log("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+          if (message.username == "testUser$port") {
+            sawUserJoined = true
+            logger.atInfo().log("FOUND USERJOINED")
+          }
+          else {
+          }
         }
 
         else -> {}
       }
-      message = receiveV086Message()
+      message = messageIterator.next()
     }
     check(sawUserJoined) { "Expected to see UserJoined message" }
 
     sendBundle(V086Bundle.Single(QuitRequest(++lastMessageNumber, message = "peace")))
 
     var sawQuitNotification = false
-    message = receiveV086Message()
-    while (message != null) {
+    message = messageIterator.next()
+    while (!sawQuitNotification) {
+      if (message == null ){
+        Thread.yield()
+        if (Thread.interrupted()) throw InterruptedException()
+      }
+
       when (message) {
         is QuitNotification -> {
           if (message.username == "testUser$port") {
@@ -212,7 +232,7 @@ open class LoginBenchmark : KoinComponent {
 
         else -> {}
       }
-      message = receiveV086Message()
+      message = messageIterator.next()
     }
     check(sawQuitNotification)
 

@@ -122,6 +122,7 @@ class V086ClientHandler(
     }
 
   // TODO(nue): This no longer fulfills any purpose. Remove.
+  @Deprecated("", ReplaceWith("0"))
   val nextMessageNumber = 0
 
   private val lastSendMessageNumber = AtomicInteger(0)
@@ -373,7 +374,9 @@ class V086ClientHandler(
       lastMessageBuffer.add(outMessage)
       numToSend = lastMessageBuffer.fill(outMessages, numToSend)
       val outBundle = V086Bundle.Multi(outMessages, numToSend)
-      stripFromProdBinary { logger.atFinest().log("<- TO P%d: %s", user.id, outMessage) }
+      stripFromProdBinary {
+        logger.atFine().log("<- TO P%d: %s", user.id, outMessage)
+      }
       outBundle.writeTo(buf)
       combinedKailleraController.send(DatagramPacket(buf, remoteSocketAddress!!))
       clientResponseMeter?.mark()
