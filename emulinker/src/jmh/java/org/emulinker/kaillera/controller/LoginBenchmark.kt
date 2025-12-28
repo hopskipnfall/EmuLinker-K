@@ -8,9 +8,6 @@ import java.net.InetAddress
 import java.net.InetSocketAddress
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
-import kotlin.random.Random
-import kotlin.random.nextInt
-import kotlin.test.assertNotNull
 import kotlin.time.Duration
 import org.emulinker.kaillera.access.AccessManager
 import org.emulinker.kaillera.controller.connectcontroller.protocol.ConnectMessage
@@ -24,12 +21,10 @@ import org.emulinker.kaillera.controller.v086.protocol.ServerAck
 import org.emulinker.kaillera.controller.v086.protocol.UserInformation
 import org.emulinker.kaillera.controller.v086.protocol.UserJoined
 import org.emulinker.kaillera.controller.v086.protocol.V086Bundle
-import org.emulinker.kaillera.controller.v086.protocol.V086BundleFormatException
 import org.emulinker.kaillera.controller.v086.protocol.V086Message
 import org.emulinker.kaillera.model.ConnectionType
 import org.emulinker.kaillera.pico.AppModule
 import org.emulinker.kaillera.pico.koinModule
-import org.emulinker.util.EmuUtil.dumpToByteArray
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.get
 import org.koin.core.context.startKoin
@@ -80,8 +75,48 @@ open class LoginBenchmark : KoinComponent {
 
   private var port = 0
 
+  sealed interface OutgoingMessage {
+    object Null : OutgoingMessage
+
+    @JvmInline value class Bundle(val message: V086Bundle) : OutgoingMessage
+
+    @JvmInline
+    value class ConnectionMessage(val message: RequestPrivateKailleraPortResponse) :
+      OutgoingMessage
+  }
+
+  fun readOutgoing(): OutgoingMessage {
+    channel.runPendingTasks()
+    val response: DatagramPacket =
+      channel.readOutbound<DatagramPacket>() ?: return OutgoingMessage.Null
+    try {
+      if (response.recipient().port != port) {
+        logger.atInfo().log("INCORRECT PORT: %d", response.recipient().port)
+        return OutgoingMessage.Null
+      }
+      val message = ConnectMessage.parse(response.content())
+      if (message.isSuccess) {
+        return OutgoingMessage.ConnectionMessage(
+          message.getOrThrow() as RequestPrivateKailleraPortResponse
+        )
+      }
+      val content = response.content()
+      return try {
+        OutgoingMessage.Bundle(V086Bundle.parse(content, lastMessageID = lastMessageNumberReceived))
+      } catch (e: Exception) {
+        logger.atSevere().withCause(e).log("Failed to parse bundle")
+        OutgoingMessage.Null
+      }
+    } finally {
+      response.release()
+    }
+  }
+
+  private var lastMessageNumberReceived = -1
+
   @Benchmark
   fun login(blackhole: Blackhole) {
+    lastMessageNumberReceived = -1
     port++
     logger.atInfo().log("starting login on port %d", port)
     val sender = InetSocketAddress("127.0.0.1", port)
@@ -99,14 +134,13 @@ open class LoginBenchmark : KoinComponent {
 
     fun receiveRequestPrivateKailleraPortResponse(): RequestPrivateKailleraPortResponse {
       while (true) {
-        channel.flush()
-        val response: DatagramPacket = assertNotNull(channel.readOutbound<DatagramPacket>())
-        try {
-          if (response.recipient().port != port) continue
-          val message = ConnectMessage.parse(response.content()).getOrThrow()
-          return message as RequestPrivateKailleraPortResponse
-        } finally {
-          response.release()
+        when (val message = readOutgoing()) {
+          is OutgoingMessage.Bundle ->
+            throw IllegalStateException("Received bundle before being logged in??")
+          is OutgoingMessage.ConnectionMessage -> return message.message
+          OutgoingMessage.Null -> {
+            if (Thread.interrupted()) throw InterruptedException()
+          }
         }
       }
     }
@@ -122,7 +156,6 @@ open class LoginBenchmark : KoinComponent {
     }
 
     var lastMessageNumber = -1
-    var lastMessageNumberReceived = -1
     sendBundle(
       V086Bundle.Single(
         UserInformation(
@@ -137,56 +170,42 @@ open class LoginBenchmark : KoinComponent {
     val messageIterator =
       iterator<V086Message?> {
         while (true) {
-          val packet: DatagramPacket? = channel.readOutbound<DatagramPacket>()
-          if (packet == null) {
-            yield(null)
-            continue
-          }
+          when (val message = readOutgoing()) {
+            is OutgoingMessage.Bundle -> {
+              when (val message = message.message) {
+                is V086Bundle.Single ->
+                  yield(
+                    message.message.also {
+                      lastMessageNumberReceived = it.messageNumber
 
-          try {
-            val content = packet.content()
-            if (content.readableBytes() <= 1) {
-              logger.atInfo().log("Single byte or less!")
-              yield(null)
-              continue
-            }
-            if (packet.recipient().port != port) {
-              logger
-                .atSevere()
-                .log(
-                  "RECEIVED PACKET FOR WRONG USER: %d (me %d), message=%s",
-                  packet.recipient().port,
-                  port,
-                  V086Bundle.parse(packet.content())
-                )
-              continue
-            }
-
-            when (val bundle = V086Bundle.parse(content, lastMessageID = lastMessageNumberReceived)) {
-              is V086Bundle.Single ->
-                yield(bundle.message.also { lastMessageNumberReceived = it.messageNumber
-
-                  logger.atInfo().log("Received to %d message=%s", port, it)
-                })
-              is V086Bundle.Multi -> {
-                for (m in bundle.messages.sortedBy { it!!.messageNumber }) yield(
-                  m.also {
-                    lastMessageNumberReceived = it!!.messageNumber
-                    logger.atInfo().log("Received to %d message=%s", port, it)
+                      logger.atInfo().log("Received to %d message=%s", port, it)
+                    }
+                  )
+                is V086Bundle.Multi -> {
+                  for (m in message.messages.filterNotNull().sortedBy { it.messageNumber }) {
+                    yield(
+                      m.also {
+                        lastMessageNumberReceived = it.messageNumber
+                        logger.atInfo().log("Received to %d message=%s", port, it)
+                      }
+                    )
                   }
-                )
+                }
               }
             }
-          } finally {
-            packet.release()
+            is OutgoingMessage.ConnectionMessage ->
+              throw IllegalStateException("Connection message again??")
+            OutgoingMessage.Null -> {
+              yield(null)
+            }
           }
         }
       }
 
-    var message: V086Message? = checkNotNull(messageIterator.next())
+    var message: V086Message? = messageIterator.next()
     var sawUserJoined = false
     while (!sawUserJoined) {
-      if (message == null ){
+      if (message == null) {
         Thread.yield()
         if (Thread.interrupted()) throw InterruptedException()
       }
@@ -199,9 +218,7 @@ open class LoginBenchmark : KoinComponent {
           if (message.username == "testUser$port") {
             sawUserJoined = true
             logger.atInfo().log("FOUND USERJOINED")
-          }
-          else {
-          }
+          } else {}
         }
 
         else -> {}
@@ -215,7 +232,7 @@ open class LoginBenchmark : KoinComponent {
     var sawQuitNotification = false
     message = messageIterator.next()
     while (!sawQuitNotification) {
-      if (message == null ){
+      if (message == null) {
         Thread.yield()
         if (Thread.interrupted()) throw InterruptedException()
       }

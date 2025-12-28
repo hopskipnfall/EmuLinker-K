@@ -1,6 +1,7 @@
 package org.emulinker.kaillera.controller
 
 import com.google.common.flogger.FluentLogger
+import com.google.common.flogger.StackSize
 import io.ktor.server.engine.EmbeddedServer
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
@@ -48,7 +49,17 @@ class CombinedKailleraController(
   fun alloc(): ByteBufAllocator = SecurityContext.handlerContext?.alloc() ?: nettyChannel.alloc()
 
   fun send(datagramPacket: DatagramPacket) {
-    (SecurityContext.handlerContext ?: nettyChannel).writeAndFlush(datagramPacket)
+    when (val context = SecurityContext.handlerContext) {
+      null ->  {
+        nettyChannel.writeAndFlush(datagramPacket)
+        logger.atFine().withStackTrace(StackSize.SMALL).log("sent via channel")
+      }
+      else -> {
+        context.writeAndFlush(datagramPacket)
+        logger.atFine().log("sent via context")
+      }
+    }
+//    (SecurityContext.handlerContext ?: nettyChannel).writeAndFlush(datagramPacket)
   }
 
   @Synchronized

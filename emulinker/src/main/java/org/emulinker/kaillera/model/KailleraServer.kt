@@ -209,8 +209,7 @@ class KailleraServer(
     return user
   }
 
-  // TODO(nue): Could this withLock be the source of lag on server join?
-  fun login(user: KailleraUser): Result<Unit> = withLock {
+  fun login(user: KailleraUser): Result<Unit> {
     logger
       .atInfo()
       .log(
