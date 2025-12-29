@@ -1,81 +1,56 @@
 package org.emulinker.kaillera.model
 
+import io.github.hopskipnfall.kaillera.protocol.model.ConnectionType
+import io.github.hopskipnfall.kaillera.protocol.model.GameStatus
+import io.github.hopskipnfall.kaillera.protocol.model.UserStatus
+
 const val CLIENT_WITH_BYTE_ID_BUG = "Project 64k 0.13 (01 Aug 2003)"
 
-enum class UserStatus(val byteValue: Byte, private val readableName: String) {
-  PLAYING(0, "Playing"),
-  IDLE(1, "Idle"),
-  CONNECTING(2, "Connecting");
-
-  override fun toString() = readableName
-
-  fun toValueForBrokenClient(): UserStatus =
+val UserStatus.readableName: String
+  get() =
     when (this) {
-      // CONNECTING and IDLE might be backwards.
-      PLAYING -> CONNECTING
-      IDLE -> IDLE
-      CONNECTING -> PLAYING
+      UserStatus.PLAYING -> "Playing"
+      UserStatus.IDLE -> "Idle"
+      UserStatus.CONNECTING -> "Connecting"
     }
 
-  companion object {
-    fun fromByteValue(byteValue: Byte): UserStatus {
-      return entries.find { it.byteValue == byteValue }
-        ?: throw IllegalArgumentException("Invalid byte value: $byteValue")
-    }
+fun UserStatus.toValueForBrokenClient(): UserStatus =
+  when (this) {
+    // CONNECTING and IDLE might be backwards.
+    UserStatus.PLAYING -> UserStatus.CONNECTING
+    UserStatus.IDLE -> UserStatus.IDLE
+    UserStatus.CONNECTING -> UserStatus.PLAYING
   }
-}
 
-enum class GameStatus(val byteValue: Byte, private val readableName: String) {
-  WAITING(0, "Waiting"),
-  SYNCHRONIZING(1, "Synchronizing"),
-  PLAYING(2, "Playing");
-
-  override fun toString() = readableName
-
-  fun toValueForBrokenClient(): GameStatus =
+val GameStatus.readableName: String
+  get() =
     when (this) {
-      WAITING -> WAITING
-      PLAYING -> SYNCHRONIZING
-      SYNCHRONIZING -> PLAYING
+      GameStatus.WAITING -> "Waiting"
+      GameStatus.SYNCHRONIZING -> "Synchronizing"
+      GameStatus.PLAYING -> "Playing"
     }
 
-  companion object {
-    fun fromByteValue(byteValue: Byte): GameStatus {
-      return entries.find { it.byteValue == byteValue }
-        ?: throw IllegalArgumentException("Invalid byte value: $byteValue")
+fun GameStatus.toValueForBrokenClient(): GameStatus =
+  when (this) {
+    GameStatus.WAITING -> GameStatus.WAITING
+    GameStatus.PLAYING -> GameStatus.SYNCHRONIZING
+    GameStatus.SYNCHRONIZING -> GameStatus.PLAYING
+  }
+
+val ConnectionType.readableName: String
+  get() =
+    when (this) {
+      ConnectionType.DISABLED -> "DISABLED"
+      ConnectionType.LAN -> "LAN"
+      ConnectionType.EXCELLENT -> "Excellent"
+      ConnectionType.GOOD -> "Good"
+      ConnectionType.AVERAGE -> "Average"
+      ConnectionType.LOW -> "Low"
+      ConnectionType.BAD -> "Bad"
     }
-  }
-}
 
-enum class ConnectionType(
-  /**
-   * ID for the connection type used over the wire, but has a more concrete meaning in that it
-   * determines the number of updates per second while inside a game: 60/byteValue qps.
-   *
-   * Note: Technically not all games run at 60FPS, but Kaillera assumes it is for most purposes.
-   */
-  val byteValue: Byte,
-  val readableName: String,
-) {
-  DISABLED(0, "DISABLED"),
-  LAN(1, "LAN"),
-  EXCELLENT(2, "Excellent"),
-  GOOD(3, "Good"),
-  AVERAGE(4, "Average"),
-  LOW(5, "Low"),
-  BAD(6, "Bad");
+fun ConnectionType.getUpdatesPerSecond(gameFps: Int = KailleraGame.GAME_FPS): Double =
+  getUpdatesPerSecond(gameFps.toDouble())
 
-  override fun toString() = readableName
-
-  fun getUpdatesPerSecond(gameFps: Int = KailleraGame.GAME_FPS): Double =
-    getUpdatesPerSecond(gameFps.toDouble())
-
-  fun getUpdatesPerSecond(gameFps: Double): Double =
-    if (byteValue == 0.toByte()) 0.0 else gameFps / byteValue
-
-  companion object {
-    fun fromByteValue(byteValue: Byte): ConnectionType =
-      entries.find { it.byteValue == byteValue }
-        ?: throw IllegalArgumentException("Invalid byte value: $byteValue")
-  }
-}
+fun ConnectionType.getUpdatesPerSecond(gameFps: Double): Double =
+  if (byteValue == 0.toByte()) 0.0 else gameFps / byteValue

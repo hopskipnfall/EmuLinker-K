@@ -2,6 +2,8 @@ package org.emulinker.kaillera.model
 
 import com.google.common.flogger.FluentLogger
 import com.google.protobuf.util.Timestamps
+import io.github.hopskipnfall.kaillera.protocol.model.GameStatus
+import io.github.hopskipnfall.kaillera.protocol.model.UserStatus
 import java.io.FileOutputStream
 import java.util.Date
 import java.util.concurrent.CopyOnWriteArrayList

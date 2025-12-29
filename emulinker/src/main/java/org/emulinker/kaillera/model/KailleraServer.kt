@@ -3,6 +3,8 @@ package org.emulinker.kaillera.model
 import com.codahale.metrics.Gauge
 import com.codahale.metrics.MetricRegistry
 import com.google.common.flogger.FluentLogger
+import io.github.hopskipnfall.kaillera.protocol.model.GameStatus
+import io.github.hopskipnfall.kaillera.protocol.model.UserStatus
 import java.net.InetSocketAddress
 import java.util.Locale
 import java.util.concurrent.ConcurrentHashMap

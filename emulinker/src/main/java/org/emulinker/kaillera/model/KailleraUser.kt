@@ -1,6 +1,8 @@
 package org.emulinker.kaillera.model
 
 import com.google.common.flogger.FluentLogger
+import io.github.hopskipnfall.kaillera.protocol.model.ConnectionType
+import io.github.hopskipnfall.kaillera.protocol.model.UserStatus
 import java.net.InetSocketAddress
 import kotlin.time.Clock
 import kotlin.time.Duration

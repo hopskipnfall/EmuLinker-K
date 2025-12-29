@@ -4,6 +4,11 @@ import com.codahale.metrics.Meter
 import com.codahale.metrics.MetricRegistry
 import com.codahale.metrics.Timer
 import com.google.common.flogger.FluentLogger
+import io.github.hopskipnfall.kaillera.protocol.netty.v086.NettyV086BundleSerializer
+import io.github.hopskipnfall.kaillera.protocol.v086.CachedGameData
+import io.github.hopskipnfall.kaillera.protocol.v086.GameData
+import io.github.hopskipnfall.kaillera.protocol.v086.V086Bundle
+import io.github.hopskipnfall.kaillera.protocol.v086.V086Message
 import io.netty.buffer.ByteBuf
 import io.netty.channel.socket.DatagramPacket
 import java.net.InetSocketAddress
@@ -13,8 +18,6 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.nanoseconds
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.controller.CombinedKailleraController
-import org.emulinker.kaillera.controller.messaging.MessageFormatException
-import org.emulinker.kaillera.controller.messaging.ParseException
 import org.emulinker.kaillera.controller.v086.action.CachedGameDataAction
 import org.emulinker.kaillera.controller.v086.action.FatalActionException
 import org.emulinker.kaillera.controller.v086.action.GameDataAction
@@ -22,17 +25,13 @@ import org.emulinker.kaillera.controller.v086.action.V086Action
 import org.emulinker.kaillera.controller.v086.action.V086GameEventHandler
 import org.emulinker.kaillera.controller.v086.action.V086ServerEventHandler
 import org.emulinker.kaillera.controller.v086.action.V086UserEventHandler
-import org.emulinker.kaillera.controller.v086.protocol.CachedGameData
-import org.emulinker.kaillera.controller.v086.protocol.GameData
-import org.emulinker.kaillera.controller.v086.protocol.V086Bundle
-import org.emulinker.kaillera.controller.v086.protocol.V086BundleFormatException
-import org.emulinker.kaillera.controller.v086.protocol.V086Message
 import org.emulinker.kaillera.model.KailleraUser
 import org.emulinker.kaillera.model.event.GameDataEvent
 import org.emulinker.kaillera.model.event.GameEvent
 import org.emulinker.kaillera.model.event.KailleraEvent
 import org.emulinker.kaillera.model.event.ServerEvent
 import org.emulinker.kaillera.model.event.UserEvent
+import org.emulinker.kaillera.pico.AppModule
 import org.emulinker.util.EmuUtil
 import org.emulinker.util.EmuUtil.dumpToByteArray
 import org.emulinker.util.EmuUtil.timeKt
@@ -168,30 +167,14 @@ class V086ClientHandler(
   private fun handleReceivedInternal(buffer: ByteBuf) {
     val inBundle: V086Bundle =
       try {
-        V086Bundle.parse(buffer, lastMessageNumber, user.circularVariableSizeByteArrayBuffer)
-      } catch (e: ParseException) {
+        NettyV086BundleSerializer.read(buffer, lastMessageNumber, AppModule.charsetDoNotUse)
+      } catch (
+        e: Exception) {
         buffer.resetReaderIndex()
         logger
           .atWarning()
           .withCause(e)
-          .log("%s failed to parse: %s", this, buffer.dumpToByteArray().toHexString())
-        null
-      } catch (e: V086BundleFormatException) {
-        buffer.resetReaderIndex()
-        logger
-          .atWarning()
-          .withCause(e)
-          .log(
-            "%s received invalid message bundle: %s",
-            this,
-            buffer.dumpToByteArray().toHexString(),
-          )
-        null
-      } catch (e: MessageFormatException) {
-        logger
-          .atWarning()
-          .withCause(e)
-          .log("%s received invalid message: %s}", this, buffer.dumpToByteArray().toHexString())
+          .log("%s failed to parse bundle: %s", this, buffer.dumpToByteArray().toHexString())
         null
       } ?: return
 
@@ -208,7 +191,7 @@ class V086ClientHandler(
         )
     }
     clientRetryCount =
-      if (inBundle is V086Bundle.Multi && inBundle.numMessages == 0) {
+      if (inBundle is V086Bundle.Multi && inBundle.messages.isEmpty()) {
         logger
           .atFine()
           .atMostEvery(1, TimeUnit.SECONDS)
@@ -239,17 +222,18 @@ class V086ClientHandler(
           }
           (action as V086Action<V086Message>).performAction(m, this)
         }
+
         is V086Bundle.Multi -> {
           val messages = inBundle.messages
           // read the bundle from back to front to process the oldest messages first
-          for (i in inBundle.numMessages - 1 downTo 0) {
+          for (i in messages.indices.reversed()) {
             /**
              * already extracts messages with higher numbers when parsing, it does not need to be
              * checked and this causes an error if messageNumber is 0 and lastMessageNumber is
              * 0xFFFF if (messages [i].getNumber() > lastMessageNumber)
              */
             prevMessageNumber = lastMessageNumber
-            val m: V086Message = messages[i]!!
+            val m: V086Message = messages[i]
             lastMessageNumber = m.messageNumber
             if (prevMessageNumber + 1 != lastMessageNumber) {
               if (prevMessageNumber == 0xFFFF && lastMessageNumber == 0) {
@@ -294,6 +278,7 @@ class V086ClientHandler(
       is GameDataEvent -> {
         GameDataAction.handleEvent(event, this)
       }
+
       is GameEvent -> {
         val eventHandler = controller.gameEventHandlers[event::class]
         if (eventHandler == null) {
@@ -304,6 +289,7 @@ class V086ClientHandler(
         }
         (eventHandler as V086GameEventHandler<GameEvent>).handleEvent(event, this)
       }
+
       is ServerEvent -> {
         val eventHandler = controller.serverEventHandlers[event::class]
         if (eventHandler == null) {
@@ -318,6 +304,7 @@ class V086ClientHandler(
         }
         (eventHandler as V086ServerEventHandler<ServerEvent>).handleEvent(event, this)
       }
+
       is UserEvent -> {
         val eventHandler = controller.userEventHandlers[event::class]
         if (eventHandler == null) {
@@ -357,9 +344,9 @@ class V086ClientHandler(
 
       val buf = combinedKailleraController.alloc().directBuffer(flags.v086BufferSize)
       numToSend = lastMessageBuffer.fill(outMessages, numToSend)
-      val outBundle = V086Bundle.Multi(outMessages, numToSend)
+      val outBundle = V086Bundle.Multi(outMessages.take(numToSend).filterNotNull())
       stripFromProdBinary { logger.atFinest().log("<- TO P%d: (RESEND)", user.id) }
-      outBundle.writeTo(buf)
+      NettyV086BundleSerializer.write(buf, outBundle, AppModule.charsetDoNotUse)
       combinedKailleraController.send(DatagramPacket(buf, remoteSocketAddress!!))
       clientResponseMeter?.mark()
     }
@@ -372,9 +359,9 @@ class V086ClientHandler(
       val buf = combinedKailleraController.alloc().directBuffer(flags.v086BufferSize)
       lastMessageBuffer.add(outMessage)
       numToSend = lastMessageBuffer.fill(outMessages, numToSend)
-      val outBundle = V086Bundle.Multi(outMessages, numToSend)
+      val outBundle = V086Bundle.Multi(outMessages.take(numToSend).filterNotNull())
       stripFromProdBinary { logger.atFinest().log("<- TO P%d: %s", user.id, outMessage) }
-      outBundle.writeTo(buf)
+      NettyV086BundleSerializer.write(buf, outBundle, AppModule.charsetDoNotUse)
       combinedKailleraController.send(DatagramPacket(buf, remoteSocketAddress!!))
       clientResponseMeter?.mark()
     }

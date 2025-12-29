@@ -1,6 +1,11 @@
 package org.emulinker.kaillera.controller
 
 import com.google.common.flogger.FluentLogger
+import io.github.hopskipnfall.kaillera.protocol.connection.ConnectMessage_PING
+import io.github.hopskipnfall.kaillera.protocol.connection.ConnectMessage_PONG
+import io.github.hopskipnfall.kaillera.protocol.connection.RequestPrivateKailleraPortRequest
+import io.github.hopskipnfall.kaillera.protocol.connection.RequestPrivateKailleraPortResponse
+import io.github.hopskipnfall.kaillera.protocol.netty.connection.NettyConnectMessageFactory
 import io.ktor.server.engine.EmbeddedServer
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
@@ -22,11 +27,6 @@ import java.util.concurrent.ConcurrentHashMap
 import kotlin.concurrent.thread
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.access.AccessManager
-import org.emulinker.kaillera.controller.connectcontroller.protocol.ConnectMessage
-import org.emulinker.kaillera.controller.connectcontroller.protocol.ConnectMessage_PING
-import org.emulinker.kaillera.controller.connectcontroller.protocol.ConnectMessage_PONG
-import org.emulinker.kaillera.controller.connectcontroller.protocol.RequestPrivateKailleraPortRequest
-import org.emulinker.kaillera.controller.connectcontroller.protocol.RequestPrivateKailleraPortResponse
 import org.emulinker.kaillera.controller.v086.V086ClientHandler
 import org.emulinker.kaillera.model.KailleraServer
 import org.emulinker.kaillera.model.exception.NewConnectionException
@@ -123,12 +123,13 @@ class CombinedKailleraController(
     if (handler == null) {
       // User is new. It's either a ConnectMessage or it's the user's first message after
       // reconnecting to the server via the dictated port.
-      val connectMessageResult: Result<ConnectMessage> = ConnectMessage.parse(buffer)
-      if (connectMessageResult.isSuccess) {
-        when (val connectMessage = connectMessageResult.getOrThrow()) {
+      buffer.markReaderIndex()
+      val connectMessage = NettyConnectMessageFactory.read(buffer)
+      if (connectMessage != null) {
+        when (connectMessage) {
           is ConnectMessage_PING -> {
             val buf = alloc().buffer(bufferSize)
-            ConnectMessage_PONG.writeTo(buf)
+            NettyConnectMessageFactory.write(buf, ConnectMessage_PONG)
             send(DatagramPacket(buf, remoteSocketAddress))
           }
           is RequestPrivateKailleraPortRequest -> {
@@ -137,7 +138,10 @@ class CombinedKailleraController(
             }
 
             val buf = alloc().buffer(bufferSize)
-            RequestPrivateKailleraPortResponse(flags.serverPort).writeTo(buf)
+            NettyConnectMessageFactory.write(
+              buf,
+              RequestPrivateKailleraPortResponse(flags.serverPort),
+            )
             send(DatagramPacket(buf, remoteSocketAddress))
           }
           else -> {
@@ -146,16 +150,13 @@ class CombinedKailleraController(
               .log(
                 "Received unexpected message type from %s: %s",
                 formatSocketAddress(remoteSocketAddress),
-                connectMessageResult,
+                connectMessage,
               )
           }
         }
         // We successfully parsed a connection message and handled it so return.
         return
       }
-
-      // TODO(nue): I'm almost certain this can be removed?
-      // The message should be parsed as a V086Message. Reset it.
       buffer.resetReaderIndex()
 
       if (!accessManager.isAddressAllowed(remoteSocketAddress.address)) {
