@@ -168,8 +168,7 @@ class V086ClientHandler(
     val inBundle: V086Bundle =
       try {
         NettyV086BundleSerializer.read(buffer, lastMessageNumber, AppModule.charsetDoNotUse)
-      } catch (
-        e: Exception) {
+      } catch (e: Exception) {
         buffer.resetReaderIndex()
         logger
           .atWarning()

@@ -2,6 +2,30 @@ package org.emulinker.kaillera.controller
 
 import com.google.common.truth.Expect
 import com.google.common.truth.Truth.assertThat
+import io.github.hopskipnfall.kaillera.protocol.connection.ConnectMessage_PING
+import io.github.hopskipnfall.kaillera.protocol.connection.ConnectMessage_PONG
+import io.github.hopskipnfall.kaillera.protocol.connection.RequestPrivateKailleraPortRequest
+import io.github.hopskipnfall.kaillera.protocol.connection.RequestPrivateKailleraPortResponse
+import io.github.hopskipnfall.kaillera.protocol.model.ConnectionType.LAN
+import io.github.hopskipnfall.kaillera.protocol.model.GameStatus.WAITING
+import io.github.hopskipnfall.kaillera.protocol.model.UserStatus
+import io.github.hopskipnfall.kaillera.protocol.netty.connection.NettyConnectMessageFactory
+import io.github.hopskipnfall.kaillera.protocol.netty.v086.NettyV086BundleSerializer
+import io.github.hopskipnfall.kaillera.protocol.v086.ClientAck
+import io.github.hopskipnfall.kaillera.protocol.v086.CreateGameNotification
+import io.github.hopskipnfall.kaillera.protocol.v086.CreateGameRequest
+import io.github.hopskipnfall.kaillera.protocol.v086.GameChatNotification
+import io.github.hopskipnfall.kaillera.protocol.v086.GameStatus
+import io.github.hopskipnfall.kaillera.protocol.v086.InformationMessage
+import io.github.hopskipnfall.kaillera.protocol.v086.JoinGameNotification
+import io.github.hopskipnfall.kaillera.protocol.v086.JoinGameRequest
+import io.github.hopskipnfall.kaillera.protocol.v086.PlayerInformation
+import io.github.hopskipnfall.kaillera.protocol.v086.ServerAck
+import io.github.hopskipnfall.kaillera.protocol.v086.ServerStatus
+import io.github.hopskipnfall.kaillera.protocol.v086.UserInformation
+import io.github.hopskipnfall.kaillera.protocol.v086.UserJoined
+import io.github.hopskipnfall.kaillera.protocol.v086.V086Bundle
+import io.github.hopskipnfall.kaillera.protocol.v086.V086Message
 import io.ktor.util.network.hostname
 import io.ktor.util.network.port
 import io.netty.buffer.ByteBuf
@@ -12,31 +36,8 @@ import java.net.InetSocketAddress
 import java.nio.ByteOrder
 import kotlin.test.assertNotNull
 import kotlin.time.Duration
-import org.emulinker.kaillera.controller.connectcontroller.protocol.ConnectMessage
-import org.emulinker.kaillera.controller.connectcontroller.protocol.ConnectMessage_PING
-import org.emulinker.kaillera.controller.connectcontroller.protocol.ConnectMessage_PONG
-import org.emulinker.kaillera.controller.connectcontroller.protocol.RequestPrivateKailleraPortRequest
-import org.emulinker.kaillera.controller.connectcontroller.protocol.RequestPrivateKailleraPortResponse
 import org.emulinker.kaillera.controller.v086.action.ActionModule
-import org.emulinker.kaillera.controller.v086.protocol.ClientAck
-import org.emulinker.kaillera.controller.v086.protocol.CreateGameNotification
-import org.emulinker.kaillera.controller.v086.protocol.CreateGameRequest
-import org.emulinker.kaillera.controller.v086.protocol.GameChatNotification
-import org.emulinker.kaillera.controller.v086.protocol.GameStatus
-import org.emulinker.kaillera.controller.v086.protocol.InformationMessage
-import org.emulinker.kaillera.controller.v086.protocol.JoinGameNotification
-import org.emulinker.kaillera.controller.v086.protocol.JoinGameRequest
-import org.emulinker.kaillera.controller.v086.protocol.PlayerInformation
-import org.emulinker.kaillera.controller.v086.protocol.ProtocolBaseTest
-import org.emulinker.kaillera.controller.v086.protocol.ServerAck
-import org.emulinker.kaillera.controller.v086.protocol.ServerStatus
-import org.emulinker.kaillera.controller.v086.protocol.UserInformation
-import org.emulinker.kaillera.controller.v086.protocol.UserJoined
-import org.emulinker.kaillera.controller.v086.protocol.V086Bundle
-import org.emulinker.kaillera.controller.v086.protocol.V086Message
-import org.emulinker.kaillera.model.ConnectionType.LAN
-import org.emulinker.kaillera.model.GameStatus.WAITING
-import org.emulinker.kaillera.model.UserStatus
+import org.emulinker.kaillera.pico.AppModule
 import org.emulinker.kaillera.pico.koinModule
 import org.emulinker.kaillera.release.ReleaseInfo
 import org.junit.After
@@ -65,16 +66,14 @@ class CombinedKailleraControllerTest : ProtocolBaseTest(), KoinTest {
 
     // Create a PING packet
     val buffer = Unpooled.buffer()
-    ConnectMessage_PING.writeTo(buffer)
+    NettyConnectMessageFactory.write(buffer, ConnectMessage_PING)
     val packet = DatagramPacket(buffer, recipient, sender)
 
     // Write inbound
     channel.writeInbound(packet)
 
     val response: DatagramPacket = assertNotNull(channel.readOutbound<DatagramPacket>())
-    expect
-      .that(ConnectMessage.parse(response.content()))
-      .isEqualTo(Result.success(ConnectMessage_PONG))
+    expect.that(NettyConnectMessageFactory.read(response.content())).isEqualTo(ConnectMessage_PONG)
     expect.that(response.recipient().address.hostAddress).isEqualTo("127.0.0.1")
     expect.that(response.recipient().port).isEqualTo(12345)
   }
@@ -367,7 +366,7 @@ class CombinedKailleraControllerTest : ProtocolBaseTest(), KoinTest {
     channel.writeInbound(
       datagramPacket(
         channel.alloc().buffer().order(ByteOrder.LITTLE_ENDIAN).also {
-          RequestPrivateKailleraPortRequest(protocol = "0.83").writeTo(it)
+          NettyConnectMessageFactory.write(it, RequestPrivateKailleraPortRequest(protocol = "0.83"))
         },
         fromPort = clientPort,
       )
@@ -376,14 +375,14 @@ class CombinedKailleraControllerTest : ProtocolBaseTest(), KoinTest {
     expect.that(channel.outboundMessages()).hasSize(1)
     val receivedPacket = channel.readOutbound<DatagramPacket>()
 
-    val response: ConnectMessage = ConnectMessage.parse(receivedPacket.content()).getOrThrow()
+    val response = NettyConnectMessageFactory.read(receivedPacket.content())
     expect.that(response).isEqualTo(RequestPrivateKailleraPortResponse(27888))
   }
 
   /** Send message to the server. */
   private fun send(message: V086Message, fromPort: Int) {
     val buf = channel.alloc().buffer().order(ByteOrder.LITTLE_ENDIAN)
-    V086Bundle.Single(message).writeTo(buf)
+    NettyV086BundleSerializer.write(buf, V086Bundle.Single(message), AppModule.charsetDoNotUse)
     channel.writeInbound(datagramPacket(buf, fromPort = fromPort))
   }
 
@@ -431,7 +430,13 @@ class CombinedKailleraControllerTest : ProtocolBaseTest(), KoinTest {
         var lastMessageId =
           portToLastServerMessageId.getOrPut(receivedPacket.recipient().port) { -1 }
 
-        when (val bundle = V086Bundle.parse(receivedPacket.content())) {
+        when (
+          val bundle =
+            NettyV086BundleSerializer.read(
+              receivedPacket.content(),
+              charset = AppModule.charsetDoNotUse,
+            )
+        ) {
           is V086Bundle.Single -> {
             val message = bundle.message
             expect.that(message.messageNumber).isEqualTo(lastMessageId + 1)
@@ -446,8 +451,8 @@ class CombinedKailleraControllerTest : ProtocolBaseTest(), KoinTest {
           is V086Bundle.Multi -> {
             val messages =
               bundle.messages
-                .filter { it!!.messageNumber > lastMessageId }
-                .sortedBy { it!!.messageNumber }
+                .filter { it.messageNumber > lastMessageId }
+                .sortedBy { it.messageNumber }
             expect
               .withMessage(
                 "It would be strange to receive a bundle of no new messages. Raw bundle: $bundle"
@@ -455,7 +460,7 @@ class CombinedKailleraControllerTest : ProtocolBaseTest(), KoinTest {
               .that(messages)
               .isNotEmpty()
             for (message in messages) {
-              expect.that(message!!.messageNumber).isEqualTo(lastMessageId + 1)
+              expect.that(message.messageNumber).isEqualTo(lastMessageId + 1)
 
               portToMessages
                 .getOrPut(receivedPacket.recipient().port) { mutableListOf() }
