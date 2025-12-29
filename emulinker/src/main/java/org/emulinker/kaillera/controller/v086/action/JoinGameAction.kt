@@ -1,14 +1,14 @@
 package org.emulinker.kaillera.controller.v086.action
 
 import com.google.common.flogger.FluentLogger
+import io.github.hopskipnfall.kaillera.protocol.v086.InformationMessage
+import io.github.hopskipnfall.kaillera.protocol.v086.JoinGameNotification
+import io.github.hopskipnfall.kaillera.protocol.v086.JoinGameRequest
+import io.github.hopskipnfall.kaillera.protocol.v086.PlayerInformation
+import io.github.hopskipnfall.kaillera.protocol.v086.PlayerInformation.Player
+import io.github.hopskipnfall.kaillera.protocol.v086.QuitGameNotification
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086ClientHandler
-import org.emulinker.kaillera.controller.v086.protocol.InformationMessage
-import org.emulinker.kaillera.controller.v086.protocol.JoinGameNotification
-import org.emulinker.kaillera.controller.v086.protocol.JoinGameRequest
-import org.emulinker.kaillera.controller.v086.protocol.PlayerInformation
-import org.emulinker.kaillera.controller.v086.protocol.PlayerInformation.Player
-import org.emulinker.kaillera.controller.v086.protocol.QuitGameNotification
 import org.emulinker.kaillera.model.event.GameInfoEvent
 import org.emulinker.kaillera.model.event.UserJoinedGameEvent
 import org.emulinker.kaillera.model.exception.JoinGameException
@@ -64,7 +64,7 @@ class JoinGameAction :
         game.players
           .asSequence()
           .filter { it != thisUser && !it.inStealthMode }
-          .mapTo(players) { PlayerInformation.Player(it.name!!, it.ping, it.id, it.connectionType) }
+          .mapTo(players) { Player(it.name!!, it.ping, it.id, it.connectionType) }
         clientHandler.send(PlayerInformation(clientHandler.nextMessageNumber, players))
       }
       if (!user.inStealthMode)

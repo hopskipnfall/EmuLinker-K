@@ -1,10 +1,10 @@
 package org.emulinker.kaillera.controller.v086.action
 
 import com.google.common.flogger.FluentLogger
+import io.github.hopskipnfall.kaillera.protocol.v086.PlayerDropNotification
+import io.github.hopskipnfall.kaillera.protocol.v086.PlayerDropRequest
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086ClientHandler
-import org.emulinker.kaillera.controller.v086.protocol.PlayerDropNotification
-import org.emulinker.kaillera.controller.v086.protocol.PlayerDropRequest
 import org.emulinker.kaillera.model.event.UserDroppedGameEvent
 import org.emulinker.kaillera.model.exception.DropGameException
 
@@ -28,11 +28,7 @@ class DropGameAction : V086Action<PlayerDropRequest>, V086GameEventHandler<UserD
       // user.getName(), (byte) game.getPlayerNumber(user)));
       if (!user.inStealthMode)
         clientHandler.send(
-          PlayerDropNotification(
-            clientHandler.nextMessageNumber,
-            user.name!!,
-            playerNumber.toByte(),
-          )
+          PlayerDropNotification(clientHandler.nextMessageNumber, user.name!!, playerNumber)
         )
     } catch (e: MessageFormatException) {
       logger.atSevere().withCause(e).log("Failed to construct PlayerDrop.Notification message")

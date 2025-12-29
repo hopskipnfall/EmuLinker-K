@@ -1,11 +1,11 @@
 package org.emulinker.kaillera.controller.v086.action
 
 import com.google.common.flogger.FluentLogger
+import io.github.hopskipnfall.kaillera.protocol.v086.CachedGameData
+import io.github.hopskipnfall.kaillera.protocol.v086.GameChatNotification
+import io.github.hopskipnfall.kaillera.protocol.v086.GameData
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086ClientHandler
-import org.emulinker.kaillera.controller.v086.protocol.CachedGameData
-import org.emulinker.kaillera.controller.v086.protocol.GameChatNotification
-import org.emulinker.kaillera.controller.v086.protocol.GameData.Companion.createAndMakeDeepCopy
 import org.emulinker.kaillera.model.exception.GameDataException
 
 object CachedGameDataAction : V086Action<CachedGameData> {
@@ -29,7 +29,7 @@ object CachedGameDataAction : V086Action<CachedGameData> {
           if (e.response != null) {
             try {
               clientHandler.send(
-                createAndMakeDeepCopy(clientHandler.nextMessageNumber, e.response!!)
+                GameData(clientHandler.nextMessageNumber, e.response!!.toByteArray().clone())
               )
             } catch (e2: MessageFormatException) {
               logger.atSevere().withCause(e2).log("Failed to construct GameData message")

@@ -17,7 +17,7 @@ constructor(
   override var messageNumber: Int,
   val gameId: Int,
   val val1: Int,
-  val gameStatus: org.emulinker.kaillera.model.GameStatus,
+  val gameStatus: io.github.hopskipnfall.kaillera.protocol.model.GameStatus,
   val numPlayers: Byte,
   val maxPlayers: Byte,
 ) : V086Message(), ServerMessage {
@@ -71,7 +71,7 @@ constructor(
           messageNumber,
           gameID,
           val1,
-          org.emulinker.kaillera.model.GameStatus.fromByteValue(gameStatus),
+          io.github.hopskipnfall.kaillera.protocol.model.GameStatus.fromByteValue(gameStatus),
           numPlayers,
           maxPlayers,
         )

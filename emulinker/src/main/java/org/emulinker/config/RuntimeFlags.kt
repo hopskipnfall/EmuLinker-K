@@ -1,9 +1,9 @@
 package org.emulinker.config
 
+import io.github.hopskipnfall.kaillera.protocol.model.ConnectionType
 import java.nio.charset.Charset
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
-import org.emulinker.kaillera.model.ConnectionType
 
 /** Configuration flags that are set at startup and do not change until the job is restarted. */
 data class RuntimeFlags(

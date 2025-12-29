@@ -1,14 +1,15 @@
 package org.emulinker.kaillera.controller.v086.action
 
 import com.google.common.flogger.FluentLogger
+import io.github.hopskipnfall.kaillera.protocol.v086.CachedGameData
+import io.github.hopskipnfall.kaillera.protocol.v086.GameData
 import java.util.concurrent.TimeUnit
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086ClientHandler
-import org.emulinker.kaillera.controller.v086.protocol.CachedGameData
-import org.emulinker.kaillera.controller.v086.protocol.GameData
 import org.emulinker.kaillera.model.event.GameDataEvent
 import org.emulinker.kaillera.model.exception.GameDataException
 import org.emulinker.kaillera.pico.CompiledFlags
+import org.emulinker.util.VariableSizeByteArray
 
 object GameDataAction : V086Action<GameData>, V086GameEventHandler<GameDataEvent> {
   override fun toString() = "GameDataAction"
@@ -16,7 +17,11 @@ object GameDataAction : V086Action<GameData>, V086GameEventHandler<GameDataEvent
   @Throws(FatalActionException::class)
   override fun performAction(message: GameData, clientHandler: V086ClientHandler) {
     val user = clientHandler.user
-    val data = message.gameData
+    val dataArray = message.gameData
+    // DONOTSUBMIT: Make sure that everything is being returned to the cache correctly.
+    // Convert KMP ByteArray to VariableSizeByteArray for legacy compatibility
+    val data = VariableSizeByteArray(dataArray)
+
     clientHandler.clientGameDataCache.add(data)
     try {
       user.addGameData(data).onFailure { e ->
@@ -25,9 +30,9 @@ object GameDataAction : V086Action<GameData>, V086GameEventHandler<GameDataEvent
             logger.atWarning().atMostEvery(5, TimeUnit.SECONDS).withCause(e).log("Game data error")
             if (e.response != null) {
               try {
-                clientHandler.send(
-                  GameData.createAndMakeDeepCopy(clientHandler.nextMessageNumber, e.response!!)
-                )
+                // e.response is likely VariableSizeByteArray? We need ByteArray for KMP GameData
+                val responseBytes = e.response!!.toByteArray().clone() // Clone to be safe
+                clientHandler.send(GameData(clientHandler.nextMessageNumber, responseBytes))
               } catch (e2: MessageFormatException) {
                 logger.atSevere().withCause(e2).log("Failed to construct GameData message")
               }
@@ -50,7 +55,7 @@ object GameDataAction : V086Action<GameData>, V086GameEventHandler<GameDataEvent
       if (key < 0) {
         clientHandler.serverGameDataCache.add(data)
         try {
-          clientHandler.send(GameData(clientHandler.nextMessageNumber, data))
+          clientHandler.send(GameData(clientHandler.nextMessageNumber, data.toByteArray()))
         } catch (e: MessageFormatException) {
           logger.atSevere().withCause(e).log("Failed to construct GameData message")
         }

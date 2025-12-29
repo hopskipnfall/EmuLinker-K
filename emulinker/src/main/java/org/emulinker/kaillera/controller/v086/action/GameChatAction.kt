@@ -1,6 +1,12 @@
 package org.emulinker.kaillera.controller.v086.action
 
 import com.google.common.flogger.FluentLogger
+import io.github.hopskipnfall.kaillera.protocol.model.ConnectionType
+import io.github.hopskipnfall.kaillera.protocol.v086.GameChat
+import io.github.hopskipnfall.kaillera.protocol.v086.GameChatNotification
+import io.github.hopskipnfall.kaillera.protocol.v086.GameChatRequest
+import io.github.hopskipnfall.kaillera.protocol.v086.InformationMessage
+import io.github.hopskipnfall.kaillera.protocol.v086.V086Message
 import java.util.Scanner
 import kotlin.math.roundToInt
 import kotlin.time.Clock
@@ -14,13 +20,7 @@ import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.access.AccessManager
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086ClientHandler
-import org.emulinker.kaillera.controller.v086.protocol.GameChat
-import org.emulinker.kaillera.controller.v086.protocol.GameChatNotification
-import org.emulinker.kaillera.controller.v086.protocol.GameChatRequest
-import org.emulinker.kaillera.controller.v086.protocol.InformationMessage
-import org.emulinker.kaillera.controller.v086.protocol.V086Message
 import org.emulinker.kaillera.lookingforgame.TwitterBroadcaster
-import org.emulinker.kaillera.model.ConnectionType
 import org.emulinker.kaillera.model.KailleraGame
 import org.emulinker.kaillera.model.event.GameChatEvent
 import org.emulinker.kaillera.model.exception.ActionException
@@ -486,8 +486,10 @@ class GameChatAction(
             game.players
               .filter { !it.inStealthMode }
               .joinToString(separator = ", ") {
-                "P${it.playerNumber}: ${it.lagAttributedToUser()
-                    .toSecondDoublePrecisionString()}"
+                "P${it.playerNumber}: ${
+                        it.lagAttributedToUser()
+                          .toSecondDoublePrecisionString()
+                      }"
               }
         )
 

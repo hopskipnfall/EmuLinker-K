@@ -1,11 +1,11 @@
 package org.emulinker.kaillera.controller.v086.action
 
 import com.google.common.flogger.FluentLogger
+import io.github.hopskipnfall.kaillera.protocol.v086.GameChatNotification
+import io.github.hopskipnfall.kaillera.protocol.v086.StartGameNotification
+import io.github.hopskipnfall.kaillera.protocol.v086.StartGameRequest
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086ClientHandler
-import org.emulinker.kaillera.controller.v086.protocol.GameChatNotification
-import org.emulinker.kaillera.controller.v086.protocol.StartGameNotification
-import org.emulinker.kaillera.controller.v086.protocol.StartGameRequest
 import org.emulinker.kaillera.lookingforgame.TwitterBroadcaster
 import org.emulinker.kaillera.model.event.GameStartedEvent
 import org.emulinker.kaillera.model.exception.StartGameException
@@ -42,10 +42,10 @@ class StartGameAction(private val lookingForGameReporter: TwitterBroadcaster) :
       val playerNumber = game.getPlayerNumber(clientHandler.user)
       clientHandler.send(
         StartGameNotification(
-          clientHandler.nextMessageNumber,
-          delay.toShort().toInt(),
-          playerNumber.toByte().toShort(),
-          game.players.size.toByte().toShort(),
+          messageNumber = clientHandler.nextMessageNumber,
+          numPlayers = game.players.size,
+          playerNumber = playerNumber,
+          val1 = delay,
         )
       )
     } catch (e: MessageFormatException) {

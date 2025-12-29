@@ -1,6 +1,8 @@
 package org.emulinker.kaillera.controller.v086.action
 
 import com.google.common.flogger.FluentLogger
+import io.github.hopskipnfall.kaillera.protocol.v086.Chat
+import io.github.hopskipnfall.kaillera.protocol.v086.InformationMessage
 import java.net.InetAddress
 import java.util.Locale
 import java.util.Scanner
@@ -9,8 +11,6 @@ import kotlin.time.Duration.Companion.minutes
 import org.emulinker.kaillera.access.AccessManager
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086ClientHandler
-import org.emulinker.kaillera.controller.v086.protocol.Chat
-import org.emulinker.kaillera.controller.v086.protocol.InformationMessage
 import org.emulinker.kaillera.model.KailleraServer
 import org.emulinker.kaillera.model.KailleraUser
 import org.emulinker.kaillera.model.exception.ActionException
@@ -42,6 +42,7 @@ class AdminCommandAction : V086Action<Chat> {
         chat.startsWith(COMMAND_TEMPMODERATOR) ||
         chat.startsWith(COMMAND_TRIVIA) ||
         chat.startsWith(COMMAND_VERSION) -> true
+
       else -> false
     }
   }

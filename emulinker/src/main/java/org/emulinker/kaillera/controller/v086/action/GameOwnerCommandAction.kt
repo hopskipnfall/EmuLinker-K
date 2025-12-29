@@ -1,17 +1,18 @@
 package org.emulinker.kaillera.controller.v086.action
 
 import com.google.common.flogger.FluentLogger
+import io.github.hopskipnfall.kaillera.protocol.model.GameStatus
+import io.github.hopskipnfall.kaillera.protocol.v086.GameChat
 import java.util.Scanner
 import java.util.StringTokenizer
 import kotlin.time.Duration.Companion.milliseconds
 import org.emulinker.kaillera.access.AccessManager
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086ClientHandler
-import org.emulinker.kaillera.controller.v086.protocol.GameChat
-import org.emulinker.kaillera.model.GameStatus
 import org.emulinker.kaillera.model.KailleraGame
 import org.emulinker.kaillera.model.KailleraUser
 import org.emulinker.kaillera.model.exception.ActionException
+import org.emulinker.kaillera.model.readableName
 import org.emulinker.util.EmuLang
 import org.emulinker.util.EmuUtil.threadSleep
 

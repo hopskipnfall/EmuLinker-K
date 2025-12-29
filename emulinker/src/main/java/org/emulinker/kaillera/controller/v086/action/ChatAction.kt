@@ -1,15 +1,15 @@
 package org.emulinker.kaillera.controller.v086.action
 
 import com.google.common.flogger.FluentLogger
+import io.github.hopskipnfall.kaillera.protocol.v086.ChatNotification
+import io.github.hopskipnfall.kaillera.protocol.v086.ChatRequest
+import io.github.hopskipnfall.kaillera.protocol.v086.InformationMessage
 import java.util.Locale
 import java.util.Scanner
 import kotlin.time.Duration.Companion.milliseconds
 import org.emulinker.kaillera.access.AccessManager
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086ClientHandler
-import org.emulinker.kaillera.controller.v086.protocol.ChatNotification
-import org.emulinker.kaillera.controller.v086.protocol.ChatRequest
-import org.emulinker.kaillera.controller.v086.protocol.InformationMessage
 import org.emulinker.kaillera.model.event.ChatEvent
 import org.emulinker.kaillera.model.exception.ActionException
 import org.emulinker.util.EmuLang

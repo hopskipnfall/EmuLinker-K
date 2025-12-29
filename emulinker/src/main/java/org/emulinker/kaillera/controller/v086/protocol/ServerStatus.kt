@@ -1,5 +1,8 @@
 package org.emulinker.kaillera.controller.v086.protocol
 
+import io.github.hopskipnfall.kaillera.protocol.model.ConnectionType
+import io.github.hopskipnfall.kaillera.protocol.model.GameStatus
+import io.github.hopskipnfall.kaillera.protocol.model.UserStatus
 import io.netty.buffer.ByteBuf
 import java.nio.ByteBuffer
 import kotlin.math.roundToInt
@@ -9,9 +12,6 @@ import kotlin.time.Duration.Companion.milliseconds
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.kaillera.controller.v086.V086Utils.getNumBytesPlusStopByte
-import org.emulinker.kaillera.model.ConnectionType
-import org.emulinker.kaillera.model.GameStatus
-import org.emulinker.kaillera.model.UserStatus
 import org.emulinker.util.EmuUtil
 import org.emulinker.util.EmuUtil.readString
 import org.emulinker.util.EmuUtil.toMillisDouble

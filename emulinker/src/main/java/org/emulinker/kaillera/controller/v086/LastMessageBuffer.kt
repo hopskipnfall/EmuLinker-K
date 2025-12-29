@@ -1,6 +1,6 @@
 package org.emulinker.kaillera.controller.v086
 
-import org.emulinker.kaillera.controller.v086.protocol.V086Message
+import io.github.hopskipnfall.kaillera.protocol.v086.V086Message
 
 /**
  * This is a specialized data structure designed to efficiently store and retrieve the last outbound
