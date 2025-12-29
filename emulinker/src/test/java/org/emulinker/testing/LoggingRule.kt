@@ -8,7 +8,6 @@ import com.google.common.truth.FailureMetadata
 import com.google.common.truth.Subject
 import com.google.common.truth.Truth.assertAbout
 import com.google.common.truth.Truth.assertWithMessage
-import java.lang.RuntimeException
 import java.util.logging.Level
 import java.util.logging.Level.SEVERE
 import java.util.logging.Level.WARNING
