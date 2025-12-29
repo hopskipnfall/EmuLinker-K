@@ -34,6 +34,7 @@ import io.netty.channel.embedded.EmbeddedChannel
 import io.netty.channel.socket.DatagramPacket
 import java.net.InetSocketAddress
 import java.nio.ByteOrder
+import java.util.Locale
 import kotlin.test.assertNotNull
 import kotlin.time.Duration
 import org.emulinker.kaillera.controller.v086.action.ActionModule
@@ -78,8 +79,12 @@ class CombinedKailleraControllerTest : ProtocolBaseTest(), KoinTest {
     expect.that(response.recipient().port).isEqualTo(12345)
   }
 
+  private lateinit var originalLocale: Locale
+
   @Before
   fun before() {
+    originalLocale = Locale.getDefault()
+    Locale.setDefault(Locale.US)
     channel =
       EmbeddedChannel(
         // io.netty.handler.logging.LoggingHandler(),
@@ -97,6 +102,7 @@ class CombinedKailleraControllerTest : ProtocolBaseTest(), KoinTest {
     expect.that(channel.inboundMessages()).isEmpty()
 
     channel.close()
+    Locale.setDefault(originalLocale)
   }
 
   @Test
