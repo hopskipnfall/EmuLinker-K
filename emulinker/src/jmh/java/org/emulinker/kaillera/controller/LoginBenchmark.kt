@@ -33,7 +33,6 @@ import org.koin.core.qualifier.named
 import org.koin.dsl.module
 import org.openjdk.jmh.annotations.Benchmark
 import org.openjdk.jmh.annotations.BenchmarkMode
-import org.openjdk.jmh.annotations.Fork
 import org.openjdk.jmh.annotations.Level
 import org.openjdk.jmh.annotations.Mode
 import org.openjdk.jmh.annotations.OutputTimeUnit
@@ -46,7 +45,6 @@ import org.openjdk.jmh.infra.Blackhole
 @State(Scope.Benchmark)
 @BenchmarkMode(Mode.Throughput)
 @OutputTimeUnit(TimeUnit.MILLISECONDS)
-@Fork(value = 1)
 open class LoginBenchmark : KoinComponent {
   lateinit var channel: EmbeddedChannel
   lateinit var controller: CombinedKailleraController
