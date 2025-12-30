@@ -241,7 +241,6 @@ class KailleraUser(
   }
 
   // server actions
-  @Synchronized
   fun login(): Result<Unit> {
     updateLastActivity()
     return server.login(this)

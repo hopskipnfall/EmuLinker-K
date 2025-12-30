@@ -81,11 +81,7 @@ class CombinedKailleraControllerTest : ProtocolBaseTest(), KoinTest {
 
   @Before
   fun before() {
-    channel =
-      EmbeddedChannel(
-        // io.netty.handler.logging.LoggingHandler(),
-        server
-      )
+    channel = EmbeddedChannel(server)
   }
 
   @After

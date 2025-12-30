@@ -196,9 +196,12 @@ tasks.withType<JavaExec> { jvmArgs = listOf("-Xms512m", "-Xmx512m") }
 tasks.processJmhResources { duplicatesStrategy = DuplicatesStrategy.EXCLUDE }
 
 jmh {
+  val includePattern =
+    if (project.hasProperty("jmhInclude")) project.property("jmhInclude") as String else ".*"
+  this@jmh.includes = listOf(includePattern)
+
   // Run with ./gradlew jmh -PjmhDryRun
   if (project.hasProperty("jmhDryRun")) {
-    this@jmh.includes = listOf(".*")
     warmupIterations = 0
     iterations = 1
     fork = 0

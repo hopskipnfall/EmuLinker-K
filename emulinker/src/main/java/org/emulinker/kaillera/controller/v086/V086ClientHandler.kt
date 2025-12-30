@@ -121,7 +121,7 @@ class V086ClientHandler(
     }
 
   // TODO(nue): This no longer fulfills any purpose. Remove.
-  val nextMessageNumber = 0
+  @Deprecated("", ReplaceWith("0")) val nextMessageNumber = 0
 
   private val lastSendMessageNumber = AtomicInteger(0)
 
