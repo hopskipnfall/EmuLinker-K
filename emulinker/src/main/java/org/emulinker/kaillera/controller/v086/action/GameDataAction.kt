@@ -18,8 +18,8 @@ object GameDataAction : V086Action<GameData>, V086GameEventHandler<GameDataEvent
   override fun performAction(message: GameData, clientHandler: V086ClientHandler) {
     val user = clientHandler.user
     val dataArray = message.gameData
-    // DONOTSUBMIT: Make sure that everything is being returned to the cache correctly.
-    // Convert KMP ByteArray to VariableSizeByteArray for legacy compatibility
+    // Note: This dataArray is actually part of another VariableSizeByteArray that is cached and
+    // will be returned. Wrapping this doesn't allocate a new array.
     val data = VariableSizeByteArray(dataArray)
 
     clientHandler.clientGameDataCache.add(data)
@@ -30,8 +30,7 @@ object GameDataAction : V086Action<GameData>, V086GameEventHandler<GameDataEvent
             logger.atWarning().atMostEvery(5, TimeUnit.SECONDS).withCause(e).log("Game data error")
             if (e.response != null) {
               try {
-                // e.response is likely VariableSizeByteArray? We need ByteArray for KMP GameData
-                val responseBytes = e.response!!.toByteArray().clone() // Clone to be safe
+                val responseBytes = e.response!!.toByteArray().clone()
                 clientHandler.send(GameData(clientHandler.nextMessageNumber, responseBytes))
               } catch (e2: MessageFormatException) {
                 logger.atSevere().withCause(e2).log("Failed to construct GameData message")

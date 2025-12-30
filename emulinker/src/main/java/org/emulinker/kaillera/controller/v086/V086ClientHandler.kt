@@ -166,6 +166,7 @@ class V086ClientHandler(
   private fun handleReceivedInternal(buffer: ByteBuf) {
     val inBundle: V086Bundle =
       try {
+        // DONOTSUBMIT: This is allocating a new byte array!
         NettyV086BundleSerializer.read(buffer, lastMessageNumber, AppModule.charsetDoNotUse)
       } catch (e: Exception) {
         buffer.resetReaderIndex()
@@ -220,7 +221,6 @@ class V086ClientHandler(
           }
           (action as V086Action<V086Message>).performAction(m, this)
         }
-
         is V086Bundle.Multi -> {
           val messages = inBundle.messages
           // read the bundle from back to front to process the oldest messages first
@@ -276,7 +276,6 @@ class V086ClientHandler(
       is GameDataEvent -> {
         GameDataAction.handleEvent(event, this)
       }
-
       is GameEvent -> {
         val eventHandler = controller.gameEventHandlers[event::class]
         if (eventHandler == null) {
@@ -287,7 +286,6 @@ class V086ClientHandler(
         }
         (eventHandler as V086GameEventHandler<GameEvent>).handleEvent(event, this)
       }
-
       is ServerEvent -> {
         val eventHandler = controller.serverEventHandlers[event::class]
         if (eventHandler == null) {
@@ -302,7 +300,6 @@ class V086ClientHandler(
         }
         (eventHandler as V086ServerEventHandler<ServerEvent>).handleEvent(event, this)
       }
-
       is UserEvent -> {
         val eventHandler = controller.userEventHandlers[event::class]
         if (eventHandler == null) {

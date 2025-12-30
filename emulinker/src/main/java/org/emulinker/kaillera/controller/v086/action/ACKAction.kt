@@ -58,7 +58,6 @@ class ACKAction : V086Action<ClientAck>, V086UserEventHandler<UserEvent>, KoinCo
             }
             throw FatalActionException("Login failed: " + e.message)
           }
-
           else -> throw e
         }
       }

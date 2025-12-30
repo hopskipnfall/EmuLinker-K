@@ -40,7 +40,6 @@ class AdminCommandAction : V086Action<Chat> {
         chat.startsWith(COMMAND_TEMPMODERATOR) ||
         chat.startsWith(COMMAND_TRIVIA) ||
         chat.startsWith(COMMAND_VERSION) -> true
-
       else -> false
     }
   }
