@@ -29,7 +29,6 @@ import org.emulinker.proto.GameLog
 import org.emulinker.util.EmuLang
 import org.emulinker.util.EmuLang.getStringOrNull
 import org.emulinker.util.EmuUtil.min
-import org.emulinker.util.EmuUtil.threadSleep
 import org.emulinker.util.EmuUtil.toLocalizedString
 import org.emulinker.util.EmuUtil.toMillisDouble
 import org.emulinker.util.EmuUtil.toSecondDoublePrecisionString
@@ -432,22 +431,18 @@ class GameChatAction(
           "/me <message> to make personal message eg. /me is bored ...SupraFast is bored.",
           clientHandler.user,
         )
-        threadSleep(20.milliseconds)
         game.announce(
           "/msg <UserID> <msg> to PM somebody. /msgoff or /msgon to turn pm off | on.",
           clientHandler.user,
         )
-        threadSleep(20.milliseconds)
         game.announce(
           "/ignore <UserID> or /unignore <UserID> or /ignoreall or /unignoreall to ignore users.",
           clientHandler.user,
         )
-        threadSleep(20.milliseconds)
         game.announce(
           "/p2pon or /p2poff this option ignores all server activity during gameplay.",
           clientHandler.user,
         )
-        threadSleep(20.milliseconds)
       } else if (message.message == "/stop") {
         if (lookingForGameReporter.cancelActionsForUser(clientHandler.user.id)) {
           game.announce(

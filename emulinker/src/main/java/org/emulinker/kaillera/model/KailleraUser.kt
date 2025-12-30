@@ -533,6 +533,7 @@ class KailleraUser(
     totalDriftCache.update(totalDriftNs, nowNs = nowNs)
   }
 
+  // TODO(nue): Try to remove this entirely.
   fun queueEvent(event: KailleraEvent) {
     server.queueEvent(this, event)
   }

@@ -16,7 +16,6 @@ import org.emulinker.kaillera.model.event.ConnectedEvent
 import org.emulinker.kaillera.model.event.UserEvent
 import org.emulinker.kaillera.model.exception.LoginException
 import org.emulinker.kaillera.model.toValueForBrokenClient
-import org.emulinker.util.EmuUtil.threadSleep
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
@@ -82,7 +81,7 @@ class ACKAction : V086Action<ClientAck>, V086UserEventHandler<UserEvent>, KoinCo
     val games = mutableListOf<ServerStatus.Game>()
     val switchStatuses: Boolean =
       flags.switchStatusBytesForBuggyClient &&
-        clientHandler.user.clientType == CLIENT_WITH_BYTE_ID_BUG
+              clientHandler.user.clientType == CLIENT_WITH_BYTE_ID_BUG
 
     for (user in server.usersMap.values) {
       if (user.status != UserStatus.CONNECTING && user != thisUser)
@@ -134,7 +133,6 @@ class ACKAction : V086Action<ClientAck>, V086UserEventHandler<UserEvent>, KoinCo
         gamesSubList = mutableListOf()
         counter = 0
         sent = true
-        threadSleep(100.milliseconds)
       }
       counter += user.numBytes
       usersSubList.add(user)
@@ -147,7 +145,6 @@ class ACKAction : V086Action<ClientAck>, V086UserEventHandler<UserEvent>, KoinCo
         gamesSubList = mutableListOf()
         counter = 0
         sent = true
-        threadSleep(100.milliseconds)
       }
       counter += game.numBytes
       gamesSubList.add(game)

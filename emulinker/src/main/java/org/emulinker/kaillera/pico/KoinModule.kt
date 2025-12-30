@@ -124,7 +124,6 @@ val koinModule = module {
         maxUsers = config.getInt("server.maxUsers", 0),
         metricsEnabled = config.getBoolean("metrics.enabled", false),
         metricsLoggingFrequency = config.getInt("metrics.loggingFrequencySeconds", 30).seconds,
-        nettyFlags = config.getInt("server.nettyThreadpoolSize", 30),
         serverAddress = config.getString("masterList.serverConnectAddress", ""),
         serverLocation = config.getString("masterList.serverLocation", "Unknown"),
         serverName = config.getString("masterList.serverName", "New ELK Server"),

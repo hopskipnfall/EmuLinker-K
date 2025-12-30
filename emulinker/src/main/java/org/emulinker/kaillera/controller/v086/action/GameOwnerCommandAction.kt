@@ -5,7 +5,6 @@ import io.github.hopskipnfall.kaillera.protocol.model.GameStatus
 import io.github.hopskipnfall.kaillera.protocol.v086.GameChat
 import java.util.Scanner
 import java.util.StringTokenizer
-import kotlin.time.Duration.Companion.milliseconds
 import org.emulinker.kaillera.access.AccessManager
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086ClientHandler
@@ -14,7 +13,6 @@ import org.emulinker.kaillera.model.KailleraUser
 import org.emulinker.kaillera.model.exception.ActionException
 import org.emulinker.kaillera.model.readableName
 import org.emulinker.util.EmuLang
-import org.emulinker.util.EmuUtil.threadSleep
 
 class GameOwnerCommandAction : V086Action<GameChat> {
   override fun toString() = "GameOwnerCommandAction"
@@ -86,49 +84,35 @@ class GameOwnerCommandAction : V086Action<GameChat> {
     // game.announce(EmuLang.getString("GameOwnerCommandAction.AvailableCommands"));
     // try { Thread.sleep(20); } catch(Exception e) {}
     game.announce(EmuLang.getString("GameOwnerCommandAction.SetAutofireDetection"), admin)
-    threadSleep(20.milliseconds)
     game.announce("/maxusers <#> to set capacity of room", admin)
-    threadSleep(20.milliseconds)
     game.announce("/maxping <#> to set maximum ping for room", admin)
-    threadSleep(20.milliseconds)
     game.announce("/start or /startn <#> start game when n players are joined.", admin)
-    threadSleep(20.milliseconds)
     game.announce("/mute /unmute  <UserID> or /muteall or /unmuteall to mute player(s).", admin)
-    threadSleep(20.milliseconds)
     game.announce(
       "/swap <order> eg. 123..n {n = total # of players; Each slot = new player#}",
       admin,
     )
-    threadSleep(20.milliseconds)
     game.announce("/kick <Player#> or /kickall to kick a player(s).", admin)
-    threadSleep(20.milliseconds)
     game.announce("/setemu To restrict the gameroom to this emulator!", admin)
-    threadSleep(20.milliseconds)
     game.announce("/setconn To restrict the gameroom to this connection type!", admin)
-    threadSleep(20.milliseconds)
     game.announce(
       "/lagstat To check who has the most lag spikes or /lagreset to reset lagstat!",
       admin,
     )
-    threadSleep(20.milliseconds)
     game.announce(
       "/samedelay {true | false} to play at the same delay as player with highest ping. Default is false.",
       admin,
     )
-    threadSleep(20.milliseconds)
     game.announce(
       "/samedelay {true | false} to play at the same delay as player with highest ping. Default is false.",
       admin,
     )
-    threadSleep(20.milliseconds)
   }
 
   private fun autoFireHelp(game: KailleraGame, admin: KailleraUser) {
     val cur = game.autoFireDetector.sensitivity
     game.announce(EmuLang.getString("GameOwnerCommandAction.HelpSensitivity"), admin)
-    threadSleep(20.milliseconds)
     game.announce(EmuLang.getString("GameOwnerCommandAction.HelpDisable"), admin)
-    threadSleep(20.milliseconds)
     game.announce(
       EmuLang.getString("GameOwnerCommandAction.HelpCurrentSensitivity", cur) +
         if (cur == 0) EmuLang.getString("GameOwnerCommandAction.HelpDisabled") else "",
