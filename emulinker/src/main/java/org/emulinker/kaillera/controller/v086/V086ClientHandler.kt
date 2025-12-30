@@ -351,17 +351,17 @@ class V086ClientHandler(
   }
 
   private fun resendFromCache(numToSend: Int = 5) {
-    //    synchronized(sendMutex) {
-    var numToSend = numToSend
+    synchronized(sendMutex) {
+      var numToSend = numToSend
 
-    val buf = combinedKailleraController.alloc().directBuffer(flags.v086BufferSize)
-    numToSend = lastMessageBuffer.fill(outMessages, numToSend)
-    val outBundle = V086Bundle.Multi(outMessages, numToSend)
-    stripFromProdBinary { logger.atFinest().log("<- TO P%d: (RESEND)", user.id) }
-    outBundle.writeTo(buf)
-    combinedKailleraController.send(DatagramPacket(buf, remoteSocketAddress!!))
-    clientResponseMeter?.mark()
-    //    }
+      val buf = combinedKailleraController.alloc().directBuffer(flags.v086BufferSize)
+      numToSend = lastMessageBuffer.fill(outMessages, numToSend)
+      val outBundle = V086Bundle.Multi(outMessages, numToSend)
+      stripFromProdBinary { logger.atFinest().log("<- TO P%d: (RESEND)", user.id) }
+      outBundle.writeTo(buf)
+      combinedKailleraController.send(DatagramPacket(buf, remoteSocketAddress!!))
+      clientResponseMeter?.mark()
+    }
   }
 
   fun send(outMessage: V086Message, numToSend: Int = 5) {
