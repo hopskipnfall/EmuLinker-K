@@ -515,13 +515,6 @@ class KailleraUser(
     val delaySinceLastResponseNs = nowNs - lastUpdateNs
     val timeWaitingNs = nowNs - receivedGameDataNs
     val delaySinceLastResponseMinusWaitingNs = delaySinceLastResponseNs - timeWaitingNs
-
-    // We assume minFrameDelay is 1 for individual user drift if we don't know better,
-    // or maybe we should use the user's own frame delay?
-    // In the old code: lagLeeway > game!!.singleFrameDuration... which implies frameDelay=1
-    // effectively.
-    // But the user has a specific frame delay.
-    // Let's use the user's frame delay here.
     lagometer?.update(
       delaySinceLastResponseNs = delaySinceLastResponseMinusWaitingNs,
       minFrameDelay = frameDelay,
