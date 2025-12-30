@@ -7,7 +7,6 @@ import io.github.hopskipnfall.kaillera.protocol.v086.ClientAck
 import io.github.hopskipnfall.kaillera.protocol.v086.ConnectionRejected
 import io.github.hopskipnfall.kaillera.protocol.v086.ServerAck
 import io.github.hopskipnfall.kaillera.protocol.v086.ServerStatus
-import kotlin.time.Duration.Companion.milliseconds
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086ClientHandler
@@ -81,7 +80,7 @@ class ACKAction : V086Action<ClientAck>, V086UserEventHandler<UserEvent>, KoinCo
     val games = mutableListOf<ServerStatus.Game>()
     val switchStatuses: Boolean =
       flags.switchStatusBytesForBuggyClient &&
-              clientHandler.user.clientType == CLIENT_WITH_BYTE_ID_BUG
+        clientHandler.user.clientType == CLIENT_WITH_BYTE_ID_BUG
 
     for (user in server.usersMap.values) {
       if (user.status != UserStatus.CONNECTING && user != thisUser)
