@@ -56,126 +56,189 @@ import org.openjdk.jmh.annotations.State
 import org.openjdk.jmh.annotations.TearDown
 import org.openjdk.jmh.infra.Blackhole
 
-@State(Scope.Benchmark)
 @BenchmarkMode(Mode.Throughput)
 @OutputTimeUnit(TimeUnit.MILLISECONDS)
 @Fork(value = 1)
-open class GameDataBenchmark : KoinComponent {
-  lateinit var channel: EmbeddedChannel
-  lateinit var controller: CombinedKailleraController
-  lateinit var userActionsExecutor: ThreadPoolExecutor
+open class GameDataBenchmark {
 
-  var succeeded = 0L
-
-  private val clientQueues = ConcurrentHashMap<Int, BlockingQueue<OutgoingMsg>>()
-  private lateinit var client1: Client
-  private lateinit var client2: Client
-
-  @Setup(Level.Trial)
-  fun setup() {
-    startKoin {
-      allowOverride(true)
-      modules(koinModule, ActionModule, module { single<AccessManager> { FakeAccessManager() } })
-    }
-    controller = get()
-    userActionsExecutor = get(named("userActionsExecutor"))
-    channel = EmbeddedChannel(controller)
-
-    client1 = Client(1111, "User1")
-    client2 = Client(2222, "User2")
-
-    // Advance client 2 iterator to desync
-    repeat(1000) { client2.gameDataIterator.next() }
-
-    logger.atInfo().log("Starting setup...")
-
-    client1.login()
-    Thread.sleep(500)
-    client2.login()
-
-    val gameId = client1.createGame()
-    client2.consumeUntil { it is CreateGameNotification && it.gameId == gameId }
-
-    client2.joinGame(gameId)
-    client1.consumeUntil { it is JoinGameNotification && it.gameId == gameId }
-
-    client1.startGame()
-    client2.consumeUntil { it is StartGameNotification }
-
-    client1.sendReady()
-    client2.sendReady()
-
-    client1.waitForReady()
-    client2.waitForReady()
-
-    logger.atInfo().log("Setup complete.")
-  }
-
-  @TearDown(Level.Trial)
-  fun teardown() {
-    try {
-      client1.logout()
-      client2.logout()
-    } catch (e: Exception) {
-      logger.atWarning().withCause(e).log("Failed to logout cleanly")
-    }
-
-    channel.close()
-    controller.stop()
-    userActionsExecutor.shutdown()
-    stopKoin()
+  @Benchmark
+  fun benchmark1Player(state: State1P, blackhole: Blackhole) {
+    runBenchmark(state, blackhole)
   }
 
   @Benchmark
-  fun benchmark(blackhole: Blackhole) {
-    client1.sendGameData()
-    client2.sendGameData()
-
-    client1.receiveGameData(blackhole)
-    client2.receiveGameData(blackhole)
-
-    succeeded++
+  fun benchmark2Players(state: State2P, blackhole: Blackhole) {
+    runBenchmark(state, blackhole)
   }
 
-  private fun pump() {
-    channel.runPendingTasks()
-    while (true) {
-      val response: DatagramPacket = channel.readOutbound<DatagramPacket>() ?: break
+  @Benchmark
+  fun benchmark3Players(state: State3P, blackhole: Blackhole) {
+    runBenchmark(state, blackhole)
+  }
 
-      val port = response.recipient().port
-      val queue = clientQueues[port]
-      if (queue == null) {
-        logger.atWarning().log("Received message for unknown port: %d", port)
-        response.release()
-        continue
+  @Benchmark
+  fun benchmark4Players(state: State4P, blackhole: Blackhole) {
+    runBenchmark(state, blackhole)
+  }
+
+  private fun runBenchmark(state: GameState, blackhole: Blackhole) {
+    state.clients.forEach { it.sendGameData() }
+    state.clients.forEach { it.receiveGameData(blackhole) }
+
+    state.succeeded++
+  }
+
+  @State(Scope.Benchmark)
+  abstract class GameState : KoinComponent {
+    abstract val playerCount: Int
+
+    lateinit var channel: EmbeddedChannel
+    lateinit var controller: CombinedKailleraController
+    lateinit var userActionsExecutor: ThreadPoolExecutor
+
+    var succeeded = 0L
+
+    val clientQueues = ConcurrentHashMap<Int, BlockingQueue<OutgoingMsg>>()
+    lateinit var clients: List<Client>
+    lateinit var clientMap: Map<Int, Client>
+
+    @Setup(Level.Trial)
+    fun setup() {
+      startKoin {
+        allowOverride(true)
+        modules(koinModule, ActionModule, module { single<AccessManager> { FakeAccessManager() } })
+      }
+      controller = get()
+      userActionsExecutor = get(named("userActionsExecutor"))
+      channel = EmbeddedChannel(controller)
+
+      val _clients = ArrayList<Client>()
+      val _clientMap = ConcurrentHashMap<Int, Client>()
+
+      for (i in 1..playerCount) {
+        val port = i * 1111
+        val client = Client(port, "User$i", this)
+        _clients.add(client)
+        _clientMap[port] = client
+
+        // Advance client iterator to desync for subsequent clients
+        if (i > 1) {
+          repeat(1000) { client.gameDataIterator.next() }
+        }
+      }
+      clients = _clients
+      clientMap = _clientMap
+
+      logger.atInfo().log("Starting setup for $playerCount players...")
+
+      clients.forEach {
+        it.login()
+        Thread.sleep(100)
       }
 
-      val content = response.content()
-      val connectMessage = ConnectMessage.parse(content)
-      if (connectMessage.isSuccess) {
-        queue.add(
-          OutgoingMsg.ConnectionMessage(
-            connectMessage.getOrThrow() as RequestPrivateKailleraPortResponse
-          )
-        )
-        response.release()
-        continue
+      val creator = clients[0]
+      val gameId = creator.createGame()
+
+      // Others wait for creation notification and join
+      for (i in 1 until clients.size) {
+        clients[i].consumeUntil { it is CreateGameNotification && it.gameId == gameId }
+        clients[i].joinGame(gameId)
       }
 
-      content.resetReaderIndex()
-      val client = if (client1.port == port) client1 else client2
-      // Using helper to get last ID safely? The client object is accessible here.
-      val lastId = client.lastMessageNumberReceived
+      // Creator waits for everyone to join
+      repeat(clients.size - 1) {
+        creator.consumeUntil { it is JoinGameNotification && it.gameId == gameId }
+      }
 
+      creator.startGame()
+
+      // Others wait for Start
+      for (i in 1 until clients.size) {
+        clients[i].consumeUntil { it is StartGameNotification }
+      }
+
+      clients.forEach { it.sendReady() }
+      clients.forEach { it.waitForReady() }
+
+      logger.atInfo().log("Setup complete.")
+    }
+
+    @TearDown(Level.Trial)
+    fun teardown() {
       try {
-        val bundle = V086Bundle.parse(content, lastMessageID = lastId)
-        queue.add(OutgoingMsg.Bundle(bundle))
+        clients.forEach { it.logout() }
       } catch (e: Exception) {
-        logger.atSevere().withCause(e).log("Failed to parse bundle for port %d", port)
-      } finally {
-        response.release()
+        logger.atWarning().withCause(e).log("Failed to logout cleanly")
+      }
+
+      channel.close()
+      controller.stop()
+      userActionsExecutor.shutdown()
+      stopKoin()
+    }
+
+    fun pump() {
+      channel.runPendingTasks()
+      while (true) {
+        val response: DatagramPacket = channel.readOutbound<DatagramPacket>() ?: break
+
+        val port = response.recipient().port
+        val queue = clientQueues[port]
+        if (queue == null) {
+          logger.atWarning().log("Received message for unknown port: %d", port)
+          response.release()
+          continue
+        }
+
+        val content = response.content()
+        val connectMessage = ConnectMessage.parse(content)
+        if (connectMessage.isSuccess) {
+          queue.add(
+            OutgoingMsg.ConnectionMessage(
+              connectMessage.getOrThrow() as RequestPrivateKailleraPortResponse
+            )
+          )
+          response.release()
+          continue
+        }
+
+        content.resetReaderIndex()
+        val client = clientMap[port]
+        if (client == null) {
+          logger.atWarning().log("Client not found for port: %d", port)
+          response.release()
+          continue
+        }
+
+        val lastId = client.lastMessageNumberReceived
+
+        try {
+          val bundle = V086Bundle.parse(content, lastMessageID = lastId)
+          queue.add(OutgoingMsg.Bundle(bundle))
+        } catch (e: Exception) {
+          logger.atSevere().withCause(e).log("Failed to parse bundle for port %d", port)
+        } finally {
+          response.release()
+        }
       }
     }
+  }
+
+  // Concrete state classes
+  open class State1P : GameState() {
+    override val playerCount = 1
+  }
+
+  open class State2P : GameState() {
+    override val playerCount = 2
+  }
+
+  open class State3P : GameState() {
+    override val playerCount = 3
+  }
+
+  open class State4P : GameState() {
+    override val playerCount = 4
   }
 
   sealed interface OutgoingMsg {
@@ -184,7 +247,7 @@ open class GameDataBenchmark : KoinComponent {
     data class ConnectionMessage(val message: RequestPrivateKailleraPortResponse) : OutgoingMsg
   }
 
-  inner class Client(val port: Int, val username: String) {
+  class Client(val port: Int, val username: String, val gameState: GameState) {
     var lastMessageNumberReceived = -1
     var lastMessageNumber = -1
     val sender = InetSocketAddress("127.0.0.1", port)
@@ -193,13 +256,13 @@ open class GameDataBenchmark : KoinComponent {
     private val queue = ArrayBlockingQueue<OutgoingMsg>(100)
 
     init {
-      clientQueues[port] = queue
+      gameState.clientQueues[port] = queue
     }
 
     // Helper to yield messages from the queue
     private val messageIterator = iterator {
       while (true) {
-        pump()
+        gameState.pump()
 
         while (true) {
           val msg = queue.poll() ?: break
@@ -230,11 +293,11 @@ open class GameDataBenchmark : KoinComponent {
       val request = RequestPrivateKailleraPortRequest("0.83")
       val buffer =
         Unpooled.buffer(request.bodyBytesPlusMessageIdType).apply { request.writeTo(this) }
-      channel.writeInbound(DatagramPacket(buffer, RECIPIENT, sender))
+      gameState.channel.writeInbound(DatagramPacket(buffer, RECIPIENT, sender))
 
       var loggedIn = false
       while (!loggedIn) {
-        pump()
+        gameState.pump()
         val msg = queue.poll()
         if (msg is OutgoingMsg.ConnectionMessage) {
           loggedIn = true
@@ -341,7 +404,7 @@ open class GameDataBenchmark : KoinComponent {
     fun sendBundle(bundle: V086Bundle) {
       val buffer = Unpooled.buffer(1024).apply { bundle.writeTo(this) }
       val packet = DatagramPacket(buffer, RECIPIENT, sender)
-      channel.writeInbound(packet)
+      gameState.channel.writeInbound(packet)
     }
   }
 
