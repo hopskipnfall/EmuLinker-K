@@ -1216,13 +1216,9 @@ $dokka.location:org.emulinker.kaillera.model/KailleraGame/singleFrameDurationFor
 $dokka.location:org.emulinker.kaillera.model/KailleraGame/start/#org.emulinker.kaillera.model.KailleraUser/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-kaillera-game/start.html
 $dokka.location:org.emulinker.kaillera.model/KailleraGame/startDate/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-kaillera-game/start-date.html
 $dokka.location:org.emulinker.kaillera.model/KailleraGame/startN/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-kaillera-game/start-n.html
-$dokka.location:org.emulinker.kaillera.model/KailleraGame/startTimeout/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-kaillera-game/start-timeout.html
-$dokka.location:org.emulinker.kaillera.model/KailleraGame/startTimeoutTime/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-kaillera-game/start-timeout-time.html
 $dokka.location:org.emulinker.kaillera.model/KailleraGame/status/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-kaillera-game/status.html
 $dokka.location:org.emulinker.kaillera.model/KailleraGame/swap/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-kaillera-game/swap.html
 $dokka.location:org.emulinker.kaillera.model/KailleraGame/toString/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-kaillera-game/to-string.html
-$dokka.location:org.emulinker.kaillera.model/KailleraGame/totalDriftCache/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-kaillera-game/total-drift-cache.html
-$dokka.location:org.emulinker.kaillera.model/KailleraGame/totalDriftNs/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-kaillera-game/total-drift-ns.html
 $dokka.location:org.emulinker.kaillera.model/KailleraGame/waitingOnData/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-kaillera-game/waiting-on-data.html
 $dokka.location:org.emulinker.kaillera.model/KailleraGame/waitingOnPlayerNumber/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-kaillera-game/waiting-on-player-number.html
 $dokka.location:org.emulinker.kaillera.model/KailleraServer.Companion///PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-kaillera-server/-companion/index.html
@@ -1319,6 +1315,12 @@ $dokka.location:org.emulinker.kaillera.model/KailleraUser/toString/#/PointingToD
 $dokka.location:org.emulinker.kaillera.model/KailleraUser/updateLastKeepAlive/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-kaillera-user/update-last-keep-alive.html
 $dokka.location:org.emulinker.kaillera.model/KailleraUser/updateUserDrift/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-kaillera-user/update-user-drift.html
 $dokka.location:org.emulinker.kaillera.model/KailleraUser/users/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-kaillera-user/users.html
+$dokka.location:org.emulinker.kaillera.model/Lagometer///PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-lagometer/index.html
+$dokka.location:org.emulinker.kaillera.model/Lagometer/Lagometer/#kotlin.Long#kotlin.time.Duration#kotlin.time.Duration/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-lagometer/-lagometer.html
+$dokka.location:org.emulinker.kaillera.model/Lagometer/frameDurationNs/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-lagometer/frame-duration-ns.html
+$dokka.location:org.emulinker.kaillera.model/Lagometer/lag/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-lagometer/lag.html
+$dokka.location:org.emulinker.kaillera.model/Lagometer/reset/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-lagometer/reset.html
+$dokka.location:org.emulinker.kaillera.model/Lagometer/update/#kotlin.Long#kotlin.Int#kotlin.Long/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-lagometer/update.html
 $dokka.location:org.emulinker.kaillera.model/UserStatus.CONNECTING///PointingToDeclaration/{"org.jetbrains.dokka.links.EnumEntryDRIExtra":{"key":"org.jetbrains.dokka.links.EnumEntryDRIExtra"}}emulinker/org.emulinker.kaillera.model/-user-status/-c-o-n-n-e-c-t-i-n-g/index.html
 $dokka.location:org.emulinker.kaillera.model/UserStatus.Companion///PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-user-status/-companion/index.html
 $dokka.location:org.emulinker.kaillera.model/UserStatus.Companion/fromByteValue/#kotlin.Byte/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-user-status/-companion/from-byte-value.html
