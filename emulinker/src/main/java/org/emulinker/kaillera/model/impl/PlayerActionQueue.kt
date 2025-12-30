@@ -1,7 +1,7 @@
 package org.emulinker.kaillera.model.impl
 
+import io.netty.buffer.ByteBuf
 import org.emulinker.kaillera.model.KailleraUser
-import org.emulinker.util.VariableSizeByteArray
 
 /**
  * A buffer of game data for one player.
@@ -20,6 +20,7 @@ class PlayerActionQueue(
   var lastTimeout: PlayerTimeoutException? = null
 
   private val data = ByteArray(gameBufferSize)
+
   /** Effectively a map of `player number - 1` to the last read index. */
   private val heads = IntArray(numPlayers)
   private var tail = 0
@@ -42,87 +43,72 @@ class PlayerActionQueue(
   }
 
   /** Adds "actions" at the [tail] position, and increments [tail]. */
-  fun addActions(actions: VariableSizeByteArray) {
+  fun addActions(actions: ByteBuf) {
     if (!synced) return
 
-    if (tail + actions.size <= gameBufferSize) {
+    val length = actions.readableBytes()
+    if (tail + length <= gameBufferSize) {
       // This can be done in one pass.
-      actions.writeDataOutTo(copyTo = data, writeAtIndex = tail, 0, actions.size)
+      actions.getBytes(actions.readerIndex(), data, tail, length)
     } else {
       // this has to be done in two steps because the array wraps around.
       val initialReadSize = gameBufferSize - tail
-      actions.writeDataOutTo(
-        copyTo = data,
-        writeAtIndex = tail,
-        srcIndex = 0,
-        // Read the remaining bytes until the end.
-        writeLength = initialReadSize,
-      )
-      actions.writeDataOutTo(
-        copyTo = data,
-        writeAtIndex = 0,
-        srcIndex = initialReadSize,
-        // Read the remaining bytes until the end.
-        writeLength = actions.size - initialReadSize,
-      )
+      actions.getBytes(actions.readerIndex(), data, tail, initialReadSize)
+      actions.getBytes(actions.readerIndex() + initialReadSize, data, 0, length - initialReadSize)
     }
-    tail = (tail + actions.size) % gameBufferSize
+    tail = (tail + length) % gameBufferSize
     lastTimeout = null
   }
 
   fun getActionAndWriteToArray(
     readingPlayerIndex: Int,
-    writeTo: VariableSizeByteArray,
+    writeTo: ByteBuf,
     writeAtIndex: Int,
     actionLength: Int,
   ) {
     when {
       !synced -> {
         // If the player is no longer synced (e.g. if they left the game), make sure the target
-        // range
-        // is set to 0.
-        writeTo.setZeroesForRange(
-          fromIndex = writeAtIndex,
-          untilIndexExclusive = writeAtIndex + actionLength,
-        )
+        // range is set to 0.
+        // We need to write zeros to the ByteBuf at writeAtIndex
+
+        // Ensure capacity? ByteBuf should be large enough based on usage in KailleraGame.
+        // We use setZero or just writeBytes(zeroArray).
+        // Since we need to write at specific index, we use setBytes.
+        // Or writeBytes if we are respecting the writerIndex?
+        // KailleraGame calculates writeAtIndex -> Random Access.
+        // So we use setBytes/setZero functions.
+        writeTo.setZero(writeAtIndex, actionLength)
       }
+
       containsNewDataForPlayer(readingPlayerIndex, actionLength) -> {
         val head = heads[readingPlayerIndex]
         copyTo(writeTo, writeAtIndex, readStartIndex = head, readLength = actionLength)
         heads[readingPlayerIndex] = (head + actionLength) % gameBufferSize
       }
+
       else -> throw IllegalStateException("There is no data available for this synced user!")
     }
   }
 
   private fun copyTo(
-    writeTo: VariableSizeByteArray,
+    writeTo: ByteBuf,
     writeAtIndex: Int,
     readStartIndex: Int,
     readLength: Int,
   ) {
     if (readStartIndex + readLength <= gameBufferSize) {
       // This can be done in one pass.
-      writeTo.importDataFrom(data, writeAtIndex, readStartIndex, readLength)
+      writeTo.setBytes(writeAtIndex, data, readStartIndex, readLength)
       return
     }
 
     // this has to be done in two steps because the array wraps around.
     val initialReadSize = gameBufferSize - readStartIndex
-    writeTo.importDataFrom(
-      copyFrom = data,
-      writeAtIndex,
-      readStartIndex,
-      // Read the remaining bytes until the end.
-      readLength = initialReadSize,
-    )
-    writeTo.importDataFrom(
-      data,
-      writeAtIndex = writeAtIndex + initialReadSize,
-      readStartIndex = 0,
-      // Read the remaining bytes until the end.
-      readLength = readLength - initialReadSize,
-    )
+
+    writeTo.setBytes(writeAtIndex, data, readStartIndex, initialReadSize)
+
+    writeTo.setBytes(writeAtIndex + initialReadSize, data, 0, readLength - initialReadSize)
   }
 
   fun containsNewDataForPlayer(playerIndex: Int, actionLength: Int) =

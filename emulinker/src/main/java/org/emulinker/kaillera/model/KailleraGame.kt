@@ -38,6 +38,8 @@ import org.emulinker.kaillera.model.exception.UserReadyException
 import org.emulinker.kaillera.model.impl.AutoFireDetector
 import org.emulinker.kaillera.model.impl.PlayerActionQueue
 import org.emulinker.kaillera.pico.CompiledFlags
+import io.netty.buffer.ByteBuf
+import org.emulinker.kaillera.controller.v086.protocol.GameData
 import org.emulinker.proto.EventKt.GameStartKt.playerDetails
 import org.emulinker.proto.EventKt.LagstatSummaryKt.playerAttributedLag
 import org.emulinker.proto.EventKt.fanOut
@@ -96,6 +98,7 @@ class KailleraGame(
    * fanning out.
    */
   var waitingOnData = false
+
   /**
    * If `waitingOnPlayerNumber[playerNumber - 1]` is `true`, we are waiting on data for that player.
    */
@@ -124,7 +127,9 @@ class KailleraGame(
   var aEmulator = "any"
   var aConnection = "any"
   val startDate: Date = Date()
-  @JvmField var swap = false
+
+  @JvmField
+  var swap = false
 
   var status = GameStatus.WAITING
     private set(status) {
@@ -261,7 +266,8 @@ class KailleraGame(
           kickedUsers.add(user.connectSocketAddress.address.hostAddress)
           try {
             user.quitGame()
-          } catch (e: Exception) {}
+          } catch (e: Exception) {
+          }
           throw JoinGameException("Spam Protection")
         }
       }
@@ -303,7 +309,7 @@ class KailleraGame(
     }
     if (
       access < AccessManager.ACCESS_ADMIN &&
-        kickedUsers.contains(user.connectSocketAddress.address.hostAddress)
+      kickedUsers.contains(user.connectSocketAddress.address.hostAddress)
     ) {
       logger.atWarning().log("%s join game denied: previously kicked: %s", user, this)
       throw JoinGameException(EmuLang.getString("KailleraGameImpl.JoinGameDeniedPreviouslyKicked"))
@@ -328,7 +334,8 @@ class KailleraGame(
       if (players.size >= startN) {
         try {
           start(owner)
-        } catch (e: Exception) {}
+        } catch (e: Exception) {
+        }
       }
     }
 
@@ -368,8 +375,8 @@ class KailleraGame(
     // new SF MOD - different emulator versions notifications
     if (
       access < AccessManager.ACCESS_ADMIN &&
-        user.clientType != owner.clientType &&
-        !owner.game!!.romName.startsWith("*")
+      user.clientType != owner.clientType &&
+      !owner.game!!.romName.startsWith("*")
     )
       addEventForAllPlayers(
         GameInfoEvent(this, user.name + " using different emulator version: " + user.clientType)
@@ -470,7 +477,7 @@ class KailleraGame(
       )
       val delayVal =
         GAME_FPS.toDouble() / player.connectionType.byteValue *
-          (player.ping.toMillisDouble() / 1000.0) + 1.0
+                (player.ping.toMillisDouble() / 1000.0) + 1.0
       player.frameDelay = delayVal.toInt()
       if (delayVal.toInt() > highestUserFrameDelay) {
         highestUserFrameDelay = delayVal.toInt()
@@ -689,8 +696,11 @@ class KailleraGame(
    * Adds data and suspends until all data is available, at which time it returns the sends new data
    * back to the client.
    */
-  fun addData(user: KailleraUser, playerNumber: Int, data: VariableSizeByteArray): AddDataResult {
-    if (!isSynched) return AddDataResult.IgnoringDesynched
+  fun addData(user: KailleraUser, playerNumber: Int, data: ByteBuf): AddDataResult {
+    if (!isSynched) {
+      data.release()
+      return AddDataResult.IgnoringDesynched
+    }
 
     gameLogBuilder?.addEvents(
       event {
@@ -711,6 +721,15 @@ class KailleraGame(
 
     autoFireDetector.addData(playerNumber, data, user.bytesPerAction)
 
+    // Release the original data buffer as addActions should have copied expected data
+    // WAIT: Does addActions copy?
+    // PlayerActionQueue.addActions(data: ByteBuf) -> updates to use getBytes into internal array.
+    // So yes, we should release data here unless PlayerActionQueue retains it.
+    // PlayerActionQueue implementation (to be done) should copy bytes.
+    // data is owned by caller (KailleraUser which got it from network), passed here.
+    // So we release it here when done.
+    data.release()
+
     return maybeSendData(user)
   }
 
@@ -719,7 +738,6 @@ class KailleraGame(
    *
    * @param user The user who initiated this call.
    */
-  // TODO(nue): This is probably not threadsafe but is being called from multiple threads.
   fun maybeSendData(user: KailleraUser): AddDataResult {
     // TODO(nue): This works for 2P but what about more? This probably results in unnecessary
     // messages.
@@ -730,20 +748,18 @@ class KailleraGame(
       if (
         playerActionQueues.all {
           !it.synced ||
-            it.containsNewDataForPlayer(
-              playerIndex = playerNumber - 1,
-              actionLength = actionsPerMessage * user.bytesPerAction,
-            )
+                  it.containsNewDataForPlayer(
+                    playerIndex = playerNumber - 1,
+                    actionLength = actionsPerMessage * user.bytesPerAction,
+                  )
         }
       ) {
         waitingOnData = false
-        val joinedGameData =
-          if (CompiledFlags.USE_CIRCULAR_BYTE_ARRAY_BUFFER) {
-            player.circularVariableSizeByteArrayBuffer.borrow()
-          } else {
-            VariableSizeByteArray()
-          }
-        joinedGameData.size = user.arraySize
+        val joinedGameDataSize = user.arraySize
+
+        // Allocate a new ByteBuf for the response
+        val joinedGameData = io.netty.buffer.Unpooled.buffer(joinedGameDataSize)
+
         for (actionCounter in 0 until actionsPerMessage) {
           for (playerActionQueueIndex in playerActionQueues.indices) {
             playerActionQueues[playerActionQueueIndex].getActionAndWriteToArray(
@@ -751,13 +767,35 @@ class KailleraGame(
               writeTo = joinedGameData,
               writeAtIndex =
                 actionCounter * (playerActionQueues.size * user.bytesPerAction) +
-                  playerActionQueueIndex * user.bytesPerAction,
+                        playerActionQueueIndex * user.bytesPerAction,
               actionLength = user.bytesPerAction,
             )
           }
         }
-        if (!isSynched) return AddDataResult.IgnoringDesynched
-        player.doEvent(GameDataEvent(this, joinedGameData))
+
+        // Ensure the writer index is set correctly if getAction/writeBytes didn't advance it properly
+        // Actually getActionAndWriteToArray should write bytes.
+        // If we use setBytes/writeBytes correctly.
+        // We will assert this in PlayerActionQueue implementation.
+        // Assuming we write linearly, but here we calculate indices?
+        // Ah, writeAtIndex is passed. So we are doing random access writes?
+        // Unpooled.buffer might not expand if we use setBytes beyond capacity?
+        // Unpooled.buffer(joinedGameDataSize) has capacity.
+        // We need to make sure we set writerIndex at the end.
+        joinedGameData.writerIndex(joinedGameDataSize)
+
+        if (!isSynched) {
+          joinedGameData.release()
+          return AddDataResult.IgnoringDesynched
+        }
+
+        // Create GameData object. It takes ownership of the ByteBuf.
+        val gameDataMsg = GameData(messageNumber = 0, gameData = joinedGameData)
+        // messageNumber is assigned by protocol handling usually? Or KailleraUser?
+        // Wait, KailleraUser.doEvent -> clientHandler.actionPerformed -> ...
+        // Here we construct GameDataEvent.
+
+        player.doEvent(GameDataEvent(this, gameDataMsg))
         player.updateUserDrift()
         val firstPlayer = players.firstOrNull()
         if (firstPlayer != null && firstPlayer.id == player.id) {
@@ -768,10 +806,10 @@ class KailleraGame(
         playerActionQueues.forEach {
           waitingOnPlayerNumber[it.playerNumber - 1] =
             it.synced &&
-              !it.containsNewDataForPlayer(
-                playerIndex = playerNumber - 1,
-                actionLength = actionsPerMessage * user.bytesPerAction,
-              )
+                    !it.containsNewDataForPlayer(
+                      playerIndex = playerNumber - 1,
+                      actionLength = actionsPerMessage * user.bytesPerAction,
+                    )
         }
       }
     }

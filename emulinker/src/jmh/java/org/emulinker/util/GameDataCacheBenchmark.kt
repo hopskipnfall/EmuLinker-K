@@ -10,24 +10,27 @@ import org.openjdk.jmh.annotations.Scope
 import org.openjdk.jmh.annotations.Setup
 import org.openjdk.jmh.annotations.State
 import org.openjdk.jmh.infra.Blackhole
+import io.netty.buffer.ByteBuf
+import io.netty.buffer.Unpooled
+
 
 @State(Scope.Benchmark)
 @BenchmarkMode(Mode.Throughput)
 @OutputTimeUnit(TimeUnit.MILLISECONDS)
 open class GameDataCacheBenchmark {
-  private lateinit var inputs: Iterator<VariableSizeByteArray>
+  private lateinit var inputs: Iterator<ByteBuf>
   private lateinit var cache: GameDataCache
 
   private fun buildIterator() =
-    iterator<VariableSizeByteArray> {
+    iterator<ByteBuf> {
       lateinit var previousLine: String
       while (true) {
         for (line in LINES) {
           if (line.startsWith("x")) {
             val times = line.removePrefix("x").toInt()
-            repeat(times) { yield(VariableSizeByteArray(previousLine.decodeHex())) }
+            repeat(times) { yield(Unpooled.wrappedBuffer(previousLine.decodeHex())) }
           } else {
-            yield(VariableSizeByteArray(line.decodeHex()))
+            yield(Unpooled.wrappedBuffer(line.decodeHex()))
           }
           previousLine = line
         }

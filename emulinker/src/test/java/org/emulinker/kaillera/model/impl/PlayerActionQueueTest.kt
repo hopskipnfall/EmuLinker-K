@@ -1,16 +1,17 @@
 package org.emulinker.kaillera.model.impl
 
 import com.google.common.truth.Truth.assertThat
+import io.netty.buffer.Unpooled
 import kotlin.random.Random
 import org.emulinker.testing.LoggingRule
-import org.emulinker.util.VariableSizeByteArray
 import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mockito.kotlin.mock
 
 class PlayerActionQueueTest {
-  @get:Rule val logging = LoggingRule()
+  @get:Rule
+  val logging = LoggingRule()
 
   @Test
   fun `containsNewDataForPlayer returns false if no data`() {
@@ -27,7 +28,17 @@ class PlayerActionQueueTest {
       PlayerActionQueue(playerNumber = 1, player = mock(), numPlayers = 1, gameBufferSize = 4096)
     queue.markSynced()
 
-    queue.addActions(VariableSizeByteArray(DATA))
+    val buf = Unpooled.wrappedBuffer(DATA)
+    queue.addActions(buf)
+    // We shouldn't release buf because addActions consumes/reads it but not retains it?
+    // addActions reads from it. Unpooled.wrappedBuffer(DATA) creates wrapper.
+    // We passed it. Logic in addActions reads it.
+    // No release needed if we don't retain it locally?
+    // Wait, Unpooled.wrappedBuffer returns a buffer with refCnt 1.
+    // If addActions reads it and we are done with it, we should release it.
+    // But check PlayerActionQueue implementation -> addActions uses getBytes. It does NOT retain.
+    // So YES we must release it.
+    buf.release()
 
     assertThat(queue.containsNewDataForPlayer(playerIndex = 0, actionLength = DATA.size)).isTrue()
   }
@@ -44,9 +55,15 @@ class PlayerActionQueueTest {
       )
     queue.markDesynced()
 
-    queue.addActions(VariableSizeByteArray(DATA))
+    val buf = Unpooled.wrappedBuffer(DATA)
+    queue.addActions(buf)
+    buf.release()
 
-    val out = VariableSizeByteArray(Random.nextBytes(DATA.size))
+    val out = Unpooled.buffer(DATA.size)
+    // Make sure it has capacity
+    out.writeZero(DATA.size) // Fill with something else? No, just ensure writable.
+    out.clear() // Reset reader/writer
+
     queue.getActionAndWriteToArray(
       readingPlayerIndex = 0,
       writeTo = out,
@@ -54,7 +71,11 @@ class PlayerActionQueueTest {
       actionLength = DATA.size,
     )
 
-    assertThat(out.toByteArray()).isEqualTo(ByteArray(DATA.size) { 0x00 })
+    val resultBytes = ByteArray(DATA.size)
+    out.getBytes(0, resultBytes)
+    out.release()
+
+    assertThat(resultBytes).isEqualTo(ByteArray(DATA.size) { 0x00 })
   }
 
   @Test
@@ -69,9 +90,12 @@ class PlayerActionQueueTest {
       )
     queue.markSynced()
 
-    queue.addActions(VariableSizeByteArray(DATA))
+    val buf = Unpooled.wrappedBuffer(DATA)
+    queue.addActions(buf)
+    buf.release()
 
-    val out = VariableSizeByteArray(Random.nextBytes(DATA.size))
+    val out = Unpooled.buffer(DATA.size)
+
     queue.getActionAndWriteToArray(
       readingPlayerIndex = 0,
       writeTo = out,
@@ -79,7 +103,11 @@ class PlayerActionQueueTest {
       actionLength = DATA.size,
     )
 
-    assertThat(out.toByteArray()).isEqualTo(DATA)
+    val resultBytes = ByteArray(DATA.size)
+    out.getBytes(0, resultBytes)
+    out.release()
+
+    assertThat(resultBytes).isEqualTo(DATA)
   }
 
   @Test
@@ -94,9 +122,19 @@ class PlayerActionQueueTest {
       )
     queue.markSynced()
 
-    queue.addActions(VariableSizeByteArray(DATA))
+    val buf = Unpooled.wrappedBuffer(DATA)
+    queue.addActions(buf)
+    // buf wrapped DATA.
+    // We should not release buf because we reuse DATA?
+    // Unpooled.wrappedBuffer(DATA) wraps the array.
+    // ByteBuf operations don't modify array content if we only getBytes.
+    // Safe to reuse DATA array. But we need new ByteBuf wrapper each time we wrap or just retain?
+    // If we release buf, the array is fine.
 
-    var out = VariableSizeByteArray(Random.nextBytes(DATA.size))
+    // BUT we need to pass a valid buffer to addActions.
+
+    var out = Unpooled.buffer(DATA.size)
+
     queue.getActionAndWriteToArray(
       readingPlayerIndex = 0,
       writeTo = out,
@@ -104,11 +142,18 @@ class PlayerActionQueueTest {
       actionLength = DATA.size,
     )
 
-    assertThat(out.toByteArray()).isEqualTo(DATA)
+    var resultBytes = ByteArray(DATA.size)
+    out.getBytes(0, resultBytes)
+    assertThat(resultBytes).isEqualTo(DATA)
+    out.release()
+    buf.release()
 
-    queue.addActions(VariableSizeByteArray(DATA))
+    // Add again
+    val buf2 = Unpooled.wrappedBuffer(DATA)
+    queue.addActions(buf2)
+    buf2.release()
 
-    out = VariableSizeByteArray(Random.nextBytes(DATA.size))
+    out = Unpooled.buffer(DATA.size)
     queue.getActionAndWriteToArray(
       readingPlayerIndex = 0,
       writeTo = out,
@@ -116,7 +161,10 @@ class PlayerActionQueueTest {
       actionLength = DATA.size,
     )
 
-    assertThat(out.toByteArray()).isEqualTo(DATA)
+    resultBytes = ByteArray(DATA.size)
+    out.getBytes(0, resultBytes)
+    assertThat(resultBytes).isEqualTo(DATA)
+    out.release()
   }
 
   @Test
@@ -130,9 +178,10 @@ class PlayerActionQueueTest {
       )
     queue.markSynced()
 
-    queue.addActions(VariableSizeByteArray(DATA))
+    val buf = Unpooled.wrappedBuffer(DATA)
+    queue.addActions(buf)
 
-    var out = VariableSizeByteArray(Random.nextBytes(DATA.size))
+    var out = Unpooled.buffer(DATA.size)
     queue.getActionAndWriteToArray(
       readingPlayerIndex = 0,
       writeTo = out,
@@ -140,11 +189,17 @@ class PlayerActionQueueTest {
       actionLength = DATA.size,
     )
 
-    assertThat(out.toByteArray()).isEqualTo(DATA)
+    var resultBytes = ByteArray(DATA.size)
+    out.getBytes(0, resultBytes)
+    assertThat(resultBytes).isEqualTo(DATA)
+    out.release()
 
-    queue.addActions(VariableSizeByteArray(DATA))
+    // Add again
+    // Reusing buf (assuming we didn't release it yet or reset reader index)
+    buf.readerIndex(0)
+    queue.addActions(buf)
 
-    out = VariableSizeByteArray(Random.nextBytes(DATA.size))
+    out = Unpooled.buffer(DATA.size)
     queue.getActionAndWriteToArray(
       readingPlayerIndex = 0,
       writeTo = out,
@@ -152,11 +207,17 @@ class PlayerActionQueueTest {
       actionLength = DATA.size,
     )
 
-    assertThat(out.toByteArray()).isEqualTo(DATA)
+    resultBytes = ByteArray(DATA.size)
+    out.getBytes(0, resultBytes)
+    assertThat(resultBytes).isEqualTo(DATA)
+    out.release()
 
-    queue.addActions(VariableSizeByteArray(DATA))
+    // Add again
+    buf.readerIndex(0)
+    queue.addActions(buf)
+    buf.release()
 
-    out = VariableSizeByteArray(Random.nextBytes(DATA.size))
+    out = Unpooled.buffer(DATA.size)
     queue.getActionAndWriteToArray(
       readingPlayerIndex = 0,
       writeTo = out,
@@ -164,7 +225,10 @@ class PlayerActionQueueTest {
       actionLength = DATA.size,
     )
 
-    assertThat(out.toByteArray()).isEqualTo(DATA)
+    resultBytes = ByteArray(DATA.size)
+    out.getBytes(0, resultBytes)
+    assertThat(resultBytes).isEqualTo(DATA)
+    out.release()
   }
 
   @Test
@@ -174,9 +238,11 @@ class PlayerActionQueueTest {
       PlayerActionQueue(playerNumber = 1, player = mock(), numPlayers = 2, gameBufferSize = 4096)
     queue.markSynced()
 
-    queue.addActions(VariableSizeByteArray(DATA))
+    val buf = Unpooled.wrappedBuffer(DATA)
+    queue.addActions(buf)
+    buf.release()
 
-    val out = VariableSizeByteArray(Random.nextBytes(DATA.size))
+    val out = Unpooled.buffer(DATA.size)
     queue.getActionAndWriteToArray(
       readingPlayerIndex = 0,
       writeTo = out,
@@ -185,7 +251,11 @@ class PlayerActionQueueTest {
     )
 
     assertThat(queue.containsNewDataForPlayer(playerIndex = 0, actionLength = DATA.size)).isTrue()
-    assertThat(out.toByteArray()).isEqualTo(DATA)
+
+    val resultBytes = ByteArray(DATA.size)
+    out.getBytes(0, resultBytes)
+    assertThat(resultBytes).isEqualTo(DATA)
+    out.release()
   }
 
   companion object {

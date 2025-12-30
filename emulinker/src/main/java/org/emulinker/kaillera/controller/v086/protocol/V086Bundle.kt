@@ -4,7 +4,6 @@ import io.netty.buffer.ByteBuf
 import org.emulinker.kaillera.controller.messaging.ByteBufferMessage
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.messaging.ParseException
-import org.emulinker.util.CircularVariableSizeByteArrayBuffer
 import org.emulinker.util.EmuUtil
 
 sealed interface V086Bundle : ByteBufferMessage {
@@ -62,7 +61,6 @@ sealed interface V086Bundle : ByteBufferMessage {
     fun parse(
       buffer: ByteBuf,
       lastMessageID: Int = -1,
-      arrayBuffer: CircularVariableSizeByteArrayBuffer? = null,
     ): V086Bundle {
       if (buffer.readableBytes() < 5) {
         throw V086BundleFormatException("Invalid buffer length: " + buffer.readableBytes())
@@ -90,29 +88,36 @@ sealed interface V086Bundle : ByteBufferMessage {
         if (messageLength !in 2..buffer.readableBytes()) {
           throw ParseException("Invalid message length: $messageLength")
         }
-        return Single(V086Message.parse(messageNumber, messageLength.toInt(), buffer, arrayBuffer))
+        return Single(V086Message.parse(messageNumber, messageLength.toInt(), buffer))
       } else {
         messages = arrayOfNulls(messageCount)
         var parsedCount = 0
-        while (parsedCount < messageCount) {
-          val messageNumber = buffer.readUnsignedShortLE()
-          if (messageNumber <= lastMessageID) {
-            if (messageNumber < 0x20 && lastMessageID > 0xFFDF) {
-              // exception when messageNumber with lower value is greater do nothing
-            } else {
+        try {
+          while (parsedCount < messageCount) {
+            val messageNumber = buffer.readUnsignedShortLE()
+            if (messageNumber <= lastMessageID) {
+              if (messageNumber < 0x20 && lastMessageID > 0xFFDF) {
+                // exception when messageNumber with lower value is greater do nothing
+              } else {
+                break
+              }
+            } else if (messageNumber > 0xFFBF && lastMessageID < 0x40) {
+              // exception when disorder messageNumber greater that lastMessageID
               break
             }
-          } else if (messageNumber > 0xFFBF && lastMessageID < 0x40) {
-            // exception when disorder messageNumber greater that lastMessageID
-            break
+            val messageLength = buffer.readShortLE()
+            if (messageLength < 2 || messageLength > buffer.readableBytes()) {
+              throw ParseException("Invalid message length: $messageLength")
+            }
+            messages[parsedCount] =
+              V086Message.parse(messageNumber, messageLength.toInt(), buffer)
+            parsedCount++
           }
-          val messageLength = buffer.readShortLE()
-          if (messageLength < 2 || messageLength > buffer.readableBytes()) {
-            throw ParseException("Invalid message length: $messageLength")
+        } catch (e: Exception) {
+          for (i in 0 until parsedCount) {
+            io.netty.util.ReferenceCountUtil.release(messages[i])
           }
-          messages[parsedCount] =
-            V086Message.parse(messageNumber, messageLength.toInt(), buffer, arrayBuffer)
-          parsedCount++
+          throw e
         }
         return Multi(messages, parsedCount)
       }

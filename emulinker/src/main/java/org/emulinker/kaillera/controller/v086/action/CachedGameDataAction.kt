@@ -15,13 +15,11 @@ object CachedGameDataAction : V086Action<CachedGameData> {
   override fun performAction(message: CachedGameData, clientHandler: V086ClientHandler) {
     val user = clientHandler.user
     val data = clientHandler.clientGameDataCache[message.key]
-    data.inTemporaryUse.set(true)
-    val addGameDataResult =
-      try {
-        user.addGameData(data)
-      } finally {
-        data.inTemporaryUse.set(false)
-      }
+    // data is a retained slice from the cache.
+    // addGameData will release it when done (or we should release it if addGameData doesn't take ownership).
+    // KailleraUser.addGameData releases the input data.
+    val addGameDataResult = user.addGameData(data)
+
     addGameDataResult.onFailure { e ->
       when (e) {
         is GameDataException -> {
@@ -31,11 +29,13 @@ object CachedGameDataAction : V086Action<CachedGameData> {
               clientHandler.send(
                 createAndMakeDeepCopy(clientHandler.nextMessageNumber, e.response!!)
               )
+              e.response!!.release()
             } catch (e2: MessageFormatException) {
               logger.atSevere().withCause(e2).log("Failed to construct GameData message")
             }
           }
         }
+
         is IndexOutOfBoundsException -> {
           logger
             .atSevere()
@@ -58,6 +58,7 @@ object CachedGameDataAction : V086Action<CachedGameData> {
             logger.atSevere().withCause(e2).log("Failed to construct new GameChat.Notification")
           }
         }
+
         else -> throw e
       }
     }

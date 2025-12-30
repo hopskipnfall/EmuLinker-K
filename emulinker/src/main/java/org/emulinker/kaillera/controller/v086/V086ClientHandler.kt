@@ -167,7 +167,7 @@ class V086ClientHandler(
   private fun handleReceivedInternal(buffer: ByteBuf) {
     val inBundle: V086Bundle =
       try {
-        V086Bundle.parse(buffer, lastMessageNumber, user.circularVariableSizeByteArrayBuffer)
+        V086Bundle.parse(buffer, lastMessageNumber)
       } catch (e: ParseException) {
         buffer.resetReaderIndex()
         logger
@@ -213,6 +213,14 @@ class V086ClientHandler(
           .atMostEvery(1, TimeUnit.SECONDS)
           .log("%s received bundle of messages from %s", this, user)
         clientRetryCount++
+        // Release any messages in the bundle since we are dropping them
+        if (inBundle is V086Bundle.Multi) {
+          for (i in 0 until inBundle.numMessages) {
+            io.netty.util.ReferenceCountUtil.release(inBundle.messages[i])
+          }
+        } else if (inBundle is V086Bundle.Single) {
+          io.netty.util.ReferenceCountUtil.release(inBundle.message)
+        }
         resend(clientRetryCount)
         return
       } else {
@@ -238,45 +246,57 @@ class V086ClientHandler(
           }
           (action as V086Action<V086Message>).performAction(m, this)
         }
+
         is V086Bundle.Multi -> {
           val messages = inBundle.messages
           // read the bundle from back to front to process the oldest messages first
-          for (i in inBundle.numMessages - 1 downTo 0) {
-            /**
-             * already extracts messages with higher numbers when parsing, it does not need to be
-             * checked and this causes an error if messageNumber is 0 and lastMessageNumber is
-             * 0xFFFF if (messages [i].getNumber() > lastMessageNumber)
-             */
-            prevMessageNumber = lastMessageNumber
-            val m: V086Message = messages[i]!!
-            lastMessageNumber = m.messageNumber
-            if (prevMessageNumber + 1 != lastMessageNumber) {
-              if (prevMessageNumber == 0xFFFF && lastMessageNumber == 0) {
-                // exception; do nothing
+          try {
+            for (i in inBundle.numMessages - 1 downTo 0) {
+              /**
+               * already extracts messages with higher numbers when parsing, it does not need to be
+               * checked and this causes an error if messageNumber is 0 and lastMessageNumber is
+               * 0xFFFF if (messages [i].getNumber() > lastMessageNumber)
+               */
+              prevMessageNumber = lastMessageNumber
+              val m: V086Message = messages[i]!!
+              lastMessageNumber = m.messageNumber
+              if (prevMessageNumber + 1 != lastMessageNumber) {
+                if (prevMessageNumber == 0xFFFF && lastMessageNumber == 0) {
+                  // exception; do nothing
+                } else {
+                  logger
+                    .atWarning()
+                    .log(
+                      "%s dropped a packet! (%d to %d)",
+                      user,
+                      prevMessageNumber,
+                      lastMessageNumber,
+                    )
+                  user.droppedPacket()
+                }
+              }
+              val action: V086Action<out V086Message>? =
+                // Checking for GameData first is a speed optimization.
+                when (m.messageTypeId) {
+                  GameData.ID -> GameDataAction
+                  CachedGameData.ID -> CachedGameDataAction
+                  else -> controller.actions[m.messageTypeId.toInt()]
+                }
+              if (action == null) {
+                logger.atSevere().log("No action defined to handle client message: %s", messages[i])
               } else {
-                logger
-                  .atWarning()
-                  .log(
-                    "%s dropped a packet! (%d to %d)",
-                    user,
-                    prevMessageNumber,
-                    lastMessageNumber,
-                  )
-                user.droppedPacket()
+                // logger.atFine().log(user + " -> " + message);
+                (action as V086Action<V086Message>).performAction(m, this)
               }
+              messages[i] = null // Mark as processed/consumed
             }
-            val action: V086Action<out V086Message>? =
-              // Checking for GameData first is a speed optimization.
-              when (m.messageTypeId) {
-                GameData.ID -> GameDataAction
-                CachedGameData.ID -> CachedGameDataAction
-                else -> controller.actions[m.messageTypeId.toInt()]
+          } finally {
+            // Release any messages that weren't processed (e.g. due to exception or early exit)
+            for (i in 0 until inBundle.numMessages) {
+              val m = messages[i]
+              if (m != null) {
+                io.netty.util.ReferenceCountUtil.release(m)
               }
-            if (action == null) {
-              logger.atSevere().log("No action defined to handle client message: %s", messages[i])
-            } else {
-              // logger.atFine().log(user + " -> " + message);
-              (action as V086Action<V086Message>).performAction(m, this)
             }
           }
         }
@@ -293,6 +313,7 @@ class V086ClientHandler(
       is GameDataEvent -> {
         GameDataAction.handleEvent(event, this)
       }
+
       is GameEvent -> {
         val eventHandler = controller.gameEventHandlers[event::class]
         if (eventHandler == null) {
@@ -303,6 +324,7 @@ class V086ClientHandler(
         }
         (eventHandler as V086GameEventHandler<GameEvent>).handleEvent(event, this)
       }
+
       is ServerEvent -> {
         val eventHandler = controller.serverEventHandlers[event::class]
         if (eventHandler == null) {
@@ -317,6 +339,7 @@ class V086ClientHandler(
         }
         (eventHandler as V086ServerEventHandler<ServerEvent>).handleEvent(event, this)
       }
+
       is UserEvent -> {
         val eventHandler = controller.userEventHandlers[event::class]
         if (eventHandler == null) {

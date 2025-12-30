@@ -30,10 +30,10 @@ import org.emulinker.kaillera.model.exception.QuitException
 import org.emulinker.kaillera.model.exception.QuitGameException
 import org.emulinker.kaillera.model.exception.StartGameException
 import org.emulinker.kaillera.model.exception.UserReadyException
-import org.emulinker.util.CircularVariableSizeByteArrayBuffer
 import org.emulinker.util.EmuLang
 import org.emulinker.util.TimeOffsetCache
-import org.emulinker.util.VariableSizeByteArray
+import io.netty.buffer.ByteBuf
+import org.emulinker.kaillera.controller.v086.protocol.GameData
 
 /**
  * Represents a user in the server.
@@ -62,20 +62,13 @@ class KailleraUser(
   private val initTime = clock.now()
   val connectTime: Instant = initTime
 
-  var connectionType: ConnectionType =
-    ConnectionType.DISABLED // TODO(nue): This probably shouldn't have a default.
+  var connectionType: ConnectionType = ConnectionType.DISABLED // TODO(nue): This probably shouldn't have a default.
   var ping = 0.milliseconds // TODO(nue): This probably shouldn't have a default.
   var socketAddress: InetSocketAddress? = null
   var status = UserStatus.PLAYING // TODO(nue): This probably shouldn't have a default value..
 
-  /** A non-threadsafe cache of [VariableSizeByteArray] instances. */
-  val circularVariableSizeByteArrayBuffer =
-    CircularVariableSizeByteArrayBuffer(
-      // The GameDataCache has 256 so we should have something significantly larger.
-      capacity = 2_000
-    ) {
-      VariableSizeByteArray()
-    }
+  /** A non-threadsafe cache of [ByteBuf] instances is no longer needed since we use Netty's pooling. */
+  // Removed circularVariableSizeByteArrayBuffer
 
   /**
    * Level of access that the user has.
@@ -114,7 +107,7 @@ class KailleraUser(
   val isDead: Boolean
     get() =
       clock.now() - lastKeepAlive > flags.keepAliveTimeout &&
-        System.nanoTime() - lastUpdateNs > flags.keepAliveTimeout.inWholeNanoseconds
+              System.nanoTime() - lastUpdateNs > flags.keepAliveTimeout.inWholeNanoseconds
 
   /**
    * The user may have a successful connection to the server, but they are seemingly AFK for longer
@@ -123,7 +116,7 @@ class KailleraUser(
   val isIdleForTooLong: Boolean
     get() =
       clock.now() - lastActivity > flags.idleTimeout &&
-        System.nanoTime() - lastUpdateNs > flags.idleTimeout.inWholeNanoseconds
+              System.nanoTime() - lastUpdateNs > flags.idleTimeout.inWholeNanoseconds
 
   private var lastKeepAlive: Instant = initTime
   var lastChatTime: Instant = initTime
@@ -156,11 +149,11 @@ class KailleraUser(
   var lastMsgID = -1
   var isMuted = false
 
-  private val lostInput: MutableList<VariableSizeByteArray> = ArrayList()
+  private val lostInput: MutableList<ByteBuf> = ArrayList()
 
   /** Note that this is a different type from lostInput. */
-  fun getLostInput(): VariableSizeByteArray {
-    return lostInput[0]
+  fun getLostInput(): ByteBuf {
+    return lostInput[0].retainedSlice()
   }
 
   private val ignoredUsers: MutableList<String> = ArrayList()
@@ -434,7 +427,7 @@ class KailleraUser(
     }
     if (
       playerNumber > game.playerActionQueues.size ||
-        game.playerActionQueues[playerNumber - 1].synced
+      game.playerActionQueues[playerNumber - 1].synced
     ) {
       return
     }
@@ -444,7 +437,7 @@ class KailleraUser(
   }
 
   // Current source of the lag.
-  fun addGameData(data: VariableSizeByteArray): Result<Unit> {
+  fun addGameData(data: ByteBuf): Result<Unit> {
     receivedGameDataNs = System.nanoTime()
     fun doTheThing(): Result<Unit> {
       // Returning success when the game doesn't exist might not be correct?
@@ -453,21 +446,87 @@ class KailleraUser(
       // Initial Delay
       // totalDelay = (game.getDelay() + tempDelay + 5)
       if (frameCount < totalDelay) {
-        bytesPerAction = data.size / connectionType.byteValue
+        bytesPerAction = data.readableBytes() / connectionType.byteValue
         arraySize = game.playerActionQueues.size * connectionType.byteValue * bytesPerAction
+
+        // Retain before adding to list to take ownership
+        data.retain()
         lostInput.add(data)
-        doEvent(GameDataEvent(game, VariableSizeByteArray(ByteArray(arraySize) { 0 })))
+
+        // We create a dummy bytebuf here for the event?
+        // Note: The original code created a new ByteArray(size).
+        // VariableSizeByteArray(ByteArray(arraySize) { 0 })
+        // We replicate with Unpooled.buffer.
+        val zeroData = io.netty.buffer.Unpooled.wrappedBuffer(ByteArray(arraySize)) // Zeros by default
+
+        // doEvent takes the event which takes GameData which implements ReferenceCounted.
+        // GameData(..., zeroData).
+        // GameData constructor does NOT copy? No.
+        // So we just pass zeroData. GameData takes ownership.
+        doEvent(GameDataEvent(game, GameData(0, zeroData)))
+
         frameCount++
       } else {
         // lostInput.add(data);
         if (lostInput.isNotEmpty()) {
-          when (val r = game.addData(this, playerNumber, lostInput[0])) {
+          // Send lost input first
+          val lost = lostInput.removeAt(0)
+
+          // addData releases the buffer we pass it!
+          // But wait, lostInput has retained items.
+          // So we simply pass 'lost' to addData, which will release it.
+
+          when (val r = game.addData(this, playerNumber, lost)) {
             AddDataResult.Success -> {}
             AddDataResult.IgnoringDesynched -> {}
             is AddDataResult.Failure -> return Result.failure(r.exception)
           }
-          lostInput.removeAt(0)
+
         } else {
+          // When passing direct data, we must check if game.addData releases it.
+          // My implementation of KailleraGame.addData releases the data.
+          // But doTheThing is called with 'data' which is passed by caller.
+          // The caller might expect us to release it if we consume it?
+          // The caller is V086ClientHandler or similar.
+          // Typically in Netty simple inbound handlers release automatically.
+          // If we pass it to game.addData, and it releases, we are good.
+          // BUT, we need to make sure we retained it if we stored it in lostInput.
+          // Here we are NOT storing it.
+          // So we retain it? No, we pass ownership.
+          // So just pass it.
+
+          // WAIT! If we fail (Result.failure), we might leak if game.addData didn't release on failure?
+          // KailleraGame.addData releases IF !isSynched.
+          // It seems it consistently releases.
+
+          // CAUTION: The 'data' param comes from `addGameData` which comes from handler.
+          // Ideally we should retain it if we are going to use it async or store it.
+          // Here `game.addData` is synchronous? Yes.
+          // But `game.addData` implementation consumes it.
+
+          // One catch: `data` is used in multiple branches.
+          // if frameCount < totalDelay -> data is stored in `lostInput`.
+          // We did `data.retain()` there.
+          // original `data` reference from caller still exists.
+          // Does the caller release it?
+          // If the caller releases it, then `lostInput` having a retained copy covers us.
+          // If we DON'T store it (else block), we pass it to `game.addData`.
+          // If caller releases it, and we pass it to game.addData which releases it... double release?
+
+          // Standard Netty: Inbound handler releases msg after channelRead returns unless ReferenceCountUtil.retain is called.
+          // So if we consume it, we must ensure it is valid during consumption.
+          // If we pass it to another component that releases it, the final ref count is -1 (from caller's perspective)?
+          // No. Caller releases (cnt--). We consumed it (cnt--). If starting cnt was 1 -> 0 -> -1. Bad.
+
+          // Correct pattern:
+          // If we want to consume (and eventually release), we usually `retain` if we are storing.
+          // If we are just passing through, we rely on the caller's auto-release mechanism OR we release it ourselves and tell caller not to?
+          // If this function `addGameData` is part of logical processing, it likely shouldn't mess with refCounts unless it stores.
+          // BUT `KailleraGame.addData` calls `data.release()`.
+          // This implies `KailleraGame` assumes it consumes the ref.
+          // So we should `retain` before passing to `KailleraGame.addData`.
+
+          data.retain()
           when (val r = game.addData(this, playerNumber, data)) {
             AddDataResult.Success -> {}
             AddDataResult.IgnoringDesynched -> {}
@@ -504,6 +563,7 @@ class KailleraUser(
             return result
           }
         }
+
         else -> throw e
       }
     }

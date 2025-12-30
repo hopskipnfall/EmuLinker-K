@@ -1,9 +1,12 @@
 package org.emulinker.util
 
+import io.netty.buffer.ByteBuf
+import io.netty.buffer.ByteBufUtil
+
 class GameDataCacheImpl(override val capacity: Int) : GameDataCache {
   private var lastRetrievedIndex = -1
 
-  private var array: Array<VariableSizeByteArray?> = arrayOfNulls(capacity)
+  private var array: Array<ByteBuf?> = arrayOfNulls(capacity)
 
   // head points to the first logical element in the array, and
   // tail points to the element following the last. This means
@@ -15,26 +18,23 @@ class GameDataCacheImpl(override val capacity: Int) : GameDataCache {
   override var size = 0
     private set
 
-  override fun containsAll(elements: Collection<VariableSizeByteArray>): Boolean =
-    elements.all { contains(it) }
-
   override fun isEmpty(): Boolean = size == 0
 
-  override fun iterator() = iterator<VariableSizeByteArray> { repeat(size) { i -> yield(get(i)) } }
+  override fun iterator() = iterator<ByteBuf> { repeat(size) { i -> yield(get(i)) } }
 
-  override fun contains(element: VariableSizeByteArray): Boolean = indexOf(element) >= 0
+  override fun contains(element: ByteBuf): Boolean = indexOf(element) >= 0
 
-  override fun indexOf(data: VariableSizeByteArray): Int {
+  override fun indexOf(data: ByteBuf): Int {
     // Often the state is exactly the same from call to call, so it helps to check the last index
     // returned first.
     if (lastRetrievedIndex >= 0) {
-      if (data == array[lastRetrievedIndex]) {
+      if (ByteBufUtil.equals(data, array[lastRetrievedIndex])) {
         return toExternalIndex(lastRetrievedIndex)
       }
     }
     for (i in size - 1 downTo 0) {
       val arrayIndex = toInternalIndex(i)
-      if (data == array[arrayIndex]) {
+      if (ByteBufUtil.equals(data, array[arrayIndex])) {
         lastRetrievedIndex = arrayIndex
         return i
       }
@@ -43,9 +43,11 @@ class GameDataCacheImpl(override val capacity: Int) : GameDataCache {
     return -1
   }
 
-  override operator fun get(index: Int): VariableSizeByteArray {
+  override operator fun get(index: Int): ByteBuf {
     rangeCheck(index)
-    return array[toInternalIndex(index)]!!
+    val buf = array[toInternalIndex(index)]!!
+    // Return retained slice to be safe, matching FastGameDataCache behavior
+    return buf.retainedSlice()
   }
 
   // This method is the main reason we re-wrote the class.
@@ -55,7 +57,9 @@ class GameDataCacheImpl(override val capacity: Int) : GameDataCache {
     rangeCheck(index)
     val pos = toInternalIndex(index)
     val entry = array[pos]
-    entry?.isInCache?.set(false)
+
+    // Release the buffer
+    entry?.release()
     array[pos] = null
 
     // optimized for FIFO access, i.e. adding to back and
@@ -82,7 +86,7 @@ class GameDataCacheImpl(override val capacity: Int) : GameDataCache {
 
   override fun clear() {
     for (i in 0 until size) {
-      array[toInternalIndex(i)]?.isInCache?.set(false)
+      array[toInternalIndex(i)]?.release()
       array[toInternalIndex(i)] = null
     }
     size = 0
@@ -90,11 +94,12 @@ class GameDataCacheImpl(override val capacity: Int) : GameDataCache {
     head = tail
   }
 
-  override fun add(data: VariableSizeByteArray): Int {
+  override fun add(data: ByteBuf): Int {
     if (size == array.size) remove(0)
     val pos = tail
-    data.isInCache.set(true)
-    array[tail] = data
+
+    // Retain copy for storage
+    array[tail] = data.copy()
 
     // tail = ((tail + 1) % array.length);
     tail++

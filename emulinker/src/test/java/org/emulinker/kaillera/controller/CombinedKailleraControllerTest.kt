@@ -37,6 +37,7 @@ import org.emulinker.kaillera.controller.v086.protocol.V086Message
 import org.emulinker.kaillera.model.ConnectionType.LAN
 import org.emulinker.kaillera.model.GameStatus.WAITING
 import org.emulinker.kaillera.model.UserStatus
+import org.emulinker.kaillera.pico.AppModule
 import org.emulinker.kaillera.pico.koinModule
 import org.emulinker.kaillera.release.ReleaseInfo
 import org.junit.After
@@ -48,9 +49,11 @@ import org.koin.test.KoinTestRule
 import org.koin.test.inject
 
 class CombinedKailleraControllerTest : ProtocolBaseTest(), KoinTest {
-  @get:Rule val koinTestRule = KoinTestRule.create { modules(koinModule, ActionModule) }
+  @get:Rule
+  val koinTestRule = KoinTestRule.create { modules(koinModule, ActionModule) }
 
-  @get:Rule val expect = Expect.create()
+  @get:Rule
+  val expect = Expect.create()
 
   private val server: CombinedKailleraController by inject()
 
@@ -81,6 +84,8 @@ class CombinedKailleraControllerTest : ProtocolBaseTest(), KoinTest {
 
   @Before
   fun before() {
+    AppModule.charsetDoNotUse = java.nio.charset.StandardCharsets.ISO_8859_1
+    java.util.Locale.setDefault(java.util.Locale.US)
     channel =
       EmbeddedChannel(
         // io.netty.handler.logging.LoggingHandler(),
@@ -134,21 +139,21 @@ class CombinedKailleraControllerTest : ProtocolBaseTest(), KoinTest {
     MessageVerifier().apply {
       expectMessage<UserJoined> {
         it ==
-          UserJoined(
-            messageNumber = 0,
-            username = "tester2",
-            userId = 2,
-            ping = Duration.ZERO,
-            connectionType = LAN,
-          )
+                UserJoined(
+                  messageNumber = 0,
+                  username = "tester2",
+                  userId = 2,
+                  ping = Duration.ZERO,
+                  connectionType = LAN,
+                )
       }
       expectMessage<InformationMessage> {
         it ==
-          InformationMessage(
-            messageNumber = 0,
-            source = "server",
-            message = "Server Owner Logged In!",
-          )
+                InformationMessage(
+                  messageNumber = 0,
+                  source = "server",
+                  message = "Server Owner Logged In!",
+                )
       }
       receiveAllMessages(receiveAll(onPort = 1))
       flushExpectations()
@@ -159,34 +164,34 @@ class CombinedKailleraControllerTest : ProtocolBaseTest(), KoinTest {
     MessageVerifier().apply {
       expectMessage<CreateGameNotification> {
         it ==
-          CreateGameNotification(
-            messageNumber = 0,
-            username = "tester1",
-            romName = "Test Game",
-            clientType = "tester_tester",
-            gameId = 1,
-            val1 = 0,
-          )
+                CreateGameNotification(
+                  messageNumber = 0,
+                  username = "tester1",
+                  romName = "Test Game",
+                  clientType = "tester_tester",
+                  gameId = 1,
+                  val1 = 0,
+                )
       }
 
       expectMessage<GameStatus> {
         it ==
-          GameStatus(
-            messageNumber = 0,
-            gameId = 1,
-            val1 = 0,
-            gameStatus = WAITING,
-            numPlayers = 1,
-            maxPlayers = 8,
-          )
+                GameStatus(
+                  messageNumber = 0,
+                  gameId = 1,
+                  val1 = 0,
+                  gameStatus = WAITING,
+                  numPlayers = 1,
+                  maxPlayers = 8,
+                )
       }
       expectMessage<InformationMessage> {
         it ==
-          InformationMessage(
-            messageNumber = 0,
-            source = "server",
-            message = "tester1 created game: Test Game",
-          )
+                InformationMessage(
+                  messageNumber = 0,
+                  source = "server",
+                  message = "tester1 created game: Test Game",
+                )
       }
 
       receiveAllMessages(receiveAll(onPort = 2))
@@ -198,26 +203,26 @@ class CombinedKailleraControllerTest : ProtocolBaseTest(), KoinTest {
     MessageVerifier().apply {
       expectMessage<GameStatus> {
         it ==
-          GameStatus(
-            messageNumber = 0,
-            gameId = 1,
-            val1 = 0,
-            gameStatus = WAITING,
-            numPlayers = 2,
-            maxPlayers = 8,
-          )
+                GameStatus(
+                  messageNumber = 0,
+                  gameId = 1,
+                  val1 = 0,
+                  gameStatus = WAITING,
+                  numPlayers = 2,
+                  maxPlayers = 8,
+                )
       }
       expectMessage<JoinGameNotification> {
         it ==
-          JoinGameNotification(
-            messageNumber = 0,
-            gameId = 1,
-            val1 = 0,
-            username = "tester2",
-            ping = Duration.ZERO,
-            userId = 2,
-            connectionType = LAN,
-          )
+                JoinGameNotification(
+                  messageNumber = 0,
+                  gameId = 1,
+                  val1 = 0,
+                  username = "tester2",
+                  ping = Duration.ZERO,
+                  userId = 2,
+                  connectionType = LAN,
+                )
       }
 
       receiveAllMessages(receiveAll(onPort = 1))
@@ -227,49 +232,49 @@ class CombinedKailleraControllerTest : ProtocolBaseTest(), KoinTest {
     MessageVerifier().apply {
       expectMessage<GameStatus> {
         it ==
-          GameStatus(
-            messageNumber = 0,
-            gameId = 1,
-            val1 = 0,
-            gameStatus = WAITING,
-            numPlayers = 2,
-            maxPlayers = 8,
-          )
+                GameStatus(
+                  messageNumber = 0,
+                  gameId = 1,
+                  val1 = 0,
+                  gameStatus = WAITING,
+                  numPlayers = 2,
+                  maxPlayers = 8,
+                )
       }
       expectMessage<PlayerInformation> {
         it ==
-          PlayerInformation(
-            messageNumber = 0,
-            players =
-              listOf(
-                PlayerInformation.Player(
-                  username = "tester1",
-                  ping = Duration.ZERO,
-                  userId = 1,
-                  connectionType = LAN,
+                PlayerInformation(
+                  messageNumber = 0,
+                  players =
+                    listOf(
+                      PlayerInformation.Player(
+                        username = "tester1",
+                        ping = Duration.ZERO,
+                        userId = 1,
+                        connectionType = LAN,
+                      )
+                    ),
                 )
-              ),
-          )
       }
       expectMessage<JoinGameNotification> {
         it ==
-          JoinGameNotification(
-            messageNumber = 0,
-            gameId = 1,
-            val1 = 0,
-            username = "tester2",
-            ping = Duration.ZERO,
-            userId = 2,
-            connectionType = LAN,
-          )
+                JoinGameNotification(
+                  messageNumber = 0,
+                  gameId = 1,
+                  val1 = 0,
+                  username = "tester2",
+                  ping = Duration.ZERO,
+                  userId = 2,
+                  connectionType = LAN,
+                )
       }
       expectMessage<GameChatNotification> {
         it ==
-          GameChatNotification(
-            messageNumber = 0,
-            username = "Server",
-            message = "Message that appears when a user joins/starts a game!",
-          )
+                GameChatNotification(
+                  messageNumber = 0,
+                  username = "Server",
+                  message = "Message that appears when a user joins/starts a game!",
+                )
       }
 
       receiveAllMessages(receiveAll(onPort = 2))
@@ -283,37 +288,37 @@ class CombinedKailleraControllerTest : ProtocolBaseTest(), KoinTest {
     MessageVerifier().apply {
       expectMessage<CreateGameNotification> {
         it ==
-          CreateGameNotification(
-            messageNumber = 0,
-            username = "tester$clientPort",
-            romName = "Test Game",
-            clientType = "tester_tester",
-            gameId = 1,
-            val1 = 0,
-          )
+                CreateGameNotification(
+                  messageNumber = 0,
+                  username = "tester$clientPort",
+                  romName = "Test Game",
+                  clientType = "tester_tester",
+                  gameId = 1,
+                  val1 = 0,
+                )
       }
       expectMessage<GameStatus> {
         it ==
-          GameStatus(
-            messageNumber = 0,
-            gameId = 1,
-            val1 = 0,
-            gameStatus = WAITING,
-            numPlayers = 1,
-            maxPlayers = 8,
-          )
+                GameStatus(
+                  messageNumber = 0,
+                  gameId = 1,
+                  val1 = 0,
+                  gameStatus = WAITING,
+                  numPlayers = 1,
+                  maxPlayers = 8,
+                )
       }
       expectMessage<JoinGameNotification> {
         it ==
-          JoinGameNotification(
-            messageNumber = 0,
-            gameId = 1,
-            val1 = 0,
-            username = "tester$clientPort",
-            ping = Duration.ZERO,
-            userId = 1,
-            connectionType = LAN,
-          )
+                JoinGameNotification(
+                  messageNumber = 0,
+                  gameId = 1,
+                  val1 = 0,
+                  username = "tester$clientPort",
+                  ping = Duration.ZERO,
+                  userId = 1,
+                  connectionType = LAN,
+                )
       }
       expectMessage<InformationMessage> { it.message.contains("created game") }
       expectMessage<GameChatNotification>()
@@ -475,7 +480,8 @@ class CombinedKailleraControllerTest : ProtocolBaseTest(), KoinTest {
   private fun datagramPacket(buffer: ByteBuf, fromPort: Int) =
     DatagramPacket(
       Unpooled.wrappedBuffer(buffer),
-      /* recipient= */ InetSocketAddress(
+      /* recipient= */
+      InetSocketAddress(
         channel.remoteAddress().hostname,
         channel.remoteAddress().port,
       ),
@@ -518,7 +524,8 @@ private fun V086Message.zeroMessageNumber(): V086Message =
 
 class MessageVerifier {
 
-  @PublishedApi internal val expectations = mutableListOf<(Any) -> Boolean>()
+  @PublishedApi
+  internal val expectations = mutableListOf<(Any) -> Boolean>()
 
   /** expectMessage: Adds an expectation based on a specific type R and a predicate. */
   inline fun <reified R : Any> expectMessage(crossinline predicate: (R) -> Boolean = { true }) {

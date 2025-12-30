@@ -7,7 +7,7 @@ import org.emulinker.kaillera.model.KailleraGame
 import org.emulinker.kaillera.model.KailleraUser
 import org.emulinker.util.EmuLang.getString
 import org.emulinker.util.EmuUtil
-import org.emulinker.util.VariableSizeByteArray
+import io.netty.buffer.ByteBuf
 
 class AutoFireScanner2(private var game: KailleraGame, sensitivity: Int) : AutoFireDetector {
   override var sensitivity = 0
@@ -46,7 +46,7 @@ class AutoFireScanner2(private var game: KailleraGame, sensitivity: Int) : AutoF
     scanningJobs?.forEach { it?.stop() }
   }
 
-  override fun addData(playerNumber: Int, data: VariableSizeByteArray, bytesPerAction: Int) {
+  override fun addData(playerNumber: Int, data: ByteBuf, bytesPerAction: Int) {
     if (sensitivity <= 0) return
     scanningJobs?.get(playerNumber - 1)?.addData(data, bytesPerAction)
   }
@@ -65,22 +65,24 @@ class AutoFireScanner2(private var game: KailleraGame, sensitivity: Int) : AutoF
     private var stopFlag = false
 
     @Synchronized
-    fun addData(data: VariableSizeByteArray, bytesPerAction: Int) {
-      // TODO(nue): Don't make a deep copy.
-      val data = data.toByteArray()
-      if (pos + data.size >= sizeLimit) {
+    fun addData(data: ByteBuf, bytesPerAction: Int) {
+      val length = data.readableBytes()
+      val byteArray = ByteArray(length)
+      data.getBytes(data.readerIndex(), byteArray)
+
+      if (pos + length >= sizeLimit) {
         val firstSize = sizeLimit - pos
-        System.arraycopy(data, 0, buffer[tail], pos, firstSize)
+        System.arraycopy(byteArray, 0, buffer[tail], pos, firstSize)
         tail++
         if (tail == bufferSize) tail = 0
-        System.arraycopy(data, firstSize, buffer[tail], 0, data.size - firstSize)
-        pos = data.size - firstSize
+        System.arraycopy(byteArray, firstSize, buffer[tail], 0, length - firstSize)
+        pos = length - firstSize
         size++
         if (this.bytesPerAction <= 0) this.bytesPerAction = bytesPerAction
         if (!running) executor.submit(this)
       } else {
-        System.arraycopy(data, 0, buffer[tail], pos, data.size)
-        pos += data.size
+        System.arraycopy(byteArray, 0, buffer[tail], pos, length)
+        pos += length
       }
     }
 

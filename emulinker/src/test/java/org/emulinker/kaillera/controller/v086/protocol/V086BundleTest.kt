@@ -14,7 +14,7 @@ import org.emulinker.kaillera.model.GameStatus
 import org.emulinker.kaillera.model.UserStatus
 import org.emulinker.kaillera.pico.AppModule
 import org.emulinker.testing.LoggingRule
-import org.emulinker.util.VariableSizeByteArray
+
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -30,9 +30,22 @@ private fun wrapInArray(vararg a: Params) = a.map { arrayOf(it as Object) }.toLi
 
 @RunWith(Parameterized::class)
 class V086BundleTestShiftJis {
-  @get:Rule val logging = LoggingRule()
+  @get:Rule
+  val logging = LoggingRule()
 
-  @Parameterized.Parameter lateinit var params: Params
+  @org.junit.Before
+  fun setup() {
+    AppModule.charsetDoNotUse = Charset.forName("Shift_JIS")
+  }
+
+  @org.junit.After
+  fun tearDown() {
+    AppModule.charsetDoNotUse = StandardCharsets.ISO_8859_1
+  }
+
+
+  @Parameterized.Parameter
+  lateinit var params: Params
 
   @Test
   fun parse() {
@@ -43,6 +56,7 @@ class V086BundleTestShiftJis {
       is V086Bundle.Single -> {
         assertThat(parsedBundle.message).isEqualTo(params.expectedMessages.single())
       }
+
       is V086Bundle.Multi -> {
         assertThat(parsedBundle.messages.toList())
           .containsExactlyElementsIn(params.expectedMessages)
@@ -55,7 +69,6 @@ class V086BundleTestShiftJis {
     @Parameterized.Parameters
     @JvmStatic
     fun data(): List<Array<Object>> {
-      AppModule.charsetDoNotUse = Charset.forName("Shift_JIS")
 
       return wrapInArray(
         Params(
@@ -159,7 +172,7 @@ class V086BundleTestShiftJis {
             listOf(
               GameData(
                 messageNumber = 9,
-                VariableSizeByteArray(
+                Unpooled.wrappedBuffer(
                   byteArrayOf(
                     16,
                     32,
@@ -190,7 +203,7 @@ class V086BundleTestShiftJis {
               ),
               GameData(
                 messageNumber = 8,
-                VariableSizeByteArray(
+                Unpooled.wrappedBuffer(
                   byteArrayOf(
                     16,
                     36,
@@ -233,7 +246,7 @@ class V086BundleTestShiftJis {
               GameData(
                 messageNumber = 35245,
                 gameData =
-                  VariableSizeByteArray(
+                  Unpooled.wrappedBuffer(
                     "10,20,00,00,00,00,00,00,01,00,00,00,00,00,FC,03,00,00,00,00,00,00,00,00"
                       .replace(",", "")
                       .hexToByteArray(HexFormat.UpperCase)
@@ -242,7 +255,7 @@ class V086BundleTestShiftJis {
               //              GameData(
               //                messageNumber = 35244,
               //                gameData =
-              //                  VariableSizeByteArray(
+              //                  Unpooled.wrappedBuffer(
               //
               // "10,20,00,00,00,00,00,00,01,00,00,00,00,00,FC,03,00,00,00,00,00,00,00,00"
               //                      .replace(",", "")
@@ -269,9 +282,22 @@ class V086BundleTestShiftJis {
 
 @RunWith(Parameterized::class)
 class V086BundleTestShiftUtf8 {
-  @get:Rule val logging = LoggingRule()
+  @get:Rule
+  val logging = LoggingRule()
 
-  @Parameterized.Parameter lateinit var params: Params
+  @org.junit.Before
+  fun setup() {
+    AppModule.charsetDoNotUse = StandardCharsets.UTF_8
+  }
+
+  @org.junit.After
+  fun tearDown() {
+    AppModule.charsetDoNotUse = StandardCharsets.ISO_8859_1
+  }
+
+
+  @Parameterized.Parameter
+  lateinit var params: Params
 
   @Test
   fun parse() {
@@ -282,6 +308,7 @@ class V086BundleTestShiftUtf8 {
       is V086Bundle.Single -> {
         assertThat(parsedBundle.message).isEqualTo(params.expectedMessages.single())
       }
+
       is V086Bundle.Multi -> {
         assertThat(parsedBundle.messages.toList())
           .containsExactlyElementsIn(params.expectedMessages)
@@ -294,7 +321,6 @@ class V086BundleTestShiftUtf8 {
     @Parameterized.Parameters
     @JvmStatic
     fun data(): List<Array<Object>> {
-      AppModule.charsetDoNotUse = StandardCharsets.UTF_8
 
       return wrapInArray(
         Params(
@@ -318,7 +344,8 @@ class V086BundleTestShiftUtf8 {
 }
 
 class V086BundleTest {
-  @get:Rule val logging = LoggingRule()
+  @get:Rule
+  val logging = LoggingRule()
 
   @Test
   fun hexStringToByteBuffer() {
@@ -333,32 +360,32 @@ class V086BundleTest {
   @Test
   fun serverStatus_bodyLength() {
     assertThat(
-        ServerStatus(
-            messageNumber = 4,
-            users =
-              listOf(
-                ServerStatus.User(
-                  username = "test",
-                  ping = 19.milliseconds,
-                  status = UserStatus.CONNECTING,
-                  userId = 392,
-                  connectionType = ConnectionType.LAN,
-                )
-              ),
-            games =
-              listOf(
-                ServerStatus.Game(
-                  romName = "Nintendo All-Star! Dairantou Smash Brothers (J)",
-                  gameId = 61,
-                  clientType = "Project 64k 0.13 (01 Aug 2003)",
-                  username = "test",
-                  playerCountOutOfMax = "1/2",
-                  status = GameStatus.PLAYING,
-                )
-              ),
-          )
-          .bodyBytes
+      ServerStatus(
+        messageNumber = 4,
+        users =
+          listOf(
+            ServerStatus.User(
+              username = "test",
+              ping = 19.milliseconds,
+              status = UserStatus.CONNECTING,
+              userId = 392,
+              connectionType = ConnectionType.LAN,
+            )
+          ),
+        games =
+          listOf(
+            ServerStatus.Game(
+              romName = "Nintendo All-Star! Dairantou Smash Brothers (J)",
+              gameId = 61,
+              clientType = "Project 64k 0.13 (01 Aug 2003)",
+              username = "test",
+              playerCountOutOfMax = "1/2",
+              status = GameStatus.PLAYING,
+            )
+          ),
       )
+        .bodyBytes
+    )
       .isEqualTo(115)
   }
 

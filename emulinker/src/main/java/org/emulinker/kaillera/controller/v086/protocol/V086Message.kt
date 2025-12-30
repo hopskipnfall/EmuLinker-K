@@ -7,7 +7,6 @@ import org.emulinker.kaillera.controller.messaging.ByteBufferMessage
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.messaging.ParseException
 import org.emulinker.kaillera.pico.AppModule
-import org.emulinker.util.CircularVariableSizeByteArrayBuffer
 import org.emulinker.util.UnsignedUtil.putUnsignedShort
 
 /**
@@ -94,30 +93,30 @@ abstract class V086Message : ByteBufferMessage {
   companion object {
     val SERIALIZERS: Map<Byte, MessageSerializer<out V086Message>> =
       arrayOf(
-          Ack.ClientAckSerializer,
-          Ack.ServerAckSerializer,
-          AllReady.AllReadySerializer,
-          CachedGameData.CachedGameDataSerializer,
-          Chat.ChatSerializer,
-          CloseGame.CloseGameSerializer,
-          ConnectionRejected.ConnectionRejectedSerializer,
-          CreateGame.CreateGameSerializer,
-          GameChat.GameChatSerializer,
-          GameData.GameDataSerializer,
-          GameKick.GameKickSerializer,
-          GameStatus.GameStatusSerializer,
-          InformationMessage.InformationMessageSerializer,
-          JoinGame.JoinGameSerializer,
-          KeepAlive.KeepAliveSerializer,
-          PlayerDrop.PlayerDropSerializer,
-          PlayerInformation.PlayerInformationSerializer,
-          Quit.QuitSerializer,
-          QuitGame.QuitGameSerializer,
-          ServerStatus.ServerStatusSerializer,
-          StartGame.StartGameSerializer,
-          UserInformation.UserInformationSerializer,
-          UserJoined.UserJoinedSerializer,
-        )
+        Ack.ClientAckSerializer,
+        Ack.ServerAckSerializer,
+        AllReady.AllReadySerializer,
+        CachedGameData.CachedGameDataSerializer,
+        Chat.ChatSerializer,
+        CloseGame.CloseGameSerializer,
+        ConnectionRejected.ConnectionRejectedSerializer,
+        CreateGame.CreateGameSerializer,
+        GameChat.GameChatSerializer,
+        GameData.GameDataSerializer,
+        GameKick.GameKickSerializer,
+        GameStatus.GameStatusSerializer,
+        InformationMessage.InformationMessageSerializer,
+        JoinGame.JoinGameSerializer,
+        KeepAlive.KeepAliveSerializer,
+        PlayerDrop.PlayerDropSerializer,
+        PlayerInformation.PlayerInformationSerializer,
+        Quit.QuitSerializer,
+        QuitGame.QuitGameSerializer,
+        ServerStatus.ServerStatusSerializer,
+        StartGame.StartGameSerializer,
+        UserInformation.UserInformationSerializer,
+        UserJoined.UserJoinedSerializer,
+      )
         .associateBy { it.messageTypeId }
 
     protected fun <T : V086Message> T.validateMessageNumber(): Result<T> {
@@ -133,13 +132,12 @@ abstract class V086Message : ByteBufferMessage {
       messageNumber: Int,
       messageLength: Int,
       buf: ByteBuf,
-      arrayBuffer: CircularVariableSizeByteArrayBuffer?,
     ): V086Message {
       val messageType = buf.readByte()
 
       var parseResult =
         if (messageType == GameData.ID) {
-          GameData.GameDataSerializer.read(buf, messageNumber, arrayBuffer)
+          GameData.GameDataSerializer.read(buf, messageNumber)
         } else {
           val serializer =
             when (messageType) {
