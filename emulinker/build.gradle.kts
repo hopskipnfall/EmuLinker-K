@@ -3,24 +3,21 @@ import java.time.Instant
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompilationTask
 
 plugins {
-  id("com.google.protobuf") version "0.9.5"
-  id("build.buf") version "0.10.2"
-  id("com.diffplug.spotless") version "7.2.1"
-  id("org.jetbrains.dokka") version "2.0.0"
+  id("com.google.protobuf")
+  id("build.buf")
+  id("com.diffplug.spotless")
+  id("org.jetbrains.dokka")
   application
 
-  kotlin("jvm") version "2.2.10"
-  kotlin("plugin.serialization") version "2.2.10"
-  id("me.champeau.jmh") version "0.7.2"
-}
-
-repositories {
-  mavenLocal()
-  mavenCentral()
+  kotlin("jvm")
+  kotlin("plugin.serialization")
+  id("me.champeau.jmh")
 }
 
 dependencies {
-  api("org.jetbrains.kotlin:kotlin-stdlib:2.2.10")
+  implementation(
+    "com.github.hopskipnfall.KailleraProtocol-kmp:kailleraprotocol-jvm:1b008db2ad8cb91881c1641e6a1a9187c30b5948"
+  )
 
   implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.1")
 
@@ -132,8 +129,11 @@ tasks.named<KotlinCompilationTask<*>>("compileKotlin") {
 
   // Filtering the resources has to happen first.
   dependsOn(":emulinker:processResources")
+}
 
+tasks.withType<KotlinCompilationTask<*>> {
   compilerOptions.optIn.add("kotlin.time.ExperimentalTime")
+  compilerOptions.optIn.add("kotlin.ExperimentalStdlibApi")
 }
 
 tasks.named("compileTestKotlin") { dependsOn(":emulinker:processTestResources") }

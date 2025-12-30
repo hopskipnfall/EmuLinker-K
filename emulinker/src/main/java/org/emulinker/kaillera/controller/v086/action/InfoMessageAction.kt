@@ -1,9 +1,9 @@
 package org.emulinker.kaillera.controller.v086.action
 
 import com.google.common.flogger.FluentLogger
+import io.github.hopskipnfall.kaillera.protocol.v086.InformationMessage
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086ClientHandler
-import org.emulinker.kaillera.controller.v086.protocol.InformationMessage
 import org.emulinker.kaillera.model.event.InfoMessageEvent
 
 class InfoMessageAction : V086UserEventHandler<InfoMessageEvent> {

@@ -1,9 +1,9 @@
 package org.emulinker.kaillera.controller.v086.action
 
 import com.google.common.flogger.FluentLogger
+import io.github.hopskipnfall.kaillera.protocol.v086.GameStatus
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086ClientHandler
-import org.emulinker.kaillera.controller.v086.protocol.GameStatus
 import org.emulinker.kaillera.model.event.GameStatusChangedEvent
 
 class GameStatusAction : V086ServerEventHandler<GameStatusChangedEvent> {
@@ -19,8 +19,8 @@ class GameStatusAction : V086ServerEventHandler<GameStatusChangedEvent> {
           game.id,
           0.toShort().toInt(),
           game.status,
-          visiblePlayers.toByte(),
-          game.maxUsers.toByte(),
+          visiblePlayers,
+          game.maxUsers,
         )
       )
     } catch (e: MessageFormatException) {

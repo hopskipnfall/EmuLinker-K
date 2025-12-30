@@ -1,6 +1,7 @@
 package org.emulinker.kaillera.master.client
 
 import com.google.common.flogger.FluentLogger
+import io.github.hopskipnfall.kaillera.protocol.model.GameStatus
 import io.ktor.http.URLBuilder
 import java.io.BufferedReader
 import java.io.IOException
@@ -10,7 +11,6 @@ import java.net.URL
 import java.util.concurrent.TimeUnit
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.master.PublicServerInformation
-import org.emulinker.kaillera.model.GameStatus
 import org.emulinker.kaillera.model.KailleraServer
 import org.emulinker.kaillera.release.ReleaseInfo
 

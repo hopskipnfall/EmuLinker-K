@@ -1,12 +1,12 @@
 package org.emulinker.kaillera.controller.v086.action
 
 import com.google.common.flogger.FluentLogger
+import io.github.hopskipnfall.kaillera.protocol.v086.CreateGame
+import io.github.hopskipnfall.kaillera.protocol.v086.CreateGameNotification
+import io.github.hopskipnfall.kaillera.protocol.v086.InformationMessage
+import io.github.hopskipnfall.kaillera.protocol.v086.QuitGameNotification
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086ClientHandler
-import org.emulinker.kaillera.controller.v086.protocol.CreateGame
-import org.emulinker.kaillera.controller.v086.protocol.CreateGameNotification
-import org.emulinker.kaillera.controller.v086.protocol.InformationMessage
-import org.emulinker.kaillera.controller.v086.protocol.QuitGameNotification
 import org.emulinker.kaillera.model.event.GameCreatedEvent
 import org.emulinker.kaillera.model.event.GameInfoEvent
 import org.emulinker.kaillera.model.exception.CreateGameException

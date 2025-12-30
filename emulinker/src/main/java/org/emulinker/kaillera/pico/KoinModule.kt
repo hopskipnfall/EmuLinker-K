@@ -1,6 +1,7 @@
 package org.emulinker.kaillera.pico
 
 import com.codahale.metrics.MetricRegistry
+import io.github.hopskipnfall.kaillera.protocol.model.ConnectionType
 import io.github.redouane59.twitter.TwitterClient
 import io.github.redouane59.twitter.signature.TwitterCredentials
 import java.nio.charset.Charset
@@ -29,7 +30,6 @@ import org.emulinker.kaillera.master.client.KailleraMasterUpdateTask
 import org.emulinker.kaillera.master.client.MasterListUpdateTask
 import org.emulinker.kaillera.master.client.MasterListUpdater
 import org.emulinker.kaillera.master.client.ServerCheckinTask
-import org.emulinker.kaillera.model.ConnectionType
 import org.emulinker.kaillera.model.KailleraServer
 import org.emulinker.kaillera.model.impl.AutoFireDetectorFactory
 import org.emulinker.kaillera.model.impl.AutoFireDetectorFactoryImpl

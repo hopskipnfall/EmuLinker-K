@@ -3,6 +3,8 @@ package org.emulinker.kaillera.access
 import java.io.Closeable
 import java.net.InetAddress
 import kotlin.time.Duration
+import org.emulinker.kaillera.access.AccessManager.Companion.ACCESS_ADMIN
+import org.emulinker.kaillera.access.AccessManager.Companion.ACCESS_BANNED
 
 /**
  * An AccessManager is used retrieve, check, and store user access levels and permissions, and game

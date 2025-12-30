@@ -1,9 +1,9 @@
 package org.emulinker.kaillera.controller.v086.action
 
 import com.google.common.flogger.FluentLogger
+import io.github.hopskipnfall.kaillera.protocol.v086.AllReady
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086ClientHandler
-import org.emulinker.kaillera.controller.v086.protocol.AllReady
 import org.emulinker.kaillera.model.event.GameEvent
 import org.emulinker.kaillera.model.exception.UserReadyException
 
