@@ -12,7 +12,6 @@ import org.emulinker.kaillera.controller.v086.protocol.InformationMessage
 import org.emulinker.kaillera.model.event.ChatEvent
 import org.emulinker.kaillera.model.exception.ActionException
 import org.emulinker.util.EmuLang
-import org.emulinker.util.EmuUtil.threadSleep
 import org.emulinker.util.EmuUtil.toSimpleUtcDatetime
 
 private const val ADMIN_COMMAND_ESCAPE_STRING = "/"
@@ -552,7 +551,6 @@ class ChatAction(private val adminCommandAction: AdminCommandAction) :
             )
           )
         } catch (e: Exception) {}
-        threadSleep()
         try {
           clientHandler.send(
             InformationMessage(
@@ -562,7 +560,6 @@ class ChatAction(private val adminCommandAction: AdminCommandAction) :
             )
           )
         } catch (e: Exception) {}
-        threadSleep()
         try {
           clientHandler.send(
             InformationMessage(
@@ -572,7 +569,6 @@ class ChatAction(private val adminCommandAction: AdminCommandAction) :
             )
           )
         } catch (e: Exception) {}
-        threadSleep()
         try {
           clientHandler.send(
             InformationMessage(
@@ -582,7 +578,6 @@ class ChatAction(private val adminCommandAction: AdminCommandAction) :
             )
           )
         } catch (e: Exception) {}
-        threadSleep()
         if (clientHandler.user.accessLevel == AccessManager.ACCESS_MODERATOR) {
           try {
             clientHandler.send(
@@ -593,7 +588,6 @@ class ChatAction(private val adminCommandAction: AdminCommandAction) :
               )
             )
           } catch (e: Exception) {}
-          threadSleep()
           try {
             clientHandler.send(
               InformationMessage(
@@ -603,7 +597,6 @@ class ChatAction(private val adminCommandAction: AdminCommandAction) :
               )
             )
           } catch (e: Exception) {}
-          threadSleep()
         }
         if (clientHandler.user.accessLevel < AccessManager.ACCESS_ADMIN) {
           try {
@@ -615,7 +608,6 @@ class ChatAction(private val adminCommandAction: AdminCommandAction) :
               )
             )
           } catch (e: Exception) {}
-          threadSleep()
           try {
             clientHandler.send(
               InformationMessage(
@@ -625,7 +617,6 @@ class ChatAction(private val adminCommandAction: AdminCommandAction) :
               )
             )
           } catch (e: Exception) {}
-          threadSleep()
           return
         }
       } else if (
