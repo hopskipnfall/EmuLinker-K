@@ -52,7 +52,6 @@ import org.emulinker.proto.Player.PLAYER_THREE
 import org.emulinker.proto.Player.PLAYER_TWO
 import org.emulinker.proto.event
 import org.emulinker.util.EmuLang
-import org.emulinker.util.EmuUtil.threadSleep
 import org.emulinker.util.EmuUtil.toMillisDouble
 import org.emulinker.util.TimeOffsetCache
 import org.emulinker.util.VariableSizeByteArray
@@ -168,7 +167,7 @@ class KailleraGame(
     "Game[id=$id name=${if (romName.length > 15) romName.take(15) + "..." else romName}]"
 
   private val playingCount: Int
-    get() = players.asSequence().filter { it.status == UserStatus.PLAYING }.count()
+    get() = players.count { it.status == UserStatus.PLAYING }
 
   private val synchedCount: Int
     get() =
@@ -327,7 +326,6 @@ class KailleraGame(
     // SF MOD - /startn
     if (startN != -1) {
       if (players.size >= startN) {
-        threadSleep(1.seconds)
         try {
           start(owner)
         } catch (e: Exception) {}

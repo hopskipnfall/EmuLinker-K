@@ -2,7 +2,6 @@ package org.emulinker.kaillera.controller.v086.action
 
 import com.google.common.flogger.FluentLogger
 import com.google.common.flogger.LazyArg
-import kotlin.time.Duration.Companion.milliseconds
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086ClientHandler
@@ -15,7 +14,6 @@ import org.emulinker.kaillera.model.UserStatus
 import org.emulinker.kaillera.model.event.ConnectedEvent
 import org.emulinker.kaillera.model.event.UserEvent
 import org.emulinker.kaillera.model.exception.LoginException
-import org.emulinker.util.EmuUtil.threadSleep
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
@@ -133,7 +131,6 @@ class ACKAction : V086Action<ClientAck>, V086UserEventHandler<UserEvent>, KoinCo
         gamesSubList = mutableListOf()
         counter = 0
         sent = true
-        threadSleep(100.milliseconds)
       }
       counter += user.numBytes
       usersSubList.add(user)
@@ -146,7 +143,6 @@ class ACKAction : V086Action<ClientAck>, V086UserEventHandler<UserEvent>, KoinCo
         gamesSubList = mutableListOf()
         counter = 0
         sent = true
-        threadSleep(100.milliseconds)
       }
       counter += game.numBytes
       gamesSubList.add(game)
