@@ -16,7 +16,7 @@ plugins {
 
 dependencies {
   implementation(
-    "com.github.hopskipnfall.KailleraProtocol-kmp:kailleraprotocol-jvm:255b433cbbe7bf817b2bdb40e7a368b7eb8c3c87"
+    "com.github.hopskipnfall.KailleraProtocol-kmp:kailleraprotocol-jvm:1b008db2ad8cb91881c1641e6a1a9187c30b5948"
   )
 
   implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.1")
