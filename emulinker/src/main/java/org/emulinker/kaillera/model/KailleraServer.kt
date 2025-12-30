@@ -15,7 +15,6 @@ import kotlin.time.Clock
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
-import kotlin.time.Duration.Companion.seconds
 import kotlin.time.DurationUnit
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.access.AccessManager
@@ -854,18 +853,6 @@ class KailleraServer(
         val access = accessManager.getAccess(user.connectSocketAddress.address)
         user.accessLevel = access
 
-        // LagStat
-        if (user.loggedIn) {
-          val game = user.game
-          if (game != null && game.status == GameStatus.PLAYING && !game.startTimeout) {
-            val stt = game.startTimeoutTime
-            if (stt != null && clock.now() - stt >= 15.seconds) {
-              game.players.forEach { it.resetLag() }
-              game.resetLag()
-              game.startTimeout = true
-            }
-          }
-        }
         if (!user.loggedIn && clock.now() - user.connectTime > flags.maxPing * 15) {
           logger
             .atFine()

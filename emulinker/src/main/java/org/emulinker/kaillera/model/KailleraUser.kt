@@ -5,7 +5,6 @@ import java.net.InetSocketAddress
 import kotlin.time.Clock
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
-import kotlin.time.Duration.Companion.nanoseconds
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.Instant
 import org.emulinker.config.RuntimeFlags
@@ -32,7 +31,6 @@ import org.emulinker.kaillera.model.exception.StartGameException
 import org.emulinker.kaillera.model.exception.UserReadyException
 import org.emulinker.util.CircularVariableSizeByteArrayBuffer
 import org.emulinker.util.EmuLang
-import org.emulinker.util.TimeOffsetCache
 import org.emulinker.util.VariableSizeByteArray
 
 /**
@@ -90,10 +88,7 @@ class KailleraUser(
   /** This marks the last time the user interacted in the server. */
   private var lastActivity: Instant = initTime
 
-  private var lagLeewayNs = 0.seconds.inWholeNanoseconds
-  private var totalDriftNs = 0.seconds.inWholeNanoseconds
-  private val totalDriftCache =
-    TimeOffsetCache(delay = flags.lagstatDuration, resolution = 5.seconds)
+  private var lagometer: Lagometer? = null
 
   /** Time we received the latest game data from the user for lag measurement purposes. */
   var receivedGameDataNs: Long? = null
@@ -297,12 +292,10 @@ class KailleraUser(
     loggedIn = false
   }
 
-  fun lagAttributedToUser(): Duration =
-    (totalDriftNs - (totalDriftCache.getDelayedValue() ?: 0)).nanoseconds.absoluteValue
+  fun lagAttributedToUser(): Duration = lagometer?.lag ?: Duration.ZERO
 
   fun resetLag() {
-    totalDriftNs = 0
-    totalDriftCache.clear()
+    lagometer?.reset()
   }
 
   @Synchronized
@@ -412,6 +405,13 @@ class KailleraUser(
   @Synchronized
   @Throws(StartGameException::class)
   fun startGame() {
+    lagometer =
+      Lagometer(
+        frameDurationNs =
+          (1.seconds / connectionType.getUpdatesPerSecond(KailleraGame.GAME_FPS.toDouble()))
+            .inWholeNanoseconds,
+        historyDuration = flags.lagstatDuration,
+      )
     resetLag()
     updateLastActivity()
     val game = this.game
@@ -515,19 +515,13 @@ class KailleraUser(
     val delaySinceLastResponseNs = nowNs - lastUpdateNs
     val timeWaitingNs = nowNs - receivedGameDataNs
     val delaySinceLastResponseMinusWaitingNs = delaySinceLastResponseNs - timeWaitingNs
-    val leewayChangeNs =
-      game!!.singleFrameDurationForLagCalculationOnlyNs - delaySinceLastResponseMinusWaitingNs
-    lagLeewayNs += leewayChangeNs
-    if (lagLeewayNs < 0) {
-      // Lag leeway fell below zero. We caused lag!
-      totalDriftNs += lagLeewayNs
-      lagLeewayNs = 0
-    } else if (lagLeewayNs > game!!.singleFrameDurationForLagCalculationOnlyNs) {
-      // Does not make sense to allow lag leeway to be longer than the length of one frame.
-      lagLeewayNs = game!!.singleFrameDurationForLagCalculationOnlyNs
-    }
+    lagometer?.update(
+      delaySinceLastResponseNs = delaySinceLastResponseMinusWaitingNs,
+      minFrameDelay = frameDelay,
+      nowNs = nowNs,
+    )
+
     lastUpdateNs = nowNs
-    totalDriftCache.update(totalDriftNs, nowNs = nowNs)
   }
 
   // TODO(nue): Try to remove this entirely.

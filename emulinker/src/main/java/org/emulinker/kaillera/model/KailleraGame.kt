@@ -8,11 +8,11 @@ import java.util.concurrent.CopyOnWriteArrayList
 import java.util.zip.GZIPOutputStream
 import kotlin.io.path.createTempDirectory
 import kotlin.time.Clock
+import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.nanoseconds
 import kotlin.time.Duration.Companion.seconds
-import kotlin.time.Instant
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.access.AccessManager
 import org.emulinker.kaillera.master.StatsCollector
@@ -53,7 +53,6 @@ import org.emulinker.proto.Player.PLAYER_TWO
 import org.emulinker.proto.event
 import org.emulinker.util.EmuLang
 import org.emulinker.util.EmuUtil.toMillisDouble
-import org.emulinker.util.TimeOffsetCache
 import org.emulinker.util.VariableSizeByteArray
 import org.koin.core.component.KoinComponent
 
@@ -74,7 +73,7 @@ class KailleraGame(
 
   /** Frame delay is synced with others users in the same game (see /samedelay). */
   var sameDelay = false
-  var startTimeout = false
+
   var maxUsers = 8
     set(maxUsers) {
       field = maxUsers
@@ -108,17 +107,12 @@ class KailleraGame(
   /** Last time we fanned out data for a frame. */
   private var lastFrameNs = System.nanoTime()
 
-  var startTimeoutTime: Instant? = null
-    private set
-
   val players: MutableList<KailleraUser> = CopyOnWriteArrayList()
 
   var lastLagReset = clock.now()
     private set
 
-  private var lagLeewayNs = 0.seconds.inWholeNanoseconds
-  var totalDriftNs = 0.seconds.inWholeNanoseconds
-  val totalDriftCache = TimeOffsetCache(delay = flags.lagstatDuration, resolution = 5.seconds)
+  private var lagometer: Lagometer? = null
 
   val mutedUsers: MutableList<String> = mutableListOf()
   var aEmulator = "any"
@@ -451,7 +445,7 @@ class KailleraGame(
     status = GameStatus.SYNCHRONIZING
     autoFireDetector.start(players.size)
     val actionQueueBuilder = mutableListOf<PlayerActionQueue>()
-    startTimeout = false
+
     highestUserFrameDelay = 1
     if (server.usersMap.values.size > 60) {
       ignoringUnnecessaryServerActivity = true
@@ -535,7 +529,7 @@ class KailleraGame(
       logger.atFine().log("%s all players are ready: starting...", this)
       status = GameStatus.PLAYING
       isSynched = true
-      startTimeoutTime = clock.now()
+
       addEventForAllPlayers(AllReadyEvent(this))
       var frameDelay = (highestUserFrameDelay + 1) * owner.connectionType.byteValue - 1
       if (sameDelay) {
@@ -779,8 +773,7 @@ class KailleraGame(
   }
 
   fun resetLag() {
-    totalDriftCache.clear()
-    totalDriftNs = 0
+    lagometer?.reset()
     lastLagReset = clock.now()
   }
 
@@ -788,6 +781,13 @@ class KailleraGame(
   fun setGameFps(fps: Double) {
     singleFrameDurationForLagCalculationOnlyNs =
       (1.seconds / players.first().connectionType.getUpdatesPerSecond(fps)).inWholeNanoseconds
+
+    lagometer =
+      Lagometer(
+        frameDurationNs = singleFrameDurationForLagCalculationOnlyNs,
+        historyDuration = flags.lagstatDuration,
+      )
+
     resetLag()
     for (player in players) {
       player.resetLag()
@@ -796,7 +796,7 @@ class KailleraGame(
 
   /** The total duration that the game has drifted over the lagstat measurement window. */
   val currentGameLag
-    get() = (totalDriftNs - (totalDriftCache.getDelayedValue() ?: 0)).nanoseconds.absoluteValue
+    get() = lagometer?.lag ?: Duration.ZERO
 
   private fun updateGameDrift() {
     val nowNs = System.nanoTime()
@@ -834,16 +834,22 @@ class KailleraGame(
 
     val delaySinceLastResponseNs = nowNs - lastFrameNs
 
-    lagLeewayNs += singleFrameDurationForLagCalculationOnlyNs - delaySinceLastResponseNs
-    if (lagLeewayNs < 0) {
-      // Lag leeway fell below zero. Lag occurred!
-      totalDriftNs += lagLeewayNs
-      lagLeewayNs = 0
-    } else if (lagLeewayNs > singleFrameDurationForLagCalculationOnlyNs) {
-      // Does not make sense to allow lag leeway to be longer than the length of one frame.
-      lagLeewayNs = singleFrameDurationForLagCalculationOnlyNs
+    val minFrameDelay = if (players.isEmpty()) 1 else players.minOfOrNull { it.frameDelay } ?: 1
+
+    if (lagometer == null) {
+      lagometer =
+        Lagometer(
+          frameDurationNs = singleFrameDurationForLagCalculationOnlyNs,
+          historyDuration = flags.lagstatDuration,
+        )
     }
-    totalDriftCache.update(totalDriftNs, nowNs = nowNs)
+
+    lagometer?.update(
+      delaySinceLastResponseNs = delaySinceLastResponseNs,
+      minFrameDelay = minFrameDelay,
+      nowNs = nowNs,
+    )
+
     lastFrameNs = nowNs
   }
 

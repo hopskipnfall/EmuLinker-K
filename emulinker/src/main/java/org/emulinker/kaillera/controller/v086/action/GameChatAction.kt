@@ -453,13 +453,8 @@ class GameChatAction(
           game.announce("No pending tweets.", clientHandler.user)
         }
       } else if (message.message == "/lagstat") {
-        // TODO(nue): Localize this.
         game.chat(clientHandler.user, message.message)
-        // Note: This was duplicated from GameOwnerCommandAction.
-        if (!game.startTimeout) {
-          game.announce(EmuLang.getString("Lagstat.LagstatNotReady"))
-          return
-        }
+
         val lagstatDuration = min(flags.lagstatDuration, clock.now() - game.lastLagReset)
         val lagstatDurationAsString =
           if (lagstatDuration < 1.minutes) {
