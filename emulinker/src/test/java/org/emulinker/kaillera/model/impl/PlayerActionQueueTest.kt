@@ -1,9 +1,9 @@
 package org.emulinker.kaillera.model.impl
 
 import com.google.common.truth.Truth.assertThat
-import kotlin.random.Random
+import io.netty.buffer.ByteBufUtil
+import io.netty.buffer.Unpooled
 import org.emulinker.testing.LoggingRule
-import org.emulinker.util.VariableSizeByteArray
 import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
@@ -27,7 +27,7 @@ class PlayerActionQueueTest {
       PlayerActionQueue(playerNumber = 1, player = mock(), numPlayers = 1, gameBufferSize = 4096)
     queue.markSynced()
 
-    queue.addActions(VariableSizeByteArray(DATA))
+    queue.addActions(Unpooled.wrappedBuffer(DATA))
 
     assertThat(queue.containsNewDataForPlayer(playerIndex = 0, actionLength = DATA.size)).isTrue()
   }
@@ -44,17 +44,21 @@ class PlayerActionQueueTest {
       )
     queue.markDesynced()
 
-    queue.addActions(VariableSizeByteArray(DATA))
+    queue.addActions(Unpooled.wrappedBuffer(DATA))
 
-    val out = VariableSizeByteArray(Random.nextBytes(DATA.size))
+    val out = Unpooled.buffer(DATA.size)
     queue.getActionAndWriteToArray(
       readingPlayerIndex = 0,
       writeTo = out,
-      writeAtIndex = 0,
+      // writeAtIndex = 0, // removed
       actionLength = DATA.size,
     )
 
-    assertThat(out.toByteArray()).isEqualTo(ByteArray(DATA.size) { 0x00 })
+    // Verify out contains zeroes
+    val zeroes = ByteArray(DATA.size)
+    val actual = ByteArray(DATA.size)
+    out.getBytes(0, actual)
+    assertThat(actual).isEqualTo(zeroes)
   }
 
   @Test
@@ -69,17 +73,12 @@ class PlayerActionQueueTest {
       )
     queue.markSynced()
 
-    queue.addActions(VariableSizeByteArray(DATA))
+    queue.addActions(Unpooled.wrappedBuffer(DATA))
 
-    val out = VariableSizeByteArray(Random.nextBytes(DATA.size))
-    queue.getActionAndWriteToArray(
-      readingPlayerIndex = 0,
-      writeTo = out,
-      writeAtIndex = 0,
-      actionLength = DATA.size,
-    )
+    val out = Unpooled.buffer(DATA.size)
+    queue.getActionAndWriteToArray(readingPlayerIndex = 0, writeTo = out, actionLength = DATA.size)
 
-    assertThat(out.toByteArray()).isEqualTo(DATA)
+    assertThat(ByteBufUtil.equals(out, Unpooled.wrappedBuffer(DATA))).isTrue()
   }
 
   @Test
@@ -89,34 +88,23 @@ class PlayerActionQueueTest {
         playerNumber = 1,
         player = mock(),
         numPlayers = 1,
-        // Something slightly bigger than DATA.size so it will wrap around if we add two.
         gameBufferSize = DATA.size + 5,
       )
     queue.markSynced()
 
-    queue.addActions(VariableSizeByteArray(DATA))
+    queue.addActions(Unpooled.wrappedBuffer(DATA))
 
-    var out = VariableSizeByteArray(Random.nextBytes(DATA.size))
-    queue.getActionAndWriteToArray(
-      readingPlayerIndex = 0,
-      writeTo = out,
-      writeAtIndex = 0,
-      actionLength = DATA.size,
-    )
+    var out = Unpooled.buffer(DATA.size)
+    queue.getActionAndWriteToArray(readingPlayerIndex = 0, writeTo = out, actionLength = DATA.size)
 
-    assertThat(out.toByteArray()).isEqualTo(DATA)
+    assertThat(ByteBufUtil.equals(out, Unpooled.wrappedBuffer(DATA))).isTrue()
 
-    queue.addActions(VariableSizeByteArray(DATA))
+    queue.addActions(Unpooled.wrappedBuffer(DATA))
 
-    out = VariableSizeByteArray(Random.nextBytes(DATA.size))
-    queue.getActionAndWriteToArray(
-      readingPlayerIndex = 0,
-      writeTo = out,
-      writeAtIndex = 0,
-      actionLength = DATA.size,
-    )
+    out = Unpooled.buffer(DATA.size)
+    queue.getActionAndWriteToArray(readingPlayerIndex = 0, writeTo = out, actionLength = DATA.size)
 
-    assertThat(out.toByteArray()).isEqualTo(DATA)
+    assertThat(ByteBufUtil.equals(out, Unpooled.wrappedBuffer(DATA))).isTrue()
   }
 
   @Test
@@ -130,41 +118,26 @@ class PlayerActionQueueTest {
       )
     queue.markSynced()
 
-    queue.addActions(VariableSizeByteArray(DATA))
+    queue.addActions(Unpooled.wrappedBuffer(DATA))
 
-    var out = VariableSizeByteArray(Random.nextBytes(DATA.size))
-    queue.getActionAndWriteToArray(
-      readingPlayerIndex = 0,
-      writeTo = out,
-      writeAtIndex = 0,
-      actionLength = DATA.size,
-    )
+    var out = Unpooled.buffer(DATA.size)
+    queue.getActionAndWriteToArray(readingPlayerIndex = 0, writeTo = out, actionLength = DATA.size)
 
-    assertThat(out.toByteArray()).isEqualTo(DATA)
+    assertThat(ByteBufUtil.equals(out, Unpooled.wrappedBuffer(DATA))).isTrue()
 
-    queue.addActions(VariableSizeByteArray(DATA))
+    queue.addActions(Unpooled.wrappedBuffer(DATA))
 
-    out = VariableSizeByteArray(Random.nextBytes(DATA.size))
-    queue.getActionAndWriteToArray(
-      readingPlayerIndex = 0,
-      writeTo = out,
-      writeAtIndex = 0,
-      actionLength = DATA.size,
-    )
+    out = Unpooled.buffer(DATA.size)
+    queue.getActionAndWriteToArray(readingPlayerIndex = 0, writeTo = out, actionLength = DATA.size)
 
-    assertThat(out.toByteArray()).isEqualTo(DATA)
+    assertThat(ByteBufUtil.equals(out, Unpooled.wrappedBuffer(DATA))).isTrue()
 
-    queue.addActions(VariableSizeByteArray(DATA))
+    queue.addActions(Unpooled.wrappedBuffer(DATA))
 
-    out = VariableSizeByteArray(Random.nextBytes(DATA.size))
-    queue.getActionAndWriteToArray(
-      readingPlayerIndex = 0,
-      writeTo = out,
-      writeAtIndex = 0,
-      actionLength = DATA.size,
-    )
+    out = Unpooled.buffer(DATA.size)
+    queue.getActionAndWriteToArray(readingPlayerIndex = 0, writeTo = out, actionLength = DATA.size)
 
-    assertThat(out.toByteArray()).isEqualTo(DATA)
+    assertThat(ByteBufUtil.equals(out, Unpooled.wrappedBuffer(DATA))).isTrue()
   }
 
   @Test
@@ -174,18 +147,13 @@ class PlayerActionQueueTest {
       PlayerActionQueue(playerNumber = 1, player = mock(), numPlayers = 2, gameBufferSize = 4096)
     queue.markSynced()
 
-    queue.addActions(VariableSizeByteArray(DATA))
+    queue.addActions(Unpooled.wrappedBuffer(DATA))
 
-    val out = VariableSizeByteArray(Random.nextBytes(DATA.size))
-    queue.getActionAndWriteToArray(
-      readingPlayerIndex = 0,
-      writeTo = out,
-      writeAtIndex = 0,
-      actionLength = DATA.size,
-    )
+    val out = Unpooled.buffer(DATA.size)
+    queue.getActionAndWriteToArray(readingPlayerIndex = 0, writeTo = out, actionLength = DATA.size)
 
     assertThat(queue.containsNewDataForPlayer(playerIndex = 0, actionLength = DATA.size)).isTrue()
-    assertThat(out.toByteArray()).isEqualTo(DATA)
+    assertThat(ByteBufUtil.equals(out, Unpooled.wrappedBuffer(DATA))).isTrue()
   }
 
   companion object {

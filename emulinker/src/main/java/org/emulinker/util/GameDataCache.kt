@@ -1,16 +1,18 @@
 package org.emulinker.util
 
-interface GameDataCache : Collection<VariableSizeByteArray> {
-  operator fun get(index: Int): VariableSizeByteArray
+import io.netty.buffer.ByteBuf
+
+interface GameDataCache : Collection<ByteBuf> {
+  operator fun get(index: Int): ByteBuf
 
   /**
    * Adds to the cache even the cache already contains it.
    *
    * Unfortunately some clients assume this behavior.
    */
-  fun add(data: VariableSizeByteArray): Int
+  fun add(data: ByteBuf): Int
 
-  fun indexOf(data: VariableSizeByteArray): Int
+  fun indexOf(data: ByteBuf): Int
 
   fun clear()
 

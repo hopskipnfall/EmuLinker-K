@@ -2,6 +2,8 @@ package org.emulinker.kaillera.model
 
 import com.google.common.flogger.FluentLogger
 import com.google.protobuf.util.Timestamps
+import io.netty.buffer.ByteBuf
+import io.netty.buffer.PooledByteBufAllocator
 import java.io.FileOutputStream
 import java.util.Date
 import java.util.concurrent.CopyOnWriteArrayList
@@ -37,7 +39,6 @@ import org.emulinker.kaillera.model.exception.StartGameException
 import org.emulinker.kaillera.model.exception.UserReadyException
 import org.emulinker.kaillera.model.impl.AutoFireDetector
 import org.emulinker.kaillera.model.impl.PlayerActionQueue
-import org.emulinker.kaillera.pico.CompiledFlags
 import org.emulinker.proto.EventKt.GameStartKt.playerDetails
 import org.emulinker.proto.EventKt.LagstatSummaryKt.playerAttributedLag
 import org.emulinker.proto.EventKt.fanOut
@@ -53,7 +54,6 @@ import org.emulinker.proto.Player.PLAYER_TWO
 import org.emulinker.proto.event
 import org.emulinker.util.EmuLang
 import org.emulinker.util.EmuUtil.toMillisDouble
-import org.emulinker.util.VariableSizeByteArray
 import org.koin.core.component.KoinComponent
 
 class KailleraGame(
@@ -683,8 +683,11 @@ class KailleraGame(
    * Adds data and suspends until all data is available, at which time it returns the sends new data
    * back to the client.
    */
-  fun addData(user: KailleraUser, playerNumber: Int, data: VariableSizeByteArray): AddDataResult {
-    if (!isSynched) return AddDataResult.IgnoringDesynched
+  fun addData(user: KailleraUser, playerNumber: Int, data: ByteBuf): AddDataResult {
+    if (!isSynched) {
+      data.release()
+      return AddDataResult.IgnoringDesynched
+    }
 
     gameLogBuilder?.addEvents(
       event {
@@ -731,26 +734,23 @@ class KailleraGame(
         }
       ) {
         waitingOnData = false
-        val joinedGameData =
-          if (CompiledFlags.USE_CIRCULAR_BYTE_ARRAY_BUFFER) {
-            player.circularVariableSizeByteArrayBuffer.borrow()
-          } else {
-            VariableSizeByteArray()
-          }
-        joinedGameData.size = user.arraySize
+        // Allocated pooled buffer for efficiency
+        // TODO(nue): Use SecurityContext.alloc()?
+        val joinedGameData = PooledByteBufAllocator.DEFAULT.buffer(user.arraySize)
+
         for (actionCounter in 0 until actionsPerMessage) {
           for (playerActionQueueIndex in playerActionQueues.indices) {
             playerActionQueues[playerActionQueueIndex].getActionAndWriteToArray(
               readingPlayerIndex = playerNumber - 1,
               writeTo = joinedGameData,
-              writeAtIndex =
-                actionCounter * (playerActionQueues.size * user.bytesPerAction) +
-                  playerActionQueueIndex * user.bytesPerAction,
               actionLength = user.bytesPerAction,
             )
           }
         }
-        if (!isSynched) return AddDataResult.IgnoringDesynched
+        if (!isSynched) {
+          joinedGameData.release()
+          return AddDataResult.IgnoringDesynched
+        }
         player.doEvent(GameDataEvent(this, joinedGameData))
         player.updateUserDrift()
         val firstPlayer = players.firstOrNull()

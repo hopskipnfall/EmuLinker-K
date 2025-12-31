@@ -15,12 +15,11 @@ object CachedGameDataAction : V086Action<CachedGameData> {
   override fun performAction(message: CachedGameData, clientHandler: V086ClientHandler) {
     val user = clientHandler.user
     val data = clientHandler.clientGameDataCache[message.key]
-    data.inTemporaryUse.set(true)
     val addGameDataResult =
       try {
         user.addGameData(data)
       } finally {
-        data.inTemporaryUse.set(false)
+        // data.inTemporaryUse.set(false)
       }
     addGameDataResult.onFailure { e ->
       when (e) {

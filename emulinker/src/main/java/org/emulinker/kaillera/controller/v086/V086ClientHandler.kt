@@ -159,6 +159,7 @@ class V086ClientHandler(
   fun stop() {
     controller.clientHandlers.remove(user.id)
     combinedKailleraController.clientHandlers.remove(remoteSocketAddress)
+    synchronized(sendMutex) { lastMessageBuffer.releaseAll() }
   }
 
   override fun toString(): String = "[V086ClientHandler $user]"
@@ -167,7 +168,7 @@ class V086ClientHandler(
   private fun handleReceivedInternal(buffer: ByteBuf) {
     val inBundle: V086Bundle =
       try {
-        V086Bundle.parse(buffer, lastMessageNumber, user.circularVariableSizeByteArrayBuffer)
+        V086Bundle.parse(buffer, lastMessageNumber)
       } catch (e: ParseException) {
         buffer.resetReaderIndex()
         logger

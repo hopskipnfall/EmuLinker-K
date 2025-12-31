@@ -146,6 +146,8 @@ tasks.withType<Test> {
     "flogger.backend_factory",
     "org.emulinker.testing.TestLoggingBackendFactory#getInstance",
   )
+  systemProperty("user.language", "en")
+  systemProperty("user.country", "US")
 }
 
 // Formatting/linting.

@@ -14,7 +14,6 @@ import org.emulinker.kaillera.model.GameStatus
 import org.emulinker.kaillera.model.UserStatus
 import org.emulinker.kaillera.pico.AppModule
 import org.emulinker.testing.LoggingRule
-import org.emulinker.util.VariableSizeByteArray
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -159,7 +158,7 @@ class V086BundleTestShiftJis {
             listOf(
               GameData(
                 messageNumber = 9,
-                VariableSizeByteArray(
+                Unpooled.wrappedBuffer(
                   byteArrayOf(
                     16,
                     32,
@@ -190,7 +189,7 @@ class V086BundleTestShiftJis {
               ),
               GameData(
                 messageNumber = 8,
-                VariableSizeByteArray(
+                Unpooled.wrappedBuffer(
                   byteArrayOf(
                     16,
                     36,
@@ -233,7 +232,7 @@ class V086BundleTestShiftJis {
               GameData(
                 messageNumber = 35245,
                 gameData =
-                  VariableSizeByteArray(
+                  Unpooled.wrappedBuffer(
                     "10,20,00,00,00,00,00,00,01,00,00,00,00,00,FC,03,00,00,00,00,00,00,00,00"
                       .replace(",", "")
                       .hexToByteArray(HexFormat.UpperCase)

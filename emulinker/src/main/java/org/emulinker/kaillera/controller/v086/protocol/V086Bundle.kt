@@ -4,7 +4,6 @@ import io.netty.buffer.ByteBuf
 import org.emulinker.kaillera.controller.messaging.ByteBufferMessage
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.messaging.ParseException
-import org.emulinker.util.CircularVariableSizeByteArrayBuffer
 import org.emulinker.util.EmuUtil
 
 sealed interface V086Bundle : ByteBufferMessage {
@@ -59,11 +58,7 @@ sealed interface V086Bundle : ByteBufferMessage {
   companion object {
 
     @Throws(ParseException::class, V086BundleFormatException::class, MessageFormatException::class)
-    fun parse(
-      buffer: ByteBuf,
-      lastMessageID: Int = -1,
-      arrayBuffer: CircularVariableSizeByteArrayBuffer? = null,
-    ): V086Bundle {
+    fun parse(buffer: ByteBuf, lastMessageID: Int = -1): V086Bundle {
       if (buffer.readableBytes() < 5) {
         throw V086BundleFormatException("Invalid buffer length: " + buffer.readableBytes())
       }
@@ -90,7 +85,7 @@ sealed interface V086Bundle : ByteBufferMessage {
         if (messageLength !in 2..buffer.readableBytes()) {
           throw ParseException("Invalid message length: $messageLength")
         }
-        return Single(V086Message.parse(messageNumber, messageLength.toInt(), buffer, arrayBuffer))
+        return Single(V086Message.parse(messageNumber, messageLength.toInt(), buffer))
       } else {
         messages = arrayOfNulls(messageCount)
         var parsedCount = 0
@@ -110,8 +105,7 @@ sealed interface V086Bundle : ByteBufferMessage {
           if (messageLength < 2 || messageLength > buffer.readableBytes()) {
             throw ParseException("Invalid message length: $messageLength")
           }
-          messages[parsedCount] =
-            V086Message.parse(messageNumber, messageLength.toInt(), buffer, arrayBuffer)
+          messages[parsedCount] = V086Message.parse(messageNumber, messageLength.toInt(), buffer)
           parsedCount++
         }
         return Multi(messages, parsedCount)

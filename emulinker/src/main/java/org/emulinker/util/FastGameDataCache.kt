@@ -1,13 +1,26 @@
 package org.emulinker.util
 
+import io.netty.buffer.ByteBuf
+import io.netty.buffer.ByteBufUtil
+
 /** A [GameDataCache] implementation that uses hashing and a circular buffer. */
 class FastGameDataCache(override val capacity: Int) : GameDataCache {
 
   // Circular buffer storage
-  private val buffer = arrayOfNulls<VariableSizeByteArray>(capacity)
+  private val buffer = arrayOfNulls<ByteBuf>(capacity)
 
   // Maps Content -> Queue of Absolute Indices
-  private val indexMap = HashMap<VariableSizeByteArray, ArrayDeque<Int>>()
+  private class ByteBufKey(val buf: ByteBuf) {
+    override fun equals(other: Any?): Boolean {
+      if (this === other) return true
+      if (other !is ByteBufKey) return false
+      return ByteBufUtil.equals(buf, other.buf)
+    }
+
+    override fun hashCode(): Int = ByteBufUtil.hashCode(buf)
+  }
+
+  private val indexMap = HashMap<ByteBufKey, ArrayDeque<Int>>()
 
   /** Absolute index of the first element (logical index 0). */
   private var head: Int = 0
@@ -17,15 +30,16 @@ class FastGameDataCache(override val capacity: Int) : GameDataCache {
 
   override fun isEmpty(): Boolean = size == 0
 
-  override operator fun get(index: Int): VariableSizeByteArray {
+  override operator fun get(index: Int): ByteBuf {
     checkBounds(index)
     return buffer[toBufferIndex(head + index)]!!
   }
 
-  override fun add(data: VariableSizeByteArray): Int {
+  override fun add(data: ByteBuf): Int {
     if (size == capacity) {
       // Cache is full: Evict the oldest element (head)
-      val headKey = buffer[toBufferIndex(head)]!!
+      val headBuf = buffer[toBufferIndex(head)]!!
+      val headKey = ByteBufKey(headBuf)
       val indices = indexMap[headKey]
 
       // Remove the exact absolute index of the head from the map
@@ -34,8 +48,9 @@ class FastGameDataCache(override val capacity: Int) : GameDataCache {
         indexMap.remove(headKey)
       }
 
-      // Clean buffer slot (optional, but good for GC)
+      // Clean buffer slot and release the buffer
       buffer[toBufferIndex(head)] = null
+      headBuf.release()
 
       // Advance head: This logically decrements the index of all remaining items by 1
       head++
@@ -44,20 +59,25 @@ class FastGameDataCache(override val capacity: Int) : GameDataCache {
 
     // Add new element at the tail
     val absIndex = head + size
-    buffer[toBufferIndex(absIndex)] = data
+    // Retain the data before storing it
+    val retainedData = data.retainedDuplicate()
+    buffer[toBufferIndex(absIndex)] = retainedData
 
-    // Update Map: O(1)
-    indexMap.getOrPut(data) { ArrayDeque() }.addLast(absIndex)
+    // Update Map
+    indexMap.getOrPut(ByteBufKey(retainedData)) { ArrayDeque() }.addLast(absIndex)
 
     size++
     return size - 1 // Return the new logical index
   }
 
-  override fun indexOf(data: VariableSizeByteArray): Int {
-    val indices = indexMap[data] ?: return -1
+  override fun indexOf(data: ByteBuf): Int {
+    val indices = indexMap[ByteBufKey(data)] ?: return -1
     if (indices.isEmpty()) return -1
 
-    // The last element in the deque is the oldest occurrence
+    // The last element in the deque is the oldest occurrence (wait, newest added is last?)
+    // In add(), we did addLast(absIndex). So last is NEWEST.
+    // We usually want to find *any* index, but probably the most recent one?
+    // The original implementation used `indices.last()`.
     val lastAbsIndex = indices.last()
 
     // Convert Absolute Index -> Logical Index
@@ -72,18 +92,19 @@ class FastGameDataCache(override val capacity: Int) : GameDataCache {
     val dataToRemove = buffer[toBufferIndex(absToRemove)]!!
 
     // 2. Remove its specific instance from the Map
-    // We must remove the specific absolute index, not just any instance
-    val indices = indexMap[dataToRemove]!!
+    val key = ByteBufKey(dataToRemove)
+    val indices = indexMap[key]!!
     indices.remove(absToRemove)
-    if (indices.isEmpty()) indexMap.remove(dataToRemove)
+    if (indices.isEmpty()) indexMap.remove(key)
+
+    // Release the buffer
+    dataToRemove.release()
 
     // 3. Shift elements physically
-    // Because we are removing from the middle, we cannot use ring buffer magic alone.
-    // We must preserve the order of subsequent items.
     // We shift elements from [index + 1] down to [index]
     for (i in index + 1 until size) {
       val currentAbs = head + i
-      val prevAbs = currentAbs - 1 // The 'hole' we are filling
+      val prevAbs = currentAbs - 1
 
       val dataToMove = buffer[toBufferIndex(currentAbs)]!!
 
@@ -91,16 +112,12 @@ class FastGameDataCache(override val capacity: Int) : GameDataCache {
       buffer[toBufferIndex(prevAbs)] = dataToMove
 
       // Update Map: The absolute index of this item has changed
-      val key = dataToMove
-      val entryIndices = indexMap[key]!!
+      val moveKey = ByteBufKey(dataToMove)
+      val entryIndices = indexMap[moveKey]!!
 
       // Efficiently update the index in the deque
-      // Since we iterate linearly, order is preserved naturally
       entryIndices.remove(currentAbs)
       entryIndices.add(prevAbs)
-      // Note: We use add() because we are conceptually appending the 'new' location
-      // However, since we scan strictly right-to-left, the relative order in the deque remains
-      // correct.
     }
 
     // 4. Nullify the last slot (now empty)
@@ -109,18 +126,20 @@ class FastGameDataCache(override val capacity: Int) : GameDataCache {
   }
 
   override fun clear() {
-    buffer.fill(null)
+    for (i in 0 until capacity) {
+      buffer[i]?.release()
+      buffer[i] = null
+    }
     indexMap.clear()
     head = 0
     size = 0
   }
 
-  override fun contains(element: VariableSizeByteArray): Boolean = indexOf(element) != -1
+  override fun contains(element: ByteBuf): Boolean = indexOf(element) != -1
 
-  override fun containsAll(elements: Collection<VariableSizeByteArray>): Boolean =
-    elements.all { contains(it) }
+  override fun containsAll(elements: Collection<ByteBuf>): Boolean = elements.all { contains(it) }
 
-  override fun iterator() = iterator<VariableSizeByteArray> { repeat(size) { i -> yield(get(i)) } }
+  override fun iterator() = iterator<ByteBuf> { repeat(size) { i -> yield(get(i)) } }
 
   private fun toBufferIndex(absIndex: Int): Int = absIndex % capacity
 
