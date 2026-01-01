@@ -1,5 +1,6 @@
 package org.emulinker.kaillera.controller
 
+import com.google.common.truth.Expect
 import io.netty.buffer.Unpooled
 import io.netty.channel.embedded.EmbeddedChannel
 import io.netty.channel.socket.DatagramPacket
@@ -39,6 +40,7 @@ import org.emulinker.util.FastGameDataCache
 import org.emulinker.util.VariableSizeByteArray
 import org.junit.After
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.get
@@ -56,7 +58,6 @@ class GameDataE2ETest : KoinComponent {
   private val clientQueues = ConcurrentHashMap<Int, BlockingQueue<OutgoingMsg>>()
   private val clientMap = ConcurrentHashMap<Int, Client>()
 
-  // We'll use this simply for the test
   class FakeAccessManager : AccessManager {
     override fun isAddressAllowed(address: InetAddress): Boolean = true
 
@@ -87,7 +88,6 @@ class GameDataE2ETest : KoinComponent {
 
   @Before
   fun setup() {
-    // Essential to avoid charset issues if any
     AppModule.charsetDoNotUse = Charsets.UTF_8
 
     startKoin {
@@ -112,7 +112,7 @@ class GameDataE2ETest : KoinComponent {
     stopKoin()
   }
 
-  @org.junit.Rule @JvmField val expect = com.google.common.truth.Expect.create()
+  @Rule @JvmField val expect = Expect.create()
 
   @Test
   fun test1PlayerGameDataSync() {
@@ -251,7 +251,89 @@ class GameDataE2ETest : KoinComponent {
     println("4-player loop complete.")
   }
 
-  // --- Helper Logic (adapted from Benchmark) ---
+  @Test
+  fun test4PlayerCachedGameDataSync() {
+    println("Initializing 4 clients with OUTGOING CACHE ENABLED...")
+    val p1 = Client(1, "P1", this, useOutgoingCache = true)
+    val p2 = Client(2, "P2", this, useOutgoingCache = true)
+    val p3 = Client(3, "P3", this, useOutgoingCache = true)
+    val p4 = Client(4, "P4", this, useOutgoingCache = true)
+    val clients = listOf(p1, p2, p3, p4)
+
+    println("Logging in clients...")
+    clients.forEach { it.login() }
+
+    // P1 Create Game
+    println("P1 creating game...")
+    p1.createGame()
+
+    // Others Join
+    println("Others joining game...")
+    p2.joinGame(1)
+    p3.joinGame(1)
+    p4.joinGame(1)
+
+    // P1 Start Game
+    println("P1 starting game...")
+    p1.startGame()
+
+    // Wait for GameStarted
+    println("Waiting for GameStarted...")
+    clients.filter { it != p1 }.forEach { it.waitForGameStarted() }
+
+    // Send Ready
+    println("Sending Ready...")
+    clients.forEach { it.sendReady() }
+    println("Waiting for AllReady...")
+    clients.forEach { it.waitForReady() }
+
+    // Advance iterators to ensure unique data streams
+    println("Advancing iterators...")
+    p1.advanceIterator(100)
+    p2.advanceIterator(200)
+    p3.advanceIterator(300)
+    p4.advanceIterator(400)
+
+    // History of COMBINED packets (P1+P2+P3+P4)
+    val sentHistory = java.util.ArrayList<ByteArray>()
+
+    println("Starting 4-player CACHED loop...")
+    for (i in 1..1000) {
+      // 1. Collect Input for this frame
+      val inputs = clients.map { it.nextInput() }
+
+      // 2. Calculate Combined Packet for History
+      // Server fans out: [P1_Data][P2_Data][P3_Data][P4_Data]
+      val combinedPacket = java.io.ByteArrayOutputStream()
+      inputs.forEach { combinedPacket.write(it.toByteArray()) }
+      val expectedCombinedData = combinedPacket.toByteArray()
+      sentHistory.add(expectedCombinedData)
+
+      // 3. Send Data (All players send their part, potentially as CachedGameData)
+      clients.forEachIndexed { index, client -> client.sendGameData(inputs[index]) }
+
+      // 4. Receive Data (All players receive the SAME combined packet)
+      clients.forEach { client ->
+        val received = client.receiveGameData()
+        val receivedBytes = received.toByteArray()
+
+        if (i <= 6) {
+          // Phase 1: Buffering
+          expect.that(receivedBytes.size).isEqualTo(expectedCombinedData.size)
+          expect.that(receivedBytes).isEqualTo(ByteArray(receivedBytes.size) { 0 })
+        } else if (i <= 12) {
+          // Phase 2: Draining
+          val historicIndex = i - 7
+          val expectedData = sentHistory[historicIndex]
+          expect.that(receivedBytes).isEqualTo(expectedData)
+        } else {
+          // Phase 3: Synced
+          expect.that(receivedBytes).isEqualTo(expectedCombinedData)
+        }
+      }
+    }
+    println("4-player CACHED loop complete.")
+  }
 
   fun pump() {
     channel.runPendingTasks()
@@ -305,7 +387,12 @@ class GameDataE2ETest : KoinComponent {
     data class ConnectionMessage(val message: RequestPrivateKailleraPortResponse) : OutgoingMsg
   }
 
-  class Client(val port: Int, val username: String, val testInstance: GameDataE2ETest) {
+  class Client(
+    port: Int,
+    val username: String,
+    val testInstance: GameDataE2ETest,
+    val useOutgoingCache: Boolean = false,
+  ) {
     var lastMessageNumberReceived = -1
     var lastMessageNumber = -1
     val sender = InetSocketAddress("127.0.0.1", port)
@@ -428,8 +515,21 @@ class GameDataE2ETest : KoinComponent {
       consumeUntil { it is StartGameNotification }
     }
 
+    private val outgoingCache = FastGameDataCache(256)
+
     fun sendGameData(data: VariableSizeByteArray) {
-      sendBundle(V086Bundle.Single(GameData(++lastMessageNumber, data)))
+      if (useOutgoingCache) {
+        val index = outgoingCache.indexOf(data)
+
+        if (index != -1) {
+          sendBundle(V086Bundle.Single(CachedGameData(++lastMessageNumber, index)))
+        } else {
+          outgoingCache.add(data)
+          sendBundle(V086Bundle.Single(GameData(++lastMessageNumber, data)))
+        }
+      } else {
+        sendBundle(V086Bundle.Single(GameData(++lastMessageNumber, data)))
+      }
     }
 
     private val cache = FastGameDataCache(256) // Standard Kaillera cache size
