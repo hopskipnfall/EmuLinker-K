@@ -56,6 +56,23 @@ import org.emulinker.util.EmuUtil.toMillisDouble
 import org.emulinker.util.VariableSizeByteArray
 import org.koin.core.component.KoinComponent
 
+/**
+ * Represents a game instance on the server.
+ *
+ * ## Synchronization Handshake
+ * The game uses a lock-step synchronization model with an initial handshake to establish lag
+ * compensation. The handshake consists of three phases verified by E2E tests:
+ * 1. **Buffering (Frames 1-6):** The server buffers incoming packets from the client to build up a
+ *    delay buffer (determined by `totalDelay`). During this phase, the server sends back "Zero
+ *    Packets" (packets of the same size as input but zeroed) to the client.
+ * 2. **Draining (Frames 7-12):** Once the buffer is full, the server begins "draining" the buffer.
+ *    It processes and fans out the old packets stored during Phase 1. Crucially, strictly "new"
+ *    inputs received during this draining phase are **DROPPED** to allow the stream to align with
+ *    the buffered history.
+ * 3. **Synced (Frames 13+):** The buffer is now managing the flow. The server fans out packets in
+ *    real-time order, effectively delayed by the buffer size. `Received[T] == Sent[T]` (relative to
+ *    the shifted timeline).
+ */
 class KailleraGame(
   val id: Int,
   val romName: String,
