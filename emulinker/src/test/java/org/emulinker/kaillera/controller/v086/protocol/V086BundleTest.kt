@@ -14,6 +14,7 @@ import org.emulinker.kaillera.model.GameStatus
 import org.emulinker.kaillera.model.UserStatus
 import org.emulinker.kaillera.pico.AppModule
 import org.emulinker.testing.LoggingRule
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -318,6 +319,11 @@ class V086BundleTestShiftUtf8 {
 
 class V086BundleTest {
   @get:Rule val logging = LoggingRule()
+
+  @Before
+  fun setup() {
+    AppModule.charsetDoNotUse = StandardCharsets.UTF_8
+  }
 
   @Test
   fun hexStringToByteBuffer() {

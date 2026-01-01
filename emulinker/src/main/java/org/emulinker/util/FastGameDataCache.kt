@@ -9,15 +9,32 @@ class FastGameDataCache(override val capacity: Int) : GameDataCache {
   // Circular buffer storage
   private val buffer = arrayOfNulls<ByteBuf>(capacity)
 
+  // TODO(nue): Can we make this a value class?
   // Maps Content -> Queue of Absolute Indices
   private class ByteBufKey(val buf: ByteBuf) {
     override fun equals(other: Any?): Boolean {
       if (this === other) return true
       if (other !is ByteBufKey) return false
-      return ByteBufUtil.equals(buf, other.buf)
+      // Safety check: One of the buffers might be released (dead key or dead search).
+      // We must avoid IllegalReferenceCountException.
+      if (buf.refCnt() == 0 || other.buf.refCnt() == 0) {
+        return false
+      }
+      return try {
+        ByteBufUtil.equals(buf, other.buf)
+      } catch (e: io.netty.util.IllegalReferenceCountException) {
+        false
+      }
     }
 
-    override fun hashCode(): Int = ByteBufUtil.hashCode(buf)
+    override fun hashCode(): Int {
+      if (buf.refCnt() == 0) return 0
+      return try {
+        ByteBufUtil.hashCode(buf)
+      } catch (e: io.netty.util.IllegalReferenceCountException) {
+        0
+      }
+    }
   }
 
   private val indexMap = HashMap<ByteBufKey, ArrayDeque<Int>>()
@@ -42,10 +59,29 @@ class FastGameDataCache(override val capacity: Int) : GameDataCache {
       val headKey = ByteBufKey(headBuf)
       val indices = indexMap[headKey]
 
-      // Remove the exact absolute index of the head from the map
-      indices?.removeFirst()
-      if (indices != null && indices.isEmpty()) {
-        indexMap.remove(headKey)
+      // Remove the exact absolute index of the head from the map.
+      // If 'headKey' represents one of multiple duplicates, 'indices' (ArrayDeque) is sorted by
+      // age.
+      // 'removeFirst()' correctly removes the oldest instance (current head), leaving newer
+      // duplicates intact.
+      // This ensures that "if there are two equal elements in the cache, the older one is removed".
+      if (indices != null) {
+        indices.removeFirst()
+        if (indices.isEmpty()) {
+          indexMap.remove(headKey)
+        } else {
+          // KEY SWAP FIX:
+          // The current key (headKey) holds a reference to 'headBuf'.
+          // 'headBuf' is about to be released. The HashMap still holds 'headKey'.
+          // Valid 'indices' remain which verify against 'headKey'.
+          // Future lookups will use 'headKey.buf' (which is dead) causing
+          // IllegalReferenceCountException.
+          // We MUST replace the key with one pointing to a live buffer.
+          indexMap.remove(headKey)
+          val nextLiveAbsIndex = indices.first()
+          val nextLiveBuf = buffer[toBufferIndex(nextLiveAbsIndex)]!!
+          indexMap[ByteBufKey(nextLiveBuf)] = indices
+        }
       }
 
       // Clean buffer slot and release the buffer
@@ -71,6 +107,9 @@ class FastGameDataCache(override val capacity: Int) : GameDataCache {
   }
 
   override fun indexOf(data: ByteBuf): Int {
+    if (data.refCnt() == 0) {
+      return -1
+    }
     val indices = indexMap[ByteBufKey(data)] ?: return -1
     if (indices.isEmpty()) return -1
 
@@ -78,7 +117,10 @@ class FastGameDataCache(override val capacity: Int) : GameDataCache {
     // In add(), we did addLast(absIndex). So last is NEWEST.
     // We usually want to find *any* index, but probably the most recent one?
     // The original implementation used `indices.last()`.
-    val lastAbsIndex = indices.last()
+    // The GameDataCache interface documentation states "Returns the index of the first occurrence".
+    // 'indices' is sorted by insertion order (oldest to newest).
+    // So we must use 'first()'.
+    val lastAbsIndex = indices.first()
 
     // Convert Absolute Index -> Logical Index
     return lastAbsIndex - head
@@ -92,10 +134,28 @@ class FastGameDataCache(override val capacity: Int) : GameDataCache {
     val dataToRemove = buffer[toBufferIndex(absToRemove)]!!
 
     // 2. Remove its specific instance from the Map
+    // 2. Remove its specific instance from the Map
     val key = ByteBufKey(dataToRemove)
     val indices = indexMap[key]!!
+
+    // We must remove the index from the list
     indices.remove(absToRemove)
-    if (indices.isEmpty()) indexMap.remove(key)
+
+    if (indices.isEmpty()) {
+      indexMap.remove(key)
+    } else {
+      // Safe Key Swap:
+      // Regardless of whether 'dataToRemove' was the backing buffer for the map Key,
+      // we are about to release 'dataToRemove'.
+      // If it WAS the backing buffer, we must swap.
+      // If it wasn't, swapping is harmless (just updates key to oldest remaining).
+      // To guarantee safety without complex checks, we simply re-key to the new oldest
+      // (indices.first()).
+      indexMap.remove(key)
+      val newFirstAbs = indices.first()
+      val newFirstBuf = buffer[toBufferIndex(newFirstAbs)]!!
+      indexMap[ByteBufKey(newFirstBuf)] = indices
+    }
 
     // Release the buffer
     dataToRemove.release()

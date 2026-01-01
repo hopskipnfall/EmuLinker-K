@@ -61,7 +61,7 @@ abstract class GameDataCacheTest {
     cache.add(Unpooled.wrappedBuffer(byteArrayOf(1.toByte())))
 
     assertThat(cache.size).isEqualTo(2)
-    assertThat(cache.indexOf(Unpooled.wrappedBuffer(byteArrayOf(1.toByte())))).isEqualTo(1)
+    assertThat(cache.indexOf(Unpooled.wrappedBuffer(byteArrayOf(1.toByte())))).isEqualTo(0)
   }
 
   @Test

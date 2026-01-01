@@ -6,6 +6,7 @@ import com.codahale.metrics.Timer
 import com.google.common.flogger.FluentLogger
 import io.netty.buffer.ByteBuf
 import io.netty.channel.socket.DatagramPacket
+import io.netty.util.ReferenceCountUtil
 import java.net.InetSocketAddress
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
@@ -285,6 +286,8 @@ class V086ClientHandler(
     } catch (e: FatalActionException) {
       logger.atWarning().withCause(e).log("%s fatal action, closing connection", this)
       stop()
+    } finally {
+      ReferenceCountUtil.release(inBundle)
     }
   }
 

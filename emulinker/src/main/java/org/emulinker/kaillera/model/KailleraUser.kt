@@ -143,11 +143,6 @@ class KailleraUser(
 
   private val lostInput: MutableList<ByteBuf> = ArrayList()
 
-  /** Note that this is a different type from lostInput. */
-  fun getLostInput(): ByteBuf {
-    return lostInput[0]
-  }
-
   private val ignoredUsers: MutableList<String> = ArrayList()
   private var gameDataErrorTime: Long = -1
 

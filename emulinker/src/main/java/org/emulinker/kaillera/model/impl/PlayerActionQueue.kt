@@ -43,6 +43,11 @@ class PlayerActionQueue(
   fun markSynced() {
     synced = true
     // Reset state?
+    // data.clear() checks writerIndex/readerIndex but does not release components.
+    // We must release components to avoid leaks.
+    if (data.numComponents() > 0) {
+      data.removeComponents(0, data.numComponents())
+    }
     data.clear()
     totalWrittenBytes = 0
     readPosition = 0
@@ -60,8 +65,7 @@ class PlayerActionQueue(
       return
     }
 
-    actions.retain()
-    data.addComponent(true, actions)
+    data.addComponent(true, actions.retain())
     totalWrittenBytes += actions.readableBytes()
 
     if (data.readableBytes() > gameBufferSize) {
