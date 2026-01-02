@@ -2,6 +2,7 @@ package org.emulinker.testing
 
 import com.google.common.flogger.backend.LogData
 import com.google.common.flogger.backend.LoggerBackend
+import com.google.common.flogger.backend.SimpleMessageFormatter
 import com.google.common.flogger.backend.system.BackendFactory
 import com.google.common.truth.Fact.simpleFact
 import com.google.common.truth.FailureMetadata
@@ -65,7 +66,15 @@ object TestLoggingBackend : LoggerBackend() {
   }
 
   override fun handleError(e: RuntimeException?, logData: LogData) {
-    logs.loggerToMessage.add(logData.loggerName!! to logData.literalArgument.toString())
+    val message =
+      if (logData.templateContext == null) {
+        logData.literalArgument.toString()
+      } else {
+        val sb = StringBuilder()
+        SimpleMessageFormatter.format(logData) { _, message, _ -> sb.append(message) }
+        sb.toString()
+      }
+    logs.loggerToMessage.add(logData.loggerName!! to message)
   }
 }
 

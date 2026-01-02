@@ -79,8 +79,7 @@ open class LoginBenchmark : KoinComponent {
     @JvmInline value class Bundle(val message: V086Bundle) : OutgoingMessage
 
     @JvmInline
-    value class ConnectionMessage(val message: RequestPrivateKailleraPortResponse) :
-      OutgoingMessage
+    value class ConnectionMessage(val message: RequestPrivateKailleraPortResponse) : OutgoingMessage
   }
 
   fun readOutgoing(): OutgoingMessage {
