@@ -108,7 +108,7 @@
   <div class="breadcrumbs"><a href="../../../index.html">emulinker</a><span class="delimiter">/</span><a href="../index.html">org.emulinker.kaillera.controller.v086.protocol</a><span class="delimiter">/</span><span class="current">V086Bundle</span></div>
   <div class="cover ">
     <h1 class="cover"><span><span>V086Bundle</span></span></h1>
-    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">sealed </span><span class="token keyword">interface </span><a href="index.html">V086Bundle</a> : <a href="../../org.emulinker.kaillera.controller.messaging/-byte-buffer-message/index.html">ByteBufferMessage</a></div><h4 class="">Inheritors</h4><div class="table"><div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><a href="-single/index.html">Single</a></div></span></div><div></div></div></div><div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><a href="-multi/index.html">Multi</a></div></span></div><div></div></div></div></div></div></div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">sealed </span><span class="token keyword">interface </span><a href="index.html">V086Bundle</a> : <a href="../../org.emulinker.kaillera.controller.messaging/-byte-buffer-message/index.html">ByteBufferMessage</a>, <span data-unresolved-link="io.netty.util/ReferenceCounted///PointingToDeclaration/">ReferenceCounted</span></div><h4 class="">Inheritors</h4><div class="table"><div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><a href="-single/index.html">Single</a></div></span></div><div></div></div></div><div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><a href="-multi/index.html">Multi</a></div></span></div><div></div></div></div></div></div></div>
   </div>
   <div class="tabbedcontent">
     <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION">Members</button></div>
@@ -183,7 +183,67 @@
       </div>
       <div data-togglable="FUNCTION">
         <h2 class="">Functions</h2>
-        <div class="table"><a data-name="1052008650%2FFunctions%2F-1834219614" anchor-label="writeTo" id="1052008650%2FFunctions%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+        <div class="table"><a data-name="-1391011724%2FFunctions%2F-1834219614" anchor-label="refCnt" id="-1391011724%2FFunctions%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#-1391011724%2FFunctions%2F-1834219614"><span>ref</span><wbr></wbr><span><span>Cnt</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1391011724%2FFunctions%2F-1834219614"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">fun </span><a href="index.html#-1391011724%2FFunctions%2F-1834219614"><span class="token function">refCnt</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="125518794%2FFunctions%2F-1834219614" anchor-label="release" id="125518794%2FFunctions%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#1173798761%2FFunctions%2F-1834219614"><span><span>release</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="125518794%2FFunctions%2F-1834219614"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">fun </span><a href="index.html#1173798761%2FFunctions%2F-1834219614"><span class="token function">release</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">fun </span><a href="index.html#1019693511%2FFunctions%2F-1834219614"><span class="token function">release</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">p0<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1086491356%2FFunctions%2F-1834219614" anchor-label="retain" id="1086491356%2FFunctions%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#-28905947%2FFunctions%2F-1834219614"><span><span>retain</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1086491356%2FFunctions%2F-1834219614"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">fun </span><a href="index.html#-28905947%2FFunctions%2F-1834219614"><span class="token function">retain</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><span data-unresolved-link="io.netty.util/ReferenceCounted///PointingToDeclaration/">ReferenceCounted</span></div><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">fun </span><a href="index.html#1093221763%2FFunctions%2F-1834219614"><span class="token function">retain</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">p0<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><span data-unresolved-link="io.netty.util/ReferenceCounted///PointingToDeclaration/">ReferenceCounted</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1431148307%2FFunctions%2F-1834219614" anchor-label="touch" id="-1431148307%2FFunctions%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#-1846382607%2FFunctions%2F-1834219614"><span><span>touch</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1431148307%2FFunctions%2F-1834219614"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">fun </span><a href="index.html#-1846382607%2FFunctions%2F-1834219614"><span class="token function">touch</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><span data-unresolved-link="io.netty.util/ReferenceCounted///PointingToDeclaration/">ReferenceCounted</span></div><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">fun </span><a href="index.html#1017323954%2FFunctions%2F-1834219614"><span class="token function">touch</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">p0<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-any/index.html">Any</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><span data-unresolved-link="io.netty.util/ReferenceCounted///PointingToDeclaration/">ReferenceCounted</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1052008650%2FFunctions%2F-1834219614" anchor-label="writeTo" id="1052008650%2FFunctions%2F-1834219614" data-filterable-set=":emulinker/main"></a>
           <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
