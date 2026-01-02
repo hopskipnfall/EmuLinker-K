@@ -458,24 +458,14 @@ class KailleraUser(
           val lost = lostInput.removeAt(0)
 
           when (val r = game.addData(this, playerNumber, lost)) {
-            AddDataResult.Success -> {} // game queue retained, now we release our ref
-            AddDataResult.IgnoringDesynched -> {} // game released if ignoring?
-            // game.addData releases only if IgnoringDesynched.
-            // If Success, it's in queue. We release OUR reference.
+            AddDataResult.Success -> {}
+            AddDataResult.IgnoringDesynched -> {}
             is AddDataResult.Failure -> {
-              lost.release() // release if failure
+              lost.release()
               return Result.failure(r.exception)
             }
           }
           lost.release() // Release our reference after passing to game
-
-          // Now process the NEW data
-          when (val r = game.addData(this, playerNumber, data)) {
-            AddDataResult.Success -> {} // game retained, don't release unless we kept a ref
-            AddDataResult.IgnoringDesynched -> {} // game released
-            is AddDataResult.Failure ->
-              return Result.failure(r.exception) // game did not take ownership?
-          }
         } else {
           when (val r = game.addData(this, playerNumber, data)) {
             AddDataResult.Success -> {}

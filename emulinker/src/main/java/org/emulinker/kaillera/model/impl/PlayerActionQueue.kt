@@ -55,7 +55,9 @@ class PlayerActionQueue(
 
   fun markDesynced() {
     synced = false
-    data.release()
+    // TODO(nue): See if this is the correct way to do this. Maybe there is a function to throw away
+    // the rest of the bytes?
+    if (data.refCnt() > 0) data.release()
   }
 
   /** Adds "actions" to the queue. */

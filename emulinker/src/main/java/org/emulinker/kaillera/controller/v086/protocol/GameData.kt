@@ -68,12 +68,6 @@ data class GameData(override var messageNumber: Int, val gameData: ByteBuf) :
   companion object {
     const val ID: Byte = 0x12
 
-    // TODO(nue): Get rid of this.
-    @Throws(Exception::class)
-    fun main() {
-      // Benchmark code removed/disabled as it relied on VariableSizeByteArray
-    }
-
     /** Same as the constructor, but it makes a deep copy of the array. */
     @Throws(MessageFormatException::class)
     fun createAndMakeDeepCopy(messageNumber: Int, gameData: ByteBuf): GameData {
