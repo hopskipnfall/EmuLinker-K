@@ -9,32 +9,16 @@ class FastGameDataCache(override val capacity: Int) : GameDataCache {
   // Circular buffer storage
   private val buffer = arrayOfNulls<ByteBuf>(capacity)
 
-  // TODO(nue): Can we make this a value class?
-  // Maps Content -> Queue of Absolute Indices
   private class ByteBufKey(val buf: ByteBuf) {
     override fun equals(other: Any?): Boolean {
       if (this === other) return true
       if (other !is ByteBufKey) return false
-      // Safety check: One of the buffers might be released (dead key or dead search).
-      // We must avoid IllegalReferenceCountException.
-      if (buf.refCnt() == 0 || other.buf.refCnt() == 0) {
-        return false
-      }
-      return try {
-        ByteBufUtil.equals(buf, other.buf)
-      } catch (e: io.netty.util.IllegalReferenceCountException) {
-        false
-      }
+      return ByteBufUtil.equals(buf, other.buf)
     }
 
-    override fun hashCode(): Int {
-      if (buf.refCnt() == 0) return 0
-      return try {
-        ByteBufUtil.hashCode(buf)
-      } catch (e: io.netty.util.IllegalReferenceCountException) {
-        0
-      }
-    }
+    private val cachedHash: Int = ByteBufUtil.hashCode(buf)
+
+    override fun hashCode(): Int = cachedHash
   }
 
   private val indexMap = HashMap<ByteBufKey, ArrayDeque<Int>>()
@@ -54,34 +38,25 @@ class FastGameDataCache(override val capacity: Int) : GameDataCache {
 
   override fun add(data: ByteBuf): Int {
     if (size == capacity) {
-      // Cache is full: Evict the oldest element (head)
+      // Cache is full: Evict the oldest element (head).
       val headBuf = buffer[toBufferIndex(head)]!!
       val headKey = ByteBufKey(headBuf)
-      val indices = indexMap[headKey]
+      val indices = checkNotNull(indexMap[headKey]) { "Index list not in map!" }
 
-      // Remove the exact absolute index of the head from the map.
-      // If 'headKey' represents one of multiple duplicates, 'indices' (ArrayDeque) is sorted by
-      // age.
-      // 'removeFirst()' correctly removes the oldest instance (current head), leaving newer
-      // duplicates intact.
-      // This ensures that "if there are two equal elements in the cache, the older one is removed".
-      if (indices != null) {
-        indices.removeFirst()
-        if (indices.isEmpty()) {
-          indexMap.remove(headKey)
-        } else {
-          // KEY SWAP FIX:
-          // The current key (headKey) holds a reference to 'headBuf'.
-          // 'headBuf' is about to be released. The HashMap still holds 'headKey'.
-          // Valid 'indices' remain which verify against 'headKey'.
-          // Future lookups will use 'headKey.buf' (which is dead) causing
-          // IllegalReferenceCountException.
-          // We MUST replace the key with one pointing to a live buffer.
-          indexMap.remove(headKey)
-          val nextLiveAbsIndex = indices.first()
-          val nextLiveBuf = buffer[toBufferIndex(nextLiveAbsIndex)]!!
-          indexMap[ByteBufKey(nextLiveBuf)] = indices
-        }
+      indices.removeFirst()
+
+      if (indices.isEmpty()) {
+        indexMap.remove(headKey)
+      } else {
+        // The oldest key holds a reference to headBuf which is about to be released. We need to
+        // swap this out for the newer one otherwise calling most methods on it will throw an
+        // IllegalReferenceCountException exception.
+
+        // TODO: We can probably optimize this a bit by using a different key.
+        indexMap.remove(headKey)
+        val nextLiveAbsIndex = indices.first()
+        val nextLiveBuf = buffer[toBufferIndex(nextLiveAbsIndex)]!!
+        indexMap[ByteBufKey(nextLiveBuf)] = indices
       }
 
       // Clean buffer slot and release the buffer
@@ -107,20 +82,9 @@ class FastGameDataCache(override val capacity: Int) : GameDataCache {
   }
 
   override fun indexOf(data: ByteBuf): Int {
-    if (data.refCnt() == 0) {
-      return -1
-    }
     val indices = indexMap[ByteBufKey(data)] ?: return -1
     if (indices.isEmpty()) return -1
-
-    // The last element in the deque is the oldest occurrence (wait, newest added is last?)
-    // In add(), we did addLast(absIndex). So last is NEWEST.
-    // We usually want to find *any* index, but probably the most recent one?
-    // The original implementation used `indices.last()`.
-    // The GameDataCache interface documentation states "Returns the index of the first occurrence".
-    // 'indices' is sorted by insertion order (oldest to newest).
-    // So we must use 'first()'.
-    val lastAbsIndex = indices.first()
+    val lastAbsIndex = indices.last() // NUE: I just changed this from first()
 
     // Convert Absolute Index -> Logical Index
     return lastAbsIndex - head
@@ -204,7 +168,7 @@ class FastGameDataCache(override val capacity: Int) : GameDataCache {
   private fun toBufferIndex(absIndex: Int): Int = absIndex % capacity
 
   private fun checkBounds(index: Int) {
-    if (index !in 0 until size) {
+    if (index !in 0..size) {
       throw IndexOutOfBoundsException("Index: $index, Size: $size")
     }
   }

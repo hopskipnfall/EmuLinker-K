@@ -1,6 +1,7 @@
 package org.emulinker.kaillera.controller
 
 import com.google.common.truth.Expect
+import io.netty.buffer.ByteBuf
 import io.netty.buffer.Unpooled
 import io.netty.channel.embedded.EmbeddedChannel
 import io.netty.channel.socket.DatagramPacket
@@ -37,7 +38,6 @@ import org.emulinker.kaillera.model.ConnectionType
 import org.emulinker.kaillera.pico.AppModule
 import org.emulinker.kaillera.pico.koinModule
 import org.emulinker.util.FastGameDataCache
-import org.emulinker.util.VariableSizeByteArray
 import org.junit.After
 import org.junit.Before
 import org.junit.Rule
@@ -407,7 +407,7 @@ class GameDataE2ETest : KoinComponent {
       testInstance.clientMap[port] = this
     }
 
-    fun nextInput(): VariableSizeByteArray = inputIterator.next()
+    fun nextInput(): ByteBuf = inputIterator.next()
 
     fun advanceIterator(count: Int) {
       repeat(count) { inputIterator.next() }
@@ -424,6 +424,7 @@ class GameDataE2ETest : KoinComponent {
               when (val inner = msg.message) {
                 is V086Bundle.Single ->
                   yield(inner.message.also { lastMessageNumberReceived = it.messageNumber })
+
                 is V086Bundle.Multi -> {
                   for (m in inner.messages.filterNotNull().sortedBy { it.messageNumber }) {
                     yield(m.also { lastMessageNumberReceived = it.messageNumber })
@@ -431,6 +432,7 @@ class GameDataE2ETest : KoinComponent {
                 }
               }
             }
+
             is OutgoingMsg.ConnectionMessage -> {}
           }
         }
@@ -517,7 +519,7 @@ class GameDataE2ETest : KoinComponent {
 
     private val outgoingCache = FastGameDataCache(256)
 
-    fun sendGameData(data: VariableSizeByteArray) {
+    fun sendGameData(data: ByteBuf) {
       if (useOutgoingCache) {
         val index = outgoingCache.indexOf(data)
 
@@ -534,9 +536,7 @@ class GameDataE2ETest : KoinComponent {
 
     private val cache = FastGameDataCache(256) // Standard Kaillera cache size
 
-    fun receiveGameData(
-      timeout: java.time.Duration = java.time.Duration.ofSeconds(1)
-    ): VariableSizeByteArray {
+    fun receiveGameData(timeout: java.time.Duration = java.time.Duration.ofSeconds(1)): ByteBuf {
       val deadline = System.nanoTime() + timeout.toNanos()
       while (System.nanoTime() < deadline) {
         val msg = nextMessage()
@@ -591,15 +591,15 @@ class GameDataE2ETest : KoinComponent {
     }
 
     private fun buildIterator() =
-      iterator<VariableSizeByteArray> {
+      iterator<ByteBuf> {
         lateinit var previousLine: String
         while (true) {
           for (line in LINES) {
             if (line.startsWith("x")) {
               val times = line.removePrefix("x").toInt()
-              repeat(times) { yield(VariableSizeByteArray(previousLine.decodeHex())) }
+              repeat(times) { yield(Unpooled.wrappedBuffer(previousLine.decodeHex())) }
             } else {
-              yield(VariableSizeByteArray(line.decodeHex()))
+              yield(Unpooled.wrappedBuffer(line.decodeHex()))
             }
             previousLine = line
           }
@@ -611,4 +611,10 @@ class GameDataE2ETest : KoinComponent {
 private fun String.decodeHex(): ByteArray {
   check(length % 2 == 0) { "Must have an even length" }
   return chunked(2).map { it.lowercase().toInt(16).toByte() }.toByteArray()
+}
+
+private fun ByteBuf.toByteArray(): ByteArray {
+  val arr = ByteArray(readableBytes())
+  getBytes(readerIndex(), arr)
+  return arr
 }

@@ -218,6 +218,9 @@ class CombinedKailleraController(
       handleReceived(packet.content(), packet.sender())
     } finally {
       SecurityContext.remove()
+      // The packet is retained at the beginning of the request handler and released at the end.
+      // If the bytes need to stay live past that, they need to be retained additional times.
+      packet.release()
     }
   }
 

@@ -28,7 +28,7 @@ sealed interface V086Bundle : ByteBufferMessage, ReferenceCounted {
       message.writeTo(buffer)
     }
 
-    override fun refCnt(): Int = (message as? ReferenceCounted)?.refCnt() ?: 1
+    override fun refCnt(): Int = (message as? ReferenceCounted)?.refCnt() ?: TODO("Unsupported!")
 
     override fun retain(): V086Bundle {
       ReferenceCountUtil.retain(message)
@@ -87,11 +87,7 @@ sealed interface V086Bundle : ByteBufferMessage, ReferenceCounted {
     }
 
     override fun refCnt(): Int {
-      // return failure if any message is released? Or just return the first one?
-      // Since this is a container, refCnt isn't perfectly defined if children have different
-      // counts.
-      // We will just proxy... but we don't really use refCnt() checks often.
-      return 1
+      TODO("Unsupported!")
     }
 
     override fun retain(): V086Bundle {

@@ -18,7 +18,7 @@ interface GameDataCache : Collection<ByteBuf> {
   fun add(data: ByteBuf): Int
 
   /**
-   * Returns the index of the first occurrence of the specified [data] in the cache, or -1 if the
+   * Returns the index of the last occurrence of the specified [data] in the cache, or -1 if the
    * cache does not contain the element.
    */
   fun indexOf(data: ByteBuf): Int

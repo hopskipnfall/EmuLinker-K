@@ -2,6 +2,7 @@ package org.emulinker.kaillera.model
 
 import com.google.common.flogger.FluentLogger
 import io.netty.buffer.ByteBuf
+import io.netty.buffer.PooledByteBufAllocator
 import java.net.InetSocketAddress
 import kotlin.time.Clock
 import kotlin.time.Duration
@@ -447,7 +448,8 @@ class KailleraUser(
         lostInput.add(data)
 
         val zeroData =
-          io.netty.buffer.PooledByteBufAllocator.DEFAULT.buffer(arraySize).writeZero(arraySize)
+          // This could be a problem?
+          PooledByteBufAllocator.DEFAULT.buffer(arraySize).writeZero(arraySize)
         doEvent(GameDataEvent(game, zeroData))
         frameCount++
       } else {
