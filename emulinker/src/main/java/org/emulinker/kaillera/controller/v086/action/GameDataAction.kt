@@ -48,6 +48,7 @@ object GameDataAction : V086Action<GameData>, V086GameEventHandler<GameDataEvent
         logger.atSevere().withCause(e).log("Failed to construct GameData message")
       }
     } else {
+      data.release()
       try {
         clientHandler.send(CachedGameData(clientHandler.nextMessageNumber, key))
       } catch (e: MessageFormatException) {

@@ -79,10 +79,12 @@ class CombinedKailleraController(
                 logger.atInfo().log("Using Epoll (Linux native)")
                 EpollIoHandler.newFactory()
               }
+
               KQueue.isAvailable() -> {
                 logger.atInfo().log("Using KQueue (MacOS native)")
                 KQueueIoHandler.newFactory()
               }
+
               else -> {
                 logger.atInfo().log("Using NIO (Generic)")
                 NioIoHandler.newFactory()
@@ -153,6 +155,7 @@ class CombinedKailleraController(
             ConnectMessage_PONG.writeTo(buf)
             send(DatagramPacket(buf, remoteSocketAddress))
           }
+
           is RequestPrivateKailleraPortRequest -> {
             check(connectMessage.protocol == "0.83") {
               "Client listed unsupported protocol! $connectMessage."
@@ -162,6 +165,7 @@ class CombinedKailleraController(
             RequestPrivateKailleraPortResponse(flags.serverPort).writeTo(buf)
             send(DatagramPacket(buf, remoteSocketAddress))
           }
+
           else -> {
             logger
               .atWarning()
@@ -218,9 +222,6 @@ class CombinedKailleraController(
       handleReceived(packet.content(), packet.sender())
     } finally {
       SecurityContext.remove()
-      // The packet is retained at the beginning of the request handler and released at the end.
-      // If the bytes need to stay live past that, they need to be retained additional times.
-      packet.release()
     }
   }
 
