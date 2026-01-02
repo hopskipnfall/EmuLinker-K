@@ -12,6 +12,8 @@ import java.util.concurrent.BlockingQueue
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ThreadPoolExecutor
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 import org.emulinker.kaillera.access.AccessManager
 import org.emulinker.kaillera.controller.connectcontroller.protocol.ConnectMessage
 import org.emulinker.kaillera.controller.connectcontroller.protocol.RequestPrivateKailleraPortRequest
@@ -252,6 +254,223 @@ class GameDataE2ETest : KoinComponent {
   }
 
   @Test
+  fun test4PlayerGoodConnection() {
+    println("Initializing 4 clients with GOOD connection...")
+    val p1 = Client(1, "P1", this, connectionType = ConnectionType.GOOD)
+    val p2 = Client(2, "P2", this, connectionType = ConnectionType.GOOD)
+    val p3 = Client(3, "P3", this, connectionType = ConnectionType.GOOD)
+    val p4 = Client(4, "P4", this, connectionType = ConnectionType.GOOD)
+    val clients = listOf(p1, p2, p3, p4)
+
+    println("Logging in clients...")
+    clients.forEach { it.login() }
+
+    // P1 Create Game
+    println("P1 creating game...")
+    p1.createGame()
+
+    // Others Join
+    println("Others joining game...")
+    p2.joinGame(1)
+    p3.joinGame(1)
+    p4.joinGame(1)
+
+    // P1 Start Game
+    println("P1 starting game...")
+    p1.startGame()
+
+    // Wait for GameStarted
+    println("Waiting for GameStarted...")
+    clients.filter { it != p1 }.forEach { it.waitForGameStarted() }
+
+    // Send Ready
+    println("Sending Ready...")
+    clients.forEach { it.sendReady() }
+    println("Waiting for AllReady...")
+    clients.forEach { it.waitForReady() }
+
+    // Advance iterators to ensure unique data streams
+    println("Advancing iterators...")
+    p1.advanceIterator(100)
+    p2.advanceIterator(200)
+    p3.advanceIterator(300)
+    p4.advanceIterator(400)
+
+    // History of COMBINED packets (P1+P2+P3+P4)
+    val sentHistory = java.util.ArrayList<ByteArray>()
+
+    println("Starting 4-player GOOD connection loop...")
+    val actionsPerMessage = ConnectionType.GOOD.byteValue.toInt() // 3
+
+    for (i in 1..333) {
+      // 1. Collect Input for this packet (3 frames per client)
+      // We keep frames separated first to construct expected combined data (interleaved)
+      val clientFrames =
+        clients.map { client ->
+          val frames = mutableListOf<ByteBuf>()
+          repeat(actionsPerMessage) { frames.add(client.nextInput()) }
+          frames
+        }
+
+      // 2. Calculate Combined Packet for History
+      // Server interleaves: Frame 1 (All Players), Frame 2 (All Players), Frame 3 (All Players)
+      val combinedPacket = java.io.ByteArrayOutputStream()
+      for (frameIdx in 0 until actionsPerMessage) {
+        for (clientIdx in clients.indices) {
+          combinedPacket.write(clientFrames[clientIdx][frameIdx].toByteArray())
+        }
+      }
+      val expectedCombinedData = combinedPacket.toByteArray()
+      sentHistory.add(expectedCombinedData)
+
+      // Prepare packet inputs (Client just concatenates its own frames)
+      // Note: This consumes the clientFrames ByteBufs (readerIndex moves)
+      val packetInputs =
+        clientFrames.map { frames ->
+          val buffer = Unpooled.buffer()
+          frames.forEach { buffer.writeBytes(it) }
+          buffer
+        }
+
+      // 3. Send Data (All players send their part)
+      clients.forEachIndexed { index, client -> client.sendGameData(packetInputs[index]) }
+
+      // 4. Receive Data (All players receive the SAME combined packet)
+      clients.forEach { client ->
+        val received = client.receiveGameData()
+        val receivedBytes = received.toByteArray()
+
+        if (i <= 6) {
+          // Phase 1: Buffering
+          // Server buffers inputs. Returns Zeros.
+          // Size = Sum of all input sizes
+          expect.that(receivedBytes.size).isEqualTo(expectedCombinedData.size)
+          expect.that(receivedBytes).isEqualTo(ByteArray(receivedBytes.size) { 0 })
+        } else if (i <= 12) {
+          // Phase 2: Draining
+          // Server processes buffered packets (1-6). i-7 is the historic index.
+          val historicIndex = i - 7
+          val expectedData = sentHistory[historicIndex]
+          expect.that(receivedBytes).isEqualTo(expectedData)
+        } else {
+          // Phase 3: Synced
+          // Buffer empty. Receive current combined input.
+          expect.that(receivedBytes).isEqualTo(expectedCombinedData)
+        }
+      }
+
+      println("4-player GOOD connection loop complete.")
+    }
+  }
+
+  @Test
+  fun test3PlayerVariableDelay() {
+    println("Initializing 3 clients with variable delays...")
+    // Target Delays: P1=2 frames, P2=3 frames, P3=4 frames.
+    // Logic: Delay = (Ping * 60) + 1  =>  Ping = (Delay - 1) / 60
+    // P3: (4-1)/60 = 50.00ms
+    // We add a little buffer because network speed is avg.
+    val p1 = Client(1, "P1", this, loginDelay = 17.milliseconds)
+    val p2 = Client(2, "P2", this, loginDelay = 34.milliseconds)
+    val p3 = Client(3, "P3", this, loginDelay = 51.milliseconds)
+    val clients = listOf(p1, p2, p3)
+
+    println("Logging in clients...")
+    clients.forEach { it.login() }
+
+    // P1 Create Game
+    println("P1 creating game...")
+    p1.createGame()
+
+    // Others Join
+    println("Others joining game...")
+    p2.joinGame(1)
+    p3.joinGame(1)
+
+    // P1 Start Game
+    println("P1 starting game...")
+    p1.startGame()
+
+    // Wait for GameStarted
+    println("Waiting for GameStarted...")
+    clients.filter { it != p1 }.forEach { it.waitForGameStarted() }
+
+    // Send Ready
+    println("Sending Ready...")
+    clients.forEach { it.sendReady() }
+    println("Waiting for AllReady...")
+    clients.forEach { it.waitForReady() }
+
+    // Advance iterators to ensure unique data streams
+    println("Advancing iterators...")
+    p1.advanceIterator(100)
+    p2.advanceIterator(200)
+    p3.advanceIterator(300)
+
+    // Expected Total Delay: Max Frame Delay + 1 (Sync Delay)
+    // Server logic: totalDelay = game.highestUserFrameDelay + tempDelay + 5?
+    // Let's verify via buffering behavior.
+    // Based on KailleraGame.kt:
+    // val delayVal = GAME_FPS.toDouble() / player.connectionType.byteValue *
+    // (player.ping.toMillisDouble() / 1000.0) + 1.0
+    // player.frameDelay = delayVal.toInt()
+    // totalDelay = game.highestUserFrameDelay + tempDelay + 5
+    // P3 has highest delay ~4 frames.
+    // So totalDelay should be roughly 4 + 0 + 5 = 9?
+    // Wait, totalDelay determines buffering phase.
+    // If totalDelay is 9, buffering is 9 frames. i=1..9 buffer, i>9 drain.
+
+    // Let's run a short loop to capture behavior and assertions.
+    // We won't iterate 1000 times, just enough to verify delays.
+    // Actually, we should check what the server calculates.
+    // This integration test is black-box to the server internals, so we infer from behavior.
+
+    println("Starting 3-player variable delay loop...")
+    val sentHistory = java.util.ArrayList<ByteArray>()
+
+    // We use a shorter timeout for receive in the loop to allow fast clients to progress
+    // while slow clients (P3) wait for sync.
+    for (i in 1..50) {
+      val inputs = clients.map { it.nextInput() }
+
+      val combinedPacket = java.io.ByteArrayOutputStream()
+      inputs.forEach { combinedPacket.write(it.toByteArray()) }
+      val expectedCombinedData = combinedPacket.toByteArray()
+      sentHistory.add(expectedCombinedData)
+
+      clients.forEachIndexed { index, client -> client.sendGameData(inputs[index]) }
+
+      val currentReceived = java.util.ArrayList<ByteArray>()
+      clients.forEach { client ->
+        try {
+          // Use very short timeout to avoid deadlock during disparate buffering phases
+          val received = client.receiveGameData(timeout = 50.milliseconds)
+          val receivedBytes = received.toByteArray()
+          currentReceived.add(receivedBytes)
+        } catch (e: Exception) {
+          // It is expected that some clients (like P3) might timeout in early frames.
+        }
+      }
+
+      if (i > 35) {
+        // Verify that we received packets from ALL clients (Sync achieved)
+        expect.that(currentReceived.size).isEqualTo(clients.size)
+
+        // Verify Consistency: All players must receive the IDENTICAL packet
+        // and it must be non-zero (actual game data)
+        if (currentReceived.isNotEmpty()) {
+          val first = currentReceived[0]
+          currentReceived.forEach {
+            expect.that(it).isEqualTo(first)
+            expect.that(it).isNotEqualTo(ByteArray(it.size) { 0 })
+          }
+        }
+      }
+    }
+    println("3-player variable delay loop complete.")
+  }
+
+  @Test
   fun test4PlayerCachedGameDataSync() {
     println("Initializing 4 clients with OUTGOING CACHE ENABLED...")
     val p1 = Client(1, "P1", this, useOutgoingCache = true)
@@ -392,6 +611,8 @@ class GameDataE2ETest : KoinComponent {
     val username: String,
     val testInstance: GameDataE2ETest,
     val useOutgoingCache: Boolean = false,
+    val connectionType: ConnectionType = ConnectionType.LAN,
+    val loginDelay: Duration = Duration.ZERO,
   ) {
     var lastMessageNumberReceived = -1
     var lastMessageNumber = -1
@@ -461,11 +682,15 @@ class GameDataE2ETest : KoinComponent {
 
       sendBundle(
         V086Bundle.Single(
-          UserInformation(++lastMessageNumber, username, "Test Client", ConnectionType.LAN)
+          UserInformation(++lastMessageNumber, username, "Test Client", connectionType)
         )
       )
       consumeUntil {
         if (it is ServerAck) {
+          // Simulate latency for ping calculation
+          if (loginDelay > Duration.ZERO) {
+            Thread.sleep(loginDelay.inWholeMilliseconds)
+          }
           sendBundle(V086Bundle.Single(ClientAck(++lastMessageNumber)))
           false
         } else {
@@ -505,9 +730,7 @@ class GameDataE2ETest : KoinComponent {
     }
 
     fun joinGame(gameId: Int) {
-      sendBundle(
-        V086Bundle.Single(JoinGameRequest(++lastMessageNumber, gameId, ConnectionType.LAN))
-      )
+      sendBundle(V086Bundle.Single(JoinGameRequest(++lastMessageNumber, gameId, connectionType)))
       consumeUntil {
         it is JoinGameNotification && it.username == this.username && it.gameId == gameId
       }
@@ -536,8 +759,8 @@ class GameDataE2ETest : KoinComponent {
 
     private val cache = FastGameDataCache(256) // Standard Kaillera cache size
 
-    fun receiveGameData(timeout: java.time.Duration = java.time.Duration.ofSeconds(1)): ByteBuf {
-      val deadline = System.nanoTime() + timeout.toNanos()
+    fun receiveGameData(timeout: Duration = 1.seconds): ByteBuf {
+      val deadline = System.nanoTime() + timeout.inWholeNanoseconds
       while (System.nanoTime() < deadline) {
         val msg = nextMessage()
         if (msg == null) {

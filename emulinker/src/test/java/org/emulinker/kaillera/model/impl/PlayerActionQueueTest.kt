@@ -4,7 +4,6 @@ import com.google.common.truth.Truth.assertThat
 import io.netty.buffer.ByteBufUtil
 import io.netty.buffer.Unpooled
 import org.emulinker.testing.LoggingRule
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mockito.kotlin.mock
@@ -137,22 +136,6 @@ class PlayerActionQueueTest {
     out = Unpooled.buffer(DATA.size)
     queue.getActionAndWriteToArray(readingPlayerIndex = 0, writeTo = out, actionLength = DATA.size)
 
-    assertThat(ByteBufUtil.equals(out, Unpooled.wrappedBuffer(DATA))).isTrue()
-  }
-
-  @Test
-  @Ignore // TODO: Fill out this test properly with real data.
-  fun `containsNewDataForPlayer works for two players`() {
-    val queue =
-      PlayerActionQueue(playerNumber = 1, player = mock(), numPlayers = 2, gameBufferSize = 4096)
-    queue.markSynced()
-
-    queue.addActions(Unpooled.wrappedBuffer(DATA))
-
-    val out = Unpooled.buffer(DATA.size)
-    queue.getActionAndWriteToArray(readingPlayerIndex = 0, writeTo = out, actionLength = DATA.size)
-
-    assertThat(queue.containsNewDataForPlayer(playerIndex = 0, actionLength = DATA.size)).isTrue()
     assertThat(ByteBufUtil.equals(out, Unpooled.wrappedBuffer(DATA))).isTrue()
   }
 
