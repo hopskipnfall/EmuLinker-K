@@ -7,7 +7,6 @@ import org.emulinker.kaillera.controller.messaging.ByteBufferMessage
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.messaging.ParseException
 import org.emulinker.kaillera.pico.AppModule
-import org.emulinker.util.CircularVariableSizeByteArrayBuffer
 import org.emulinker.util.UnsignedUtil.putUnsignedShort
 
 /**
@@ -129,17 +128,11 @@ abstract class V086Message : ByteBufferMessage {
     }
 
     @Throws(ParseException::class, MessageFormatException::class)
-    fun parse(
-      messageNumber: Int,
-      messageLength: Int,
-      buf: ByteBuf,
-      arrayBuffer: CircularVariableSizeByteArrayBuffer?,
-    ): V086Message {
+    fun parse(messageNumber: Int, messageLength: Int, buf: ByteBuf): V086Message {
       val messageType = buf.readByte()
-
       var parseResult =
         if (messageType == GameData.ID) {
-          GameData.GameDataSerializer.read(buf, messageNumber, arrayBuffer)
+          GameData.GameDataSerializer.read(buf, messageNumber)
         } else {
           val serializer =
             when (messageType) {

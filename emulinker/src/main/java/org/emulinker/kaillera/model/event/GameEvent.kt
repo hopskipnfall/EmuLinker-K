@@ -1,8 +1,8 @@
 package org.emulinker.kaillera.model.event
 
+import io.netty.buffer.ByteBuf
 import org.emulinker.kaillera.model.KailleraGame
 import org.emulinker.kaillera.model.KailleraUser
-import org.emulinker.util.VariableSizeByteArray
 
 sealed interface GameEvent : KailleraEvent {
   val game: KailleraGame?
@@ -25,8 +25,7 @@ data class AllReadyEvent(override val game: KailleraGame) : GameEvent
 data class GameDesynchEvent(override val game: KailleraGame, val message: String) : GameEvent
 
 // Why is there a gamedata and gamedataevent
-data class GameDataEvent(override val game: KailleraGame, val data: VariableSizeByteArray) :
-  GameEvent
+data class GameDataEvent(override val game: KailleraGame, val data: ByteBuf) : GameEvent
 
 data class GameStartedEvent(override val game: KailleraGame) : GameEvent
 
