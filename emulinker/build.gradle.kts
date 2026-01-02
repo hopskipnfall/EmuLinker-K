@@ -212,6 +212,7 @@ jmh {
     benchmarkMode = listOf("ss") // "Single Shot" mode (runs method once, minimal timing overhead)
     resultFormat = "JSON"
   }
+  profilers = listOf("jfr:dir=build/results/jmh-jfr", "gc")
 }
 
 tasks.named("jmh") {
