@@ -751,10 +751,7 @@ class KailleraGame(
         }
       ) {
         waitingOnData = false
-        // Allocated pooled buffer for efficiency
-        // TODO(nue): Use SecurityContext.alloc()?
         val joinedGameData = PooledByteBufAllocator.DEFAULT.buffer(user.arraySize)
-
         for (actionCounter in 0 until actionsPerMessage) {
           for (playerActionQueueIndex in playerActionQueues.indices) {
             playerActionQueues[playerActionQueueIndex].getActionAndWriteToArray(

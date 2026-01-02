@@ -54,11 +54,9 @@ class AutoFireScanner2(private var game: KailleraGame, sensitivity: Int) : AutoF
   inner class ScanningJob(private val user: KailleraUser, private val playerNumber: Int) :
     Runnable {
     private var bytesPerAction = -1
-    // The size limit seems to be the buffer size for analysis?
     private val sizeLimit: Int = (maxDelay + 1) * minReps * 5
     private val bufferSize = 5
     private var size = 0
-    // Buffer for storing history of actions?
     private val buffer: Array<ByteArray> = Array(bufferSize) { ByteArray(sizeLimit) }
     private var head = 0
     private var tail = 0
@@ -71,21 +69,18 @@ class AutoFireScanner2(private var game: KailleraGame, sensitivity: Int) : AutoF
       val length = data.readableBytes()
       if (pos + length >= sizeLimit) {
         val firstSize = sizeLimit - pos
-        // System.arraycopy(data, 0, buffer[tail], pos, firstSize)
+        // TODO(nue): Does this copy??
         data.getBytes(data.readerIndex(), buffer[tail], pos, firstSize)
-
         tail++
         if (tail == bufferSize) tail = 0
-
-        // System.arraycopy(data, firstSize, buffer[tail], 0, data.size - firstSize)
+        // TODO(nue): Does this copy??
         data.getBytes(data.readerIndex() + firstSize, buffer[tail], 0, length - firstSize)
-
         pos = length - firstSize
         size++
         if (this.bytesPerAction <= 0) this.bytesPerAction = bytesPerAction
         if (!running) executor.submit(this)
       } else {
-        // System.arraycopy(data, 0, buffer[tail], pos, data.size)
+        // TODO(nue): Does this copy??
         data.getBytes(data.readerIndex(), buffer[tail], pos, length)
         pos += length
       }

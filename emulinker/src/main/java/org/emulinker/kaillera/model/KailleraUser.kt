@@ -447,13 +447,10 @@ class KailleraUser(
         data.retain()
         lostInput.add(data)
 
-        val zeroData =
-          // This could be a problem?
-          PooledByteBufAllocator.DEFAULT.buffer(arraySize).writeZero(arraySize)
+        val zeroData = PooledByteBufAllocator.DEFAULT.buffer(arraySize).writeZero(arraySize)
         doEvent(GameDataEvent(game, zeroData))
         frameCount++
       } else {
-        // lostInput.add(data);
         if (lostInput.isNotEmpty()) {
           val lost = lostInput.removeAt(0)
 

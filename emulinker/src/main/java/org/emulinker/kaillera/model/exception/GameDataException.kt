@@ -29,8 +29,6 @@ class GameDataException : ActionException {
       val srcIndex = actionCounter * bytesPerAction
       val dstIndex =
         actionCounter * (numPlayers * bytesPerAction) + (playerNumber - 1) * bytesPerAction
-      // data.toByteArray() creates copy. Use getBytes from ByteBuf.
-      // data is ByteBuf.
       data.getBytes(data.readerIndex() + srcIndex, r, dstIndex, bytesPerAction)
     }
     response = r

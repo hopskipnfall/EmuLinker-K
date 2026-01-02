@@ -379,12 +379,9 @@ class GameDataE2ETest : KoinComponent {
   fun test3PlayerVariableDelay() {
     println("Initializing 3 clients with variable delays...")
     // Target Delays: P1=2 frames, P2=3 frames, P3=4 frames.
-    // Logic: Delay = (Ping * 60) + 1  =>  Ping = (Delay - 1) / 60
-    // P3: (4-1)/60 = 50.00ms
-    // We add a little buffer because network speed is avg.
-    val p1 = Client(1, "P1", this, loginDelay = 17.milliseconds)
-    val p2 = Client(2, "P2", this, loginDelay = 34.milliseconds)
-    val p3 = Client(3, "P3", this, loginDelay = 51.milliseconds)
+    val p1 = Client(1, "P1", this, loginDelay = 25.milliseconds)
+    val p2 = Client(2, "P2", this, loginDelay = 41.milliseconds)
+    val p3 = Client(3, "P3", this, loginDelay = 58.milliseconds)
     val clients = listOf(p1, p2, p3)
 
     println("Logging in clients...")
@@ -418,24 +415,6 @@ class GameDataE2ETest : KoinComponent {
     p1.advanceIterator(100)
     p2.advanceIterator(200)
     p3.advanceIterator(300)
-
-    // Expected Total Delay: Max Frame Delay + 1 (Sync Delay)
-    // Server logic: totalDelay = game.highestUserFrameDelay + tempDelay + 5?
-    // Let's verify via buffering behavior.
-    // Based on KailleraGame.kt:
-    // val delayVal = GAME_FPS.toDouble() / player.connectionType.byteValue *
-    // (player.ping.toMillisDouble() / 1000.0) + 1.0
-    // player.frameDelay = delayVal.toInt()
-    // totalDelay = game.highestUserFrameDelay + tempDelay + 5
-    // P3 has highest delay ~4 frames.
-    // So totalDelay should be roughly 4 + 0 + 5 = 9?
-    // Wait, totalDelay determines buffering phase.
-    // If totalDelay is 9, buffering is 9 frames. i=1..9 buffer, i>9 drain.
-
-    // Let's run a short loop to capture behavior and assertions.
-    // We won't iterate 1000 times, just enough to verify delays.
-    // Actually, we should check what the server calculates.
-    // This integration test is black-box to the server internals, so we infer from behavior.
 
     println("Starting 3-player variable delay loop...")
     val sentHistory = java.util.ArrayList<ByteArray>()

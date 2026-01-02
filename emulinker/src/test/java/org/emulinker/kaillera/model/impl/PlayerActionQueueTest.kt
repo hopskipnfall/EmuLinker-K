@@ -46,12 +46,7 @@ class PlayerActionQueueTest {
     queue.addActions(Unpooled.wrappedBuffer(DATA))
 
     val out = Unpooled.buffer(DATA.size)
-    queue.getActionAndWriteToArray(
-      readingPlayerIndex = 0,
-      writeTo = out,
-      // writeAtIndex = 0, // removed
-      actionLength = DATA.size,
-    )
+    queue.getActionAndWriteToArray(readingPlayerIndex = 0, writeTo = out, actionLength = DATA.size)
 
     // Verify out contains zeroes
     val zeroes = ByteArray(DATA.size)

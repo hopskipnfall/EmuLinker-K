@@ -28,7 +28,8 @@ sealed interface V086Bundle : ByteBufferMessage, ReferenceCounted {
       message.writeTo(buffer)
     }
 
-    override fun refCnt(): Int = (message as? ReferenceCounted)?.refCnt() ?: TODO("Unsupported!")
+    override fun refCnt(): Int =
+      (message as? ReferenceCounted)?.refCnt() ?: throw UnsupportedOperationException()
 
     override fun retain(): V086Bundle {
       ReferenceCountUtil.retain(message)
@@ -87,7 +88,7 @@ sealed interface V086Bundle : ByteBufferMessage, ReferenceCounted {
     }
 
     override fun refCnt(): Int {
-      TODO("Unsupported!")
+      throw UnsupportedOperationException()
     }
 
     override fun retain(): V086Bundle {
@@ -212,7 +213,6 @@ sealed interface V086Bundle : ByteBufferMessage, ReferenceCounted {
             parsedCount++
           }
         } catch (t: Throwable) {
-          // Leak fix: If we fail halfway, release what we successfully parsed
           for (i in 0..parsedCount) {
             val m = messages[i]
             if (m != null) {

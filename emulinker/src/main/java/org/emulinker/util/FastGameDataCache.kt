@@ -51,15 +51,13 @@ class FastGameDataCache(override val capacity: Int) : GameDataCache {
         // The oldest key holds a reference to headBuf which is about to be released. We need to
         // swap this out for the newer one otherwise calling most methods on it will throw an
         // IllegalReferenceCountException exception.
-
-        // TODO: We can probably optimize this a bit by using a different key.
         indexMap.remove(headKey)
         val nextLiveAbsIndex = indices.first()
         val nextLiveBuf = buffer[toBufferIndex(nextLiveAbsIndex)]!!
         indexMap[ByteBufKey(nextLiveBuf)] = indices
       }
 
-      // Clean buffer slot and release the buffer
+      // Clean buffer slot and release the buffer.
       buffer[toBufferIndex(head)] = null
       headBuf.release()
 
@@ -70,11 +68,11 @@ class FastGameDataCache(override val capacity: Int) : GameDataCache {
 
     // Add new element at the tail
     val absIndex = head + size
-    // Retain the data before storing it
+    // Retain the data before storing it.
     val retainedData = data.retainedDuplicate()
     buffer[toBufferIndex(absIndex)] = retainedData
 
-    // Update Map
+    // Update Map.
     indexMap.getOrPut(ByteBufKey(retainedData)) { ArrayDeque() }.addLast(absIndex)
 
     size++
@@ -84,7 +82,7 @@ class FastGameDataCache(override val capacity: Int) : GameDataCache {
   override fun indexOf(data: ByteBuf): Int {
     val indices = indexMap[ByteBufKey(data)] ?: return -1
     if (indices.isEmpty()) return -1
-    val lastAbsIndex = indices.last() // NUE: I just changed this from first()
+    val lastAbsIndex = indices.last()
 
     // Convert Absolute Index -> Logical Index
     return lastAbsIndex - head
@@ -108,13 +106,6 @@ class FastGameDataCache(override val capacity: Int) : GameDataCache {
     if (indices.isEmpty()) {
       indexMap.remove(key)
     } else {
-      // Safe Key Swap:
-      // Regardless of whether 'dataToRemove' was the backing buffer for the map Key,
-      // we are about to release 'dataToRemove'.
-      // If it WAS the backing buffer, we must swap.
-      // If it wasn't, swapping is harmless (just updates key to oldest remaining).
-      // To guarantee safety without complex checks, we simply re-key to the new oldest
-      // (indices.first()).
       indexMap.remove(key)
       val newFirstAbs = indices.first()
       val newFirstBuf = buffer[toBufferIndex(newFirstAbs)]!!

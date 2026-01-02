@@ -20,9 +20,6 @@ class PlayerActionQueue(
 ) {
   var lastTimeout: PlayerTimeoutException? = null
 
-  // We use a CompositeByteBuf to hold the queue of data.
-  // This avoids copying when adding data, we just add the component.
-  // However, we need to be careful about releasing components when they are fully read.
   private val data: CompositeByteBuf = Unpooled.compositeBuffer()
 
   // Total bytes currently available to read from the start of the buffer
@@ -42,9 +39,6 @@ class PlayerActionQueue(
 
   fun markSynced() {
     synced = true
-    // Reset state?
-    // data.clear() checks writerIndex/readerIndex but does not release components.
-    // We must release components to avoid leaks.
     if (data.numComponents() > 0) {
       data.removeComponents(0, data.numComponents())
     }
@@ -114,9 +108,6 @@ class PlayerActionQueue(
     }
 
     if (minHead > 0) {
-      // We can discard `minHead` bytes.
-      // data.discardReadBytes() works on readerIndex.
-      // So we set readerIndex to minHead.
       data.readerIndex(minHead)
       data.discardReadBytes()
       for (i in heads.indices) {
