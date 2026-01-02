@@ -1,23 +1,23 @@
 <!DOCTYPE html>
-<html class="no-js">
+<html class="no-js" lang="en">
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
     <title>EventOrBuilder</title>
     <link href="../../../images/logo-icon.svg" rel="icon" type="image/svg">
-    <script>var pathToRoot = "../../../";</script>
-    <script>document.documentElement.classList.replace("no-js","js");</script>
+        <script>var pathToRoot = "../../../";</script>
+    <script>document.documentElement.classList.replace("no-js", "js");</script>
     <script>const storage = localStorage.getItem("dokka-dark-mode")
-    if (storage == null) {
+      if (storage == null) {
         const osDarkSchemePreferred = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
         if (osDarkSchemePreferred === true) {
-            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+          document.getElementsByTagName("html")[0].classList.add("theme-dark")
         }
-    } else {
+      } else {
         const savedDarkMode = JSON.parse(storage)
-        if(savedDarkMode === true) {
-            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        if (savedDarkMode === true) {
+          document.getElementsByTagName("html")[0].classList.add("theme-dark")
         }
-    }
+      }
     </script>
 <script type="text/javascript" src="https://unpkg.com/kotlin-playground@1/dist/playground.min.js" async="async"></script>
 <script type="text/javascript" src="../../../scripts/sourceset_dependencies.js" async="async"></script>
@@ -25,20 +25,18 @@
 <link href="../../../styles/main.css" rel="Stylesheet">
 <link href="../../../styles/prism.css" rel="Stylesheet">
 <link href="../../../styles/logo-styles.css" rel="Stylesheet">
-<link href="../../../styles/font-jb-sans-auto.css" rel="Stylesheet">
 <link href="../../../ui-kit/ui-kit.min.css" rel="Stylesheet">
-<script type="text/javascript" src="../../../scripts/clipboard.js" async="async"></script>
+<script type="text/javascript" src="../../../scripts/safe-local-storage_blocking.js"></script>
 <script type="text/javascript" src="../../../scripts/navigation-loader.js" async="async"></script>
 <script type="text/javascript" src="../../../scripts/platform-content-handler.js" async="async"></script>
 <script type="text/javascript" src="../../../scripts/main.js" defer="defer"></script>
 <script type="text/javascript" src="../../../scripts/prism.js" async="async"></script>
 <script type="text/javascript" src="../../../ui-kit/ui-kit.min.js" defer="defer"></script>
-<script type="text/javascript" src="../../../scripts/symbol-parameters-wrapper_deferred.js" defer="defer"></script>
 </head>
 <body>
-    <div class="root">
-    <nav class="navigation theme-dark" id="navigation-wrapper">
-            <a class="library-name--link" href="../../../index.html">
+<div class="root">
+    <header class="navigation theme-dark" id="navigation-wrapper" role="banner">
+            <a class="library-name--link" href="../../../index.html" tabindex="1">
                     emulinker
             </a>
         <button class="navigation-controls--btn navigation-controls--btn_toc ui-kit_mobile-only" id="toc-toggle"
@@ -48,8 +46,8 @@
         <div class="library-version" id="library-version">
 0.15.0        </div>
         <div class="navigation-controls">
-        <div class="filter-section filter-section_loading" id="filter-section">
-                <button class="platform-tag platform-selector jvm-like" data-active=""
+        <ul class="filter-section filter-section_loading" id="filter-section" aria-label="Target filter">
+                <button class="platform-tag platform-selector jvm-like" data-active="" aria-pressed="true"
                         data-filter=":emulinker/main">jvm</button>
             <div class="dropdown filter-section--dropdown" data-role="dropdown" id="filter-section-dropdown">
                 <button class="button button_dropdown filter-section--dropdown-toggle" role="combobox"
@@ -59,9 +57,9 @@
                         aria-expanded="false"
                         aria-label="Toggle source sets"
                 ></button>
-                <ul role="listbox" id="platform-tags-listbox" class="dropdown--list" data-role="dropdown-listbox">
-                    <div class="dropdown--header"><span>Platform filter</span>
-                        <button class="button" data-role="dropdown-toggle" aria-label="Close platform filter">
+                <ul role="listbox" id="platform-tags-listbox" class="dropdown--list" data-role="dropdown-listbox" aria-label="Target filter">
+                    <div class="dropdown--header"><span>Target filter</span>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close target filter">
                             <i class="ui-kit-icon ui-kit-icon_cross"></i>
                         </button>
                     </div>
@@ -76,7 +74,7 @@
                 </ul>
                 <div class="dropdown--overlay"></div>
             </div>
-        </div>
+        </ul>
             <button class="navigation-controls--btn navigation-controls--btn_theme" id="theme-toggle-button"
                     type="button">Switch theme
             </button>
@@ -84,39 +82,41 @@
                 API
             </div>
         </div>
-    </nav>
-        <div id="container">
-            <div class="sidebar" id="leftColumn">
-                <div class="dropdown theme-dark_mobile" data-role="dropdown" id="toc-dropdown">
-                    <ul role="listbox" id="toc-listbox" class="dropdown--list dropdown--list_toc-list"
-                        data-role="dropdown-listbox">
-                        <div class="dropdown--header">
+    </header>
+    <div id="container">
+        <nav id="leftColumn" class="sidebar" data-item-type="SECTION" data-item-config='{"defaultSize": 280, "minSize": 200, "maxSize": 400}'>
+            <a class="toc--skip-link" href="#main">Skip to content</a>
+            <div class="dropdown theme-dark_mobile" data-role="dropdown" id="toc-dropdown">
+                <ul role="listbox" id="toc-listbox" class="dropdown--list dropdown--list_toc-list"
+                    data-role="dropdown-listbox" aria-label="Table of contents">
+                    <div class="dropdown--header">
                             <span>
                                     emulinker
                             </span>
-                            <button class="button" data-role="dropdown-toggle" aria-label="Close table of contents">
-                                <i class="ui-kit-icon ui-kit-icon_cross"></i>
-                            </button>
-                        </div>
-                        <div class="sidebar--inner" id="sideMenu"></div>
-                    </ul>
-                    <div class="dropdown--overlay"></div>
-                </div>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close table of contents">
+                            <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                        </button>
+                    </div>
+                    <div class="sidebar--inner" id="sideMenu"></div>
+                </ul>
+                <div class="dropdown--overlay"></div>
             </div>
-            <div id="main">
+        </nav>
+        <div id="resizer" class="resizer" data-item-type="BAR"></div>
+        <div id="main" data-item-type="SECTION" role="main">
 <div class="main-content" data-page-type="classlike" id="content" pageIds="emulinker::org.emulinker.proto/EventOrBuilder///PointingToDeclaration//-1834219614">
   <div class="breadcrumbs"><a href="../../../index.html">emulinker</a><span class="delimiter">/</span><a href="../index.html">org.emulinker.proto</a><span class="delimiter">/</span><span class="current">EventOrBuilder</span></div>
   <div class="cover ">
     <h1 class="cover"><span>Event</span><wbr></wbr><span>Or</span><wbr></wbr><span><span>Builder</span></span></h1>
-    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><span data-unresolved-link="com.google.protobuf/Generated///PointingToDeclaration/"><span class="token annotation builtin">Generated</span></span></div></div><span class="token keyword">interface </span><a href="index.html">EventOrBuilder</a> : <span data-unresolved-link="com.google.protobuf/MessageOrBuilder///PointingToDeclaration/">MessageOrBuilder</span></div><h4 class="">Inheritors</h4><div class="table"><div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><a href="../-event/index.html">Event</a></div></span></div><div></div></div></div><div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><a href="../-event/-builder/index.html">Builder</a></div></span></div><div></div></div></div></div></div></div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><span data-unresolved-link="com.google.protobuf/Generated///PointingToDeclaration/"><span class="token annotation builtin">Generated</span></span></div></div><span class="token keyword">interface </span><a href="index.html">EventOrBuilder</a> : <span data-unresolved-link="com.google.protobuf/MessageOrBuilder///PointingToDeclaration/">MessageOrBuilder</span></div><h4 class="tableheader">Inheritors</h4><div class="table"><div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><a href="../-event/index.html">Event</a></div></span></div><div></div></div></div><div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><a href="../-event/-builder/index.html">Builder</a></div></span></div><div></div></div></div></div></div></div>
   </div>
   <div class="tabbedcontent">
     <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION">Members</button><button class="section-tab" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION,EXTENSION_PROPERTY,EXTENSION_FUNCTION">Members &amp; Extensions</button></div>
     <div class="tabs-section-body">
       <div data-togglable="EXTENSION_PROPERTY">
-        <h2 class="">Properties</h2>
+        <h2 class="tableheader">Properties</h2>
         <div class="table"><a data-name="429118748%2FProperties%2F-1834219614" anchor-label="fanOutOrNull" id="429118748%2FProperties%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../fan-out-or-null.html"><span>fan</span><wbr></wbr><span>Out</span><wbr></wbr><span>Or</span><wbr></wbr><span><span>Null</span></span></a></div>
@@ -131,7 +131,7 @@
             </div>
           </div>
 <a data-name="1550578671%2FProperties%2F-1834219614" anchor-label="gameStartOrNull" id="1550578671%2FProperties%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../game-start-or-null.html"><span>game</span><wbr></wbr><span>Start</span><wbr></wbr><span>Or</span><wbr></wbr><span><span>Null</span></span></a></div>
@@ -146,7 +146,7 @@
             </div>
           </div>
 <a data-name="-356695273%2FProperties%2F-1834219614" anchor-label="lagstatSummaryOrNull" id="-356695273%2FProperties%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../lagstat-summary-or-null.html"><span>lagstat</span><wbr></wbr><span>Summary</span><wbr></wbr><span>Or</span><wbr></wbr><span><span>Null</span></span></a></div>
@@ -161,7 +161,7 @@
             </div>
           </div>
 <a data-name="893752794%2FProperties%2F-1834219614" anchor-label="receivedGameDataOrNull" id="893752794%2FProperties%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../received-game-data-or-null.html"><span>received</span><wbr></wbr><span>Game</span><wbr></wbr><span>Data</span><wbr></wbr><span>Or</span><wbr></wbr><span><span>Null</span></span></a></div>
@@ -178,9 +178,9 @@
         </div>
       </div>
       <div data-togglable="FUNCTION">
-        <h2 class="">Functions</h2>
+        <h2 class="tableheader">Functions</h2>
         <div class="table"><a data-name="1227463831%2FFunctions%2F-1834219614" anchor-label="findInitializationErrors" id="1227463831%2FFunctions%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../-game-log-or-builder/index.html#1227463831%2FFunctions%2F-1834219614"><span>find</span><wbr></wbr><span>Initialization</span><wbr></wbr><span><span>Errors</span></span></a></div>
@@ -195,7 +195,7 @@
             </div>
           </div>
 <a data-name="-1735213033%2FFunctions%2F-1834219614" anchor-label="getAllFields" id="-1735213033%2FFunctions%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../-game-log-or-builder/index.html#-1735213033%2FFunctions%2F-1834219614"><span>get</span><wbr></wbr><span>All</span><wbr></wbr><span><span>Fields</span></span></a></div>
@@ -210,7 +210,7 @@
             </div>
           </div>
 <a data-name="463841534%2FFunctions%2F-1834219614" anchor-label="getDefaultInstanceForType" id="463841534%2FFunctions%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../-game-log-or-builder/index.html#-889905270%2FFunctions%2F-1834219614"><span>get</span><wbr></wbr><span>Default</span><wbr></wbr><span>Instance</span><wbr></wbr><span>For</span><wbr></wbr><span><span>Type</span></span></a></div>
@@ -225,7 +225,7 @@
             </div>
           </div>
 <a data-name="-2023656483%2FFunctions%2F-1834219614" anchor-label="getDescriptorForType" id="-2023656483%2FFunctions%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../-game-log-or-builder/index.html#-2023656483%2FFunctions%2F-1834219614"><span>get</span><wbr></wbr><span>Descriptor</span><wbr></wbr><span>For</span><wbr></wbr><span><span>Type</span></span></a></div>
@@ -240,7 +240,7 @@
             </div>
           </div>
 <a data-name="-425181943%2FFunctions%2F-1834219614" anchor-label="getEventTypeCase" id="-425181943%2FFunctions%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="get-event-type-case.html"><span>get</span><wbr></wbr><span>Event</span><wbr></wbr><span>Type</span><wbr></wbr><span><span>Case</span></span></a></div>
@@ -255,7 +255,7 @@
             </div>
           </div>
 <a data-name="2134629330%2FFunctions%2F-1834219614" anchor-label="getFanOut" id="2134629330%2FFunctions%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="get-fan-out.html"><span>get</span><wbr></wbr><span>Fan</span><wbr></wbr><span><span>Out</span></span></a></div>
@@ -270,7 +270,7 @@
             </div>
           </div>
 <a data-name="-144950736%2FFunctions%2F-1834219614" anchor-label="getFanOutOrBuilder" id="-144950736%2FFunctions%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="get-fan-out-or-builder.html"><span>get</span><wbr></wbr><span>Fan</span><wbr></wbr><span>Out</span><wbr></wbr><span>Or</span><wbr></wbr><span><span>Builder</span></span></a></div>
@@ -285,7 +285,7 @@
             </div>
           </div>
 <a data-name="-728711289%2FFunctions%2F-1834219614" anchor-label="getField" id="-728711289%2FFunctions%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../-game-log-or-builder/index.html#-728711289%2FFunctions%2F-1834219614"><span>get</span><wbr></wbr><span><span>Field</span></span></a></div>
@@ -300,7 +300,7 @@
             </div>
           </div>
 <a data-name="-1187327683%2FFunctions%2F-1834219614" anchor-label="getGameStart" id="-1187327683%2FFunctions%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="get-game-start.html"><span>get</span><wbr></wbr><span>Game</span><wbr></wbr><span><span>Start</span></span></a></div>
@@ -315,7 +315,7 @@
             </div>
           </div>
 <a data-name="2131963173%2FFunctions%2F-1834219614" anchor-label="getGameStartOrBuilder" id="2131963173%2FFunctions%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="get-game-start-or-builder.html"><span>get</span><wbr></wbr><span>Game</span><wbr></wbr><span>Start</span><wbr></wbr><span>Or</span><wbr></wbr><span><span>Builder</span></span></a></div>
@@ -330,7 +330,7 @@
             </div>
           </div>
 <a data-name="-106143432%2FFunctions%2F-1834219614" anchor-label="getInitializationErrorString" id="-106143432%2FFunctions%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../-game-log-or-builder/index.html#-106143432%2FFunctions%2F-1834219614"><span>get</span><wbr></wbr><span>Initialization</span><wbr></wbr><span>Error</span><wbr></wbr><span><span>String</span></span></a></div>
@@ -345,7 +345,7 @@
             </div>
           </div>
 <a data-name="-745018163%2FFunctions%2F-1834219614" anchor-label="getLagstatSummary" id="-745018163%2FFunctions%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="get-lagstat-summary.html"><span>get</span><wbr></wbr><span>Lagstat</span><wbr></wbr><span><span>Summary</span></span></a></div>
@@ -360,7 +360,7 @@
             </div>
           </div>
 <a data-name="-443280491%2FFunctions%2F-1834219614" anchor-label="getLagstatSummaryOrBuilder" id="-443280491%2FFunctions%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="get-lagstat-summary-or-builder.html"><span>get</span><wbr></wbr><span>Lagstat</span><wbr></wbr><span>Summary</span><wbr></wbr><span>Or</span><wbr></wbr><span><span>Builder</span></span></a></div>
@@ -375,7 +375,7 @@
             </div>
           </div>
 <a data-name="1767160798%2FFunctions%2F-1834219614" anchor-label="getOneofFieldDescriptor" id="1767160798%2FFunctions%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../-game-log-or-builder/index.html#1767160798%2FFunctions%2F-1834219614"><span>get</span><wbr></wbr><span>Oneof</span><wbr></wbr><span>Field</span><wbr></wbr><span><span>Descriptor</span></span></a></div>
@@ -390,7 +390,7 @@
             </div>
           </div>
 <a data-name="-7810672%2FFunctions%2F-1834219614" anchor-label="getReceivedGameData" id="-7810672%2FFunctions%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="get-received-game-data.html"><span>get</span><wbr></wbr><span>Received</span><wbr></wbr><span>Game</span><wbr></wbr><span><span>Data</span></span></a></div>
@@ -405,7 +405,7 @@
             </div>
           </div>
 <a data-name="-1537942990%2FFunctions%2F-1834219614" anchor-label="getReceivedGameDataOrBuilder" id="-1537942990%2FFunctions%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="get-received-game-data-or-builder.html"><span>get</span><wbr></wbr><span>Received</span><wbr></wbr><span>Game</span><wbr></wbr><span>Data</span><wbr></wbr><span>Or</span><wbr></wbr><span><span>Builder</span></span></a></div>
@@ -420,7 +420,7 @@
             </div>
           </div>
 <a data-name="1425494465%2FFunctions%2F-1834219614" anchor-label="getRepeatedField" id="1425494465%2FFunctions%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../-game-log-or-builder/index.html#1425494465%2FFunctions%2F-1834219614"><span>get</span><wbr></wbr><span>Repeated</span><wbr></wbr><span><span>Field</span></span></a></div>
@@ -435,7 +435,7 @@
             </div>
           </div>
 <a data-name="-950528252%2FFunctions%2F-1834219614" anchor-label="getRepeatedFieldCount" id="-950528252%2FFunctions%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../-game-log-or-builder/index.html#-950528252%2FFunctions%2F-1834219614"><span>get</span><wbr></wbr><span>Repeated</span><wbr></wbr><span>Field</span><wbr></wbr><span><span>Count</span></span></a></div>
@@ -450,7 +450,7 @@
             </div>
           </div>
 <a data-name="1252599218%2FFunctions%2F-1834219614" anchor-label="getTimestampNs" id="1252599218%2FFunctions%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="get-timestamp-ns.html"><span>get</span><wbr></wbr><span>Timestamp</span><wbr></wbr><span><span>Ns</span></span></a></div>
@@ -462,13 +462,13 @@
                   <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">fun </span><a href="get-timestamp-ns.html"><span class="token function">getTimestampNs</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-long/index.html">Long</a></div><div class="brief "><div class="sample-container"><pre><code class="block lang-kotlin" theme="idea">Number of nanoseconds from an arbitrary point of time in the past.
 This can be used to check elapsed time between events for a single
 game, but not necessarily between events between two games.
-</code></pre><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><code class="lang-kotlin">int64 timestamp_ns = 1;</code></div></div></div>
+</code></pre><span class="copy-tooltip"><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div><span class="copy-icon"></span></span></div><code class="lang-kotlin">int64 timestamp_ns = 1;</code></div></div></div>
                 </div>
               </div>
             </div>
           </div>
 <a data-name="-1388384690%2FFunctions%2F-1834219614" anchor-label="getUnknownFields" id="-1388384690%2FFunctions%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../-game-log-or-builder/index.html#-1388384690%2FFunctions%2F-1834219614"><span>get</span><wbr></wbr><span>Unknown</span><wbr></wbr><span><span>Fields</span></span></a></div>
@@ -483,7 +483,7 @@ game, but not necessarily between events between two games.
             </div>
           </div>
 <a data-name="1020030990%2FFunctions%2F-1834219614" anchor-label="hasFanOut" id="1020030990%2FFunctions%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="has-fan-out.html"><span>has</span><wbr></wbr><span>Fan</span><wbr></wbr><span><span>Out</span></span></a></div>
@@ -498,7 +498,7 @@ game, but not necessarily between events between two games.
             </div>
           </div>
 <a data-name="2095008451%2FFunctions%2F-1834219614" anchor-label="hasField" id="2095008451%2FFunctions%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../-game-log-or-builder/index.html#2095008451%2FFunctions%2F-1834219614"><span>has</span><wbr></wbr><span><span>Field</span></span></a></div>
@@ -513,7 +513,7 @@ game, but not necessarily between events between two games.
             </div>
           </div>
 <a data-name="-1794309247%2FFunctions%2F-1834219614" anchor-label="hasGameStart" id="-1794309247%2FFunctions%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="has-game-start.html"><span>has</span><wbr></wbr><span>Game</span><wbr></wbr><span><span>Start</span></span></a></div>
@@ -528,7 +528,7 @@ game, but not necessarily between events between two games.
             </div>
           </div>
 <a data-name="1365148937%2FFunctions%2F-1834219614" anchor-label="hasLagstatSummary" id="1365148937%2FFunctions%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="has-lagstat-summary.html"><span>has</span><wbr></wbr><span>Lagstat</span><wbr></wbr><span><span>Summary</span></span></a></div>
@@ -543,7 +543,7 @@ game, but not necessarily between events between two games.
             </div>
           </div>
 <a data-name="687391779%2FFunctions%2F-1834219614" anchor-label="hasOneof" id="687391779%2FFunctions%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../-game-log-or-builder/index.html#687391779%2FFunctions%2F-1834219614"><span>has</span><wbr></wbr><span><span>Oneof</span></span></a></div>
@@ -558,7 +558,7 @@ game, but not necessarily between events between two games.
             </div>
           </div>
 <a data-name="638208716%2FFunctions%2F-1834219614" anchor-label="hasReceivedGameData" id="638208716%2FFunctions%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="has-received-game-data.html"><span>has</span><wbr></wbr><span>Received</span><wbr></wbr><span>Game</span><wbr></wbr><span><span>Data</span></span></a></div>
@@ -573,7 +573,7 @@ game, but not necessarily between events between two games.
             </div>
           </div>
 <a data-name="2058868470%2FFunctions%2F-1834219614" anchor-label="hasTimestampNs" id="2058868470%2FFunctions%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="has-timestamp-ns.html"><span>has</span><wbr></wbr><span>Timestamp</span><wbr></wbr><span><span>Ns</span></span></a></div>
@@ -585,13 +585,13 @@ game, but not necessarily between events between two games.
                   <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">fun </span><a href="has-timestamp-ns.html"><span class="token function">hasTimestampNs</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><div class="sample-container"><pre><code class="block lang-kotlin" theme="idea">Number of nanoseconds from an arbitrary point of time in the past.
 This can be used to check elapsed time between events for a single
 game, but not necessarily between events between two games.
-</code></pre><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><code class="lang-kotlin">int64 timestamp_ns = 1;</code></div></div></div>
+</code></pre><span class="copy-tooltip"><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div><span class="copy-icon"></span></span></div><code class="lang-kotlin">int64 timestamp_ns = 1;</code></div></div></div>
                 </div>
               </div>
             </div>
           </div>
 <a data-name="-786502173%2FFunctions%2F-1834219614" anchor-label="isInitialized" id="-786502173%2FFunctions%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../-game-log-or-builder/index.html#-786502173%2FFunctions%2F-1834219614"><span>is</span><wbr></wbr><span><span>Initialized</span></span></a></div>
@@ -611,17 +611,21 @@ game, but not necessarily between events between two games.
   </div>
 </div>
     <div class="footer">
-        <a href="#content" id="go-to-top-link" class="footer--button footer--button_go-to-top"></a>
-        <span>© 2026 Copyright</span>
-        <span class="pull-right">
-            <span>Generated by </span>
-            <a class="footer--link footer--link_external" href="https://github.com/Kotlin/dokka">
-                <span>dokka</span>
-            </a>
-        </span>
-    </div>
+        <div class="footer--container">
+            <a href="#content" id="go-to-top-link" class="footer--button footer--button_go-to-top"></a>
+            <div class="footer--content">
+                <div>
+                    <span>Generated by </span>
+                    <a class="footer--link footer--link_external" href="https://github.com/Kotlin/dokka">
+                        Dokka
+                    </a>
+                    <div>© 2026 Copyright</div>
+                </div>
             </div>
         </div>
     </div>
+        </div>
+    </div>
+</div>
 </body>
 </html>

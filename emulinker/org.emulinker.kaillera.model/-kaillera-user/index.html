@@ -1,23 +1,23 @@
 <!DOCTYPE html>
-<html class="no-js">
+<html class="no-js" lang="en">
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
     <title>KailleraUser</title>
     <link href="../../../images/logo-icon.svg" rel="icon" type="image/svg">
-    <script>var pathToRoot = "../../../";</script>
-    <script>document.documentElement.classList.replace("no-js","js");</script>
+        <script>var pathToRoot = "../../../";</script>
+    <script>document.documentElement.classList.replace("no-js", "js");</script>
     <script>const storage = localStorage.getItem("dokka-dark-mode")
-    if (storage == null) {
+      if (storage == null) {
         const osDarkSchemePreferred = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
         if (osDarkSchemePreferred === true) {
-            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+          document.getElementsByTagName("html")[0].classList.add("theme-dark")
         }
-    } else {
+      } else {
         const savedDarkMode = JSON.parse(storage)
-        if(savedDarkMode === true) {
-            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        if (savedDarkMode === true) {
+          document.getElementsByTagName("html")[0].classList.add("theme-dark")
         }
-    }
+      }
     </script>
 <script type="text/javascript" src="https://unpkg.com/kotlin-playground@1/dist/playground.min.js" async="async"></script>
 <script type="text/javascript" src="../../../scripts/sourceset_dependencies.js" async="async"></script>
@@ -25,20 +25,18 @@
 <link href="../../../styles/main.css" rel="Stylesheet">
 <link href="../../../styles/prism.css" rel="Stylesheet">
 <link href="../../../styles/logo-styles.css" rel="Stylesheet">
-<link href="../../../styles/font-jb-sans-auto.css" rel="Stylesheet">
 <link href="../../../ui-kit/ui-kit.min.css" rel="Stylesheet">
-<script type="text/javascript" src="../../../scripts/clipboard.js" async="async"></script>
+<script type="text/javascript" src="../../../scripts/safe-local-storage_blocking.js"></script>
 <script type="text/javascript" src="../../../scripts/navigation-loader.js" async="async"></script>
 <script type="text/javascript" src="../../../scripts/platform-content-handler.js" async="async"></script>
 <script type="text/javascript" src="../../../scripts/main.js" defer="defer"></script>
 <script type="text/javascript" src="../../../scripts/prism.js" async="async"></script>
 <script type="text/javascript" src="../../../ui-kit/ui-kit.min.js" defer="defer"></script>
-<script type="text/javascript" src="../../../scripts/symbol-parameters-wrapper_deferred.js" defer="defer"></script>
 </head>
 <body>
-    <div class="root">
-    <nav class="navigation theme-dark" id="navigation-wrapper">
-            <a class="library-name--link" href="../../../index.html">
+<div class="root">
+    <header class="navigation theme-dark" id="navigation-wrapper" role="banner">
+            <a class="library-name--link" href="../../../index.html" tabindex="1">
                     emulinker
             </a>
         <button class="navigation-controls--btn navigation-controls--btn_toc ui-kit_mobile-only" id="toc-toggle"
@@ -48,8 +46,8 @@
         <div class="library-version" id="library-version">
 0.15.0        </div>
         <div class="navigation-controls">
-        <div class="filter-section filter-section_loading" id="filter-section">
-                <button class="platform-tag platform-selector jvm-like" data-active=""
+        <ul class="filter-section filter-section_loading" id="filter-section" aria-label="Target filter">
+                <button class="platform-tag platform-selector jvm-like" data-active="" aria-pressed="true"
                         data-filter=":emulinker/main">jvm</button>
             <div class="dropdown filter-section--dropdown" data-role="dropdown" id="filter-section-dropdown">
                 <button class="button button_dropdown filter-section--dropdown-toggle" role="combobox"
@@ -59,9 +57,9 @@
                         aria-expanded="false"
                         aria-label="Toggle source sets"
                 ></button>
-                <ul role="listbox" id="platform-tags-listbox" class="dropdown--list" data-role="dropdown-listbox">
-                    <div class="dropdown--header"><span>Platform filter</span>
-                        <button class="button" data-role="dropdown-toggle" aria-label="Close platform filter">
+                <ul role="listbox" id="platform-tags-listbox" class="dropdown--list" data-role="dropdown-listbox" aria-label="Target filter">
+                    <div class="dropdown--header"><span>Target filter</span>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close target filter">
                             <i class="ui-kit-icon ui-kit-icon_cross"></i>
                         </button>
                     </div>
@@ -76,7 +74,7 @@
                 </ul>
                 <div class="dropdown--overlay"></div>
             </div>
-        </div>
+        </ul>
             <button class="navigation-controls--btn navigation-controls--btn_theme" id="theme-toggle-button"
                     type="button">Switch theme
             </button>
@@ -84,26 +82,28 @@
                 API
             </div>
         </div>
-    </nav>
-        <div id="container">
-            <div class="sidebar" id="leftColumn">
-                <div class="dropdown theme-dark_mobile" data-role="dropdown" id="toc-dropdown">
-                    <ul role="listbox" id="toc-listbox" class="dropdown--list dropdown--list_toc-list"
-                        data-role="dropdown-listbox">
-                        <div class="dropdown--header">
+    </header>
+    <div id="container">
+        <nav id="leftColumn" class="sidebar" data-item-type="SECTION" data-item-config='{"defaultSize": 280, "minSize": 200, "maxSize": 400}'>
+            <a class="toc--skip-link" href="#main">Skip to content</a>
+            <div class="dropdown theme-dark_mobile" data-role="dropdown" id="toc-dropdown">
+                <ul role="listbox" id="toc-listbox" class="dropdown--list dropdown--list_toc-list"
+                    data-role="dropdown-listbox" aria-label="Table of contents">
+                    <div class="dropdown--header">
                             <span>
                                     emulinker
                             </span>
-                            <button class="button" data-role="dropdown-toggle" aria-label="Close table of contents">
-                                <i class="ui-kit-icon ui-kit-icon_cross"></i>
-                            </button>
-                        </div>
-                        <div class="sidebar--inner" id="sideMenu"></div>
-                    </ul>
-                    <div class="dropdown--overlay"></div>
-                </div>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close table of contents">
+                            <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                        </button>
+                    </div>
+                    <div class="sidebar--inner" id="sideMenu"></div>
+                </ul>
+                <div class="dropdown--overlay"></div>
             </div>
-            <div id="main">
+        </nav>
+        <div id="resizer" class="resizer" data-item-type="BAR"></div>
+        <div id="main" data-item-type="SECTION" role="main">
 <div class="main-content" data-page-type="classlike" id="content" pageIds="emulinker::org.emulinker.kaillera.model/KailleraUser///PointingToDeclaration//-1834219614">
   <div class="breadcrumbs"><a href="../../../index.html">emulinker</a><span class="delimiter">/</span><a href="../index.html">org.emulinker.kaillera.model</a><span class="delimiter">/</span><span class="current">KailleraUser</span></div>
   <div class="cover ">
@@ -114,9 +114,9 @@
     <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION">Members</button></div>
     <div class="tabs-section-body">
       <div data-togglable="CONSTRUCTOR">
-        <h2 class="">Constructors</h2>
+        <h2 class="tableheader">Constructors</h2>
         <div class="table"><a data-name="1107856700%2FConstructors%2F-1834219614" anchor-label="KailleraUser" id="1107856700%2FConstructors%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-togglable="CONSTRUCTOR" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-togglable="CONSTRUCTOR" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-kaillera-user.html"><span>Kaillera</span><wbr></wbr><span><span>User</span></span></a></div>
@@ -133,9 +133,9 @@
         </div>
       </div>
       <div data-togglable="TYPE">
-        <h2 class="">Types</h2>
+        <h2 class="tableheader">Types</h2>
         <div class="table"><a data-name="-2002648808%2FClasslikes%2F-1834219614" anchor-label="Companion" id="-2002648808%2FClasslikes%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-companion/index.html"><span><span>Companion</span></span></a></div>
@@ -152,9 +152,9 @@
         </div>
       </div>
       <div data-togglable="PROPERTY">
-        <h2 class="">Properties</h2>
+        <h2 class="tableheader">Properties</h2>
         <div class="table"><a data-name="891934289%2FProperties%2F-1834219614" anchor-label="accessLevel" id="891934289%2FProperties%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="access-level.html"><span>access</span><wbr></wbr><span><span>Level</span></span></a></div>
@@ -169,7 +169,7 @@
             </div>
           </div>
 <a data-name="2044241476%2FProperties%2F-1834219614" anchor-label="accessStr" id="2044241476%2FProperties%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="access-str.html"><span>access</span><wbr></wbr><span><span>Str</span></span></a></div>
@@ -184,7 +184,7 @@
             </div>
           </div>
 <a data-name="1284541207%2FProperties%2F-1834219614" anchor-label="arraySize" id="1284541207%2FProperties%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="array-size.html"><span>array</span><wbr></wbr><span><span>Size</span></span></a></div>
@@ -199,7 +199,7 @@
             </div>
           </div>
 <a data-name="-1175972959%2FProperties%2F-1834219614" anchor-label="bytesPerAction" id="-1175972959%2FProperties%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="bytes-per-action.html"><span>bytes</span><wbr></wbr><span>Per</span><wbr></wbr><span><span>Action</span></span></a></div>
@@ -214,7 +214,7 @@
             </div>
           </div>
 <a data-name="-294243292%2FProperties%2F-1834219614" anchor-label="clientType" id="-294243292%2FProperties%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="client-type.html"><span>client</span><wbr></wbr><span><span>Type</span></span></a></div>
@@ -229,7 +229,7 @@
             </div>
           </div>
 <a data-name="-1435750415%2FProperties%2F-1834219614" anchor-label="connectionType" id="-1435750415%2FProperties%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="connection-type.html"><span>connection</span><wbr></wbr><span><span>Type</span></span></a></div>
@@ -244,7 +244,7 @@
             </div>
           </div>
 <a data-name="-388890926%2FProperties%2F-1834219614" anchor-label="connectSocketAddress" id="-388890926%2FProperties%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="connect-socket-address.html"><span>connect</span><wbr></wbr><span>Socket</span><wbr></wbr><span><span>Address</span></span></a></div>
@@ -259,7 +259,7 @@
             </div>
           </div>
 <a data-name="456839130%2FProperties%2F-1834219614" anchor-label="connectTime" id="456839130%2FProperties%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="connect-time.html"><span>connect</span><wbr></wbr><span><span>Time</span></span></a></div>
@@ -274,7 +274,7 @@
             </div>
           </div>
 <a data-name="1217003719%2FProperties%2F-1834219614" anchor-label="frameCount" id="1217003719%2FProperties%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="frame-count.html"><span>frame</span><wbr></wbr><span><span>Count</span></span></a></div>
@@ -289,7 +289,7 @@
             </div>
           </div>
 <a data-name="1423917779%2FProperties%2F-1834219614" anchor-label="frameDelay" id="1423917779%2FProperties%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="frame-delay.html"><span>frame</span><wbr></wbr><span><span>Delay</span></span></a></div>
@@ -304,7 +304,7 @@
             </div>
           </div>
 <a data-name="200967031%2FProperties%2F-1834219614" anchor-label="game" id="200967031%2FProperties%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="game.html"><span><span>game</span></span></a></div>
@@ -319,7 +319,7 @@
             </div>
           </div>
 <a data-name="-607969938%2FProperties%2F-1834219614" anchor-label="id" id="-607969938%2FProperties%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="id.html"><span><span>id</span></span></a></div>
@@ -334,7 +334,7 @@
             </div>
           </div>
 <a data-name="-33415102%2FProperties%2F-1834219614" anchor-label="ignoreAll" id="-33415102%2FProperties%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="ignore-all.html"><span>ignore</span><wbr></wbr><span><span>All</span></span></a></div>
@@ -349,7 +349,7 @@
             </div>
           </div>
 <a data-name="-2062156968%2FProperties%2F-1834219614" anchor-label="ignoringUnnecessaryServerActivity" id="-2062156968%2FProperties%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="ignoring-unnecessary-server-activity.html"><span>ignoring</span><wbr></wbr><span>Unnecessary</span><wbr></wbr><span>Server</span><wbr></wbr><span><span>Activity</span></span></a></div>
@@ -364,7 +364,7 @@
             </div>
           </div>
 <a data-name="1705154320%2FProperties%2F-1834219614" anchor-label="inStealthMode" id="1705154320%2FProperties%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="in-stealth-mode.html"><span>in</span><wbr></wbr><span>Stealth</span><wbr></wbr><span><span>Mode</span></span></a></div>
@@ -379,7 +379,7 @@
             </div>
           </div>
 <a data-name="202989356%2FProperties%2F-1834219614" anchor-label="isAcceptingDirectMessages" id="202989356%2FProperties%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="is-accepting-direct-messages.html"><span>is</span><wbr></wbr><span>Accepting</span><wbr></wbr><span>Direct</span><wbr></wbr><span><span>Messages</span></span></a></div>
@@ -394,7 +394,7 @@
             </div>
           </div>
 <a data-name="394745659%2FProperties%2F-1834219614" anchor-label="isDead" id="394745659%2FProperties%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="is-dead.html"><span>is</span><wbr></wbr><span><span>Dead</span></span></a></div>
@@ -409,7 +409,7 @@
             </div>
           </div>
 <a data-name="1446300541%2FProperties%2F-1834219614" anchor-label="isEsfAdminClient" id="1446300541%2FProperties%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="is-esf-admin-client.html"><span>is</span><wbr></wbr><span>Esf</span><wbr></wbr><span>Admin</span><wbr></wbr><span><span>Client</span></span></a></div>
@@ -424,7 +424,7 @@
             </div>
           </div>
 <a data-name="-707188444%2FProperties%2F-1834219614" anchor-label="isIdleForTooLong" id="-707188444%2FProperties%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="is-idle-for-too-long.html"><span>is</span><wbr></wbr><span>Idle</span><wbr></wbr><span>For</span><wbr></wbr><span>Too</span><wbr></wbr><span><span>Long</span></span></a></div>
@@ -439,7 +439,7 @@
             </div>
           </div>
 <a data-name="-823671408%2FProperties%2F-1834219614" anchor-label="isMuted" id="-823671408%2FProperties%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="is-muted.html"><span>is</span><wbr></wbr><span><span>Muted</span></span></a></div>
@@ -454,7 +454,7 @@
             </div>
           </div>
 <a data-name="1951596686%2FProperties%2F-1834219614" anchor-label="lastChatTime" id="1951596686%2FProperties%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="last-chat-time.html"><span>last</span><wbr></wbr><span>Chat</span><wbr></wbr><span><span>Time</span></span></a></div>
@@ -469,7 +469,7 @@
             </div>
           </div>
 <a data-name="-1916763112%2FProperties%2F-1834219614" anchor-label="lastCreateGameTime" id="-1916763112%2FProperties%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="last-create-game-time.html"><span>last</span><wbr></wbr><span>Create</span><wbr></wbr><span>Game</span><wbr></wbr><span><span>Time</span></span></a></div>
@@ -484,7 +484,7 @@
             </div>
           </div>
 <a data-name="-1674137813%2FProperties%2F-1834219614" anchor-label="lastMsgID" id="-1674137813%2FProperties%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="last-msg-i-d.html"><span>last</span><wbr></wbr><span>Msg</span><wbr></wbr><span><span>ID</span></span></a></div>
@@ -499,7 +499,7 @@
             </div>
           </div>
 <a data-name="1763339458%2FProperties%2F-1834219614" anchor-label="loggedIn" id="1763339458%2FProperties%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="logged-in.html"><span>logged</span><wbr></wbr><span><span>In</span></span></a></div>
@@ -514,7 +514,7 @@
             </div>
           </div>
 <a data-name="757711614%2FProperties%2F-1834219614" anchor-label="name" id="757711614%2FProperties%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="name.html"><span><span>name</span></span></a></div>
@@ -529,7 +529,7 @@
             </div>
           </div>
 <a data-name="1129676279%2FProperties%2F-1834219614" anchor-label="ping" id="1129676279%2FProperties%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="ping.html"><span><span>ping</span></span></a></div>
@@ -544,7 +544,7 @@
             </div>
           </div>
 <a data-name="-191813409%2FProperties%2F-1834219614" anchor-label="playerNumber" id="-191813409%2FProperties%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="player-number.html"><span>player</span><wbr></wbr><span><span>Number</span></span></a></div>
@@ -559,7 +559,7 @@
             </div>
           </div>
 <a data-name="-742862447%2FProperties%2F-1834219614" anchor-label="protocol" id="-742862447%2FProperties%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="protocol.html"><span><span>protocol</span></span></a></div>
@@ -574,7 +574,7 @@
             </div>
           </div>
 <a data-name="352333319%2FProperties%2F-1834219614" anchor-label="receivedGameDataNs" id="352333319%2FProperties%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="received-game-data-ns.html"><span>received</span><wbr></wbr><span>Game</span><wbr></wbr><span>Data</span><wbr></wbr><span><span>Ns</span></span></a></div>
@@ -589,7 +589,7 @@
             </div>
           </div>
 <a data-name="1217471046%2FProperties%2F-1834219614" anchor-label="server" id="1217471046%2FProperties%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="server.html"><span><span>server</span></span></a></div>
@@ -604,7 +604,7 @@
             </div>
           </div>
 <a data-name="411474928%2FProperties%2F-1834219614" anchor-label="socketAddress" id="411474928%2FProperties%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="socket-address.html"><span>socket</span><wbr></wbr><span><span>Address</span></span></a></div>
@@ -619,7 +619,7 @@
             </div>
           </div>
 <a data-name="1235833975%2FProperties%2F-1834219614" anchor-label="status" id="1235833975%2FProperties%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="status.html"><span><span>status</span></span></a></div>
@@ -634,7 +634,7 @@
             </div>
           </div>
 <a data-name="621511842%2FProperties%2F-1834219614" anchor-label="tempDelay" id="621511842%2FProperties%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="temp-delay.html"><span>temp</span><wbr></wbr><span><span>Delay</span></span></a></div>
@@ -649,7 +649,7 @@
             </div>
           </div>
 <a data-name="609625289%2FProperties%2F-1834219614" anchor-label="users" id="609625289%2FProperties%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="users.html"><span><span>users</span></span></a></div>
@@ -666,9 +666,9 @@
         </div>
       </div>
       <div data-togglable="FUNCTION">
-        <h2 class="">Functions</h2>
+        <h2 class="tableheader">Functions</h2>
         <div class="table"><a data-name="2044906461%2FFunctions%2F-1834219614" anchor-label="addGameData" id="2044906461%2FFunctions%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="add-game-data.html"><span>add</span><wbr></wbr><span>Game</span><wbr></wbr><span><span>Data</span></span></a></div>
@@ -683,7 +683,7 @@
             </div>
           </div>
 <a data-name="-460142889%2FFunctions%2F-1834219614" anchor-label="addIgnoredUser" id="-460142889%2FFunctions%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="add-ignored-user.html"><span>add</span><wbr></wbr><span>Ignored</span><wbr></wbr><span><span>User</span></span></a></div>
@@ -698,7 +698,7 @@
             </div>
           </div>
 <a data-name="974827987%2FFunctions%2F-1834219614" anchor-label="chat" id="974827987%2FFunctions%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="chat.html"><span><span>chat</span></span></a></div>
@@ -713,7 +713,7 @@
             </div>
           </div>
 <a data-name="658098697%2FFunctions%2F-1834219614" anchor-label="createGame" id="658098697%2FFunctions%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="create-game.html"><span>create</span><wbr></wbr><span><span>Game</span></span></a></div>
@@ -728,7 +728,7 @@
             </div>
           </div>
 <a data-name="172250251%2FFunctions%2F-1834219614" anchor-label="doEvent" id="172250251%2FFunctions%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="do-event.html"><span>do</span><wbr></wbr><span><span>Event</span></span></a></div>
@@ -743,7 +743,7 @@
             </div>
           </div>
 <a data-name="356001992%2FFunctions%2F-1834219614" anchor-label="dropGame" id="356001992%2FFunctions%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="drop-game.html"><span>drop</span><wbr></wbr><span><span>Game</span></span></a></div>
@@ -758,7 +758,7 @@
             </div>
           </div>
 <a data-name="1754790505%2FFunctions%2F-1834219614" anchor-label="droppedPacket" id="1754790505%2FFunctions%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="dropped-packet.html"><span>dropped</span><wbr></wbr><span><span>Packet</span></span></a></div>
@@ -773,7 +773,7 @@
             </div>
           </div>
 <a data-name="-1207114632%2FFunctions%2F-1834219614" anchor-label="equals" id="-1207114632%2FFunctions%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="equals.html"><span><span>equals</span></span></a></div>
@@ -788,7 +788,7 @@
             </div>
           </div>
 <a data-name="785056023%2FFunctions%2F-1834219614" anchor-label="findIgnoredUser" id="785056023%2FFunctions%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="find-ignored-user.html"><span>find</span><wbr></wbr><span>Ignored</span><wbr></wbr><span><span>User</span></span></a></div>
@@ -803,7 +803,7 @@
             </div>
           </div>
 <a data-name="569711320%2FFunctions%2F-1834219614" anchor-label="gameChat" id="569711320%2FFunctions%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="game-chat.html"><span>game</span><wbr></wbr><span><span>Chat</span></span></a></div>
@@ -818,7 +818,7 @@
             </div>
           </div>
 <a data-name="989835055%2FFunctions%2F-1834219614" anchor-label="gameKick" id="989835055%2FFunctions%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="game-kick.html"><span>game</span><wbr></wbr><span><span>Kick</span></span></a></div>
@@ -833,7 +833,7 @@
             </div>
           </div>
 <a data-name="-772416146%2FFunctions%2F-1834219614" anchor-label="hashCode" id="-772416146%2FFunctions%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="hash-code.html"><span>hash</span><wbr></wbr><span><span>Code</span></span></a></div>
@@ -848,7 +848,7 @@
             </div>
           </div>
 <a data-name="206822859%2FFunctions%2F-1834219614" anchor-label="joinGame" id="206822859%2FFunctions%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="join-game.html"><span>join</span><wbr></wbr><span><span>Game</span></span></a></div>
@@ -863,7 +863,7 @@
             </div>
           </div>
 <a data-name="1025354961%2FFunctions%2F-1834219614" anchor-label="lagAttributedToUser" id="1025354961%2FFunctions%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="lag-attributed-to-user.html"><span>lag</span><wbr></wbr><span>Attributed</span><wbr></wbr><span>To</span><wbr></wbr><span><span>User</span></span></a></div>
@@ -878,7 +878,7 @@
             </div>
           </div>
 <a data-name="1301176968%2FFunctions%2F-1834219614" anchor-label="login" id="1301176968%2FFunctions%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="login.html"><span><span>login</span></span></a></div>
@@ -893,7 +893,7 @@
             </div>
           </div>
 <a data-name="-1758833201%2FFunctions%2F-1834219614" anchor-label="playerReady" id="-1758833201%2FFunctions%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="player-ready.html"><span>player</span><wbr></wbr><span><span>Ready</span></span></a></div>
@@ -908,7 +908,7 @@
             </div>
           </div>
 <a data-name="2078159849%2FFunctions%2F-1834219614" anchor-label="queueEvent" id="2078159849%2FFunctions%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="queue-event.html"><span>queue</span><wbr></wbr><span><span>Event</span></span></a></div>
@@ -923,7 +923,7 @@
             </div>
           </div>
 <a data-name="2125811594%2FFunctions%2F-1834219614" anchor-label="quit" id="2125811594%2FFunctions%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="quit.html"><span><span>quit</span></span></a></div>
@@ -938,7 +938,7 @@
             </div>
           </div>
 <a data-name="-1761906328%2FFunctions%2F-1834219614" anchor-label="quitGame" id="-1761906328%2FFunctions%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="quit-game.html"><span>quit</span><wbr></wbr><span><span>Game</span></span></a></div>
@@ -953,7 +953,7 @@
             </div>
           </div>
 <a data-name="2126780248%2FFunctions%2F-1834219614" anchor-label="removeIgnoredUser" id="2126780248%2FFunctions%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="remove-ignored-user.html"><span>remove</span><wbr></wbr><span>Ignored</span><wbr></wbr><span><span>User</span></span></a></div>
@@ -968,7 +968,7 @@
             </div>
           </div>
 <a data-name="781476038%2FFunctions%2F-1834219614" anchor-label="resetLag" id="781476038%2FFunctions%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="reset-lag.html"><span>reset</span><wbr></wbr><span><span>Lag</span></span></a></div>
@@ -983,7 +983,7 @@
             </div>
           </div>
 <a data-name="1366341913%2FFunctions%2F-1834219614" anchor-label="searchIgnoredUsers" id="1366341913%2FFunctions%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="search-ignored-users.html"><span>search</span><wbr></wbr><span>Ignored</span><wbr></wbr><span><span>Users</span></span></a></div>
@@ -998,7 +998,7 @@
             </div>
           </div>
 <a data-name="-1980188963%2FFunctions%2F-1834219614" anchor-label="startGame" id="-1980188963%2FFunctions%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="start-game.html"><span>start</span><wbr></wbr><span><span>Game</span></span></a></div>
@@ -1013,7 +1013,7 @@
             </div>
           </div>
 <a data-name="1647671655%2FFunctions%2F-1834219614" anchor-label="stop" id="1647671655%2FFunctions%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="stop.html"><span><span>stop</span></span></a></div>
@@ -1028,7 +1028,7 @@
             </div>
           </div>
 <a data-name="-950582211%2FFunctions%2F-1834219614" anchor-label="toString" id="-950582211%2FFunctions%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="to-string.html"><span>to</span><wbr></wbr><span><span>String</span></span></a></div>
@@ -1043,7 +1043,7 @@
             </div>
           </div>
 <a data-name="1808223976%2FFunctions%2F-1834219614" anchor-label="updateLastKeepAlive" id="1808223976%2FFunctions%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="update-last-keep-alive.html"><span>update</span><wbr></wbr><span>Last</span><wbr></wbr><span>Keep</span><wbr></wbr><span><span>Alive</span></span></a></div>
@@ -1058,7 +1058,7 @@
             </div>
           </div>
 <a data-name="-1190838628%2FFunctions%2F-1834219614" anchor-label="updateUserDrift" id="-1190838628%2FFunctions%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="update-user-drift.html"><span>update</span><wbr></wbr><span>User</span><wbr></wbr><span><span>Drift</span></span></a></div>
@@ -1078,17 +1078,21 @@
   </div>
 </div>
     <div class="footer">
-        <a href="#content" id="go-to-top-link" class="footer--button footer--button_go-to-top"></a>
-        <span>© 2026 Copyright</span>
-        <span class="pull-right">
-            <span>Generated by </span>
-            <a class="footer--link footer--link_external" href="https://github.com/Kotlin/dokka">
-                <span>dokka</span>
-            </a>
-        </span>
-    </div>
+        <div class="footer--container">
+            <a href="#content" id="go-to-top-link" class="footer--button footer--button_go-to-top"></a>
+            <div class="footer--content">
+                <div>
+                    <span>Generated by </span>
+                    <a class="footer--link footer--link_external" href="https://github.com/Kotlin/dokka">
+                        Dokka
+                    </a>
+                    <div>© 2026 Copyright</div>
+                </div>
             </div>
         </div>
     </div>
+        </div>
+    </div>
+</div>
 </body>
 </html>

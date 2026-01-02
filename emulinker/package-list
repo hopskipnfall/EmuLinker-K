@@ -2113,11 +2113,11 @@ $dokka.location:org.emulinker.proto/Player/values/#/PointingToDeclaration/emuli
 $dokka.location:org.emulinker.util////PointingToDeclaration/emulinker/org.emulinker.util/index.html
 $dokka.location:org.emulinker.util//stripFromProdBinary/#kotlin.Function0[kotlin.Unit]/PointingToDeclaration/emulinker/org.emulinker.util/strip-from-prod-binary.html
 $dokka.location:org.emulinker.util/CustomUserStrings///PointingToDeclaration/emulinker/org.emulinker.util/-custom-user-strings/index.html
-$dokka.location:org.emulinker.util/CustomUserStrings/getString/#kotlin.String#kotlin.Array[kotlin.Any]/PointingToDeclaration/emulinker/org.emulinker.util/-custom-user-strings/get-string.html
+$dokka.location:org.emulinker.util/CustomUserStrings/getString/#kotlin.String#kotlin.Any/PointingToDeclaration/emulinker/org.emulinker.util/-custom-user-strings/get-string.html
 $dokka.location:org.emulinker.util/CustomUserStrings/getString/#kotlin.String/PointingToDeclaration/emulinker/org.emulinker.util/-custom-user-strings/get-string.html
 $dokka.location:org.emulinker.util/CustomUserStrings/hasString/#kotlin.String/PointingToDeclaration/emulinker/org.emulinker.util/-custom-user-strings/has-string.html
 $dokka.location:org.emulinker.util/EmuLang///PointingToDeclaration/emulinker/org.emulinker.util/-emu-lang/index.html
-$dokka.location:org.emulinker.util/EmuLang/getString/#kotlin.String#kotlin.Array[kotlin.Any?]/PointingToDeclaration/emulinker/org.emulinker.util/-emu-lang/get-string.html
+$dokka.location:org.emulinker.util/EmuLang/getString/#kotlin.String#kotlin.Any?/PointingToDeclaration/emulinker/org.emulinker.util/-emu-lang/get-string.html
 $dokka.location:org.emulinker.util/EmuLang/getString/#kotlin.String/PointingToDeclaration/emulinker/org.emulinker.util/-emu-lang/get-string.html
 $dokka.location:org.emulinker.util/EmuLang/getStringOrNull/#kotlin.String/PointingToDeclaration/emulinker/org.emulinker.util/-emu-lang/get-string-or-null.html
 $dokka.location:org.emulinker.util/EmuLang/hasString/#kotlin.String/PointingToDeclaration/emulinker/org.emulinker.util/-emu-lang/has-string.html

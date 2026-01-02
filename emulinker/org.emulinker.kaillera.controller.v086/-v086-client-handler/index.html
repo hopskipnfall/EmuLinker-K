@@ -1,23 +1,23 @@
 <!DOCTYPE html>
-<html class="no-js">
+<html class="no-js" lang="en">
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
     <title>V086ClientHandler</title>
     <link href="../../../images/logo-icon.svg" rel="icon" type="image/svg">
-    <script>var pathToRoot = "../../../";</script>
-    <script>document.documentElement.classList.replace("no-js","js");</script>
+        <script>var pathToRoot = "../../../";</script>
+    <script>document.documentElement.classList.replace("no-js", "js");</script>
     <script>const storage = localStorage.getItem("dokka-dark-mode")
-    if (storage == null) {
+      if (storage == null) {
         const osDarkSchemePreferred = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
         if (osDarkSchemePreferred === true) {
-            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+          document.getElementsByTagName("html")[0].classList.add("theme-dark")
         }
-    } else {
+      } else {
         const savedDarkMode = JSON.parse(storage)
-        if(savedDarkMode === true) {
-            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        if (savedDarkMode === true) {
+          document.getElementsByTagName("html")[0].classList.add("theme-dark")
         }
-    }
+      }
     </script>
 <script type="text/javascript" src="https://unpkg.com/kotlin-playground@1/dist/playground.min.js" async="async"></script>
 <script type="text/javascript" src="../../../scripts/sourceset_dependencies.js" async="async"></script>
@@ -25,20 +25,18 @@
 <link href="../../../styles/main.css" rel="Stylesheet">
 <link href="../../../styles/prism.css" rel="Stylesheet">
 <link href="../../../styles/logo-styles.css" rel="Stylesheet">
-<link href="../../../styles/font-jb-sans-auto.css" rel="Stylesheet">
 <link href="../../../ui-kit/ui-kit.min.css" rel="Stylesheet">
-<script type="text/javascript" src="../../../scripts/clipboard.js" async="async"></script>
+<script type="text/javascript" src="../../../scripts/safe-local-storage_blocking.js"></script>
 <script type="text/javascript" src="../../../scripts/navigation-loader.js" async="async"></script>
 <script type="text/javascript" src="../../../scripts/platform-content-handler.js" async="async"></script>
 <script type="text/javascript" src="../../../scripts/main.js" defer="defer"></script>
 <script type="text/javascript" src="../../../scripts/prism.js" async="async"></script>
 <script type="text/javascript" src="../../../ui-kit/ui-kit.min.js" defer="defer"></script>
-<script type="text/javascript" src="../../../scripts/symbol-parameters-wrapper_deferred.js" defer="defer"></script>
 </head>
 <body>
-    <div class="root">
-    <nav class="navigation theme-dark" id="navigation-wrapper">
-            <a class="library-name--link" href="../../../index.html">
+<div class="root">
+    <header class="navigation theme-dark" id="navigation-wrapper" role="banner">
+            <a class="library-name--link" href="../../../index.html" tabindex="1">
                     emulinker
             </a>
         <button class="navigation-controls--btn navigation-controls--btn_toc ui-kit_mobile-only" id="toc-toggle"
@@ -48,8 +46,8 @@
         <div class="library-version" id="library-version">
 0.15.0        </div>
         <div class="navigation-controls">
-        <div class="filter-section filter-section_loading" id="filter-section">
-                <button class="platform-tag platform-selector jvm-like" data-active=""
+        <ul class="filter-section filter-section_loading" id="filter-section" aria-label="Target filter">
+                <button class="platform-tag platform-selector jvm-like" data-active="" aria-pressed="true"
                         data-filter=":emulinker/main">jvm</button>
             <div class="dropdown filter-section--dropdown" data-role="dropdown" id="filter-section-dropdown">
                 <button class="button button_dropdown filter-section--dropdown-toggle" role="combobox"
@@ -59,9 +57,9 @@
                         aria-expanded="false"
                         aria-label="Toggle source sets"
                 ></button>
-                <ul role="listbox" id="platform-tags-listbox" class="dropdown--list" data-role="dropdown-listbox">
-                    <div class="dropdown--header"><span>Platform filter</span>
-                        <button class="button" data-role="dropdown-toggle" aria-label="Close platform filter">
+                <ul role="listbox" id="platform-tags-listbox" class="dropdown--list" data-role="dropdown-listbox" aria-label="Target filter">
+                    <div class="dropdown--header"><span>Target filter</span>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close target filter">
                             <i class="ui-kit-icon ui-kit-icon_cross"></i>
                         </button>
                     </div>
@@ -76,7 +74,7 @@
                 </ul>
                 <div class="dropdown--overlay"></div>
             </div>
-        </div>
+        </ul>
             <button class="navigation-controls--btn navigation-controls--btn_theme" id="theme-toggle-button"
                     type="button">Switch theme
             </button>
@@ -84,26 +82,28 @@
                 API
             </div>
         </div>
-    </nav>
-        <div id="container">
-            <div class="sidebar" id="leftColumn">
-                <div class="dropdown theme-dark_mobile" data-role="dropdown" id="toc-dropdown">
-                    <ul role="listbox" id="toc-listbox" class="dropdown--list dropdown--list_toc-list"
-                        data-role="dropdown-listbox">
-                        <div class="dropdown--header">
+    </header>
+    <div id="container">
+        <nav id="leftColumn" class="sidebar" data-item-type="SECTION" data-item-config='{"defaultSize": 280, "minSize": 200, "maxSize": 400}'>
+            <a class="toc--skip-link" href="#main">Skip to content</a>
+            <div class="dropdown theme-dark_mobile" data-role="dropdown" id="toc-dropdown">
+                <ul role="listbox" id="toc-listbox" class="dropdown--list dropdown--list_toc-list"
+                    data-role="dropdown-listbox" aria-label="Table of contents">
+                    <div class="dropdown--header">
                             <span>
                                     emulinker
                             </span>
-                            <button class="button" data-role="dropdown-toggle" aria-label="Close table of contents">
-                                <i class="ui-kit-icon ui-kit-icon_cross"></i>
-                            </button>
-                        </div>
-                        <div class="sidebar--inner" id="sideMenu"></div>
-                    </ul>
-                    <div class="dropdown--overlay"></div>
-                </div>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close table of contents">
+                            <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                        </button>
+                    </div>
+                    <div class="sidebar--inner" id="sideMenu"></div>
+                </ul>
+                <div class="dropdown--overlay"></div>
             </div>
-            <div id="main">
+        </nav>
+        <div id="resizer" class="resizer" data-item-type="BAR"></div>
+        <div id="main" data-item-type="SECTION" role="main">
 <div class="main-content" data-page-type="classlike" id="content" pageIds="emulinker::org.emulinker.kaillera.controller.v086/V086ClientHandler///PointingToDeclaration//-1834219614">
   <div class="breadcrumbs"><a href="../../../index.html">emulinker</a><span class="delimiter">/</span><a href="../index.html">org.emulinker.kaillera.controller.v086</a><span class="delimiter">/</span><span class="current">V086ClientHandler</span></div>
   <div class="cover ">
@@ -114,9 +114,9 @@
     <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION">Members</button></div>
     <div class="tabs-section-body">
       <div data-togglable="CONSTRUCTOR">
-        <h2 class="">Constructors</h2>
+        <h2 class="tableheader">Constructors</h2>
         <div class="table"><a data-name="614277046%2FConstructors%2F-1834219614" anchor-label="V086ClientHandler" id="614277046%2FConstructors%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-togglable="CONSTRUCTOR" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-togglable="CONSTRUCTOR" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-v086-client-handler.html"><span>V086Client</span><wbr></wbr><span><span>Handler</span></span></a></div>
@@ -133,9 +133,9 @@
         </div>
       </div>
       <div data-togglable="TYPE">
-        <h2 class="">Types</h2>
+        <h2 class="tableheader">Types</h2>
         <div class="table"><a data-name="-982362662%2FClasslikes%2F-1834219614" anchor-label="Companion" id="-982362662%2FClasslikes%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-companion/index.html"><span><span>Companion</span></span></a></div>
@@ -152,9 +152,9 @@
         </div>
       </div>
       <div data-togglable="PROPERTY">
-        <h2 class="">Properties</h2>
+        <h2 class="tableheader">Properties</h2>
         <div class="table"><a data-name="507875421%2FProperties%2F-1834219614" anchor-label="averageNetworkSpeed" id="507875421%2FProperties%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="average-network-speed.html"><span>average</span><wbr></wbr><span>Network</span><wbr></wbr><span><span>Speed</span></span></a></div>
@@ -169,7 +169,7 @@
             </div>
           </div>
 <a data-name="658558474%2FProperties%2F-1834219614" anchor-label="bestNetworkSpeed" id="658558474%2FProperties%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="best-network-speed.html"><span>best</span><wbr></wbr><span>Network</span><wbr></wbr><span><span>Speed</span></span></a></div>
@@ -184,7 +184,7 @@
             </div>
           </div>
 <a data-name="2038106456%2FProperties%2F-1834219614" anchor-label="clientGameDataCache" id="2038106456%2FProperties%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="client-game-data-cache.html"><span>client</span><wbr></wbr><span>Game</span><wbr></wbr><span>Data</span><wbr></wbr><span><span>Cache</span></span></a></div>
@@ -199,7 +199,7 @@
             </div>
           </div>
 <a data-name="412906934%2FProperties%2F-1834219614" anchor-label="connectRemoteSocketAddress" id="412906934%2FProperties%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="connect-remote-socket-address.html"><span>connect</span><wbr></wbr><span>Remote</span><wbr></wbr><span>Socket</span><wbr></wbr><span><span>Address</span></span></a></div>
@@ -214,7 +214,7 @@
             </div>
           </div>
 <a data-name="164331915%2FProperties%2F-1834219614" anchor-label="controller" id="164331915%2FProperties%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="controller.html"><span><span>controller</span></span></a></div>
@@ -229,7 +229,7 @@
             </div>
           </div>
 <a data-name="315057974%2FProperties%2F-1834219614" anchor-label="nextMessageNumber" id="315057974%2FProperties%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="next-message-number.html"><span>next</span><wbr></wbr><span>Message</span><wbr></wbr><span><span>Number</span></span></a></div>
@@ -244,7 +244,7 @@
             </div>
           </div>
 <a data-name="-133559149%2FProperties%2F-1834219614" anchor-label="numAcksForSpeedTest" id="-133559149%2FProperties%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="num-acks-for-speed-test.html"><span>num</span><wbr></wbr><span>Acks</span><wbr></wbr><span>For</span><wbr></wbr><span>Speed</span><wbr></wbr><span><span>Test</span></span></a></div>
@@ -259,7 +259,7 @@
             </div>
           </div>
 <a data-name="-1652979944%2FProperties%2F-1834219614" anchor-label="remoteSocketAddress" id="-1652979944%2FProperties%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="remote-socket-address.html"><span>remote</span><wbr></wbr><span>Socket</span><wbr></wbr><span><span>Address</span></span></a></div>
@@ -274,7 +274,7 @@
             </div>
           </div>
 <a data-name="1520036560%2FProperties%2F-1834219614" anchor-label="serverGameDataCache" id="1520036560%2FProperties%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="server-game-data-cache.html"><span>server</span><wbr></wbr><span>Game</span><wbr></wbr><span>Data</span><wbr></wbr><span><span>Cache</span></span></a></div>
@@ -289,7 +289,7 @@
             </div>
           </div>
 <a data-name="-575589447%2FProperties%2F-1834219614" anchor-label="speedMeasurementCount" id="-575589447%2FProperties%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="speed-measurement-count.html"><span>speed</span><wbr></wbr><span>Measurement</span><wbr></wbr><span><span>Count</span></span></a></div>
@@ -304,7 +304,7 @@
             </div>
           </div>
 <a data-name="-475630660%2FProperties%2F-1834219614" anchor-label="user" id="-475630660%2FProperties%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="user.html"><span><span>user</span></span></a></div>
@@ -321,9 +321,9 @@
         </div>
       </div>
       <div data-togglable="FUNCTION">
-        <h2 class="">Functions</h2>
+        <h2 class="tableheader">Functions</h2>
         <div class="table"><a data-name="-215395118%2FFunctions%2F-1834219614" anchor-label="actionPerformed" id="-215395118%2FFunctions%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="action-performed.html"><span>action</span><wbr></wbr><span><span>Performed</span></span></a></div>
@@ -338,7 +338,7 @@
             </div>
           </div>
 <a data-name="-794710499%2FFunctions%2F-1834219614" anchor-label="addSpeedMeasurement" id="-794710499%2FFunctions%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="add-speed-measurement.html"><span>add</span><wbr></wbr><span>Speed</span><wbr></wbr><span><span>Measurement</span></span></a></div>
@@ -353,7 +353,7 @@
             </div>
           </div>
 <a data-name="894441567%2FFunctions%2F-1834219614" anchor-label="getKoin" id="894441567%2FFunctions%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../../org.emulinker.kaillera.pico/-new-app-component/index.html#894441567%2FFunctions%2F-1834219614"><span>get</span><wbr></wbr><span><span>Koin</span></span></a></div>
@@ -368,7 +368,7 @@
             </div>
           </div>
 <a data-name="1470030940%2FFunctions%2F-1834219614" anchor-label="handleReceived" id="1470030940%2FFunctions%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="handle-received.html"><span>handle</span><wbr></wbr><span><span>Received</span></span></a></div>
@@ -383,7 +383,7 @@
             </div>
           </div>
 <a data-name="-861902486%2FFunctions%2F-1834219614" anchor-label="resend" id="-861902486%2FFunctions%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="resend.html"><span><span>resend</span></span></a></div>
@@ -398,7 +398,7 @@
             </div>
           </div>
 <a data-name="-635022736%2FFunctions%2F-1834219614" anchor-label="resetGameDataCache" id="-635022736%2FFunctions%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="reset-game-data-cache.html"><span>reset</span><wbr></wbr><span>Game</span><wbr></wbr><span>Data</span><wbr></wbr><span><span>Cache</span></span></a></div>
@@ -413,7 +413,7 @@
             </div>
           </div>
 <a data-name="-1893503040%2FFunctions%2F-1834219614" anchor-label="send" id="-1893503040%2FFunctions%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="send.html"><span><span>send</span></span></a></div>
@@ -428,7 +428,7 @@
             </div>
           </div>
 <a data-name="-1323811465%2FFunctions%2F-1834219614" anchor-label="start" id="-1323811465%2FFunctions%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="start.html"><span><span>start</span></span></a></div>
@@ -443,7 +443,7 @@
             </div>
           </div>
 <a data-name="368782672%2FFunctions%2F-1834219614" anchor-label="startSpeedTest" id="368782672%2FFunctions%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="start-speed-test.html"><span>start</span><wbr></wbr><span>Speed</span><wbr></wbr><span><span>Test</span></span></a></div>
@@ -458,7 +458,7 @@
             </div>
           </div>
 <a data-name="-1152404635%2FFunctions%2F-1834219614" anchor-label="stop" id="-1152404635%2FFunctions%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="stop.html"><span><span>stop</span></span></a></div>
@@ -473,7 +473,7 @@
             </div>
           </div>
 <a data-name="883445563%2FFunctions%2F-1834219614" anchor-label="toString" id="883445563%2FFunctions%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="to-string.html"><span>to</span><wbr></wbr><span><span>String</span></span></a></div>
@@ -493,17 +493,21 @@
   </div>
 </div>
     <div class="footer">
-        <a href="#content" id="go-to-top-link" class="footer--button footer--button_go-to-top"></a>
-        <span>© 2026 Copyright</span>
-        <span class="pull-right">
-            <span>Generated by </span>
-            <a class="footer--link footer--link_external" href="https://github.com/Kotlin/dokka">
-                <span>dokka</span>
-            </a>
-        </span>
-    </div>
+        <div class="footer--container">
+            <a href="#content" id="go-to-top-link" class="footer--button footer--button_go-to-top"></a>
+            <div class="footer--content">
+                <div>
+                    <span>Generated by </span>
+                    <a class="footer--link footer--link_external" href="https://github.com/Kotlin/dokka">
+                        Dokka
+                    </a>
+                    <div>© 2026 Copyright</div>
+                </div>
             </div>
         </div>
     </div>
+        </div>
+    </div>
+</div>
 </body>
 </html>
