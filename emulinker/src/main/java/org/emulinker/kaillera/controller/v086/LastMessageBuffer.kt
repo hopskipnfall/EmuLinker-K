@@ -16,9 +16,25 @@ class LastMessageBuffer(private val max: Int) {
   private val array: Array<V086Message?> = arrayOfNulls(max)
 
   fun add(o: V086Message) {
+    val existing = array[next]
+    if (existing is io.netty.util.ReferenceCounted) {
+      existing.release()
+    }
     array[next] = o
     if (--next < 0) next = max - 1
     if (size < max) size++
+  }
+
+  fun releaseAll() {
+    for (i in array.indices) {
+      val msg = array[i]
+      if (msg is io.netty.util.ReferenceCounted) {
+        msg.release()
+      }
+      array[i] = null
+    }
+    size = 0
+    next = max - 1
   }
 
   fun fill(o: Array<V086Message?>, num: Int): Int {

@@ -121,7 +121,7 @@ class V086ClientHandler(
     }
 
   // TODO(nue): This no longer fulfills any purpose. Remove.
-  val nextMessageNumber = 0
+  @Deprecated("", ReplaceWith("0")) val nextMessageNumber = 0
 
   private val lastSendMessageNumber = AtomicInteger(0)
 
@@ -159,6 +159,7 @@ class V086ClientHandler(
   fun stop() {
     controller.clientHandlers.remove(user.id)
     combinedKailleraController.clientHandlers.remove(remoteSocketAddress)
+    synchronized(sendMutex) { lastMessageBuffer.releaseAll() }
   }
 
   override fun toString(): String = "[V086ClientHandler $user]"
@@ -167,7 +168,7 @@ class V086ClientHandler(
   private fun handleReceivedInternal(buffer: ByteBuf) {
     val inBundle: V086Bundle =
       try {
-        V086Bundle.parse(buffer, lastMessageNumber, user.circularVariableSizeByteArrayBuffer)
+        V086Bundle.parse(buffer, lastMessageNumber)
       } catch (e: ParseException) {
         buffer.resetReaderIndex()
         logger
@@ -284,6 +285,9 @@ class V086ClientHandler(
     } catch (e: FatalActionException) {
       logger.atWarning().withCause(e).log("%s fatal action, closing connection", this)
       stop()
+    } finally {
+      // Release any GameData messages that were in the bundle.
+      inBundle.release()
     }
   }
 
