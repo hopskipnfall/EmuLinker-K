@@ -376,9 +376,13 @@ open class GameDataBenchmark {
           Thread.yield()
           continue
         }
-        if (msg is GameData || msg is CachedGameData) {
-          received = true
-          blackhole.consume(msg)
+        try {
+          if (msg is GameData || msg is CachedGameData) {
+            received = true
+            blackhole.consume(msg)
+          }
+        } finally {
+          io.netty.util.ReferenceCountUtil.release(msg)
         }
       }
     }
@@ -395,7 +399,13 @@ open class GameDataBenchmark {
               Thread.yield()
               null
             }
-        if (msg != null && predicate(msg)) return
+        if (msg != null) {
+          try {
+            if (predicate(msg)) return
+          } finally {
+            io.netty.util.ReferenceCountUtil.release(msg)
+          }
+        }
       }
     }
 
