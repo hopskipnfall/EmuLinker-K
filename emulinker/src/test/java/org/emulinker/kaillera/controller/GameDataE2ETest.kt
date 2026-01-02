@@ -27,6 +27,7 @@ import org.emulinker.kaillera.controller.v086.protocol.CreateGameRequest
 import org.emulinker.kaillera.controller.v086.protocol.GameData
 import org.emulinker.kaillera.controller.v086.protocol.JoinGameNotification
 import org.emulinker.kaillera.controller.v086.protocol.JoinGameRequest
+import org.emulinker.kaillera.controller.v086.protocol.QuitGameRequest
 import org.emulinker.kaillera.controller.v086.protocol.QuitNotification
 import org.emulinker.kaillera.controller.v086.protocol.QuitRequest
 import org.emulinker.kaillera.controller.v086.protocol.ServerAck
@@ -163,6 +164,9 @@ class GameDataE2ETest : KoinComponent {
         expect.that(receivedBytes).isEqualTo(expectedData)
       }
     }
+    println("Shutting down...")
+    client.quitGame()
+    client.quit()
   }
 
   @Test
@@ -251,6 +255,11 @@ class GameDataE2ETest : KoinComponent {
       }
     }
     println("4-player loop complete.")
+    println("Shutting down...")
+    clients.forEach {
+      it.quitGame()
+      it.quit()
+    }
   }
 
   @Test
@@ -358,8 +367,11 @@ class GameDataE2ETest : KoinComponent {
           expect.that(receivedBytes).isEqualTo(expectedCombinedData)
         }
       }
-
-      println("4-player GOOD connection loop complete.")
+    }
+    println("Shutting down...")
+    clients.forEach {
+      it.quitGame()
+      it.quit()
     }
   }
 
@@ -468,6 +480,11 @@ class GameDataE2ETest : KoinComponent {
       }
     }
     println("3-player variable delay loop complete.")
+    println("Shutting down...")
+    clients.forEach {
+      it.quitGame()
+      it.quit()
+    }
   }
 
   @Test
@@ -552,6 +569,11 @@ class GameDataE2ETest : KoinComponent {
       }
     }
     println("4-player CACHED loop complete.")
+    println("Shutting down...")
+    clients.forEach {
+      it.quitGame()
+      it.quit()
+    }
   }
 
   fun pump() {
@@ -800,6 +822,14 @@ class GameDataE2ETest : KoinComponent {
       val buffer = Unpooled.buffer(1024).apply { bundle.writeTo(this) }
       val packet = DatagramPacket(buffer, RECIPIENT, sender)
       testInstance.channel.writeInbound(packet)
+    }
+
+    fun quitGame() {
+      sendBundle(V086Bundle.Single(QuitGameRequest(++lastMessageNumber)))
+    }
+
+    fun quit() {
+      sendBundle(V086Bundle.Single(QuitRequest(++lastMessageNumber, "Test Client Shutdown")))
     }
   }
 
