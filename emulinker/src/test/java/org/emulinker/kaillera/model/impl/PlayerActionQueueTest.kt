@@ -134,6 +134,54 @@ class PlayerActionQueueTest {
     assertThat(ByteBufUtil.equals(out, Unpooled.wrappedBuffer(DATA))).isTrue()
   }
 
+  @Test
+  fun `getAction returns zeroes if desynced`() {
+    val queue =
+      PlayerActionQueue(
+        playerNumber = 1,
+        player = mock(),
+        numPlayers = 1,
+        gameBufferSize = DATA.size + 5,
+      )
+    queue.markDesynced()
+    queue.addActions(Unpooled.wrappedBuffer(DATA))
+
+    val result = queue.getAction(readingPlayerIndex = 0, actionLength = DATA.size)
+
+    val zeroes = ByteArray(DATA.size)
+    val actual = ByteArray(DATA.size)
+    result.getBytes(0, actual)
+    assertThat(actual).isEqualTo(zeroes)
+    result.release()
+  }
+
+  @Test
+  fun `getAction returns retained slice if synced`() {
+    val queue =
+      PlayerActionQueue(
+        playerNumber = 1,
+        player = mock(),
+        numPlayers = 1,
+        gameBufferSize = DATA.size + 5,
+      )
+    queue.markSynced()
+    queue.addActions(Unpooled.wrappedBuffer(DATA))
+
+    val result = queue.getAction(readingPlayerIndex = 0, actionLength = DATA.size)
+
+    try {
+      println(
+        "Result details: cap=${result.capacity()} readable=${result.readableBytes()} readerIndex=${result.readerIndex()} writerIndex=${result.writerIndex()}"
+      )
+      val actual = ByteArray(DATA.size)
+      result.getBytes(0, actual)
+      assertThat(actual).isEqualTo(DATA)
+      assertThat(result.refCnt()).isAtLeast(1)
+    } finally {
+      result.release()
+    }
+  }
+
   companion object {
     val DATA = byteArrayOf(16, 32, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
   }

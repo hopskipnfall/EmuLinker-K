@@ -100,6 +100,46 @@ class PlayerActionQueue(
     }
   }
 
+  fun getAction(readingPlayerIndex: Int, actionLength: Int): ByteBuf {
+    if (!synced) {
+      val zeroes = Unpooled.buffer(actionLength)
+      zeroes.writeZero(actionLength)
+      return zeroes
+    }
+
+    if (containsNewDataForPlayer(readingPlayerIndex, actionLength)) {
+      val relativeHead = heads[readingPlayerIndex]
+
+      if (relativeHead + actionLength > data.writerIndex()) {
+        throw IllegalStateException("Not enough data!")
+      }
+
+      // We must use decompose to get the underlying components because 'data' is mutable.
+      // If we just used 'data.retainedSlice()', the slice would be a view onto 'data',
+      // and 'cleanUp()' below modifies 'data' (via discardReadBytes), which would invalidate or
+      // shift the slice.
+      val components = data.decompose(relativeHead, actionLength)
+
+      val result =
+        if (components.size == 1) {
+          components[0].retain()
+        } else {
+          val composite = Unpooled.compositeBuffer(components.size)
+          for (c in components) {
+            composite.addComponent(true, c.retain())
+          }
+          composite
+        }
+
+      heads[readingPlayerIndex] += actionLength
+
+      cleanUp()
+      return result
+    } else {
+      throw IllegalStateException("There is no data available for this synced user!")
+    }
+  }
+
   private fun cleanUp() {
     // Find the minimum head. We can discard data before that.
     var minHead = Int.MAX_VALUE

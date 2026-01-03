@@ -3,7 +3,7 @@ package org.emulinker.kaillera.model
 import com.google.common.flogger.FluentLogger
 import com.google.protobuf.util.Timestamps
 import io.netty.buffer.ByteBuf
-import io.netty.buffer.PooledByteBufAllocator
+import io.netty.buffer.Unpooled
 import java.io.FileOutputStream
 import java.util.Date
 import java.util.concurrent.CopyOnWriteArrayList
@@ -751,14 +751,15 @@ class KailleraGame(
         }
       ) {
         waitingOnData = false
-        val joinedGameData = PooledByteBufAllocator.DEFAULT.buffer(user.arraySize)
-        for (actionCounter in 0 until actionsPerMessage) {
+        val joinedGameData = Unpooled.compositeBuffer(actionsPerMessage * playerActionQueues.size)
+        repeat(actionsPerMessage) {
           for (playerActionQueueIndex in playerActionQueues.indices) {
-            playerActionQueues[playerActionQueueIndex].getActionAndWriteToArray(
-              readingPlayerIndex = playerNumber - 1,
-              writeTo = joinedGameData,
-              actionLength = user.bytesPerAction,
-            )
+            val actionSlice =
+              playerActionQueues[playerActionQueueIndex].getAction(
+                readingPlayerIndex = playerNumber - 1,
+                actionLength = user.bytesPerAction,
+              )
+            joinedGameData.addComponent(true, actionSlice)
           }
         }
         if (!isSynched) {
