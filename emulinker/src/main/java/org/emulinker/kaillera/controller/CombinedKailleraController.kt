@@ -37,7 +37,7 @@ class CombinedKailleraController(
   private var stopFlag = false
 
   lateinit var nettyChannel: io.netty.channel.Channel
-    private set
+    internal set
 
   @Synchronized
   fun stop() {
@@ -123,7 +123,7 @@ class CombinedKailleraController(
 
   val bufferSize: Int = flags.v086BufferSize
 
-  private fun handleReceived(
+  internal fun handleReceived(
     buffer: ByteBuf,
     remoteSocketAddress: InetSocketAddress,
     ctx: ChannelHandlerContext,

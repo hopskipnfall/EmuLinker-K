@@ -7,6 +7,7 @@ plugins {
 
   kotlin("jvm") version "2.1.10"
   kotlin("plugin.serialization") version "2.1.10"
+  id("me.champeau.jmh") version "0.7.3"
 }
 
 repositories {
@@ -73,6 +74,10 @@ kotlin { jvmToolchain(17) }
 
 // Copy/filter files before compiling.
 tasks.processResources {
+  // Fails to compile without this.
+  // https://github.com/google/protobuf-gradle-plugin/issues/522#issuecomment-1195266995
+  duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
   from("src/main/java-templates") {
     include("**/*")
 
@@ -107,6 +112,8 @@ sourceSets {
 
     resources { srcDirs("conf") }
   }
+
+  named("jmh") { resources { srcDir("src/jmh/resources") } }
 }
 
 tasks.named("compileKotlin") {
@@ -157,3 +164,43 @@ tasks.jar {
 subprojects { apply(plugin = "org.jetbrains.dokka") }
 
 tasks.withType<JavaExec> { jvmArgs = listOf("-Xms512m", "-Xmx512m") }
+
+tasks.processJmhResources { duplicatesStrategy = DuplicatesStrategy.EXCLUDE }
+
+jmh {
+  val includePattern =
+    if (project.hasProperty("jmhInclude")) project.property("jmhInclude") as String else ".*"
+  this@jmh.includes.set(listOf(includePattern))
+
+  // Run with ./gradlew jmh -PjmhDryRun
+  if (project.hasProperty("jmhDryRun")) {
+    warmupIterations.set(0)
+    iterations.set(1)
+    fork.set(0)
+    failOnError.set(true)
+    benchmarkMode.set(
+      listOf("ss")
+    ) // "Single Shot" mode (runs method once, minimal timing overhead)
+    resultFormat.set("JSON")
+  } else {
+    // Enable JFR profiling.
+    profilers.add("jfr")
+    profilers.add("gc")
+  }
+}
+
+tasks.named("jmh") {
+  doLast {
+    if (project.hasProperty("jmhDryRun")) {
+      val resultsFile = project.layout.buildDirectory.file("results/jmh/results.json").get().asFile
+      val json = resultsFile.readText()
+      // A simple check: if the JSON is empty or just an empty array "[]", it means no benchmarks
+      // ran successfully.
+      if (json.replace("\\s+".toRegex(), "") == "[]" || json.isBlank()) {
+        throw GradleException(
+          "JMH benchmarks failed to produce results (likely due to an exception)."
+        )
+      }
+    }
+  }
+}
