@@ -555,6 +555,130 @@ class GameDataE2ETest : KoinComponent {
     }
   }
 
+
+  @Test
+  fun test4PlayerDropOut() {
+    println("Initializing 4 clients...")
+    val p1 = Client(1, "P1", this)
+    val p2 = Client(2, "P2", this)
+    val p3 = Client(3, "P3", this)
+    val p4 = Client(4, "P4", this)
+    val clients = listOf(p1, p2, p3, p4)
+
+    println("Logging in clients...")
+    clients.forEach { it.login() }
+
+    // P1 Create Game
+    println("P1 creating game...")
+    p1.createGame()
+
+    // Others Join
+    println("Others joining game...")
+    p2.joinGame(1)
+    p3.joinGame(1)
+    p4.joinGame(1)
+
+    // P1 Start Game
+    println("P1 starting game...")
+    p1.startGame()
+
+    // Wait for GameStarted
+    println("Waiting for GameStarted...")
+    clients.filter { it != p1 }.forEach { it.waitForGameStarted() }
+
+    // Send Ready
+    println("Sending Ready...")
+    clients.forEach { it.sendReady() }
+    println("Waiting for AllReady...")
+    clients.forEach { it.waitForReady() }
+
+    // Advance iterators to ensure unique data streams
+    println("Advancing iterators...")
+    p1.advanceIterator(100)
+    p2.advanceIterator(200)
+    p3.advanceIterator(300)
+    p4.advanceIterator(400)
+
+    val sentHistory = java.util.ArrayList<ByteArray>()
+
+    println("Starting 4-player DropOut loop...")
+    for (i in 1..1000) {
+      val inputs = clients.map { it.nextInput().toByteArray() }
+
+      val combinedPacket = java.io.ByteArrayOutputStream()
+      inputs.forEachIndexed { index, input ->
+        // Player 2 is index 1.
+        // If i > 50, P2 is dropped, so expect zeros.
+        if (index == 1 && i > 50) {
+          combinedPacket.write(ByteArray(input.size))
+        } else {
+          combinedPacket.write(input)
+        }
+      }
+      val expectedCombinedData = combinedPacket.toByteArray()
+      sentHistory.add(expectedCombinedData)
+
+      clients.forEachIndexed { index, client ->
+        if (index == 1) { // P2
+          if (i <= 50) {
+            client.sendGameData(Unpooled.wrappedBuffer(inputs[index]))
+          }
+        } else {
+          client.sendGameData(Unpooled.wrappedBuffer(inputs[index]))
+        }
+      }
+
+      clients.forEachIndexed { index, client ->
+        // P2 stops receiving after dropping (from frame 50 onwards)
+        if (index == 1 && i > 50) {
+          return@forEachIndexed
+        }
+
+        val received = client.receiveGameData()
+        val receivedBytes = received.toByteArray()
+
+        if (i <= 6) {
+          expect.that(receivedBytes.size).isEqualTo(expectedCombinedData.size)
+          expect.that(receivedBytes).isEqualTo(ByteArray(receivedBytes.size) { 0 })
+        } else if (i <= 12) {
+          val historicIndex = i - 7
+          val expectedData = sentHistory[historicIndex]
+          expect.that(receivedBytes).isEqualTo(expectedData)
+        } else if (i !in 45..60) {
+           // Skip frames 45-60 to allow drop transition to settle
+           // Verify P2 (Index 1) is Zeros
+           expect.that(receivedBytes.size).isEqualTo(expectedCombinedData.size)
+           
+           var offset = 0
+           inputs.forEachIndexed { idx, inp ->
+               val len = inp.size
+               val slice = receivedBytes.sliceArray(offset until offset + len)
+               if (idx == 1) {
+                   // Verify P2 is 0
+                 println("---- here: ${inputs.joinToString(", ") { it.toHexString() }}")
+                   expect.withMessage("frame $i").that(slice).isEqualTo(ByteArray(len) { 0 })
+               } else {
+                   // Verify others are NOT 0
+                   expect.withMessage("frame $i").that(slice).isNotEqualTo(ByteArray(len) { 0 })
+               }
+               offset += len
+           }
+        }
+      }
+
+      if (i == 50) {
+         p2.quitGame()
+      }
+    }
+    println("4-player DropOut loop complete.")
+    println("Shutting down...")
+    clients.forEach {
+      // P2 already quit game
+      if (it != p2) it.quitGame()
+      it.quit()
+    }
+  }
+
   fun pump() {
     channel.runPendingTasks()
     while (true) {
