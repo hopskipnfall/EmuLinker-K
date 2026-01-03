@@ -157,7 +157,7 @@ class KailleraGameImpl(
     }
 
   private fun addEventForAllPlayers(event: GameEvent) {
-    for (player in players) player.queueEvent(event)
+    for (player in players) player.doEvent(event)
   }
 
   @Throws(GameChatException::class)
@@ -727,7 +727,7 @@ class KailleraGameImpl(
             )
           )
         }
-        player.queueEvent(GameDataEvent(this, response))
+        player.doEvent(GameDataEvent(this, response))
         player.updateUserDrift()
         val firstPlayer = players.firstOrNull()
         if (firstPlayer != null && firstPlayer.id == player.id) {

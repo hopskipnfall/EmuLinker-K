@@ -229,7 +229,7 @@ class KailleraUser(
       return
     }
     stopFlag = true
-    queueEvent(StopFlagEvent())
+    doEvent(StopFlagEvent())
     listener.stop()
   }
 
@@ -408,7 +408,7 @@ class KailleraUser(
     }
     isMuted = false
     game = null
-    queueEvent(UserQuitGameEvent(game, this))
+    doEvent(UserQuitGameEvent(game, this))
   }
 
   @Synchronized
@@ -469,7 +469,7 @@ class KailleraUser(
           response[i] = 0
         }
         lostInput.add(data)
-        queueEvent(GameDataEvent(game as KailleraGameImpl, response))
+        doEvent(GameDataEvent(game as KailleraGameImpl, response))
         frameCount++
       } else {
         // lostInput.add(data);
@@ -540,6 +540,7 @@ class KailleraUser(
     totalDriftCache.update(totalDriftNs, nowNs = nowNs)
   }
 
+  @Deprecated("", ReplaceWith("doEvent(event)"))
   fun queueEvent(event: KailleraEvent) {
     if (status != UserStatus.IDLE) {
       if (ignoringUnnecessaryServerActivity) {
@@ -547,6 +548,16 @@ class KailleraUser(
       }
     }
     eventQueue.offer(event)
+  }
+
+  fun doEvent(event: KailleraEvent) {
+    listener.actionPerformed(event)
+    if (event is GameStartedEvent) {
+      status = UserStatus.PLAYING
+      lastUpdateNs = System.nanoTime()
+    } else if (event is UserQuitEvent && event.user == this) {
+      stop()
+    }
   }
 
   init {
@@ -561,13 +572,7 @@ class KailleraUser(
           } else if (event is StopFlagEvent) {
             break
           }
-          listener.actionPerformed(event)
-          if (event is GameStartedEvent) {
-            status = UserStatus.PLAYING
-            lastUpdateNs = System.nanoTime()
-          } else if (event is UserQuitEvent && event.user == this) {
-            stop()
-          }
+          doEvent(event)
         }
       } catch (e: InterruptedException) {
         logger.atSevere().withCause(e).log("%s thread interrupted!", this)

@@ -36,7 +36,7 @@ class CreateGameAction :
 
       if (game != null) {
         for (msg in joinGameMessages) {
-          clientHandler.user.queueEvent(GameInfoEvent(game, msg, toUser = clientHandler.user))
+          clientHandler.user.doEvent(GameInfoEvent(game, msg, toUser = clientHandler.user))
         }
       }
     } catch (e: CreateGameException) {
