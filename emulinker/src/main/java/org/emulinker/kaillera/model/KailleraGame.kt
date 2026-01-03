@@ -497,6 +497,7 @@ class KailleraGame(
       autoFireDetector.addPlayer(player, playerNumber)
     }
     playerActionQueues = actionQueueBuilder.toTypedArray()
+    playerOrder = playerActionQueues.indices.toList().toIntArray()
     statsCollector?.markGameAsStarted(server, this)
     gameLogBuilder?.addEvents(
       event {
@@ -728,6 +729,22 @@ class KailleraGame(
     return maybeSendData(user)
   }
 
+  fun setPlayerOrder(order: IntArray) {
+    if (order.size != players.size) {
+      throw IllegalArgumentException("Order size must match player count")
+    }
+    // Verify valid permutation
+    val sorted = order.sorted()
+    for (i in sorted.indices) {
+      if (sorted[i] != i) throw IllegalArgumentException("Invalid player order permutation")
+    }
+    this.playerOrder = order
+    val orderString = order.joinToString("") { (it + 1).toString() }
+    announce("Player order swapped to: $orderString")
+  }
+
+  private var playerOrder: IntArray? = null
+
   /**
    * Checks if any user has a full set of new data to send.
    *
@@ -752,8 +769,8 @@ class KailleraGame(
       ) {
         waitingOnData = false
         val joinedGameData = PooledByteBufAllocator.DEFAULT.buffer(user.arraySize)
-        for (actionCounter in 0 until actionsPerMessage) {
-          for (playerActionQueueIndex in playerActionQueues.indices) {
+        repeat(actionsPerMessage) {
+          for (playerActionQueueIndex in playerOrder!!) {
             playerActionQueues[playerActionQueueIndex].getActionAndWriteToArray(
               readingPlayerIndex = playerNumber - 1,
               writeTo = joinedGameData,
