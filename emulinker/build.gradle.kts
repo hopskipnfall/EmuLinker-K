@@ -211,6 +211,8 @@ jmh {
     failOnError = true
     benchmarkMode = listOf("ss") // "Single Shot" mode (runs method once, minimal timing overhead)
     resultFormat = "JSON"
+  } else {
+    profilers = listOf("jfr:dir=build/results/jmh-jfr", "gc")
   }
 }
 
