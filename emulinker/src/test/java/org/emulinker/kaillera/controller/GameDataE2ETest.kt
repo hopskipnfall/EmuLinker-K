@@ -617,8 +617,9 @@ class GameDataE2ETest : KoinComponent {
   ) {
     var lastMessageNumberReceived = -1
     var lastMessageNumber = -1
-    val sender = InetSocketAddress("127.0.0.1", port)
+    private val sender = InetSocketAddress(InetAddress.getLoopbackAddress(), port)
     private val queue = ArrayBlockingQueue<OutgoingMsg>(100)
+    private val cache = ArrayList<ByteBuf>()
 
     // Iterator for real game data
     private val inputIterator = buildIterator()
@@ -758,8 +759,6 @@ class GameDataE2ETest : KoinComponent {
       }
     }
 
-    private val cache = FastGameDataCache(256) // Standard Kaillera cache size
-
     fun receiveGameData(timeout: Duration = 1.seconds): ByteBuf {
       val deadline = System.nanoTime() + timeout.inWholeNanoseconds
       while (System.nanoTime() < deadline) {
@@ -779,9 +778,7 @@ class GameDataE2ETest : KoinComponent {
       throw RuntimeException("Timed out waiting for GameData")
     }
 
-    private fun nextMessage(): V086Message? {
-      return messageIterator.next() as? V086Message
-    }
+    private fun nextMessage(): V086Message? = messageIterator.next()
 
     fun consumeUntil(timeoutMs: Long = 5000, predicate: (V086Message) -> Boolean) {
       val deadline = System.currentTimeMillis() + timeoutMs

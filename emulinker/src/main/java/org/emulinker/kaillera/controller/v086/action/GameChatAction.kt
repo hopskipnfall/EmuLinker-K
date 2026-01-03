@@ -16,7 +16,6 @@ import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086ClientHandler
 import org.emulinker.kaillera.controller.v086.protocol.GameChat
 import org.emulinker.kaillera.controller.v086.protocol.GameChatNotification
-import org.emulinker.kaillera.controller.v086.protocol.GameChatRequest
 import org.emulinker.kaillera.controller.v086.protocol.InformationMessage
 import org.emulinker.kaillera.controller.v086.protocol.V086Message
 import org.emulinker.kaillera.lookingforgame.TwitterBroadcaster
@@ -38,11 +37,11 @@ class GameChatAction(
   private val lookingForGameReporter: TwitterBroadcaster,
   private val flags: RuntimeFlags,
   private val clock: Clock,
-) : V086Action<GameChatRequest>, V086GameEventHandler<GameChatEvent> {
+) : V086Action<GameChat>, V086GameEventHandler<GameChatEvent> {
   override fun toString() = "GameChatAction"
 
   @Throws(FatalActionException::class)
-  override fun performAction(message: GameChatRequest, clientHandler: V086ClientHandler) {
+  override fun performAction(message: GameChat, clientHandler: V086ClientHandler) {
     if (clientHandler.user.game == null) return
     if (message.message.startsWith(ADMIN_COMMAND_ESCAPE_STRING)) {
       try {
@@ -540,6 +539,27 @@ class GameChatAction(
         if (game.gameLogBuilder == null) {
           game.gameLogBuilder = GameLog.newBuilder()
           game.announce("Enabled logging for session.")
+        }
+      } else if (message.message.startsWith("/swap ")) {
+        val args = message.message.removePrefix("/swap ").trim()
+        val digits = args.toCharArray().filter { it.isDigit() }.map { it.digitToInt() }
+
+        if (digits.size != game.players.size) {
+          game.announce(
+            "Swap failed: incorrect number of players specified. Usage: /swap <order>",
+            clientHandler.user,
+          )
+        } else {
+          try {
+            // Convert to 0-based indices
+            val order = digits.map { it - 1 }.toIntArray()
+            game.setPlayerOrder(order)
+          } catch (e: IllegalArgumentException) {
+            game.announce("Swap failed: ${e.message}", clientHandler.user)
+          } catch (e: Exception) {
+            logger.atWarning().withCause(e).log("Swap failed")
+            game.announce("Swap failed: internal error", clientHandler.user)
+          }
         }
       } else {
         game.announce(
