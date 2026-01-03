@@ -183,9 +183,7 @@ jmh {
     ) // "Single Shot" mode (runs method once, minimal timing overhead)
     resultFormat.set("JSON")
   } else {
-    // Enable JFR profiling.
-    profilers.add("jfr")
-    profilers.add("gc")
+    profilers.addAll("jfr:dir=build/results/jmh-jfr", "gc")
   }
 }
 

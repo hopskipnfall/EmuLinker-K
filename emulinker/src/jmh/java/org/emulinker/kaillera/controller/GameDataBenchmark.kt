@@ -15,6 +15,9 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.TimeSource
 import org.emulinker.kaillera.access.AccessManager
 import org.emulinker.kaillera.controller.connectcontroller.protocol.ConnectMessage
 import org.emulinker.kaillera.controller.connectcontroller.protocol.RequestPrivateKailleraPortRequest
@@ -40,6 +43,7 @@ import org.emulinker.kaillera.controller.v086.protocol.V086Message
 import org.emulinker.kaillera.model.ConnectionType
 import org.emulinker.kaillera.pico.AppModule
 import org.emulinker.kaillera.pico.koinModule
+import org.emulinker.util.GameDataCacheImpl
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.get
 import org.koin.core.context.startKoin
@@ -48,7 +52,6 @@ import org.koin.core.qualifier.named
 import org.koin.dsl.module
 import org.openjdk.jmh.annotations.Benchmark
 import org.openjdk.jmh.annotations.BenchmarkMode
-import org.openjdk.jmh.annotations.Fork
 import org.openjdk.jmh.annotations.Level
 import org.openjdk.jmh.annotations.Mode
 import org.openjdk.jmh.annotations.OutputTimeUnit
@@ -60,7 +63,6 @@ import org.openjdk.jmh.infra.Blackhole
 
 @BenchmarkMode(Mode.Throughput)
 @OutputTimeUnit(TimeUnit.MILLISECONDS)
-@Fork(1)
 open class GameDataBenchmark {
 
   @Benchmark
@@ -148,26 +150,39 @@ open class GameDataBenchmark {
 
       // Others wait for creation notification and join
       for (i in 1 until clients.size) {
+        Thread.sleep(1000)
         clients[i].consumeUntil { it is CreateGameNotification && it.gameId == gameId }
         clients[i].joinGame(gameId)
       }
+      Thread.sleep(1000)
 
       // Creator waits for everyone to join
       repeat(clients.size - 1) {
         creator.consumeUntil { it is JoinGameNotification && it.gameId == gameId }
       }
+      Thread.sleep(1000)
 
       creator.startGame()
 
+      Thread.sleep(1000)
       // Others wait for Start
       for (i in 1 until clients.size) {
+        Thread.sleep(1000)
         clients[i].consumeUntil { it is StartGameNotification }
       }
 
-      clients.forEach { it.sendReady() }
-      clients.forEach { it.waitForReady() }
+      clients.forEach {
+        Thread.sleep(1000)
+        it.sendReady()
+      }
 
+      clients.forEach {
+        Thread.sleep(1000)
+        it.waitForReady()
+      }
+      Thread.sleep(1000)
       logger.atInfo().log("Setup complete.")
+      Thread.sleep(1000)
     }
 
     @TearDown(Level.Trial)
@@ -186,7 +201,9 @@ open class GameDataBenchmark {
 
     fun pump() {
       channel.runPendingTasks()
-      while (true) {
+
+      val start = TimeSource.Monotonic.markNow()
+      while (start.elapsedNow() < 10.seconds) {
         val response: DatagramPacket = channel.readOutbound<DatagramPacket>() ?: break
 
         val port = response.recipient().port
@@ -279,7 +296,8 @@ open class GameDataBenchmark {
 
     // Helper to yield messages from the queue
     private val messageIterator = iterator {
-      while (true) {
+      var lastSeen = TimeSource.Monotonic.markNow()
+      while (lastSeen.elapsedNow() < 1.minutes) {
         gameState.pump()
 
         while (true) {
@@ -289,6 +307,7 @@ open class GameDataBenchmark {
               val bundle = msg.message
               for (m in bundle.messages.filterNotNull().sortedBy { it.messageNumber }) {
                 yield(m.also { lastMessageNumberReceived = it.messageNumber })
+                lastSeen = TimeSource.Monotonic.markNow()
               }
             }
 
@@ -300,6 +319,7 @@ open class GameDataBenchmark {
 
         yield(null)
       }
+      throw IllegalStateException("Nothing for more than 1m!")
     }
 
     fun login() {
@@ -307,6 +327,7 @@ open class GameDataBenchmark {
       val buffer =
         Unpooled.buffer(request.bodyBytesPlusMessageIdType).apply { request.writeTo(this) }
       gameState.channel.writeInbound(DatagramPacket(buffer, RECIPIENT, sender))
+      Thread.sleep(500)
 
       var loggedIn = false
       while (!loggedIn) {
@@ -356,11 +377,13 @@ open class GameDataBenchmark {
 
     fun joinGame(gameId: Int) {
       sendBundle(singleBundle(JoinGameRequest(++lastMessageNumber, gameId, ConnectionType.LAN)))
+      Thread.sleep(500)
       consumeUntil { it is JoinGameNotification && it.username == this.username }
     }
 
     fun startGame() {
       sendBundle(singleBundle(StartGameRequest(++lastMessageNumber)))
+      Thread.sleep(1000)
       consumeUntil { it is StartGameNotification }
     }
 
@@ -377,8 +400,18 @@ open class GameDataBenchmark {
       consumeUntil { it is QuitNotification && it.username == this.username }
     }
 
+    private val outgoingCache = GameDataCacheImpl(256)
+
     fun sendGameData() {
-      sendBundle(singleBundle(GameData(++lastMessageNumber, gameDataIterator.next())))
+      val data = gameDataIterator.next()
+      val index = outgoingCache.indexOf(data)
+
+      if (index != -1) {
+        sendBundle(singleBundle(CachedGameData(++lastMessageNumber, index)))
+      } else {
+        outgoingCache.add(data)
+        sendBundle(singleBundle(GameData(++lastMessageNumber, data)))
+      }
     }
 
     fun receiveGameData(blackhole: Blackhole) {
