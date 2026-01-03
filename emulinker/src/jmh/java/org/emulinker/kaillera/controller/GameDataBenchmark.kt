@@ -38,6 +38,7 @@ import org.emulinker.kaillera.controller.v086.protocol.V086Message
 import org.emulinker.kaillera.model.ConnectionType
 import org.emulinker.kaillera.pico.AppModule
 import org.emulinker.kaillera.pico.koinModule
+import org.emulinker.util.FastGameDataCache
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.get
 import org.koin.core.context.startKoin
@@ -364,8 +365,18 @@ open class GameDataBenchmark {
       consumeUntil { it is QuitNotification && it.username == this.username }
     }
 
+    private val outgoingCache = org.emulinker.util.FastGameDataCache(256)
+
     fun sendGameData() {
-      sendBundle(V086Bundle.Single(GameData(++lastMessageNumber, gameDataIterator.next())))
+      val data = gameDataIterator.next()
+      val index = outgoingCache.indexOf(data)
+
+      if (index != -1) {
+        sendBundle(V086Bundle.Single(CachedGameData(++lastMessageNumber, index)))
+      } else {
+        outgoingCache.add(data)
+        sendBundle(V086Bundle.Single(GameData(++lastMessageNumber, data)))
+      }
     }
 
     fun receiveGameData(blackhole: Blackhole) {
