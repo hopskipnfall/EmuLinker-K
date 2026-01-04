@@ -27,6 +27,7 @@ import org.emulinker.kaillera.controller.v086.protocol.CreateGameRequest
 import org.emulinker.kaillera.controller.v086.protocol.GameData
 import org.emulinker.kaillera.controller.v086.protocol.JoinGameNotification
 import org.emulinker.kaillera.controller.v086.protocol.JoinGameRequest
+import org.emulinker.kaillera.controller.v086.protocol.QuitGameNotification
 import org.emulinker.kaillera.controller.v086.protocol.QuitGameRequest
 import org.emulinker.kaillera.controller.v086.protocol.QuitNotification
 import org.emulinker.kaillera.controller.v086.protocol.QuitRequest
@@ -256,7 +257,8 @@ class GameDataE2ETest : KoinComponent {
     }
     println("4-player loop complete.")
     println("Shutting down...")
-    clients.forEach {
+    // If player 1 quits, it closes the game. reverse() to make sure player 1 is last to quit.
+    clients.reversed().forEach {
       it.quitGame()
       it.quit()
     }
@@ -369,7 +371,8 @@ class GameDataE2ETest : KoinComponent {
       }
     }
     println("Shutting down...")
-    clients.forEach {
+    // If player 1 quits, it closes the game. reverse() to make sure player 1 is last to quit.
+    clients.reversed().forEach {
       it.quitGame()
       it.quit()
     }
@@ -460,7 +463,8 @@ class GameDataE2ETest : KoinComponent {
     }
     println("3-player variable delay loop complete.")
     println("Shutting down...")
-    clients.forEach {
+    // If player 1 quits, it closes the game. reverse() to make sure player 1 is last to quit.
+    clients.reversed().forEach {
       it.quitGame()
       it.quit()
     }
@@ -549,9 +553,97 @@ class GameDataE2ETest : KoinComponent {
     }
     println("4-player CACHED loop complete.")
     println("Shutting down...")
-    clients.forEach {
-      it.quitGame()
+    // If player 1 quits, it closes the game. reverse() to make sure player 1 is last to quit.
+    clients.reversed().forEach {
+      //      it.quitGame()
       it.quit()
+    }
+  }
+
+  @Test
+  fun test4PlayerGameWithP4Drop() {
+    println("Initializing 4 clients...")
+    val p1 = Client(1, "P1", this)
+    val p2 = Client(2, "P2", this)
+    val p3 = Client(3, "P3", this)
+    val p4 = Client(4, "P4", this)
+    val clients = listOf(p1, p2, p3, p4)
+
+    println("Logging in clients...")
+    clients.forEach { it.login() }
+
+    // P1 Create Game
+    p1.createGame()
+
+    // Others Join
+    p2.joinGame(1)
+    p3.joinGame(1)
+    p4.joinGame(1)
+
+    // P1 Start Game
+    p1.startGame()
+
+    // Wait for GameStarted
+    clients.filter { it != p1 }.forEach { it.waitForGameStarted() }
+
+    // Send Ready
+    clients.forEach { it.sendReady() }
+    clients.forEach { it.waitForReady() }
+
+    // Advance iterators
+    p1.advanceIterator(100)
+    p2.advanceIterator(200)
+    p3.advanceIterator(300)
+    p4.advanceIterator(400)
+
+    val remainingClients = listOf(p1, p2, p3)
+
+    // Run for 100 frames with all 4 players
+    println("Running 4-player loop (pre-drop)...")
+    for (i in 1..100) {
+      val inputs = clients.map { it.nextInput() }
+      clients.forEachIndexed { index, client -> client.sendGameData(inputs[index]) }
+      clients.forEach { client -> client.receiveGameData() }
+    }
+
+    // P4 Drops
+    println("P4 Dropping...")
+    p4.quitGame()
+
+    // Remaining players continue
+    println("Running 3-player loop (post-drop)...")
+    val zeroData = ByteArray(p4.nextInput().toByteArray().size) { 0 }
+
+    for (i in 1..100) {
+      // 1. Collect Input for this frame (only remaining players)
+      val inputs = remainingClients.map { it.nextInput() }
+
+      // 2. Send Data
+      remainingClients.forEachIndexed { index, client -> client.sendGameData(inputs[index]) }
+
+      // 3. Receive Data
+      // We expect P4's data to be ZEROS in the combined packet
+      remainingClients.forEach { client ->
+        val received = client.receiveGameData()
+        val receivedBytes = received.toByteArray()
+
+        // Verify the packet structure: [P1][P2][P3][P4(Zeros)]
+        // We know the sizes from the inputs.
+        val p1Size = inputs[0].toByteArray().size
+        val p2Size = inputs[1].toByteArray().size
+        val p3Size = inputs[2].toByteArray().size
+        val p4Size = zeroData.size
+
+        val receivedP1 = receivedBytes.copyOfRange(0, p1Size)
+        val receivedP2 = receivedBytes.copyOfRange(p1Size, p1Size + p2Size)
+        val receivedP3 = receivedBytes.copyOfRange(p1Size + p2Size, p1Size + p2Size + p3Size)
+        val receivedP4 = receivedBytes.copyOfRange(p1Size + p2Size + p3Size, receivedBytes.size)
+
+        expect.that(receivedP1).isEqualTo(inputs[0].toByteArray())
+        expect.that(receivedP2).isEqualTo(inputs[1].toByteArray())
+        expect.that(receivedP3).isEqualTo(inputs[2].toByteArray())
+        expect.that(receivedP4).isEqualTo(zeroData)
+      }
     }
   }
 
@@ -730,6 +822,11 @@ class GameDataE2ETest : KoinComponent {
       consumeUntil { it is QuitNotification && it.username == this.username }
     }
 
+    fun quitGame() {
+      sendBundle(V086Bundle.Single(QuitGameRequest(++lastMessageNumber)))
+      consumeUntil { it is QuitGameNotification && it.username == this.username }
+    }
+
     fun joinGame(gameId: Int) {
       sendBundle(V086Bundle.Single(JoinGameRequest(++lastMessageNumber, gameId, connectionType)))
       consumeUntil {
@@ -768,20 +865,28 @@ class GameDataE2ETest : KoinComponent {
           Thread.yield()
           continue
         }
-        if (msg is GameData) {
-          cache.add(msg.gameData)
-          return msg.gameData
-        }
-        if (msg is CachedGameData) {
-          return cache[msg.key]
+        when (msg) {
+          is GameData -> {
+            println(
+              "DEBUG: Client ${this.username} received GameData. bytes=${msg.gameData.readableBytes()}"
+            )
+            cache.add(msg.gameData)
+            return msg.gameData
+          }
+
+          is CachedGameData -> {
+            val cached = cache[msg.key]
+            println(
+              "DEBUG: Client ${this.username} received CachedGameData key=${msg.key} found=${cached != null}"
+            )
+            return cached
+          }
         }
       }
       throw RuntimeException("Timed out waiting for GameData")
     }
 
-    private fun nextMessage(): V086Message? {
-      return messageIterator.next() as? V086Message
-    }
+    private fun nextMessage(): V086Message? = messageIterator.next()
 
     fun consumeUntil(timeoutMs: Long = 5000, predicate: (V086Message) -> Boolean) {
       val deadline = System.currentTimeMillis() + timeoutMs
@@ -801,10 +906,6 @@ class GameDataE2ETest : KoinComponent {
       val buffer = Unpooled.buffer(1024).apply { bundle.writeTo(this) }
       val packet = DatagramPacket(buffer, RECIPIENT, sender)
       testInstance.channel.writeInbound(packet)
-    }
-
-    fun quitGame() {
-      sendBundle(V086Bundle.Single(QuitGameRequest(++lastMessageNumber)))
     }
 
     fun quit() {

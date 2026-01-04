@@ -69,6 +69,10 @@ class PlayerActionQueue(
       val toDiscard = data.readableBytes() - gameBufferSize
       data.skipBytes(toDiscard)
       data.discardReadBytes()
+
+      for (i in heads.indices) {
+        heads[i] = (heads[i] - toDiscard).coerceAtLeast(0)
+      }
     }
 
     lastTimeout = null
