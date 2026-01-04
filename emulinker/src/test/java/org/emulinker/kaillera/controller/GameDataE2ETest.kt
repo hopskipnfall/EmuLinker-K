@@ -27,6 +27,8 @@ import org.emulinker.kaillera.controller.v086.protocol.CreateGameRequest
 import org.emulinker.kaillera.controller.v086.protocol.GameData
 import org.emulinker.kaillera.controller.v086.protocol.JoinGameNotification
 import org.emulinker.kaillera.controller.v086.protocol.JoinGameRequest
+import org.emulinker.kaillera.controller.v086.protocol.QuitGameNotification
+import org.emulinker.kaillera.controller.v086.protocol.QuitGameRequest
 import org.emulinker.kaillera.controller.v086.protocol.QuitNotification
 import org.emulinker.kaillera.controller.v086.protocol.QuitRequest
 import org.emulinker.kaillera.controller.v086.protocol.ServerAck
@@ -255,7 +257,8 @@ class GameDataE2ETest : KoinComponent {
     }
     println("4-player loop complete.")
     println("Shutting down...")
-    clients.forEach {
+    // If player 1 quits, it closes the game. reverse() to make sure player 1 is last to quit.
+    clients.reversed().forEach {
       it.quitGame()
       it.quit()
     }
@@ -368,7 +371,8 @@ class GameDataE2ETest : KoinComponent {
       }
     }
     println("Shutting down...")
-    clients.forEach {
+    // If player 1 quits, it closes the game. reverse() to make sure player 1 is last to quit.
+    clients.reversed().forEach {
       it.quitGame()
       it.quit()
     }
@@ -459,7 +463,8 @@ class GameDataE2ETest : KoinComponent {
     }
     println("3-player variable delay loop complete.")
     println("Shutting down...")
-    clients.forEach {
+    // If player 1 quits, it closes the game. reverse() to make sure player 1 is last to quit.
+    clients.reversed().forEach {
       it.quitGame()
       it.quit()
     }
@@ -548,7 +553,8 @@ class GameDataE2ETest : KoinComponent {
     }
     println("4-player CACHED loop complete.")
     println("Shutting down...")
-    clients.forEach {
+    // If player 1 quits, it closes the game. reverse() to make sure player 1 is last to quit.
+    clients.reversed().forEach {
       it.quitGame()
       it.quit()
     }
@@ -597,9 +603,7 @@ class GameDataE2ETest : KoinComponent {
     for (i in 1..100) {
       val inputs = clients.map { it.nextInput() }
       clients.forEachIndexed { index, client -> client.sendGameData(inputs[index]) }
-      clients.forEach { client ->
-        client.receiveGameData()
-      }
+      clients.forEach { client -> client.receiveGameData() }
     }
 
     // P4 Drops
@@ -894,10 +898,6 @@ class GameDataE2ETest : KoinComponent {
       val buffer = Unpooled.buffer(1024).apply { bundle.writeTo(this) }
       val packet = DatagramPacket(buffer, RECIPIENT, sender)
       testInstance.channel.writeInbound(packet)
-    }
-
-    fun quitGame() {
-      sendBundle(V086Bundle.Single(QuitGameRequest(++lastMessageNumber)))
     }
 
     fun quit() {
