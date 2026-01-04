@@ -1,6 +1,7 @@
 package org.emulinker.kaillera.controller
 
 import com.google.common.flogger.FluentLogger
+import io.netty.buffer.ByteBuf
 import io.netty.buffer.Unpooled
 import io.netty.channel.embedded.EmbeddedChannel
 import io.netty.channel.socket.DatagramPacket
@@ -37,7 +38,7 @@ import org.emulinker.kaillera.controller.v086.protocol.V086Message
 import org.emulinker.kaillera.model.ConnectionType
 import org.emulinker.kaillera.pico.AppModule
 import org.emulinker.kaillera.pico.koinModule
-import org.emulinker.util.VariableSizeByteArray
+import org.emulinker.util.FastGameDataCache
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.get
 import org.koin.core.context.startKoin
@@ -364,8 +365,18 @@ open class GameDataBenchmark {
       consumeUntil { it is QuitNotification && it.username == this.username }
     }
 
+    private val outgoingCache = org.emulinker.util.FastGameDataCache(256)
+
     fun sendGameData() {
-      sendBundle(V086Bundle.Single(GameData(++lastMessageNumber, gameDataIterator.next())))
+      val data = gameDataIterator.next()
+      val index = outgoingCache.indexOf(data)
+
+      if (index != -1) {
+        sendBundle(V086Bundle.Single(CachedGameData(++lastMessageNumber, index)))
+      } else {
+        outgoingCache.add(data)
+        sendBundle(V086Bundle.Single(GameData(++lastMessageNumber, data)))
+      }
     }
 
     fun receiveGameData(blackhole: Blackhole) {
@@ -376,9 +387,13 @@ open class GameDataBenchmark {
           Thread.yield()
           continue
         }
-        if (msg is GameData || msg is CachedGameData) {
-          received = true
-          blackhole.consume(msg)
+        try {
+          if (msg is GameData || msg is CachedGameData) {
+            received = true
+            blackhole.consume(msg)
+          }
+        } finally {
+          io.netty.util.ReferenceCountUtil.release(msg)
         }
       }
     }
@@ -395,7 +410,13 @@ open class GameDataBenchmark {
               Thread.yield()
               null
             }
-        if (msg != null && predicate(msg)) return
+        if (msg != null) {
+          try {
+            if (predicate(msg)) return
+          } finally {
+            io.netty.util.ReferenceCountUtil.release(msg)
+          }
+        }
       }
     }
 
@@ -423,15 +444,15 @@ open class GameDataBenchmark {
     }
 
     private fun buildIterator() =
-      iterator<VariableSizeByteArray> {
+      iterator<ByteBuf> {
         lateinit var previousLine: String
         while (true) {
           for (line in LINES) {
             if (line.startsWith("x")) {
               val times = line.removePrefix("x").toInt()
-              repeat(times) { yield(VariableSizeByteArray(previousLine.decodeHex())) }
+              repeat(times) { yield(Unpooled.wrappedBuffer(previousLine.decodeHex())) }
             } else {
-              yield(VariableSizeByteArray(line.decodeHex()))
+              yield(Unpooled.wrappedBuffer(line.decodeHex()))
             }
             previousLine = line
           }

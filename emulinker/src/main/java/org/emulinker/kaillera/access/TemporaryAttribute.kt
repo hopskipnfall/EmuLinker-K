@@ -22,8 +22,7 @@ class TempBan(accessStr: String, duration: Duration) : TemporaryAttribute(access
 
 class TempAdmin(accessStr: String, duration: Duration) : TemporaryAttribute(accessStr, duration)
 
-class TempModerator(accessStr: String, duration: Duration) :
-  TemporaryAttribute(accessStr, duration)
+class TempModerator(accessStr: String, duration: Duration) : TemporaryAttribute(accessStr, duration)
 
 class TempElevated(accessStr: String, duration: Duration) : TemporaryAttribute(accessStr, duration)
 
