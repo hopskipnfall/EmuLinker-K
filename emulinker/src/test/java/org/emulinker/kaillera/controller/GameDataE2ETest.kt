@@ -555,7 +555,7 @@ class GameDataE2ETest : KoinComponent {
     println("Shutting down...")
     // If player 1 quits, it closes the game. reverse() to make sure player 1 is last to quit.
     clients.reversed().forEach {
-      it.quitGame()
+      //      it.quitGame()
       it.quit()
     }
   }
@@ -865,20 +865,28 @@ class GameDataE2ETest : KoinComponent {
           Thread.yield()
           continue
         }
-        if (msg is GameData) {
-          cache.add(msg.gameData)
-          return msg.gameData
-        }
-        if (msg is CachedGameData) {
-          return cache[msg.key]
+        when (msg) {
+          is GameData -> {
+            println(
+              "DEBUG: Client ${this.username} received GameData. bytes=${msg.gameData.readableBytes()}"
+            )
+            cache.add(msg.gameData)
+            return msg.gameData
+          }
+
+          is CachedGameData -> {
+            val cached = cache[msg.key]
+            println(
+              "DEBUG: Client ${this.username} received CachedGameData key=${msg.key} found=${cached != null}"
+            )
+            return cached
+          }
         }
       }
       throw RuntimeException("Timed out waiting for GameData")
     }
 
-    private fun nextMessage(): V086Message? {
-      return messageIterator.next() as? V086Message
-    }
+    private fun nextMessage(): V086Message? = messageIterator.next()
 
     fun consumeUntil(timeoutMs: Long = 5000, predicate: (V086Message) -> Boolean) {
       val deadline = System.currentTimeMillis() + timeoutMs

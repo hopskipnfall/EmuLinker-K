@@ -219,6 +219,7 @@ class V086ClientHandler(
       } else {
         0
       }
+
     try {
       when (inBundle) {
         is V086Bundle.Single -> {
