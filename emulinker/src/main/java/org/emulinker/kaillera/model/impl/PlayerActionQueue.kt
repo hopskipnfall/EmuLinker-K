@@ -100,6 +100,19 @@ class PlayerActionQueue(
     }
   }
 
+  fun advanceCursor(readingPlayerIndex: Int, actionLength: Int) {
+    if (!synced) {
+      return
+    }
+
+    if (containsNewDataForPlayer(readingPlayerIndex, actionLength)) {
+      heads[readingPlayerIndex] += actionLength
+      cleanUp()
+    } else {
+      throw IllegalStateException("There is no data available for this synced user!")
+    }
+  }
+
   private fun cleanUp() {
     // Find the minimum head. We can discard data before that.
     var minHead = Int.MAX_VALUE
