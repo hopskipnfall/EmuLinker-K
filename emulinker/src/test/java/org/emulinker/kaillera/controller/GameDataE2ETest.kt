@@ -14,6 +14,7 @@ import java.util.concurrent.ThreadPoolExecutor
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
+import kotlin.time.TimeSource.Monotonic
 import org.emulinker.kaillera.access.AccessManager
 import org.emulinker.kaillera.controller.connectcontroller.protocol.ConnectMessage
 import org.emulinker.kaillera.controller.connectcontroller.protocol.RequestPrivateKailleraPortRequest
@@ -52,7 +53,6 @@ import org.koin.core.context.startKoin
 import org.koin.core.context.stopKoin
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
-import kotlin.time.TimeSource.Monotonic
 
 class GameDataE2ETest : KoinComponent {
 
@@ -555,9 +555,7 @@ class GameDataE2ETest : KoinComponent {
     println("4-player CACHED loop complete.")
     println("Shutting down...")
     // If player 1 quits, it closes the game. reverse() to make sure player 1 is last to quit.
-    clients.reversed().forEach {
-      it.quit()
-    }
+    clients.reversed().forEach { it.quit() }
   }
 
   @Test
