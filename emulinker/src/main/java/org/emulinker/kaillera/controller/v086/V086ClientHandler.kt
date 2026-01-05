@@ -121,7 +121,8 @@ class V086ClientHandler(
     }
 
   // TODO(nue): This no longer fulfills any purpose. Remove.
-  @Deprecated("", ReplaceWith("0")) val nextMessageNumber = 0
+  @Deprecated("", ReplaceWith("0"))
+  val nextMessageNumber = 0
 
   private val lastSendMessageNumber = AtomicInteger(0)
 
@@ -160,6 +161,7 @@ class V086ClientHandler(
     controller.clientHandlers.remove(user.id)
     combinedKailleraController.clientHandlers.remove(remoteSocketAddress)
     synchronized(sendMutex) { lastMessageBuffer.releaseAll() }
+    resetGameDataCache()
   }
 
   override fun toString(): String = "[V086ClientHandler $user]"
@@ -240,6 +242,7 @@ class V086ClientHandler(
           }
           (action as V086Action<V086Message>).performAction(m, this)
         }
+
         is V086Bundle.Multi -> {
           val messages = inBundle.messages
           // read the bundle from back to front to process the oldest messages first
@@ -298,6 +301,7 @@ class V086ClientHandler(
       is GameDataEvent -> {
         GameDataAction.handleEvent(event, this)
       }
+
       is GameEvent -> {
         val eventHandler = controller.gameEventHandlers[event::class]
         if (eventHandler == null) {
@@ -308,6 +312,7 @@ class V086ClientHandler(
         }
         (eventHandler as V086GameEventHandler<GameEvent>).handleEvent(event, this)
       }
+
       is ServerEvent -> {
         val eventHandler = controller.serverEventHandlers[event::class]
         if (eventHandler == null) {
@@ -322,6 +327,7 @@ class V086ClientHandler(
         }
         (eventHandler as V086ServerEventHandler<ServerEvent>).handleEvent(event, this)
       }
+
       is UserEvent -> {
         val eventHandler = controller.userEventHandlers[event::class]
         if (eventHandler == null) {
