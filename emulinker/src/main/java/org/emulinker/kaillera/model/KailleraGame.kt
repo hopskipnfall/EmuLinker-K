@@ -614,8 +614,23 @@ class KailleraGame(
     addEventForAllPlayers(UserQuitGameEvent(this, user))
     user.ignoringUnnecessaryServerActivity = false
     swap = false
+    // Comment me?
+    if (status == GameStatus.WAITING) {
+      for (i in players.indices) {
+        getPlayer(i + 1)!!.playerNumber = i + 1
+        logger.atFine().log(getPlayer(i + 1)!!.name + ":::" + getPlayer(i + 1)!!.playerNumber)
+      }
+    }
+    // Comment me?
+    if (playerNumber - 1 < playerActionQueues.size) {
+      playerActionQueues[playerNumber - 1].markDesynced()
+    }
     if (user == owner) server.closeGame(this, user)
     else server.addEvent(GameStatusChangedEvent(server, this))
+
+    if (waitingOnData) {
+      maybeSendData(user)
+    }
   }
 
   @Synchronized

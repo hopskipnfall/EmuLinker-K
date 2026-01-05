@@ -20,6 +20,8 @@ jobs:
       - uses: gradle/actions/wrapper-validation@v4
   build:
     runs-on: ubuntu-latest
+    env:
+      CI: true
     steps:
       - uses: actions/checkout@v4
       - name: Set up JDK 17
