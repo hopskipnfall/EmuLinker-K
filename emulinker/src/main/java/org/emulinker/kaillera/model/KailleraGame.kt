@@ -620,8 +620,15 @@ class KailleraGame(
         logger.atFine().log(getPlayer(i + 1)!!.name + ":::" + getPlayer(i + 1)!!.playerNumber)
       }
     }
+    if (playerNumber - 1 < playerActionQueues.size) {
+      playerActionQueues[playerNumber - 1].markDesynced()
+    }
     if (user == owner) server.closeGame(this, user)
     else server.addEvent(GameStatusChangedEvent(server, this))
+
+    if (waitingOnData) {
+      maybeSendData(user)
+    }
   }
 
   @Synchronized
