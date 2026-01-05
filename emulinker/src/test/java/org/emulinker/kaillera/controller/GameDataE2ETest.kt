@@ -52,6 +52,7 @@ import org.koin.core.context.startKoin
 import org.koin.core.context.stopKoin
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
+import kotlin.time.TimeSource.Monotonic
 
 class GameDataE2ETest : KoinComponent {
 
@@ -555,7 +556,6 @@ class GameDataE2ETest : KoinComponent {
     println("Shutting down...")
     // If player 1 quits, it closes the game. reverse() to make sure player 1 is last to quit.
     clients.reversed().forEach {
-      //      it.quitGame()
       it.quit()
     }
   }
@@ -649,7 +649,12 @@ class GameDataE2ETest : KoinComponent {
 
   fun pump() {
     channel.runPendingTasks()
+    val started = Monotonic.markNow()
     while (true) {
+      if (started.elapsedNow() > 1.seconds) {
+        throw IllegalStateException("Timed out pumping")
+      }
+
       val response: DatagramPacket = channel.readOutbound<DatagramPacket>() ?: break
       val port = response.recipient().port
       val queue = clientQueues[port]
@@ -728,7 +733,12 @@ class GameDataE2ETest : KoinComponent {
     }
 
     private val messageIterator = iterator {
+      val started = Monotonic.markNow()
       while (true) {
+        if (started.elapsedNow() > 3.seconds) {
+          throw IllegalStateException("Timed out iterating")
+        }
+
         testInstance.pump()
 
         while (true) {
@@ -867,19 +877,12 @@ class GameDataE2ETest : KoinComponent {
         }
         when (msg) {
           is GameData -> {
-            println(
-              "DEBUG: Client ${this.username} received GameData. bytes=${msg.gameData.readableBytes()}"
-            )
             cache.add(msg.gameData)
             return msg.gameData
           }
 
           is CachedGameData -> {
-            val cached = cache[msg.key]
-            println(
-              "DEBUG: Client ${this.username} received CachedGameData key=${msg.key} found=${cached != null}"
-            )
-            return cached
+            return cache[msg.key]
           }
         }
       }
