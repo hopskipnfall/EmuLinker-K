@@ -6,7 +6,6 @@ import io.netty.buffer.ByteBuf
 import io.netty.buffer.PooledByteBufAllocator
 import java.io.FileOutputStream
 import java.util.Date
-import java.util.concurrent.CopyOnWriteArrayList
 import java.util.zip.GZIPOutputStream
 import kotlin.io.path.createTempDirectory
 import kotlin.time.Clock
@@ -124,7 +123,7 @@ class KailleraGame(
   /** Last time we fanned out data for a frame. */
   private var lastFrameNs = System.nanoTime()
 
-  val players: MutableList<KailleraUser> = CopyOnWriteArrayList()
+  val players = mutableListOf<KailleraUser>()
 
   var lastLagReset = clock.now()
     private set
@@ -185,7 +184,7 @@ class KailleraGame(
       if (this::playerActionQueues.isInitialized) playerActionQueues.count { it.synced } else 0
 
   private fun addEventForAllPlayers(event: GameEvent) {
-    for (player in players) player.queueEvent(event)
+    for (player in players) player.doEvent(event)
   }
 
   @Throws(GameChatException::class)
@@ -623,8 +622,11 @@ class KailleraGame(
     if (playerNumber - 1 < playerActionQueues.size) {
       playerActionQueues[playerNumber - 1].markDesynced()
     }
-    if (user == owner) server.closeGame(this, user)
-    else server.addEvent(GameStatusChangedEvent(server, this))
+    if (user == owner) {
+      server.closeGame(this, user)
+    } else {
+      server.addEvent(GameStatusChangedEvent(server, this))
+    }
 
     if (waitingOnData) {
       maybeSendData(user)

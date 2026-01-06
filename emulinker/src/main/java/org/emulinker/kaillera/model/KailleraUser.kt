@@ -388,7 +388,7 @@ class KailleraUser(
     }
     isMuted = false
     game = null
-    queueEvent(UserQuitGameEvent(game, this))
+    doEvent(UserQuitGameEvent(game, this))
   }
 
   @Synchronized
@@ -521,11 +521,6 @@ class KailleraUser(
     lastUpdateNs = nowNs
   }
 
-  // TODO(nue): Try to remove this entirely.
-  fun queueEvent(event: KailleraEvent) {
-    server.queueEvent(this, event)
-  }
-
   /** Acts on an event in realtime. */
   fun doEvent(event: KailleraEvent) {
     if (
@@ -545,10 +540,7 @@ class KailleraUser(
 
   override fun equals(other: Any?): Boolean {
     if (this === other) return true
-    if (javaClass != other?.javaClass) return false
-
-    other as KailleraUser
-
+    if (other !is KailleraUser) return false
     return id == other.id
   }
 
