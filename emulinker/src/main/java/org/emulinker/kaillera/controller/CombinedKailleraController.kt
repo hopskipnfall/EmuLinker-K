@@ -16,8 +16,10 @@ import io.netty.channel.EventLoopGroup
 import io.netty.channel.MultiThreadIoEventLoopGroup
 import io.netty.channel.SimpleChannelInboundHandler
 import io.netty.channel.epoll.Epoll
+import io.netty.channel.epoll.EpollDatagramChannel
 import io.netty.channel.epoll.EpollIoHandler
 import io.netty.channel.kqueue.KQueue
+import io.netty.channel.kqueue.KQueueDatagramChannel
 import io.netty.channel.kqueue.KQueueIoHandler
 import io.netty.channel.nio.NioIoHandler
 import io.netty.channel.socket.DatagramPacket
@@ -72,23 +74,25 @@ class CombinedKailleraController(
     port: Int
   ): EmbeddedServer<NettyApplicationEngine, NettyApplicationEngine.Configuration> =
     embeddedServer(Netty, port = port) {
-        val group: EventLoopGroup =
-          MultiThreadIoEventLoopGroup(
-            when {
-              Epoll.isAvailable() -> {
-                logger.atInfo().log("Using Epoll (Linux native)")
-                EpollIoHandler.newFactory()
-              }
-              KQueue.isAvailable() -> {
-                logger.atInfo().log("Using KQueue (MacOS native)")
-                KQueueIoHandler.newFactory()
-              }
-              else -> {
-                logger.atInfo().log("Using NIO (Generic)")
-                NioIoHandler.newFactory()
-              }
+        val (ioHandlerFactory, channelClass) =
+          when {
+            Epoll.isAvailable() -> {
+              logger.atInfo().log("Using Epoll (Linux native)")
+              EpollIoHandler.newFactory() to EpollDatagramChannel::class.java
             }
-          )
+
+            KQueue.isAvailable() -> {
+              logger.atInfo().log("Using KQueue (MacOS native)")
+              KQueueIoHandler.newFactory() to KQueueDatagramChannel::class.java
+            }
+
+            else -> {
+              logger.atInfo().log("Using NIO (Generic)")
+              NioIoHandler.newFactory() to NioDatagramChannel::class.java
+            }
+          }
+
+        val group: EventLoopGroup = MultiThreadIoEventLoopGroup(ioHandlerFactory)
 
         Runtime.getRuntime()
           .addShutdownHook(
@@ -112,7 +116,7 @@ class CombinedKailleraController(
         try {
           Bootstrap().apply {
             group(group)
-            channel(NioDatagramChannel::class.java)
+            channel(channelClass)
             option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
             option(ChannelOption.SO_BROADCAST, true)
             handler(this@CombinedKailleraController)
@@ -153,6 +157,7 @@ class CombinedKailleraController(
             ConnectMessage_PONG.writeTo(buf)
             send(DatagramPacket(buf, remoteSocketAddress))
           }
+
           is RequestPrivateKailleraPortRequest -> {
             check(connectMessage.protocol == "0.83") {
               "Client listed unsupported protocol! $connectMessage."
@@ -162,6 +167,7 @@ class CombinedKailleraController(
             RequestPrivateKailleraPortResponse(flags.serverPort).writeTo(buf)
             send(DatagramPacket(buf, remoteSocketAddress))
           }
+
           else -> {
             logger
               .atWarning()

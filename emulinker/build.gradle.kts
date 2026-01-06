@@ -66,6 +66,11 @@ dependencies {
   // https://mvnrepository.com/artifact/io.netty/netty-all
   testImplementation("io.netty:netty-all:4.2.9.Final")
 
+  implementation("io.netty:netty-transport-native-epoll:4.2.9.Final:linux-x86_64")
+  implementation("io.netty:netty-transport-native-epoll:4.2.9.Final:linux-aarch_64")
+  implementation("io.netty:netty-transport-native-kqueue:4.2.9.Final:osx-x86_64")
+  implementation("io.netty:netty-transport-native-kqueue:4.2.9.Final:osx-aarch_64")
+
   testImplementation("junit:junit:4.13.2")
   testImplementation("com.google.truth:truth:1.4.5")
   testImplementation("com.google.truth.extensions:truth-proto-extension:1.4.5")
