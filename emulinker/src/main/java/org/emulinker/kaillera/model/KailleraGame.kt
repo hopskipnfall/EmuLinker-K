@@ -759,8 +759,7 @@ class KailleraGame(
 
     // Identify a reference player to check availability against
     val referencePlayerIndex =
-      playerActionQueues.indexOfFirst { it.synced }.takeIf { it >= 0 }
-        ?: return AddDataResult.Success
+      paq.indexOfFirst { it.synced }.takeIf { it >= 0 } ?: return AddDataResult.Success
 
     val canSend =
       paq.all {
@@ -786,9 +785,9 @@ class KailleraGame(
       }
 
       // Now update other readers.
-      for (readerIndex in playerActionQueues.indices) {
+      for (readerIndex in paq.indices) {
         if (readerIndex == referencePlayerIndex) continue
-        val readerQueue = playerActionQueues[readerIndex]
+        val readerQueue = paq[readerIndex]
         if (!readerQueue.synced) continue
 
         // Advance this reader on ALL source queues
@@ -800,7 +799,7 @@ class KailleraGame(
       }
 
       val isSynched =
-        playerActionQueues.all {
+        paq.all {
           it.synced ||
             it.containsNewDataForPlayer(
               playerIndex = it.playerNumber - 1,
