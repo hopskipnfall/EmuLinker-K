@@ -724,8 +724,9 @@ class GameDataE2ETest : KoinComponent {
   ) {
     var lastMessageNumberReceived = -1
     var lastMessageNumber = -1
-    val sender = InetSocketAddress("127.0.0.1", port)
+    private val sender = InetSocketAddress(InetAddress.getLoopbackAddress(), port)
     private val queue = ArrayBlockingQueue<OutgoingMsg>(100)
+    private val cache = ArrayList<ByteBuf>()
 
     // Iterator for real game data
     private val inputIterator = buildIterator()
@@ -874,8 +875,6 @@ class GameDataE2ETest : KoinComponent {
         sendBundle(V086Bundle.Single(GameData(++lastMessageNumber, data)))
       }
     }
-
-    private val cache = FastGameDataCache(256) // Standard Kaillera cache size
 
     fun receiveGameData(timeout: Duration = 1.seconds): ByteBuf {
       val deadline = System.nanoTime() + timeout.inWholeNanoseconds

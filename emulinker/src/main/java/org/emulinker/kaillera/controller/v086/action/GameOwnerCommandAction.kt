@@ -27,7 +27,7 @@ class GameOwnerCommandAction : V086Action<GameChat> {
       chat.startsWith(COMMAND_EMU) ||
       chat.startsWith(COMMAND_CONN) ||
       chat.startsWith(COMMAND_UNMUTE) ||
-      chat.startsWith(COMMAND_SWAP) ||
+      chat.startsWith(COMMAND_UNMUTE) ||
       chat.startsWith(COMMAND_KICK) ||
       chat.startsWith(COMMAND_SAMEDELAY) ||
       chat.startsWith(COMMAND_NUM)
@@ -59,7 +59,6 @@ class GameOwnerCommandAction : V086Action<GameChat> {
         chat.startsWith(COMMAND_EMU) -> processEmu(chat, game, user)
         chat.startsWith(COMMAND_CONN) -> processConn(chat, game, user)
         chat.startsWith(COMMAND_UNMUTE) -> processUnmute(chat, game, user, clientHandler)
-        chat.startsWith(COMMAND_SWAP) -> processSwap(chat, game, user)
         chat.startsWith(COMMAND_KICK) -> processKick(chat, game, user, clientHandler)
         chat.startsWith(COMMAND_SAMEDELAY) -> processSameDelay(chat, game, user)
         chat.startsWith(COMMAND_NUM) -> processNum(game, user)
@@ -307,66 +306,6 @@ class GameOwnerCommandAction : V086Action<GameChat> {
   }
 
   @Throws(ActionException::class, MessageFormatException::class)
-  private fun processSwap(message: String, game: KailleraGame, admin: KailleraUser) {
-    /*if(game.getStatus() != KailleraGame.STATUS_PLAYING){
-    	game.announce("Failed: wap Players can only be used during gameplay!", admin);
-    	return;
-    }*/
-    val scanner = Scanner(message).useDelimiter(" ")
-    try {
-      var i: Int
-      val str: String
-      scanner.next()
-      val test = scanner.nextInt()
-      str = test.toString()
-      if (game.players.size < str.length) {
-        game.announce("Failed: You can't swap more than the # of players in the room.", admin)
-        return
-      }
-      if (test > 0) {
-        var numCount = 0
-        val num = IntArray(str.length)
-        // before swap check numbers to prevent errors due to incorrectly entered numbers
-        i = 0
-        while (i < num.size) {
-          num[i] = str[i].toString().toInt()
-          numCount = 1
-          if (num[i] == 0 || num[i] > game.players.size) break
-          for (j in num.indices) {
-            if (num[i] != num[j]) numCount++
-          }
-          i++
-        }
-        if (numCount == game.players.size) {
-          game.swap = true
-          // PlayerActionQueue temp = game.getPlayerActionQueue()[0];
-          i = 0
-          while (i < str.length) {
-            val player = game.players[i]
-            player.playerNumber = num[i]
-            /*if(num[i] == 1){
-            	game.getPlayerActionQueue()[i] = temp;
-            }
-            else{
-            	game.getPlayerActionQueue()[i] = game.getPlayerActionQueue()[num[i]-1];
-            }*/ game.announce(player.name + " is now Player#: " + player.playerNumber)
-            i++
-          }
-        } else
-          game.announce(
-            "Swap Player Error: /swap <order> eg. 123..n {n = total # of players; Each slot = new player#}",
-            admin,
-          )
-      }
-    } catch (e: NoSuchElementException) {
-      game.announce(
-        "Swap Player Error: /swap <order> eg. 123..n {n = total # of players; Each slot = new player#}",
-        admin,
-      )
-    }
-  }
-
-  @Throws(ActionException::class, MessageFormatException::class)
   private fun processStart(game: KailleraGame, admin: KailleraUser) {
     game.start(admin)
   }
@@ -469,8 +408,6 @@ class GameOwnerCommandAction : V086Action<GameChat> {
     private const val COMMAND_MUTE = "/mute"
 
     private const val COMMAND_UNMUTE = "/unmute"
-
-    private const val COMMAND_SWAP = "/swap"
 
     private const val COMMAND_KICK = "/kick"
 
