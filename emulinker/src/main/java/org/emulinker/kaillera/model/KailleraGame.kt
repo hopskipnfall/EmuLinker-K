@@ -615,6 +615,7 @@ class KailleraGame(
     addEventForAllPlayers(UserQuitGameEvent(this, user))
     user.ignoringUnnecessaryServerActivity = false
     swap = false
+    // Comment me?
     if (status == GameStatus.WAITING) {
       for (i in players.indices) {
         getPlayer(i + 1)!!.playerNumber = i + 1
@@ -756,52 +757,85 @@ class KailleraGame(
       playerActionQueues
         ?: return AddDataResult.Failure(GameDataException("playerActionQueues is null"))
 
-    // TODO(nue): This works for 2P but what about more? This probably results in unnecessary
-    // messages.
-    for (player in players) {
-      val playerNumber = player.playerNumber
+    // Identify a reference player to check availability against
+    val referencePlayerIndex =
+      paq.indexOfFirst { it.synced }.takeIf { it >= 0 } ?: return AddDataResult.Success
 
-      // If there is new information about all synced players.
-      if (
+    val canSend =
+      paq.all {
+        !it.synced ||
+          it.containsNewDataForPlayer(
+            playerIndex = it.playerNumber - 1,
+            actionLength = actionsPerMessage * user.bytesPerAction,
+          )
+      }
+
+    if (canSend) {
+      waitingOnData = false
+      val joinedGameData = PooledByteBufAllocator.DEFAULT.buffer(user.arraySize)
+      // Read actions for the first synced player to populate the buffer
+      repeat(actionsPerMessage) {
+        for (playerActionQueueIndex in paq.indices) {
+          paq[playerActionQueueIndex].getActionAndWriteToArray(
+            readingPlayerIndex = referencePlayerIndex,
+            writeTo = joinedGameData,
+            actionLength = user.bytesPerAction,
+          )
+        }
+      }
+
+      // Now update other readers.
+      for (readerIndex in paq.indices) {
+        if (readerIndex == referencePlayerIndex) continue
+        val readerQueue = paq[readerIndex]
+        if (!readerQueue.synced) continue
+
+        // Advance this reader on ALL source queues
+        repeat(actionsPerMessage) {
+          for (sourceQueue in playerActionQueues) {
+            sourceQueue.advanceCursor(readerIndex, user.bytesPerAction)
+          }
+        }
+      }
+
+      val isSynched =
         paq.all {
-          !it.synced ||
+          it.synced ||
             it.containsNewDataForPlayer(
-              playerIndex = playerNumber - 1,
+              playerIndex = it.playerNumber - 1,
               actionLength = actionsPerMessage * user.bytesPerAction,
             )
         }
-      ) {
-        waitingOnData = false
-        val joinedGameData = PooledByteBufAllocator.DEFAULT.buffer(user.arraySize)
-        for (actionCounter in 0 until actionsPerMessage) {
-          for (playerActionQueueIndex in paq.indices) {
-            paq[playerActionQueueIndex].getActionAndWriteToArray(
-              readingPlayerIndex = playerNumber - 1,
-              writeTo = joinedGameData,
-              actionLength = user.bytesPerAction,
-            )
-          }
-        }
-        if (!isSynched) {
-          joinedGameData.release()
-          return AddDataResult.IgnoringDesynched
-        }
-        player.doEvent(GameDataEvent(this, joinedGameData))
+
+      if (!isSynched) {
+        joinedGameData.release()
+        return AddDataResult.IgnoringDesynched
+      }
+
+      // Multicast
+      players.forEach { player ->
+        // We pass a retained duplicate to each player so they can process it independently.
+        // GameDataAction (via handler) will manage the per-client cache (FastGameDataCache).
+        // If a client has it cached, they get CachedGameData. If not, GameData.
+        // This keeps the efficient "O(1) Data Creation" but ensures P1 and P2 caches remain correct
+        // even if their arrival times (buffering) differed.
+        player.doEvent(GameDataEvent(this, joinedGameData.retainedDuplicate()))
         player.updateUserDrift()
         val firstPlayer = players.firstOrNull()
         if (firstPlayer != null && firstPlayer.id == player.id) {
           updateGameDrift()
         }
-      } else {
-        waitingOnData = true
-        paq.forEach {
-          waitingOnPlayerNumber[it.playerNumber - 1] =
-            it.synced &&
-              !it.containsNewDataForPlayer(
-                playerIndex = playerNumber - 1,
-                actionLength = actionsPerMessage * user.bytesPerAction,
-              )
-        }
+      }
+      joinedGameData.release() // Release our initial reference
+    } else {
+      waitingOnData = true
+      paq.forEach {
+        waitingOnPlayerNumber[it.playerNumber - 1] =
+          it.synced &&
+            !it.containsNewDataForPlayer(
+              playerIndex = it.playerNumber - 1,
+              actionLength = actionsPerMessage * user.bytesPerAction,
+            )
       }
     }
     return AddDataResult.Success
