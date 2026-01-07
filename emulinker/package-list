@@ -874,6 +874,10 @@ $dokka.location:org.emulinker.kaillera.controller/CombinedKailleraController/cha
 $dokka.location:org.emulinker.kaillera.controller/CombinedKailleraController/clientHandlers/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.controller/-combined-kaillera-controller/client-handlers.html
 $dokka.location:org.emulinker.kaillera.controller/CombinedKailleraController/send/#io.netty.channel.socket.DatagramPacket/PointingToDeclaration/emulinker/org.emulinker.kaillera.controller/-combined-kaillera-controller/send.html
 $dokka.location:org.emulinker.kaillera.controller/CombinedKailleraController/stop/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.controller/-combined-kaillera-controller/stop.html
+$dokka.location:org.emulinker.kaillera.controller/GlobalExceptionHandler.Companion///PointingToDeclaration/emulinker/org.emulinker.kaillera.controller/-global-exception-handler/-companion/index.html
+$dokka.location:org.emulinker.kaillera.controller/GlobalExceptionHandler///PointingToDeclaration/emulinker/org.emulinker.kaillera.controller/-global-exception-handler/index.html
+$dokka.location:org.emulinker.kaillera.controller/GlobalExceptionHandler/GlobalExceptionHandler/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.controller/-global-exception-handler/-global-exception-handler.html
+$dokka.location:org.emulinker.kaillera.controller/GlobalExceptionHandler/exceptionCaught/#io.netty.channel.ChannelHandlerContext#kotlin.Throwable/PointingToDeclaration/emulinker/org.emulinker.kaillera.controller/-global-exception-handler/exception-caught.html
 $dokka.location:org.emulinker.kaillera.controller/KailleraServerController///PointingToDeclaration/emulinker/org.emulinker.kaillera.controller/-kaillera-server-controller/index.html
 $dokka.location:org.emulinker.kaillera.controller/KailleraServerController/bufferSize/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.controller/-kaillera-server-controller/buffer-size.html
 $dokka.location:org.emulinker.kaillera.controller/KailleraServerController/clientTypes/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.controller/-kaillera-server-controller/client-types.html
@@ -1316,7 +1320,6 @@ $dokka.location:org.emulinker.kaillera.model/KailleraUser/ping/#/PointingToDecla
 $dokka.location:org.emulinker.kaillera.model/KailleraUser/playerNumber/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-kaillera-user/player-number.html
 $dokka.location:org.emulinker.kaillera.model/KailleraUser/playerReady/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-kaillera-user/player-ready.html
 $dokka.location:org.emulinker.kaillera.model/KailleraUser/protocol/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-kaillera-user/protocol.html
-$dokka.location:org.emulinker.kaillera.model/KailleraUser/queueEvent/#org.emulinker.kaillera.model.event.KailleraEvent/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-kaillera-user/queue-event.html
 $dokka.location:org.emulinker.kaillera.model/KailleraUser/quit/#kotlin.String/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-kaillera-user/quit.html
 $dokka.location:org.emulinker.kaillera.model/KailleraUser/quitGame/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-kaillera-user/quit-game.html
 $dokka.location:org.emulinker.kaillera.model/KailleraUser/receivedGameDataNs/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-kaillera-user/received-game-data-ns.html
