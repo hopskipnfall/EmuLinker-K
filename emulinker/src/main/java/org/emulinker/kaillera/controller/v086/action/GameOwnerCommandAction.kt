@@ -339,17 +339,11 @@ class GameOwnerCommandAction : V086Action<GameChat> {
         }
         if (numCount == game.players.size) {
           game.swap = true
-          // PlayerActionQueue temp = game.getPlayerActionQueue()[0];
           i = 0
           while (i < str.length) {
             val player = game.players[i]
             player.playerNumber = num[i]
-            /*if(num[i] == 1){
-            	game.getPlayerActionQueue()[i] = temp;
-            }
-            else{
-            	game.getPlayerActionQueue()[i] = game.getPlayerActionQueue()[num[i]-1];
-            }*/ game.announce(player.name + " is now Player#: " + player.playerNumber)
+            game.announce(player.name + " is now Player#: " + player.playerNumber)
             i++
           }
         } else

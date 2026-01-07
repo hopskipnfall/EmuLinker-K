@@ -3,7 +3,6 @@ package org.emulinker.kaillera.model
 import com.google.common.flogger.FluentLogger
 import com.google.protobuf.util.Timestamps
 import io.netty.buffer.ByteBuf
-import io.netty.buffer.PooledByteBufAllocator
 import java.io.FileOutputStream
 import java.util.Date
 import java.util.zip.GZIPOutputStream
@@ -38,7 +37,7 @@ import org.emulinker.kaillera.model.exception.QuitGameException
 import org.emulinker.kaillera.model.exception.StartGameException
 import org.emulinker.kaillera.model.exception.UserReadyException
 import org.emulinker.kaillera.model.impl.AutoFireDetector
-import org.emulinker.kaillera.model.impl.PlayerActionQueue
+import org.emulinker.kaillera.model.impl.GameActionQueue
 import org.emulinker.proto.EventKt.GameStartKt.playerDetails
 import org.emulinker.proto.EventKt.LagstatSummaryKt.playerAttributedLag
 import org.emulinker.proto.EventKt.fanOut
@@ -112,6 +111,7 @@ class KailleraGame(
    * fanning out.
    */
   var waitingOnData = false
+
   /**
    * If `waitingOnPlayerNumber[playerNumber - 1]` is `true`, we are waiting on data for that player.
    */
@@ -135,6 +135,7 @@ class KailleraGame(
   var aEmulator = "any"
   var aConnection = "any"
   val startDate: Date = Date()
+
   @JvmField var swap = false
 
   var status = GameStatus.WAITING
@@ -152,7 +153,7 @@ class KailleraGame(
 
   private val actionsPerMessage = owner.connectionType.byteValue.toInt()
 
-  var playerActionQueues: Array<PlayerActionQueue>? = null
+  var gameActionQueue: GameActionQueue? = null
     private set
 
   val clientType: String?
@@ -181,7 +182,14 @@ class KailleraGame(
     get() = players.count { it.status == UserStatus.PLAYING }
 
   private val synchedCount: Int
-    get() = playerActionQueues?.count { it.synced } ?: 0
+    get() {
+      val gaq = gameActionQueue ?: return 0
+      var count = 0
+      for (i in 1..gaq.numPlayers) {
+        if (gaq.isSynced(i)) count++
+      }
+      return count
+    }
 
   private fun addEventForAllPlayers(event: GameEvent) {
     for (player in players) player.doEvent(event)
@@ -460,7 +468,6 @@ class KailleraGame(
     logger.atInfo().log("%s started: %s", user, this)
     status = GameStatus.SYNCHRONIZING
     autoFireDetector.start(players.size)
-    val actionQueueBuilder = mutableListOf<PlayerActionQueue>()
 
     highestUserFrameDelay = 1
     if (server.usersMap.values.size > 60) {
@@ -470,14 +477,7 @@ class KailleraGame(
       val playerNumber = i + 1
       if (!swap) player.playerNumber = playerNumber
       player.frameCount = 0
-      actionQueueBuilder.add(
-        PlayerActionQueue(
-          playerNumber = playerNumber,
-          player,
-          numPlayers = players.size,
-          gameBufferSize = bufferSize,
-        )
-      )
+
       val delayVal =
         GAME_FPS.toDouble() / player.connectionType.byteValue *
           (player.ping.toMillisDouble() / 1000.0) + 1.0
@@ -495,7 +495,7 @@ class KailleraGame(
       logger.atFine().log("%s: %s is player number %s", this, player, playerNumber)
       autoFireDetector.addPlayer(player, playerNumber)
     }
-    playerActionQueues = actionQueueBuilder.toTypedArray()
+    gameActionQueue = GameActionQueue(numPlayers = players.size, bufferSize = bufferSize)
     statsCollector?.markGameAsStarted(server, this)
     gameLogBuilder?.addEvents(
       event {
@@ -533,15 +533,13 @@ class KailleraGame(
       logger.atWarning().log("%s ready failed: %s status is %s", user, this, status)
       throw UserReadyException(EmuLang.getString("KailleraGameImpl.ReadyGameErrorIncorrectState"))
     }
-    val paq = playerActionQueues
-    if (paq == null) {
-      logger
-        .atSevere()
-        .log("%s ready failed: %s playerActionQueues is not initialized!", user, this)
+    val gaq = gameActionQueue
+    if (gaq == null) {
+      logger.atSevere().log("%s ready failed: %s gameActionQueue is not initialized!", user, this)
       throw UserReadyException(EmuLang.getString("KailleraGameImpl.ReadyGameErrorInternalError"))
     }
     logger.atFine().log("%s (player %s) is ready to play: %s", user, playerNumber, this)
-    paq[playerNumber - 1].markSynced()
+    gaq.markSynced(playerNumber)
     if (synchedCount == players.size) {
       logger.atFine().log("%s all players are ready: starting...", this)
       status = GameStatus.PLAYING
@@ -553,7 +551,7 @@ class KailleraGame(
         announce("This game's delay is: $highestUserFrameDelay ($frameDelay frame delay)")
       } else {
         var i = 0
-        while (i < paq.size && i < players.size) {
+        while (i < gaq.numPlayers && i < players.size) {
           val player = players[i]
           // do not show delay if stealth mode
           if (!player.inStealthMode) {
@@ -573,15 +571,13 @@ class KailleraGame(
       logger.atWarning().log("%s drop game failed: not in %s", user, this)
       throw DropGameException(EmuLang.getString("KailleraGameImpl.DropGameErrorNotInGame"))
     }
-    val paq = playerActionQueues
-    if (paq == null) {
-      logger.atSevere().log("%s drop failed: %s playerActionQueues is not initialized!", user, this)
+    val gaq = gameActionQueue
+    if (gaq == null) {
+      logger.atSevere().log("%s drop failed: %s gameActionQueue is not initialized!", user, this)
       throw DropGameException(EmuLang.getString("KailleraGameImpl.DropGameErrorInternalError"))
     }
     logger.atInfo().log("%s dropped: %s", user, this)
-    if (playerNumber - 1 < paq.size) {
-      paq[playerNumber - 1].markDesynced()
-    }
+    gaq.markDesynced(playerNumber)
     autoFireDetector.stop(playerNumber)
     if (playingCount == 0) {
       if (startN != -1) {
@@ -621,12 +617,7 @@ class KailleraGame(
         logger.atFine().log(getPlayer(i + 1)!!.name + ":::" + getPlayer(i + 1)!!.playerNumber)
       }
     }
-    val paq = playerActionQueues
-    if (paq != null) {
-      if (playerNumber - 1 < paq.size) {
-        paq[playerNumber - 1].markDesynced()
-      }
-    }
+    gameActionQueue?.markDesynced(playerNumber)
 
     if (user == owner) {
       server.closeGame(this, user)
@@ -648,9 +639,7 @@ class KailleraGame(
     }
     if (isSynched) {
       isSynched = false
-      for (q in playerActionQueues ?: emptyArray()) {
-        q.markDesynced()
-      }
+      gameActionQueue?.desyncAll()
 
       logger.atInfo().log("%s: game desynched: game closed!", this)
     }
@@ -686,8 +675,8 @@ class KailleraGame(
   fun droppedPacket(user: KailleraUser) {
     if (!isSynched) return
     val playerNumber = user.playerNumber
-    val paq = playerActionQueues ?: return
-    if (user.playerNumber > paq.size) {
+    val gaq = gameActionQueue ?: return
+    if (user.playerNumber > gaq.numPlayers) {
       logger
         .atInfo()
         .log(
@@ -696,8 +685,8 @@ class KailleraGame(
           user,
         )
     }
-    if (paq[playerNumber - 1].synced) {
-      paq[playerNumber - 1].markDesynced()
+    if (gaq.isSynced(playerNumber)) {
+      gaq.markDesynced(playerNumber)
       logger.atInfo().log("%s: %s: player desynched: dropped a packet!", this, user)
       addEventForAllPlayers(
         PlayerDesynchEvent(
@@ -708,7 +697,7 @@ class KailleraGame(
       )
       if (synchedCount < 2 && isSynched) {
         isSynched = false
-        for (q in paq) q.markDesynced()
+        gaq.desyncAll()
         logger.atInfo().log("%s: game desynched: less than 2 players synched!", this)
       }
     }
@@ -739,7 +728,7 @@ class KailleraGame(
     )
 
     // Add the data for the user to their own player queue.
-    playerActionQueues?.get(playerNumber - 1)?.addActions(data)
+    gameActionQueue?.addActions(playerNumber, data)
     autoFireDetector.addData(playerNumber, data, user.bytesPerAction)
 
     return maybeSendData(user)
@@ -750,58 +739,36 @@ class KailleraGame(
    *
    * @param user The user who initiated this call.
    */
-  // TODO(nue): This is probably not threadsafe but is being called from multiple threads.
   fun maybeSendData(user: KailleraUser): AddDataResult {
-    val paq =
-      playerActionQueues
-        ?: return AddDataResult.Failure(GameDataException("playerActionQueues is null"))
+    val gaq =
+      gameActionQueue ?: return AddDataResult.Failure(GameDataException("gameActionQueue is null"))
 
-    // TODO(nue): This works for 2P but what about more? This probably results in unnecessary
-    // messages.
-    for (player in players) {
-      val playerNumber = player.playerNumber
+    val joinedGameData = gaq.getJoinedData(actionsPerMessage, user.bytesPerAction)
+    if (joinedGameData != null) {
+      waitingOnData = false
+      if (!isSynched) {
+        joinedGameData.release()
+        return AddDataResult.IgnoringDesynched
+      }
 
-      // If there is new information about all synced players.
-      if (
-        paq.all {
-          !it.synced ||
-            it.containsNewDataForPlayer(
-              playerIndex = playerNumber - 1,
-              actionLength = actionsPerMessage * user.bytesPerAction,
-            )
-        }
-      ) {
-        waitingOnData = false
-        val joinedGameData = PooledByteBufAllocator.DEFAULT.buffer(user.arraySize)
-        for (actionCounter in 0 until actionsPerMessage) {
-          for (playerActionQueueIndex in paq.indices) {
-            paq[playerActionQueueIndex].getActionAndWriteToArray(
-              readingPlayerIndex = playerNumber - 1,
-              writeTo = joinedGameData,
-              actionLength = user.bytesPerAction,
-            )
+      try {
+        for (player in players) {
+          // Retain for each consumer
+          player.doEvent(GameDataEvent(this, joinedGameData.retainedDuplicate()))
+          player.updateUserDrift()
+          val firstPlayer = players.firstOrNull()
+          if (firstPlayer != null && firstPlayer.id == player.id) {
+            updateGameDrift()
           }
         }
-        if (!isSynched) {
-          joinedGameData.release()
-          return AddDataResult.IgnoringDesynched
-        }
-        player.doEvent(GameDataEvent(this, joinedGameData))
-        player.updateUserDrift()
-        val firstPlayer = players.firstOrNull()
-        if (firstPlayer != null && firstPlayer.id == player.id) {
-          updateGameDrift()
-        }
-      } else {
-        waitingOnData = true
-        paq.forEach {
-          waitingOnPlayerNumber[it.playerNumber - 1] =
-            it.synced &&
-              !it.containsNewDataForPlayer(
-                playerIndex = playerNumber - 1,
-                actionLength = actionsPerMessage * user.bytesPerAction,
-              )
-        }
+      } finally {
+        joinedGameData.release()
+      }
+    } else {
+      waitingOnData = true
+      for (player in players) {
+        waitingOnPlayerNumber[player.playerNumber - 1] =
+          gaq.isWaitingOn(player.playerNumber, actionsPerMessage * user.bytesPerAction)
       }
     }
     return AddDataResult.Success
