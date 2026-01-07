@@ -420,8 +420,8 @@ class KailleraUser(
       logger.atWarning().log("%s player ready failed: Not in a game", this)
       throw UserReadyException(EmuLang.getString("KailleraUserImpl.PlayerReadyErrorNotInGame"))
     }
-    val paq = game.playerActionQueues
-    if (paq != null && (playerNumber > paq.size || paq[playerNumber - 1].synced)) {
+    val gaq = game.gameActionQueue
+    if (gaq != null && (playerNumber > gaq.numPlayers || gaq.isSynced(playerNumber))) {
       return
     }
     totalDelay = game.highestUserFrameDelay + tempDelay + 5
@@ -440,7 +440,8 @@ class KailleraUser(
       // totalDelay = (game.getDelay() + tempDelay + 5)
       if (frameCount < totalDelay) {
         bytesPerAction = data.readableBytes() / connectionType.byteValue
-        arraySize = (game.playerActionQueues?.size ?: 0) * connectionType.byteValue * bytesPerAction
+        arraySize =
+          (game.gameActionQueue?.numPlayers ?: 0) * connectionType.byteValue * bytesPerAction
 
         data.retain()
         lostInput.add(data)
@@ -498,6 +499,7 @@ class KailleraUser(
             return result
           }
         }
+
         else -> throw e
       }
     }
