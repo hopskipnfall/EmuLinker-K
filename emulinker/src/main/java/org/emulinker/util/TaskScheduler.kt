@@ -16,7 +16,9 @@ import kotlin.time.Duration.Companion.seconds
  */
 class TaskScheduler {
   private val executor: ScheduledExecutorService =
-    Executors.newSingleThreadScheduledExecutor { r -> Thread(r).apply { isDaemon = true } }
+    Executors.newSingleThreadScheduledExecutor { runnable ->
+      Thread(/* target= */ runnable, /* name= */ "TaskScheduler").apply { isDaemon = true }
+    }
 
   fun schedule(delay: Duration = 0.seconds, action: () -> Unit): ScheduledFuture<*> =
     executor.schedule(

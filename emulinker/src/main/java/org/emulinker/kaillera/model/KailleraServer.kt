@@ -839,10 +839,6 @@ class KailleraServer(
       // Identify and repair games in a frozen state, where one user left and the server is waiting
       // on input to fan-out.
       for (game in gamesMap.values) {
-        if (game.players.isEmpty()) {
-          logger.atSevere().log("Removing empty game. PLEASE REPORT THIS BUG!")
-        }
-
         if (game.waitingOnData && game.status == GameStatus.PLAYING) {
           for (player in game.players) {
             if (

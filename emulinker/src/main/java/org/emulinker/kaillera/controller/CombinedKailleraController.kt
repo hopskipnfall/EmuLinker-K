@@ -12,15 +12,8 @@ import io.netty.buffer.PooledByteBufAllocator
 import io.netty.channel.Channel
 import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.ChannelOption
-import io.netty.channel.EventLoopGroup
 import io.netty.channel.MultiThreadIoEventLoopGroup
 import io.netty.channel.SimpleChannelInboundHandler
-import io.netty.channel.epoll.Epoll
-import io.netty.channel.epoll.EpollDatagramChannel
-import io.netty.channel.epoll.EpollIoHandler
-import io.netty.channel.kqueue.KQueue
-import io.netty.channel.kqueue.KQueueDatagramChannel
-import io.netty.channel.kqueue.KQueueIoHandler
 import io.netty.channel.nio.NioIoHandler
 import io.netty.channel.socket.DatagramPacket
 import io.netty.channel.socket.nio.NioDatagramChannel
@@ -39,6 +32,7 @@ import org.emulinker.kaillera.controller.v086.V086ClientHandler
 import org.emulinker.kaillera.model.KailleraServer
 import org.emulinker.kaillera.model.exception.NewConnectionException
 import org.emulinker.kaillera.model.exception.ServerFullException
+import org.emulinker.util.EmuLang.getStringOrNull
 import org.emulinker.util.EmuUtil.formatSocketAddress
 
 class CombinedKailleraController(
@@ -74,36 +68,25 @@ class CombinedKailleraController(
     port: Int
   ): EmbeddedServer<NettyApplicationEngine, NettyApplicationEngine.Configuration> =
     embeddedServer(Netty, port = port) {
-        val (ioHandlerFactory, channelClass) =
-          when {
-            Epoll.isAvailable() -> {
-              logger.atInfo().log("Using Epoll (Linux native)")
-              EpollIoHandler.newFactory() to EpollDatagramChannel::class.java
-            }
-
-            KQueue.isAvailable() -> {
-              logger.atInfo().log("Using KQueue (MacOS native)")
-              KQueueIoHandler.newFactory() to KQueueDatagramChannel::class.java
-            }
-
-            else -> {
-              logger.atInfo().log("Using NIO (Generic)")
-              NioIoHandler.newFactory() to NioDatagramChannel::class.java
-            }
-          }
-
-        val group: EventLoopGroup = MultiThreadIoEventLoopGroup(ioHandlerFactory)
-
+        val group = MultiThreadIoEventLoopGroup(NioIoHandler.newFactory())
         Runtime.getRuntime()
           .addShutdownHook(
             thread(start = false) {
               logger.atInfo().log("Received SIGTERM, shutting down gracefully.")
               try {
-                server.announce("The server is shutting down", gamesAlso = true)
+                server.announce(
+                  getStringOrNull("KailleraServerImpl.ServerShuttingDown")
+                    ?: "The server is shutting down",
+                  gamesAlso = true,
+                )
                 Thread.sleep(1_000)
 
                 for (handler in clientHandlers.values) {
-                  server.quit(handler.user, "Server shutting down")
+                  server.quit(
+                    handler.user,
+                    getStringOrNull("KailleraServerImpl.ServerShuttingDown")
+                      ?: "The server is shutting down",
+                  )
                 }
                 // Give the server time to notify everyone they are being kicked.
                 Thread.sleep(1_000)
@@ -116,10 +99,17 @@ class CombinedKailleraController(
         try {
           Bootstrap().apply {
             group(group)
-            channel(channelClass)
+            channel(NioDatagramChannel::class.java)
             option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
             option(ChannelOption.SO_BROADCAST, true)
-            handler(this@CombinedKailleraController)
+            handler(
+              object : io.netty.channel.ChannelInitializer<Channel>() {
+                override fun initChannel(ch: Channel) {
+                  ch.pipeline().addLast(this@CombinedKailleraController)
+                  ch.pipeline().addLast(GlobalExceptionHandler())
+                }
+              }
+            )
 
             nettyChannel = bind(port).sync().channel()
             nettyChannel.closeFuture().sync()
