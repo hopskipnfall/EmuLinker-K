@@ -495,8 +495,9 @@ class KailleraGame(
       logger.atFine().log("%s: %s is player number %s", this, player, playerNumber)
       autoFireDetector.addPlayer(player, playerNumber)
     }
-    playerActionQueues = actionQueueBuilder.toTypedArray()
-    playerOrder = playerActionQueues.indices.toList().toIntArray()
+    val paq = actionQueueBuilder.toTypedArray()
+    playerActionQueues = paq
+    playerOrder = paq.indices.toList().toIntArray()
     statsCollector?.markGameAsStarted(server, this)
     gameLogBuilder?.addEvents(
       event {
@@ -790,7 +791,7 @@ class KailleraGame(
       ) {
         waitingOnData = false
         val joinedGameData = PooledByteBufAllocator.DEFAULT.buffer(user.arraySize)
-        repeat (actionsPerMessage) {
+        repeat(actionsPerMessage) {
           for (playerActionQueueIndex in playerOrder!!) {
             paq[playerActionQueueIndex].getActionAndWriteToArray(
               readingPlayerIndex = playerNumber - 1,
