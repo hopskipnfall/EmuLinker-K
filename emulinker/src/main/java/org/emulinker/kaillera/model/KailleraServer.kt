@@ -433,18 +433,18 @@ class KailleraServer(
     user.status = UserStatus.IDLE
     user.loggedIn = true
     usersMap[userListKey] = user
-    user.queueEvent(ConnectedEvent(this, user))
+    user.doEvent(ConnectedEvent(this, user))
     for (loginMessage in loginMessages) {
-      user.queueEvent(InfoMessageEvent(user, loginMessage))
+      user.doEvent(InfoMessageEvent(user, loginMessage))
     }
-    user.queueEvent(
+    user.doEvent(
       InfoMessageEvent(
         user,
         "${releaseInfo.productName} v${releaseInfo.version}: ${releaseInfo.websiteString}",
       )
     )
     if (CompiledFlags.DEBUG_BUILD) {
-      user.queueEvent(
+      user.doEvent(
         InfoMessageEvent(
           user,
           "WARNING: This is an unoptimized debug build that should not be used in production.",
@@ -461,7 +461,7 @@ class KailleraServer(
 
     // this is fairly ugly
     if (user.isEsfAdminClient) {
-      user.queueEvent(InfoMessageEvent(user, ":ACCESS=" + user.accessStr))
+      user.doEvent(InfoMessageEvent(user, ":ACCESS=" + user.accessStr))
       if (access >= AccessManager.ACCESS_SUPERADMIN) {
         var sb = StringBuilder()
         sb.append(":USERINFO=")
@@ -486,22 +486,22 @@ class KailleraServer(
           sb.append(0x03.toChar())
           sbCount++
           if (sb.length > 300) {
-            user.queueEvent(InfoMessageEvent(user, sb.toString()))
+            user.doEvent(InfoMessageEvent(user, sb.toString()))
             sb = StringBuilder()
             sb.append(":USERINFO=")
             sbCount = 0
           }
         }
-        if (sbCount > 0) user.queueEvent(InfoMessageEvent(user, sb.toString()))
+        if (sbCount > 0) user.doEvent(InfoMessageEvent(user, sb.toString()))
       }
     }
     if (access >= AccessManager.ACCESS_ADMIN) {
-      user.queueEvent(
+      user.doEvent(
         InfoMessageEvent(user, EmuLang.getString("KailleraServerImpl.AdminWelcomeMessage"))
       )
       // Display messages to admins if they exist.
       for (message in AppModule.messagesToAdmins) {
-        user.queueEvent(InfoMessageEvent(user, message))
+        user.doEvent(InfoMessageEvent(user, message))
       }
     }
     addEvent(UserJoinedEvent(this, user))
@@ -524,10 +524,13 @@ class KailleraServer(
       logger.atSevere().log("%s quit failed: Not logged in", user)
       throw QuitException(EmuLang.getString("KailleraServerImpl.NotLoggedIn"))
     }
-    if (usersMap.remove(user.id) == null)
+    if (usersMap.remove(user.id) == null) {
       logger.atSevere().log("%s quit failed: not in user list", user)
+    }
     val userGame = user.game
-    if (userGame != null) user.quitGame()
+    if (userGame != null) {
+      user.quitGame()
+    }
     var quitMsg = message.trim { it <= ' ' }
     if (
       quitMsg.isBlank() ||
@@ -764,7 +767,7 @@ class KailleraServer(
         .asSequence()
         .filter { it.loggedIn }
         .forEach { kailleraUser ->
-          kailleraUser.queueEvent(InfoMessageEvent(kailleraUser, message))
+          kailleraUser.doEvent(InfoMessageEvent(kailleraUser, message))
 
           if (gamesAlso && kailleraUser.game != null) {
             kailleraUser.game!!.announce(message, kailleraUser)
@@ -783,9 +786,9 @@ class KailleraServer(
                   targetUser.connectSocketAddress.address.hostAddress
                 )
               )
-                kailleraUser.queueEvent(InfoMessageEvent(kailleraUser, message))
+                kailleraUser.doEvent(InfoMessageEvent(kailleraUser, message))
             } else {
-              kailleraUser.queueEvent(InfoMessageEvent(kailleraUser, message))
+              kailleraUser.doEvent(InfoMessageEvent(kailleraUser, message))
             }
 
             /*//SF MOD
@@ -798,7 +801,7 @@ class KailleraServer(
             */
           }
       } else {
-        targetUser.queueEvent(InfoMessageEvent(targetUser, message))
+        targetUser.doEvent(InfoMessageEvent(targetUser, message))
       }
     }
   }
@@ -809,7 +812,7 @@ class KailleraServer(
         if (user.status != UserStatus.IDLE) {
           if (user.ignoringUnnecessaryServerActivity) {
             when (event) {
-              is GameDataEvent -> user.queueEvent(event)
+              is GameDataEvent -> user.doEvent(event)
               is ChatEvent,
               is UserJoinedEvent,
               is UserQuitEvent,
@@ -817,13 +820,13 @@ class KailleraServer(
               is GameClosedEvent,
               is GameCreatedEvent -> continue
 
-              else -> user.queueEvent(event)
+              else -> user.doEvent(event)
             }
           } else {
-            user.queueEvent(event)
+            user.doEvent(event)
           }
         } else {
-          user.queueEvent(event)
+          user.doEvent(event)
         }
       } else {
         logger.atFine().log("%s: not adding event, not logged in: %s", user, event)
@@ -848,7 +851,6 @@ class KailleraServer(
           }
         }
       }
-      if (usersMap.isEmpty()) return
       for (user in usersMap.values) {
         val access = accessManager.getAccess(user.connectSocketAddress.address)
         user.accessLevel = access

@@ -388,7 +388,7 @@ class KailleraUser(
     }
     isMuted = false
     game = null
-    queueEvent(UserQuitGameEvent(game, this))
+    doEvent(UserQuitGameEvent(game, this))
   }
 
   @Synchronized
@@ -420,10 +420,8 @@ class KailleraUser(
       logger.atWarning().log("%s player ready failed: Not in a game", this)
       throw UserReadyException(EmuLang.getString("KailleraUserImpl.PlayerReadyErrorNotInGame"))
     }
-    if (
-      playerNumber > game.playerActionQueues.size ||
-        game.playerActionQueues[playerNumber - 1].synced
-    ) {
+    val paq = game.playerActionQueues
+    if (paq != null && (playerNumber > paq.size || paq[playerNumber - 1].synced)) {
       return
     }
     totalDelay = game.highestUserFrameDelay + tempDelay + 5
@@ -442,7 +440,7 @@ class KailleraUser(
       // totalDelay = (game.getDelay() + tempDelay + 5)
       if (frameCount < totalDelay) {
         bytesPerAction = data.readableBytes() / connectionType.byteValue
-        arraySize = game.playerActionQueues.size * connectionType.byteValue * bytesPerAction
+        arraySize = (game.playerActionQueues?.size ?: 0) * connectionType.byteValue * bytesPerAction
 
         data.retain()
         lostInput.add(data)
@@ -521,11 +519,6 @@ class KailleraUser(
     lastUpdateNs = nowNs
   }
 
-  // TODO(nue): Try to remove this entirely.
-  fun queueEvent(event: KailleraEvent) {
-    server.queueEvent(this, event)
-  }
-
   /** Acts on an event in realtime. */
   fun doEvent(event: KailleraEvent) {
     if (
@@ -545,10 +538,7 @@ class KailleraUser(
 
   override fun equals(other: Any?): Boolean {
     if (this === other) return true
-    if (javaClass != other?.javaClass) return false
-
-    other as KailleraUser
-
+    if (other !is KailleraUser) return false
     return id == other.id
   }
 
