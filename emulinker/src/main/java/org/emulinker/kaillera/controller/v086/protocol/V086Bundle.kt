@@ -169,7 +169,7 @@ sealed interface V086Bundle : ByteBufferMessage, ReferenceCounted {
       // again no real need for unsigned
       // int messageCount = UnsignedUtil.getUnsignedByte(buffer);
       val messageCount = buffer.readByte().toInt()
-      if (messageCount <= 0 || messageCount > 32) {
+      if (messageCount !in 1..32) {
         throw V086BundleFormatException("Invalid message count: $messageCount")
       }
       if (buffer.readableBytes() < messageCount * 6) {

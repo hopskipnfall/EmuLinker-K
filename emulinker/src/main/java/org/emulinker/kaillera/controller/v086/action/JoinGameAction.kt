@@ -29,7 +29,7 @@ class JoinGameAction :
       val game = clientHandler.user.joinGame(message.gameId)
 
       for (msg in joinGameMessages) {
-        clientHandler.user.queueEvent(GameInfoEvent(game, msg, toUser = clientHandler.user))
+        clientHandler.user.doEvent(GameInfoEvent(game, msg, toUser = clientHandler.user))
       }
     } catch (e: JoinGameException) {
       logger.atSevere().withCause(e).log("Failed to join game.")

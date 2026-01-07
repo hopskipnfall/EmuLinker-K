@@ -48,7 +48,6 @@ data class ServerStatus(
     ServerStatusSerializer.write(buffer, this)
   }
 
-  // TODO(nue): this User and Game class should not be here.
   data class User(
     val username: String,
     val ping: Duration,
