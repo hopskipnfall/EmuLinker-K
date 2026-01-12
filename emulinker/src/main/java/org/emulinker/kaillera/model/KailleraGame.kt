@@ -819,8 +819,10 @@ class KailleraGame(
 
     lagometer =
       Lagometer(
-        frameDurationNs = singleFrameDurationForLagCalculationOnlyNs,
+        frameDurationNs = singleFrameDurationForLagCalculationOnlyNs.nanoseconds,
         historyDuration = flags.lagstatDuration,
+        historyResolution = 5.seconds,
+        players = TODO()
       )
 
     resetLag()
@@ -874,16 +876,18 @@ class KailleraGame(
     if (lagometer == null) {
       lagometer =
         Lagometer(
-          frameDurationNs = singleFrameDurationForLagCalculationOnlyNs,
+          frameDurationNs = singleFrameDurationForLagCalculationOnlyNs.nanoseconds,
           historyDuration = flags.lagstatDuration,
+          historyResolution = 5.seconds,
+          players = TODO()
         )
     }
 
-    lagometer?.update(
-      delaySinceLastResponseNs = delaySinceLastResponseNs,
-      minFrameDelay = minFrameDelay,
-      nowNs = nowNs,
-    )
+//    lagometer?.advanceFrame(
+//      delaySinceLastResponseNs = delaySinceLastResponseNs,
+//      minFrameDelay = minFrameDelay,
+//      nowNs = nowNs,
+//    )
 
     lastFrameNs = nowNs
   }

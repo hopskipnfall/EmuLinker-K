@@ -394,13 +394,14 @@ class KailleraUser(
   @Synchronized
   @Throws(StartGameException::class)
   fun startGame() {
-    lagometer =
-      Lagometer(
-        frameDurationNs =
-          (1.seconds / connectionType.getUpdatesPerSecond(KailleraGame.GAME_FPS.toDouble()))
-            .inWholeNanoseconds,
-        historyDuration = flags.lagstatDuration,
-      )
+//    lagometer =
+//      Lagometer(
+//        frameDurationNs =
+//          (1.seconds / connectionType.getUpdatesPerSecond(KailleraGame.GAME_FPS.toDouble()))
+//            .inWholeNanoseconds,
+//        historyDuration = flags.lagstatDuration,
+//        historyResolution = 5.seconds,
+//      )
     resetLag()
     updateLastActivity()
     val game = this.game
@@ -510,11 +511,11 @@ class KailleraUser(
     val delaySinceLastResponseNs = nowNs - lastUpdateNs
     val timeWaitingNs = nowNs - receivedGameDataNs
     val delaySinceLastResponseMinusWaitingNs = delaySinceLastResponseNs - timeWaitingNs
-    lagometer?.update(
-      delaySinceLastResponseNs = delaySinceLastResponseMinusWaitingNs,
-      minFrameDelay = frameDelay,
-      nowNs = nowNs,
-    )
+//    lagometer?.update(
+//      delaySinceLastResponseNs = delaySinceLastResponseMinusWaitingNs,
+//      minFrameDelay = frameDelay,
+//      nowNs = nowNs,
+//    )
 
     lastUpdateNs = nowNs
   }
