@@ -3,12 +3,11 @@ package org.emulinker.kaillera.model
 import kotlin.time.Clock
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.nanoseconds
-import kotlin.time.Duration.Companion.seconds
 import kotlin.time.Instant
 import org.emulinker.util.TimeOffsetCache
 
 class UserData(
-  private val frameDurationNs: Duration = Duration.ZERO,
+  private val frameDurationNs: Duration,
   val totalDriftCache: TimeOffsetCache,
   var receivedDataNs: Long = 0L,
   var totalDrift: Duration = Duration.ZERO,
@@ -37,13 +36,18 @@ class UserData(
     receivedDataNs = 0L
     lagLeeway = Duration.ZERO
   }
+
+  val windowedLag: Duration
+    get() =
+      (totalDrift - (totalDriftCache.getDelayedValue()?.nanoseconds ?: Duration.ZERO)).absoluteValue
 }
 
 class Lagometer(
   val frameDurationNs: Duration,
   historyDuration: Duration,
   historyResolution: Duration,
-  val players: List<Int>,
+  val numPlayers: Int,
+  private val clock: Clock = Clock.System,
 ) {
   private var lagLeewayNs: Duration = Duration.ZERO
   private var totalDriftNs: Duration = Duration.ZERO
@@ -54,14 +58,17 @@ class Lagometer(
 
   /** The total duration of lag attributed to the game over the history window. */
   val lag: Duration
-    get() = 0.seconds
+    get() =
+      (totalDriftNs - (totalDriftCache.getDelayedValue()?.nanoseconds ?: Duration.ZERO))
+        .absoluteValue
 
+  /** Total cumulative lag since the game started. */
   val cumulativeLag: Duration
     get() = totalDriftNs.absoluteValue
 
   /** How much of the above lag could be definitively attributed to each user. */
   val gameLagPerPlayer: List<Duration>
-    get() = userDatas.map { Duration.ZERO }
+    get() = userDatas.map { it.windowedLag }
 
   /** How much of the above lag could be definitively attributed to each user. */
   val cumulativeGameLagPerPlayer: List<Duration>
@@ -70,9 +77,10 @@ class Lagometer(
   var lastLagReset: Instant = Clock.System.now()
 
   private val userDatas =
-    Array(players.size) {
+    Array(numPlayers) {
       UserData(
-        totalDriftCache = TimeOffsetCache(delay = historyDuration, resolution = historyResolution)
+        frameDurationNs = frameDurationNs,
+        totalDriftCache = TimeOffsetCache(delay = historyDuration, resolution = historyResolution),
       )
     }
 
@@ -81,8 +89,7 @@ class Lagometer(
   }
 
   fun advanceFrame(nowNs: Long) {
-    userDatas.forEach { it.calculateLagForUser(nowNs = nowNs, lastFrameNs = lastFrameNs)
-    }
+    userDatas.forEach { it.calculateLagForUser(nowNs = nowNs, lastFrameNs = lastFrameNs) }
 
     val delaySinceLastResponseNs = (nowNs - lastFrameNs).nanoseconds
 
@@ -102,7 +109,7 @@ class Lagometer(
   fun reset() {
     totalDriftCache.clear()
     totalDriftNs = Duration.ZERO
-    lastLagReset = Clock.System.now()
+    lastLagReset = clock.now()
     userDatas.forEach { it.reset() }
   }
 }

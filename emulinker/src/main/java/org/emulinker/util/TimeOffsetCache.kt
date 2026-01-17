@@ -13,7 +13,6 @@ class TimeOffsetCache(delay: Duration, resolution: Duration) {
   var size = 0
     private set
 
-  @Synchronized
   fun update(latestVal: Long, nowNs: Long = System.nanoTime()) {
     val lns = lastUpdatedNs
     if (lns == null || nowNs - lns >= resolutionNs) {
@@ -26,10 +25,10 @@ class TimeOffsetCache(delay: Duration, resolution: Duration) {
     }
   }
 
-  @Synchronized
   fun getDelayedValue(): Long? =
     when {
-      size == 0 -> null
+      // If empty or there is only one element, return null (no deferred value available).
+      size <= 1 -> null
       size < cacheSize -> cache[0]!!
       else -> cache[(last + 1) % cacheSize]!!
     }
