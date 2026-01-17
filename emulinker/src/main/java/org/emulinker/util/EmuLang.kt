@@ -4,26 +4,14 @@ import com.google.common.flogger.FluentLogger
 import java.text.MessageFormat
 import java.util.MissingResourceException
 import java.util.ResourceBundle
+import org.emulinker.kaillera.pico.AppModule
 
 object EmuLang {
   private const val BUNDLE_NAME = "messages"
 
-  private val RESOURCE_BUNDLE = ResourceBundle.getBundle(BUNDLE_NAME)
+  private val RESOURCE_BUNDLE = ResourceBundle.getBundle(BUNDLE_NAME, AppModule.locale)
 
   private val logger = FluentLogger.forEnclosingClass()
-
-  fun hasString(key: String): Boolean {
-    if (RESOURCE_BUNDLE.containsKey(key)) {
-      try {
-        RESOURCE_BUNDLE.getString(key)
-        return true
-      } catch (e: Exception) {
-        // It exists but is not readable.
-        e.printStackTrace()
-      }
-    }
-    return false
-  }
 
   fun getStringOrNull(key: String): String? =
     try {
