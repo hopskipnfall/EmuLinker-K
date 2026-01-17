@@ -5,17 +5,20 @@ import com.codahale.metrics.MetricRegistry
 import com.google.common.flogger.FluentLogger
 import java.net.InetSocketAddress
 import java.util.Locale
-import java.util.TimerTask
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.LinkedBlockingQueue
+import java.util.concurrent.ScheduledFuture
 import java.util.concurrent.ThreadPoolExecutor
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.time.Clock
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
-import kotlin.time.Duration.Companion.seconds
 import kotlin.time.DurationUnit
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.access.AccessManager
+import org.emulinker.kaillera.controller.v086.V086ClientHandler
 import org.emulinker.kaillera.lookingforgame.LookingForGameEvent
 import org.emulinker.kaillera.lookingforgame.TwitterBroadcaster
 import org.emulinker.kaillera.master.StatsCollector
@@ -27,7 +30,6 @@ import org.emulinker.kaillera.model.event.GameDataEvent
 import org.emulinker.kaillera.model.event.GameStatusChangedEvent
 import org.emulinker.kaillera.model.event.InfoMessageEvent
 import org.emulinker.kaillera.model.event.KailleraEvent
-import org.emulinker.kaillera.model.event.KailleraEventListener
 import org.emulinker.kaillera.model.event.UserJoinedEvent
 import org.emulinker.kaillera.model.event.UserQuitEvent
 import org.emulinker.kaillera.model.exception.ChatException
@@ -52,7 +54,6 @@ import org.emulinker.kaillera.release.ReleaseInfo
 import org.emulinker.util.CustomUserStrings
 import org.emulinker.util.EmuLang
 import org.emulinker.util.EmuUtil
-import org.emulinker.util.EmuUtil.threadSleep
 import org.emulinker.util.TaskScheduler
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -71,11 +72,23 @@ class KailleraServer(
   private val clock: Clock,
 ) : KoinComponent {
 
+  private val eventQueue = LinkedBlockingQueue<Pair<KailleraUser, KailleraEvent>>()
+
+  fun queueEvent(user: KailleraUser, event: KailleraEvent) {
+    eventQueue.offer(user to event)
+  }
+
   private val userActionsExecutor: ThreadPoolExecutor by
     inject(qualifier = named("userActionsExecutor"))
 
   private var allowedConnectionTypes = BooleanArray(7)
-  private val loginMessages: List<String>
+  private val loginMessages: List<String> = buildList {
+    var i = 1
+    while (CustomUserStrings.hasString("KailleraServerImpl.LoginMessage.$i")) {
+      add(CustomUserStrings.getString("KailleraServerImpl.LoginMessage.$i"))
+      i++
+    }
+  }
   private var connectionCounter = 1
   private var gameCounter = 1
 
@@ -103,7 +116,7 @@ class KailleraServer(
   val maxGameChatLength = flags.maxGameChatLength
   private val maxClientNameLength: Int = flags.maxClientNameLength
 
-  private var timerTask: TimerTask? = null
+  private var timerTask: ScheduledFuture<*>? = null
 
   override fun toString(): String {
     return String.format(
@@ -127,9 +140,10 @@ class KailleraServer(
 
   @Synchronized
   fun stop() {
+    stopFlag.set(true)
     usersMap.clear()
     gamesMap.clear()
-    timerTask?.cancel()
+    timerTask?.cancel(/* mayInterruptIfRunning= */ false)
     timerTask = null
   }
 
@@ -153,7 +167,7 @@ class KailleraServer(
   fun newConnection(
     clientSocketAddress: InetSocketAddress,
     protocol: String,
-    listener: KailleraEventListener,
+    clientHandler: V086ClientHandler,
   ): KailleraUser {
     // we'll assume at this point that ConnectController has already asked AccessManager if this IP
     // is banned, so no need to do it again here
@@ -179,16 +193,7 @@ class KailleraServer(
     }
     val userID = getNextUserID()
     val user =
-      KailleraUser(
-        userID,
-        protocol,
-        clientSocketAddress,
-        listener,
-        this,
-        flags,
-        userActionsExecutor,
-        clock,
-      )
+      KailleraUser(userID, protocol, clientSocketAddress, clientHandler, this, flags, clock)
     user.status = UserStatus.CONNECTING
     logger
       .atFine()
@@ -202,8 +207,7 @@ class KailleraServer(
     return user
   }
 
-  // TODO(nue): Could this withLock be the source of lag on server join?
-  fun login(user: KailleraUser): Result<Unit> = withLock {
+  fun login(user: KailleraUser): Result<Unit> {
     logger
       .atInfo()
       .log(
@@ -242,7 +246,7 @@ class KailleraServer(
         flags.maxPing > 0.milliseconds &&
         user.ping > flags.maxPing
     ) {
-      logger.atInfo().log("%s login denied: Ping %d ms > %s", user, user.ping, flags.maxPing)
+      logger.atInfo().log("%s login denied: Ping %s ms > %s", user, user.ping, flags.maxPing)
       usersMap.remove(userListKey)
       return Result.failure(
         PingTimeException(
@@ -429,27 +433,24 @@ class KailleraServer(
     user.status = UserStatus.IDLE
     user.loggedIn = true
     usersMap[userListKey] = user
-    user.queueEvent(ConnectedEvent(this, user))
-    threadSleep(20.milliseconds)
+    user.doEvent(ConnectedEvent(this, user))
     for (loginMessage in loginMessages) {
-      user.queueEvent(InfoMessageEvent(user, loginMessage))
-      threadSleep(20.milliseconds)
+      user.doEvent(InfoMessageEvent(user, loginMessage))
     }
-    user.queueEvent(
+    user.doEvent(
       InfoMessageEvent(
         user,
         "${releaseInfo.productName} v${releaseInfo.version}: ${releaseInfo.websiteString}",
       )
     )
     if (CompiledFlags.DEBUG_BUILD) {
-      user.queueEvent(
+      user.doEvent(
         InfoMessageEvent(
           user,
           "WARNING: This is an unoptimized debug build that should not be used in production.",
         )
       )
     }
-    threadSleep(20.milliseconds)
     if (access > AccessManager.ACCESS_NORMAL) {
       logger
         .atInfo()
@@ -460,7 +461,7 @@ class KailleraServer(
 
     // this is fairly ugly
     if (user.isEsfAdminClient) {
-      user.queueEvent(InfoMessageEvent(user, ":ACCESS=" + user.accessStr))
+      user.doEvent(InfoMessageEvent(user, ":ACCESS=" + user.accessStr))
       if (access >= AccessManager.ACCESS_SUPERADMIN) {
         var sb = StringBuilder()
         sb.append(":USERINFO=")
@@ -485,30 +486,25 @@ class KailleraServer(
           sb.append(0x03.toChar())
           sbCount++
           if (sb.length > 300) {
-            user.queueEvent(InfoMessageEvent(user, sb.toString()))
+            user.doEvent(InfoMessageEvent(user, sb.toString()))
             sb = StringBuilder()
             sb.append(":USERINFO=")
             sbCount = 0
-            threadSleep(100.milliseconds)
           }
         }
-        if (sbCount > 0) user.queueEvent(InfoMessageEvent(user, sb.toString()))
-        threadSleep(100.milliseconds)
+        if (sbCount > 0) user.doEvent(InfoMessageEvent(user, sb.toString()))
       }
     }
-    threadSleep(20.milliseconds)
     if (access >= AccessManager.ACCESS_ADMIN) {
-      user.queueEvent(
+      user.doEvent(
         InfoMessageEvent(user, EmuLang.getString("KailleraServerImpl.AdminWelcomeMessage"))
       )
       // Display messages to admins if they exist.
       for (message in AppModule.messagesToAdmins) {
-        threadSleep(20.milliseconds)
-        user.queueEvent(InfoMessageEvent(user, message))
+        user.doEvent(InfoMessageEvent(user, message))
       }
     }
     addEvent(UserJoinedEvent(this, user))
-    threadSleep(20.milliseconds)
     val announcement = accessManager.getAnnouncement(user.socketAddress!!.address)
     if (announcement != null) announce(announcement, false)
 
@@ -528,10 +524,13 @@ class KailleraServer(
       logger.atSevere().log("%s quit failed: Not logged in", user)
       throw QuitException(EmuLang.getString("KailleraServerImpl.NotLoggedIn"))
     }
-    if (usersMap.remove(user.id) == null)
+    if (usersMap.remove(user.id) == null) {
       logger.atSevere().log("%s quit failed: not in user list", user)
+    }
     val userGame = user.game
-    if (userGame != null) user.quitGame()
+    if (userGame != null) {
+      user.quitGame()
+    }
     var quitMsg = message.trim { it <= ' ' }
     if (
       quitMsg.isBlank() ||
@@ -542,7 +541,7 @@ class KailleraServer(
     logger.atInfo().log("%s quit: %s", user, quitMsg)
     val quitEvent = UserQuitEvent(this, user, quitMsg)
     addEvent(quitEvent)
-    user.queueEvent(quitEvent)
+    user.doEvent(quitEvent)
   }
 
   @Synchronized
@@ -624,9 +623,11 @@ class KailleraServer(
     }
     val access = accessManager.getAccess(user.socketAddress!!.address)
     if (access == AccessManager.ACCESS_NORMAL) {
+      val lastCreateGameTime = user.lastCreateGameTime
       if (
-        flags.createGameFloodTime > Duration.ZERO &&
-          clock.now() - user.lastCreateGameTime < flags.createGameFloodTime
+        lastCreateGameTime != null &&
+          flags.createGameFloodTime > Duration.ZERO &&
+          clock.now() - lastCreateGameTime < flags.createGameFloodTime
       ) {
         logger.atWarning().log("%s create game denied: Flood: %s", user, romName)
         throw FloodException(EmuLang.getString("KailleraServerImpl.CreateGameDeniedFloodControl"))
@@ -766,11 +767,10 @@ class KailleraServer(
         .asSequence()
         .filter { it.loggedIn }
         .forEach { kailleraUser ->
-          kailleraUser.queueEvent(InfoMessageEvent(kailleraUser, message))
+          kailleraUser.doEvent(InfoMessageEvent(kailleraUser, message))
 
           if (gamesAlso && kailleraUser.game != null) {
             kailleraUser.game!!.announce(message, kailleraUser)
-            Thread.yield()
           }
         }
     } else {
@@ -786,9 +786,9 @@ class KailleraServer(
                   targetUser.connectSocketAddress.address.hostAddress
                 )
               )
-                kailleraUser.queueEvent(InfoMessageEvent(kailleraUser, message))
+                kailleraUser.doEvent(InfoMessageEvent(kailleraUser, message))
             } else {
-              kailleraUser.queueEvent(InfoMessageEvent(kailleraUser, message))
+              kailleraUser.doEvent(InfoMessageEvent(kailleraUser, message))
             }
 
             /*//SF MOD
@@ -801,7 +801,7 @@ class KailleraServer(
             */
           }
       } else {
-        targetUser.queueEvent(InfoMessageEvent(targetUser, message))
+        targetUser.doEvent(InfoMessageEvent(targetUser, message))
       }
     }
   }
@@ -812,20 +812,21 @@ class KailleraServer(
         if (user.status != UserStatus.IDLE) {
           if (user.ignoringUnnecessaryServerActivity) {
             when (event) {
-              is GameDataEvent -> user.queueEvent(event)
+              is GameDataEvent -> user.doEvent(event)
               is ChatEvent,
               is UserJoinedEvent,
               is UserQuitEvent,
               is GameStatusChangedEvent,
               is GameClosedEvent,
               is GameCreatedEvent -> continue
-              else -> user.queueEvent(event)
+
+              else -> user.doEvent(event)
             }
           } else {
-            user.queueEvent(event)
+            user.doEvent(event)
           }
         } else {
-          user.queueEvent(event)
+          user.doEvent(event)
         }
       } else {
         logger.atFine().log("%s: not adding event, not logged in: %s", user, event)
@@ -850,23 +851,10 @@ class KailleraServer(
           }
         }
       }
-      if (usersMap.isEmpty()) return
       for (user in usersMap.values) {
         val access = accessManager.getAccess(user.connectSocketAddress.address)
         user.accessLevel = access
 
-        // LagStat
-        if (user.loggedIn) {
-          val game = user.game
-          if (game != null && game.status == GameStatus.PLAYING && !game.startTimeout) {
-            val stt = game.startTimeoutTime
-            if (stt != null && clock.now() - stt >= 15.seconds) {
-              game.players.forEach { it.resetLag() }
-              game.resetLag()
-              game.startTimeout = true
-            }
-          }
-        }
         if (!user.loggedIn && clock.now() - user.connectTime > flags.maxPing * 15) {
           logger
             .atFine()
@@ -928,13 +916,6 @@ class KailleraServer(
   }
 
   init {
-    val loginMessagesBuilder = mutableListOf<String>()
-    var i = 1
-    while (CustomUserStrings.hasString("KailleraServerImpl.LoginMessage.$i")) {
-      loginMessagesBuilder.add(CustomUserStrings.getString("KailleraServerImpl.LoginMessage.$i"))
-      i++
-    }
-    loginMessages = loginMessagesBuilder
     flags.allowedConnectionTypes.forEach { type ->
       val ct = type.toInt()
       allowedConnectionTypes[ct] = true
@@ -958,7 +939,32 @@ class KailleraServer(
       MetricRegistry.name(this.javaClass, "games", "playing"),
       Gauge { gamesMap.values.count { it.status == GameStatus.PLAYING } },
     )
+
+    userActionsExecutor.submit {
+      logger.atFine().log("Waiting for KailleraEvents")
+      try {
+        while (!stopFlag.get()) {
+          val userToEvent: Pair<KailleraUser, KailleraEvent>? = eventQueue.poll(5, TimeUnit.SECONDS)
+          if (userToEvent == null) {
+            if (Thread.interrupted()) break
+
+            continue
+          }
+          try {
+            userToEvent.first.doEvent(userToEvent.second)
+          } catch (e: RuntimeException) {
+            logger.atSevere().withCause(e).log("%s thread caught unexpected exception!", this)
+          }
+        }
+      } catch (e: InterruptedException) {
+        logger.atSevere().withCause(e).log("%s thread interrupted!", this)
+      } finally {
+        logger.atFine().log("Done waiting for KailleraEvents")
+      }
+    }
   }
+
+  private var stopFlag = AtomicBoolean(false)
 
   private val o = Object()
 

@@ -172,17 +172,6 @@ object EmuUtil {
     return EmuLang.getString(i18nTemplate, number)
   }
 
-  // TODO(nue): Get rid of this after it's confirmed it can be safely removed.
-  /** NOOP placeholder for a function that _used to_ call [Thread.sleep]. */
-  @Deprecated(
-    message = "We no longer sleep. Should be inlined.",
-    ReplaceWith("Thread.yield()"),
-    DeprecationLevel.WARNING,
-  )
-  fun threadSleep(d: Duration) {
-    Thread.yield()
-  }
-
   fun min(a: Duration, b: Duration) = if (a <= b) a else b
 
   inline fun <R> Timer.timeKt(toTime: () -> R): R {

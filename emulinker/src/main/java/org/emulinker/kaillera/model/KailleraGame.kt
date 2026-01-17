@@ -2,17 +2,18 @@ package org.emulinker.kaillera.model
 
 import com.google.common.flogger.FluentLogger
 import com.google.protobuf.util.Timestamps
+import io.netty.buffer.ByteBuf
+import io.netty.buffer.PooledByteBufAllocator
 import java.io.FileOutputStream
 import java.util.Date
-import java.util.concurrent.CopyOnWriteArrayList
 import java.util.zip.GZIPOutputStream
 import kotlin.io.path.createTempDirectory
 import kotlin.time.Clock
+import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.nanoseconds
 import kotlin.time.Duration.Companion.seconds
-import kotlin.time.Instant
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.access.AccessManager
 import org.emulinker.kaillera.master.StatsCollector
@@ -38,7 +39,6 @@ import org.emulinker.kaillera.model.exception.StartGameException
 import org.emulinker.kaillera.model.exception.UserReadyException
 import org.emulinker.kaillera.model.impl.AutoFireDetector
 import org.emulinker.kaillera.model.impl.PlayerActionQueue
-import org.emulinker.kaillera.pico.CompiledFlags
 import org.emulinker.proto.EventKt.GameStartKt.playerDetails
 import org.emulinker.proto.EventKt.LagstatSummaryKt.playerAttributedLag
 import org.emulinker.proto.EventKt.fanOut
@@ -53,12 +53,26 @@ import org.emulinker.proto.Player.PLAYER_THREE
 import org.emulinker.proto.Player.PLAYER_TWO
 import org.emulinker.proto.event
 import org.emulinker.util.EmuLang
-import org.emulinker.util.EmuUtil.threadSleep
 import org.emulinker.util.EmuUtil.toMillisDouble
-import org.emulinker.util.TimeOffsetCache
-import org.emulinker.util.VariableSizeByteArray
 import org.koin.core.component.KoinComponent
 
+/**
+ * Represents a game instance on the server.
+ *
+ * ## Synchronization Handshake
+ * The game uses a lock-step synchronization model with an initial handshake to establish lag
+ * compensation. The handshake consists of three phases verified by E2E tests:
+ * 1. **Buffering (Frames 1-6):** The server buffers incoming packets from the client to build up a
+ *    delay buffer (determined by `totalDelay`). During this phase, the server sends back "Zero
+ *    Packets" (packets of the same size as input but zeroed) to the client.
+ * 2. **Draining (Frames 7-12):** Once the buffer is full, the server begins "draining" the buffer.
+ *    It processes and fans out the old packets stored during Phase 1. Crucially, strictly "new"
+ *    inputs received during this draining phase are **DROPPED** to allow the stream to align with
+ *    the buffered history.
+ * 3. **Synced (Frames 13+):** The buffer is now managing the flow. The server fans out packets in
+ *    real-time order, effectively delayed by the buffer size. `Received[T] == Sent[T]` (relative to
+ *    the shifted timeline).
+ */
 class KailleraGame(
   val id: Int,
   val romName: String,
@@ -76,7 +90,7 @@ class KailleraGame(
 
   /** Frame delay is synced with others users in the same game (see /samedelay). */
   var sameDelay = false
-  var startTimeout = false
+
   var maxUsers = 8
     set(maxUsers) {
       field = maxUsers
@@ -110,17 +124,10 @@ class KailleraGame(
   /** Last time we fanned out data for a frame. */
   private var lastFrameNs = System.nanoTime()
 
-  var startTimeoutTime: Instant? = null
+  val players = mutableListOf<KailleraUser>()
+
+  var lagometer: Lagometer? = null
     private set
-
-  val players: MutableList<KailleraUser> = CopyOnWriteArrayList()
-
-  var lastLagReset = clock.now()
-    private set
-
-  private var lagLeewayNs = 0.seconds.inWholeNanoseconds
-  var totalDriftNs = 0.seconds.inWholeNanoseconds
-  val totalDriftCache = TimeOffsetCache(delay = flags.lagstatDuration, resolution = 5.seconds)
 
   val mutedUsers: MutableList<String> = mutableListOf()
   var aEmulator = "any"
@@ -143,7 +150,7 @@ class KailleraGame(
 
   private val actionsPerMessage = owner.connectionType.byteValue.toInt()
 
-  lateinit var playerActionQueues: Array<PlayerActionQueue>
+  var playerActionQueues: Array<PlayerActionQueue>? = null
     private set
 
   val clientType: String?
@@ -169,14 +176,13 @@ class KailleraGame(
     "Game[id=$id name=${if (romName.length > 15) romName.take(15) + "..." else romName}]"
 
   private val playingCount: Int
-    get() = players.asSequence().filter { it.status == UserStatus.PLAYING }.count()
+    get() = players.count { it.status == UserStatus.PLAYING }
 
   private val synchedCount: Int
-    get() =
-      if (this::playerActionQueues.isInitialized) playerActionQueues.count { it.synced } else 0
+    get() = playerActionQueues?.count { it.synced } ?: 0
 
   private fun addEventForAllPlayers(event: GameEvent) {
-    for (player in players) player.queueEvent(event)
+    for (player in players) player.doEvent(event)
   }
 
   @Throws(GameChatException::class)
@@ -205,6 +211,7 @@ class KailleraGame(
   }
 
   fun announce(announcement: String, toUser: KailleraUser? = null) {
+    logger.atInfo().log("[ %s ] Announcement to %s: %s", this, toUser ?: "all", announcement)
     addEventForAllPlayers(GameInfoEvent(this, announcement, toUser))
   }
 
@@ -327,45 +334,11 @@ class KailleraGame(
     // SF MOD - /startn
     if (startN != -1) {
       if (players.size >= startN) {
-        threadSleep(1.seconds)
         try {
           start(owner)
         } catch (e: Exception) {}
       }
     }
-
-    // TODO(nue): Localize this welcome message?
-    // announce(
-    //     "Help: "
-    //         + getServer().getReleaseInfo().getProductName()
-    //         + " v"
-    //         + getServer().getReleaseInfo().getVersionString()
-    //         + ": "
-    //         + getServer().getReleaseInfo().getReleaseDate()
-    //         + " - Visit: www.EmuLinker.org",
-    //     user);
-    // announce("************************", user);
-    // announce("Type /p2pon to ignore ALL server activity during gameplay.", user);
-    // announce("This will reduce lag that you contribute due to a busy server.", user);
-    // announce("If server is greater than 60 users, option is auto set.", user);
-    // announce("************************", user);
-
-    /*
-    if(autoFireDetector != null)
-    {
-    	if(autoFireDetector.getSensitivity() > 0)
-    	{
-    		announce(EmuLang.getString("KailleraGameImpl.AutofireDetectionOn"));
-    		announce(EmuLang.getString("KailleraGameImpl.AutofireCurrentSensitivity", autoFireDetector.getSensitivity()));
-    	}
-    	else
-    	{
-    		announce(EmuLang.getString("KailleraGameImpl.AutofireDetectionOff"));
-    	}
-    	announce(EmuLang.getString("KailleraGameImpl.GameHelp"));
-    }
-    */
-    // }
 
     // new SF MOD - different emulator versions notifications
     if (
@@ -453,7 +426,7 @@ class KailleraGame(
     status = GameStatus.SYNCHRONIZING
     autoFireDetector.start(players.size)
     val actionQueueBuilder = mutableListOf<PlayerActionQueue>()
-    startTimeout = false
+
     highestUserFrameDelay = 1
     if (server.usersMap.values.size > 60) {
       ignoringUnnecessaryServerActivity = true
@@ -512,6 +485,14 @@ class KailleraGame(
 
     // timeoutMillis = highestPing;
     addEventForAllPlayers(GameStartedEvent(this))
+
+    lagometer =
+      Lagometer(
+        frameDurationNs = singleFrameDurationForLagCalculationOnlyNs.nanoseconds,
+        historyDuration = flags.lagstatDuration,
+        historyResolution = 5.seconds,
+        numPlayers = players.size,
+      )
   }
 
   @Synchronized
@@ -525,26 +506,27 @@ class KailleraGame(
       logger.atWarning().log("%s ready failed: %s status is %s", user, this, status)
       throw UserReadyException(EmuLang.getString("KailleraGameImpl.ReadyGameErrorIncorrectState"))
     }
-    if (!this::playerActionQueues.isInitialized) {
+    val paq = playerActionQueues
+    if (paq == null) {
       logger
         .atSevere()
         .log("%s ready failed: %s playerActionQueues is not initialized!", user, this)
       throw UserReadyException(EmuLang.getString("KailleraGameImpl.ReadyGameErrorInternalError"))
     }
     logger.atFine().log("%s (player %s) is ready to play: %s", user, playerNumber, this)
-    playerActionQueues[playerNumber - 1].markSynced()
+    paq[playerNumber - 1].markSynced()
     if (synchedCount == players.size) {
       logger.atFine().log("%s all players are ready: starting...", this)
       status = GameStatus.PLAYING
       isSynched = true
-      startTimeoutTime = clock.now()
+
       addEventForAllPlayers(AllReadyEvent(this))
       var frameDelay = (highestUserFrameDelay + 1) * owner.connectionType.byteValue - 1
       if (sameDelay) {
         announce("This game's delay is: $highestUserFrameDelay ($frameDelay frame delay)")
       } else {
         var i = 0
-        while (i < playerActionQueues.size && i < players.size) {
+        while (i < paq.size && i < players.size) {
           val player = players[i]
           // do not show delay if stealth mode
           if (!player.inStealthMode) {
@@ -564,20 +546,14 @@ class KailleraGame(
       logger.atWarning().log("%s drop game failed: not in %s", user, this)
       throw DropGameException(EmuLang.getString("KailleraGameImpl.DropGameErrorNotInGame"))
     }
-    if (!this::playerActionQueues.isInitialized) {
+    val paq = playerActionQueues
+    if (paq == null) {
       logger.atSevere().log("%s drop failed: %s playerActionQueues is not initialized!", user, this)
       throw DropGameException(EmuLang.getString("KailleraGameImpl.DropGameErrorInternalError"))
     }
     logger.atInfo().log("%s dropped: %s", user, this)
-    if (playerNumber - 1 < playerActionQueues.size) {
-      playerActionQueues[playerNumber - 1].markDesynced()
-    }
-    if (synchedCount < 2 && isSynched) {
-      isSynched = false
-      for (q in playerActionQueues) {
-        q.markDesynced()
-      }
-      logger.atInfo().log("%s: game desynched: less than 2 players playing!", this)
+    if (playerNumber - 1 < paq.size) {
+      paq[playerNumber - 1].markDesynced()
     }
     autoFireDetector.stop(playerNumber)
     if (playingCount == 0) {
@@ -618,8 +594,22 @@ class KailleraGame(
         logger.atFine().log(getPlayer(i + 1)!!.name + ":::" + getPlayer(i + 1)!!.playerNumber)
       }
     }
-    if (user == owner) server.closeGame(this, user)
-    else server.addEvent(GameStatusChangedEvent(server, this))
+    val paq = playerActionQueues
+    if (paq != null) {
+      if (playerNumber - 1 < paq.size) {
+        paq[playerNumber - 1].markDesynced()
+      }
+    }
+
+    if (user == owner) {
+      server.closeGame(this, user)
+    } else {
+      server.addEvent(GameStatusChangedEvent(server, this))
+    }
+
+    if (waitingOnData) {
+      maybeSendData(user)
+    }
   }
 
   @Synchronized
@@ -631,7 +621,9 @@ class KailleraGame(
     }
     if (isSynched) {
       isSynched = false
-      for (q in playerActionQueues) q.markDesynced()
+      for (q in playerActionQueues ?: emptyArray()) {
+        q.markDesynced()
+      }
 
       logger.atInfo().log("%s: game desynched: game closed!", this)
     }
@@ -667,7 +659,8 @@ class KailleraGame(
   fun droppedPacket(user: KailleraUser) {
     if (!isSynched) return
     val playerNumber = user.playerNumber
-    if (user.playerNumber > playerActionQueues.size) {
+    val paq = playerActionQueues ?: return
+    if (user.playerNumber > paq.size) {
       logger
         .atInfo()
         .log(
@@ -676,8 +669,8 @@ class KailleraGame(
           user,
         )
     }
-    if (playerActionQueues[playerNumber - 1].synced) {
-      playerActionQueues[playerNumber - 1].markDesynced()
+    if (paq[playerNumber - 1].synced) {
+      paq[playerNumber - 1].markDesynced()
       logger.atInfo().log("%s: %s: player desynched: dropped a packet!", this, user)
       addEventForAllPlayers(
         PlayerDesynchEvent(
@@ -688,7 +681,7 @@ class KailleraGame(
       )
       if (synchedCount < 2 && isSynched) {
         isSynched = false
-        for (q in playerActionQueues) q.markDesynced()
+        for (q in paq) q.markDesynced()
         logger.atInfo().log("%s: game desynched: less than 2 players synched!", this)
       }
     }
@@ -698,11 +691,18 @@ class KailleraGame(
    * Adds data and suspends until all data is available, at which time it returns the sends new data
    * back to the client.
    */
-  @Throws(GameDataException::class)
-  fun addData(user: KailleraUser, playerNumber: Int, data: VariableSizeByteArray): Result<Unit> {
+  fun addData(user: KailleraUser, playerNumber: Int, data: ByteBuf): AddDataResult {
+    if (!isSynched) {
+      data.release()
+      return AddDataResult.IgnoringDesynched
+    }
+
     gameLogBuilder?.addEvents(
       event {
-        timestampNs = checkNotNull(user.receivedGameDataNs) { "user.receivedGameDataNs is null!" }
+        timestampNs =
+          checkNotNull(lagometer?.userDatas[user.playerNumber - 1]?.receivedDataNs) {
+            "user's receivedGameDataNs is null!"
+          }
         receivedGameData =
           when (user.playerNumber) {
             1 -> RECEIVED_FROM_P1
@@ -714,22 +714,8 @@ class KailleraGame(
       }
     )
 
-    // int bytesPerAction = (data.length / actionsPerMessage);
-    // int arraySize = (playerActionQueues.length * actionsPerMessage * user.getBytesPerAction());
-    if (!isSynched) {
-      return Result.failure(
-        GameDataException(
-          EmuLang.getString("KailleraGameImpl.DesynchedWarning"),
-          data,
-          actionsPerMessage,
-          playerNumber,
-          playerActionQueues.size,
-        )
-      )
-    }
     // Add the data for the user to their own player queue.
-    playerActionQueues[playerNumber - 1].addActions(data)
-
+    playerActionQueues?.get(playerNumber - 1)?.addActions(data)
     autoFireDetector.addData(playerNumber, data, user.bytesPerAction)
 
     return maybeSendData(user)
@@ -741,15 +727,20 @@ class KailleraGame(
    * @param user The user who initiated this call.
    */
   // TODO(nue): This is probably not threadsafe but is being called from multiple threads.
-  fun maybeSendData(user: KailleraUser): Result<Unit> {
+  fun maybeSendData(user: KailleraUser): AddDataResult {
+    val paq =
+      playerActionQueues
+        ?: return AddDataResult.Failure(GameDataException("playerActionQueues is null"))
+
     // TODO(nue): This works for 2P but what about more? This probably results in unnecessary
     // messages.
+    val nowNs = System.nanoTime()
     for (player in players) {
       val playerNumber = player.playerNumber
 
       // If there is new information about all synced players.
       if (
-        playerActionQueues.all {
+        paq.all {
           !it.synced ||
             it.containsNewDataForPlayer(
               playerIndex = playerNumber - 1,
@@ -758,45 +749,29 @@ class KailleraGame(
         }
       ) {
         waitingOnData = false
-        val joinedGameData =
-          if (CompiledFlags.USE_CIRCULAR_BYTE_ARRAY_BUFFER) {
-            user.circularVariableSizeByteArrayBuffer.borrow()
-          } else {
-            VariableSizeByteArray()
-          }
-        joinedGameData.size = user.arraySize
-        for (actionCounter in 0 until actionsPerMessage) {
-          for (playerActionQueueIndex in playerActionQueues.indices) {
-            playerActionQueues[playerActionQueueIndex].getActionAndWriteToArray(
+        val joinedGameData = PooledByteBufAllocator.DEFAULT.buffer(user.arraySize)
+        repeat(actionsPerMessage) {
+          for (playerActionQueueIndex in paq.indices) {
+            paq[playerActionQueueIndex].getActionAndWriteToArray(
               readingPlayerIndex = playerNumber - 1,
               writeTo = joinedGameData,
-              writeAtIndex =
-                actionCounter * (playerActionQueues.size * user.bytesPerAction) +
-                  playerActionQueueIndex * user.bytesPerAction,
               actionLength = user.bytesPerAction,
             )
           }
         }
         if (!isSynched) {
-          return Result.failure(
-            GameDataException(
-              EmuLang.getString("KailleraGameImpl.DesynchedWarning"),
-              VariableSizeByteArray(),
-              user.bytesPerAction,
-              playerNumber,
-              playerActionQueues.size,
-            )
-          )
+          joinedGameData.release()
+          return AddDataResult.IgnoringDesynched
         }
-        player.queueEvent(GameDataEvent(this, joinedGameData))
-        player.updateUserDrift()
+        player.doEvent(GameDataEvent(this, joinedGameData))
+        player.updateActivity(nowNs)
         val firstPlayer = players.firstOrNull()
         if (firstPlayer != null && firstPlayer.id == player.id) {
-          updateGameDrift()
+          updateGameDrift(nowNs)
         }
       } else {
         waitingOnData = true
-        playerActionQueues.forEach {
+        paq.forEach {
           waitingOnPlayerNumber[it.playerNumber - 1] =
             it.synced &&
               !it.containsNewDataForPlayer(
@@ -806,32 +781,34 @@ class KailleraGame(
         }
       }
     }
-    return Result.success(Unit)
+    return AddDataResult.Success
   }
 
   fun resetLag() {
-    totalDriftCache.clear()
-    totalDriftNs = 0
-    lastLagReset = clock.now()
+    lagometer?.reset()
   }
 
   /** Sets the game framerate for lag measuring purposes. */
   fun setGameFps(fps: Double) {
     singleFrameDurationForLagCalculationOnlyNs =
       (1.seconds / players.first().connectionType.getUpdatesPerSecond(fps)).inWholeNanoseconds
+
+    lagometer =
+      Lagometer(
+        frameDurationNs = singleFrameDurationForLagCalculationOnlyNs.nanoseconds,
+        historyDuration = flags.lagstatDuration,
+        historyResolution = 5.seconds,
+        numPlayers = players.size,
+      )
+
     resetLag()
-    for (player in players) {
-      player.resetLag()
-    }
   }
 
   /** The total duration that the game has drifted over the lagstat measurement window. */
   val currentGameLag
-    get() = (totalDriftNs - (totalDriftCache.getDelayedValue() ?: 0)).nanoseconds.absoluteValue
+    get() = lagometer?.lag ?: Duration.ZERO
 
-  private fun updateGameDrift() {
-    val nowNs = System.nanoTime()
-
+  private fun updateGameDrift(nowNs: Long) {
     val glb = gameLogBuilder
     if (glb != null) {
       glb.addEvents(
@@ -850,10 +827,13 @@ class KailleraGame(
               windowDurationMs = flags.lagstatDuration.inWholeMilliseconds.toInt()
               gameLagMs = currentGameLag.toMillisDouble()
 
-              for (p in players) {
-                playerAttributedLags += playerAttributedLag {
-                  player = p.playerNumber.toPlayerNumberProto()
-                  attributedLagMs = p.lagAttributedToUser().toMillisDouble()
+              val lags = lagometer?.gameLagPerPlayer
+              if (lags != null) {
+                for ((i, p) in players.withIndex()) {
+                  playerAttributedLags += playerAttributedLag {
+                    player = p.playerNumber.toPlayerNumberProto()
+                    attributedLagMs = lags[i].toMillisDouble()
+                  }
                 }
               }
             }
@@ -863,18 +843,8 @@ class KailleraGame(
       }
     }
 
-    val delaySinceLastResponseNs = nowNs - lastFrameNs
+    lagometer?.advanceFrame(nowNs)
 
-    lagLeewayNs += singleFrameDurationForLagCalculationOnlyNs - delaySinceLastResponseNs
-    if (lagLeewayNs < 0) {
-      // Lag leeway fell below zero. Lag occurred!
-      totalDriftNs += lagLeewayNs
-      lagLeewayNs = 0
-    } else if (lagLeewayNs > singleFrameDurationForLagCalculationOnlyNs) {
-      // Does not make sense to allow lag leeway to be longer than the length of one frame.
-      lagLeewayNs = singleFrameDurationForLagCalculationOnlyNs
-    }
-    totalDriftCache.update(totalDriftNs, nowNs = nowNs)
     lastFrameNs = nowNs
   }
 

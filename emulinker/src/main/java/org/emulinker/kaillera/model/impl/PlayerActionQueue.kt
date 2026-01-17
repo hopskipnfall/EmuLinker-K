@@ -1,8 +1,5 @@
 package org.emulinker.kaillera.model.impl
 
-import org.emulinker.kaillera.model.KailleraUser
-import org.emulinker.util.VariableSizeByteArray
-
 /**
  * A buffer of game data for one player.
  *
@@ -10,8 +7,12 @@ import org.emulinker.util.VariableSizeByteArray
  *
  * Not threadsafe.
  */
+import io.netty.buffer.ByteBuf
+import io.netty.buffer.CompositeByteBuf
+import io.netty.buffer.Unpooled
+import org.emulinker.kaillera.model.KailleraUser
+
 class PlayerActionQueue(
-  // TODO(nue): We probably don't need this.
   val playerNumber: Int,
   val player: KailleraUser,
   numPlayers: Int,
@@ -19,13 +20,16 @@ class PlayerActionQueue(
 ) {
   var lastTimeout: PlayerTimeoutException? = null
 
-  private val data = ByteArray(gameBufferSize)
-  /** Effectively a map of `player number - 1` to the last read index. */
-  private val heads = IntArray(numPlayers)
-  private var tail = 0
+  private val data: CompositeByteBuf = Unpooled.compositeBuffer()
+
+  // Total bytes currently available to read from the start of the buffer
+  private var totalWrittenBytes = 0
+
+  // How many bytes this specific player has read from the stream
+  private var readPosition = 0
 
   /**
-   * Whether the queue is synced with the [KailleraGame].
+   * Whether the queue is synced with the [org.emulinker.kaillera.model.KailleraGame].
    *
    * Synced starts as `true` at the beginning of a game, and if it ever is set to false there is no
    * path where it will resync.
@@ -35,100 +39,90 @@ class PlayerActionQueue(
 
   fun markSynced() {
     synced = true
+    if (data.numComponents() > 0) {
+      data.removeComponents(0, data.numComponents())
+    }
+    data.clear()
+    totalWrittenBytes = 0
+    readPosition = 0
   }
 
   fun markDesynced() {
     synced = false
+    // TODO(nue): See if this is the correct way to do this. Maybe there is a function to throw away
+    // the rest of the bytes?
+    if (data.refCnt() > 0) data.release()
   }
 
-  /** Adds "actions" at the [tail] position, and increments [tail]. */
-  fun addActions(actions: VariableSizeByteArray) {
-    if (!synced) return
-
-    if (tail + actions.size <= gameBufferSize) {
-      // This can be done in one pass.
-      actions.writeDataOutTo(copyTo = data, writeAtIndex = tail, 0, actions.size)
-    } else {
-      // this has to be done in two steps because the array wraps around.
-      val initialReadSize = gameBufferSize - tail
-      actions.writeDataOutTo(
-        copyTo = data,
-        writeAtIndex = tail,
-        srcIndex = 0,
-        // Read the remaining bytes until the end.
-        writeLength = initialReadSize,
-      )
-      actions.writeDataOutTo(
-        copyTo = data,
-        writeAtIndex = 0,
-        srcIndex = initialReadSize,
-        // Read the remaining bytes until the end.
-        writeLength = actions.size - initialReadSize,
-      )
-    }
-    tail = (tail + actions.size) % gameBufferSize
-    lastTimeout = null
-  }
-
-  fun getActionAndWriteToArray(
-    readingPlayerIndex: Int,
-    writeTo: VariableSizeByteArray,
-    writeAtIndex: Int,
-    actionLength: Int,
-  ) {
-    when {
-      !synced -> {
-        // If the player is no longer synced (e.g. if they left the game), make sure the target
-        // range
-        // is set to 0.
-        writeTo.setZeroesForRange(
-          fromIndex = writeAtIndex,
-          untilIndexExclusive = writeAtIndex + actionLength,
-        )
-      }
-      containsNewDataForPlayer(readingPlayerIndex, actionLength) -> {
-        val head = heads[readingPlayerIndex]
-        copyTo(writeTo, writeAtIndex, readStartIndex = head, readLength = actionLength)
-        heads[readingPlayerIndex] = (head + actionLength) % gameBufferSize
-      }
-      else -> throw IllegalStateException("There is no data available for this synced user!")
-    }
-  }
-
-  private fun copyTo(
-    writeTo: VariableSizeByteArray,
-    writeAtIndex: Int,
-    readStartIndex: Int,
-    readLength: Int,
-  ) {
-    if (readStartIndex + readLength <= gameBufferSize) {
-      // This can be done in one pass.
-      writeTo.importDataFrom(data, writeAtIndex, readStartIndex, readLength)
+  /** Adds "actions" to the queue. */
+  fun addActions(actions: ByteBuf) {
+    if (!synced) {
+      actions.release()
       return
     }
 
-    // this has to be done in two steps because the array wraps around.
-    val initialReadSize = gameBufferSize - readStartIndex
-    writeTo.importDataFrom(
-      copyFrom = data,
-      writeAtIndex,
-      readStartIndex,
-      // Read the remaining bytes until the end.
-      readLength = initialReadSize,
-    )
-    writeTo.importDataFrom(
-      data,
-      writeAtIndex = writeAtIndex + initialReadSize,
-      readStartIndex = 0,
-      // Read the remaining bytes until the end.
-      readLength = readLength - initialReadSize,
-    )
+    data.addComponent(true, actions.retain())
+    totalWrittenBytes += actions.readableBytes()
+
+    if (data.readableBytes() > gameBufferSize) {
+      // Discard bytes from the beginning
+      val toDiscard = data.readableBytes() - gameBufferSize
+      data.skipBytes(toDiscard)
+      data.discardReadBytes()
+
+      for (i in heads.indices) {
+        heads[i] = (heads[i] - toDiscard).coerceAtLeast(0)
+      }
+    }
+
+    lastTimeout = null
   }
 
-  fun containsNewDataForPlayer(playerIndex: Int, actionLength: Int) =
-    getSize(playerIndex) >= actionLength
+  private val heads = IntArray(numPlayers)
 
-  /** Number of remaining bytes for the user to read. */
-  private fun getSize(playerIndex: Int): Int =
-    (tail + gameBufferSize - heads[playerIndex]) % gameBufferSize
+  fun getActionAndWriteToArray(readingPlayerIndex: Int, writeTo: ByteBuf, actionLength: Int) {
+    if (!synced) {
+      writeTo.writeZero(actionLength)
+      return
+    }
+
+    if (containsNewDataForPlayer(readingPlayerIndex, actionLength)) {
+      val relativeHead = heads[readingPlayerIndex]
+
+      if (relativeHead + actionLength > data.writerIndex()) {
+        // Should verify containsNewDataForPlayer check coverage
+        throw IllegalStateException("Not enough data!")
+      }
+
+      writeTo.writeBytes(data, relativeHead, actionLength)
+
+      heads[readingPlayerIndex] += actionLength
+
+      cleanUp()
+    } else {
+      throw IllegalStateException("There is no data available for this synced user!")
+    }
+  }
+
+  private fun cleanUp() {
+    // Find the minimum head. We can discard data before that.
+    var minHead = Int.MAX_VALUE
+    for (h in heads) {
+      if (h < minHead) minHead = h
+    }
+
+    if (minHead > 0) {
+      data.readerIndex(minHead)
+      data.discardReadBytes()
+      for (i in heads.indices) {
+        heads[i] -= minHead
+      }
+    }
+  }
+
+  fun containsNewDataForPlayer(playerIndex: Int, actionLength: Int): Boolean {
+    val head = heads[playerIndex]
+    val available = data.writerIndex() - head
+    return available >= actionLength
+  }
 }

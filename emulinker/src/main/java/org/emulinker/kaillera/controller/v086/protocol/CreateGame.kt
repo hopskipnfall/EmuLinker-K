@@ -6,7 +6,6 @@ import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.kaillera.controller.v086.V086Utils.getNumBytesPlusStopByte
 import org.emulinker.util.EmuUtil
 import org.emulinker.util.EmuUtil.readString
-import org.emulinker.util.UnsignedUtil.getUnsignedShort
 import org.emulinker.util.UnsignedUtil.putUnsignedShort
 
 sealed class CreateGame : V086Message() {
@@ -49,31 +48,6 @@ sealed class CreateGame : V086Message() {
       )
     }
 
-    override fun read(buffer: ByteBuffer, messageNumber: Int): Result<CreateGame> {
-      if (buffer.remaining() < 8) {
-        return parseFailure("Failed byte count validation!")
-      }
-      val userName = buffer.readString()
-      if (buffer.remaining() < 6) {
-        return parseFailure("Failed byte count validation!")
-      }
-      val romName = buffer.readString()
-      if (buffer.remaining() < 5) {
-        return parseFailure("Failed byte count validation!")
-      }
-      val clientType = buffer.readString()
-      if (buffer.remaining() < 4) {
-        return parseFailure("Failed byte count validation!")
-      }
-      val gameID = buffer.getUnsignedShort()
-      val val1 = buffer.getUnsignedShort()
-      return Result.success(
-        if (userName == REQUEST_USERNAME && gameID == REQUEST_GAME_ID && val1 == REQUEST_VAL1)
-          CreateGameRequest(messageNumber, romName)
-        else CreateGameNotification(messageNumber, userName, romName, clientType, gameID, val1)
-      )
-    }
-
     override fun write(buffer: ByteBuf, message: CreateGame) {
       EmuUtil.writeString(
         buffer,
@@ -104,7 +78,7 @@ sealed class CreateGame : V086Message() {
       )
     }
 
-    override fun write(buffer: ByteBuffer, message: CreateGame) {
+    fun write(buffer: ByteBuffer, message: CreateGame) {
       EmuUtil.writeString(
         buffer,
         when (message) {
@@ -142,7 +116,7 @@ sealed class CreateGame : V086Message() {
  * This message shares a message type with [CreateGameRequest]: `0x0A`.
  */
 data class CreateGameNotification(
-  override val messageNumber: Int,
+  override var messageNumber: Int,
   val username: String,
   override val romName: String,
   val clientType: String,
@@ -180,7 +154,7 @@ data class CreateGameNotification(
  *
  * This message shares a message type with [CreateGameRequest]: `0x0A`.
  */
-data class CreateGameRequest(override val messageNumber: Int, override val romName: String) :
+data class CreateGameRequest(override var messageNumber: Int, override val romName: String) :
   CreateGame(), ClientMessage {
   override val messageTypeId = ID
 

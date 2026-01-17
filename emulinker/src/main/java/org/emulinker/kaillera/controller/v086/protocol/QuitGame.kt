@@ -6,7 +6,6 @@ import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.kaillera.controller.v086.V086Utils.getNumBytesPlusStopByte
 import org.emulinker.util.EmuUtil
 import org.emulinker.util.EmuUtil.readString
-import org.emulinker.util.UnsignedUtil.getUnsignedShort
 import org.emulinker.util.UnsignedUtil.putUnsignedShort
 
 sealed class QuitGame : V086Message() {
@@ -55,24 +54,6 @@ sealed class QuitGame : V086Message() {
       )
     }
 
-    override fun read(buffer: ByteBuffer, messageNumber: Int): Result<QuitGame> {
-      if (buffer.remaining() < 3) {
-        return parseFailure("Failed byte count validation!")
-      }
-      val userName = buffer.readString()
-      if (buffer.remaining() < 2) {
-        return parseFailure("Failed byte count validation!")
-      }
-      val userID = buffer.getUnsignedShort()
-      return Result.success(
-        if (userName == REQUEST_USERNAME && userID == REQUEST_USER_ID) {
-          QuitGameRequest(messageNumber)
-        } else {
-          QuitGameNotification(messageNumber, userName, userID)
-        }
-      )
-    }
-
     override fun write(buffer: ByteBuf, message: QuitGame) {
       EmuUtil.writeString(
         buffer,
@@ -89,7 +70,7 @@ sealed class QuitGame : V086Message() {
       )
     }
 
-    override fun write(buffer: ByteBuffer, message: QuitGame) {
+    fun write(buffer: ByteBuffer, message: QuitGame) {
       EmuUtil.writeString(
         buffer,
         when (message) {
@@ -112,7 +93,7 @@ sealed class QuitGame : V086Message() {
  *
  * Shares a message type ID with [QuitGameNotification]: `0x0B`.
  */
-data class QuitGameRequest(override val messageNumber: Int) : QuitGame(), ClientMessage
+data class QuitGameRequest(override var messageNumber: Int) : QuitGame(), ClientMessage
 
 /**
  * Message sent by the server to notify that a user has left the game.
@@ -120,7 +101,7 @@ data class QuitGameRequest(override val messageNumber: Int) : QuitGame(), Client
  * Shares a message type ID with [QuitGameRequest]: `0x0B`.
  */
 data class QuitGameNotification(
-  override val messageNumber: Int,
+  override var messageNumber: Int,
   val username: String,
   val userId: Int,
 ) : QuitGame(), ServerMessage {

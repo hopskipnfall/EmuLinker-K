@@ -1,22 +1,19 @@
 package org.emulinker.kaillera.model
 
 import com.google.common.flogger.FluentLogger
+import io.netty.buffer.ByteBuf
+import io.netty.buffer.PooledByteBufAllocator
 import java.net.InetSocketAddress
-import java.util.concurrent.ConcurrentLinkedQueue
-import java.util.concurrent.ThreadPoolExecutor
 import kotlin.time.Clock
-import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
-import kotlin.time.Duration.Companion.nanoseconds
-import kotlin.time.Duration.Companion.seconds
 import kotlin.time.Instant
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.access.AccessManager
+import org.emulinker.kaillera.controller.v086.V086ClientHandler
 import org.emulinker.kaillera.model.event.GameDataEvent
 import org.emulinker.kaillera.model.event.GameStartedEvent
+import org.emulinker.kaillera.model.event.InfoMessageEvent
 import org.emulinker.kaillera.model.event.KailleraEvent
-import org.emulinker.kaillera.model.event.KailleraEventListener
-import org.emulinker.kaillera.model.event.StopFlagEvent
 import org.emulinker.kaillera.model.event.UserQuitEvent
 import org.emulinker.kaillera.model.event.UserQuitGameEvent
 import org.emulinker.kaillera.model.exception.ChatException
@@ -32,10 +29,7 @@ import org.emulinker.kaillera.model.exception.QuitException
 import org.emulinker.kaillera.model.exception.QuitGameException
 import org.emulinker.kaillera.model.exception.StartGameException
 import org.emulinker.kaillera.model.exception.UserReadyException
-import org.emulinker.util.CircularVariableSizeByteArrayBuffer
 import org.emulinker.util.EmuLang
-import org.emulinker.util.TimeOffsetCache
-import org.emulinker.util.VariableSizeByteArray
 
 /**
  * Represents a user in the server.
@@ -46,10 +40,9 @@ class KailleraUser(
   val id: Int,
   val protocol: String,
   val connectSocketAddress: InetSocketAddress,
-  private val listener: KailleraEventListener,
+  private val clientHandler: V086ClientHandler,
   val server: KailleraServer,
   private val flags: RuntimeFlags,
-  threadpoolExecutor: ThreadPoolExecutor,
   private val clock: Clock,
 ) {
   var inStealthMode = false
@@ -71,15 +64,6 @@ class KailleraUser(
   var socketAddress: InetSocketAddress? = null
   var status = UserStatus.PLAYING // TODO(nue): This probably shouldn't have a default value..
 
-  /** A non-threadsafe cache of [VariableSizeByteArray] instances. */
-  val circularVariableSizeByteArrayBuffer =
-    CircularVariableSizeByteArrayBuffer(
-      // The GameDataCache has 256 so we should have something significantly larger.
-      capacity = 2_000
-    ) {
-      VariableSizeByteArray()
-    }
-
   /**
    * Level of access that the user has.
    *
@@ -92,15 +76,6 @@ class KailleraUser(
 
   /** This marks the last time the user interacted in the server. */
   private var lastActivity: Instant = initTime
-
-  private var lagLeewayNs = 0.seconds.inWholeNanoseconds
-  private var totalDriftNs = 0.seconds.inWholeNanoseconds
-  private val totalDriftCache =
-    TimeOffsetCache(delay = flags.lagstatDuration, resolution = 5.seconds)
-
-  /** Time we received the latest game data from the user for lag measurement purposes. */
-  var receivedGameDataNs: Long? = null
-    private set
 
   /** The last time we heard from this player for lag detection purposes. */
   private var lastUpdateNs = System.nanoTime()
@@ -132,7 +107,7 @@ class KailleraUser(
   var lastChatTime: Instant = initTime
     private set
 
-  var lastCreateGameTime: Instant = initTime
+  var lastCreateGameTime: Instant? = null
     private set
 
   var frameCount = 0
@@ -159,20 +134,12 @@ class KailleraUser(
   var lastMsgID = -1
   var isMuted = false
 
-  private val lostInput: MutableList<VariableSizeByteArray> = ArrayList()
-
-  /** Note that this is a different type from lostInput. */
-  fun getLostInput(): VariableSizeByteArray {
-    return lostInput[0]
-  }
+  private val lostInput: MutableList<ByteBuf> = ArrayList()
 
   private val ignoredUsers: MutableList<String> = ArrayList()
   private var gameDataErrorTime: Long = -1
 
-  private var threadIsActive = false
-
   private var stopFlag = false
-  private val eventQueue = ConcurrentLinkedQueue<KailleraEvent>()
 
   var tempDelay = 0
 
@@ -229,22 +196,16 @@ class KailleraUser(
   val accessStr: String
     get() = AccessManager.ACCESS_NAMES[accessLevel]
 
-  override fun equals(other: Any?): Boolean {
-    return other is KailleraUser && other.id == id
-  }
-
   fun stop() {
-    if (!threadIsActive) {
-      logger.atFine().log("%s  thread stop request ignored: not running!", this)
-      return
-    }
     if (stopFlag) {
       logger.atFine().log("%s  thread stop request ignored: already stopping!", this)
       return
     }
     stopFlag = true
-    queueEvent(StopFlagEvent())
-    listener.stop()
+    clientHandler.stop()
+    // Release any buffered data
+    lostInput.forEach { it.release() }
+    lostInput.clear()
   }
 
   fun droppedPacket() {
@@ -256,7 +217,6 @@ class KailleraUser(
   }
 
   // server actions
-  @Synchronized
   fun login(): Result<Unit> {
     updateLastActivity()
     return server.login(this)
@@ -313,14 +273,6 @@ class KailleraUser(
     loggedIn = false
   }
 
-  fun lagAttributedToUser(): Duration =
-    (totalDriftNs - (totalDriftCache.getDelayedValue() ?: 0)).nanoseconds.absoluteValue
-
-  fun resetLag() {
-    totalDriftNs = 0
-    totalDriftCache.clear()
-  }
-
   @Synchronized
   @Throws(JoinGameException::class)
   fun joinGame(gameID: Int): KailleraGame {
@@ -342,15 +294,6 @@ class KailleraUser(
       throw JoinGameException(EmuLang.getString("KailleraUserImpl.JoinGameErrorDoesNotExist"))
     }
 
-    // if (connectionType != game.getOwner().getConnectionType())
-    // {
-    //	logger.atWarning().log(this + " join game denied: " + this + ": You must use the same
-    // connection type as
-    // the owner: " + game.getOwner().getConnectionType());
-    //	throw new
-    // JoinGameException(EmuLang.getString("KailleraGameImpl.StartGameConnectionTypeMismatchInfo"));
-    //
-    // }
     playerNumber = game.join(this)
     this.game = game
     gameDataErrorTime = -1
@@ -422,13 +365,12 @@ class KailleraUser(
     }
     isMuted = false
     game = null
-    queueEvent(UserQuitGameEvent(game, this))
+    doEvent(UserQuitGameEvent(game, this))
   }
 
   @Synchronized
   @Throws(StartGameException::class)
   fun startGame() {
-    resetLag()
     updateLastActivity()
     val game = this.game
     if (game == null) {
@@ -447,10 +389,8 @@ class KailleraUser(
       logger.atWarning().log("%s player ready failed: Not in a game", this)
       throw UserReadyException(EmuLang.getString("KailleraUserImpl.PlayerReadyErrorNotInGame"))
     }
-    if (
-      playerNumber > game.playerActionQueues!!.size ||
-        game.playerActionQueues!![playerNumber - 1].synced
-    ) {
+    val paq = game.playerActionQueues
+    if (paq != null && (playerNumber > paq.size || paq[playerNumber - 1].synced)) {
       return
     }
     totalDelay = game.highestUserFrameDelay + tempDelay + 5
@@ -459,40 +399,42 @@ class KailleraUser(
   }
 
   // Current source of the lag.
-  fun addGameData(data: VariableSizeByteArray): Result<Unit> {
-    receivedGameDataNs = System.nanoTime()
+  fun addGameData(data: ByteBuf): Result<Unit> {
+    game?.lagometer?.receivedInputsFromUser(playerNumber - 1, System.nanoTime())
     fun doTheThing(): Result<Unit> {
-      val game =
-        this.game
-          ?: return Result.failure(
-            GameDataException(
-              toString() + " " + EmuLang.getString("KailleraUserImpl.GameDataErrorNotInGame"),
-              data,
-              // This will be zero if the user is DISABLED.. Rewrite all of this.
-              actionsPerMessage = connectionType.byteValue.toInt(),
-              playerNumber = 1,
-              numPlayers = 1,
-            )
-          )
+      // Returning success when the game doesn't exist might not be correct?
+      val game = this.game ?: return Result.success(Unit)
 
       // Initial Delay
       // totalDelay = (game.getDelay() + tempDelay + 5)
       if (frameCount < totalDelay) {
-        bytesPerAction = data.size / connectionType.byteValue
-        arraySize = game.playerActionQueues!!.size * connectionType.byteValue * bytesPerAction
+        bytesPerAction = data.readableBytes() / connectionType.byteValue
+        arraySize = (game.playerActionQueues?.size ?: 0) * connectionType.byteValue * bytesPerAction
+
+        data.retain()
         lostInput.add(data)
-        queueEvent(GameDataEvent(game, VariableSizeByteArray(ByteArray(arraySize) { 0 })))
+
+        val zeroData = PooledByteBufAllocator.DEFAULT.buffer(arraySize).writeZero(arraySize)
+        doEvent(GameDataEvent(game, zeroData))
         frameCount++
       } else {
-        // lostInput.add(data);
         if (lostInput.isNotEmpty()) {
-          game.addData(this, playerNumber, lostInput[0]).onFailure {
-            return Result.failure(it)
+          val lost = lostInput.removeAt(0)
+
+          when (val r = game.addData(this, playerNumber, lost)) {
+            AddDataResult.Success -> {}
+            AddDataResult.IgnoringDesynched -> {}
+            is AddDataResult.Failure -> {
+              lost.release()
+              return Result.failure(r.exception)
+            }
           }
-          lostInput.removeAt(0)
+          lost.release() // Release our reference after passing to game
         } else {
-          game.addData(this, playerNumber, data).onFailure {
-            return Result.failure(it)
+          when (val r = game.addData(this, playerNumber, data)) {
+            AddDataResult.Success -> {}
+            AddDataResult.IgnoringDesynched -> {}
+            is AddDataResult.Failure -> return Result.failure(r.exception)
           }
         }
       }
@@ -531,67 +473,35 @@ class KailleraUser(
     return Result.success(Unit)
   }
 
-  fun updateUserDrift() {
-    val receivedGameDataNs = receivedGameDataNs ?: return
-    val nowNs = System.nanoTime()
-    val delaySinceLastResponseNs = nowNs - lastUpdateNs
-    val timeWaitingNs = nowNs - receivedGameDataNs
-    val delaySinceLastResponseMinusWaitingNs = delaySinceLastResponseNs - timeWaitingNs
-    val leewayChangeNs =
-      game!!.singleFrameDurationForLagCalculationOnlyNs - delaySinceLastResponseMinusWaitingNs
-    lagLeewayNs += leewayChangeNs
-    if (lagLeewayNs < 0) {
-      // Lag leeway fell below zero. We caused lag!
-      totalDriftNs += lagLeewayNs
-      lagLeewayNs = 0
-    } else if (lagLeewayNs > game!!.singleFrameDurationForLagCalculationOnlyNs) {
-      // Does not make sense to allow lag leeway to be longer than the length of one frame.
-      lagLeewayNs = game!!.singleFrameDurationForLagCalculationOnlyNs
-    }
+  fun updateActivity(nowNs: Long) {
     lastUpdateNs = nowNs
-    totalDriftCache.update(totalDriftNs, nowNs = nowNs)
   }
 
-  fun queueEvent(event: KailleraEvent) {
-    if (status != UserStatus.IDLE) {
-      if (ignoringUnnecessaryServerActivity) {
-        if (event.toString() == "InfoMessageEvent") return
-      }
+  /** Acts on an event in realtime. */
+  fun doEvent(event: KailleraEvent) {
+    if (
+      status != UserStatus.IDLE && ignoringUnnecessaryServerActivity && event is InfoMessageEvent
+    ) {
+      return
     }
-    eventQueue.offer(event)
+
+    clientHandler.actionPerformed(event)
+    if (event is GameStartedEvent) {
+      status = UserStatus.PLAYING
+      lastUpdateNs = System.nanoTime()
+    } else if (event is UserQuitEvent && event.user == this) {
+      stop()
+    }
   }
 
-  init {
-    threadpoolExecutor.submit {
-      threadIsActive = true
-      logger.atFine().log("%s thread running...", this)
-      try {
-        while (!stopFlag) {
-          val event = eventQueue.poll()
-          if (event == null) {
-            // This is supposedly preferable to Thread.yield() but I can't remember why.
-            Thread.sleep(1)
-            continue
-          } else if (event is StopFlagEvent) {
-            break
-          }
-          listener.actionPerformed(event)
-          if (event is GameStartedEvent) {
-            status = UserStatus.PLAYING
-            lastUpdateNs = System.nanoTime()
-          } else if (event is UserQuitEvent && event.user == this) {
-            stop()
-          }
-        }
-      } catch (e: InterruptedException) {
-        logger.atSevere().withCause(e).log("%s thread interrupted!", this)
-      } catch (e: Throwable) {
-        logger.atSevere().withCause(e).log("%s thread caught unexpected exception!", this)
-      } finally {
-        threadIsActive = false
-        logger.atFine().log("%s thread exiting...", this)
-      }
-    }
+  override fun equals(other: Any?): Boolean {
+    if (this === other) return true
+    if (other !is KailleraUser) return false
+    return id == other.id
+  }
+
+  override fun hashCode(): Int {
+    return id
   }
 
   companion object {

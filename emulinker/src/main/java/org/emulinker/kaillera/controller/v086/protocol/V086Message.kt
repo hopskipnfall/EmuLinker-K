@@ -7,7 +7,6 @@ import org.emulinker.kaillera.controller.messaging.ByteBufferMessage
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.messaging.ParseException
 import org.emulinker.kaillera.pico.AppModule
-import org.emulinker.util.CircularVariableSizeByteArrayBuffer
 import org.emulinker.util.UnsignedUtil.putUnsignedShort
 
 /**
@@ -33,7 +32,7 @@ abstract class V086Message : ByteBufferMessage {
    * This rule is sometimes broken. For instance, ConnectMessage_HELLO and ConnectMessage_HELLOD00D
    * are not included in this count.
    */
-  abstract val messageNumber: Int
+  abstract var messageNumber: Int
 
   // TODO(nue): Think about this:
   //  @Deprecated("We should try to use a sealed class instead of relying on this messageId field")
@@ -68,7 +67,7 @@ abstract class V086Message : ByteBufferMessage {
     }
   }
 
-  override fun writeTo(buffer: ByteBuffer) {
+  fun writeTo(buffer: ByteBuffer) {
     val len = bodyBytesPlusMessageIdType
     if (len > buffer.remaining()) {
       logger
@@ -129,65 +128,11 @@ abstract class V086Message : ByteBufferMessage {
     }
 
     @Throws(ParseException::class, MessageFormatException::class)
-    fun parse(
-      messageNumber: Int,
-      messageLength: Int,
-      buffer: ByteBuffer,
-      arrayBuffer: CircularVariableSizeByteArrayBuffer?,
-    ): V086Message {
-      val messageType = buffer.get()
-
-      var parseResult =
-        if (messageType == GameData.ID) {
-          GameData.GameDataSerializer.read(buffer, messageNumber, arrayBuffer)
-        } else {
-          val serializer =
-            when (messageType) {
-              CachedGameData.ID -> CachedGameData.CachedGameDataSerializer
-              else ->
-                checkNotNull(SERIALIZERS[messageType]) { "Unrecognized message ID: $messageType" }
-            }
-
-          serializer.read(buffer, messageNumber)
-        }
-
-      parseResult.onSuccess { parseResult = it.validateMessageNumber() }
-
-      val message =
-        when {
-          // TODO(nue): Return this up the stack instead of throwing an exception.
-          parseResult.isSuccess -> parseResult.getOrThrow()
-          else -> throw MessageFormatException(parseResult.toString())
-        }
-
-      // removed to improve speed
-      if (message.bodyBytesPlusMessageIdType != messageLength) {
-        //			throw new ParseException("Bundle contained length " + messageLength + " !=  parsed
-        // lengthy
-        // " + message.getLength());
-        logger
-          .atFine()
-          .log(
-            "Bundle contained length %d != parsed length %d",
-            messageLength,
-            message.bodyBytesPlusMessageIdType,
-          )
-      }
-      return message
-    }
-
-    @Throws(ParseException::class, MessageFormatException::class)
-    fun parse(
-      messageNumber: Int,
-      messageLength: Int,
-      buf: ByteBuf,
-      arrayBuffer: CircularVariableSizeByteArrayBuffer?,
-    ): V086Message {
+    fun parse(messageNumber: Int, messageLength: Int, buf: ByteBuf): V086Message {
       val messageType = buf.readByte()
-
       var parseResult =
         if (messageType == GameData.ID) {
-          GameData.GameDataSerializer.read(buf, messageNumber, arrayBuffer)
+          GameData.GameDataSerializer.read(buf, messageNumber)
         } else {
           val serializer =
             when (messageType) {

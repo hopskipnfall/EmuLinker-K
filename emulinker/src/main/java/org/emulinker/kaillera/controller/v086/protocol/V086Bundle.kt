@@ -1,17 +1,14 @@
 package org.emulinker.kaillera.controller.v086.protocol
 
 import io.netty.buffer.ByteBuf
-import java.nio.ByteBuffer
-import java.nio.ByteOrder
+import io.netty.util.ReferenceCountUtil
+import io.netty.util.ReferenceCounted
 import org.emulinker.kaillera.controller.messaging.ByteBufferMessage
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.messaging.ParseException
-import org.emulinker.kaillera.controller.v086.protocol.V086Message.Companion.parse
-import org.emulinker.util.CircularVariableSizeByteArrayBuffer
 import org.emulinker.util.EmuUtil
-import org.emulinker.util.UnsignedUtil.getUnsignedShort
 
-sealed interface V086Bundle : ByteBufferMessage {
+sealed interface V086Bundle : ByteBufferMessage, ReferenceCounted {
 
   @JvmInline
   value class Single(val message: V086Message) : V086Bundle {
@@ -31,10 +28,35 @@ sealed interface V086Bundle : ByteBufferMessage {
       message.writeTo(buffer)
     }
 
-    override fun writeTo(buffer: ByteBuffer) {
-      buffer.order(ByteOrder.LITTLE_ENDIAN)
-      buffer.put(1.toByte())
-      message.writeTo(buffer)
+    override fun refCnt(): Int =
+      (message as? ReferenceCounted)?.refCnt() ?: throw UnsupportedOperationException()
+
+    override fun retain(): V086Bundle {
+      ReferenceCountUtil.retain(message)
+      return this
+    }
+
+    override fun retain(increment: Int): V086Bundle {
+      ReferenceCountUtil.retain(message, increment)
+      return this
+    }
+
+    override fun touch(): V086Bundle {
+      ReferenceCountUtil.touch(message)
+      return this
+    }
+
+    override fun touch(hint: Any?): V086Bundle {
+      ReferenceCountUtil.touch(message, hint)
+      return this
+    }
+
+    override fun release(): Boolean {
+      return ReferenceCountUtil.release(message)
+    }
+
+    override fun release(decrement: Int): Boolean {
+      return ReferenceCountUtil.release(message, decrement)
     }
   }
 
@@ -42,7 +64,7 @@ sealed interface V086Bundle : ByteBufferMessage {
     val numMessages: Int = messages.size.coerceAtMost(numToWrite)
 
     override val bodyBytesPlusMessageIdType
-      get() = messages.sumOf { it?.bodyBytesPlusMessageIdType ?: 0 } - 1
+      get() = messages.take(numMessages).sumOf { it?.bodyBytesPlusMessageIdType ?: 0 } - 1
 
     override fun toString(): String {
       val sb = StringBuilder()
@@ -65,82 +87,81 @@ sealed interface V086Bundle : ByteBufferMessage {
       }
     }
 
-    override fun writeTo(buffer: ByteBuffer) {
-      buffer.order(ByteOrder.LITTLE_ENDIAN)
-      buffer.put(numMessages.toByte())
+    override fun refCnt(): Int {
+      throw UnsupportedOperationException()
+    }
+
+    override fun retain(): V086Bundle {
       for (i in 0 until numMessages) {
-        val message = messages[i] ?: break
-        message.writeTo(buffer)
+        val m = messages[i]
+        if (m != null) {
+          ReferenceCountUtil.retain(m)
+        }
       }
+      return this
+    }
+
+    override fun retain(increment: Int): V086Bundle {
+      for (i in 0 until numMessages) {
+        val m = messages[i]
+        if (m != null) {
+          ReferenceCountUtil.retain(m, increment)
+        }
+      }
+      return this
+    }
+
+    override fun touch(): V086Bundle {
+      for (i in 0 until numMessages) {
+        val m = messages[i]
+        if (m != null) {
+          ReferenceCountUtil.touch(m)
+        }
+      }
+      return this
+    }
+
+    override fun touch(hint: Any?): V086Bundle {
+      for (i in 0 until numMessages) {
+        val m = messages[i]
+        if (m != null) {
+          ReferenceCountUtil.touch(m, hint)
+        }
+      }
+      return this
+    }
+
+    override fun release(): Boolean {
+      var allReleased = true
+      for (i in 0 until numMessages) {
+        val m = messages[i]
+        if (m != null) {
+          if (!ReferenceCountUtil.release(m)) {
+            allReleased = false
+          }
+        }
+      }
+      return allReleased
+    }
+
+    override fun release(decrement: Int): Boolean {
+      var allReleased = true
+      for (i in 0 until numMessages) {
+        val m = messages[i]
+        if (m != null) {
+          if (!ReferenceCountUtil.release(m, decrement)) {
+            allReleased = false
+          }
+        }
+      }
+      return allReleased
     }
   }
 
   companion object {
-    @Throws(ParseException::class, V086BundleFormatException::class, MessageFormatException::class)
-    fun parse(
-      buffer: ByteBuffer,
-      lastMessageID: Int = -1,
-      arrayBuffer: CircularVariableSizeByteArrayBuffer? = null,
-    ): V086Bundle {
-      buffer.order(ByteOrder.LITTLE_ENDIAN)
-      if (buffer.limit() < 5) {
-        throw V086BundleFormatException("Invalid buffer length: " + buffer.limit())
-      }
-
-      // again no real need for unsigned
-      // int messageCount = UnsignedUtil.getUnsignedByte(buffer);
-      val messageCount = buffer.get().toInt()
-      if (messageCount <= 0 || messageCount > 32) {
-        throw V086BundleFormatException("Invalid message count: $messageCount")
-      }
-      if (buffer.limit() < 1 + messageCount * 6) {
-        throw V086BundleFormatException(
-          "Invalid bundle length: ${buffer.limit()} pos = ${buffer.position()} messageCount=$messageCount"
-        )
-      }
-      // buffer.getShort(1); - mistake. max value of short is 0x7FFF but we need 0xFFFF
-      val msgNum = buffer.getChar(1).code
-      if (
-        msgNum - 1 == lastMessageID || msgNum == 0 && lastMessageID == 0xFFFF
-      ) { // exception for 0 and 0xFFFF
-        val messageNumber = buffer.short.toInt() and 0xffff
-        val messageLength = buffer.getShort()
-        if (messageLength !in 2..buffer.remaining()) {
-          throw ParseException("Invalid message length: $messageLength")
-        }
-        return Single(parse(messageNumber, messageLength.toInt(), buffer, arrayBuffer))
-      } else {
-        val messages: Array<V086Message?> = arrayOfNulls(messageCount)
-        var parsedCount = 0
-        while (parsedCount < messageCount) {
-          val messageNumber = buffer.getUnsignedShort()
-          if (messageNumber <= lastMessageID) {
-            if (messageNumber < 0x20 && lastMessageID > 0xFFDF) {
-              // exception when messageNumber with lower value is greater do nothing
-            } else {
-              break
-            }
-          } else if (messageNumber > 0xFFBF && lastMessageID < 0x40) {
-            // exception when disorder messageNumber greater that lastMessageID
-            break
-          }
-          val messageLength = buffer.short
-          if (messageLength < 2 || messageLength > buffer.remaining()) {
-            throw ParseException("Invalid message length: $messageLength")
-          }
-          messages[parsedCount] = parse(messageNumber, messageLength.toInt(), buffer, arrayBuffer)
-          parsedCount++
-        }
-        return Multi(messages, parsedCount)
-      }
-    }
 
     @Throws(ParseException::class, V086BundleFormatException::class, MessageFormatException::class)
-    fun parse(
-      buffer: ByteBuf,
-      lastMessageID: Int = -1,
-      arrayBuffer: CircularVariableSizeByteArrayBuffer? = null,
-    ): V086Bundle {
+    fun parse(buffer: ByteBuf, lastMessageID: Int = -1): V086Bundle {
       if (buffer.readableBytes() < 5) {
         throw V086BundleFormatException("Invalid buffer length: " + buffer.readableBytes())
       }
@@ -148,7 +169,7 @@ sealed interface V086Bundle : ByteBufferMessage {
       // again no real need for unsigned
       // int messageCount = UnsignedUtil.getUnsignedByte(buffer);
       val messageCount = buffer.readByte().toInt()
-      if (messageCount <= 0 || messageCount > 32) {
+      if (messageCount !in 1..32) {
         throw V086BundleFormatException("Invalid message count: $messageCount")
       }
       if (buffer.readableBytes() < messageCount * 6) {
@@ -167,28 +188,38 @@ sealed interface V086Bundle : ByteBufferMessage {
         if (messageLength !in 2..buffer.readableBytes()) {
           throw ParseException("Invalid message length: $messageLength")
         }
-        return Single(parse(messageNumber, messageLength.toInt(), buffer, arrayBuffer))
+        return Single(V086Message.parse(messageNumber, messageLength.toInt(), buffer))
       } else {
         messages = arrayOfNulls(messageCount)
         var parsedCount = 0
-        while (parsedCount < messageCount) {
-          val messageNumber = buffer.readUnsignedShortLE()
-          if (messageNumber <= lastMessageID) {
-            if (messageNumber < 0x20 && lastMessageID > 0xFFDF) {
-              // exception when messageNumber with lower value is greater do nothing
-            } else {
+        try {
+          while (parsedCount < messageCount) {
+            val messageNumber = buffer.readUnsignedShortLE()
+            if (messageNumber <= lastMessageID) {
+              if (messageNumber < 0x20 && lastMessageID > 0xFFDF) {
+                // exception when messageNumber with lower value is greater do nothing
+              } else {
+                break
+              }
+            } else if (messageNumber > 0xFFBF && lastMessageID < 0x40) {
+              // exception when disorder messageNumber greater that lastMessageID
               break
             }
-          } else if (messageNumber > 0xFFBF && lastMessageID < 0x40) {
-            // exception when disorder messageNumber greater that lastMessageID
-            break
+            val messageLength = buffer.readShortLE()
+            if (messageLength < 2 || messageLength > buffer.readableBytes()) {
+              throw ParseException("Invalid message length: $messageLength")
+            }
+            messages[parsedCount] = V086Message.parse(messageNumber, messageLength.toInt(), buffer)
+            parsedCount++
           }
-          val messageLength = buffer.readShortLE()
-          if (messageLength < 2 || messageLength > buffer.readableBytes()) {
-            throw ParseException("Invalid message length: $messageLength")
+        } catch (t: Throwable) {
+          for (i in 0..parsedCount) {
+            val m = messages[i]
+            if (m != null) {
+              ReferenceCountUtil.release(m)
+            }
           }
-          messages[parsedCount] = parse(messageNumber, messageLength.toInt(), buffer, arrayBuffer)
-          parsedCount++
+          throw t
         }
         return Multi(messages, parsedCount)
       }

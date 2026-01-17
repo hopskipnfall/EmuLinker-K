@@ -18,7 +18,7 @@ import org.emulinker.util.EmuUtil.readString
 data class UserInformation
 @Throws(MessageFormatException::class)
 constructor(
-  override val messageNumber: Int,
+  override var messageNumber: Int,
   val username: String,
   val clientType: String,
   val connectionType: ConnectionType,
@@ -68,36 +68,13 @@ constructor(
       )
     }
 
-    override fun read(buffer: ByteBuffer, messageNumber: Int): Result<UserInformation> {
-      if (buffer.remaining() < 5) {
-        return parseFailure("Failed byte count validation!")
-      }
-      val userName = buffer.readString()
-      if (buffer.remaining() < 3) {
-        return parseFailure("Failed byte count validation!")
-      }
-      val clientType = buffer.readString()
-      if (buffer.remaining() < 1) {
-        return parseFailure("Failed byte count validation!")
-      }
-      val connectionType = buffer.get()
-      return Result.success(
-        UserInformation(
-          messageNumber,
-          userName,
-          clientType,
-          ConnectionType.fromByteValue(connectionType),
-        )
-      )
-    }
-
     override fun write(buffer: ByteBuf, message: UserInformation) {
       EmuUtil.writeString(buffer, message.username)
       EmuUtil.writeString(buffer, message.clientType)
       buffer.writeByte(message.connectionType.byteValue.toInt())
     }
 
-    override fun write(buffer: ByteBuffer, message: UserInformation) {
+    fun write(buffer: ByteBuffer, message: UserInformation) {
       EmuUtil.writeString(buffer, message.username)
       EmuUtil.writeString(buffer, message.clientType)
       buffer.put(message.connectionType.byteValue)

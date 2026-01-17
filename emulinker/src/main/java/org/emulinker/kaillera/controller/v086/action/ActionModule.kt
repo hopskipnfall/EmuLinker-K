@@ -16,7 +16,6 @@ val ActionModule = module {
   singleOf(::GameKickAction)
   singleOf(::GameOwnerCommandAction)
   singleOf(::GameStatusAction)
-  singleOf(::GameTimeoutAction)
   singleOf(::InfoMessageAction)
   singleOf(::JoinGameAction)
   singleOf(::KeepAliveAction)

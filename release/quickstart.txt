@@ -1,0 +1,40 @@
+EmuLinker-K Server - Quick Start Guide
+====================================
+
+1. Prerequisites
+----------------
+*   Java Runtime Environment (JRE) or Java Development Kit (JDK) version 17 or higher.
+
+2. Configuration
+----------------
+*   Edit `conf/emulinker.cfg` to configure general server properties (ports, max users, server name, etc.).
+*   Edit `conf/access.cfg` to configure access controls, IP filtering, and game/emulator restrictions.
+*   (Optional) Edit `conf/language.properties` to customize server messages.
+*   (Optional) Edit `conf/log4j2.properties` to customize logging behavior.
+
+3. Network Configuration
+------------------------
+*   Configure your firewall/router to allow **UDP** traffic on the ports specified in `emulinker.cfg`.
+*   Default port: 27888.
+*   Note: Kaillera uses UDP only; TCP is not required for game traffic.
+
+4. Starting the Server
+----------------------
+The server must be run from its installation directory so it can find the `conf` and `lib` folders.
+
+**Windows:**
+Double-click `start-server.bat` or run it from the command prompt.
+
+**Linux / macOS:**
+1.  Ensure the scripts are executable:
+    `chmod +x *.sh`
+2.  Run the startup script:
+    `./start-server.sh`
+
+5. Monitoring & Troubleshooting
+-------------------------------
+*   Logs are written to `emulinker.log`.
+*   On startup, look for "Server is Running".
+*   If the server fails to start, check `emulinker.log` or the console output for error messages. Common issues include port conflicts or invalid configuration files.
+
+For more information, visit: https://github.com/hopskipnfall/EmuLinker-K

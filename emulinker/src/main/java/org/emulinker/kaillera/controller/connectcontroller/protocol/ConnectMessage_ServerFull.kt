@@ -1,7 +1,6 @@
 package org.emulinker.kaillera.controller.connectcontroller.protocol
 
 import io.netty.buffer.ByteBuf
-import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.util.EmuUtil
 
@@ -15,10 +14,6 @@ object ConnectMessage_ServerFull : ConnectMessage() {
     get() = ID.length + 1
 
   override fun writeTo(buffer: ByteBuf) {
-    EmuUtil.writeString(buffer, ID)
-  }
-
-  override fun writeTo(buffer: ByteBuffer) {
     EmuUtil.writeString(buffer, ID)
   }
 

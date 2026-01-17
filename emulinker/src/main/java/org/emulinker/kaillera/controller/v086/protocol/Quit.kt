@@ -6,7 +6,6 @@ import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.kaillera.controller.v086.V086Utils.getNumBytesPlusStopByte
 import org.emulinker.util.EmuUtil
 import org.emulinker.util.EmuUtil.readString
-import org.emulinker.util.UnsignedUtil.getUnsignedShort
 import org.emulinker.util.UnsignedUtil.putUnsignedShort
 
 sealed class Quit : V086Message() {
@@ -58,25 +57,6 @@ sealed class Quit : V086Message() {
       )
     }
 
-    override fun read(buffer: ByteBuffer, messageNumber: Int): Result<Quit> {
-      if (buffer.remaining() < 5) {
-        return parseFailure("Failed byte count validation!")
-      }
-      val userName = buffer.readString()
-      if (buffer.remaining() < 3) {
-        return parseFailure("Failed byte count validation!")
-      }
-      val userID = buffer.getUnsignedShort()
-      val message = buffer.readString()
-      return Result.success(
-        if (userName.isBlank() && userID == REQUEST_USER_ID) {
-          QuitRequest(messageNumber, message)
-        } else {
-          QuitNotification(messageNumber, userName, userID, message)
-        }
-      )
-    }
-
     override fun write(buffer: ByteBuf, message: Quit) {
       EmuUtil.writeString(
         buffer,
@@ -94,7 +74,7 @@ sealed class Quit : V086Message() {
       EmuUtil.writeString(buffer, message.message)
     }
 
-    override fun write(buffer: ByteBuffer, message: Quit) {
+    fun write(buffer: ByteBuffer, message: Quit) {
       EmuUtil.writeString(
         buffer,
         when (message) {
@@ -119,7 +99,7 @@ sealed class Quit : V086Message() {
  * Shares a message type ID with [QuitRequest]: `0x01`.
  */
 data class QuitNotification(
-  override val messageNumber: Int,
+  override var messageNumber: Int,
   val username: String,
   val userId: Int,
   override val message: String,
@@ -136,4 +116,4 @@ data class QuitNotification(
  *
  * Shares a message type ID with [QuitNotification]: `0x01`.
  */
-data class QuitRequest(override val messageNumber: Int, override val message: String) : Quit()
+data class QuitRequest(override var messageNumber: Int, override val message: String) : Quit()

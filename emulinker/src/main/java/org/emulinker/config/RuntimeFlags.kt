@@ -33,7 +33,6 @@ data class RuntimeFlags(
   val maxUsers: Int,
   val metricsEnabled: Boolean,
   val metricsLoggingFrequency: Duration,
-  val nettyFlags: Int,
   val serverAddress: String,
   val serverLocation: String,
   val serverName: String,

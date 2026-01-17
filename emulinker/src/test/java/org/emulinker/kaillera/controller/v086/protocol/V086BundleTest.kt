@@ -14,7 +14,7 @@ import org.emulinker.kaillera.model.GameStatus
 import org.emulinker.kaillera.model.UserStatus
 import org.emulinker.kaillera.pico.AppModule
 import org.emulinker.testing.LoggingRule
-import org.emulinker.util.VariableSizeByteArray
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -35,23 +35,7 @@ class V086BundleTestShiftJis {
   @Parameterized.Parameter lateinit var params: Params
 
   @Test
-  fun parse_byteBuffer() {
-    val buffer = V086Utils.hexStringToByteBuffer(params.hexString)
-
-    when (val parsedBundle = V086Bundle.parse(buffer, params.lastMessageNumber)) {
-      is V086Bundle.Single -> {
-        assertThat(parsedBundle.message).isEqualTo(params.expectedMessages.single())
-      }
-      is V086Bundle.Multi -> {
-        assertThat(parsedBundle.messages.toList())
-          .containsExactlyElementsIn(params.expectedMessages)
-          .inOrder()
-      }
-    }
-  }
-
-  @Test
-  fun parse_byteBuf() {
+  fun parse() {
     val buf = Unpooled.buffer(4096)
     buf.writeBytes(V086Utils.hexStringToByteBuffer(params.hexString))
 
@@ -175,7 +159,7 @@ class V086BundleTestShiftJis {
             listOf(
               GameData(
                 messageNumber = 9,
-                VariableSizeByteArray(
+                Unpooled.wrappedBuffer(
                   byteArrayOf(
                     16,
                     32,
@@ -206,7 +190,7 @@ class V086BundleTestShiftJis {
               ),
               GameData(
                 messageNumber = 8,
-                VariableSizeByteArray(
+                Unpooled.wrappedBuffer(
                   byteArrayOf(
                     16,
                     36,
@@ -249,7 +233,7 @@ class V086BundleTestShiftJis {
               GameData(
                 messageNumber = 35245,
                 gameData =
-                  VariableSizeByteArray(
+                  Unpooled.wrappedBuffer(
                     "10,20,00,00,00,00,00,00,01,00,00,00,00,00,FC,03,00,00,00,00,00,00,00,00"
                       .replace(",", "")
                       .hexToByteArray(HexFormat.UpperCase)
@@ -290,23 +274,7 @@ class V086BundleTestShiftUtf8 {
   @Parameterized.Parameter lateinit var params: Params
 
   @Test
-  fun parse_byteBuffer() {
-    val buffer = V086Utils.hexStringToByteBuffer(params.hexString)
-
-    when (val parsedBundle = V086Bundle.parse(buffer, params.lastMessageNumber)) {
-      is V086Bundle.Single -> {
-        assertThat(parsedBundle.message).isEqualTo(params.expectedMessages.single())
-      }
-      is V086Bundle.Multi -> {
-        assertThat(parsedBundle.messages.toList())
-          .containsExactlyElementsIn(params.expectedMessages)
-          .inOrder()
-      }
-    }
-  }
-
-  @Test
-  fun parse_byteBuf() {
+  fun parse() {
     val buf = Unpooled.buffer(4096)
     buf.writeBytes(V086Utils.hexStringToByteBuffer(params.hexString))
 
@@ -351,6 +319,11 @@ class V086BundleTestShiftUtf8 {
 
 class V086BundleTest {
   @get:Rule val logging = LoggingRule()
+
+  @Before
+  fun setup() {
+    AppModule.charsetDoNotUse = StandardCharsets.UTF_8
+  }
 
   @Test
   fun hexStringToByteBuffer() {

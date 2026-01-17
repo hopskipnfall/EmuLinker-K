@@ -4,7 +4,6 @@ import io.netty.buffer.ByteBuf
 import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.util.UnsignedUtil.getUnsignedByte
-import org.emulinker.util.UnsignedUtil.getUnsignedShort
 import org.emulinker.util.UnsignedUtil.putUnsignedByte
 import org.emulinker.util.UnsignedUtil.putUnsignedShort
 
@@ -61,28 +60,6 @@ sealed class StartGame : V086Message() {
       )
     }
 
-    override fun read(buffer: ByteBuffer, messageNumber: Int): Result<StartGame> {
-      if (buffer.remaining() < 5) {
-        return parseFailure("Failed byte count validation!")
-      }
-      val b = buffer.get()
-      if (b.toInt() != 0x00) {
-        return parseFailure("Failed byte count validation!")
-      }
-      val val1 = buffer.getUnsignedShort()
-      val playerNumber = buffer.getUnsignedByte()
-      val numPlayers = buffer.getUnsignedByte()
-      return Result.success(
-        if (
-          val1 == REQUEST_VAL1 &&
-            playerNumber == REQUEST_PLAYER_NUMBER &&
-            numPlayers == REQUEST_NUM_PLAYERS
-        )
-          StartGameRequest(messageNumber)
-        else StartGameNotification(messageNumber, val1, playerNumber, numPlayers)
-      )
-    }
-
     override fun write(buffer: ByteBuf, message: StartGame) {
       buffer.writeByte(0x00)
       buffer.writeShortLE(
@@ -105,7 +82,7 @@ sealed class StartGame : V086Message() {
       )
     }
 
-    override fun write(buffer: ByteBuffer, message: StartGame) {
+    fun write(buffer: ByteBuffer, message: StartGame) {
       buffer.put(0x00.toByte())
       buffer.putUnsignedShort(
         when (message) {
@@ -137,7 +114,7 @@ sealed class StartGame : V086Message() {
  * @param playerNumber The player that triggered the game to start.
  */
 data class StartGameNotification(
-  override val messageNumber: Int,
+  override var messageNumber: Int,
   val val1: Int,
   val playerNumber: Short,
   val numPlayers: Short,
@@ -155,4 +132,4 @@ data class StartGameNotification(
  *
  * Shares a message type ID with [StartGameNotification]: `0x11`.
  */
-data class StartGameRequest(override val messageNumber: Int) : StartGame(), ClientMessage
+data class StartGameRequest(override var messageNumber: Int) : StartGame(), ClientMessage

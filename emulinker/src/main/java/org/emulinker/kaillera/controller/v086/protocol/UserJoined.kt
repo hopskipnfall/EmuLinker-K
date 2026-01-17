@@ -13,8 +13,6 @@ import org.emulinker.kaillera.model.ConnectionType
 import org.emulinker.util.EmuUtil
 import org.emulinker.util.EmuUtil.readString
 import org.emulinker.util.EmuUtil.toMillisDouble
-import org.emulinker.util.UnsignedUtil.getUnsignedInt
-import org.emulinker.util.UnsignedUtil.getUnsignedShort
 import org.emulinker.util.UnsignedUtil.putUnsignedInt
 import org.emulinker.util.UnsignedUtil.putUnsignedShort
 
@@ -25,7 +23,7 @@ import org.emulinker.util.UnsignedUtil.putUnsignedShort
  * Message type ID: `0x02`.
  */
 data class UserJoined(
-  override val messageNumber: Int,
+  override var messageNumber: Int,
   val username: String,
   val userId: Int,
   val ping: Duration,
@@ -82,28 +80,6 @@ data class UserJoined(
       )
     }
 
-    override fun read(buffer: ByteBuffer, messageNumber: Int): Result<UserJoined> {
-      if (buffer.remaining() < 9) {
-        return parseFailure("Failed byte count validation!")
-      }
-      val userName = buffer.readString()
-      if (buffer.remaining() < 7) {
-        return parseFailure("Failed byte count validation!")
-      }
-      val userID = buffer.getUnsignedShort()
-      val ping = buffer.getUnsignedInt()
-      val connectionType = buffer.get()
-      return Result.success(
-        UserJoined(
-          messageNumber,
-          userName,
-          userID,
-          ping.milliseconds,
-          ConnectionType.fromByteValue(connectionType),
-        )
-      )
-    }
-
     override fun write(buffer: ByteBuf, message: UserJoined) {
       EmuUtil.writeString(buffer, message.username)
       buffer.writeShortLE(message.userId)
@@ -111,7 +87,7 @@ data class UserJoined(
       buffer.writeByte(message.connectionType.byteValue.toInt())
     }
 
-    override fun write(buffer: ByteBuffer, message: UserJoined) {
+    fun write(buffer: ByteBuffer, message: UserJoined) {
       EmuUtil.writeString(buffer, message.username)
       buffer.putUnsignedShort(message.userId)
       buffer.putUnsignedInt(message.ping.toMillisDouble().roundToLong())

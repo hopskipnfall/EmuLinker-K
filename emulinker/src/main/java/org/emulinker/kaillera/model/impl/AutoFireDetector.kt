@@ -1,7 +1,7 @@
 package org.emulinker.kaillera.model.impl
 
+import io.netty.buffer.ByteBuf
 import org.emulinker.kaillera.model.KailleraUser
-import org.emulinker.util.VariableSizeByteArray
 
 interface AutoFireDetector {
   var sensitivity: Int
@@ -10,7 +10,7 @@ interface AutoFireDetector {
 
   fun addPlayer(user: KailleraUser, playerNumber: Int)
 
-  fun addData(playerNumber: Int, data: VariableSizeByteArray, bytesPerAction: Int)
+  fun addData(playerNumber: Int, data: ByteBuf, bytesPerAction: Int)
 
   fun stop(playerNumber: Int)
 

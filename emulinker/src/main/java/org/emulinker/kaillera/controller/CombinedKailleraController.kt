@@ -7,15 +7,18 @@ import io.ktor.server.netty.Netty
 import io.ktor.server.netty.NettyApplicationEngine
 import io.netty.bootstrap.Bootstrap
 import io.netty.buffer.ByteBuf
+import io.netty.buffer.ByteBufAllocator
 import io.netty.buffer.PooledByteBufAllocator
+import io.netty.channel.Channel
 import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.ChannelOption
+import io.netty.channel.MultiThreadIoEventLoopGroup
 import io.netty.channel.SimpleChannelInboundHandler
-import io.netty.channel.nio.NioEventLoopGroup
+import io.netty.channel.nio.NioIoHandler
 import io.netty.channel.socket.DatagramPacket
 import io.netty.channel.socket.nio.NioDatagramChannel
+import io.netty.util.concurrent.FastThreadLocal
 import java.net.InetSocketAddress
-import java.nio.ByteOrder
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.concurrent.thread
 import org.emulinker.config.RuntimeFlags
@@ -29,7 +32,7 @@ import org.emulinker.kaillera.controller.v086.V086ClientHandler
 import org.emulinker.kaillera.model.KailleraServer
 import org.emulinker.kaillera.model.exception.NewConnectionException
 import org.emulinker.kaillera.model.exception.ServerFullException
-import org.emulinker.kaillera.pico.CompiledFlags
+import org.emulinker.util.EmuLang.getStringOrNull
 import org.emulinker.util.EmuUtil.formatSocketAddress
 
 class CombinedKailleraController(
@@ -42,8 +45,13 @@ class CombinedKailleraController(
 
   private var stopFlag = false
 
-  lateinit var nettyChannel: io.netty.channel.Channel
-    private set
+  private lateinit var nettyChannel: Channel
+
+  fun alloc(): ByteBufAllocator = SecurityContext.handlerContext?.alloc() ?: nettyChannel.alloc()
+
+  fun send(datagramPacket: DatagramPacket) {
+    (SecurityContext.handlerContext ?: nettyChannel).writeAndFlush(datagramPacket)
+  }
 
   @Synchronized
   fun stop() {
@@ -51,6 +59,7 @@ class CombinedKailleraController(
     for (controller in controllersMap.values) {
       controller.stop()
     }
+    server.stop()
     stopFlag = true
   }
 
@@ -59,19 +68,25 @@ class CombinedKailleraController(
     port: Int
   ): EmbeddedServer<NettyApplicationEngine, NettyApplicationEngine.Configuration> =
     embeddedServer(Netty, port = port) {
-        // Note: This is a fixed number of threads.
-        val group = NioEventLoopGroup(flags.nettyFlags)
-
+        val group = MultiThreadIoEventLoopGroup(NioIoHandler.newFactory())
         Runtime.getRuntime()
           .addShutdownHook(
             thread(start = false) {
               logger.atInfo().log("Received SIGTERM, shutting down gracefully.")
               try {
-                server.announce("The server is shutting down", gamesAlso = true)
+                server.announce(
+                  getStringOrNull("KailleraServerImpl.ServerShuttingDown")
+                    ?: "The server is shutting down",
+                  gamesAlso = true,
+                )
                 Thread.sleep(1_000)
 
                 for (handler in clientHandlers.values) {
-                  server.quit(handler.user, "Server shutting down")
+                  server.quit(
+                    handler.user,
+                    getStringOrNull("KailleraServerImpl.ServerShuttingDown")
+                      ?: "The server is shutting down",
+                  )
                 }
                 // Give the server time to notify everyone they are being kicked.
                 Thread.sleep(1_000)
@@ -87,7 +102,14 @@ class CombinedKailleraController(
             channel(NioDatagramChannel::class.java)
             option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
             option(ChannelOption.SO_BROADCAST, true)
-            handler(this@CombinedKailleraController)
+            handler(
+              object : io.netty.channel.ChannelInitializer<Channel>() {
+                override fun initChannel(ch: Channel) {
+                  ch.pipeline().addLast(this@CombinedKailleraController)
+                  ch.pipeline().addLast(GlobalExceptionHandler())
+                }
+              }
+            )
 
             nettyChannel = bind(port).sync().channel()
             nettyChannel.closeFuture().sync()
@@ -98,14 +120,6 @@ class CombinedKailleraController(
         }
       }
       .start(true)
-
-  fun send(datagram: DatagramPacket) {
-    try {
-      this.nettyChannel.writeAndFlush(datagram)
-    } catch (e: Exception) {
-      logger.atSevere().withCause(e).log("Failed to send on port %s", boundPort)
-    }
-  }
 
   /** Map of protocol name (e.g. "0.86") to [KailleraServerController]. */
   // TODO(nue): Since there is only one, we could just remove this for now..
@@ -118,39 +132,32 @@ class CombinedKailleraController(
 
   val bufferSize: Int = flags.v086BufferSize
 
-  private fun handleReceived(
-    buffer: ByteBuf,
-    remoteSocketAddress: InetSocketAddress,
-    ctx: ChannelHandlerContext,
-  ) {
+  private fun handleReceived(buffer: ByteBuf, remoteSocketAddress: InetSocketAddress) {
     // Note: The the port also has to match. Users relaunching their kaillera clients and connecting
     // again will most likely be connecting from a different port.
     var handler = clientHandlers[remoteSocketAddress]
     if (handler == null) {
       // User is new. It's either a ConnectMessage or it's the user's first message after
       // reconnecting to the server via the dictated port.
-      val connectMessageResult: Result<ConnectMessage> =
-        if (CompiledFlags.USE_BYTEBUF_INSTEAD_OF_BYTEBUFFER) {
-          ConnectMessage.parse(buffer)
-        } else {
-          ConnectMessage.parse(buffer.nioBuffer().order(ByteOrder.LITTLE_ENDIAN))
-        }
+      val connectMessageResult: Result<ConnectMessage> = ConnectMessage.parse(buffer)
       if (connectMessageResult.isSuccess) {
         when (val connectMessage = connectMessageResult.getOrThrow()) {
           is ConnectMessage_PING -> {
-            val buf = nettyChannel.alloc().buffer(bufferSize)
+            val buf = alloc().buffer(bufferSize)
             ConnectMessage_PONG.writeTo(buf)
-            ctx.writeAndFlush(DatagramPacket(buf, remoteSocketAddress))
+            send(DatagramPacket(buf, remoteSocketAddress))
           }
+
           is RequestPrivateKailleraPortRequest -> {
             check(connectMessage.protocol == "0.83") {
               "Client listed unsupported protocol! $connectMessage."
             }
 
-            val buf = nettyChannel.alloc().buffer(bufferSize)
+            val buf = alloc().buffer(bufferSize)
             RequestPrivateKailleraPortResponse(flags.serverPort).writeTo(buf)
-            ctx.writeAndFlush(DatagramPacket(buf, remoteSocketAddress))
+            send(DatagramPacket(buf, remoteSocketAddress))
           }
+
           else -> {
             logger
               .atWarning()
@@ -198,14 +205,16 @@ class CombinedKailleraController(
 
       clientHandlers[remoteSocketAddress] = handler
     }
-    // I do not like blocking on a request thread.
-    synchronized(handler.requestHandlerMutex) {
-      handler.handleReceived(buffer, remoteSocketAddress)
-    }
+    handler.handleReceived(buffer, remoteSocketAddress)
   }
 
   override fun channelRead0(ctx: ChannelHandlerContext, packet: DatagramPacket) {
-    handleReceived(packet.content(), packet.sender(), ctx)
+    try {
+      SecurityContext.handlerContext = ctx
+      handleReceived(packet.content(), packet.sender())
+    } finally {
+      SecurityContext.remove()
+    }
   }
 
   override fun channelRegistered(ctx: ChannelHandlerContext) {
@@ -218,5 +227,17 @@ class CombinedKailleraController(
 
   private companion object {
     val logger = FluentLogger.forEnclosingClass()
+  }
+
+  private object SecurityContext {
+    private val CTX_HOLDER = FastThreadLocal<ChannelHandlerContext>()
+
+    var handlerContext: ChannelHandlerContext?
+      set(value) {
+        CTX_HOLDER.set(value)
+      }
+      get() = CTX_HOLDER.get()
+
+    fun remove() = CTX_HOLDER.remove()
   }
 }

@@ -62,25 +62,7 @@ sealed class Chat : V086Message() {
       )
     }
 
-    override fun read(buffer: ByteBuffer, messageNumber: Int): Result<Chat> {
-      if (buffer.remaining() < 3) {
-        return parseFailure("Failed byte count validation!")
-      }
-      val username = buffer.readString()
-      if (buffer.remaining() < 2) {
-        return parseFailure("Failed byte count validation!")
-      }
-      val message = buffer.readString()
-      return Result.success(
-        if (username.isBlank()) {
-          ChatRequest(messageNumber = messageNumber, message = message)
-        } else {
-          ChatNotification(messageNumber = messageNumber, username = username, message = message)
-        }
-      )
-    }
-
-    override fun write(buffer: ByteBuffer, message: Chat) {
+    fun write(buffer: ByteBuffer, message: Chat) {
       EmuUtil.writeString(
         buffer,
         when (message) {
@@ -99,7 +81,7 @@ sealed class Chat : V086Message() {
  * This shares a message type ID with [ChatRequest]: `0x07`.
  */
 data class ChatNotification(
-  override val messageNumber: Int,
+  override var messageNumber: Int,
   val username: String,
   override val message: String,
 ) : Chat(), ServerMessage
@@ -109,5 +91,5 @@ data class ChatNotification(
  *
  * This shares a message type ID with [ChatNotification]: `0x07`.
  */
-data class ChatRequest(override val messageNumber: Int, override val message: String) :
+data class ChatRequest(override var messageNumber: Int, override val message: String) :
   Chat(), ClientMessage

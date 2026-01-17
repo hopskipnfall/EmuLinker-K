@@ -1,7 +1,6 @@
 package org.emulinker.kaillera.controller.connectcontroller.protocol
 
 import io.netty.buffer.ByteBuf
-import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.pico.AppModule
 import org.emulinker.util.EmuUtil
@@ -19,11 +18,6 @@ data class RequestPrivateKailleraPortRequest(val protocol: String) : ConnectMess
 
   override fun writeTo(buffer: ByteBuf) {
     buffer.writeBytes(AppModule.charsetDoNotUse.encode(iD))
-    EmuUtil.writeString(buffer, protocol, 0x00, AppModule.charsetDoNotUse)
-  }
-
-  override fun writeTo(buffer: ByteBuffer) {
-    buffer.put(AppModule.charsetDoNotUse.encode(iD))
     EmuUtil.writeString(buffer, protocol, 0x00, AppModule.charsetDoNotUse)
   }
 

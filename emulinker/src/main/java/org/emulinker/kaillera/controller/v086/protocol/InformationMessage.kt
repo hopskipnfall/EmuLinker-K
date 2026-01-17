@@ -14,7 +14,7 @@ import org.emulinker.util.EmuUtil.readString
  */
 data class InformationMessage
 @Throws(MessageFormatException::class)
-constructor(override val messageNumber: Int, val source: String, val message: String) :
+constructor(override var messageNumber: Int, val source: String, val message: String) :
   V086Message(), ServerMessage {
 
   override val messageTypeId = ID
@@ -53,24 +53,12 @@ constructor(override val messageNumber: Int, val source: String, val message: St
       return Result.success(InformationMessage(messageNumber, source, message))
     }
 
-    override fun read(buffer: ByteBuffer, messageNumber: Int): Result<InformationMessage> {
-      if (buffer.remaining() < 4) {
-        return parseFailure("Failed byte count validation!")
-      }
-      val source = buffer.readString()
-      if (buffer.remaining() < 2) {
-        return parseFailure("Failed byte count validation!")
-      }
-      val message = buffer.readString()
-      return Result.success(InformationMessage(messageNumber, source, message))
-    }
-
     override fun write(buffer: ByteBuf, message: InformationMessage) {
       EmuUtil.writeString(buffer, message.source)
       EmuUtil.writeString(buffer, message.message)
     }
 
-    override fun write(buffer: ByteBuffer, message: InformationMessage) {
+    fun write(buffer: ByteBuffer, message: InformationMessage) {
       EmuUtil.writeString(buffer, message.source)
       EmuUtil.writeString(buffer, message.message)
     }

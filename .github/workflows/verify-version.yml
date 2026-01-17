@@ -1,0 +1,40 @@
+name: Verify Version
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  verify-version:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Extract version from build.gradle.kts
+        id: get_version
+        run: |
+          VERSION=$(grep 'version = ' emulinker/build.gradle.kts | cut -d '"' -f 2)
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "Detected version: $VERSION"
+
+      - name: Verify start-server.sh
+        run: |
+          if grep -q "emulinker-k-${{ env.VERSION }}.jar" release/start-server.sh; then
+            echo "✅ start-server.sh matches version ${{ env.VERSION }}"
+          else
+            echo "❌ start-server.sh does NOT match version ${{ env.VERSION }}"
+            grep "emulinker-k-.*.jar" release/start-server.sh
+            exit 1
+          fi
+
+      - name: Verify start-server.bat
+        run: |
+          if grep -q "emulinker-k-${{ env.VERSION }}.jar" release/start-server.bat; then
+            echo "✅ start-server.bat matches version ${{ env.VERSION }}"
+          else
+            echo "❌ start-server.bat does NOT match version ${{ env.VERSION }}"
+            grep "emulinker-k-.*.jar" release/start-server.bat
+            exit 1
+          fi

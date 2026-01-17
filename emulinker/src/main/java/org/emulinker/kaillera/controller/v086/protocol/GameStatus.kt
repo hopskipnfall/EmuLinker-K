@@ -4,7 +4,6 @@ import io.netty.buffer.ByteBuf
 import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086Utils
-import org.emulinker.util.UnsignedUtil.getUnsignedShort
 import org.emulinker.util.UnsignedUtil.putUnsignedShort
 
 /**
@@ -15,7 +14,7 @@ import org.emulinker.util.UnsignedUtil.putUnsignedShort
 data class GameStatus
 @Throws(MessageFormatException::class)
 constructor(
-  override val messageNumber: Int,
+  override var messageNumber: Int,
   val gameId: Int,
   val val1: Int,
   val gameStatus: org.emulinker.kaillera.model.GameStatus,
@@ -79,31 +78,6 @@ constructor(
       )
     }
 
-    override fun read(buffer: ByteBuffer, messageNumber: Int): Result<GameStatus> {
-      if (buffer.remaining() < 8) {
-        return parseFailure("Failed byte count validation!")
-      }
-      val b = buffer.get()
-      require(b.toInt() == 0x00) {
-        "Invalid Game Status format: byte 0 = " + b.toHexString(HexFormat.UpperCase)
-      }
-      val gameID = buffer.getUnsignedShort()
-      val val1 = buffer.getUnsignedShort()
-      val gameStatus = buffer.get()
-      val numPlayers = buffer.get()
-      val maxPlayers = buffer.get()
-      return Result.success(
-        GameStatus(
-          messageNumber,
-          gameID,
-          val1,
-          org.emulinker.kaillera.model.GameStatus.fromByteValue(gameStatus),
-          numPlayers,
-          maxPlayers,
-        )
-      )
-    }
-
     override fun write(buffer: ByteBuf, message: GameStatus) {
       buffer.writeByte(0x00)
       // Note: I think val0 is always 00, meaning that this could just be
@@ -115,7 +89,7 @@ constructor(
       buffer.writeByte(message.maxPlayers.toInt())
     }
 
-    override fun write(buffer: ByteBuffer, message: GameStatus) {
+    fun write(buffer: ByteBuffer, message: GameStatus) {
       buffer.put(0x00.toByte())
       buffer.putUnsignedShort(message.gameId)
       buffer.putUnsignedShort(message.val1)

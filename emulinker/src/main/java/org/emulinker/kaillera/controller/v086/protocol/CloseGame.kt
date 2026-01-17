@@ -4,11 +4,10 @@ import io.netty.buffer.ByteBuf
 import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086Utils
-import org.emulinker.util.UnsignedUtil.getUnsignedShort
 import org.emulinker.util.UnsignedUtil.putUnsignedShort
 
 data class CloseGame(
-  override val messageNumber: Int,
+  override var messageNumber: Int,
   val gameId: Int,
   // TODO(nue): Figure out what [val1] represents..
   val val1: Int,
@@ -53,27 +52,13 @@ data class CloseGame(
       return Result.success(CloseGame(messageNumber, gameID, val1))
     }
 
-    override fun read(buffer: ByteBuffer, messageNumber: Int): Result<CloseGame> {
-      if (buffer.remaining() < 5) {
-        return parseFailure("Failed byte count validation!")
-      }
-      val b = buffer.get()
-      if (b.toInt() != 0x00)
-        throw MessageFormatException(
-          "Invalid Close Game format: byte 0 = " + b.toHexString(HexFormat.UpperCase)
-        )
-      val gameID = buffer.getUnsignedShort()
-      val val1 = buffer.getUnsignedShort()
-      return Result.success(CloseGame(messageNumber, gameID, val1))
-    }
-
     override fun write(buffer: ByteBuf, message: CloseGame) {
       buffer.writeByte(0x00)
       buffer.writeShortLE(message.gameId)
       buffer.writeShortLE(message.val1)
     }
 
-    override fun write(buffer: ByteBuffer, message: CloseGame) {
+    fun write(buffer: ByteBuffer, message: CloseGame) {
       buffer.put(0x00.toByte())
       buffer.putUnsignedShort(message.gameId)
       buffer.putUnsignedShort(message.val1)

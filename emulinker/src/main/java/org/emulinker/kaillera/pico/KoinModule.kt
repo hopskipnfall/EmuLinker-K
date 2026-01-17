@@ -49,7 +49,6 @@ val koinModule = module {
   singleOf(::V086Controller).bind<KailleraServerController>()
   singleOf(::TaskScheduler)
   singleOf(::MasterListUpdater)
-  singleOf(::V086Controller).bind<KailleraServerController>()
   singleOf(::MasterListStatsCollector).bind<StatsCollector>()
   singleOf(::EmuLinkerPropertiesConfig).bind<Configuration>()
   singleOf(::MetricRegistry)
@@ -96,7 +95,9 @@ val koinModule = module {
         charset = Charset.forName(config.getString("emulinker.charset")),
         chatFloodTime = config.getInt("server.chatFloodTime", 2).seconds,
         allowedProtocols =
-          config.getStringArray("controllers.v086.clientTypes.clientType").toList(),
+          config.getStringArray("controllers.v086.clientTypes.clientType").toList().ifEmpty {
+            listOf("v086")
+          },
         allowedConnectionTypes =
           config
             .getStringArray("server.allowedConnectionTypes")
@@ -128,7 +129,6 @@ val koinModule = module {
         maxUsers = config.getInt("server.maxUsers", 0),
         metricsEnabled = config.getBoolean("metrics.enabled", false),
         metricsLoggingFrequency = config.getInt("metrics.loggingFrequencySeconds", 30).seconds,
-        nettyFlags = config.getInt("server.nettyThreadpoolSize", 30),
         serverAddress = config.getString("masterList.serverConnectAddress", ""),
         serverLocation = config.getString("masterList.serverLocation", "Unknown"),
         serverName = config.getString("masterList.serverName", "New ELK Server"),
