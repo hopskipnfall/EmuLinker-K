@@ -477,6 +477,10 @@ class KailleraUser(
     return Result.success(Unit)
   }
 
+  fun updateActivity(nowNs: Long) {
+    lastUpdateNs = nowNs
+  }
+
   /** Acts on an event in realtime. */
   fun doEvent(event: KailleraEvent) {
     if (

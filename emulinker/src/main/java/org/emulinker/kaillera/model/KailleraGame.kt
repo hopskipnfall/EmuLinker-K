@@ -485,6 +485,14 @@ class KailleraGame(
 
     // timeoutMillis = highestPing;
     addEventForAllPlayers(GameStartedEvent(this))
+
+    lagometer =
+      Lagometer(
+        frameDurationNs = singleFrameDurationForLagCalculationOnlyNs.nanoseconds,
+        historyDuration = flags.lagstatDuration,
+        historyResolution = 5.seconds,
+        numPlayers = players.size,
+      )
   }
 
   @Synchronized
@@ -753,6 +761,7 @@ class KailleraGame(
           return AddDataResult.IgnoringDesynched
         }
         player.doEvent(GameDataEvent(this, joinedGameData))
+        player.updateActivity(nowNs)
         lagometer?.receivedInputsFromUser(playerNumber - 1, nowNs = nowNs)
         val firstPlayer = players.firstOrNull()
         if (firstPlayer != null && firstPlayer.id == player.id) {
