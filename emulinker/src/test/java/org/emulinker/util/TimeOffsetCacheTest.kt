@@ -8,11 +8,20 @@ class TimeOffsetCacheTest {
 
   @Test
   fun `cache and retrieve single value`() {
+    val target = TimeOffsetCache(delay = 30.nanoseconds, resolution = 10.nanoseconds)
+
+    repeat(2) { target.update(latestVal = it.toLong(), nowNs = 10L * it) }
+
+    assertThat(target.getDelayedValue()).isEqualTo(0)
+  }
+
+  @Test
+  fun `single value cache should return null`() {
     val target = TimeOffsetCache(delay = 100.nanoseconds, resolution = 10.nanoseconds)
 
     target.update(latestVal = 42, nowNs = 0)
 
-    assertThat(target.getDelayedValue()).isEqualTo(42)
+    assertThat(target.getDelayedValue()).isNull()
   }
 
   @Test
@@ -20,7 +29,10 @@ class TimeOffsetCacheTest {
     val target = TimeOffsetCache(delay = 100.nanoseconds, resolution = 10.nanoseconds)
 
     target.update(latestVal = 42, nowNs = 0)
-    target.update(latestVal = 100, nowNs = 9)
+    target.update(latestVal = 43, nowNs = 10)
+
+    // Add one more dummy value.
+    target.update(latestVal = 100, nowNs = 10)
 
     assertThat(target.getDelayedValue()).isEqualTo(42)
   }

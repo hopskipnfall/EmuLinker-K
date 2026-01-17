@@ -126,10 +126,8 @@ class KailleraGame(
 
   val players = mutableListOf<KailleraUser>()
 
-  var lastLagReset = clock.now()
+  var lagometer: Lagometer? = null
     private set
-
-  private var lagometer: Lagometer? = null
 
   val mutedUsers: MutableList<String> = mutableListOf()
   var aEmulator = "any"
@@ -342,39 +340,6 @@ class KailleraGame(
       }
     }
 
-    // TODO(nue): Localize this welcome message?
-    // announce(
-    //     "Help: "
-    //         + getServer().getReleaseInfo().getProductName()
-    //         + " v"
-    //         + getServer().getReleaseInfo().getVersionString()
-    //         + ": "
-    //         + getServer().getReleaseInfo().getReleaseDate()
-    //         + " - Visit: www.EmuLinker.org",
-    //     user);
-    // announce("************************", user);
-    // announce("Type /p2pon to ignore ALL server activity during gameplay.", user);
-    // announce("This will reduce lag that you contribute due to a busy server.", user);
-    // announce("If server is greater than 60 users, option is auto set.", user);
-    // announce("************************", user);
-
-    /*
-    if(autoFireDetector != null)
-    {
-    	if(autoFireDetector.getSensitivity() > 0)
-    	{
-    		announce(EmuLang.getString("KailleraGameImpl.AutofireDetectionOn"));
-    		announce(EmuLang.getString("KailleraGameImpl.AutofireCurrentSensitivity", autoFireDetector.getSensitivity()));
-    	}
-    	else
-    	{
-    		announce(EmuLang.getString("KailleraGameImpl.AutofireDetectionOff"));
-    	}
-    	announce(EmuLang.getString("KailleraGameImpl.GameHelp"));
-    }
-    */
-    // }
-
     // new SF MOD - different emulator versions notifications
     if (
       access < AccessManager.ACCESS_ADMIN &&
@@ -520,6 +485,14 @@ class KailleraGame(
 
     // timeoutMillis = highestPing;
     addEventForAllPlayers(GameStartedEvent(this))
+
+    lagometer =
+      Lagometer(
+        frameDurationNs = singleFrameDurationForLagCalculationOnlyNs.nanoseconds,
+        historyDuration = flags.lagstatDuration,
+        historyResolution = 5.seconds,
+        numPlayers = players.size,
+      )
   }
 
   @Synchronized
@@ -726,7 +699,10 @@ class KailleraGame(
 
     gameLogBuilder?.addEvents(
       event {
-        timestampNs = checkNotNull(user.receivedGameDataNs) { "user.receivedGameDataNs is null!" }
+        timestampNs =
+          checkNotNull(lagometer?.userDatas[user.playerNumber - 1]?.receivedDataNs) {
+            "user's receivedGameDataNs is null!"
+          }
         receivedGameData =
           when (user.playerNumber) {
             1 -> RECEIVED_FROM_P1
@@ -758,6 +734,7 @@ class KailleraGame(
 
     // TODO(nue): This works for 2P but what about more? This probably results in unnecessary
     // messages.
+    val nowNs = System.nanoTime()
     for (player in players) {
       val playerNumber = player.playerNumber
 
@@ -773,7 +750,7 @@ class KailleraGame(
       ) {
         waitingOnData = false
         val joinedGameData = PooledByteBufAllocator.DEFAULT.buffer(user.arraySize)
-        for (actionCounter in 0 until actionsPerMessage) {
+        repeat(actionsPerMessage) {
           for (playerActionQueueIndex in paq.indices) {
             paq[playerActionQueueIndex].getActionAndWriteToArray(
               readingPlayerIndex = playerNumber - 1,
@@ -787,10 +764,10 @@ class KailleraGame(
           return AddDataResult.IgnoringDesynched
         }
         player.doEvent(GameDataEvent(this, joinedGameData))
-        player.updateUserDrift()
+        player.updateActivity(nowNs)
         val firstPlayer = players.firstOrNull()
         if (firstPlayer != null && firstPlayer.id == player.id) {
-          updateGameDrift()
+          updateGameDrift(nowNs)
         }
       } else {
         waitingOnData = true
@@ -809,7 +786,6 @@ class KailleraGame(
 
   fun resetLag() {
     lagometer?.reset()
-    lastLagReset = clock.now()
   }
 
   /** Sets the game framerate for lag measuring purposes. */
@@ -819,23 +795,20 @@ class KailleraGame(
 
     lagometer =
       Lagometer(
-        frameDurationNs = singleFrameDurationForLagCalculationOnlyNs,
+        frameDurationNs = singleFrameDurationForLagCalculationOnlyNs.nanoseconds,
         historyDuration = flags.lagstatDuration,
+        historyResolution = 5.seconds,
+        numPlayers = players.size,
       )
 
     resetLag()
-    for (player in players) {
-      player.resetLag()
-    }
   }
 
   /** The total duration that the game has drifted over the lagstat measurement window. */
   val currentGameLag
     get() = lagometer?.lag ?: Duration.ZERO
 
-  private fun updateGameDrift() {
-    val nowNs = System.nanoTime()
-
+  private fun updateGameDrift(nowNs: Long) {
     val glb = gameLogBuilder
     if (glb != null) {
       glb.addEvents(
@@ -854,10 +827,13 @@ class KailleraGame(
               windowDurationMs = flags.lagstatDuration.inWholeMilliseconds.toInt()
               gameLagMs = currentGameLag.toMillisDouble()
 
-              for (p in players) {
-                playerAttributedLags += playerAttributedLag {
-                  player = p.playerNumber.toPlayerNumberProto()
-                  attributedLagMs = p.lagAttributedToUser().toMillisDouble()
+              val lags = lagometer?.gameLagPerPlayer
+              if (lags != null) {
+                for ((i, p) in players.withIndex()) {
+                  playerAttributedLags += playerAttributedLag {
+                    player = p.playerNumber.toPlayerNumberProto()
+                    attributedLagMs = lags[i].toMillisDouble()
+                  }
                 }
               }
             }
@@ -867,23 +843,7 @@ class KailleraGame(
       }
     }
 
-    val delaySinceLastResponseNs = nowNs - lastFrameNs
-
-    val minFrameDelay = if (players.isEmpty()) 1 else players.minOfOrNull { it.frameDelay } ?: 1
-
-    if (lagometer == null) {
-      lagometer =
-        Lagometer(
-          frameDurationNs = singleFrameDurationForLagCalculationOnlyNs,
-          historyDuration = flags.lagstatDuration,
-        )
-    }
-
-    lagometer?.update(
-      delaySinceLastResponseNs = delaySinceLastResponseNs,
-      minFrameDelay = minFrameDelay,
-      nowNs = nowNs,
-    )
+    lagometer?.advanceFrame(nowNs)
 
     lastFrameNs = nowNs
   }

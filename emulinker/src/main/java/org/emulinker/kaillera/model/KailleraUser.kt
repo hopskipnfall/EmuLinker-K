@@ -5,9 +5,7 @@ import io.netty.buffer.ByteBuf
 import io.netty.buffer.PooledByteBufAllocator
 import java.net.InetSocketAddress
 import kotlin.time.Clock
-import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
-import kotlin.time.Duration.Companion.seconds
 import kotlin.time.Instant
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.access.AccessManager
@@ -78,12 +76,6 @@ class KailleraUser(
 
   /** This marks the last time the user interacted in the server. */
   private var lastActivity: Instant = initTime
-
-  private var lagometer: Lagometer? = null
-
-  /** Time we received the latest game data from the user for lag measurement purposes. */
-  var receivedGameDataNs: Long? = null
-    private set
 
   /** The last time we heard from this player for lag detection purposes. */
   private var lastUpdateNs = System.nanoTime()
@@ -281,12 +273,6 @@ class KailleraUser(
     loggedIn = false
   }
 
-  fun lagAttributedToUser(): Duration = lagometer?.lag ?: Duration.ZERO
-
-  fun resetLag() {
-    lagometer?.reset()
-  }
-
   @Synchronized
   @Throws(JoinGameException::class)
   fun joinGame(gameID: Int): KailleraGame {
@@ -308,15 +294,6 @@ class KailleraUser(
       throw JoinGameException(EmuLang.getString("KailleraUserImpl.JoinGameErrorDoesNotExist"))
     }
 
-    // if (connectionType != game.getOwner().getConnectionType())
-    // {
-    //	logger.atWarning().log(this + " join game denied: " + this + ": You must use the same
-    // connection type as
-    // the owner: " + game.getOwner().getConnectionType());
-    //	throw new
-    // JoinGameException(EmuLang.getString("KailleraGameImpl.StartGameConnectionTypeMismatchInfo"));
-    //
-    // }
     playerNumber = game.join(this)
     this.game = game
     gameDataErrorTime = -1
@@ -394,14 +371,6 @@ class KailleraUser(
   @Synchronized
   @Throws(StartGameException::class)
   fun startGame() {
-    lagometer =
-      Lagometer(
-        frameDurationNs =
-          (1.seconds / connectionType.getUpdatesPerSecond(KailleraGame.GAME_FPS.toDouble()))
-            .inWholeNanoseconds,
-        historyDuration = flags.lagstatDuration,
-      )
-    resetLag()
     updateLastActivity()
     val game = this.game
     if (game == null) {
@@ -431,7 +400,7 @@ class KailleraUser(
 
   // Current source of the lag.
   fun addGameData(data: ByteBuf): Result<Unit> {
-    receivedGameDataNs = System.nanoTime()
+    game?.lagometer?.receivedInputsFromUser(playerNumber - 1, System.nanoTime())
     fun doTheThing(): Result<Unit> {
       // Returning success when the game doesn't exist might not be correct?
       val game = this.game ?: return Result.success(Unit)
@@ -504,18 +473,7 @@ class KailleraUser(
     return Result.success(Unit)
   }
 
-  fun updateUserDrift() {
-    val receivedGameDataNs = receivedGameDataNs ?: return
-    val nowNs = System.nanoTime()
-    val delaySinceLastResponseNs = nowNs - lastUpdateNs
-    val timeWaitingNs = nowNs - receivedGameDataNs
-    val delaySinceLastResponseMinusWaitingNs = delaySinceLastResponseNs - timeWaitingNs
-    lagometer?.update(
-      delaySinceLastResponseNs = delaySinceLastResponseMinusWaitingNs,
-      minFrameDelay = frameDelay,
-      nowNs = nowNs,
-    )
-
+  fun updateActivity(nowNs: Long) {
     lastUpdateNs = nowNs
   }
 

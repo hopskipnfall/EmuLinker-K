@@ -455,7 +455,9 @@ class GameChatAction(
       } else if (message.message == "/lagstat") {
         game.chat(clientHandler.user, message.message)
 
-        val lagstatDuration = min(flags.lagstatDuration, clock.now() - game.lastLagReset)
+        val lagometer = game.lagometer ?: return
+
+        val lagstatDuration = min(flags.lagstatDuration, clock.now() - lagometer.lastLagReset)
         val lagstatDurationAsString =
           if (lagstatDuration < 1.minutes) {
             lagstatDuration.toLocalizedString(SECONDS)
@@ -470,13 +472,14 @@ class GameChatAction(
             gameLag.toSecondDoublePrecisionString(),
           )
         )
+        val lagPerPlayer = lagometer.gameLagPerPlayer
         game.announce(
           EmuLang.getString("Lagstat.PerUserSummary") +
             " " +
             game.players
               .filter { !it.inStealthMode }
               .joinToString(separator = ", ") {
-                "P${it.playerNumber}: ${it.lagAttributedToUser()
+                "P${it.playerNumber}: ${lagPerPlayer[it.playerNumber - 1]
                     .toSecondDoublePrecisionString()}"
               }
         )
@@ -485,9 +488,10 @@ class GameChatAction(
         val p1 = game.players.firstOrNull()
         if (p1 != null && p1.connectionType == ConnectionType.LAN && lagstatDuration > 10.seconds) {
           val lagPerDuration = game.currentGameLag / lagstatDuration
+          val playerToLag = game.players.associateWith { lagPerPlayer[it.playerNumber - 1] }
           if (lagPerDuration > 0.3.seconds / 1.minutes) {
-            val laggiestPlayer = game.players.maxBy { it.lagAttributedToUser() }
-            if (laggiestPlayer.lagAttributedToUser() > Duration.ZERO) {
+            val (laggiestPlayer, lagValue) = playerToLag.maxBy { (_, lag) -> lag }
+            if (lagValue > Duration.ZERO) {
               val targetFrameDelay = laggiestPlayer.frameDelay + 1
 
               fun pingThresholdForDelay(delay: Int, connectionType: ConnectionType): Duration =
@@ -517,9 +521,6 @@ class GameChatAction(
         }
       } else if (message.message == "/lagreset") {
         game.chat(clientHandler.user, message.message)
-        for (player in game.players) {
-          player.resetLag()
-        }
         game.resetLag()
         game.announce(EmuLang.getString("Lagstat.LagstatReset"))
       } else if (

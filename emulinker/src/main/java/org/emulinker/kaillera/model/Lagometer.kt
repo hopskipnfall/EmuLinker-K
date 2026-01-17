@@ -1,68 +1,115 @@
 package org.emulinker.kaillera.model
 
-import kotlin.math.absoluteValue
+import kotlin.time.Clock
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.nanoseconds
-import kotlin.time.Duration.Companion.seconds
+import kotlin.time.Instant
 import org.emulinker.util.TimeOffsetCache
 
-/**
- * Encapsulates the logic for measuring lag (drift) against a expected frame rate.
- *
- * This class tracks the "drift" of incoming events (like game data packets) relative to the
- * expected arrival time based on a constant frame rate. It accounts for a "leeway" buffer that
- * allows for some jitter without counting as lag, which scales with the user's frame delay setting.
- */
-class Lagometer(
-  val frameDurationNs: Long,
-  historyDuration: Duration = 15.seconds,
-  historyResolution: Duration = 5.seconds,
+class UserData(
+  private val frameDurationNs: Duration,
+  val totalDriftCache: TimeOffsetCache,
+  var receivedDataNs: Long = 0L,
+  var totalDrift: Duration = Duration.ZERO,
+  var lagLeeway: Duration = Duration.ZERO,
 ) {
-  private var lagLeewayNs = 0L
-  private var totalDriftNs = 0L
-  private val totalDriftCache =
-    TimeOffsetCache(delay = historyDuration, resolution = historyResolution)
 
-  /** The total duration of lag attributed to the user/game over the history window. */
-  val lag: Duration
-    get() = (totalDriftNs - (totalDriftCache.getDelayedValue() ?: 0)).nanoseconds.absoluteValue
-
-  /**
-   * Updates the lag measurement based on the time elapsed since the last expected event.
-   *
-   * @param delaySinceLastResponseNs The actual time elapsed since the last event (or frame
-   *   boundary).
-   * @param minFrameDelay The minimum frame delay (buffer size in frames) currently applicable.
-   *   Drift within this buffer is absorbed and not counted as lag.
-   */
-  fun update(delaySinceLastResponseNs: Long, minFrameDelay: Int, nowNs: Long) {
-    // We treat '0' as "Buffer Full".
-    // We allow the buffer to drain down to negative values up to -maxLagLeewayNs.
-    // Any drop below -maxLagLeewayNs is lag.
-
-    val maxLagLeewayNs = frameDurationNs * (minFrameDelay + 1)
-
-    // replenishing the leeway
-    // If delay is small (e.g. 0), we add frameDurationNs. Leeway goes up (towards 0).
-    // If delay is large, we subtract. Leeway goes down (negative).
-    lagLeewayNs += frameDurationNs - delaySinceLastResponseNs
-
-    if (lagLeewayNs < -maxLagLeewayNs) {
-      // Buffer underflow. Lag occurred!
-      val overflow = lagLeewayNs - (-maxLagLeewayNs)
-      totalDriftNs += overflow
-      lagLeewayNs = -maxLagLeewayNs
-    } else if (lagLeewayNs > 0) {
-      // Buffer overflow. We are ahead of schedule. Cap at 0 (Full).
-      lagLeewayNs = 0
+  fun calculateLagForUser(nowNs: Long, lastFrameNs: Long) {
+    val delaySinceLastResponseNs = (nowNs - lastFrameNs).nanoseconds
+    val timeWaitingNs = (nowNs - receivedDataNs).nanoseconds
+    val delaySinceLastResponseMinusWaitingNs = delaySinceLastResponseNs - timeWaitingNs
+    val leewayChangeNs = frameDurationNs - delaySinceLastResponseMinusWaitingNs
+    lagLeeway += leewayChangeNs
+    if (lagLeeway < Duration.ZERO) {
+      // Lag leeway fell below zero. We caused lag!
+      totalDrift += lagLeeway
+      lagLeeway = Duration.ZERO
+    } else if (lagLeeway > frameDurationNs) {
+      // Does not make sense to allow lag leeway to be longer than the length of one frame.
+      lagLeeway = frameDurationNs
     }
-
-    totalDriftCache.update(totalDriftNs, nowNs = nowNs)
+    totalDriftCache.update(totalDrift.inWholeNanoseconds, nowNs = nowNs)
   }
 
   fun reset() {
-    totalDriftNs = 0
-    lagLeewayNs = 0
     totalDriftCache.clear()
+    receivedDataNs = 0L
+    lagLeeway = Duration.ZERO
+  }
+
+  val windowedLag: Duration
+    get() =
+      (totalDrift - (totalDriftCache.getDelayedValue()?.nanoseconds ?: Duration.ZERO)).absoluteValue
+}
+
+class Lagometer(
+  val frameDurationNs: Duration,
+  historyDuration: Duration,
+  historyResolution: Duration,
+  val numPlayers: Int,
+  private val clock: Clock = Clock.System,
+) {
+  private var lagLeewayNs: Duration = Duration.ZERO
+  private var totalDriftNs: Duration = Duration.ZERO
+  private val totalDriftCache =
+    TimeOffsetCache(delay = historyDuration, resolution = historyResolution)
+
+  private var lastFrameNs = 0L
+
+  /** The total duration of lag attributed to the game over the history window. */
+  val lag: Duration
+    get() =
+      (totalDriftNs - (totalDriftCache.getDelayedValue()?.nanoseconds ?: Duration.ZERO))
+        .absoluteValue
+
+  /** Total cumulative lag since the game started. */
+  val cumulativeLag: Duration
+    get() = totalDriftNs.absoluteValue
+
+  /** How much of the above lag could be definitively attributed to each user. */
+  val gameLagPerPlayer: List<Duration>
+    get() = userDatas.map { it.windowedLag }
+
+  /** How much of the above lag could be definitively attributed to each user. */
+  val cumulativeGameLagPerPlayer: List<Duration>
+    get() = userDatas.map { it.totalDrift.absoluteValue }
+
+  var lastLagReset: Instant = Clock.System.now()
+
+  val userDatas =
+    Array(numPlayers) {
+      UserData(
+        frameDurationNs = frameDurationNs,
+        totalDriftCache = TimeOffsetCache(delay = historyDuration, resolution = historyResolution),
+      )
+    }
+
+  fun receivedInputsFromUser(playerIndex: Int, nowNs: Long) {
+    userDatas[playerIndex].receivedDataNs = nowNs
+  }
+
+  fun advanceFrame(nowNs: Long) {
+    userDatas.forEach { it.calculateLagForUser(nowNs = nowNs, lastFrameNs = lastFrameNs) }
+
+    val delaySinceLastResponseNs = (nowNs - lastFrameNs).nanoseconds
+
+    lagLeewayNs += frameDurationNs - delaySinceLastResponseNs
+    if (lagLeewayNs < Duration.ZERO) {
+      // Lag leeway fell below zero. Lag occurred!
+      totalDriftNs += lagLeewayNs
+      lagLeewayNs = Duration.ZERO
+    } else if (lagLeewayNs > frameDurationNs) {
+      // Does not make sense to allow lag leeway to be longer than the length of one frame.
+      lagLeewayNs = frameDurationNs
+    }
+    totalDriftCache.update(totalDriftNs.inWholeNanoseconds, nowNs = nowNs)
+    lastFrameNs = nowNs
+  }
+
+  fun reset() {
+    totalDriftCache.clear()
+    totalDriftNs = Duration.ZERO
+    lastLagReset = clock.now()
+    userDatas.forEach { it.reset() }
   }
 }
