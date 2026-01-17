@@ -6,7 +6,7 @@ cd "$SCRIPT_DIR"
 
 # 2. CONFIGURATION
 # Update these variables if you upgrade the jar or change memory settings
-JAR_FILE="./lib/emulinker-k-0.15.1.jar"
+JAR_FILE="./lib/emulinker-k-0.15.0.jar"
 MAIN_CLASS="org.emulinker.kaillera.pico.ServerMainKt"
 LOG_FILE="emulinker.log"
 SEARCH_TERM="EmuLinker-K version"
