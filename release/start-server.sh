@@ -10,12 +10,18 @@ JAR_FILE="./lib/emulinker-k-0.15.0.jar"
 MAIN_CLASS="org.emulinker.kaillera.pico.ServerMainKt"
 LOG_FILE="emulinker.log"
 SEARCH_TERM="EmuLinker-K version"
-
-# Java arguments from your old server.sh
 JAVA_OPTS="-Xms64m -Xmx256m -XX:+UseSerialGC -XX:+AlwaysPreTouch"
 CLASSPATH="./conf:$JAR_FILE"
 
 # 3. PRE-FLIGHT CHECKS
+
+# Check if Java is installed
+if ! command -v java &> /dev/null; then
+    echo "❌ Error: Java is not installed or not found in your PATH."
+    echo "   Please install a Java Runtime Environment (JRE) to continue."
+    exit 1
+fi
+
 # Verify the jar file actually exists
 if [ ! -f "$JAR_FILE" ]; then
     echo "❌ Error: Jar file not found at: $JAR_FILE"
@@ -52,7 +58,6 @@ echo "--------------------------------------------------------------------------
 if [ -f "$LOG_FILE" ]; then
     # Find the line number of the LAST occurrence of the startup message
     START_LINE=$(grep -n "$SEARCH_TERM" "$LOG_FILE" | tail -n 1 | cut -d: -f1)
-
     if [ -n "$START_LINE" ]; then
         tail -n "+$START_LINE" "$LOG_FILE"
     else

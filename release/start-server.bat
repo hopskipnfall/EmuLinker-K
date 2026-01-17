@@ -5,13 +5,24 @@ setlocal
 cd /d "%~dp0"
 
 :: 2. CONFIGURATION
-set "JAR_FILE=lib\emulinker-k-0.15.0-DEV.jar"
+set "JAR_FILE=lib\emulinker-k-0.15.0.jar"
 set "MAIN_CLASS=org.emulinker.kaillera.pico.ServerMainKt"
 set "LOG_FILE=emulinker.log"
 set "JAVA_OPTS=-Xms64m -Xmx256m -XX:+UseSerialGC -XX:+AlwaysPreTouch"
 set "CLASSPATH=conf;%JAR_FILE%"
 
 :: 3. PRE-FLIGHT CHECKS
+
+:: Check if Java is installed
+where java >nul 2>nul
+if %errorlevel% neq 0 (
+    echo [ERROR] Java is not installed or not found in your PATH.
+    echo Please install Java to run this server.
+    pause
+    exit /b 1
+)
+
+:: Verify Jar exists
 if not exist "%JAR_FILE%" (
     echo [ERROR] Jar file not found at: %JAR_FILE%
     echo Please check the path or filename in the script configuration.
