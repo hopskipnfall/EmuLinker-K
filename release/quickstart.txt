@@ -1,76 +1,40 @@
-EmuLinker-K Server - Quick Start Guide For Server Administrators
-=======================================================================
+EmuLinker-K Server - Quick Start Guide
+====================================
 
-* Download and install Java (J2SE) ver 17.0 or greater from http://java.sun.com
+1. Prerequisites
+----------------
+*   Java Runtime Environment (JRE) or Java Development Kit (JDK) version 17 or higher.
 
-  You can use the JDK or JRE, but JDK performance is better.  Java 5 is the 
-  same as Java 1.5, JDK is the same as SDK.  You want J2SE NOT J2EE.  You do 
-  NOT need the NetBeans version.
+2. Configuration
+----------------
+*   Edit `conf/emulinker.cfg` to configure general server properties (ports, max users, server name, etc.).
+*   Edit `conf/access.cfg` to configure access controls, IP filtering, and game/emulator restrictions.
+*   (Optional) Edit `conf/language.properties` to customize server messages.
+*   (Optional) Edit `conf/log4j2.properties` to customize logging behavior.
 
-* Edit the file conf/emulinker.cfg to configure your general server properties.
+3. Network Configuration
+------------------------
+*   Configure your firewall/router to allow **UDP** traffic on the ports specified in `emulinker.cfg`.
+*   Default port: 27888.
+*   Note: Kaillera uses UDP only; TCP is not required for game traffic.
 
-  emulinker.cfg contains settings like server ports, max users, max ping,
-  public/private, master list name, etc.  See file for details and examples.
+4. Starting the Server
+----------------------
+The server must be run from its installation directory so it can find the `conf` and `lib` folders.
 
-* Edit the file conf/access.cfg to configure access settings and filters.
+**Windows:**
+Double-click `start-server.bat` or run it from the command prompt.
 
-  access.cfg contains user privileges, ip addresses access, and game and 
-  emulator filters.  Using the filters in this file you can run a server 
-  that only allows a specific game, or that restrict a game or emulator, or 
-  any combination of these.  This file is monitored for changes so you do not 
-  need to restart the server to pickup changes. See file for details and 
-  examples.
+**Linux / macOS:**
+1.  Ensure the scripts are executable:
+    `chmod +x *.sh`
+2.  Run the startup script:
+    `./start-server.sh`
 
-* Optional: Edit the file conf/language.properties to customize any of the 
-  server prompts and text.  Alternatively you can create a new foreign language 
-  translation file named for the language, language_fr.properties for a french 
-  language translation.  See language_en.properties for more information.
+5. Monitoring & Troubleshooting
+-------------------------------
+*   Logs are written to `emulinker.log`.
+*   On startup, look for "Server is Running".
+*   If the server fails to start, check `emulinker.log` or the console output for error messages. Common issues include port conflicts or invalid configuration files.
 
-* Configure your firewall to allow inbound UDP access to the ports configured 
-  in emulinker.cfg.  By default this is port 27888 and 27889 through 27924.  
-  You MUST allow all these ports; allowing only 27888 will not work.  Only UDP 
-  access is required; the server does not use TCP.
-
-* On Linux or Unix, you'll need to set execute permission on the shell scripts 
-  by running: chmod a+x *.sh
-  
-* EmuLinker MUST be able to find the java executable on your computer.  You
-  can do this by putting the java bin directory in the PATH, or by editing your 
-  startup script to set the full path to java.  
-
-  For example, on Windows your startup script may begin like this:
-
-   c:\jdk1.5.0\bin\java -Xms64m -Xmx128m ...
-
-  Or if Java is in your Program Files directory:
-
-   "c:\Program Files\Java\jre1.5.0\bin\java.exe" -Xms64m -Xmx128m ...
-
-  On Linux or Unix, your startup script may begin like this:
-
-   /usr/bin/java -Xms64m -Xmx128m ...
-
-* To start the server on Windows, simply run server.bat if you are using the 
-  Java JDK, or server-jre.bat if you are using the Java JRE.  JDK performance 
-  is better than JRE.
-
-  On Linux you can use the start-server.sh to force the server to run as 
-  a daemon process.  If you are using a startup script other than server.sh, 
-  edit start-server.sh to change the script name.  
-  
-* On Linux you can use the stop-server.sh script to stop the server nicely, or 
-  the kill-server.sh script to kill the immediately.  On Windows you can just 
-  hit control-c to stop the server, or close the window.
-
-If the server starts correctly, you should see "Server Starting..." and 
-"Server is Running".  The most common problems are caused by not being able to 
-find java, or formatting mistakes in emulinker.cfg.  On Linux, look in the 
-file error.log for errors.  On Windows, errors will be written to the screen.
-
-All logs are written to a file named emulinker.log, which will automatically
-rotate every 10 megs.  You can change the log file name and settings by 
-editing the file conf/log4j.properties.
-
-Please see https://github.com/hopskipnfall/EmuLinker-K for information on performance tuning.
-
-Last Updated: 05/22/2006
+For more information, visit: https://github.com/hopskipnfall/EmuLinker-K

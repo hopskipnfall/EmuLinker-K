@@ -249,7 +249,7 @@ tasks.register<Zip>("buildRelease") {
       "stop-server.sh",
       "start-server.bat",
       "stop-server.bat",
-      "README.txt",
+      "quickstart.txt",
       "NOTICE.txt",
       "LICENSE.txt",
     )
