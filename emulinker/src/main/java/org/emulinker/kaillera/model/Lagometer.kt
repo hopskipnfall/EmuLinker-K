@@ -76,7 +76,7 @@ class Lagometer(
 
   var lastLagReset: Instant = Clock.System.now()
 
-  private val userDatas =
+  val userDatas =
     Array(numPlayers) {
       UserData(
         frameDurationNs = frameDurationNs,

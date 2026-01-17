@@ -77,10 +77,6 @@ class KailleraUser(
   /** This marks the last time the user interacted in the server. */
   private var lastActivity: Instant = initTime
 
-  /** Time we received the latest game data from the user for lag measurement purposes. */
-  var receivedGameDataNs: Long? = null
-    private set
-
   /** The last time we heard from this player for lag detection purposes. */
   private var lastUpdateNs = System.nanoTime()
 
@@ -404,7 +400,7 @@ class KailleraUser(
 
   // Current source of the lag.
   fun addGameData(data: ByteBuf): Result<Unit> {
-    receivedGameDataNs = System.nanoTime()
+    game?.lagometer?.receivedInputsFromUser(playerNumber - 1, System.nanoTime())
     fun doTheThing(): Result<Unit> {
       // Returning success when the game doesn't exist might not be correct?
       val game = this.game ?: return Result.success(Unit)

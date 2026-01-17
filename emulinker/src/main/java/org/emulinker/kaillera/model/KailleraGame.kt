@@ -699,7 +699,10 @@ class KailleraGame(
 
     gameLogBuilder?.addEvents(
       event {
-        timestampNs = checkNotNull(user.receivedGameDataNs) { "user.receivedGameDataNs is null!" }
+        timestampNs =
+          checkNotNull(lagometer?.userDatas[user.playerNumber - 1]?.receivedDataNs) {
+            "user's receivedGameDataNs is null!"
+          }
         receivedGameData =
           when (user.playerNumber) {
             1 -> RECEIVED_FROM_P1
@@ -747,7 +750,7 @@ class KailleraGame(
       ) {
         waitingOnData = false
         val joinedGameData = PooledByteBufAllocator.DEFAULT.buffer(user.arraySize)
-        for (actionCounter in 0 until actionsPerMessage) {
+        repeat(actionsPerMessage) {
           for (playerActionQueueIndex in paq.indices) {
             paq[playerActionQueueIndex].getActionAndWriteToArray(
               readingPlayerIndex = playerNumber - 1,
@@ -762,7 +765,6 @@ class KailleraGame(
         }
         player.doEvent(GameDataEvent(this, joinedGameData))
         player.updateActivity(nowNs)
-        lagometer?.receivedInputsFromUser(playerNumber - 1, nowNs = nowNs)
         val firstPlayer = players.firstOrNull()
         if (firstPlayer != null && firstPlayer.id == player.id) {
           updateGameDrift(nowNs)
