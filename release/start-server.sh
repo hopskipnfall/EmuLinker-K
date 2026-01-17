@@ -4,22 +4,26 @@
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
-# Define variables
-LOG_FILE="emulinker.log"
-SERVER_SCRIPT="./server.sh"
+# 2. CONFIGURATION
+# Update these variables if you upgrade the jar or change memory settings
+JAR_FILE="./lib/emulinker-k-0.15.0.jar"
 MAIN_CLASS="org.emulinker.kaillera.pico.ServerMainKt"
+LOG_FILE="emulinker.log"
 SEARCH_TERM="EmuLinker-K version"
 
-# 2. ASSERT EXECUTABLE
-# Check if the server script exists and is executable
-if [ ! -x "$SERVER_SCRIPT" ]; then
-    echo "❌ Error: $SERVER_SCRIPT is not executable or cannot be found."
-    echo "   Please run the following command to fix it:"
-    echo "   chmod +x $SERVER_SCRIPT"
+# Java arguments from your old server.sh
+JAVA_OPTS="-Xms64m -Xmx256m -XX:+UseSerialGC -XX:+AlwaysPreTouch"
+CLASSPATH="./conf:$JAR_FILE"
+
+# 3. PRE-FLIGHT CHECKS
+# Verify the jar file actually exists
+if [ ! -f "$JAR_FILE" ]; then
+    echo "❌ Error: Jar file not found at: $JAR_FILE"
+    echo "   Please check the path or filename in the script configuration."
     exit 1
 fi
 
-# 3. CHECK FOR EXISTING INSTANCE
+# Check for existing instance
 if pgrep -f "$MAIN_CLASS" > /dev/null; then
     echo "❌ Aborted: An instance of EmuLinker-K is already running."
     exit 1
@@ -27,13 +31,14 @@ fi
 
 # 4. START THE SERVER
 echo "🚀 Starting EmuLinker-K..."
-nohup "$SERVER_SCRIPT" > /dev/null 2>&1 &
+
+# Run Java directly in the background
+nohup java $JAVA_OPTS -cp "$CLASSPATH" $MAIN_CLASS > /dev/null 2>&1 &
 SERVER_PID=$!
 
 # 5. VERIFY AND INSPECT LOGS
 sleep 3
 
-# Check if the process is still alive
 if ! ps -p $SERVER_PID > /dev/null; then
     echo "❌ Error: The server process died immediately after starting."
     echo "Check $LOG_FILE for details."
