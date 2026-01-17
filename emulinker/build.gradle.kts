@@ -231,3 +231,35 @@ tasks.named("jmh") {
     }
   }
 }
+
+tasks.register<Zip>("buildRelease") {
+  group = "distribution"
+  description = "Bundles the project into a release zip."
+
+  dependsOn("jar")
+
+  archiveFileName.set("emulinker-k-${project.version}.zip")
+  destinationDirectory.set(layout.buildDirectory.dir("distributions"))
+
+  val releaseDir = rootProject.file("release")
+
+  from(releaseDir) {
+    include(
+      "start-server.sh",
+      "stop-server.sh",
+      "start-server.bat",
+      "stop-server.bat",
+      "quickstart.txt",
+      "NOTICE.txt",
+      "LICENSE.txt",
+    )
+    into("EmuLinker-K")
+  }
+
+  from(releaseDir) {
+    include("emulinker.cfg", "log4j2.properties", "language.properties", "access.cfg")
+    into("EmuLinker-K/conf")
+  }
+
+  from(tasks.jar) { into("EmuLinker-K/lib") }
+}
