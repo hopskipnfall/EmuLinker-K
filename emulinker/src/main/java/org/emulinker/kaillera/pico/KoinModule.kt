@@ -36,6 +36,7 @@ import org.emulinker.kaillera.model.impl.AutoFireDetectorFactoryImpl
 import org.emulinker.kaillera.pico.AppModule.Companion.charsetDoNotUse
 import org.emulinker.kaillera.release.ReleaseInfo
 import org.emulinker.util.CustomUserStrings
+import org.emulinker.util.EmuLang
 import org.emulinker.util.EmuLinkerPropertiesConfig
 import org.emulinker.util.TaskScheduler
 import org.koin.core.module.dsl.factoryOf
@@ -113,6 +114,7 @@ val koinModule = module {
         keepAliveTimeout = config.getInt("server.keepAliveTimeout", 190).seconds,
         lagstatDuration =
           config.getInt("server.lagstatDurationSeconds", 1.minutes.inWholeSeconds.toInt()).seconds,
+        language = config.getString("emulinker.language", "custom"),
         maxChatLength = config.getInt("server.maxChatLength", 150),
         maxClientNameLength = config.getInt("server.maxClientNameLength", 127),
         maxGameChatLength = config.getInt("server.maxGameChatLength", 320),
@@ -146,6 +148,7 @@ val koinModule = module {
       )
 
     charsetDoNotUse = flags.charset
+    EmuLang.updateLanguage(flags.language)
     flags
   }
 
