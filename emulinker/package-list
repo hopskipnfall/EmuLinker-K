@@ -1334,7 +1334,7 @@ $dokka.location:org.emulinker.kaillera.model/KailleraUser/updateActivity/#kotlin
 $dokka.location:org.emulinker.kaillera.model/KailleraUser/updateLastKeepAlive/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-kaillera-user/update-last-keep-alive.html
 $dokka.location:org.emulinker.kaillera.model/KailleraUser/users/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-kaillera-user/users.html
 $dokka.location:org.emulinker.kaillera.model/Lagometer///PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-lagometer/index.html
-$dokka.location:org.emulinker.kaillera.model/Lagometer/Lagometer/#kotlin.time.Duration#kotlin.time.Duration#kotlin.time.Duration#kotlin.Int#kotlin.time.Clock/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-lagometer/-lagometer.html
+$dokka.location:org.emulinker.kaillera.model/Lagometer/Lagometer/#kotlin.time.Duration#kotlin.time.Duration#kotlin.time.Duration#kotlin.Int#kotlin.Long#kotlin.time.Clock/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-lagometer/-lagometer.html
 $dokka.location:org.emulinker.kaillera.model/Lagometer/advanceFrame/#kotlin.Long/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-lagometer/advance-frame.html
 $dokka.location:org.emulinker.kaillera.model/Lagometer/cumulativeGameLagPerPlayer/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-lagometer/cumulative-game-lag-per-player.html
 $dokka.location:org.emulinker.kaillera.model/Lagometer/cumulativeLag/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-lagometer/cumulative-lag.html
