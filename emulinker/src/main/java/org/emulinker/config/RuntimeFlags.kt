@@ -20,6 +20,7 @@ data class RuntimeFlags(
   val idleTimeout: Duration,
   val keepAliveTimeout: Duration,
   val lagstatDuration: Duration,
+  val language: String,
   val maxChatLength: Int,
   val maxClientNameLength: Int,
   val maxGameChatLength: Int,
