@@ -206,7 +206,8 @@ class FastGameDataCacheTest {
     // 4. Verify Cache entry is unaffected (independent index)
     val cachedItem = cache[0]
     assertThat(cachedItem.readerIndex()).isEqualTo(0)
-    assertThat(cachedItem.refCnt()).isEqualTo(2) // 1 original + 1 cache
+    assertThat(cachedItem.refCnt()).isEqualTo(3) // 1 original + 1 cache + 1 duplicate
+    cachedItem.release() // Release our duplicate reference
 
     // 5. Add duplicate (fresh buffer, same content)
     val data2 = Unpooled.wrappedBuffer(byteArrayOf(1, 2, 3))

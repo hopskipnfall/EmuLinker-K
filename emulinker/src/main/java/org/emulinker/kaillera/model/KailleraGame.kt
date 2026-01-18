@@ -112,6 +112,7 @@ class KailleraGame(
    * fanning out.
    */
   var waitingOnData = false
+
   /**
    * If `waitingOnPlayerNumber[playerNumber - 1]` is `true`, we are waiting on data for that player.
    */
@@ -133,6 +134,7 @@ class KailleraGame(
   var aEmulator = "any"
   var aConnection = "any"
   val startDate: Date = Date()
+
   @JvmField var swap = false
 
   var status = GameStatus.WAITING
@@ -693,7 +695,6 @@ class KailleraGame(
    */
   fun addData(user: KailleraUser, playerNumber: Int, data: ByteBuf): AddDataResult {
     if (!isSynched) {
-      data.release()
       return AddDataResult.IgnoringDesynched
     }
 
