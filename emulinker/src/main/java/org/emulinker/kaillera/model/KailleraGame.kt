@@ -494,6 +494,7 @@ class KailleraGame(
         historyDuration = flags.lagstatDuration,
         historyResolution = 5.seconds,
         numPlayers = players.size,
+        startTimeNs = System.nanoTime(),
       )
   }
 
@@ -800,6 +801,7 @@ class KailleraGame(
         historyDuration = flags.lagstatDuration,
         historyResolution = 5.seconds,
         numPlayers = players.size,
+        startTimeNs = System.nanoTime(),
       )
 
     resetLag()

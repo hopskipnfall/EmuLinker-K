@@ -849,7 +849,7 @@ class KailleraServer(
               .filterValues { it > 0 }
           if (statusToGames.isNotEmpty()) statusToGames.toString() else "(no games)"
         },
-        usersMap.size,
+        usersMap.values.count { it.loggedIn },
       )
 
     try {
