@@ -112,8 +112,22 @@ class CombinedKailleraController(
             )
 
             nettyChannel = bind(port).sync().channel()
-            nettyChannel.closeFuture().sync()
             boundPort = port
+
+            // Warmup the event loop.
+            nettyChannel.eventLoop().submit {
+              try {
+                val buffer = alloc().buffer(bufferSize)
+                ConnectMessage_PING.writeTo(buffer)
+                ConnectMessage.parse(buffer)
+                buffer.release()
+                logger.atFine().log("Server warmup complete.")
+              } catch (e: Exception) {
+                logger.atWarning().withCause(e).log("Server warmup failed.")
+              }
+            }
+
+            nettyChannel.closeFuture().sync()
           }
         } finally {
           group.shutdownGracefully()
