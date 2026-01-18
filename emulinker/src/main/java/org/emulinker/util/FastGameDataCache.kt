@@ -33,7 +33,7 @@ class FastGameDataCache(override val capacity: Int) : GameDataCache {
 
   override operator fun get(index: Int): ByteBuf {
     checkBounds(index)
-    return buffer[toBufferIndex(head + index)]!!
+    return buffer[toBufferIndex(head + index)]!!.retainedDuplicate()
   }
 
   override fun add(data: ByteBuf): Int {
