@@ -1,0 +1,1 @@
+This directory has config and script files that will be used when setting up a server.
