@@ -1,6 +1,7 @@
 package org.emulinker.kaillera.pico
 
 import com.codahale.metrics.MetricRegistry
+import com.google.common.flogger.FluentLogger
 import io.github.redouane59.twitter.TwitterClient
 import io.github.redouane59.twitter.signature.TwitterCredentials
 import java.nio.charset.Charset
@@ -44,6 +45,8 @@ import org.koin.core.module.dsl.singleOf
 import org.koin.core.qualifier.named
 import org.koin.dsl.bind
 import org.koin.dsl.module
+
+private val logger = FluentLogger.forEnclosingClass()
 
 val koinModule = module {
   singleOf(::AccessManager2).bind<AccessManager>()
@@ -93,7 +96,19 @@ val koinModule = module {
       RuntimeFlags(
         allowMultipleConnections = config.getBoolean("server.allowMultipleConnections", true),
         allowSinglePlayer = config.getBoolean("server.allowSinglePlayer", true),
-        charset = Charset.forName(config.getString("emulinker.charset")),
+        charset =
+          Charset.forName(
+            run {
+              config.getString("emulinker.charset", "").ifEmpty {
+                org.emulinker.kaillera.pico.logger
+                  .atSevere()
+                  .log(
+                    "emulinker.charset is not specified! Please set a value in conf/emulinker.cfg. Using 'Windows-1252' as backup."
+                  )
+                "Windows-1252"
+              }
+            }
+          ),
         chatFloodTime = config.getInt("server.chatFloodTime", 2).seconds,
         allowedProtocols =
           config.getStringArray("controllers.v086.clientTypes.clientType").toList().ifEmpty {
@@ -128,7 +143,7 @@ val koinModule = module {
         metricsLoggingFrequency = config.getInt("metrics.loggingFrequencySeconds", 30).seconds,
         serverAddress = config.getString("masterList.serverConnectAddress", ""),
         serverLocation = config.getString("masterList.serverLocation", "Unknown"),
-        serverName = config.getString("masterList.serverName", "New ELK Server"),
+        serverName = config.getString("masterList.serverName", "Not Set"),
         serverPort = config.getInt("controllers.connect.port", 27888),
         serverWebsite = config.getString("masterList.serverWebsite", ""),
         switchStatusBytesForBuggyClient =
