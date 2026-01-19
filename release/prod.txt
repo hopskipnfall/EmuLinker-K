@@ -1,0 +1,2 @@
+tag=0.15.0
+downloadUrl=https://github.com/hopskipnfall/EmuLinker-K/releases/download/0.15.0/emulinker-k-0.15.0.jar
