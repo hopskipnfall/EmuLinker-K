@@ -2,7 +2,7 @@ $dokka.format:html-v1
 $dokka.linkExtension:html
 $dokka.location:org.emulinker.config////PointingToDeclaration/emulinker/org.emulinker.config/index.html
 $dokka.location:org.emulinker.config/RuntimeFlags///PointingToDeclaration/emulinker/org.emulinker.config/-runtime-flags/index.html
-$dokka.location:org.emulinker.config/RuntimeFlags/RuntimeFlags/#kotlin.Boolean#kotlin.Boolean#java.nio.charset.Charset#kotlin.time.Duration#kotlin.collections.List[kotlin.String]#kotlin.collections.List[kotlin.String]#kotlin.Int#kotlin.time.Duration#kotlin.Int#kotlin.Int#kotlin.time.Duration#kotlin.time.Duration#kotlin.time.Duration#kotlin.Int#kotlin.Int#kotlin.Int#kotlin.Int#kotlin.Int#kotlin.time.Duration#kotlin.Int#kotlin.Int#kotlin.Int#kotlin.Boolean#kotlin.time.Duration#kotlin.String#kotlin.String#kotlin.String#kotlin.Int#kotlin.String#kotlin.Boolean#kotlin.Boolean#kotlin.Boolean#kotlin.time.Duration#kotlin.Boolean#kotlin.Boolean#kotlin.String#kotlin.String#kotlin.String#kotlin.String#kotlin.collections.List[kotlin.String]#kotlin.Int/PointingToDeclaration/emulinker/org.emulinker.config/-runtime-flags/-runtime-flags.html
+$dokka.location:org.emulinker.config/RuntimeFlags/RuntimeFlags/#kotlin.Boolean#kotlin.Boolean#java.nio.charset.Charset#kotlin.time.Duration#kotlin.collections.List[kotlin.String]#kotlin.collections.List[kotlin.String]#kotlin.Int#kotlin.time.Duration#kotlin.Int#kotlin.Int#kotlin.time.Duration#kotlin.time.Duration#kotlin.time.Duration#kotlin.String#kotlin.Int#kotlin.Int#kotlin.Int#kotlin.Int#kotlin.Int#kotlin.time.Duration#kotlin.Int#kotlin.Int#kotlin.Int#kotlin.Boolean#kotlin.time.Duration#kotlin.String#kotlin.String#kotlin.String#kotlin.Int#kotlin.String#kotlin.Boolean#kotlin.Boolean#kotlin.Boolean#kotlin.time.Duration#kotlin.Boolean#kotlin.Boolean#kotlin.String#kotlin.String#kotlin.String#kotlin.String#kotlin.collections.List[kotlin.String]#kotlin.Int/PointingToDeclaration/emulinker/org.emulinker.config/-runtime-flags/-runtime-flags.html
 $dokka.location:org.emulinker.config/RuntimeFlags/allowMultipleConnections/#/PointingToDeclaration/emulinker/org.emulinker.config/-runtime-flags/allow-multiple-connections.html
 $dokka.location:org.emulinker.config/RuntimeFlags/allowSinglePlayer/#/PointingToDeclaration/emulinker/org.emulinker.config/-runtime-flags/allow-single-player.html
 $dokka.location:org.emulinker.config/RuntimeFlags/allowedConnectionTypes/#/PointingToDeclaration/emulinker/org.emulinker.config/-runtime-flags/allowed-connection-types.html
@@ -16,6 +16,7 @@ $dokka.location:org.emulinker.config/RuntimeFlags/gameBufferSize/#/PointingToDec
 $dokka.location:org.emulinker.config/RuntimeFlags/idleTimeout/#/PointingToDeclaration/emulinker/org.emulinker.config/-runtime-flags/idle-timeout.html
 $dokka.location:org.emulinker.config/RuntimeFlags/keepAliveTimeout/#/PointingToDeclaration/emulinker/org.emulinker.config/-runtime-flags/keep-alive-timeout.html
 $dokka.location:org.emulinker.config/RuntimeFlags/lagstatDuration/#/PointingToDeclaration/emulinker/org.emulinker.config/-runtime-flags/lagstat-duration.html
+$dokka.location:org.emulinker.config/RuntimeFlags/language/#/PointingToDeclaration/emulinker/org.emulinker.config/-runtime-flags/language.html
 $dokka.location:org.emulinker.config/RuntimeFlags/maxChatLength/#/PointingToDeclaration/emulinker/org.emulinker.config/-runtime-flags/max-chat-length.html
 $dokka.location:org.emulinker.config/RuntimeFlags/maxClientNameLength/#/PointingToDeclaration/emulinker/org.emulinker.config/-runtime-flags/max-client-name-length.html
 $dokka.location:org.emulinker.config/RuntimeFlags/maxGameChatLength/#/PointingToDeclaration/emulinker/org.emulinker.config/-runtime-flags/max-game-chat-length.html
@@ -2137,6 +2138,7 @@ $dokka.location:org.emulinker.util/EmuLang/getString/#kotlin.String#kotlin.Any?/
 $dokka.location:org.emulinker.util/EmuLang/getString/#kotlin.String/PointingToDeclaration/emulinker/org.emulinker.util/-emu-lang/get-string.html
 $dokka.location:org.emulinker.util/EmuLang/getStringOrNull/#kotlin.String/PointingToDeclaration/emulinker/org.emulinker.util/-emu-lang/get-string-or-null.html
 $dokka.location:org.emulinker.util/EmuLang/hasString/#kotlin.String/PointingToDeclaration/emulinker/org.emulinker.util/-emu-lang/has-string.html
+$dokka.location:org.emulinker.util/EmuLang/updateLanguage/#kotlin.String/PointingToDeclaration/emulinker/org.emulinker.util/-emu-lang/update-language.html
 $dokka.location:org.emulinker.util/EmuLinkerPropertiesConfig///PointingToDeclaration/emulinker/org.emulinker.util/-emu-linker-properties-config/index.html
 $dokka.location:org.emulinker.util/EmuLinkerPropertiesConfig/EmuLinkerPropertiesConfig/#/PointingToDeclaration/emulinker/org.emulinker.util/-emu-linker-properties-config/-emu-linker-properties-config.html
 $dokka.location:org.emulinker.util/EmuLinkerXMLConfig///PointingToDeclaration/emulinker/org.emulinker.util/-emu-linker-x-m-l-config/index.html
