@@ -79,7 +79,10 @@ object EmuLang {
       return try {
         DEFAULT_BUNDLE.getString(key)
       } catch (e: MissingResourceException) {
-        logger.atWarning().withCause(e).log("Message key %s was not in custom bundle or default bundle.", key)
+        logger
+          .atWarning()
+          .withCause(e)
+          .log("Message key %s was not in custom bundle or default bundle.", key)
         null
       }
     } else {
