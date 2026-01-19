@@ -92,6 +92,7 @@ download_file() {
     local dest=$2
     local url="${BASE_URL}/${file}"
     echo "   📦 Downloading $file..."
+    echo "$url"
     curl -s -o "$dest" "$url"
 }
 
