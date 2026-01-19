@@ -57,7 +57,6 @@ class PlayerActionQueue(
   /** Adds "actions" to the queue. */
   fun addActions(actions: ByteBuf) {
     if (!synced) {
-      actions.release()
       return
     }
 

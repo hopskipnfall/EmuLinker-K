@@ -3,6 +3,7 @@ package org.emulinker.kaillera.model
 import com.codahale.metrics.Gauge
 import com.codahale.metrics.MetricRegistry
 import com.google.common.flogger.FluentLogger
+import com.google.common.flogger.LazyArgs
 import java.net.InetSocketAddress
 import java.util.Locale
 import java.util.concurrent.ConcurrentHashMap
@@ -10,6 +11,7 @@ import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.ScheduledFuture
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeUnit.HOURS
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.time.Clock
 import kotlin.time.Duration
@@ -835,6 +837,21 @@ class KailleraServer(
   }
 
   private fun run() {
+    logger
+      .atInfo()
+      .atMostEvery(1, HOURS)
+      .log(
+        "[Hourly status update] Games by status = %s, number of users = %d",
+        LazyArgs.lazy {
+          val statusToGames =
+            GameStatus.entries
+              .associateWith { s -> gamesMap.values.count { it.status == s } }
+              .filterValues { it > 0 }
+          if (statusToGames.isNotEmpty()) statusToGames.toString() else "(no games)"
+        },
+        usersMap.values.count { it.loggedIn },
+      )
+
     try {
       // Identify and repair games in a frozen state, where one user left and the server is waiting
       // on input to fan-out.

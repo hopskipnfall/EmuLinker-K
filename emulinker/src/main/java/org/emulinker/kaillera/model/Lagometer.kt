@@ -47,6 +47,7 @@ class Lagometer(
   historyDuration: Duration,
   historyResolution: Duration,
   val numPlayers: Int,
+  startTimeNs: Long,
   private val clock: Clock = Clock.System,
 ) {
   private var lagLeewayNs: Duration = Duration.ZERO
@@ -54,7 +55,7 @@ class Lagometer(
   private val totalDriftCache =
     TimeOffsetCache(delay = historyDuration, resolution = historyResolution)
 
-  private var lastFrameNs = 0L
+  private var lastFrameNs = startTimeNs
 
   /** The total duration of lag attributed to the game over the history window. */
   val lag: Duration
