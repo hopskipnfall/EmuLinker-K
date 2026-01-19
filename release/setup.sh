@@ -131,8 +131,29 @@ download_file() {
 }
 
 # Download JAR
-echo "   📦 Downloading emulinker-k-$VERSION.jar..."
-curl -s -L -o "$INSTALL_DIR/lib/emulinker-k-$VERSION.jar" "$DOWNLOAD_URL"
+JAR_PATH="$INSTALL_DIR/lib/emulinker-k-$VERSION.jar"
+DOWNLOAD_JAR=true
+
+if [ -f "$JAR_PATH" ]; then
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        FILE_SIZE=$(stat -f%z "$JAR_PATH")
+    else
+        FILE_SIZE=$(stat -c%s "$JAR_PATH")
+    fi
+
+    # 1MB = 1048576 bytes
+    if [ "$FILE_SIZE" -ge 1048576 ]; then
+        echo "   ✅ Found valid existing jar ($FILE_SIZE bytes). Skipping download."
+        DOWNLOAD_JAR=false
+    else
+        echo "   ⚠️  Existing jar is too small ($FILE_SIZE bytes). Re-downloading..."
+    fi
+fi
+
+if [ "$DOWNLOAD_JAR" = true ]; then
+    echo "   📦 Downloading emulinker-k-$VERSION.jar..."
+    curl -s -L -o "$JAR_PATH" "$DOWNLOAD_URL"
+fi
 
 # Download other files
 FILES=(
