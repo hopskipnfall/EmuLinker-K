@@ -99,6 +99,7 @@ download_file() {
 # Download JAR
 echo "⬇️  Downloading emulinker-k-$VERSION.jar..."
 curl -s -L -o "$INSTALL_DIR/lib/emulinker-k-$VERSION.jar" "$DOWNLOAD_URL"
+echo "$DOWNLOAD_URL"
 
 # Download other files
 FILES=(
