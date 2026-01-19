@@ -69,7 +69,7 @@ fi
 
 # Fetch prod.txt
 echo -e "📡 Fetching release information..."
-PROD_TXT=$(curl -s "https://raw.githubusercontent.com/hopskipnfall/EmuLinker-K/$TAG/release/prod.txt")
+PROD_TXT=$(curl -s "https://raw.githubusercontent.com/hopskipnfall/EmuLinker-K/master/release/prod.txt")
 
 if [ -z "$PROD_TXT" ]; then
     echo "❌ Error: Could not fetch release information."
