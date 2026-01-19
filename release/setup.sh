@@ -43,14 +43,31 @@ fi
 
 echo -e "🔍 Detected mode: \033[1m$MODE\033[0m"
 
-if [ "$MODE" == "UPGRADE" ]; then
-    echo "❌ Error: Upgrade mode is not yet supported."
-    exit 1
+    echo -e "🔄 \033[1mStarting upgrade...\033[0m"
+    
+    # Pre-flight checks
+    if [ -f "$INSTALL_DIR/start-server.sh" ]; then
+        echo "🗑️  Deleting obsolete server scripts..."
+        rm -f "$INSTALL_DIR/start-server.sh"
+        rm -f "$INSTALL_DIR/stop-server.sh"
+    fi
+     if [ -f "$INSTALL_DIR/server.sh" ]; then
+        echo "🗑️  Deleting obsolete server.sh..."
+        rm "$INSTALL_DIR/server.sh"
+    fi
+
+    # Backup config
+    if [ -f "$INSTALL_DIR/conf/emulinker.cfg" ]; then
+        echo "💾 Backing up emulinker.cfg to emulinker.cfg.old..."
+        cp "$INSTALL_DIR/conf/emulinker.cfg" "$INSTALL_DIR/conf/emulinker.cfg.old"
+    fi
+
+
+# --- Install / Upgrade Logic ---
+
+if [ "$MODE" == "INSTALL" ]; then
+    echo -e "\n🚀 \033[1mStarting installation...\033[0m"
 fi
-
-# --- Install Logic ---
-
-echo -e "\n🚀 \033[1mStarting installation...\033[0m"
 
 # Fetch prod.txt
 echo -e "📡 Fetching release information..."
@@ -120,9 +137,11 @@ for f in "${FILES[@]}"; do
     download_file "$f" "$INSTALL_DIR/$f"
 done
 
-for f in "${CONF_FILES[@]}"; do
-    download_file "$f" "$INSTALL_DIR/conf/$f"
-done
+if [ "$MODE" == "INSTALL" ]; then
+    for f in "${CONF_FILES[@]}"; do
+        download_file "$f" "$INSTALL_DIR/conf/$f"
+    done
+fi
 
 # Make scripts executable
 chmod +x "$INSTALL_DIR/start-server.sh"
@@ -133,12 +152,13 @@ chmod +x "$INSTALL_DIR/stop-server.sh"
 echo -e "\n⚙️  \033[1mConfiguration Setup\033[0m"
 echo "==================="
 
-read -p "📝 What is the name of the new server? " SERVER_NAME < /dev/tty
-read -p "🌍 Where is the server located? (e.g. Tokyo, Seattle) " SERVER_LOCATION < /dev/tty
-read -p "📡 Do you want your server to appear in server lists? (y/n) " PUBLIC_SERVER < /dev/tty
-
-# Update emulinker.cfg
 CFG_FILE="$INSTALL_DIR/conf/emulinker.cfg"
+
+if [ "$MODE" == "INSTALL" ]; then
+
+    read -p "📝 What is the name of the new server? " SERVER_NAME < /dev/tty
+    read -p "🌍 Where is the server located? (e.g. Tokyo, Seattle) " SERVER_LOCATION < /dev/tty
+    read -p "📡 Do you want your server to appear in server lists? (y/n) " PUBLIC_SERVER < /dev/tty
 
 # Escape special characters for sed if necessary, mainly slashes
 SERVER_NAME_ESCAPED=$(printf '%s\n' "$SERVER_NAME" | sed -e 's/[]\/$*.^[]/\\&/g')
@@ -147,12 +167,36 @@ SERVER_LOCATION_ESCAPED=$(printf '%s\n' "$SERVER_LOCATION" | sed -e 's/[]\/$*.^[
 "${SED_CMD[@]}" "s/^masterList.serverName=.*/masterList.serverName=$SERVER_NAME_ESCAPED/" "$CFG_FILE"
 "${SED_CMD[@]}" "s/^masterList.serverLocation=.*/masterList.serverLocation=$SERVER_LOCATION_ESCAPED/" "$CFG_FILE"
 
-if [[ "$PUBLIC_SERVER" =~ ^[Yy]$ ]]; then
-    "${SED_CMD[@]}" "s/^masterList.touchKaillera=.*/masterList.touchKaillera=true/" "$CFG_FILE"
-    "${SED_CMD[@]}" "s/^masterList.touchEmulinker=.*/masterList.touchEmulinker=true/" "$CFG_FILE"
-else
-    "${SED_CMD[@]}" "s/^masterList.touchKaillera=.*/masterList.touchKaillera=false/" "$CFG_FILE"
-    "${SED_CMD[@]}" "s/^masterList.touchEmulinker=.*/masterList.touchEmulinker=false/" "$CFG_FILE"
+    if [[ "$PUBLIC_SERVER" =~ ^[Yy]$ ]]; then
+        "${SED_CMD[@]}" "s/^masterList.touchKaillera=.*/masterList.touchKaillera=true/" "$CFG_FILE"
+        "${SED_CMD[@]}" "s/^masterList.touchEmulinker=.*/masterList.touchEmulinker=true/" "$CFG_FILE"
+    else
+        "${SED_CMD[@]}" "s/^masterList.touchKaillera=.*/masterList.touchKaillera=false/" "$CFG_FILE"
+        "${SED_CMD[@]}" "s/^masterList.touchEmulinker=.*/masterList.touchEmulinker=false/" "$CFG_FILE"
+    fi
+
+elif [ "$MODE" == "UPGRADE" ]; then
+    
+    # Download questions.txt
+    QUESTIONS_FILE="$INSTALL_DIR/questions.txt"
+    download_file "questions.txt" "$QUESTIONS_FILE"
+
+    if [ -f "$QUESTIONS_FILE" ]; then
+        while IFS='=' read -r key question || [ -n "$key" ]; do
+             # Skip empty lines or comments
+            [[ -z "$key" || "$key" == \#* ]] && continue
+            
+            # Check if key exists in config
+            if ! grep -q "^$key=" "$CFG_FILE"; then
+                echo -e "\n❓ \033[1mConfig Update: $key\033[0m"
+                read -p "$question " ANSWER < /dev/tty
+                echo "$key=$ANSWER" >> "$CFG_FILE"
+            fi
+        done < "$QUESTIONS_FILE"
+        
+        # Cleanup
+        rm "$QUESTIONS_FILE"
+    fi
 fi
 
 echo -e "\n🎉 \033[1;32mInstallation complete!\033[0m"
