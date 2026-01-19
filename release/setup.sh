@@ -95,9 +95,7 @@ mkdir -p "$INSTALL_DIR/lib"
 mkdir -p "$INSTALL_DIR/conf"
 
 # Download files
-# TODO(nue): Switch this to use $TAG after 1.0.0 release.
-# BASE_URL="https://raw.githubusercontent.com/hopskipnfall/EmuLinker-K/$TAG/release"
-BASE_URL="https://raw.githubusercontent.com/hopskipnfall/EmuLinker-K/master/release"
+BASE_URL="https://raw.githubusercontent.com/hopskipnfall/EmuLinker-K/$TAG/release"
 
 echo "⬇️  Downloading configuration and scripts..."
 
@@ -153,107 +151,99 @@ echo "==================="
 
 CFG_FILE="$INSTALL_DIR/conf/emulinker.cfg"
 
-if [ "$MODE" == "INSTALL" ]; then
+# Apply Questions.txt for both INSTALL and UPGRADE.
+# Download questions.txt
+QUESTIONS_FILE="$INSTALL_DIR/questions.txt"
+download_file "questions.txt" "$QUESTIONS_FILE"
 
-    read -p "📝 What is the name of the new server? " SERVER_NAME < /dev/tty
-    read -p "🌍 Where is the server located? (e.g. Tokyo, Seattle) " SERVER_LOCATION < /dev/tty
-    read -p "📡 Do you want your server to appear in server lists? (y/n) " PUBLIC_SERVER < /dev/tty
+if [ -f "$QUESTIONS_FILE" ]; then
+    while IFS='=' read -r key_type question || [ -n "$key_type" ]; do
+            # Skip empty lines or comments
+        [[ -z "$key_type" || "$key_type" == \#* ]] && continue
+        
+        # Parse Key and Type
+        KEY=$(echo "$key_type" | cut -d':' -f1)
+        TYPE=$(echo "$key_type" | cut -d':' -f2)
+        
+        # Default type to string if missing
+        [[ "$KEY" == "$TYPE" ]] && TYPE="string"
+        
+        # Check if key exists in config
+        IS_MISSING=false
+        IS_EMPTY=false
 
-# Escape special characters for sed if necessary, mainly slashes
-SERVER_NAME_ESCAPED=$(printf '%s\n' "$SERVER_NAME" | sed -e 's/[]\/$*.^[]/\\&/g')
-SERVER_LOCATION_ESCAPED=$(printf '%s\n' "$SERVER_LOCATION" | sed -e 's/[]\/$*.^[]/\\&/g')
+        if ! grep -q "^$KEY=" "$CFG_FILE"; then
+            IS_MISSING=true
+        elif grep -q "^$KEY=$" "$CFG_FILE"; then
+            IS_EMPTY=true
+        fi
 
-"${SED_CMD[@]}" "s/^masterList.serverName=.*/masterList.serverName=$SERVER_NAME_ESCAPED/" "$CFG_FILE"
-"${SED_CMD[@]}" "s/^masterList.serverLocation=.*/masterList.serverLocation=$SERVER_LOCATION_ESCAPED/" "$CFG_FILE"
-
-    if [[ "$PUBLIC_SERVER" =~ ^[Yy]$ ]]; then
-        "${SED_CMD[@]}" "s/^masterList.touchKaillera=.*/masterList.touchKaillera=true/" "$CFG_FILE"
-        "${SED_CMD[@]}" "s/^masterList.touchEmulinker=.*/masterList.touchEmulinker=true/" "$CFG_FILE"
-    else
-        "${SED_CMD[@]}" "s/^masterList.touchKaillera=.*/masterList.touchKaillera=false/" "$CFG_FILE"
-        "${SED_CMD[@]}" "s/^masterList.touchEmulinker=.*/masterList.touchEmulinker=false/" "$CFG_FILE"
-    fi
-
-elif [ "$MODE" == "UPGRADE" ]; then
-    
-    # Download questions.txt
-    QUESTIONS_FILE="$INSTALL_DIR/questions.txt"
-    download_file "questions.txt" "$QUESTIONS_FILE"
-
-    if [ -f "$QUESTIONS_FILE" ]; then
-        while IFS='=' read -r key_type question || [ -n "$key_type" ]; do
-             # Skip empty lines or comments
-            [[ -z "$key_type" || "$key_type" == \#* ]] && continue
+        if [ "$IS_MISSING" = true ] || [ "$IS_EMPTY" = true ]; then
+            echo -e "\n❓ \033[1mConfig Update: $KEY ($TYPE)\033[0m"
             
-            # Parse Key and Type
-            KEY=$(echo "$key_type" | cut -d':' -f1)
-            TYPE=$(echo "$key_type" | cut -d':' -f2)
-            
-            # Default type to string if missing
-            [[ "$KEY" == "$TYPE" ]] && TYPE="string"
-            
-            # Check if key exists in config
-            if ! grep -q "^$KEY=" "$CFG_FILE"; then
-                echo -e "\n❓ \033[1mConfig Update: $KEY ($TYPE)\033[0m"
+            ATTEMPTS=0
+            MAX_ATTEMPTS=2
+            VALID_INPUT=false
+            ANSWER=""
+
+            while [ $ATTEMPTS -lt $MAX_ATTEMPTS ]; do
+                read -p "  $question " INPUT < /dev/tty
                 
-                ATTEMPTS=0
-                MAX_ATTEMPTS=2
-                VALID_INPUT=false
-                ANSWER=""
+                # Empty input skips
+                if [ -z "$INPUT" ]; then
+                    echo "   Skipping..."
+                    break
+                fi
 
-                while [ $ATTEMPTS -lt $MAX_ATTEMPTS ]; do
-                    read -p "$question " INPUT < /dev/tty
-                    
-                    # Empty input skips
-                    if [ -z "$INPUT" ]; then
-                        echo "   Skipping..."
-                        break
-                    fi
-
-                    # Validation
-                    case "$TYPE" in
-                        "boolean")
-                            if [[ "$INPUT" =~ ^[Yy]([Ee][Ss])?$ ]] || [[ "$INPUT" =~ ^[Tt][Rr][Uu][Ee]$ ]]; then
-                                ANSWER="true"
-                                VALID_INPUT=true
-                            elif [[ "$INPUT" =~ ^[Nn][Oo]?$ ]] || [[ "$INPUT" =~ ^[Ff][Aa][Ll][Ss][Ee]$ ]]; then
-                                ANSWER="false"
-                                VALID_INPUT=true
-                            else
-                                echo "   ❌ Invalid boolean. Please enter 'y', 'yes', 'true' or 'n', 'no', 'false'."
-                            fi
-                            ;;
-                        "number")
-                            if [[ "$INPUT" =~ ^-?[0-9]*\.?[0-9]+$ ]]; then
-                                ANSWER="$INPUT"
-                                VALID_INPUT=true
-                            else
-                                echo "   ❌ Invalid number."
-                            fi
-                            ;;
-                        *) # string
+                # Validation
+                case "$TYPE" in
+                    "boolean")
+                        if [[ "$INPUT" =~ ^[Yy]([Ee][Ss])?$ ]] || [[ "$INPUT" =~ ^[Tt][Rr][Uu][Ee]$ ]]; then
+                            ANSWER="true"
+                            VALID_INPUT=true
+                        elif [[ "$INPUT" =~ ^[Nn][Oo]?$ ]] || [[ "$INPUT" =~ ^[Ff][Aa][Ll][Ss][Ee]$ ]]; then
+                            ANSWER="false"
+                            VALID_INPUT=true
+                        else
+                            echo "   ❌ Invalid boolean. Please enter 'y', 'yes', 'true' or 'n', 'no', 'false'."
+                        fi
+                        ;;
+                    "number")
+                        if [[ "$INPUT" =~ ^-?[0-9]*\.?[0-9]+$ ]]; then
                             ANSWER="$INPUT"
                             VALID_INPUT=true
-                            ;;
-                    esac
+                        else
+                            echo "   ❌ Invalid number."
+                        fi
+                        ;;
+                    *) # string
+                        ANSWER="$INPUT"
+                        VALID_INPUT=true
+                        ;;
+                esac
 
-                    if [ "$VALID_INPUT" = true ]; then
+                if [ "$VALID_INPUT" = true ]; then
+                    if [ "$IS_EMPTY" = true ]; then
+                        # Escape special characters for sed
+                        ANSWER_ESCAPED=$(printf '%s\n' "$ANSWER" | sed -e 's/[]\/$*.^[]/\\&/g')
+                        "${SED_CMD[@]}" "s/^$KEY=$/$KEY=$ANSWER_ESCAPED/" "$CFG_FILE"
+                    else
                         echo "$KEY=$ANSWER" >> "$CFG_FILE"
-                        break
                     fi
-                    
-                    ATTEMPTS=$((ATTEMPTS+1))
-                done
-                
-                if [ "$VALID_INPUT" = false ] && [ -n "$INPUT" ]; then
-                     echo "   ⚠️  Skipping $KEY due to invalid input."
+                    break
                 fi
+                
+                ATTEMPTS=$((ATTEMPTS+1))
+            done
+            
+            if [ "$VALID_INPUT" = false ] && [ -n "$INPUT" ]; then
+                    echo "   ⚠️  Skipping $KEY due to invalid input."
             fi
-        done < "$QUESTIONS_FILE"
-        
-        # Cleanup
-        rm "$QUESTIONS_FILE"
-    fi
+        fi
+    done < "$QUESTIONS_FILE"
+    
+    # Cleanup
+    rm "$QUESTIONS_FILE"
 fi
 
 echo -e "\n🎉 \033[1;32mInstallation complete!\033[0m"
