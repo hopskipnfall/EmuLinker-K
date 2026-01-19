@@ -63,16 +63,17 @@ if [ -z "$PROD_TXT" ]; then
     exit 1
 fi
 
-# Parse tag and downloadUrl
+# Parse tag, version and downloadUrl
 TAG=$(echo "$PROD_TXT" | grep "^tag=" | cut -d'=' -f2)
+VERSION=$(echo "$PROD_TXT" | grep "^version=" | cut -d'=' -f2)
 DOWNLOAD_URL=$(echo "$PROD_TXT" | grep "^downloadUrl=" | cut -d'=' -f2)
 
-if [ -z "$TAG" ] || [ -z "$DOWNLOAD_URL" ]; then
+if [ -z "$TAG" ] || [ -z "$VERSION" ] || [ -z "$DOWNLOAD_URL" ]; then
     echo "❌ Error: Invalid release information."
     exit 1
 fi
 
-echo -e "✅ Found version: \033[1;32m$TAG\033[0m"
+echo -e "✅ Found version: \033[1;32m$VERSION\033[0m (Tag: $TAG)"
 
 # Create directory structure
 echo "📂 Creating directory structure..."
@@ -80,9 +81,7 @@ mkdir -p "$INSTALL_DIR/lib"
 mkdir -p "$INSTALL_DIR/conf"
 
 # Download files
-#TODO: Revert
-#BASE_URL="https://raw.githubusercontent.com/hopskipnfall/EmuLinker-K/$TAG/release"
-BASE_URL="https://raw.githubusercontent.com/hopskipnfall/EmuLinker-K/setup-script/release"
+BASE_URL="https://raw.githubusercontent.com/hopskipnfall/EmuLinker-K/$TAG/release"
 
 echo "⬇️  Downloading configuration and scripts..."
 
@@ -95,8 +94,8 @@ download_file() {
 }
 
 # Download JAR
-echo "⬇️  Downloading emulinker-k-$TAG.jar..."
-curl -s -L -o "$INSTALL_DIR/lib/emulinker-k-$TAG.jar" "$DOWNLOAD_URL"
+echo "⬇️  Downloading emulinker-k-$VERSION.jar..."
+curl -s -L -o "$INSTALL_DIR/lib/emulinker-k-$VERSION.jar" "$DOWNLOAD_URL"
 
 # Download other files
 FILES=(
