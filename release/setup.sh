@@ -81,7 +81,9 @@ mkdir -p "$INSTALL_DIR/lib"
 mkdir -p "$INSTALL_DIR/conf"
 
 # Download files
-BASE_URL="https://raw.githubusercontent.com/hopskipnfall/EmuLinker-K/$TAG/release"
+#TODO undo
+BASE_URL="https://raw.githubusercontent.com/hopskipnfall/EmuLinker-K/setup-script/release"
+#BASE_URL="https://raw.githubusercontent.com/hopskipnfall/EmuLinker-K/$TAG/release"
 
 echo "⬇️  Downloading configuration and scripts..."
 
