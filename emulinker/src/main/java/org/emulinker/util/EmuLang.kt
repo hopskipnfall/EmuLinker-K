@@ -37,7 +37,7 @@ object EmuLang {
             ResourceBundle.Control.getNoFallbackControl(ResourceBundle.Control.FORMAT_PROPERTIES),
           )
         logger.atInfo().log("EmuLang found resource bundle for language: %s", language)
-      } catch (e: MissingResourceException) {
+      } catch (_: MissingResourceException) {
         // This is expected if the language is not supported (e.g. 'uk' but no
         // messages_uk.properties).
         // We catch it and set currentBundle to null, so we skip to CustomUserStrings.
@@ -60,7 +60,8 @@ object EmuLang {
       return DEFAULT_BUNDLE.containsKey(key)
     } else {
       // Standard Mode: Language -> Custom -> Default
-      if (currentBundle != null && currentBundle!!.containsKey(key)) {
+      val cb = currentBundle
+      if (cb != null && cb.containsKey(key)) {
         return true
       }
       if (CustomUserStrings.hasString(key)) {
@@ -78,15 +79,18 @@ object EmuLang {
       return try {
         DEFAULT_BUNDLE.getString(key)
       } catch (e: MissingResourceException) {
+        logger.atWarning().withCause(e).log("Message key %s was not in custom bundle or default bundle.", key)
         null
       }
     } else {
       // Standard Mode: Language -> Custom -> Default
       // 1. Try Language Specific Bundle
-      if (currentBundle != null) {
+      val cb = currentBundle
+      if (cb != null) {
         try {
-          return currentBundle!!.getString(key)
+          return cb.getString(key)
         } catch (e: MissingResourceException) {
+          logger.atFine().withCause(e).log("Key %s was not found in language bundle.", key)
           // Key missing in specific bundle, proceed to fallback
         }
       }
@@ -100,6 +104,7 @@ object EmuLang {
       return try {
         DEFAULT_BUNDLE.getString(key)
       } catch (e: MissingResourceException) {
+        logger.atWarning().withCause(e).log("Key %s was not found in default bundle", key)
         null
       }
     }
