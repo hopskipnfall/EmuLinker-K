@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # EmuLinker-K Setup Script
-# Usage: bash <(curl -s https://raw.githubusercontent.com/hopskipnfall/EmuLinker-K/master/release/setup.sh)
+# Usage: curl -fsSL https://raw.githubusercontent.com/hopskipnfall/EmuLinker-K/master/release/setup.sh | bash
 
 set -e
 
@@ -54,9 +54,7 @@ echo -e "\n🚀 \033[1mStarting installation...\033[0m"
 
 # Fetch prod.txt
 echo -e "📡 Fetching release information..."
-#TODO: Revert
-#PROD_TXT=$(curl -s "https://raw.githubusercontent.com/hopskipnfall/EmuLinker-K/master/release/prod.txt")
-PROD_TXT=$(curl -s "https://raw.githubusercontent.com/hopskipnfall/EmuLinker-K/setup-script/release/prod.txt")
+PROD_TXT=$(curl -s "https://raw.githubusercontent.com/hopskipnfall/EmuLinker-K/master/release/prod.txt")
 
 if [ -z "$PROD_TXT" ]; then
     echo "❌ Error: Could not fetch release information."
@@ -81,9 +79,9 @@ mkdir -p "$INSTALL_DIR/lib"
 mkdir -p "$INSTALL_DIR/conf"
 
 # Download files
-#TODO undo
-BASE_URL="https://raw.githubusercontent.com/hopskipnfall/EmuLinker-K/setup-script/release"
-#BASE_URL="https://raw.githubusercontent.com/hopskipnfall/EmuLinker-K/$TAG/release"
+# TODO(nue): Switch this to use $TAG after 1.0.0 release.
+# BASE_URL="https://raw.githubusercontent.com/hopskipnfall/EmuLinker-K/$TAG/release"
+BASE_URL="https://raw.githubusercontent.com/hopskipnfall/EmuLinker-K/master/release"
 
 echo "⬇️  Downloading configuration and scripts..."
 
@@ -135,9 +133,9 @@ chmod +x "$INSTALL_DIR/stop-server.sh"
 echo -e "\n⚙️  \033[1mConfiguration Setup\033[0m"
 echo "==================="
 
-read -p "📝 What is the name of the new server? " SERVER_NAME
-read -p "🌍 Where is the server located? (e.g. Tokyo, Seattle) " SERVER_LOCATION
-read -p "📡 Do you want your server to appear in server lists? (y/n) " PUBLIC_SERVER
+read -p "📝 What is the name of the new server? " SERVER_NAME < /dev/tty
+read -p "🌍 Where is the server located? (e.g. Tokyo, Seattle) " SERVER_LOCATION < /dev/tty
+read -p "📡 Do you want your server to appear in server lists? (y/n) " PUBLIC_SERVER < /dev/tty
 
 # Update emulinker.cfg
 CFG_FILE="$INSTALL_DIR/conf/emulinker.cfg"
