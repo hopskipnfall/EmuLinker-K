@@ -136,6 +136,12 @@ game) or @restart (meaning they are restarting the game and are waiting for the 
 tweets sent. Similarly, users will be notified and given 20 seconds to type `/stop` to stop the tweet from sending.
 After the game starts, the account will respond to the original tweet with the text "(opponent found)".
 
+## Legal Disclaimer
+
+Server administrators are solely responsible for ensuring that their data collection, disclosure, and retention
+practices (including logs) comply with all applicable laws and regulations. The repository maintainers assume no
+liability for the use of this software.
+
 ## Contributing
 
 If you're interested in contributing to this project, please read [Contributing.md](CONTRIBUTING.md).
