@@ -52,6 +52,29 @@ There is still a lot of legacy code that needs rewriting, but try to keep unrela
 
 For all PRs that may have a significant performance impact, we will want to run load tests.
 
+## Releasing
+We use a streamlined process for releasing new versions of the server, powered by the `release/setup.sh` script.
+
+### How setup.sh Works
+The `setup.sh` script is the single entry point for both installing and upgrading the server.
+1.  **Release Info**: It fetches release metadata from `release/prod.txt` (or `release/beta.txt` if `--beta` is used).
+2.  **Tag-based Download**: It parses the `tag` from the metadata and uses it to construct the download URL, ensuring that users always get the artifacts corresponding to that specific release tag.
+3.  **Configuration**: It handles interactive configuration and migration of old config files.
+
+### Release Process
+
+1.  **Build**: Create the release build (e.g., `./gradlew jar -PprodBuild=true`).
+2.  **Metadata**: Update `release/prod.txt` in the `master` branch:
+    *   `tag`: The git tag you will create (e.g., `0.15.0`).
+    *   `version`: The version string (e.g., `0.15.0`).
+    *   `downloadUrl`: The direct link to the JAR release asset.
+    *   `releaseNotes`: Link to the GitHub release notes.
+3.  **Commit**: Commit the changes to `release/prod.txt`.
+4.  **GitHub Release**: Create a GitHub Release for the tag and upload the JAR as an asset.
+5.  **Tag**: Create and push the git tag matching the one in `prod.txt`.
+    *   `git tag 0.15.0`
+    *   `git push origin 0.15.0`
+
 ## TODO
 
 Topics to write about:
