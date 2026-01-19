@@ -43,24 +43,22 @@ fi
 
 echo -e "🔍 Detected mode: \033[1m$MODE\033[0m"
 
-    echo -e "🔄 \033[1mStarting upgrade...\033[0m"
-    
-    # Pre-flight checks
-    if [ -f "$INSTALL_DIR/start-server.sh" ]; then
-        echo "🗑️  Deleting obsolete server scripts..."
-        rm -f "$INSTALL_DIR/start-server.sh"
-        rm -f "$INSTALL_DIR/stop-server.sh"
-    fi
-     if [ -f "$INSTALL_DIR/server.sh" ]; then
-        echo "🗑️  Deleting obsolete server.sh..."
-        rm "$INSTALL_DIR/server.sh"
-    fi
+# Pre-flight checks
+if [ -f "$INSTALL_DIR/start-server.sh" ]; then
+    echo "🗑️  Deleting obsolete server scripts..."
+    rm -f "$INSTALL_DIR/start-server.sh"
+    rm -f "$INSTALL_DIR/stop-server.sh"
+fi
+ if [ -f "$INSTALL_DIR/server.sh" ]; then
+    echo "🗑️  Deleting obsolete server.sh..."
+    rm "$INSTALL_DIR/server.sh"
+fi
 
-    # Backup config
-    if [ -f "$INSTALL_DIR/conf/emulinker.cfg" ]; then
-        echo "💾 Backing up emulinker.cfg to emulinker.cfg.old..."
-        cp "$INSTALL_DIR/conf/emulinker.cfg" "$INSTALL_DIR/conf/emulinker.cfg.old"
-    fi
+# Backup config
+if [ -f "$INSTALL_DIR/conf/emulinker.cfg" ]; then
+    echo "💾 Backing up emulinker.cfg to emulinker.cfg.old..."
+    cp "$INSTALL_DIR/conf/emulinker.cfg" "$INSTALL_DIR/conf/emulinker.cfg.old"
+fi
 
 
 # --- Install / Upgrade Logic ---
