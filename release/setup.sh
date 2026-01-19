@@ -189,7 +189,7 @@ if [ -f "$QUESTIONS_FILE" ]; then
             ANSWER=""
 
             while [ $ATTEMPTS -lt $MAX_ATTEMPTS ]; do
-                read -p "$question " INPUT < /dev/tty
+                read -p "  $question " INPUT < /dev/tty
                 
                 # Empty input skips
                 if [ -z "$INPUT" ]; then
