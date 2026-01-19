@@ -1,3 +1,7 @@
-emulinker.favoriteColor:string=What is your favorite color?
-emulinker.fanOfEggplant:boolean=Do you like eggplant?
+masterList.serverName:string=What is the name of the new server?
+masterList.serverLocation:string=Where is the server located? (e.g. Tokyo, Seattle)
+emulinker.language:string=What language should be used for server messages? Options: en, es, ja, ko, pt, ru, zh, custom. Choose custom to provide your own translations.
+emulinker.charset:string=Please select the character set that matches your language region: Use Windows-1252 for English and Western Europe, Windows-1251 for Cyrillic, GBK for Simplified Chinese, Shift_JIS for Japanese, or x-IBM949 for Korean. Note: Unicode (UTF-8) is generally not supported by clients. If text appears garbled or displays as '?', try selecting a different charset.
+masterList.touchKaillera:boolean=Do you want your server to appear in the Kaillera server list?
+masterList.touchEmulinker:boolean=Do you want your server to appear in the Emulinker server list?
 emulinker.eggplantScore:number=On a scale of 1-10, how much do you like eggplant?
