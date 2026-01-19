@@ -35,6 +35,40 @@ if pgrep -f "$MAIN_CLASS" > /dev/null; then
     exit 1
 fi
 
+# 3.b UPDATE CHECK
+echo "🔍 Checking for updates..."
+PROD_TXT=$(curl -fsSL --max-time 3 "https://raw.githubusercontent.com/hopskipnfall/EmuLinker-K/master/release/prod.txt" || true)
+
+if [ -n "$PROD_TXT" ]; then
+    LATEST_VERSION=$(echo "$PROD_TXT" | grep "^version=" | cut -d'=' -f2)
+    RELEASE_NOTES=$(echo "$PROD_TXT" | grep "^releaseNotes=" | cut -d'=' -f2)
+    
+    # Extract local version from JAR filename
+    # Assumes JAR_FILE format: .../emulinker-k-VERSION.jar
+    LOCAL_VERSION=$(basename "$JAR_FILE" | sed -E 's/emulinker-k-(.+)\.jar/\1/')
+
+    if [ -n "$LATEST_VERSION" ] && [ -n "$LOCAL_VERSION" ]; then
+        if [ "$LATEST_VERSION" != "$LOCAL_VERSION" ]; then
+            echo -e "\n⚠️  \033[1;33mUpdate Available!\033[0m"
+            echo "   Current: $LOCAL_VERSION"
+            echo "   Latest:  $LATEST_VERSION"
+            if [ -n "$RELEASE_NOTES" ]; then
+                echo "   Release Notes: $RELEASE_NOTES"
+            fi
+            echo "   To upgrade, run:"
+            echo -e "   \033[1mcurl -fsSL https://raw.githubusercontent.com/hopskipnfall/EmuLinker-K/master/release/setup.sh | bash\033[0m\n"
+            echo "   Starting server with current version in 5 seconds..."
+            sleep 5
+        else
+            echo "✅ Server is up to date ($LOCAL_VERSION)."
+        fi
+    else
+         echo "⚠️  Could not determine versions. Skipping check."
+    fi
+else
+    echo "⚠️  Could not fetch update info. Skipping check."
+fi
+
 # 4. START THE SERVER
 echo "🚀 Starting EmuLinker-K..."
 
