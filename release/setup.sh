@@ -78,10 +78,11 @@ if [ -z "$PROD_TXT" ]; then
     exit 1
 fi
 
-# Parse tag, version and downloadUrl
+# Parse tag, version, downloadUrl and releaseNotes
 TAG=$(echo "$PROD_TXT" | grep "^tag=" | cut -d'=' -f2)
 VERSION=$(echo "$PROD_TXT" | grep "^version=" | cut -d'=' -f2)
 DOWNLOAD_URL=$(echo "$PROD_TXT" | grep "^downloadUrl=" | cut -d'=' -f2)
+RELEASE_NOTES=$(echo "$PROD_TXT" | grep "^releaseNotes=" | cut -d'=' -f2)
 
 if [ -z "$TAG" ] || [ -z "$VERSION" ] || [ -z "$DOWNLOAD_URL" ]; then
     echo "❌ Error: Invalid release information."
@@ -210,4 +211,8 @@ echo ""
 echo "To stop the server, run:"
 echo -e "  \033[1m./stop-server.sh\033[0m"
 echo ""
+if [ -n "$RELEASE_NOTES" ]; then
+    echo -e "📜 \033[1mRelease Notes:\033[0m $RELEASE_NOTES"
+    echo ""
+fi
 echo "👋 Please join our Discord server (https://discord.gg/MqZEph388c) and ask for the \"Kaillera server owners\" role."
