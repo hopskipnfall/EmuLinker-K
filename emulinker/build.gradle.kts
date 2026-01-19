@@ -164,6 +164,11 @@ spotless {
     targetExclude("build/", ".git/", ".idea/", ".mvn")
     jackson()
   }
+
+  shell {
+    target("release/**/*.sh")
+    targetExclude("bin/", "build/", ".git/", ".idea/", ".mvn")
+  }
 }
 
 protobuf {

@@ -1,0 +1,1 @@
+emulinker.favoriteColor=What is your favorite color?
