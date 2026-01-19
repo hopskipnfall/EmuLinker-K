@@ -146,7 +146,7 @@ if [ -f "$JAR_PATH" ]; then
         echo "   ✅ Found valid existing jar ($FILE_SIZE bytes). Skipping download."
         DOWNLOAD_JAR=false
     else
-        echo "   ⚠️  Existing jar is too small ($FILE_SIZE bytes). Re-downloading..."
+        echo "   ⚠️ Existing jar is too small ($FILE_SIZE bytes). Re-downloading..."
     fi
 fi
 
