@@ -213,14 +213,14 @@ elif [ "$MODE" == "UPGRADE" ]; then
                     # Validation
                     case "$TYPE" in
                         "boolean")
-                            if [[ "$INPUT" =~ ^[Yy]$ ]]; then
+                            if [[ "$INPUT" =~ ^[Yy]([Ee][Ss])?$ ]] || [[ "$INPUT" =~ ^[Tt][Rr][Uu][Ee]$ ]]; then
                                 ANSWER="true"
                                 VALID_INPUT=true
-                            elif [[ "$INPUT" =~ ^[Nn]$ ]]; then
+                            elif [[ "$INPUT" =~ ^[Nn][Oo]?$ ]] || [[ "$INPUT" =~ ^[Ff][Aa][Ll][Ss][Ee]$ ]]; then
                                 ANSWER="false"
                                 VALID_INPUT=true
                             else
-                                echo "   ❌ Invalid boolean. Please enter 'y' or 'n'."
+                                echo "   ❌ Invalid boolean. Please enter 'y', 'yes', 'true' or 'n', 'no', 'false'."
                             fi
                             ;;
                         "number")
