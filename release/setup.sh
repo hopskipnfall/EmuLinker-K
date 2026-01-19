@@ -67,9 +67,31 @@ if [ "$MODE" == "INSTALL" ]; then
     echo -e "\n🚀 \033[1mStarting installation...\033[0m"
 fi
 
-# Fetch prod.txt
-echo -e "📡 Fetching release information..."
-PROD_TXT=$(curl -s "https://raw.githubusercontent.com/hopskipnfall/EmuLinker-K/master/release/prod.txt")
+
+# --- Argument Parsing ---
+RELEASE_CHANNEL="prod"
+for arg in "$@"; do
+    case $arg in
+        --beta)
+        RELEASE_CHANNEL="beta"
+        shift # Remove --beta from processing
+        ;;
+        *)
+        # Unknown option
+        ;;
+    esac
+done
+
+if [ "$RELEASE_CHANNEL" == "beta" ]; then
+    echo -e "🚧 \033[1;33mUsing BETA release channel\033[0m"
+    RELEASE_INFO_URL="https://raw.githubusercontent.com/hopskipnfall/EmuLinker-K/beta/release/beta.txt"
+else
+    RELEASE_INFO_URL="https://raw.githubusercontent.com/hopskipnfall/EmuLinker-K/master/release/prod.txt"
+fi
+
+# Fetch release info
+echo -e "📡 Fetching release information from $RELEASE_CHANNEL..."
+PROD_TXT=$(curl -s "$RELEASE_INFO_URL")
 
 if [ -z "$PROD_TXT" ]; then
     echo "❌ Error: Could not fetch release information."
@@ -89,14 +111,15 @@ fi
 
 echo -e "✅ Found version: \033[1;32m$VERSION\033[0m (Tag: $TAG)"
 
+# Set BASE_URL using TAG
+BASE_URL="https://raw.githubusercontent.com/hopskipnfall/EmuLinker-K/$TAG/release"
+
 # Create directory structure
 echo "📂 Creating directory structure..."
 mkdir -p "$INSTALL_DIR/lib"
 mkdir -p "$INSTALL_DIR/conf"
 
 # Download files
-BASE_URL="https://raw.githubusercontent.com/hopskipnfall/EmuLinker-K/$TAG/release"
-
 echo "⬇️  Downloading configuration and scripts..."
 
 download_file() {
