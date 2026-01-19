@@ -92,14 +92,12 @@ download_file() {
     local dest=$2
     local url="${BASE_URL}/${file}"
     echo "   📦 Downloading $file..."
-    echo "$url"
     curl -s -o "$dest" "$url"
 }
 
 # Download JAR
-echo "⬇️  Downloading emulinker-k-$VERSION.jar..."
+echo "   📦 Downloading emulinker-k-$VERSION.jar..."
 curl -s -L -o "$INSTALL_DIR/lib/emulinker-k-$VERSION.jar" "$DOWNLOAD_URL"
-echo "$DOWNLOAD_URL"
 
 # Download other files
 FILES=(
