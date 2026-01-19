@@ -181,15 +181,73 @@ elif [ "$MODE" == "UPGRADE" ]; then
     download_file "questions.txt" "$QUESTIONS_FILE"
 
     if [ -f "$QUESTIONS_FILE" ]; then
-        while IFS='=' read -r key question || [ -n "$key" ]; do
+        while IFS='=' read -r key_type question || [ -n "$key_type" ]; do
              # Skip empty lines or comments
-            [[ -z "$key" || "$key" == \#* ]] && continue
+            [[ -z "$key_type" || "$key_type" == \#* ]] && continue
+            
+            # Parse Key and Type
+            KEY=$(echo "$key_type" | cut -d':' -f1)
+            TYPE=$(echo "$key_type" | cut -d':' -f2)
+            
+            # Default type to string if missing
+            [[ "$KEY" == "$TYPE" ]] && TYPE="string"
             
             # Check if key exists in config
-            if ! grep -q "^$key=" "$CFG_FILE"; then
-                echo -e "\n❓ \033[1mConfig Update: $key\033[0m"
-                read -p "$question " ANSWER < /dev/tty
-                echo "$key=$ANSWER" >> "$CFG_FILE"
+            if ! grep -q "^$KEY=" "$CFG_FILE"; then
+                echo -e "\n❓ \033[1mConfig Update: $KEY ($TYPE)\033[0m"
+                
+                ATTEMPTS=0
+                MAX_ATTEMPTS=2
+                VALID_INPUT=false
+                ANSWER=""
+
+                while [ $ATTEMPTS -lt $MAX_ATTEMPTS ]; do
+                    read -p "$question " INPUT < /dev/tty
+                    
+                    # Empty input skips
+                    if [ -z "$INPUT" ]; then
+                        echo "   Skipping..."
+                        break
+                    fi
+
+                    # Validation
+                    case "$TYPE" in
+                        "boolean")
+                            if [[ "$INPUT" =~ ^[Yy]$ ]]; then
+                                ANSWER="true"
+                                VALID_INPUT=true
+                            elif [[ "$INPUT" =~ ^[Nn]$ ]]; then
+                                ANSWER="false"
+                                VALID_INPUT=true
+                            else
+                                echo "   ❌ Invalid boolean. Please enter 'y' or 'n'."
+                            fi
+                            ;;
+                        "number")
+                            if [[ "$INPUT" =~ ^-?[0-9]*\.?[0-9]+$ ]]; then
+                                ANSWER="$INPUT"
+                                VALID_INPUT=true
+                            else
+                                echo "   ❌ Invalid number."
+                            fi
+                            ;;
+                        *) # string
+                            ANSWER="$INPUT"
+                            VALID_INPUT=true
+                            ;;
+                    esac
+
+                    if [ "$VALID_INPUT" = true ]; then
+                        echo "$KEY=$ANSWER" >> "$CFG_FILE"
+                        break
+                    fi
+                    
+                    ATTEMPTS=$((ATTEMPTS+1))
+                done
+                
+                if [ "$VALID_INPUT" = false ] && [ -n "$INPUT" ]; then
+                     echo "   ⚠️  Skipping $KEY due to invalid input."
+                fi
             fi
         done < "$QUESTIONS_FILE"
         

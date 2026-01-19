@@ -1,1 +1,3 @@
-emulinker.favoriteColor=What is your favorite color?
+emulinker.favoriteColor:string=What is your favorite color?
+emulinker.fanOfEggplant:boolean=Do you like eggplant?
+emulinker.eggplantScore:number=On a scale of 1-10, how much do you like eggplant?
