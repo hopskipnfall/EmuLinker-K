@@ -69,7 +69,7 @@ fi
 
 # Fetch prod.txt
 echo -e "📡 Fetching release information..."
-PROD_TXT=$(curl -s "https://raw.githubusercontent.com/hopskipnfall/EmuLinker-K/master/release/prod.txt")
+PROD_TXT=$(curl -s "https://raw.githubusercontent.com/hopskipnfall/EmuLinker-K/$TAG/release/prod.txt")
 
 if [ -z "$PROD_TXT" ]; then
     echo "❌ Error: Could not fetch release information."
@@ -95,9 +95,7 @@ mkdir -p "$INSTALL_DIR/lib"
 mkdir -p "$INSTALL_DIR/conf"
 
 # Download files
-# TODO(nue): Switch this to use $TAG after 1.0.0 release.
-# BASE_URL="https://raw.githubusercontent.com/hopskipnfall/EmuLinker-K/$TAG/release"
-BASE_URL="https://raw.githubusercontent.com/hopskipnfall/EmuLinker-K/master/release"
+BASE_URL="https://raw.githubusercontent.com/hopskipnfall/EmuLinker-K/$TAG/release"
 
 echo "⬇️  Downloading configuration and scripts..."
 
