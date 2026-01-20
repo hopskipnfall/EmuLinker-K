@@ -98,7 +98,7 @@ elif [ "$RELEASE_CHANNEL" == "beta" ]; then
     echo -e "🚧 \033[1;33mUsing BETA release channel\033[0m"
     RELEASE_INFO_URL="https://raw.githubusercontent.com/hopskipnfall/EmuLinker-K/beta/release/beta.txt"
 else
-    RELEASE_INFO_URL="https://raw.githubusercontent.com/hopskipnfall/EmuLinker-K/master/release/prod.txt"
+    RELEASE_INFO_URL="https://raw.githubusercontent.com/hopskipnfall/EmuLinker-K/prod/release/prod.txt"
 fi
 
 # Fetch release info
