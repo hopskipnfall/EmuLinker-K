@@ -69,20 +69,32 @@ fi
 
 
 # --- Argument Parsing ---
+# --- Argument Parsing ---
 RELEASE_CHANNEL="prod"
-for arg in "$@"; do
-    case $arg in
+TAG_ARG=""
+
+while [[ $# -gt 0 ]]; do
+    case $1 in
         --beta)
-        RELEASE_CHANNEL="beta"
-        shift # Remove --beta from processing
-        ;;
+            RELEASE_CHANNEL="beta"
+            shift # Remove --beta
+            ;;
+        --tag)
+            TAG_ARG="$2"
+            shift # Remove --tag
+            shift # Remove value
+            ;;
         *)
-        # Unknown option
-        ;;
+            # Unknown option
+            shift
+            ;;
     esac
 done
 
-if [ "$RELEASE_CHANNEL" == "beta" ]; then
+if [ -n "$TAG_ARG" ]; then
+    echo -e "🏷️  \033[1;33mUsing specific tag: $TAG_ARG\033[0m"
+    RELEASE_INFO_URL="https://raw.githubusercontent.com/hopskipnfall/EmuLinker-K/$TAG_ARG/release/prod.txt"
+elif [ "$RELEASE_CHANNEL" == "beta" ]; then
     echo -e "🚧 \033[1;33mUsing BETA release channel\033[0m"
     RELEASE_INFO_URL="https://raw.githubusercontent.com/hopskipnfall/EmuLinker-K/beta/release/beta.txt"
 else

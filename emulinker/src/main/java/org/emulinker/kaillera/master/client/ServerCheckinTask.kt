@@ -33,6 +33,7 @@ data class ServerInfo(
   val javaVersion: String,
   val javaVendor: String,
   val availableProcessors: Int,
+  val language: String,
 )
 
 @Serializable data class CheckinRequest(val serverInfo: ServerInfo)
@@ -96,6 +97,7 @@ class ServerCheckinTask(
           javaVersion = System.getProperty("java.version"),
           javaVendor = System.getProperty("java.vendor"),
           availableProcessors = Runtime.getRuntime().availableProcessors(),
+          language = flags.language,
         )
       )
 
