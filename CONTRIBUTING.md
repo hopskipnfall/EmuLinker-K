@@ -63,7 +63,7 @@ The `setup.sh` script is the single entry point for both installing and upgradin
 
 ### Release Process
 
-1.  **Build**: Create the release build (e.g., `./gradlew jar -PprodBuild=true`).
+1.  **Build**: Create the release build (e.g., `./gradlew clean jar -PprodBuild=true`).
 2.  **Metadata**: Update `release/prod.txt` in the `master` branch:
     *   `tag`: The git tag you will create (e.g., `0.15.0`).
     *   `version`: The version string (e.g., `0.15.0`).
@@ -74,6 +74,10 @@ The `setup.sh` script is the single entry point for both installing and upgradin
 5.  **Tag**: Create and push the git tag matching the one in `prod.txt`.
     *   `git tag 0.15.0`
     *   `git push origin 0.15.0`
+6.  Update the `prod` tag.
+    *   `git tag -d prod`
+    *   `git tag prod`
+    *   `git push origin prod --force`
 
 ## TODO
 
