@@ -37,7 +37,7 @@ fi
 
 # 3.b UPDATE CHECK
 echo "🔍 Checking for updates..."
-PROD_TXT=$(curl -fsSL --max-time 3 "https://raw.githubusercontent.com/hopskipnfall/EmuLinker-K/master/release/prod.txt" || true)
+PROD_TXT=$(curl -fsSL --max-time 3 "https://raw.githubusercontent.com/hopskipnfall/EmuLinker-K/prod/release/prod.txt" || true)
 
 if [ -n "$PROD_TXT" ]; then
     LATEST_VERSION=$(echo "$PROD_TXT" | grep "^version=" | cut -d'=' -f2)
