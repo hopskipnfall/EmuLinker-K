@@ -78,7 +78,7 @@ group = "org.emulinker"
 
 description = "EmuLinker-K"
 
-version = "1.0.0-beta"
+version = "1.0.0"
 
 kotlin { jvmToolchain(17) }
 
