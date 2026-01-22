@@ -116,9 +116,9 @@ val koinModule = module {
               org.emulinker.kaillera.pico.logger
                 .atSevere()
                 .log(
-                  "The value you gave for emulinker.charset is unsupported. Please update conf/emulinker.cfg and select the character set that matches your language region: Use Windows-1252 for English and Western Europe, Windows-1251 for Cyrillic, GBK for Simplified Chinese, Shift_JIS for Japanese, or x-IBM949 for Korean. Note: Unicode (UTF-8) is generally not supported by clients. If text appears garbled or displays as '?', try selecting a different charset."
+                  "IMPORTANT: The value you gave for emulinker.charset is unsupported. Please update conf/emulinker.cfg and select the character set that matches your language region: Use Windows-1252 for English and Western Europe, Windows-1251 for Cyrillic, GBK for Simplified Chinese, Shift_JIS for Japanese, or x-IBM949 for Korean. Note: Unicode (UTF-8) is generally not supported by clients. If text appears garbled or displays as '?', try selecting a different charset."
                 )
-              throw e
+              Charset.forName("Windows-1252")
             },
           chatFloodTime = config.getInt("server.chatFloodTime", 2).seconds,
           allowedProtocols =
