@@ -36,14 +36,14 @@ class JoinGameAction :
       try {
         clientHandler.send(
           InformationMessage(
-            clientHandler.nextMessageNumber,
+              0,
             "server",
             EmuLang.getString("JoinGameAction.JoinGameDenied", e.message),
           )
         )
         clientHandler.send(
           QuitGameNotification(
-            clientHandler.nextMessageNumber,
+              0,
             clientHandler.user.name ?: "(empty username)",
             clientHandler.user.id,
           )
@@ -65,12 +65,12 @@ class JoinGameAction :
           .asSequence()
           .filter { it != thisUser && !it.inStealthMode }
           .mapTo(players) { PlayerInformation.Player(it.name!!, it.ping, it.id, it.connectionType) }
-        clientHandler.send(PlayerInformation(clientHandler.nextMessageNumber, players))
+        clientHandler.send(PlayerInformation(0, players))
       }
       if (!user.inStealthMode)
         clientHandler.send(
           JoinGameNotification(
-            clientHandler.nextMessageNumber,
+              0,
             game.id,
             0,
             user.name!!,

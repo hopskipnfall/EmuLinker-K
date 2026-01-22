@@ -40,7 +40,7 @@ class CreateGameAction :
       try {
         clientHandler.send(
           InformationMessage(
-            clientHandler.nextMessageNumber,
+              0,
             "server",
             EmuLang.getString("CreateGameAction.CreateGameDenied", e.message),
           )
@@ -49,7 +49,7 @@ class CreateGameAction :
         // need to send this?
         clientHandler.send(
           QuitGameNotification(
-            clientHandler.nextMessageNumber,
+              0,
             clientHandler.user.name ?: "",
             clientHandler.user.id,
           )
@@ -65,7 +65,7 @@ class CreateGameAction :
       try {
         clientHandler.send(
           InformationMessage(
-            clientHandler.nextMessageNumber,
+              0,
             "server",
             EmuLang.getString("CreateGameAction.CreateGameDeniedFloodControl"),
           )
@@ -74,7 +74,7 @@ class CreateGameAction :
         // need to send this?
         clientHandler.send(
           QuitGameNotification(
-            clientHandler.nextMessageNumber,
+              0,
             clientHandler.user.name ?: "",
             clientHandler.user.id,
           )
@@ -91,7 +91,7 @@ class CreateGameAction :
       val owner = game.owner
       clientHandler.send(
         CreateGameNotification(
-          clientHandler.nextMessageNumber,
+            0,
           owner!!.name!!,
           game.romName,
           owner.clientType!!,

@@ -69,7 +69,7 @@ class AdminCommandAction : V086Action<Chat> {
         try {
           clientHandler.send(
             InformationMessage(
-              clientHandler.nextMessageNumber,
+              0,
               "server",
               "Admin Command Error: You are not an admin!",
             )
@@ -136,7 +136,7 @@ class AdminCommandAction : V086Action<Chat> {
       try {
         clientHandler.send(
           InformationMessage(
-            clientHandler.nextMessageNumber,
+            0,
             "server",
             EmuLang.getString("AdminCommandAction.Failed", e.message),
           )
@@ -162,28 +162,28 @@ class AdminCommandAction : V086Action<Chat> {
     // try { Thread.sleep(20); } catch(Exception e) {}
     clientHandler!!.send(
       InformationMessage(
-        clientHandler.nextMessageNumber,
+        0,
         "server",
         EmuLang.getString("AdminCommandAction.HelpVersion"),
       )
     )
     clientHandler.send(
       InformationMessage(
-        clientHandler.nextMessageNumber,
+        0,
         "server",
         EmuLang.getString("AdminCommandAction.HelpKick"),
       )
     )
     clientHandler.send(
       InformationMessage(
-        clientHandler.nextMessageNumber,
+        0,
         "server",
         EmuLang.getString("AdminCommandAction.HelpSilence"),
       )
     )
     clientHandler.send(
       InformationMessage(
-        clientHandler.nextMessageNumber,
+        0,
         "server",
         EmuLang.getString("AdminCommandAction.HelpBan"),
       )
@@ -191,7 +191,7 @@ class AdminCommandAction : V086Action<Chat> {
     if (admin.accessLevel == AccessManager.ACCESS_ADMIN) {
       clientHandler.send(
         InformationMessage(
-          clientHandler.nextMessageNumber,
+          0,
           "server",
           EmuLang.getString("AdminCommandAction.HelpClear"),
         )
@@ -199,63 +199,63 @@ class AdminCommandAction : V086Action<Chat> {
     }
     clientHandler.send(
       InformationMessage(
-        clientHandler.nextMessageNumber,
+        0,
         "server",
         EmuLang.getString("AdminCommandAction.HelpCloseGame"),
       )
     )
     clientHandler.send(
       InformationMessage(
-        clientHandler.nextMessageNumber,
+        0,
         "server",
         EmuLang.getString("AdminCommandAction.HelpAnnounce"),
       )
     )
     clientHandler.send(
       InformationMessage(
-        clientHandler.nextMessageNumber,
+        0,
         "server",
         EmuLang.getString("AdminCommandAction.HelpAnnounceAll"),
       )
     )
     clientHandler.send(
       InformationMessage(
-        clientHandler.nextMessageNumber,
+        0,
         "server",
         EmuLang.getString("AdminCommandAction.HelpAnnounceGame"),
       )
     )
     clientHandler.send(
       InformationMessage(
-        clientHandler.nextMessageNumber,
+        0,
         "server",
         EmuLang.getString("AdminCommandAction.HelpFindUser"),
       )
     )
     clientHandler.send(
       InformationMessage(
-        clientHandler.nextMessageNumber,
+        0,
         "server",
         EmuLang.getString("AdminCommandAction.HelpFindGame"),
       )
     )
     clientHandler.send(
       InformationMessage(
-        clientHandler.nextMessageNumber,
+        0,
         "server",
         "/triviaon to start the trivia bot- /triviapause to pause the bot- /triviaresume to resume the bot after pause- /triviasave to save the bot's scores- /triviatime <#> to change the question delay",
       )
     )
     clientHandler.send(
       InformationMessage(
-        clientHandler.nextMessageNumber,
+        0,
         "server",
         "/triviaoff to stop the bot- /triviascores to show top 3 scores- /triviawin to show a winner- /triviaupdate <IP Address> <New IP Address> to update ip address",
       )
     )
     clientHandler.send(
       InformationMessage(
-        clientHandler.nextMessageNumber,
+        0,
         "server",
         "/stealthon /stealthoff to join a room invisibly.",
       )
@@ -263,28 +263,28 @@ class AdminCommandAction : V086Action<Chat> {
     if (admin.accessLevel == AccessManager.ACCESS_SUPERADMIN) {
       clientHandler.send(
         InformationMessage(
-          clientHandler.nextMessageNumber,
+          0,
           "server",
           "/tempelevated <UserID> <min> to give a user temporary elevated access.",
         )
       )
       clientHandler.send(
         InformationMessage(
-          clientHandler.nextMessageNumber,
+          0,
           "server",
           "/tempmoderator <UserID> <min> to give a user temporary moderator access.",
         )
       )
       clientHandler.send(
         InformationMessage(
-          clientHandler.nextMessageNumber,
+          0,
           "server",
           EmuLang.getString("AdminCommandAction.HelpTempAdmin"),
         )
       )
       clientHandler.send(
         InformationMessage(
-          clientHandler.nextMessageNumber,
+          0,
           "server",
           "/clear <IP Address> to remove any temp ban, silence, elevated, moderator or admin.",
         )
@@ -312,14 +312,14 @@ class AdminCommandAction : V086Action<Chat> {
         msg +=
           if (user.game == null) "" else ", GameID: ${user.game!!.id}, Game: ${user.game!!.romName}"
 
-        clientHandler!!.send(InformationMessage(clientHandler.nextMessageNumber, "server", msg))
+        clientHandler!!.send(InformationMessage(0, "server", msg))
         foundCount++
       }
     }
     if (foundCount == 0)
       clientHandler!!.send(
         InformationMessage(
-          clientHandler.nextMessageNumber,
+          0,
           "server",
           EmuLang.getString("AdminCommandAction.NoUsersFound"),
         )
@@ -347,7 +347,7 @@ class AdminCommandAction : V086Action<Chat> {
         sb.append(">, Game: ")
         sb.append(game.romName)
         clientHandler!!.send(
-          InformationMessage(clientHandler.nextMessageNumber, "server", sb.toString())
+          InformationMessage(0, "server", sb.toString())
         )
         foundCount++
       }
@@ -355,7 +355,7 @@ class AdminCommandAction : V086Action<Chat> {
     if (foundCount == 0)
       clientHandler!!.send(
         InformationMessage(
-          clientHandler.nextMessageNumber,
+          0,
           "server",
           EmuLang.getString("AdminCommandAction.NoGamesFound"),
         )
@@ -640,12 +640,12 @@ class AdminCommandAction : V086Action<Chat> {
     if (message == "/stealthon") {
       admin.inStealthMode = true
       clientHandler!!.send(
-        InformationMessage(clientHandler.nextMessageNumber, "server", "Stealth Mode is on.")
+        InformationMessage(0, "server", "Stealth Mode is on.")
       )
     } else if (message == "/stealthoff") {
       admin.inStealthMode = false
       clientHandler!!.send(
-        InformationMessage(clientHandler.nextMessageNumber, "server", "Stealth Mode is off.")
+        InformationMessage(0, "server", "Stealth Mode is off.")
       )
     } else throw ActionException("Stealth Mode Error: /stealthon /stealthoff")
   }
@@ -828,7 +828,7 @@ class AdminCommandAction : V086Action<Chat> {
     )
       clientHandler!!.send(
         InformationMessage(
-          clientHandler.nextMessageNumber,
+          0,
           "server",
           EmuLang.getString("AdminCommandAction.ClearSuccess"),
         )
@@ -836,7 +836,7 @@ class AdminCommandAction : V086Action<Chat> {
     else
       clientHandler!!.send(
         InformationMessage(
-          clientHandler.nextMessageNumber,
+          0,
           "server",
           EmuLang.getString("AdminCommandAction.ClearNotFound"),
         )
@@ -854,7 +854,7 @@ class AdminCommandAction : V086Action<Chat> {
       val releaseInfo = server.releaseInfo
       clientHandler!!.send(
         InformationMessage(
-          clientHandler.nextMessageNumber,
+          0,
           "server",
           "VERSION: " +
             releaseInfo.productName +
@@ -868,35 +868,35 @@ class AdminCommandAction : V086Action<Chat> {
         val props = System.getProperties()
         clientHandler.send(
           InformationMessage(
-            clientHandler.nextMessageNumber,
+            0,
             "server",
             "JAVAVER: " + props.getProperty("java.version"),
           )
         )
         clientHandler.send(
           InformationMessage(
-            clientHandler.nextMessageNumber,
+            0,
             "server",
             "JAVAVEND: " + props.getProperty("java.vendor"),
           )
         )
         clientHandler.send(
           InformationMessage(
-            clientHandler.nextMessageNumber,
+            0,
             "server",
             "OSNAME: " + props.getProperty("os.name"),
           )
         )
         clientHandler.send(
           InformationMessage(
-            clientHandler.nextMessageNumber,
+            0,
             "server",
             "OSARCH: " + props.getProperty("os.arch"),
           )
         )
         clientHandler.send(
           InformationMessage(
-            clientHandler.nextMessageNumber,
+            0,
             "server",
             "OSVER: " + props.getProperty("os.version"),
           )
@@ -904,28 +904,28 @@ class AdminCommandAction : V086Action<Chat> {
         val runtime = Runtime.getRuntime()
         clientHandler.send(
           InformationMessage(
-            clientHandler.nextMessageNumber,
+            0,
             "server",
             "NUMPROCS: " + runtime.availableProcessors(),
           )
         )
         clientHandler.send(
           InformationMessage(
-            clientHandler.nextMessageNumber,
+            0,
             "server",
             "FREEMEM: " + runtime.freeMemory(),
           )
         )
         clientHandler.send(
           InformationMessage(
-            clientHandler.nextMessageNumber,
+            0,
             "server",
             "MAXMEM: " + runtime.maxMemory(),
           )
         )
         clientHandler.send(
           InformationMessage(
-            clientHandler.nextMessageNumber,
+            0,
             "server",
             "TOTMEM: " + runtime.totalMemory(),
           )
@@ -934,14 +934,14 @@ class AdminCommandAction : V086Action<Chat> {
         if (EmuUtil.systemIsWindows()) {
           clientHandler.send(
             InformationMessage(
-              clientHandler.nextMessageNumber,
+              0,
               "server",
               "COMPNAME: " + env["COMPUTERNAME"],
             )
           )
           clientHandler.send(
             InformationMessage(
-              clientHandler.nextMessageNumber,
+              0,
               "server",
               "USER: " + env["USERNAME"],
             )
@@ -949,14 +949,14 @@ class AdminCommandAction : V086Action<Chat> {
         } else {
           clientHandler.send(
             InformationMessage(
-              clientHandler.nextMessageNumber,
+              0,
               "server",
               "COMPNAME: " + env["HOSTNAME"],
             )
           )
           clientHandler.send(
             InformationMessage(
-              clientHandler.nextMessageNumber,
+              0,
               "server",
               "USER: " + env["USERNAME"],
             )

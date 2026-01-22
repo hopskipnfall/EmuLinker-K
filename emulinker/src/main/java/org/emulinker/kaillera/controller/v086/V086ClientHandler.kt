@@ -120,9 +120,6 @@ class V086ClientHandler(
       null
     }
 
-  // TODO(nue): This no longer fulfills any purpose. Remove.
-  @Deprecated("", ReplaceWith("0")) val nextMessageNumber = 0
-
   private val lastSendMessageNumber = AtomicInteger(0)
 
   private fun getAndIncrementSendMessageNumber(): Int =

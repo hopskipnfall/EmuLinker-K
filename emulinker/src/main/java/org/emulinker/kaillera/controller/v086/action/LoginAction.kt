@@ -23,7 +23,7 @@ class LoginAction : V086Action<UserInformation>, V086ServerEventHandler<UserJoin
     user.connectionType = message.connectionType
     clientHandler.startSpeedTest()
     try {
-      clientHandler.send(ServerAck(clientHandler.nextMessageNumber))
+      clientHandler.send(ServerAck(0))
     } catch (e: MessageFormatException) {
       logger.atSevere().withCause(e).log("Failed to construct ACK.ServerACK message")
     }
@@ -34,7 +34,7 @@ class LoginAction : V086Action<UserInformation>, V086ServerEventHandler<UserJoin
       val user = event.user
       clientHandler.send(
         UserJoined(
-          clientHandler.nextMessageNumber,
+            0,
           user.name!!,
           user.id,
           user.ping,
@@ -62,7 +62,7 @@ class LoginAction : V086Action<UserInformation>, V086ServerEventHandler<UserJoin
           sb.append(0x02.toChar())
           sb.append(user.connectionType.byteValue.toInt())
           clientHandler.send(
-            InformationMessage(clientHandler.nextMessageNumber, "server", sb.toString())
+            InformationMessage(0, "server", sb.toString())
           )
         }
       }

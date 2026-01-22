@@ -21,7 +21,7 @@ class StartGameAction(private val lookingForGameReporter: TwitterBroadcaster) :
       logger.atFine().withCause(e).log("Failed to start game")
       try {
         clientHandler.send(
-          GameChatNotification(clientHandler.nextMessageNumber, "Error", e.message!!)
+          GameChatNotification(0, "Error", e.message!!)
         )
       } catch (ex: MessageFormatException) {
         logger.atSevere().withCause(ex).log("Failed to construct GameChat.Notification message")
@@ -42,7 +42,7 @@ class StartGameAction(private val lookingForGameReporter: TwitterBroadcaster) :
       val playerNumber = game.getPlayerNumber(clientHandler.user)
       clientHandler.send(
         StartGameNotification(
-          clientHandler.nextMessageNumber,
+            0,
           delay.toShort().toInt(),
           playerNumber.toByte().toShort(),
           game.players.size.toByte().toShort(),

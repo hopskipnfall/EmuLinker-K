@@ -29,7 +29,7 @@ class DropGameAction : V086Action<PlayerDropRequest>, V086GameEventHandler<UserD
       if (!user.inStealthMode)
         clientHandler.send(
           PlayerDropNotification(
-            clientHandler.nextMessageNumber,
+              0,
             user.name!!,
             playerNumber.toByte(),
           )

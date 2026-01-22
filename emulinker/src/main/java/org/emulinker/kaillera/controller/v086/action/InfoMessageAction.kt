@@ -12,7 +12,7 @@ class InfoMessageAction : V086UserEventHandler<InfoMessageEvent> {
   override fun handleEvent(event: InfoMessageEvent, clientHandler: V086ClientHandler) {
     try {
       clientHandler.send(
-        InformationMessage(clientHandler.nextMessageNumber, "server", event.message)
+        InformationMessage(0, "server", event.message)
       )
     } catch (e: MessageFormatException) {
       logger.atSevere().withCause(e).log("Failed to construct InformationMessage message")

@@ -11,7 +11,7 @@ class CloseGameAction : V086ServerEventHandler<GameClosedEvent> {
 
   override fun handleEvent(event: GameClosedEvent, clientHandler: V086ClientHandler) {
     try {
-      clientHandler.send(CloseGame(clientHandler.nextMessageNumber, event.game.id, 0))
+      clientHandler.send(CloseGame(0, event.game.id, 0))
     } catch (e: MessageFormatException) {
       logger.atSevere().withCause(e).log("Failed to construct CloseGame_Notification message")
     }

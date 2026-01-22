@@ -35,13 +35,13 @@ class QuitGameAction(private val lookingForGameReporter: TwitterBroadcaster) :
       val user = event.user
       if (!user.inStealthMode) {
         clientHandler.send(
-          QuitGameNotification(clientHandler.nextMessageNumber, user.name!!, user.id)
+          QuitGameNotification(0, user.name!!, user.id)
         )
       }
       if (thisUser === user) {
         if (user.inStealthMode)
           clientHandler.send(
-            QuitGameNotification(clientHandler.nextMessageNumber, user.name!!, user.id)
+            QuitGameNotification(0, user.name!!, user.id)
           )
       }
     } catch (e: MessageFormatException) {
