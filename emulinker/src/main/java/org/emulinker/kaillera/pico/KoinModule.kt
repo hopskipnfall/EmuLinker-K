@@ -106,7 +106,7 @@ val koinModule = module {
                     org.emulinker.kaillera.pico.logger
                       .atSevere()
                       .log(
-                        "emulinker.charset is not specified! Please set a value in conf/emulinker.cfg. Using 'Windows-1252' as backup."
+                        "=== IMPORTANT === emulinker.charset is not specified! Please set a value in conf/emulinker.cfg. Using 'Windows-1252' as backup."
                       )
                     "Windows-1252"
                   }
@@ -116,7 +116,7 @@ val koinModule = module {
               org.emulinker.kaillera.pico.logger
                 .atSevere()
                 .log(
-                  "IMPORTANT: The value you gave for emulinker.charset is unsupported. Please update conf/emulinker.cfg and select the character set that matches your language region: Use Windows-1252 for English and Western Europe, Windows-1251 for Cyrillic, GBK for Simplified Chinese, Shift_JIS for Japanese, or x-IBM949 for Korean. Note: Unicode (UTF-8) is generally not supported by clients. If text appears garbled or displays as '?', try selecting a different charset."
+                  "=== IMPORTANT === The value you gave for emulinker.charset is unsupported. Please update conf/emulinker.cfg and select the character set that matches your language region: Use Windows-1252 for English and Western Europe, Windows-1251 for Cyrillic, GBK for Simplified Chinese, Shift_JIS for Japanese, or x-IBM949 for Korean. Note: Unicode (UTF-8) is generally not supported by clients. If text appears garbled or displays as '?', try selecting a different charset."
                 )
               Charset.forName("Windows-1252")
             },
@@ -161,8 +161,12 @@ val koinModule = module {
           serverWebsite = config.getString("masterList.serverWebsite", ""),
           switchStatusBytesForBuggyClient =
             config.getBoolean("server.switchStatusBytesForBuggyClient", false),
-          touchEmulinker = config.getBoolean("masterList.touchEmulinker", false),
-          touchKaillera = config.getBoolean("masterList.touchKaillera", false),
+          touchEmulinker =
+            config.getString("masterList.touchEmulinker", "").trim().toBooleanStrictOrNull()
+              ?: false,
+          touchKaillera =
+            config.getString("masterList.touchKaillera", "").trim().toBooleanStrictOrNull()
+              ?: false,
           twitterBroadcastDelay = config.getInt("twitter.broadcastDelaySeconds", 15).seconds,
           twitterDeletePostOnClose = config.getBoolean("twitter.deletePostOnClose", false),
           twitterEnabled = config.getBoolean("twitter.enabled", false),
