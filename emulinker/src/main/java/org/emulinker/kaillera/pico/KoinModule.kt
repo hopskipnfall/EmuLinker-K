@@ -5,6 +5,7 @@ import com.google.common.flogger.FluentLogger
 import io.github.redouane59.twitter.TwitterClient
 import io.github.redouane59.twitter.signature.TwitterCredentials
 import java.nio.charset.Charset
+import java.nio.charset.UnsupportedCharsetException
 import java.util.Timer
 import java.util.concurrent.SynchronousQueue
 import java.util.concurrent.ThreadPoolExecutor
@@ -91,80 +92,100 @@ val koinModule = module {
   single { Timer(/* isDaemon= */ true) }
 
   single<RuntimeFlags> {
-    val config = get<Configuration>()
-    val flags =
-      RuntimeFlags(
-        allowMultipleConnections = config.getBoolean("server.allowMultipleConnections", true),
-        allowSinglePlayer = config.getBoolean("server.allowSinglePlayer", true),
-        charset =
-          Charset.forName(
-            run {
-              config.getString("emulinker.charset", "").ifEmpty {
-                org.emulinker.kaillera.pico.logger
-                  .atSevere()
-                  .log(
-                    "emulinker.charset is not specified! Please set a value in conf/emulinker.cfg. Using 'Windows-1252' as backup."
-                  )
-                "Windows-1252"
+    try {
+      val config = get<Configuration>()
+      val flags =
+        RuntimeFlags(
+          allowMultipleConnections = config.getBoolean("server.allowMultipleConnections", true),
+          allowSinglePlayer = config.getBoolean("server.allowSinglePlayer", true),
+          charset =
+            try {
+              Charset.forName(
+                run {
+                  config.getString("emulinker.charset", "").ifEmpty {
+                    org.emulinker.kaillera.pico.logger
+                      .atSevere()
+                      .log(
+                        "emulinker.charset is not specified! Please set a value in conf/emulinker.cfg. Using 'Windows-1252' as backup."
+                      )
+                    "Windows-1252"
+                  }
+                }
+              )
+            } catch (e: UnsupportedCharsetException) {
+              org.emulinker.kaillera.pico.logger
+                .atSevere()
+                .log(
+                  "IMPORTANT: The value you gave for emulinker.charset is unsupported. Please update conf/emulinker.cfg and select the character set that matches your language region: Use Windows-1252 for English and Western Europe, Windows-1251 for Cyrillic, GBK for Simplified Chinese, Shift_JIS for Japanese, or x-IBM949 for Korean. Note: Unicode (UTF-8) is generally not supported by clients. If text appears garbled or displays as '?', try selecting a different charset."
+                )
+              Charset.forName("Windows-1252")
+            },
+          chatFloodTime = config.getInt("server.chatFloodTime", 2).seconds,
+          allowedProtocols =
+            config.getStringArray("controllers.v086.clientTypes.clientType").toList().ifEmpty {
+              listOf("v086")
+            },
+          allowedConnectionTypes =
+            config
+              .getStringArray("server.allowedConnectionTypes")
+              .ifEmpty {
+                ConnectionType.entries.map { it.byteValue.toInt().toString() }.toTypedArray()
               }
-            }
-          ),
-        chatFloodTime = config.getInt("server.chatFloodTime", 2).seconds,
-        allowedProtocols =
-          config.getStringArray("controllers.v086.clientTypes.clientType").toList().ifEmpty {
-            listOf("v086")
-          },
-        allowedConnectionTypes =
-          config
-            .getStringArray("server.allowedConnectionTypes")
-            .ifEmpty {
-              ConnectionType.entries.map { it.byteValue.toInt().toString() }.toTypedArray()
-            }
-            .toList(),
-        coreThreadPoolSize = config.getInt("server.coreThreadpoolSize", 5),
-        createGameFloodTime = config.getInt("server.createGameFloodTime", 2).seconds,
-        gameAutoFireSensitivity = config.getInt("game.defaultAutoFireSensitivity", 0),
-        gameBufferSize = config.getInt("game.bufferSize"),
-        idleTimeout = config.getInt("server.idleTimeout", 1.hours.inWholeSeconds.toInt()).seconds,
-        keepAliveTimeout = config.getInt("server.keepAliveTimeout", 190).seconds,
-        lagstatDuration =
-          config.getInt("server.lagstatDurationSeconds", 1.minutes.inWholeSeconds.toInt()).seconds,
-        language = config.getString("emulinker.language", "custom"),
-        maxChatLength = config.getInt("server.maxChatLength", 150),
-        maxClientNameLength = config.getInt("server.maxClientNameLength", 127),
-        maxGameChatLength = config.getInt("server.maxGameChatLength", 320),
-        maxGameNameLength = config.getInt("server.maxGameNameLength", 127),
-        maxGames = config.getInt("server.maxGames", 0),
-        maxPing = config.getInt("server.maxPing", 1000).milliseconds,
-        maxQuitMessageLength = config.getInt("server.maxQuitMessageLength", 100),
-        maxUserNameLength = config.getInt("server.maxUserNameLength", 30),
-        maxUsers = config.getInt("server.maxUsers", 0),
-        metricsEnabled = config.getBoolean("metrics.enabled", false),
-        metricsLoggingFrequency = config.getInt("metrics.loggingFrequencySeconds", 30).seconds,
-        serverAddress = config.getString("masterList.serverConnectAddress", ""),
-        serverLocation = config.getString("masterList.serverLocation", "Unknown"),
-        serverName = config.getString("masterList.serverName", "Not Set"),
-        serverPort = config.getInt("controllers.connect.port", 27888),
-        serverWebsite = config.getString("masterList.serverWebsite", ""),
-        switchStatusBytesForBuggyClient =
-          config.getBoolean("server.switchStatusBytesForBuggyClient", false),
-        touchEmulinker = config.getBoolean("masterList.touchEmulinker", false),
-        touchKaillera = config.getBoolean("masterList.touchKaillera", false),
-        twitterBroadcastDelay = config.getInt("twitter.broadcastDelaySeconds", 15).seconds,
-        twitterDeletePostOnClose = config.getBoolean("twitter.deletePostOnClose", false),
-        twitterEnabled = config.getBoolean("twitter.enabled", false),
-        twitterOAuthAccessToken = config.getString("twitter.auth.oAuthAccessToken", ""),
-        twitterOAuthAccessTokenSecret = config.getString("twitter.auth.oAuthAccessTokenSecret", ""),
-        twitterOAuthConsumerKey = config.getString("twitter.auth.oAuthConsumerKey", ""),
-        twitterOAuthConsumerSecret = config.getString("twitter.auth.oAuthConsumerSecret", ""),
-        twitterPreventBroadcastNameSuffixes =
-          config.getStringArray("twitter.preventBroadcastNameSuffixes").toList(),
-        v086BufferSize = config.getInt("controllers.v086.bufferSize", 4096),
-      )
+              .toList(),
+          coreThreadPoolSize = config.getInt("server.coreThreadpoolSize", 5),
+          createGameFloodTime = config.getInt("server.createGameFloodTime", 2).seconds,
+          gameAutoFireSensitivity = config.getInt("game.defaultAutoFireSensitivity", 0),
+          gameBufferSize = config.getInt("game.bufferSize"),
+          idleTimeout = config.getInt("server.idleTimeout", 1.hours.inWholeSeconds.toInt()).seconds,
+          keepAliveTimeout = config.getInt("server.keepAliveTimeout", 190).seconds,
+          lagstatDuration =
+            config
+              .getInt("server.lagstatDurationSeconds", 1.minutes.inWholeSeconds.toInt())
+              .seconds,
+          language = config.getString("emulinker.language", "custom"),
+          maxChatLength = config.getInt("server.maxChatLength", 150),
+          maxClientNameLength = config.getInt("server.maxClientNameLength", 127),
+          maxGameChatLength = config.getInt("server.maxGameChatLength", 320),
+          maxGameNameLength = config.getInt("server.maxGameNameLength", 127),
+          maxGames = config.getInt("server.maxGames", 0),
+          maxPing = config.getInt("server.maxPing", 1000).milliseconds,
+          maxQuitMessageLength = config.getInt("server.maxQuitMessageLength", 100),
+          maxUserNameLength = config.getInt("server.maxUserNameLength", 30),
+          maxUsers = config.getInt("server.maxUsers", 0),
+          metricsEnabled = config.getBoolean("metrics.enabled", false),
+          metricsLoggingFrequency = config.getInt("metrics.loggingFrequencySeconds", 30).seconds,
+          serverAddress = config.getString("masterList.serverConnectAddress", ""),
+          serverLocation = config.getString("masterList.serverLocation", "Unknown"),
+          serverName = config.getString("masterList.serverName", "Not Set"),
+          serverPort = config.getInt("controllers.connect.port", 27888),
+          serverWebsite = config.getString("masterList.serverWebsite", ""),
+          switchStatusBytesForBuggyClient =
+            config.getBoolean("server.switchStatusBytesForBuggyClient", false),
+          touchEmulinker = config.getBoolean("masterList.touchEmulinker", false),
+          touchKaillera = config.getBoolean("masterList.touchKaillera", false),
+          twitterBroadcastDelay = config.getInt("twitter.broadcastDelaySeconds", 15).seconds,
+          twitterDeletePostOnClose = config.getBoolean("twitter.deletePostOnClose", false),
+          twitterEnabled = config.getBoolean("twitter.enabled", false),
+          twitterOAuthAccessToken = config.getString("twitter.auth.oAuthAccessToken", ""),
+          twitterOAuthAccessTokenSecret =
+            config.getString("twitter.auth.oAuthAccessTokenSecret", ""),
+          twitterOAuthConsumerKey = config.getString("twitter.auth.oAuthConsumerKey", ""),
+          twitterOAuthConsumerSecret = config.getString("twitter.auth.oAuthConsumerSecret", ""),
+          twitterPreventBroadcastNameSuffixes =
+            config.getStringArray("twitter.preventBroadcastNameSuffixes").toList(),
+          v086BufferSize = config.getInt("controllers.v086.bufferSize", 4096),
+        )
 
-    charsetDoNotUse = flags.charset
-    EmuLang.updateLanguage(flags.language)
-    flags
+      charsetDoNotUse = flags.charset
+      EmuLang.updateLanguage(flags.language)
+      flags
+    } catch (e: Exception) {
+      org.emulinker.kaillera.pico.logger
+        .atSevere()
+        .withCause(e)
+        .log("Failed to create RuntimeFlags.")
+      throw e
+    }
   }
 
   factoryOf(::AutoFireDetectorFactoryImpl).bind<AutoFireDetectorFactory>()
