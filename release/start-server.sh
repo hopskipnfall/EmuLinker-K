@@ -13,6 +13,12 @@ SEARCH_TERM="EmuLinker-K version"
 JAVA_OPTS="-Xms64m -Xmx256m -XX:+UseSerialGC -XX:+AlwaysPreTouch"
 CLASSPATH="./conf:$JAR_FILE"
 
+# Check for foreground flag
+FOREGROUND_MODE=false
+if [[ "$1" == "--foreground" ]]; then
+    FOREGROUND_MODE=true
+fi
+
 # 3. PRE-FLIGHT CHECKS
 
 # Check if Java is installed
@@ -42,7 +48,7 @@ PROD_TXT=$(curl -fsSL --max-time 3 "https://raw.githubusercontent.com/hopskipnfa
 if [ -n "$PROD_TXT" ]; then
     LATEST_VERSION=$(echo "$PROD_TXT" | grep "^version=" | cut -d'=' -f2)
     RELEASE_NOTES=$(echo "$PROD_TXT" | grep "^releaseNotes=" | cut -d'=' -f2)
-    
+
     # Extract local version from JAR filename
     # Assumes JAR_FILE format: .../emulinker-k-VERSION.jar
     LOCAL_VERSION=$(basename "$JAR_FILE" | sed -E 's/emulinker-k-(.+)\.jar/\1/')
@@ -69,7 +75,31 @@ else
     echo "⚠️  Could not fetch update info. Skipping check."
 fi
 
+print_startup_logs() {
+    echo "   Reading startup logs..."
+    echo "-------------------------------------------------------------------------------"
+    if [ -f "$LOG_FILE" ]; then
+        # Find the line number of the LAST occurrence of the startup message
+        START_LINE=$(grep -n "$SEARCH_TERM" "$LOG_FILE" | tail -n 1 | cut -d: -f1)
+        if [ -n "$START_LINE" ]; then
+            tail -n "+$START_LINE" "$LOG_FILE"
+        else
+            echo "   (Startup message not found yet. Showing last 10 lines:)"
+            tail -n 10 "$LOG_FILE"
+        fi
+    else
+        echo "⚠️  Warning: $LOG_FILE was not found."
+    fi
+    echo "-------------------------------------------------------------------------------"
+}
+
 # 4. START THE SERVER
+if [ "$FOREGROUND_MODE" = true ]; then
+    echo "🚀 Starting EmuLinker-K (Foreground Mode)..."
+    java $JAVA_OPTS -cp "$CLASSPATH" $MAIN_CLASS
+    exit $?
+fi
+
 echo "🚀 Starting EmuLinker-K..."
 
 # Run Java directly in the background
@@ -81,24 +111,10 @@ sleep 3
 
 if ! ps -p $SERVER_PID > /dev/null; then
     echo "❌ Error: The server process died immediately after starting."
-    echo "Check $LOG_FILE for details."
+    print_startup_logs
+    echo "   If nothing was found in the logs, try running ./start-server.sh --foreground to see any error output directly."
     exit 1
 fi
 
 echo "✅ Server process running (PID: $SERVER_PID)."
-echo "   Reading startup logs..."
-echo "-------------------------------------------------------------------------------"
-
-if [ -f "$LOG_FILE" ]; then
-    # Find the line number of the LAST occurrence of the startup message
-    START_LINE=$(grep -n "$SEARCH_TERM" "$LOG_FILE" | tail -n 1 | cut -d: -f1)
-    if [ -n "$START_LINE" ]; then
-        tail -n "+$START_LINE" "$LOG_FILE"
-    else
-        echo "   (Startup message not found yet. Showing last 10 lines:)"
-        tail -n 10 "$LOG_FILE"
-    fi
-else
-    echo "⚠️  Warning: $LOG_FILE was not found."
-fi
-echo "-------------------------------------------------------------------------------"
+print_startup_logs
