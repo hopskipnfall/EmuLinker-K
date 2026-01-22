@@ -36,14 +36,14 @@ class JoinGameAction :
       try {
         clientHandler.send(
           InformationMessage(
-              0,
+            0,
             "server",
             EmuLang.getString("JoinGameAction.JoinGameDenied", e.message),
           )
         )
         clientHandler.send(
           QuitGameNotification(
-              0,
+            0,
             clientHandler.user.name ?: "(empty username)",
             clientHandler.user.id,
           )
@@ -69,15 +69,7 @@ class JoinGameAction :
       }
       if (!user.inStealthMode)
         clientHandler.send(
-          JoinGameNotification(
-              0,
-            game.id,
-            0,
-            user.name!!,
-            user.ping,
-            user.id,
-            user.connectionType,
-          )
+          JoinGameNotification(0, game.id, 0, user.name!!, user.ping, user.id, user.connectionType)
         )
     } catch (e: MessageFormatException) {
       logger.atSevere().withCause(e).log("Failed to construct JoinGame.Notification message")

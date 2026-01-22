@@ -23,9 +23,7 @@ class QuitAction : V086Action<QuitRequest>, V086ServerEventHandler<UserQuitEvent
   override fun handleEvent(event: UserQuitEvent, clientHandler: V086ClientHandler) {
     try {
       val user = event.user
-      clientHandler.send(
-        QuitNotification(0, user.name!!, user.id, event.message)
-      )
+      clientHandler.send(QuitNotification(0, user.name!!, user.id, event.message))
     } catch (e: MessageFormatException) {
       logger.atSevere().withCause(e).log("Failed to construct Quit.Notification message")
     }

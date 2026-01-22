@@ -24,9 +24,7 @@ object CachedGameDataAction : V086Action<CachedGameData> {
             logger.atFine().withCause(e).log("Game data error")
             if (e.response != null) {
               try {
-                clientHandler.send(
-                  createAndMakeDeepCopy(0, e.response!!)
-                )
+                clientHandler.send(createAndMakeDeepCopy(0, e.response!!))
               } catch (e2: MessageFormatException) {
                 logger.atSevere().withCause(e2).log("Failed to construct GameData message")
               }
@@ -46,7 +44,7 @@ object CachedGameDataAction : V086Action<CachedGameData> {
             try {
               clientHandler.send(
                 GameChatNotification(
-                    0,
+                  0,
                   "Error",
                   "Game Data Error!  Game state will be inconsistent!",
                 )

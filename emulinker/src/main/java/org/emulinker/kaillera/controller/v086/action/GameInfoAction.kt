@@ -14,9 +14,7 @@ class GameInfoAction : V086GameEventHandler<GameInfoEvent> {
       if (event.toUser !== clientHandler.user) return
     }
     try {
-      clientHandler.send(
-        GameChatNotification(0, "Server", event.message)
-      )
+      clientHandler.send(GameChatNotification(0, "Server", event.message))
     } catch (e: MessageFormatException) {
       logger.atSevere().withCause(e).log("Failed to construct GameChat.Notification message")
     }

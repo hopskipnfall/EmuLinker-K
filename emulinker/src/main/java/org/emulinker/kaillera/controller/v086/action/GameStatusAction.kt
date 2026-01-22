@@ -15,7 +15,7 @@ class GameStatusAction : V086ServerEventHandler<GameStatusChangedEvent> {
       val visiblePlayers = game.players.count { !it.inStealthMode }
       clientHandler.send(
         GameStatus(
-            0,
+          0,
           game.id,
           0.toShort().toInt(),
           game.status,

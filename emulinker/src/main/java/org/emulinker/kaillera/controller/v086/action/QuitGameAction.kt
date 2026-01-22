@@ -34,15 +34,10 @@ class QuitGameAction(private val lookingForGameReporter: TwitterBroadcaster) :
     try {
       val user = event.user
       if (!user.inStealthMode) {
-        clientHandler.send(
-          QuitGameNotification(0, user.name!!, user.id)
-        )
+        clientHandler.send(QuitGameNotification(0, user.name!!, user.id))
       }
       if (thisUser === user) {
-        if (user.inStealthMode)
-          clientHandler.send(
-            QuitGameNotification(0, user.name!!, user.id)
-          )
+        if (user.inStealthMode) clientHandler.send(QuitGameNotification(0, user.name!!, user.id))
       }
     } catch (e: MessageFormatException) {
       logger.atSevere().withCause(e).log("Failed to construct QuitGame.Notification message")
