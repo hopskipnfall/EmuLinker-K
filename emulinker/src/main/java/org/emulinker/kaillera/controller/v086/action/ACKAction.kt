@@ -45,7 +45,7 @@ class ACKAction : V086Action<ClientAck>, V086UserEventHandler<UserEvent>, KoinCo
             try {
               clientHandler.send(
                 ConnectionRejected(
-                  clientHandler.nextMessageNumber,
+                  0,
                   // TODO(nue): Localize this?
                   username = "server",
                   user.id,
@@ -62,7 +62,7 @@ class ACKAction : V086Action<ClientAck>, V086UserEventHandler<UserEvent>, KoinCo
       }
     } else {
       try {
-        clientHandler.send(ServerAck(clientHandler.nextMessageNumber))
+        clientHandler.send(ServerAck(0))
       } catch (e: MessageFormatException) {
         logger.atSevere().withCause(e).log("Failed to construct new ACK.ServerACK")
         return
@@ -168,7 +168,7 @@ class ACKAction : V086Action<ClientAck>, V086UserEventHandler<UserEvent>, KoinCo
         LazyArg { games.map { it.gameId } },
       )
     try {
-      clientHandler.send(ServerStatus(clientHandler.nextMessageNumber, users, games))
+      clientHandler.send(ServerStatus(0, users, games))
     } catch (e: MessageFormatException) {
       logger.atSevere().withCause(e).log("Failed to construct new ServerStatus for users")
     }

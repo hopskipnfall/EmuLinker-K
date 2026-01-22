@@ -17,9 +17,7 @@ class GameKickAction : V086Action<GameKick> {
     } catch (e: GameKickException) {
       logger.atSevere().withCause(e).log("Failed to kick")
       try {
-        clientHandler.send(
-          GameChatNotification(clientHandler.nextMessageNumber, "Error", e.message ?: "")
-        )
+        clientHandler.send(GameChatNotification(0, "Error", e.message ?: ""))
       } catch (ex: MessageFormatException) {
         logger.atSevere().withCause(ex).log("Failed to construct GameChat.Notification message")
       }

@@ -27,13 +27,7 @@ class DropGameAction : V086Action<PlayerDropRequest>, V086GameEventHandler<UserD
       //			clientHandler.send(PlayerDrop.Notification.create(clientHandler.getNextMessageNumber(),
       // user.getName(), (byte) game.getPlayerNumber(user)));
       if (!user.inStealthMode)
-        clientHandler.send(
-          PlayerDropNotification(
-            clientHandler.nextMessageNumber,
-            user.name!!,
-            playerNumber.toByte(),
-          )
-        )
+        clientHandler.send(PlayerDropNotification(0, user.name!!, playerNumber.toByte()))
     } catch (e: MessageFormatException) {
       logger.atSevere().withCause(e).log("Failed to construct PlayerDrop.Notification message")
     }

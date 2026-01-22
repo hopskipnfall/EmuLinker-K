@@ -376,9 +376,7 @@ class GameChatAction(
             )
           else
             try {
-              clientHandler.send(
-                InformationMessage(clientHandler.nextMessageNumber, "server", "User Not Found!")
-              )
+              clientHandler.send(InformationMessage(0, "server", "User Not Found!"))
             } catch (e: Exception) {}
           return
         } catch (e: NoSuchElementException) {
@@ -570,9 +568,7 @@ class GameChatAction(
         }
       }
       val m = gameChatEvent.message
-      clientHandler.send(
-        GameChatNotification(clientHandler.nextMessageNumber, gameChatEvent.user.name!!, m)
-      )
+      clientHandler.send(GameChatNotification(0, gameChatEvent.user.name!!, m))
     } catch (e: MessageFormatException) {
       logger.atSevere().withCause(e).log("Failed to construct GameChat.Notification message")
     }

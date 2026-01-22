@@ -22,7 +22,7 @@ class UserReadyAction : V086Action<AllReady>, V086GameEventHandler<GameEvent> {
   override fun handleEvent(event: GameEvent, clientHandler: V086ClientHandler) {
     clientHandler.resetGameDataCache()
     try {
-      clientHandler.send(AllReady(clientHandler.nextMessageNumber))
+      clientHandler.send(AllReady(0))
     } catch (e: MessageFormatException) {
       logger.atSevere().withCause(e).log("Failed to construct AllReady message")
     }

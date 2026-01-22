@@ -68,11 +68,7 @@ class AdminCommandAction : V086Action<Chat> {
       } else {
         try {
           clientHandler.send(
-            InformationMessage(
-              clientHandler.nextMessageNumber,
-              "server",
-              "Admin Command Error: You are not an admin!",
-            )
+            InformationMessage(0, "server", "Admin Command Error: You are not an admin!")
           )
         } catch (e: MessageFormatException) {}
         throw FatalActionException("Admin Command Denied: $user does not have Admin access: $chat")
@@ -135,11 +131,7 @@ class AdminCommandAction : V086Action<Chat> {
       logger.atSevere().withCause(e).log("Admin Command Failed: %s: %s", user, chat)
       try {
         clientHandler.send(
-          InformationMessage(
-            clientHandler.nextMessageNumber,
-            "server",
-            EmuLang.getString("AdminCommandAction.Failed", e.message),
-          )
+          InformationMessage(0, "server", EmuLang.getString("AdminCommandAction.Failed", e.message))
         )
       } catch (e2: MessageFormatException) {
         logger.atSevere().withCause(e2).log("Failed to construct InformationMessage message")
@@ -161,130 +153,78 @@ class AdminCommandAction : V086Action<Chat> {
     // EmuLang.getString("AdminCommandAction.AdminCommands")));
     // try { Thread.sleep(20); } catch(Exception e) {}
     clientHandler!!.send(
-      InformationMessage(
-        clientHandler.nextMessageNumber,
-        "server",
-        EmuLang.getString("AdminCommandAction.HelpVersion"),
-      )
+      InformationMessage(0, "server", EmuLang.getString("AdminCommandAction.HelpVersion"))
     )
     clientHandler.send(
-      InformationMessage(
-        clientHandler.nextMessageNumber,
-        "server",
-        EmuLang.getString("AdminCommandAction.HelpKick"),
-      )
+      InformationMessage(0, "server", EmuLang.getString("AdminCommandAction.HelpKick"))
     )
     clientHandler.send(
-      InformationMessage(
-        clientHandler.nextMessageNumber,
-        "server",
-        EmuLang.getString("AdminCommandAction.HelpSilence"),
-      )
+      InformationMessage(0, "server", EmuLang.getString("AdminCommandAction.HelpSilence"))
     )
     clientHandler.send(
-      InformationMessage(
-        clientHandler.nextMessageNumber,
-        "server",
-        EmuLang.getString("AdminCommandAction.HelpBan"),
-      )
+      InformationMessage(0, "server", EmuLang.getString("AdminCommandAction.HelpBan"))
     )
     if (admin.accessLevel == AccessManager.ACCESS_ADMIN) {
       clientHandler.send(
-        InformationMessage(
-          clientHandler.nextMessageNumber,
-          "server",
-          EmuLang.getString("AdminCommandAction.HelpClear"),
-        )
+        InformationMessage(0, "server", EmuLang.getString("AdminCommandAction.HelpClear"))
       )
     }
     clientHandler.send(
-      InformationMessage(
-        clientHandler.nextMessageNumber,
-        "server",
-        EmuLang.getString("AdminCommandAction.HelpCloseGame"),
-      )
+      InformationMessage(0, "server", EmuLang.getString("AdminCommandAction.HelpCloseGame"))
+    )
+    clientHandler.send(
+      InformationMessage(0, "server", EmuLang.getString("AdminCommandAction.HelpAnnounce"))
+    )
+    clientHandler.send(
+      InformationMessage(0, "server", EmuLang.getString("AdminCommandAction.HelpAnnounceAll"))
+    )
+    clientHandler.send(
+      InformationMessage(0, "server", EmuLang.getString("AdminCommandAction.HelpAnnounceGame"))
+    )
+    clientHandler.send(
+      InformationMessage(0, "server", EmuLang.getString("AdminCommandAction.HelpFindUser"))
+    )
+    clientHandler.send(
+      InformationMessage(0, "server", EmuLang.getString("AdminCommandAction.HelpFindGame"))
     )
     clientHandler.send(
       InformationMessage(
-        clientHandler.nextMessageNumber,
-        "server",
-        EmuLang.getString("AdminCommandAction.HelpAnnounce"),
-      )
-    )
-    clientHandler.send(
-      InformationMessage(
-        clientHandler.nextMessageNumber,
-        "server",
-        EmuLang.getString("AdminCommandAction.HelpAnnounceAll"),
-      )
-    )
-    clientHandler.send(
-      InformationMessage(
-        clientHandler.nextMessageNumber,
-        "server",
-        EmuLang.getString("AdminCommandAction.HelpAnnounceGame"),
-      )
-    )
-    clientHandler.send(
-      InformationMessage(
-        clientHandler.nextMessageNumber,
-        "server",
-        EmuLang.getString("AdminCommandAction.HelpFindUser"),
-      )
-    )
-    clientHandler.send(
-      InformationMessage(
-        clientHandler.nextMessageNumber,
-        "server",
-        EmuLang.getString("AdminCommandAction.HelpFindGame"),
-      )
-    )
-    clientHandler.send(
-      InformationMessage(
-        clientHandler.nextMessageNumber,
+        0,
         "server",
         "/triviaon to start the trivia bot- /triviapause to pause the bot- /triviaresume to resume the bot after pause- /triviasave to save the bot's scores- /triviatime <#> to change the question delay",
       )
     )
     clientHandler.send(
       InformationMessage(
-        clientHandler.nextMessageNumber,
+        0,
         "server",
         "/triviaoff to stop the bot- /triviascores to show top 3 scores- /triviawin to show a winner- /triviaupdate <IP Address> <New IP Address> to update ip address",
       )
     )
     clientHandler.send(
-      InformationMessage(
-        clientHandler.nextMessageNumber,
-        "server",
-        "/stealthon /stealthoff to join a room invisibly.",
-      )
+      InformationMessage(0, "server", "/stealthon /stealthoff to join a room invisibly.")
     )
     if (admin.accessLevel == AccessManager.ACCESS_SUPERADMIN) {
       clientHandler.send(
         InformationMessage(
-          clientHandler.nextMessageNumber,
+          0,
           "server",
           "/tempelevated <UserID> <min> to give a user temporary elevated access.",
         )
       )
       clientHandler.send(
         InformationMessage(
-          clientHandler.nextMessageNumber,
+          0,
           "server",
           "/tempmoderator <UserID> <min> to give a user temporary moderator access.",
         )
       )
       clientHandler.send(
-        InformationMessage(
-          clientHandler.nextMessageNumber,
-          "server",
-          EmuLang.getString("AdminCommandAction.HelpTempAdmin"),
-        )
+        InformationMessage(0, "server", EmuLang.getString("AdminCommandAction.HelpTempAdmin"))
       )
       clientHandler.send(
         InformationMessage(
-          clientHandler.nextMessageNumber,
+          0,
           "server",
           "/clear <IP Address> to remove any temp ban, silence, elevated, moderator or admin.",
         )
@@ -312,17 +252,13 @@ class AdminCommandAction : V086Action<Chat> {
         msg +=
           if (user.game == null) "" else ", GameID: ${user.game!!.id}, Game: ${user.game!!.romName}"
 
-        clientHandler!!.send(InformationMessage(clientHandler.nextMessageNumber, "server", msg))
+        clientHandler!!.send(InformationMessage(0, "server", msg))
         foundCount++
       }
     }
     if (foundCount == 0)
       clientHandler!!.send(
-        InformationMessage(
-          clientHandler.nextMessageNumber,
-          "server",
-          EmuLang.getString("AdminCommandAction.NoUsersFound"),
-        )
+        InformationMessage(0, "server", EmuLang.getString("AdminCommandAction.NoUsersFound"))
       )
   }
 
@@ -346,19 +282,13 @@ class AdminCommandAction : V086Action<Chat> {
         sb.append(game.owner.name)
         sb.append(">, Game: ")
         sb.append(game.romName)
-        clientHandler!!.send(
-          InformationMessage(clientHandler.nextMessageNumber, "server", sb.toString())
-        )
+        clientHandler!!.send(InformationMessage(0, "server", sb.toString()))
         foundCount++
       }
     }
     if (foundCount == 0)
       clientHandler!!.send(
-        InformationMessage(
-          clientHandler.nextMessageNumber,
-          "server",
-          EmuLang.getString("AdminCommandAction.NoGamesFound"),
-        )
+        InformationMessage(0, "server", EmuLang.getString("AdminCommandAction.NoGamesFound"))
       )
   }
 
@@ -639,14 +569,10 @@ class AdminCommandAction : V086Action<Chat> {
     if (admin.game != null) throw ActionException("Can't use /stealth while in a gameroom.")
     if (message == "/stealthon") {
       admin.inStealthMode = true
-      clientHandler!!.send(
-        InformationMessage(clientHandler.nextMessageNumber, "server", "Stealth Mode is on.")
-      )
+      clientHandler!!.send(InformationMessage(0, "server", "Stealth Mode is on."))
     } else if (message == "/stealthoff") {
       admin.inStealthMode = false
-      clientHandler!!.send(
-        InformationMessage(clientHandler.nextMessageNumber, "server", "Stealth Mode is off.")
-      )
+      clientHandler!!.send(InformationMessage(0, "server", "Stealth Mode is off."))
     } else throw ActionException("Stealth Mode Error: /stealthon /stealthoff")
   }
 
@@ -827,19 +753,11 @@ class AdminCommandAction : V086Action<Chat> {
           server.accessManager.clearTemp(inetAddr, false)
     )
       clientHandler!!.send(
-        InformationMessage(
-          clientHandler.nextMessageNumber,
-          "server",
-          EmuLang.getString("AdminCommandAction.ClearSuccess"),
-        )
+        InformationMessage(0, "server", EmuLang.getString("AdminCommandAction.ClearSuccess"))
       )
     else
       clientHandler!!.send(
-        InformationMessage(
-          clientHandler.nextMessageNumber,
-          "server",
-          EmuLang.getString("AdminCommandAction.ClearNotFound"),
-        )
+        InformationMessage(0, "server", EmuLang.getString("AdminCommandAction.ClearNotFound"))
       )
   }
 
@@ -854,7 +772,7 @@ class AdminCommandAction : V086Action<Chat> {
       val releaseInfo = server.releaseInfo
       clientHandler!!.send(
         InformationMessage(
-          clientHandler.nextMessageNumber,
+          0,
           "server",
           "VERSION: " +
             releaseInfo.productName +
@@ -867,100 +785,34 @@ class AdminCommandAction : V086Action<Chat> {
       if (admin.accessLevel >= AccessManager.ACCESS_ADMIN) {
         val props = System.getProperties()
         clientHandler.send(
-          InformationMessage(
-            clientHandler.nextMessageNumber,
-            "server",
-            "JAVAVER: " + props.getProperty("java.version"),
-          )
+          InformationMessage(0, "server", "JAVAVER: " + props.getProperty("java.version"))
         )
         clientHandler.send(
-          InformationMessage(
-            clientHandler.nextMessageNumber,
-            "server",
-            "JAVAVEND: " + props.getProperty("java.vendor"),
-          )
+          InformationMessage(0, "server", "JAVAVEND: " + props.getProperty("java.vendor"))
         )
         clientHandler.send(
-          InformationMessage(
-            clientHandler.nextMessageNumber,
-            "server",
-            "OSNAME: " + props.getProperty("os.name"),
-          )
+          InformationMessage(0, "server", "OSNAME: " + props.getProperty("os.name"))
         )
         clientHandler.send(
-          InformationMessage(
-            clientHandler.nextMessageNumber,
-            "server",
-            "OSARCH: " + props.getProperty("os.arch"),
-          )
+          InformationMessage(0, "server", "OSARCH: " + props.getProperty("os.arch"))
         )
         clientHandler.send(
-          InformationMessage(
-            clientHandler.nextMessageNumber,
-            "server",
-            "OSVER: " + props.getProperty("os.version"),
-          )
+          InformationMessage(0, "server", "OSVER: " + props.getProperty("os.version"))
         )
         val runtime = Runtime.getRuntime()
         clientHandler.send(
-          InformationMessage(
-            clientHandler.nextMessageNumber,
-            "server",
-            "NUMPROCS: " + runtime.availableProcessors(),
-          )
+          InformationMessage(0, "server", "NUMPROCS: " + runtime.availableProcessors())
         )
-        clientHandler.send(
-          InformationMessage(
-            clientHandler.nextMessageNumber,
-            "server",
-            "FREEMEM: " + runtime.freeMemory(),
-          )
-        )
-        clientHandler.send(
-          InformationMessage(
-            clientHandler.nextMessageNumber,
-            "server",
-            "MAXMEM: " + runtime.maxMemory(),
-          )
-        )
-        clientHandler.send(
-          InformationMessage(
-            clientHandler.nextMessageNumber,
-            "server",
-            "TOTMEM: " + runtime.totalMemory(),
-          )
-        )
+        clientHandler.send(InformationMessage(0, "server", "FREEMEM: " + runtime.freeMemory()))
+        clientHandler.send(InformationMessage(0, "server", "MAXMEM: " + runtime.maxMemory()))
+        clientHandler.send(InformationMessage(0, "server", "TOTMEM: " + runtime.totalMemory()))
         val env = System.getenv()
         if (EmuUtil.systemIsWindows()) {
-          clientHandler.send(
-            InformationMessage(
-              clientHandler.nextMessageNumber,
-              "server",
-              "COMPNAME: " + env["COMPUTERNAME"],
-            )
-          )
-          clientHandler.send(
-            InformationMessage(
-              clientHandler.nextMessageNumber,
-              "server",
-              "USER: " + env["USERNAME"],
-            )
-          )
+          clientHandler.send(InformationMessage(0, "server", "COMPNAME: " + env["COMPUTERNAME"]))
+          clientHandler.send(InformationMessage(0, "server", "USER: " + env["USERNAME"]))
         } else {
-          clientHandler.send(
-            InformationMessage(
-              clientHandler.nextMessageNumber,
-              "server",
-              "COMPNAME: " + env["HOSTNAME"],
-            )
-          )
-          clientHandler.send(
-            InformationMessage(
-              clientHandler.nextMessageNumber,
-              "server",
-              "USER: " + env["USERNAME"],
-            )
-          )
+          clientHandler.send(InformationMessage(0, "server", "COMPNAME: " + env["HOSTNAME"]))
+          clientHandler.send(InformationMessage(0, "server", "USER: " + env["USERNAME"]))
         }
       }
     } catch (e: NoSuchElementException) {

@@ -40,7 +40,7 @@ class CreateGameAction :
       try {
         clientHandler.send(
           InformationMessage(
-            clientHandler.nextMessageNumber,
+            0,
             "server",
             EmuLang.getString("CreateGameAction.CreateGameDenied", e.message),
           )
@@ -48,11 +48,7 @@ class CreateGameAction :
         // TODO(nue): If clientHandler.user.name == null (meaning the user is not logged in) do we
         // need to send this?
         clientHandler.send(
-          QuitGameNotification(
-            clientHandler.nextMessageNumber,
-            clientHandler.user.name ?: "",
-            clientHandler.user.id,
-          )
+          QuitGameNotification(0, clientHandler.user.name ?: "", clientHandler.user.id)
         )
       } catch (e2: MessageFormatException) {
         logger.atSevere().withCause(e2).log("Failed to construct message")
@@ -65,7 +61,7 @@ class CreateGameAction :
       try {
         clientHandler.send(
           InformationMessage(
-            clientHandler.nextMessageNumber,
+            0,
             "server",
             EmuLang.getString("CreateGameAction.CreateGameDeniedFloodControl"),
           )
@@ -73,11 +69,7 @@ class CreateGameAction :
         // TODO(nue): If clientHandler.user.name == null (meaning the user is not logged in) do we
         // need to send this?
         clientHandler.send(
-          QuitGameNotification(
-            clientHandler.nextMessageNumber,
-            clientHandler.user.name ?: "",
-            clientHandler.user.id,
-          )
+          QuitGameNotification(0, clientHandler.user.name ?: "", clientHandler.user.id)
         )
       } catch (e2: MessageFormatException) {
         logger.atSevere().withCause(e2).log("Failed to construct message")
@@ -91,7 +83,7 @@ class CreateGameAction :
       val owner = game.owner
       clientHandler.send(
         CreateGameNotification(
-          clientHandler.nextMessageNumber,
+          0,
           owner!!.name!!,
           game.romName,
           owner.clientType!!,
