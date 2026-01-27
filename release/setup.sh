@@ -27,8 +27,8 @@ INSTALL_DIR="EmuLinker-K"
 if [ -d "$INSTALL_DIR" ]; then
     # Directory exists in current working directory
     MODE="UPGRADE"
-elif [ "$(basename "$(pwd)")" == "$INSTALL_DIR" ]; then
-    # Current directory is the install directory
+elif [ -f "start-server.sh" ] && [ -d "lib" ] && [ -d "conf" ]; then
+    # Current directory appears to be an installation
     MODE="UPGRADE"
     INSTALL_DIR="."
 else
