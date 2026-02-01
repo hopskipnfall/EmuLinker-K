@@ -1,4 +1,4 @@
 tag=1.0
-version=1.0.0
-downloadUrl=https://github.com/hopskipnfall/EmuLinker-K/releases/download/0.1.2/emulinker-k-1.0.0.jar
+version=1.0.1
+downloadUrl=https://github.com/hopskipnfall/EmuLinker-K/releases/download/0.1.2/emulinker-k-1.0.1.jar
 releaseNotes=https://github.com/hopskipnfall/EmuLinker-K/releases/tag/1.0
