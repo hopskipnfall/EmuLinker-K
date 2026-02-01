@@ -540,7 +540,7 @@ class KailleraServer(
     ) {
       quitMsg = EmuLang.getString("KailleraServerImpl.StandardQuitMessage")
     }
-    logger.atInfo().log("%s quit: %s", user, quitMsg)
+    logger.atInfo().log("%s quit server: %s", user, quitMsg)
     val quitEvent = UserQuitEvent(this, user, quitMsg)
     addEvent(quitEvent)
     user.doEvent(quitEvent)
@@ -714,8 +714,12 @@ class KailleraServer(
       return
     }
     game.close(user)
-    gamesMap.remove(game.id)
-    logger.atInfo().log("%s closed: %s", user, game)
+    if (gamesMap.remove(game.id) == null) {
+      logger
+        .atWarning()
+        .log("Game ID %d was not found in game map when attempting to remove", game.id, user)
+    }
+    logger.atInfo().log("%s closed game: %s", user, game)
     addEvent(GameClosedEvent(this, game))
   }
 
@@ -841,12 +845,12 @@ class KailleraServer(
       .atInfo()
       .atMostEvery(1, HOURS)
       .log(
-        "[Hourly status update] Games by status = %s, number of users = %d",
+        "[Hourly status update] Game IDs by status = %s, number of users = %d",
         LazyArgs.lazy {
           val statusToGames =
             GameStatus.entries
-              .associateWith { s -> gamesMap.values.count { it.status == s } }
-              .filterValues { it > 0 }
+              .associateWith { s -> gamesMap.values.filter { it.status == s }.map { it.id } }
+              .filterValues { it.isNotEmpty() }
           if (statusToGames.isNotEmpty()) statusToGames.toString() else "(no games)"
         },
         usersMap.values.count { it.loggedIn },
