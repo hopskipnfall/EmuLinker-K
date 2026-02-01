@@ -286,7 +286,7 @@ class KailleraUser(
       throw JoinGameException(EmuLang.getString("KailleraUserImpl.JoinGameErrorAnotherGameRunning"))
     } else if (status == UserStatus.CONNECTING) {
       logger.atWarning().log("%s join game failed: User status is Connecting!", this)
-      throw JoinGameException(EmuLang.getString("KailleraUserImpl.JoinGameErrorNotFullConnected"))
+      throw JoinGameException(EmuLang.getString("KailleraUserImpl.JoinGameErrorNotFullyConnected"))
     }
     val game = server.getGame(gameID)
     if (game == null) {

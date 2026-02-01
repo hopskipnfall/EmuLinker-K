@@ -587,7 +587,7 @@ class KailleraGame(
       logger.atWarning().log("%s quit game failed: not in %s", user, this)
       throw QuitGameException(EmuLang.getString("KailleraGameImpl.QuitGameErrorNotInGame"))
     }
-    logger.atInfo().log("%s quit: %s", user, this)
+    logger.atInfo().log("%s quit game: %s", user, this)
     addEventForAllPlayers(UserQuitGameEvent(this, user))
     user.ignoringUnnecessaryServerActivity = false
     swap = false
@@ -611,7 +611,16 @@ class KailleraGame(
     }
 
     if (waitingOnData) {
-      maybeSendData(user)
+      try {
+        maybeSendData(user)
+      } catch (e: Exception) {
+        if (e is InterruptedException) throw e
+
+        logger
+          .atSevere()
+          .withCause(e)
+          .log("Failed to maybe send data!! Swallowing. game=%s, user=%s", this, user)
+      }
     }
   }
 
