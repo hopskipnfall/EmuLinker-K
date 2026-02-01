@@ -5,7 +5,7 @@ setlocal
 cd /d "%~dp0"
 
 :: 2. CONFIGURATION
-set "JAR_FILE=lib\emulinker-k-1.0.0.jar"
+set "JAR_FILE=lib\emulinker-k-1.0.1.jar"
 set "MAIN_CLASS=org.emulinker.kaillera.pico.ServerMainKt"
 set "LOG_FILE=emulinker.log"
 set "JAVA_OPTS=-Xms64m -Xmx256m -XX:+UseSerialGC -XX:+AlwaysPreTouch"
