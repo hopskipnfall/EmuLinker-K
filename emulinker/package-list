@@ -1493,6 +1493,7 @@ $dokka.location:org.emulinker.proto/Event.FanOut/equals/#java.lang.Object/Pointi
 $dokka.location:org.emulinker.proto/Event.FanOut/getDefaultInstance/#/PointingToDeclaration/emulinker/org.emulinker.proto/-event/-fan-out/get-default-instance.html
 $dokka.location:org.emulinker.proto/Event.FanOut/getDefaultInstanceForType/#/PointingToDeclaration/emulinker/org.emulinker.proto/-event/-fan-out/get-default-instance-for-type.html
 $dokka.location:org.emulinker.proto/Event.FanOut/getDescriptor/#/PointingToDeclaration/emulinker/org.emulinker.proto/-event/-fan-out/get-descriptor.html
+$dokka.location:org.emulinker.proto/Event.FanOut/getDescriptorForType/#/PointingToDeclaration/emulinker/org.emulinker.proto/-event/-fan-out/get-descriptor-for-type.html
 $dokka.location:org.emulinker.proto/Event.FanOut/getParserForType/#/PointingToDeclaration/emulinker/org.emulinker.proto/-event/-fan-out/get-parser-for-type.html
 $dokka.location:org.emulinker.proto/Event.FanOut/getSerializedSize/#/PointingToDeclaration/emulinker/org.emulinker.proto/-event/-fan-out/get-serialized-size.html
 $dokka.location:org.emulinker.proto/Event.FanOut/hashCode/#/PointingToDeclaration/emulinker/org.emulinker.proto/-event/-fan-out/hash-code.html
@@ -1586,6 +1587,7 @@ $dokka.location:org.emulinker.proto/Event.GameStart.PlayerDetails/equals/#java.l
 $dokka.location:org.emulinker.proto/Event.GameStart.PlayerDetails/getDefaultInstance/#/PointingToDeclaration/emulinker/org.emulinker.proto/-event/-game-start/-player-details/get-default-instance.html
 $dokka.location:org.emulinker.proto/Event.GameStart.PlayerDetails/getDefaultInstanceForType/#/PointingToDeclaration/emulinker/org.emulinker.proto/-event/-game-start/-player-details/get-default-instance-for-type.html
 $dokka.location:org.emulinker.proto/Event.GameStart.PlayerDetails/getDescriptor/#/PointingToDeclaration/emulinker/org.emulinker.proto/-event/-game-start/-player-details/get-descriptor.html
+$dokka.location:org.emulinker.proto/Event.GameStart.PlayerDetails/getDescriptorForType/#/PointingToDeclaration/emulinker/org.emulinker.proto/-event/-game-start/-player-details/get-descriptor-for-type.html
 $dokka.location:org.emulinker.proto/Event.GameStart.PlayerDetails/getFrameDelay/#/PointingToDeclaration/emulinker/org.emulinker.proto/-event/-game-start/-player-details/get-frame-delay.html
 $dokka.location:org.emulinker.proto/Event.GameStart.PlayerDetails/getParserForType/#/PointingToDeclaration/emulinker/org.emulinker.proto/-event/-game-start/-player-details/get-parser-for-type.html
 $dokka.location:org.emulinker.proto/Event.GameStart.PlayerDetails/getPingMs/#/PointingToDeclaration/emulinker/org.emulinker.proto/-event/-game-start/-player-details/get-ping-ms.html
@@ -1630,6 +1632,7 @@ $dokka.location:org.emulinker.proto/Event.GameStart/equals/#java.lang.Object/Poi
 $dokka.location:org.emulinker.proto/Event.GameStart/getDefaultInstance/#/PointingToDeclaration/emulinker/org.emulinker.proto/-event/-game-start/get-default-instance.html
 $dokka.location:org.emulinker.proto/Event.GameStart/getDefaultInstanceForType/#/PointingToDeclaration/emulinker/org.emulinker.proto/-event/-game-start/get-default-instance-for-type.html
 $dokka.location:org.emulinker.proto/Event.GameStart/getDescriptor/#/PointingToDeclaration/emulinker/org.emulinker.proto/-event/-game-start/get-descriptor.html
+$dokka.location:org.emulinker.proto/Event.GameStart/getDescriptorForType/#/PointingToDeclaration/emulinker/org.emulinker.proto/-event/-game-start/get-descriptor-for-type.html
 $dokka.location:org.emulinker.proto/Event.GameStart/getParserForType/#/PointingToDeclaration/emulinker/org.emulinker.proto/-event/-game-start/get-parser-for-type.html
 $dokka.location:org.emulinker.proto/Event.GameStart/getPlayers/#int/PointingToDeclaration/emulinker/org.emulinker.proto/-event/-game-start/get-players.html
 $dokka.location:org.emulinker.proto/Event.GameStart/getPlayersCount/#/PointingToDeclaration/emulinker/org.emulinker.proto/-event/-game-start/get-players-count.html
@@ -1735,6 +1738,7 @@ $dokka.location:org.emulinker.proto/Event.LagstatSummary.PlayerAttributedLag/get
 $dokka.location:org.emulinker.proto/Event.LagstatSummary.PlayerAttributedLag/getDefaultInstance/#/PointingToDeclaration/emulinker/org.emulinker.proto/-event/-lagstat-summary/-player-attributed-lag/get-default-instance.html
 $dokka.location:org.emulinker.proto/Event.LagstatSummary.PlayerAttributedLag/getDefaultInstanceForType/#/PointingToDeclaration/emulinker/org.emulinker.proto/-event/-lagstat-summary/-player-attributed-lag/get-default-instance-for-type.html
 $dokka.location:org.emulinker.proto/Event.LagstatSummary.PlayerAttributedLag/getDescriptor/#/PointingToDeclaration/emulinker/org.emulinker.proto/-event/-lagstat-summary/-player-attributed-lag/get-descriptor.html
+$dokka.location:org.emulinker.proto/Event.LagstatSummary.PlayerAttributedLag/getDescriptorForType/#/PointingToDeclaration/emulinker/org.emulinker.proto/-event/-lagstat-summary/-player-attributed-lag/get-descriptor-for-type.html
 $dokka.location:org.emulinker.proto/Event.LagstatSummary.PlayerAttributedLag/getParserForType/#/PointingToDeclaration/emulinker/org.emulinker.proto/-event/-lagstat-summary/-player-attributed-lag/get-parser-for-type.html
 $dokka.location:org.emulinker.proto/Event.LagstatSummary.PlayerAttributedLag/getPlayer/#/PointingToDeclaration/emulinker/org.emulinker.proto/-event/-lagstat-summary/-player-attributed-lag/get-player.html
 $dokka.location:org.emulinker.proto/Event.LagstatSummary.PlayerAttributedLag/getPlayerValue/#/PointingToDeclaration/emulinker/org.emulinker.proto/-event/-lagstat-summary/-player-attributed-lag/get-player-value.html
@@ -1775,6 +1779,7 @@ $dokka.location:org.emulinker.proto/Event.LagstatSummary/equals/#java.lang.Objec
 $dokka.location:org.emulinker.proto/Event.LagstatSummary/getDefaultInstance/#/PointingToDeclaration/emulinker/org.emulinker.proto/-event/-lagstat-summary/get-default-instance.html
 $dokka.location:org.emulinker.proto/Event.LagstatSummary/getDefaultInstanceForType/#/PointingToDeclaration/emulinker/org.emulinker.proto/-event/-lagstat-summary/get-default-instance-for-type.html
 $dokka.location:org.emulinker.proto/Event.LagstatSummary/getDescriptor/#/PointingToDeclaration/emulinker/org.emulinker.proto/-event/-lagstat-summary/get-descriptor.html
+$dokka.location:org.emulinker.proto/Event.LagstatSummary/getDescriptorForType/#/PointingToDeclaration/emulinker/org.emulinker.proto/-event/-lagstat-summary/get-descriptor-for-type.html
 $dokka.location:org.emulinker.proto/Event.LagstatSummary/getGameLagMs/#/PointingToDeclaration/emulinker/org.emulinker.proto/-event/-lagstat-summary/get-game-lag-ms.html
 $dokka.location:org.emulinker.proto/Event.LagstatSummary/getParserForType/#/PointingToDeclaration/emulinker/org.emulinker.proto/-event/-lagstat-summary/get-parser-for-type.html
 $dokka.location:org.emulinker.proto/Event.LagstatSummary/getPlayerAttributedLags/#int/PointingToDeclaration/emulinker/org.emulinker.proto/-event/-lagstat-summary/get-player-attributed-lags.html
@@ -1839,6 +1844,7 @@ $dokka.location:org.emulinker.proto/Event.ReceivedGameData/equals/#java.lang.Obj
 $dokka.location:org.emulinker.proto/Event.ReceivedGameData/getDefaultInstance/#/PointingToDeclaration/emulinker/org.emulinker.proto/-event/-received-game-data/get-default-instance.html
 $dokka.location:org.emulinker.proto/Event.ReceivedGameData/getDefaultInstanceForType/#/PointingToDeclaration/emulinker/org.emulinker.proto/-event/-received-game-data/get-default-instance-for-type.html
 $dokka.location:org.emulinker.proto/Event.ReceivedGameData/getDescriptor/#/PointingToDeclaration/emulinker/org.emulinker.proto/-event/-received-game-data/get-descriptor.html
+$dokka.location:org.emulinker.proto/Event.ReceivedGameData/getDescriptorForType/#/PointingToDeclaration/emulinker/org.emulinker.proto/-event/-received-game-data/get-descriptor-for-type.html
 $dokka.location:org.emulinker.proto/Event.ReceivedGameData/getParserForType/#/PointingToDeclaration/emulinker/org.emulinker.proto/-event/-received-game-data/get-parser-for-type.html
 $dokka.location:org.emulinker.proto/Event.ReceivedGameData/getReceivedFrom/#/PointingToDeclaration/emulinker/org.emulinker.proto/-event/-received-game-data/get-received-from.html
 $dokka.location:org.emulinker.proto/Event.ReceivedGameData/getReceivedFromValue/#/PointingToDeclaration/emulinker/org.emulinker.proto/-event/-received-game-data/get-received-from-value.html
@@ -1878,6 +1884,7 @@ $dokka.location:org.emulinker.proto/Event/equals/#java.lang.Object/PointingToDec
 $dokka.location:org.emulinker.proto/Event/getDefaultInstance/#/PointingToDeclaration/emulinker/org.emulinker.proto/-event/get-default-instance.html
 $dokka.location:org.emulinker.proto/Event/getDefaultInstanceForType/#/PointingToDeclaration/emulinker/org.emulinker.proto/-event/get-default-instance-for-type.html
 $dokka.location:org.emulinker.proto/Event/getDescriptor/#/PointingToDeclaration/emulinker/org.emulinker.proto/-event/get-descriptor.html
+$dokka.location:org.emulinker.proto/Event/getDescriptorForType/#/PointingToDeclaration/emulinker/org.emulinker.proto/-event/get-descriptor-for-type.html
 $dokka.location:org.emulinker.proto/Event/getEventTypeCase/#/PointingToDeclaration/emulinker/org.emulinker.proto/-event/get-event-type-case.html
 $dokka.location:org.emulinker.proto/Event/getFanOut/#/PointingToDeclaration/emulinker/org.emulinker.proto/-event/get-fan-out.html
 $dokka.location:org.emulinker.proto/Event/getFanOutOrBuilder/#/PointingToDeclaration/emulinker/org.emulinker.proto/-event/get-fan-out-or-builder.html
@@ -2057,6 +2064,7 @@ $dokka.location:org.emulinker.proto/GameLog/equals/#java.lang.Object/PointingToD
 $dokka.location:org.emulinker.proto/GameLog/getDefaultInstance/#/PointingToDeclaration/emulinker/org.emulinker.proto/-game-log/get-default-instance.html
 $dokka.location:org.emulinker.proto/GameLog/getDefaultInstanceForType/#/PointingToDeclaration/emulinker/org.emulinker.proto/-game-log/get-default-instance-for-type.html
 $dokka.location:org.emulinker.proto/GameLog/getDescriptor/#/PointingToDeclaration/emulinker/org.emulinker.proto/-game-log/get-descriptor.html
+$dokka.location:org.emulinker.proto/GameLog/getDescriptorForType/#/PointingToDeclaration/emulinker/org.emulinker.proto/-game-log/get-descriptor-for-type.html
 $dokka.location:org.emulinker.proto/GameLog/getEvents/#int/PointingToDeclaration/emulinker/org.emulinker.proto/-game-log/get-events.html
 $dokka.location:org.emulinker.proto/GameLog/getEventsCount/#/PointingToDeclaration/emulinker/org.emulinker.proto/-game-log/get-events-count.html
 $dokka.location:org.emulinker.proto/GameLog/getEventsList/#/PointingToDeclaration/emulinker/org.emulinker.proto/-game-log/get-events-list.html
