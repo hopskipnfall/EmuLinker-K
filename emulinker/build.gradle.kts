@@ -4,8 +4,8 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompilationTask
 
 plugins {
   id("com.google.protobuf") version "0.9.6"
-  id("build.buf") version "0.10.3"
-  id("com.diffplug.spotless") version "8.1.0"
+  id("build.buf") version "0.11.0"
+  id("com.diffplug.spotless") version "8.3.0"
   id("org.jetbrains.dokka") version "2.1.0"
   application
 
@@ -23,7 +23,7 @@ repositories {
 dependencies {
   api("org.jetbrains.kotlin:kotlin-stdlib:2.3.0")
 
-  implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0")
+  implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.10.0")
 
   implementation("io.github.redouane59.twitter:twittered:2.23")
 
@@ -32,11 +32,11 @@ dependencies {
   testImplementation("io.insert-koin:koin-test")
   testImplementation("io.insert-koin:koin-test-junit4")
 
-  implementation("com.google.protobuf:protobuf-kotlin:4.33.2")
-  implementation("com.google.protobuf:protobuf-java:4.33.2")
-  implementation("com.google.protobuf:protobuf-java-util:4.33.2")
+  implementation("com.google.protobuf:protobuf-kotlin:4.34.0")
+  implementation("com.google.protobuf:protobuf-java:4.34.0")
+  implementation("com.google.protobuf:protobuf-java-util:4.34.0")
 
-  val dropwizardMetricsVersion = "4.2.37"
+  val dropwizardMetricsVersion = "4.2.38"
   api("io.dropwizard.metrics:metrics-core:$dropwizardMetricsVersion")
   api("io.dropwizard.metrics:metrics-jvm:$dropwizardMetricsVersion")
 
@@ -54,7 +54,7 @@ dependencies {
   implementation("commons-configuration:commons-configuration:1.10")
   implementation("commons-pool:commons-pool:1.6")
 
-  val ktorVersion = "3.3.3"
+  val ktorVersion = "3.4.1"
   implementation("io.ktor:ktor-network-jvm:$ktorVersion")
   implementation("io.ktor:ktor-server-core-jvm:$ktorVersion")
   implementation("io.ktor:ktor-server-netty-jvm:$ktorVersion")
@@ -71,14 +71,14 @@ dependencies {
   testImplementation("com.google.truth.extensions:truth-proto-extension:1.4.5")
   testImplementation(kotlin("test"))
   testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.2")
-  testImplementation("org.mockito.kotlin:mockito-kotlin:6.1.0")
+  testImplementation("org.mockito.kotlin:mockito-kotlin:6.2.3")
 }
 
 group = "org.emulinker"
 
 description = "EmuLinker-K"
 
-version = "1.0.1"
+version = "1.0.2"
 
 kotlin { jvmToolchain(17) }
 
@@ -172,7 +172,7 @@ spotless {
 }
 
 protobuf {
-  protoc { artifact = "com.google.protobuf:protoc:4.33.2" }
+  protoc { artifact = "com.google.protobuf:protoc:4.34.0" }
 
   generateProtoTasks {
     ofSourceSet("main").forEach {
