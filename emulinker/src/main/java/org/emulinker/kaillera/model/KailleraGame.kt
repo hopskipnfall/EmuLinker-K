@@ -208,7 +208,13 @@ class KailleraGame(
         throw GameChatException(EmuLang.getString("KailleraGameImpl.GameChatDeniedMessageTooLong"))
       }
     }
-    logger.atInfo().log("%s, %s gamechat: %s", user, this, message)
+
+    // Some games send additional game data via game chat...
+    val isTekkenGameMessage =
+      romName.startsWith("Tekken Tag Tour") && message.startsWith("\nDA") && !message.contains(' ')
+    val l = if (isTekkenGameMessage) logger.atFine() else logger.atInfo()
+    l.log("%s, %s gamechat: %s", user, this, message)
+
     addEventForAllPlayers(GameChatEvent(this, user, message))
   }
 
@@ -737,7 +743,6 @@ class KailleraGame(
    *
    * @param user The user who initiated this call.
    */
-  // TODO(nue): This is probably not threadsafe but is being called from multiple threads.
   fun maybeSendData(user: KailleraUser): AddDataResult {
     val paq =
       playerActionQueues
@@ -774,7 +779,12 @@ class KailleraGame(
           joinedGameData.release()
           return AddDataResult.IgnoringDesynched
         }
-        player.doEvent(GameDataEvent(this, joinedGameData))
+        if (joinedGameData.readableBytes() > 0) {
+          player.doEvent(GameDataEvent(this, joinedGameData))
+        } else {
+          // TODO(nue): Look more into this edge case. This check shouldn't be necessary.
+          logger.atInfo().log("%s %s: No readable bytes, skipping", this, user)
+        }
         player.updateActivity(nowNs)
         val firstPlayer = players.firstOrNull()
         if (firstPlayer != null && firstPlayer.id == player.id) {

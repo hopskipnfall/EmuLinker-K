@@ -857,6 +857,8 @@ class KailleraServer(
       )
 
     try {
+      val stuckGames = mutableListOf<Int>()
+
       // Identify and repair games in a frozen state, where one user left and the server is waiting
       // on input to fan-out.
       for (game in gamesMap.values) {
@@ -871,7 +873,14 @@ class KailleraServer(
             }
           }
         }
+
+        if (game.owner.id !in usersMap) {
+          logger.atWarning().log("Identified stuck game! Removing manually.")
+          stuckGames += game.id
+        }
       }
+      stuckGames.forEach { gamesMap.remove(it) }
+
       for (user in usersMap.values) {
         val access = accessManager.getAccess(user.connectSocketAddress.address)
         user.accessLevel = access

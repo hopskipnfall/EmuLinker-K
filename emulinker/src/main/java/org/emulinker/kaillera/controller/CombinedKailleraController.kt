@@ -163,13 +163,16 @@ class CombinedKailleraController(
           }
 
           is RequestPrivateKailleraPortRequest -> {
-            check(connectMessage.protocol == "0.83") {
-              "Client listed unsupported protocol! $connectMessage."
+            when (val p = connectMessage.protocol) {
+              "0.83" -> {
+                val buf = alloc().buffer(bufferSize)
+                RequestPrivateKailleraPortResponse(flags.serverPort).writeTo(buf)
+                send(DatagramPacket(buf, remoteSocketAddress))
+              }
+              else -> {
+                logger.atWarning().log("Attempted login with unsupported protocol: %s", p)
+              }
             }
-
-            val buf = alloc().buffer(bufferSize)
-            RequestPrivateKailleraPortResponse(flags.serverPort).writeTo(buf)
-            send(DatagramPacket(buf, remoteSocketAddress))
           }
 
           else -> {
