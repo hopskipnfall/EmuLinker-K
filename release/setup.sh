@@ -171,7 +171,6 @@ fi
 FILES=(
     "start-server.sh"
     "stop-server.sh"
-    "README.md"
     "NOTICE.txt"
     "LICENSE.txt"
 )

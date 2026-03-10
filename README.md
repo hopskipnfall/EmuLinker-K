@@ -8,11 +8,9 @@
 
 # EmuLinker-K
 
-EmuLinker-K (ELK) is a server that uses the Kaillera protocol to facilitate online multiplayer for emulators.
+EmuLinker-K (ELK) is a high-performance server that uses the Kaillera protocol to facilitate online multiplayer for retro gaming emulators. 
 
-EmuLinker-K is a Kotlin rewrite of [EmulinkerSF](https://github.com/God-Weapon/EmuLinkerSF), with an emphasis on
-measuring and improving performance, patching security and privacy vulnerabilities, and adding useful features for both
-server owners and users.
+Built as a Kotlin rewrite of the classic [EmulinkerSF](https://github.com/God-Weapon/EmuLinkerSF), EmuLinker-K focuses on maximizing performance and stability, patching legacy security and privacy vulnerabilities, and providing useful new features for both server administrators and players.
 
 Please help us translate the server into more languages by contributing to
 our [CrowdIn project](https://crowdin.com/project/emulinker-k)
@@ -23,11 +21,17 @@ Feel free to file bugs and feature requests on this repository, or find our chan
 
 ## Setting up a new server (or updating an existing one)
 
-To install or update the server, simply run the following command in your terminal:
+### Linux/MacOS
+
+To install or update the server, simply run the following command in your terminal. If you are updating an existing server, simply run this from your `EmuLinker-K` folder:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/hopskipnfall/EmuLinker-K/master/release/setup.sh | bash
 ```
+
+### Windows
+
+Please download the `.zip` file attached to latest release on the [Releases](https://github.com/hopskipnfall/EmuLinker-K/releases) page, extract it, and run `start-server.bat`.
 
 ### Configuration files
 
