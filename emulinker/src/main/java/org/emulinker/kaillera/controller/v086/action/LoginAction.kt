@@ -32,6 +32,13 @@ class LoginAction : V086Action<UserInformation>, V086ServerEventHandler<UserJoin
   override fun handleEvent(event: UserJoinedEvent, clientHandler: V086ClientHandler) {
     try {
       val user = event.user
+
+      val accessManager = clientHandler.controller.server.accessManager
+      val isClientShadowBanned =
+        accessManager.isShadowBanned(clientHandler.connectRemoteSocketAddress.address)
+      val isUserShadowBanned = accessManager.isShadowBanned(user.connectSocketAddress.address)
+
+      if (isClientShadowBanned != isUserShadowBanned) return
       clientHandler.send(UserJoined(0, user.name!!, user.id, user.ping, user.connectionType))
       val thisUser = clientHandler.user
       if (thisUser.isEsfAdminClient && thisUser.accessLevel >= AccessManager.ACCESS_SUPERADMIN) {

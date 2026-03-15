@@ -553,6 +553,14 @@ class GameChatAction(
 
   override fun handleEvent(gameChatEvent: GameChatEvent, clientHandler: V086ClientHandler) {
     try {
+      val accessManager = clientHandler.controller.server.accessManager
+      val isClientShadowBanned =
+        accessManager.isShadowBanned(clientHandler.connectRemoteSocketAddress.address)
+      val isUserShadowBanned =
+        accessManager.isShadowBanned(gameChatEvent.user.connectSocketAddress.address)
+
+      if (isClientShadowBanned != isUserShadowBanned) return
+
       if (
         clientHandler.user.searchIgnoredUsers(
           gameChatEvent.user.connectSocketAddress.address.hostAddress

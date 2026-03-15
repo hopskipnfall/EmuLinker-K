@@ -44,6 +44,13 @@ class AccessManager2(private val flags: RuntimeFlags, private val taskScheduler:
   private val tempModeratorList: MutableList<TempModerator> = CopyOnWriteArrayList()
   private val tempElevatedList: MutableList<TempElevated> = CopyOnWriteArrayList()
   private val silenceList: MutableList<Silence> = CopyOnWriteArrayList()
+  private val shadowBanList: MutableList<ShadowBan> = CopyOnWriteArrayList()
+
+  private class ShadowBan(val addressPattern: String) {
+    private val pattern = WildcardStringPattern(addressPattern)
+
+    fun matches(address: String): Boolean = pattern.match(address)
+  }
 
   private val timerTasks = mutableSetOf<ScheduledFuture<*>>()
 
@@ -112,6 +119,21 @@ class AccessManager2(private val flags: RuntimeFlags, private val taskScheduler:
 
   override fun addSilenced(addressPattern: String, duration: Duration) {
     addTemporaryAttributeToList(silenceList, Silence(addressPattern, duration))
+  }
+
+  override fun addShadowBan(addressPattern: String) {
+    logger.atInfo().log("Adding shadow ban: %s", addressPattern)
+    shadowBanList.add(ShadowBan(addressPattern))
+  }
+
+  override fun removeShadowBan(addressPattern: String): Boolean {
+    val beforeSize = shadowBanList.size
+    shadowBanList.removeIf { it.addressPattern == addressPattern }
+    val removed = beforeSize > shadowBanList.size
+    if (removed) {
+      logger.atInfo().log("Removed shadow ban: %s", addressPattern)
+    }
+    return removed
   }
 
   private fun <T : TemporaryAttribute> addTemporaryAttributeToList(
@@ -199,6 +221,16 @@ class AccessManager2(private val flags: RuntimeFlags, private val taskScheduler:
     val userAddress = address.hostAddress
     for (silence in silenceList) {
       if (silence.matches(userAddress) && !silence.isExpired) return true
+    }
+    return false
+  }
+
+  @Synchronized
+  override fun isShadowBanned(address: InetAddress): Boolean {
+    checkReload()
+    val userAddress = address.hostAddress
+    for (shadowBan in shadowBanList) {
+      if (shadowBan.matches(userAddress)) return true
     }
     return false
   }

@@ -81,6 +81,13 @@ class CreateGameAction :
     try {
       val game = event.game
       val owner = game.owner
+
+      val accessManager = clientHandler.controller.server.accessManager
+      val isClientShadowBanned =
+        accessManager.isShadowBanned(clientHandler.connectRemoteSocketAddress.address)
+      val isOwnerShadowBanned = accessManager.isShadowBanned(owner!!.connectSocketAddress.address)
+
+      if (isClientShadowBanned != isOwnerShadowBanned) return
       clientHandler.send(
         CreateGameNotification(
           0,

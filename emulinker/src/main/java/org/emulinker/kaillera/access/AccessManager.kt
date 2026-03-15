@@ -29,6 +29,9 @@ interface AccessManager : Closeable {
    */
   fun isSilenced(address: InetAddress): Boolean
 
+  /** Checks if address is shadow banned */
+  fun isShadowBanned(address: InetAddress): Boolean
+
   /**
    * Checks if client's emulator is allowed (not filtered)
    *
@@ -90,6 +93,19 @@ interface AccessManager : Closeable {
    * @param minutes Number of minutes this grant is valid from the time of addition
    */
   fun addSilenced(addressPattern: String, duration: Duration)
+
+  /**
+   * Adds a user to the shadow ban list using a pattern algorithm defined by the AccessManager
+   * implementation. While active, [isShadowBanned] should return `true`.
+   */
+  fun addShadowBan(addressPattern: String)
+
+  /**
+   * Removes a user from the shadow ban list.
+   *
+   * @return true if the pattern was found and removed
+   */
+  fun removeShadowBan(addressPattern: String): Boolean
 
   fun clearTemp(address: InetAddress, clearAll: Boolean): Boolean
 

@@ -87,6 +87,12 @@ class GameDataE2ETest : KoinComponent {
 
     override fun addSilenced(addressPattern: String, duration: Duration) {}
 
+    override fun isShadowBanned(address: InetAddress): Boolean = false
+
+    override fun addShadowBan(addressPattern: String) {}
+
+    override fun removeShadowBan(addressPattern: String): Boolean = false
+
     override fun clearTemp(address: InetAddress, clearAll: Boolean): Boolean = false
 
     override fun close() {}
@@ -957,10 +963,4 @@ class GameDataE2ETest : KoinComponent {
 private fun String.decodeHex(): ByteArray {
   check(length % 2 == 0) { "Must have an even length" }
   return chunked(2).map { it.lowercase().toInt(16).toByte() }.toByteArray()
-}
-
-private fun ByteBuf.toByteArray(): ByteArray {
-  val arr = ByteArray(readableBytes())
-  getBytes(readerIndex(), arr)
-  return arr
 }

@@ -588,6 +588,13 @@ class ChatAction(private val adminCommandAction: AdminCommandAction) :
 
   override fun handleEvent(event: ChatEvent, clientHandler: V086ClientHandler) {
     try {
+      val accessManager = clientHandler.controller.server.accessManager
+      val isClientShadowBanned =
+        accessManager.isShadowBanned(clientHandler.connectRemoteSocketAddress.address)
+      val isUserShadowBanned = accessManager.isShadowBanned(event.user.connectSocketAddress.address)
+
+      if (isClientShadowBanned != isUserShadowBanned) return
+
       if (
         clientHandler.user.searchIgnoredUsers(event.user.connectSocketAddress.address.hostAddress)
       )

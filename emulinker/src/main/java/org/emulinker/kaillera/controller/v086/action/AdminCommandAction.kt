@@ -39,7 +39,9 @@ class AdminCommandAction : V086Action<Chat> {
         chat.startsWith(COMMAND_TEMPELEVATED) ||
         chat.startsWith(COMMAND_TEMPMODERATOR) ||
         chat.startsWith(COMMAND_TRIVIA) ||
-        chat.startsWith(COMMAND_VERSION) -> true
+        chat.startsWith(COMMAND_VERSION) ||
+        chat.startsWith(COMMAND_SHADOWBAN) ||
+        chat.startsWith(COMMAND_UNSHADOWBAN) -> true
       else -> false
     }
   }
@@ -124,6 +126,12 @@ class AdminCommandAction : V086Action<Chat> {
         }
         chat.startsWith(COMMAND_TRIVIA) -> {
           processTrivia(chat, server, user, clientHandler)
+        }
+        chat.startsWith(COMMAND_SHADOWBAN) -> {
+          processShadowban(chat, server, user, clientHandler)
+        }
+        chat.startsWith(COMMAND_UNSHADOWBAN) -> {
+          processUnshadowban(chat, server, user, clientHandler)
         }
         else -> throw ActionException("Invalid Command: $chat")
       }
@@ -434,6 +442,61 @@ class AdminCommandAction : V086Action<Chat> {
       )
     } catch (e: NoSuchElementException) {
       throw ActionException(EmuLang.getString("AdminCommandAction.BanError"))
+    }
+  }
+
+  @Throws(ActionException::class, MessageFormatException::class)
+  private fun processShadowban(
+    message: String,
+    server: KailleraServer,
+    admin: KailleraUser,
+    clientHandler: V086ClientHandler?,
+  ) {
+    val scanner = Scanner(message).useDelimiter(" ")
+    try {
+      scanner.next()
+      val userID = scanner.nextInt()
+      val user =
+        server.getUser(userID)
+          ?: throw ActionException(EmuLang.getString("AdminCommandAction.UserNotFound", userID))
+      if (user.id == admin.id) throw ActionException("You cannot shadowban yourself!")
+      val access = server.accessManager.getAccess(user.connectSocketAddress.address)
+      if (
+        access >= AccessManager.ACCESS_ADMIN && admin.accessLevel != AccessManager.ACCESS_SUPERADMIN
+      )
+        throw ActionException("You cannot shadowban an admin!")
+
+      server.accessManager.addShadowBan(user.connectSocketAddress.address.hostAddress)
+      clientHandler!!.send(InformationMessage(0, "server", "Shadowban applied to ${user.name}"))
+    } catch (e: NoSuchElementException) {
+      throw ActionException("Shadowban Error: /shadowban <UserID>")
+    }
+  }
+
+  @Throws(ActionException::class, MessageFormatException::class)
+  private fun processUnshadowban(
+    message: String,
+    server: KailleraServer,
+    admin: KailleraUser,
+    clientHandler: V086ClientHandler?,
+  ) {
+    val scanner = Scanner(message).useDelimiter(" ")
+    try {
+      scanner.next()
+      val userID = scanner.nextInt()
+      val user =
+        server.getUser(userID)
+          ?: throw ActionException(EmuLang.getString("AdminCommandAction.UserNotFound", userID))
+
+      val removed =
+        server.accessManager.removeShadowBan(user.connectSocketAddress.address.hostAddress)
+      if (removed) {
+        clientHandler!!.send(InformationMessage(0, "server", "Shadowban removed for ${user.name}"))
+      } else {
+        clientHandler!!.send(InformationMessage(0, "server", "${user.name} is not shadowbanned"))
+      }
+    } catch (e: NoSuchElementException) {
+      throw ActionException("Unshadowban Error: /unshadowban <UserID>")
     }
   }
 
@@ -857,5 +920,9 @@ class AdminCommandAction : V086Action<Chat> {
     private const val COMMAND_TEMPELEVATED = "/tempelevated"
 
     private const val COMMAND_TEMPMODERATOR = "/tempmoderator"
+
+    private const val COMMAND_SHADOWBAN = "/shadowban"
+
+    private const val COMMAND_UNSHADOWBAN = "/unshadowban"
   }
 }
