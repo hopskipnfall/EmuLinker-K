@@ -65,9 +65,16 @@ interface AccessManager : Closeable {
    * [getAccess] should return [ACCESS_BANNED].
    *
    * @param addressPattern A pattern to match to an address
-   * @param minutes Number of minutes this ban is valid from the time of addition
+   * @param duration Duration this ban is valid from the time of addition
+   * @param issuer The admin who issued the ban
+   * @param reason The internal reason for the ban
    */
-  fun addTempBan(addressPattern: String, duration: Duration)
+  fun addTempBan(
+    addressPattern: String,
+    duration: Duration,
+    issuer: String? = null,
+    reason: String? = null,
+  )
 
   /**
    * Temporarily adds a user to the admin list using a pattern algorithm defined by the
@@ -87,11 +94,26 @@ interface AccessManager : Closeable {
    * AccessManager implementation. While active, [isSilenced] should return `true ` * .
    *
    * @param addressPattern A pattern to match to an address
-   * @param minutes Number of minutes this grant is valid from the time of addition
+   * @param duration Duration this grant is valid from the time of addition
+   * @param issuer The admin who issued the silence
+   * @param reason The internal reason for the silence
    */
-  fun addSilenced(addressPattern: String, duration: Duration)
+  fun addSilenced(
+    addressPattern: String,
+    duration: Duration,
+    issuer: String? = null,
+    reason: String? = null,
+  )
 
   fun clearTemp(address: InetAddress, clearAll: Boolean): Boolean
+
+  fun addPermaBan(addressPattern: String, issuer: String? = null, reason: String? = null)
+
+  fun addPermaMute(addressPattern: String, issuer: String? = null, reason: String? = null)
+
+  fun getTempBan(address: InetAddress): TempBan?
+
+  fun getSilence(address: InetAddress): Silence?
 
   companion object {
     const val ACCESS_BANNED = 0

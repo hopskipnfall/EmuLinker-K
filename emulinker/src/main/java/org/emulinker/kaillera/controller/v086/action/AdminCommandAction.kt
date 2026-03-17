@@ -39,7 +39,10 @@ class AdminCommandAction : V086Action<Chat> {
         chat.startsWith(COMMAND_TEMPELEVATED) ||
         chat.startsWith(COMMAND_TEMPMODERATOR) ||
         chat.startsWith(COMMAND_TRIVIA) ||
-        chat.startsWith(COMMAND_VERSION) -> true
+        chat.startsWith(COMMAND_VERSION) ||
+        chat.startsWith(COMMAND_PERMABAN) ||
+        chat.startsWith(COMMAND_PERMAMUTE) ||
+        chat.startsWith(COMMAND_INFO) -> true
       else -> false
     }
   }
@@ -124,6 +127,15 @@ class AdminCommandAction : V086Action<Chat> {
         }
         chat.startsWith(COMMAND_TRIVIA) -> {
           processTrivia(chat, server, user, clientHandler)
+        }
+        chat.startsWith(COMMAND_PERMABAN) -> {
+          processPermaBan(chat, server, user, clientHandler)
+        }
+        chat.startsWith(COMMAND_PERMAMUTE) -> {
+          processPermaMute(chat, server, user, clientHandler)
+        }
+        chat.startsWith(COMMAND_INFO) -> {
+          processInfo(chat, server, user, clientHandler)
         }
         else -> throw ActionException("Invalid Command: $chat")
       }
@@ -304,6 +316,15 @@ class AdminCommandAction : V086Action<Chat> {
       scanner.next()
       val userID = scanner.nextInt()
       val minutes = scanner.nextInt()
+      val reasonStr =
+        if (scanner.hasNext()) {
+          val sb = java.lang.StringBuilder()
+          while (scanner.hasNext()) {
+            sb.append(scanner.next()).append(" ")
+          }
+          sb.toString().trim()
+        } else null
+
       val user =
         server.getUser(userID)
           ?: throw ActionException(EmuLang.getString("AdminCommandAction.UserNotFound", +userID))
@@ -329,6 +350,8 @@ class AdminCommandAction : V086Action<Chat> {
       server.accessManager.addSilenced(
         user.connectSocketAddress.address.hostAddress,
         minutes.minutes,
+        admin.name,
+        reasonStr,
       )
       server.announce(
         EmuLang.getString("AdminCommandAction.Silenced", minutes, user.name),
@@ -412,6 +435,15 @@ class AdminCommandAction : V086Action<Chat> {
       scanner.next()
       val userID = scanner.nextInt()
       val minutes = scanner.nextInt()
+      val reasonStr =
+        if (scanner.hasNext()) {
+          val sb = java.lang.StringBuilder()
+          while (scanner.hasNext()) {
+            sb.append(scanner.next()).append(" ")
+          }
+          sb.toString().trim()
+        } else null
+
       val user =
         server.getUser(userID)
           ?: throw ActionException(EmuLang.getString("AdminCommandAction.UserNotFound", userID))
@@ -431,6 +463,8 @@ class AdminCommandAction : V086Action<Chat> {
       server.accessManager.addTempBan(
         user.connectSocketAddress.address.hostAddress,
         minutes.minutes,
+        admin.name,
+        reasonStr,
       )
     } catch (e: NoSuchElementException) {
       throw ActionException(EmuLang.getString("AdminCommandAction.BanError"))
@@ -739,16 +773,30 @@ class AdminCommandAction : V086Action<Chat> {
   ) {
     val space = message.indexOf(' ')
     if (space < 0) throw ActionException(EmuLang.getString("AdminCommandAction.ClearError"))
-    val addressStr = message.substring(space + 1)
-    val inetAddr: InetAddress =
-      try {
-        InetAddress.getByName(addressStr)
-      } catch (e: Exception) {
-        throw ActionException(EmuLang.getString("AdminCommandAction.ClearAddressFormatError"))
+    val targetStr = message.substring(space + 1).trim()
+
+    var inetAddr: InetAddress? = null
+    try {
+      inetAddr = InetAddress.getByName(targetStr)
+    } catch (e: Exception) {
+      val targetId = targetStr.toIntOrNull()
+      val matchedUser =
+        if (targetId != null) {
+          server.getUser(targetId)
+        } else {
+          server.usersMap.values.firstOrNull { it.name.equals(targetStr, ignoreCase = true) }
+        }
+
+      if (matchedUser != null) {
+        inetAddr = matchedUser.connectSocketAddress.address
+      } else {
+        throw ActionException("Could not find user with ID, IP or Name: $targetStr")
       }
+    }
+
     if (
       admin.accessLevel == AccessManager.ACCESS_SUPERADMIN &&
-        server.accessManager.clearTemp(inetAddr, true) ||
+        server.accessManager.clearTemp(inetAddr!!, true) ||
         admin.accessLevel == AccessManager.ACCESS_ADMIN &&
           server.accessManager.clearTemp(inetAddr, false)
     )
@@ -820,6 +868,172 @@ class AdminCommandAction : V086Action<Chat> {
     }
   }
 
+  @Throws(ActionException::class, MessageFormatException::class)
+  private fun processPermaBan(
+    message: String,
+    server: KailleraServer,
+    admin: KailleraUser,
+    clientHandler: V086ClientHandler?,
+  ) {
+    if (
+      admin.accessLevel != AccessManager.ACCESS_SUPERADMIN &&
+        admin.accessLevel != AccessManager.ACCESS_ADMIN
+    ) {
+      throw ActionException("You don't have access to permaban.")
+    }
+    val scanner = Scanner(message).useDelimiter(" ")
+    try {
+      scanner.next()
+      val userID = scanner.nextInt()
+      val reasonStr =
+        if (scanner.hasNext()) {
+          val sb = java.lang.StringBuilder()
+          while (scanner.hasNext()) {
+            sb.append(scanner.next()).append(" ")
+          }
+          sb.toString().trim()
+        } else null
+
+      val user =
+        server.getUser(userID)
+          ?: throw ActionException(EmuLang.getString("AdminCommandAction.UserNotFound", userID))
+      if (user.id == admin.id) throw ActionException("Can not permaban yourself.")
+      val access = server.accessManager.getAccess(user.connectSocketAddress.address)
+      if (
+        access >= AccessManager.ACCESS_ADMIN && admin.accessLevel != AccessManager.ACCESS_SUPERADMIN
+      )
+        throw ActionException("Can not permaban an admin.")
+
+      server.accessManager.addPermaBan(
+        user.connectSocketAddress.address.hostAddress,
+        admin.name,
+        reasonStr,
+      )
+      server.announce("Admin ${admin.name} permanently banned ${user.name}!", false, null)
+      user.quit("You have been permanently banned.")
+    } catch (e: NoSuchElementException) {
+      throw ActionException("Permaban Error: /permaban <UserID> <Optional Reason>")
+    }
+  }
+
+  @Throws(ActionException::class, MessageFormatException::class)
+  private fun processPermaMute(
+    message: String,
+    server: KailleraServer,
+    admin: KailleraUser,
+    clientHandler: V086ClientHandler?,
+  ) {
+    if (
+      admin.accessLevel != AccessManager.ACCESS_SUPERADMIN &&
+        admin.accessLevel != AccessManager.ACCESS_ADMIN
+    ) {
+      throw ActionException("You don't have access to permamute.")
+    }
+    val scanner = Scanner(message).useDelimiter(" ")
+    try {
+      scanner.next()
+      val userID = scanner.nextInt()
+      val reasonStr =
+        if (scanner.hasNext()) {
+          val sb = java.lang.StringBuilder()
+          while (scanner.hasNext()) {
+            sb.append(scanner.next()).append(" ")
+          }
+          sb.toString().trim()
+        } else null
+
+      val user =
+        server.getUser(userID)
+          ?: throw ActionException(EmuLang.getString("AdminCommandAction.UserNotFound", userID))
+      if (user.id == admin.id) throw ActionException("Can not permamute yourself.")
+      val access = server.accessManager.getAccess(user.connectSocketAddress.address)
+      if (
+        access >= AccessManager.ACCESS_ADMIN && admin.accessLevel != AccessManager.ACCESS_SUPERADMIN
+      )
+        throw ActionException("Can not permamute an admin.")
+
+      server.accessManager.addPermaMute(
+        user.connectSocketAddress.address.hostAddress,
+        admin.name,
+        reasonStr,
+      )
+      server.announce("Admin ${admin.name} permanently muted ${user.name}!", false, null)
+    } catch (e: NoSuchElementException) {
+      throw ActionException("Permamute Error: /permamute <UserID> <Optional Reason>")
+    }
+  }
+
+  @Throws(ActionException::class, MessageFormatException::class)
+  private fun processInfo(
+    message: String,
+    server: KailleraServer,
+    admin: KailleraUser,
+    clientHandler: V086ClientHandler?,
+  ) {
+    if (admin.accessLevel < AccessManager.ACCESS_ADMIN) return
+    val space = message.indexOf(' ')
+    if (space < 0) throw ActionException("Usage: /info <IP, UserID, or Name>")
+    val targetStr = message.substring(space + 1).trim()
+
+    var inetAddr: InetAddress? = null
+    var userName = targetStr
+    try {
+      inetAddr = InetAddress.getByName(targetStr)
+    } catch (e: Exception) {
+      val targetId = targetStr.toIntOrNull()
+      val matchedUser =
+        if (targetId != null) {
+          server.getUser(targetId)
+        } else {
+          server.usersMap.values.firstOrNull { it.name.equals(targetStr, ignoreCase = true) }
+        }
+
+      if (matchedUser != null) {
+        inetAddr = matchedUser.connectSocketAddress.address
+        userName = matchedUser.name ?: "Unknown"
+      } else {
+        throw ActionException("Could not find user with ID, IP or Name: $targetStr")
+      }
+    }
+
+    val tempBan = server.accessManager.getTempBan(inetAddr!!)
+    val silence = server.accessManager.getSilence(inetAddr)
+    val access = server.accessManager.getAccess(inetAddr)
+
+    clientHandler!!.send(
+      InformationMessage(0, "server", "Info for $userName (${inetAddr.hostAddress}):")
+    )
+    clientHandler.send(
+      InformationMessage(
+        0,
+        "server",
+        "Access Level: ${AccessManager.ACCESS_NAMES.getOrNull(access) ?: access}",
+      )
+    )
+
+    if (tempBan != null) {
+      clientHandler.send(
+        InformationMessage(
+          0,
+          "server",
+          "Active Temp Ban: Issuer: ${tempBan.issuer}, Reason: ${tempBan.reason ?: "None"}",
+        )
+      )
+    }
+    if (silence != null) {
+      clientHandler.send(
+        InformationMessage(
+          0,
+          "server",
+          "Active Silence: Issuer: ${silence.issuer}, Reason: ${silence.reason ?: "None"}",
+        )
+      )
+    }
+    if (tempBan == null && silence == null) {
+      clientHandler.send(InformationMessage(0, "server", "No active temporary restrictions."))
+    }
+  }
+
   companion object {
     private val logger = FluentLogger.forEnclosingClass()
 
@@ -857,5 +1071,11 @@ class AdminCommandAction : V086Action<Chat> {
     private const val COMMAND_TEMPELEVATED = "/tempelevated"
 
     private const val COMMAND_TEMPMODERATOR = "/tempmoderator"
+
+    private const val COMMAND_PERMABAN = "/permaban"
+
+    private const val COMMAND_PERMAMUTE = "/permamute"
+
+    private const val COMMAND_INFO = "/info"
   }
 }
