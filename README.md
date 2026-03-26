@@ -145,6 +145,44 @@ game) or @restart (meaning they are restarting the game and are waiting for the 
 tweets sent. Similarly, users will be notified and given 20 seconds to type `/stop` to stop the tweet from sending.
 After the game starts, the account will respond to the original tweet with the text "(opponent found)".
 
+## Server Extensions
+
+This server extends the original Kaillera/EmuLinkerSF protocol and admin toolset with additional features. All extensions are **backwards compatible** — existing clients behave identically without needing any changes. However, some features are only accessible to users with sufficient access levels (admin, superadmin).
+
+### Admin Commands
+
+EmuLinker-K adds the following admin chat commands on top of the standard set. Commands are entered in the server lobby chat.
+
+> [!NOTE]
+> Optional `<reason>` arguments are **internal only** — the reason is recorded in logs and viewable via `/info`, but is never revealed to the affected user or broadcast to the server.
+
+| Command | Access | Description |
+|---|---|---|
+| `/ban <UserID> <minutes> [reason]` | Moderator+ | Temporarily ban a user by UserID. The optional `reason` is recorded internally. |
+| `/silence <UserID> <minutes> [reason]` | Moderator+ | Temporarily silence (mute) a user. The optional `reason` is recorded internally. |
+| `/permaban <UserID> [reason]` | Admin+ | Permanently bans a user. Writes an `ipaddress,DENY` entry to `access.cfg` with a comment recording the issuer, timestamp, and optional reason. |
+| `/permamute <UserID> [reason]` | Admin+ | Permanently silences a user. Writes a `silence` entry to `access.cfg` with a comment recording the issuer, timestamp, and optional reason. |
+| `/clear <IP \| UserID \| Name>` | Admin+ | Clears all temporary bans and silences for a user. Accepts an IP address, UserID number, or exact username (case-insensitive). |
+| `/info <IP \| UserID \| Name>` | Admin+ | Displays a user's access level and any active temporary restrictions (with issuer and reason) as private messages to the requesting admin. |
+
+#### Backwards Compatibility Note
+
+The `reason` parameter on `/ban` and `/silence` is optional and appended after the required arguments. Old client UIs that issue these commands automatically (e.g. `"/ban 1 10"`) will continue to work without modification.
+
+### `access.cfg` Persistent Bans and Silences
+
+The standard `access.cfg` format is extended with a new `silence` entry type for persistent mutes:
+
+```
+# Permanent silence issued by AdminName on 2026-01-01T00:00:00
+# Reason: Hate speech
+silence,10.0.0.42
+```
+
+When `/permaban` or `/permamute` is used, the server appends the appropriate rule to `access.cfg` along with a comment block. The file is automatically reloaded without a server restart.
+
+The `access.cfg` file is monitored for changes. Any manual edits (e.g., removing a ban entry to lift a permanent ban) will take effect automatically on the next server check.
+
 ## Legal Disclaimer
 
 Server administrators are solely responsible for ensuring that their data collection, disclosure, and retention
