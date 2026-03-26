@@ -74,11 +74,19 @@ class AccessManager2(private val flags: RuntimeFlags, private val taskScheduler:
       while (reader.readLine().also { line = it } != null) {
         if (line.isNullOrBlank() || line!!.startsWith("#") || line!!.startsWith("//")) continue
         val st = StringTokenizer(line, ",")
-        if (st.countTokens() < 3) {
+        val tokenCount = st.countTokens()
+        if (tokenCount < 2) {
           logger.atSevere().log("Failed to load access line, too few tokens: %s", line)
           continue
         }
         val type = st.nextToken()
+        // silence lines have the format `silence,<address>` (2 tokens total, 1 remaining after
+        // type)
+        // all other lines need at least 2 more tokens (3 total)
+        if (type.lowercase() != "silence" && tokenCount < 3) {
+          logger.atSevere().log("Failed to load access line, too few tokens: %s", line)
+          continue
+        }
         when (type.lowercase()) {
           "user" -> userList.add(UserAccess(st))
           "game" -> gameList.add(GameAccess(st))
