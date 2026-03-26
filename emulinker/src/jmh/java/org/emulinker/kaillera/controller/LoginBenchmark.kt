@@ -277,7 +277,12 @@ open class LoginBenchmark : KoinComponent {
 
     override fun getAnnouncement(address: InetAddress): String? = null
 
-    override fun addTempBan(addressPattern: String, duration: Duration) {}
+    override fun addTempBan(
+      addressPattern: String,
+      duration: Duration,
+      issuer: String?,
+      reason: String?,
+    ) {}
 
     override fun addTempAdmin(addressPattern: String, duration: Duration) {}
 
@@ -285,9 +290,22 @@ open class LoginBenchmark : KoinComponent {
 
     override fun addTempElevated(addressPattern: String, duration: Duration) {}
 
-    override fun addSilenced(addressPattern: String, duration: Duration) {}
+    override fun addSilenced(
+      addressPattern: String,
+      duration: Duration,
+      issuer: String?,
+      reason: String?,
+    ) {}
 
     override fun clearTemp(address: InetAddress, clearAll: Boolean): Boolean = false
+
+    override fun addPermaBan(addressPattern: String, issuer: String?, reason: String?) {}
+
+    override fun addPermaMute(addressPattern: String, issuer: String?, reason: String?) {}
+
+    override fun getTempBan(address: InetAddress): org.emulinker.kaillera.access.TempBan? = null
+
+    override fun getSilence(address: InetAddress): org.emulinker.kaillera.access.Silence? = null
 
     override fun close() {}
   }
