@@ -14,7 +14,10 @@ fi
 
 # 2. SEND TERMINATION SIGNAL
 echo "🛑 Stopping EmuLinker-K (PID: $PID)..."
-kill "$PID"
+if ! kill "$PID" 2>/dev/null; then
+    echo "⚠️  Operation not permitted. Attempting to stop EmuLinker-K with sudo..."
+    sudo kill "$PID"
+fi
 
 # 3. VERIFY SHUTDOWN
 # Wait up to 10 seconds for the process to exit cleanly
