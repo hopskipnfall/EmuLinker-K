@@ -131,13 +131,16 @@ object ClearCommand : ServerCommand {
   }
 
   internal fun resolveAddress(targetStr: String, ctx: CommandExecutionContext): InetAddress? {
+    val targetId = targetStr.toIntOrNull()
+    if (targetId != null) {
+      val user = ctx.server.getUser(targetId)
+      if (user != null) return user.connectSocketAddress.address
+    }
+
     return try {
       InetAddress.getByName(targetStr)
     } catch (e: Exception) {
-      val targetId = targetStr.toIntOrNull()
-      val matchedUser =
-        if (targetId != null) ctx.server.getUser(targetId)
-        else ctx.server.usersMap.values.firstOrNull { it.name.equals(targetStr, ignoreCase = true) }
+      val matchedUser = ctx.server.usersMap.values.firstOrNull { it.name.equals(targetStr, ignoreCase = true) }
       if (matchedUser != null) {
         matchedUser.connectSocketAddress.address
       } else {
