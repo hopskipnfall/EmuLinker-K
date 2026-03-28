@@ -152,7 +152,7 @@ class AccessManager2(private val flags: RuntimeFlags, private val taskScheduler:
   }
 
   @Synchronized
-  override fun addPermaMute(addressPattern: String, issuer: String?, reason: String?) {
+  override fun addPermaSilence(addressPattern: String, issuer: String?, reason: String?) {
     val file = accessFile ?: return
     try {
       java.io.FileWriter(file, true).use { writer ->

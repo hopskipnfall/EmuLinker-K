@@ -236,39 +236,39 @@ class AccessManager2Test {
     assertThat(accessManager.isAddressAllowed(otherIp)).isTrue()
   }
 
-  // ── addPermaMute tests ──────────────────────────────────────────────────────
+  // ── addPermaSilence tests ──────────────────────────────────────────────────
 
   @Test
-  fun addPermaMute_silencesAddress() {
+  fun addPermaSilence_silencesAddress() {
     assertThat(accessManager.isSilenced(remoteIp)).isFalse()
-    accessManager.addPermaMute(remoteIp.hostAddress)
+    accessManager.addPermaSilence(remoteIp.hostAddress)
     assertThat(accessManager.isSilenced(remoteIp)).isTrue()
   }
 
   @Test
-  fun addPermaMute_writesSilenceLineToFile() {
-    accessManager.addPermaMute(remoteIp.hostAddress, issuer = "Admin", reason = null)
+  fun addPermaSilence_writesSilenceLineToFile() {
+    accessManager.addPermaSilence(remoteIp.hostAddress, issuer = "Admin", reason = null)
     val content = accessFile.readText()
     assertThat(content).contains("silence,${remoteIp.hostAddress}")
   }
 
   @Test
-  fun addPermaMute_writesIssuerCommentToFile() {
-    accessManager.addPermaMute(remoteIp.hostAddress, issuer = "Mod99", reason = null)
+  fun addPermaSilence_writesIssuerCommentToFile() {
+    accessManager.addPermaSilence(remoteIp.hostAddress, issuer = "Mod99", reason = null)
     val content = accessFile.readText()
     assertThat(content).contains("# Permanent silence issued by Mod99")
   }
 
   @Test
-  fun addPermaMute_writesReasonCommentToFile_whenProvided() {
-    accessManager.addPermaMute(remoteIp.hostAddress, issuer = "Admin", reason = "Hate speech")
+  fun addPermaSilence_writesReasonCommentToFile_whenProvided() {
+    accessManager.addPermaSilence(remoteIp.hostAddress, issuer = "Admin", reason = "Hate speech")
     val content = accessFile.readText()
     assertThat(content).contains("# Reason: Hate speech")
   }
 
   @Test
-  fun addPermaMute_doesNotSilenceOtherAddresses() {
-    accessManager.addPermaMute(remoteIp.hostAddress)
+  fun addPermaSilence_doesNotSilenceOtherAddresses() {
+    accessManager.addPermaSilence(remoteIp.hostAddress)
     assertThat(accessManager.isSilenced(otherIp)).isFalse()
   }
 

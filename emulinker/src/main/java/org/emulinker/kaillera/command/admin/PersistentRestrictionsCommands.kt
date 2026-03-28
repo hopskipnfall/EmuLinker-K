@@ -61,10 +61,10 @@ object PermabanCommand : ServerCommand {
   }
 }
 
-/** `/permamute <UserID> [reason]` — permanently mute a user (writes to access.cfg). */
-object PermaMuteCommand : ServerCommand {
-  override val name = "/permamute"
-  override val usage = "/permamute <UserID> [reason]"
+/** `/permasilence <UserID> [reason]` — permanently silence a user (writes to access.cfg). */
+object PermasilenceCommand : ServerCommand {
+  override val name = "/permasilence"
+  override val usage = "/permasilence <UserID> [reason]"
   override val description = "Permanently silence a user. Reason is internal only."
   override val minimumAccessLevel = AccessManager.ACCESS_ADMIN
   override val contexts = setOf(CommandContext.SERVER_LOBBY)
@@ -86,7 +86,7 @@ object PermaMuteCommand : ServerCommand {
             return
           }
       if (user.id == ctx.user.id) {
-        ctx.sendInfo(EmuLang.getString("Permamute.CantMuteSelf"))
+        ctx.sendInfo(EmuLang.getString("Permasilence.CantSilenceSelf"))
         return
       }
       val access = ctx.server.accessManager.getAccess(user.connectSocketAddress.address)
@@ -94,21 +94,21 @@ object PermaMuteCommand : ServerCommand {
         access >= AccessManager.ACCESS_ADMIN &&
           ctx.user.accessLevel != AccessManager.ACCESS_SUPERADMIN
       ) {
-        ctx.sendInfo(EmuLang.getString("Permamute.CantMuteAdmin"))
+        ctx.sendInfo(EmuLang.getString("Permasilence.CantSilenceAdmin"))
         return
       }
-      ctx.server.accessManager.addPermaMute(
+      ctx.server.accessManager.addPermaSilence(
         user.connectSocketAddress.address.hostAddress,
         ctx.user.name,
         reason,
       )
       ctx.server.announce(
-        EmuLang.getString("Permamute.Announcement", ctx.user.name, user.name),
+        EmuLang.getString("Permasilence.Announcement", ctx.user.name, user.name),
         false,
         null,
       )
     } catch (e: NoSuchElementException) {
-      ctx.sendInfo(EmuLang.getString("Permamute.Help"))
+      ctx.sendInfo(EmuLang.getString("Permasilence.Help"))
     }
   }
 }

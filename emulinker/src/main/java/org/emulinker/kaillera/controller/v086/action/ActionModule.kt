@@ -10,7 +10,7 @@ import org.emulinker.kaillera.command.admin.ClearCommand
 import org.emulinker.kaillera.command.admin.CloseGameCommand
 import org.emulinker.kaillera.command.admin.FindGameCommand
 import org.emulinker.kaillera.command.admin.InfoCommand
-import org.emulinker.kaillera.command.admin.PermaMuteCommand
+import org.emulinker.kaillera.command.admin.PermasilenceCommand
 import org.emulinker.kaillera.command.admin.PermabanCommand
 import org.emulinker.kaillera.command.admin.ServerKickCommand
 import org.emulinker.kaillera.command.admin.SilenceCommand
@@ -104,7 +104,7 @@ val ActionModule = module {
         SilenceCommand,
         ServerKickCommand,
         PermabanCommand,
-        PermaMuteCommand,
+        PermasilenceCommand,
         ClearCommand,
         InfoCommand,
         AnnounceCommand,
