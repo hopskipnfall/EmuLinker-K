@@ -497,7 +497,7 @@ open class GameDataBenchmark {
 
     override fun addPermaBan(addressPattern: String, issuer: String?, reason: String?) {}
 
-    override fun addPermaMute(addressPattern: String, issuer: String?, reason: String?) {}
+    override fun addPermaSilence(addressPattern: String, issuer: String?, reason: String?) {}
 
     override fun getTempBan(address: InetAddress): org.emulinker.kaillera.access.TempBan? = null
 

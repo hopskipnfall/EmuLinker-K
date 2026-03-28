@@ -41,7 +41,7 @@ class AdminCommandAction : V086Action<Chat> {
         chat.startsWith(COMMAND_TRIVIA) ||
         chat.startsWith(COMMAND_VERSION) ||
         chat.startsWith(COMMAND_PERMABAN) ||
-        chat.startsWith(COMMAND_PERMAMUTE) ||
+        chat.startsWith(COMMAND_PERMASILENCE) ||
         chat.startsWith(COMMAND_INFO) -> true
       else -> false
     }
@@ -131,8 +131,8 @@ class AdminCommandAction : V086Action<Chat> {
         chat.startsWith(COMMAND_PERMABAN) -> {
           processPermaBan(chat, server, user, clientHandler)
         }
-        chat.startsWith(COMMAND_PERMAMUTE) -> {
-          processPermaMute(chat, server, user, clientHandler)
+        chat.startsWith(COMMAND_PERMASILENCE) -> {
+          processPermasilence(chat, server, user, clientHandler)
         }
         chat.startsWith(COMMAND_INFO) -> {
           processInfo(chat, server, user, clientHandler)
@@ -917,7 +917,7 @@ class AdminCommandAction : V086Action<Chat> {
   }
 
   @Throws(ActionException::class, MessageFormatException::class)
-  private fun processPermaMute(
+  private fun processPermasilence(
     message: String,
     server: KailleraServer,
     admin: KailleraUser,
@@ -927,7 +927,7 @@ class AdminCommandAction : V086Action<Chat> {
       admin.accessLevel != AccessManager.ACCESS_SUPERADMIN &&
         admin.accessLevel != AccessManager.ACCESS_ADMIN
     ) {
-      throw ActionException("You don't have access to permamute.")
+      throw ActionException("You don't have access to permasilence.")
     }
     val scanner = Scanner(message).useDelimiter(" ")
     try {
@@ -945,21 +945,21 @@ class AdminCommandAction : V086Action<Chat> {
       val user =
         server.getUser(userID)
           ?: throw ActionException(EmuLang.getString("AdminCommandAction.UserNotFound", userID))
-      if (user.id == admin.id) throw ActionException("Can not permamute yourself.")
+      if (user.id == admin.id) throw ActionException("Can not permasilence yourself.")
       val access = server.accessManager.getAccess(user.connectSocketAddress.address)
       if (
         access >= AccessManager.ACCESS_ADMIN && admin.accessLevel != AccessManager.ACCESS_SUPERADMIN
       )
-        throw ActionException("Can not permamute an admin.")
+        throw ActionException("Can not permasilence an admin.")
 
-      server.accessManager.addPermaMute(
+      server.accessManager.addPermaSilence(
         user.connectSocketAddress.address.hostAddress,
         admin.name,
         reasonStr,
       )
-      server.announce("Admin ${admin.name} permanently muted ${user.name}!", false, null)
+      server.announce("Admin ${admin.name} permanently silenced ${user.name}!", false, null)
     } catch (e: NoSuchElementException) {
-      throw ActionException("Permamute Error: /permamute <UserID> <Optional Reason>")
+      throw ActionException("Permasilence Error: /permasilence <UserID> <Optional Reason>")
     }
   }
 
@@ -1074,7 +1074,7 @@ class AdminCommandAction : V086Action<Chat> {
 
     private const val COMMAND_PERMABAN = "/permaban"
 
-    private const val COMMAND_PERMAMUTE = "/permamute"
+    private const val COMMAND_PERMASILENCE = "/permasilence"
 
     private const val COMMAND_INFO = "/info"
   }

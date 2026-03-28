@@ -109,7 +109,7 @@ interface AccessManager : Closeable {
 
   fun addPermaBan(addressPattern: String, issuer: String? = null, reason: String? = null)
 
-  fun addPermaMute(addressPattern: String, issuer: String? = null, reason: String? = null)
+  fun addPermaSilence(addressPattern: String, issuer: String? = null, reason: String? = null)
 
   fun getTempBan(address: InetAddress): TempBan?
 
