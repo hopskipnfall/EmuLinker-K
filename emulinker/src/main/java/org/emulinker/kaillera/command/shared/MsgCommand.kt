@@ -5,6 +5,7 @@ import org.emulinker.kaillera.access.AccessManager
 import org.emulinker.kaillera.command.CommandContext
 import org.emulinker.kaillera.command.CommandExecutionContext
 import org.emulinker.kaillera.command.ServerCommand
+import org.emulinker.util.EmuLang
 
 /**
  * `/msg <UserID> <message>` — send a private message.
@@ -23,7 +24,7 @@ object MsgCommand : ServerCommand {
       accessManager.getAccess(ctx.user.socketAddress!!.address) < AccessManager.ACCESS_SUPERADMIN &&
         accessManager.isSilenced(ctx.user.socketAddress!!.address)
     ) {
-      reply(ctx, "You are silenced!")
+      reply(ctx, EmuLang.getString("MsgCommand.Silenced"))
       return
     }
 
@@ -38,7 +39,7 @@ object MsgCommand : ServerCommand {
       if (lastId != -1) {
         sendMsg(ctx, lastId, scanner)
       } else {
-        reply(ctx, "Private Message Error: /msg <UserID> <message>")
+        reply(ctx, EmuLang.getString("MsgCommand.Help"))
       }
     }
   }
@@ -50,22 +51,22 @@ object MsgCommand : ServerCommand {
     val m = sb.toString().trim()
 
     if (target == null) {
-      reply(ctx, "User Not Found!")
+      reply(ctx, EmuLang.getString("MsgCommand.UserNotFound"))
       return
     }
     if (target === ctx.user) {
-      reply(ctx, "You can't private message yourself!")
+      reply(ctx, EmuLang.getString("MsgCommand.CantMessageSelf"))
       return
     }
     if (ctx.currentContext == CommandContext.GAME_CHAT && target.game != ctx.user.game) {
-      reply(ctx, "User not in this game!")
+      reply(ctx, EmuLang.getString("MsgCommand.UserNotInGame"))
       return
     }
     if (
       !target.isAcceptingDirectMessages ||
         target.searchIgnoredUsers(ctx.user.connectSocketAddress.address.hostAddress)
     ) {
-      reply(ctx, "<${target.name}> Is not accepting private messages!")
+      reply(ctx, EmuLang.getString("MsgCommand.NotAcceptingMessages", target.name))
       return
     }
     if (m.isBlank() || m.startsWith("\ufffd")) return
@@ -73,11 +74,11 @@ object MsgCommand : ServerCommand {
     val access = ctx.server.accessManager.getAccess(ctx.user.socketAddress!!.address)
     if (access == AccessManager.ACCESS_NORMAL) {
       if (m.any { it.code < 32 }) {
-        reply(ctx, "Private Message Denied: Illegal characters in message")
+        reply(ctx, EmuLang.getString("MsgCommand.IllegalCharacters"))
         return
       }
       if (m.length > 320) {
-        reply(ctx, "Private Message Denied: Message Too Long")
+        reply(ctx, EmuLang.getString("MsgCommand.MessageTooLong"))
         return
       }
     }

@@ -4,6 +4,7 @@ import org.emulinker.kaillera.access.AccessManager
 import org.emulinker.kaillera.command.CommandContext
 import org.emulinker.kaillera.command.CommandExecutionContext
 import org.emulinker.kaillera.command.ServerCommand
+import org.emulinker.util.EmuLang
 import org.emulinker.util.EmuUtil.toSimpleUtcDatetime
 
 /** `/myip` — private message with the caller's IP address. */
@@ -15,7 +16,7 @@ object MyIpCommand : ServerCommand {
 
   override fun execute(args: String, ctx: CommandExecutionContext) {
     val ip = ctx.user.connectSocketAddress.address.hostAddress
-    ctx.sendInfo("Your IP Address is: $ip")
+    ctx.sendInfo(EmuLang.getString("UtilityCommand.YourIP", ip))
   }
 }
 

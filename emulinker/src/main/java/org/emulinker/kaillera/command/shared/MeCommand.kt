@@ -4,6 +4,7 @@ import org.emulinker.kaillera.access.AccessManager
 import org.emulinker.kaillera.command.CommandContext
 import org.emulinker.kaillera.command.CommandExecutionContext
 import org.emulinker.kaillera.command.ServerCommand
+import org.emulinker.util.EmuLang
 
 /** `/me <message>` — third-person server/game announcement. */
 object MeCommand : ServerCommand {
@@ -15,7 +16,7 @@ object MeCommand : ServerCommand {
   override fun execute(args: String, ctx: CommandExecutionContext) {
     val space = args.indexOf(' ')
     if (space < 0) {
-      reply(ctx, "Invalid # of Fields!")
+      reply(ctx, EmuLang.getString("MeCommand.InvalidFields"))
       return
     }
     var announcement = args.substring(space + 1)
@@ -27,7 +28,7 @@ object MeCommand : ServerCommand {
       accessManager.getAccess(ctx.user.socketAddress!!.address) < AccessManager.ACCESS_SUPERADMIN &&
         accessManager.isSilenced(ctx.user.socketAddress!!.address)
     ) {
-      reply(ctx, "You are silenced!")
+      reply(ctx, EmuLang.getString("MeCommand.Silenced"))
       return
     }
     if (ctx.server.checkMe(ctx.user, announcement)) {

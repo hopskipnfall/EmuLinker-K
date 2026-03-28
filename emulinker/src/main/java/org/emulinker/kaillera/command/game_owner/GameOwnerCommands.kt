@@ -23,7 +23,10 @@ object StartCommand : ServerCommand {
     try {
       game.start(ctx.user)
     } catch (e: Exception) {
-      ctx.announceGame("Start Error: ${e.message}", ctx.user)
+      ctx.announceGame(
+        EmuLang.getString("GameOwner.StartError", e.message ?: "Unknown Error"),
+        ctx.user,
+      )
     }
   }
 }
@@ -43,10 +46,10 @@ object StartNCommand : ServerCommand {
       val n = sc.nextInt()
       if (n in 1..100) {
         game.startN = n
-        game.announce("This game will start when $n players have joined.")
-      } else ctx.announceGame("StartN Error: Enter value between 1 and 100.", ctx.user)
+        game.announce(EmuLang.getString("GameOwner.StartNCount", n))
+      } else ctx.announceGame(EmuLang.getString("GameOwner.StartNUsage"), ctx.user)
     } catch (e: NoSuchElementException) {
-      ctx.announceGame("Failed: /startn <#>", ctx.user)
+      ctx.announceGame(EmuLang.getString("GameOwner.StartNError"), ctx.user)
     }
   }
 }
@@ -69,17 +72,17 @@ object GameKickCommand : ServerCommand {
           if (p.accessLevel < AccessManager.ACCESS_ADMIN && p != game.owner)
             game.kick(ctx.user, p.id)
         }
-        game.announce("All players have been kicked!")
+        game.announce(EmuLang.getString("GameOwner.AllKicked"))
         return
       }
       val num = token.removePrefix("/kick").trim().toIntOrNull() ?: sc.nextInt()
       if (num in 1..100) {
         val p = game.getPlayer(num)
         if (p != null) game.kick(ctx.user, p.id)
-        else ctx.announceGame("Player doesn't exist!", ctx.user)
-      } else ctx.announceGame("Kick Player Error: Enter value between 1 and 100", ctx.user)
+        else ctx.announceGame(EmuLang.getString("GameOwner.PlayerNotFound"), ctx.user)
+      } else ctx.announceGame(EmuLang.getString("GameOwner.KickUsage"), ctx.user)
     } catch (e: NoSuchElementException) {
-      ctx.announceGame("Failed: /kick <Player#> or /kickall to kick all players.", ctx.user)
+      ctx.announceGame(EmuLang.getString("GameOwner.KickError"), ctx.user)
     }
   }
 }
@@ -104,32 +107,32 @@ object MuteCommand : ServerCommand {
             game.mutedUsers.add(p.connectSocketAddress.address.hostAddress)
           }
         }
-        game.announce("All players have been muted!")
+        game.announce(EmuLang.getString("GameOwner.AllMuted"))
         return
       }
       val userID = sc.nextInt()
       val user =
         ctx.clientHandler.user.server.getUser(userID)
           ?: run {
-            ctx.announceGame("Player doesn't exist!", ctx.user)
+            ctx.announceGame(EmuLang.getString("GameOwner.PlayerNotFound"), ctx.user)
             return
           }
       if (user === ctx.user) {
-        ctx.announceGame("You can't mute yourself!", ctx.user)
+        ctx.announceGame(EmuLang.getString("GameOwner.CantMuteSelf"), ctx.user)
         return
       }
       if (
         user.accessLevel >= AccessManager.ACCESS_ADMIN &&
           ctx.user.accessLevel != AccessManager.ACCESS_SUPERADMIN
       ) {
-        ctx.announceGame("You can't mute an Admin", ctx.user)
+        ctx.announceGame(EmuLang.getString("GameOwner.CantMuteAdmin"), ctx.user)
         return
       }
       game.mutedUsers.add(user.connectSocketAddress.address.hostAddress)
       user.isMuted = true
-      game.announce("${user.name} has been muted!")
+      game.announce(EmuLang.getString("GameOwner.UserMuted", user.name))
     } catch (e: NoSuchElementException) {
-      ctx.announceGame("Mute Player Error: /mute <UserID>", ctx.user)
+      ctx.announceGame(EmuLang.getString("GameOwner.MuteUsage"), ctx.user)
     }
   }
 }
@@ -151,32 +154,32 @@ object UnmuteCommand : ServerCommand {
           u.isMuted = false
           game.mutedUsers.remove(u.connectSocketAddress.address.hostAddress)
         }
-        game.announce("All players have been unmuted!")
+        game.announce(EmuLang.getString("GameOwner.AllUnmuted"))
         return
       }
       val userID = sc.nextInt()
       val user =
         ctx.clientHandler.user.server.getUser(userID)
           ?: run {
-            ctx.announceGame("Player doesn't exist!", ctx.user)
+            ctx.announceGame(EmuLang.getString("GameOwner.PlayerNotFound"), ctx.user)
             return
           }
       if (user === ctx.user) {
-        ctx.announceGame("You can't unmute yourself!", ctx.user)
+        ctx.announceGame(EmuLang.getString("GameOwner.CantUnmuteSelf"), ctx.user)
         return
       }
       if (
         user.accessLevel >= AccessManager.ACCESS_ADMIN &&
           ctx.user.accessLevel != AccessManager.ACCESS_SUPERADMIN
       ) {
-        ctx.announceGame("You can't unmute an Admin", ctx.user)
+        ctx.announceGame(EmuLang.getString("GameOwner.CantUnmuteAdmin"), ctx.user)
         return
       }
       game.mutedUsers.remove(user.connectSocketAddress.address.hostAddress)
       user.isMuted = false
-      game.announce("${user.name} has been unmuted!")
+      game.announce(EmuLang.getString("GameOwner.UserUnmuted", user.name))
     } catch (e: NoSuchElementException) {
-      ctx.announceGame("Unmute Player Error: /unmute <UserID>", ctx.user)
+      ctx.announceGame(EmuLang.getString("GameOwner.UnmuteUsage"), ctx.user)
     }
   }
 }
@@ -196,7 +199,7 @@ object SwapCommand : ServerCommand {
       val test = sc.nextInt()
       val str = test.toString()
       if (game.players.size < str.length) {
-        ctx.announceGame("Failed: You can't swap more than the # of players in the room.", ctx.user)
+        ctx.announceGame(EmuLang.getString("GameOwner.SwapLimit"), ctx.user)
         return
       }
       if (test > 0) {
@@ -212,16 +215,12 @@ object SwapCommand : ServerCommand {
           for (i in str.indices) {
             val p = game.players[i]
             p.playerNumber = num[i]
-            game.announce("${p.name} is now Player#: ${p.playerNumber}")
+            game.announce(EmuLang.getString("GameOwner.UserSwapped", p.name, p.playerNumber))
           }
-        } else
-          ctx.announceGame(
-            "Swap Player Error: /swap <order> eg. 123..n {n = total # of players; Each slot = new player#}",
-            ctx.user,
-          )
+        } else ctx.announceGame(EmuLang.getString("GameOwner.SwapError"), ctx.user)
       }
     } catch (e: NoSuchElementException) {
-      ctx.announceGame("Swap Player Error: /swap <order> eg. 123..n", ctx.user)
+      ctx.announceGame(EmuLang.getString("GameOwner.SwapUsage"), ctx.user)
     }
   }
 }
@@ -238,7 +237,7 @@ object MaxUsersCommand : ServerCommand {
   override fun execute(args: String, ctx: CommandExecutionContext) {
     val game = ctx.game ?: return
     if (System.currentTimeMillis() - lastChange <= 3000) {
-      game.announce("Max User Command Spam Detection...Please Wait!", ctx.user)
+      game.announce(EmuLang.getString("GameOwner.MaxUsersSpam"), ctx.user)
       lastChange = System.currentTimeMillis()
       return
     }
@@ -249,10 +248,10 @@ object MaxUsersCommand : ServerCommand {
       val n = sc.nextInt()
       if (n in 1..100) {
         game.maxUsers = n
-        game.announce("Max Users has been set to $n")
-      } else ctx.announceGame("Max Users Error: Enter value between 1 and 100", ctx.user)
+        game.announce(EmuLang.getString("GameOwner.MaxUsersSet", n))
+      } else ctx.announceGame(EmuLang.getString("GameOwner.MaxUsersUsage"), ctx.user)
     } catch (e: NoSuchElementException) {
-      ctx.announceGame("Failed: /maxusers <#>", ctx.user)
+      ctx.announceGame(EmuLang.getString("GameOwner.MaxUsersError"), ctx.user)
     }
   }
 }
@@ -272,10 +271,10 @@ object MaxPingCommand : ServerCommand {
       val n = sc.nextInt()
       if (n in 1..1000) {
         game.maxPing = n
-        game.announce("Max Ping has been set to $n")
-      } else ctx.announceGame("Max Ping Error: Enter value between 1 and 1000", ctx.user)
+        game.announce(EmuLang.getString("GameOwner.MaxPingSet", n))
+      } else ctx.announceGame(EmuLang.getString("GameOwner.MaxPingUsage"), ctx.user)
     } catch (e: NoSuchElementException) {
-      ctx.announceGame("Failed: /maxping <#>", ctx.user)
+      ctx.announceGame(EmuLang.getString("GameOwner.MaxPingError"), ctx.user)
     }
   }
 }
@@ -291,7 +290,7 @@ object SetEmuCommand : ServerCommand {
     val game = ctx.game ?: return
     val emu = if (args == "/setemu any") "any" else game.owner.clientType ?: "any"
     game.aEmulator = emu
-    game.announce("Owner has restricted the emulator to: $emu")
+    game.announce(EmuLang.getString("GameOwner.EmuRestricted", emu))
   }
 }
 
@@ -306,7 +305,7 @@ object SetConnCommand : ServerCommand {
     val game = ctx.game ?: return
     val conn = if (args == "/setconn any") "any" else game.owner.connectionType.readableName
     game.aConnection = conn
-    game.announce("Owner has restricted the connection type to: $conn")
+    game.announce(EmuLang.getString("GameOwner.ConnRestricted", conn))
   }
 }
 
@@ -365,10 +364,10 @@ object SameDelayCommand : ServerCommand {
     val game = ctx.game ?: return
     if (args == "/samedelay true") {
       game.sameDelay = true
-      game.announce("Players will have the same delay when game starts (restarts)!")
+      game.announce(EmuLang.getString("GameOwner.SameDelayOn"))
     } else {
       game.sameDelay = false
-      game.announce("Players will have independent delays when game starts (restarts)!")
+      game.announce(EmuLang.getString("GameOwner.SameDelayOff"))
     }
   }
 }
@@ -382,6 +381,6 @@ object NumCommand : ServerCommand {
 
   override fun execute(args: String, ctx: CommandExecutionContext) {
     val game = ctx.game ?: return
-    game.announce("${game.players.size} in the room!", ctx.user)
+    game.announce(EmuLang.getString("GameOwner.NumPlayers", game.players.size), ctx.user)
   }
 }

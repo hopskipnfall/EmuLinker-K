@@ -6,6 +6,7 @@ import org.emulinker.kaillera.command.CommandContext
 import org.emulinker.kaillera.command.CommandExecutionContext
 import org.emulinker.kaillera.command.ServerCommand
 import org.emulinker.kaillera.model.impl.Trivia
+import org.emulinker.util.EmuLang
 
 /**
  * All trivia sub-commands handled under a single [ServerCommand] because they share a prefix
@@ -31,7 +32,7 @@ object TriviaCommand : ServerCommand {
             server.trivia!!.saveScores(true)
             server.triviaThread!!.stop()
           }
-          server.announce("<Trivia> SupraTrivia has been reset!", false, null)
+          server.announce(EmuLang.getString("Trivia.Reset"), false, null)
           val t = Trivia(server)
           val th = Thread(t)
           th.start()
@@ -41,10 +42,10 @@ object TriviaCommand : ServerCommand {
         }
         args == "/triviaon" -> {
           if (server.switchTrivia) {
-            ctx.sendInfo("Trivia already started!")
+            ctx.sendInfo(EmuLang.getString("Trivia.AlreadyStarted"))
             return
           }
-          server.announce("SupraTrivia has been started!", false, null)
+          server.announce(EmuLang.getString("Trivia.Started"), false, null)
           val t = Trivia(server)
           val th = Thread(t)
           th.start()
@@ -54,10 +55,10 @@ object TriviaCommand : ServerCommand {
         }
         args == "/triviaoff" -> {
           if (server.trivia == null) {
-            ctx.sendInfo("Trivia needs to be started first!")
+            ctx.sendInfo(EmuLang.getString("Trivia.NeedsStart"))
             return
           }
-          server.announce("SupraTrivia has been stopped!", false, null)
+          server.announce(EmuLang.getString("Trivia.Stopped"), false, null)
           server.trivia!!.saveScores(false)
           server.triviaThread!!.stop()
           server.switchTrivia = false
@@ -65,44 +66,44 @@ object TriviaCommand : ServerCommand {
         }
         args == "/triviapause" -> {
           if (server.trivia == null) {
-            ctx.sendInfo("Trivia needs to be started first!")
+            ctx.sendInfo(EmuLang.getString("Trivia.NeedsStart"))
             return
           }
           server.trivia!!.setTriviaPaused(true)
-          server.announce("<Trivia> SupraTrivia will be paused after this question!", false, null)
+          server.announce(EmuLang.getString("Trivia.Paused"), false, null)
         }
         args == "/triviaresume" -> {
           if (server.trivia == null) {
-            ctx.sendInfo("Trivia needs to be started first!")
+            ctx.sendInfo(EmuLang.getString("Trivia.NeedsStart"))
             return
           }
           server.trivia!!.setTriviaPaused(false)
-          server.announce("<Trivia> SupraTrivia has been resumed!", false, null)
+          server.announce(EmuLang.getString("Trivia.Resumed"), false, null)
         }
         args == "/triviasave" -> {
           if (server.trivia == null) {
-            ctx.sendInfo("Trivia needs to be started first!")
+            ctx.sendInfo(EmuLang.getString("Trivia.NeedsStart"))
             return
           }
           server.trivia!!.saveScores(true)
         }
         args == "/triviascores" -> {
           if (server.trivia == null) {
-            ctx.sendInfo("Trivia needs to be started first!")
+            ctx.sendInfo(EmuLang.getString("Trivia.NeedsStart"))
             return
           }
           server.trivia!!.displayHighScores(false)
         }
         args == "/triviawin" -> {
           if (server.trivia == null) {
-            ctx.sendInfo("Trivia needs to be started first!")
+            ctx.sendInfo(EmuLang.getString("Trivia.NeedsStart"))
             return
           }
           server.trivia!!.displayHighScores(true)
         }
         args.startsWith("/triviaupdate") -> {
           if (server.trivia == null) {
-            ctx.sendInfo("Trivia needs to be started first!")
+            ctx.sendInfo(EmuLang.getString("Trivia.NeedsStart"))
             return
           }
           val sc = Scanner(args).useDelimiter(" ")
@@ -110,13 +111,9 @@ object TriviaCommand : ServerCommand {
           val ip = sc.next()
           val newIp = sc.next()
           if (server.trivia!!.updateIP(ip, newIp)) {
-            server.announce("<Trivia> ${newIp.take(4)}.... Trivia IP was updated!", false, admin)
+            server.announce(EmuLang.getString("Trivia.IpUpdated", newIp.take(4)), false, admin)
           } else {
-            server.announce(
-              "<Trivia> ${ip.take(4)} was not found! Error updating score!",
-              false,
-              admin,
-            )
+            server.announce(EmuLang.getString("Trivia.IpNotFound", ip.take(4)), false, admin)
           }
         }
         args.startsWith("/triviatime") -> {
@@ -128,16 +125,12 @@ object TriviaCommand : ServerCommand {
           sc.next()
           val secs = sc.nextInt()
           server.trivia!!.setQuestionTime(secs * 1000)
-          server.announce(
-            "<Trivia> SupraTrivia's question delay has been changed to ${secs}s!",
-            false,
-            admin,
-          )
+          server.announce(EmuLang.getString("Trivia.DelayChanged", secs), false, admin)
         }
-        else -> ctx.sendInfo("Unknown trivia command.")
+        else -> ctx.sendInfo(EmuLang.getString("Trivia.UnknownCommand"))
       }
     } catch (e: Exception) {
-      ctx.sendInfo("Trivia command error: ${e.message}")
+      ctx.sendInfo(EmuLang.getString("Trivia.Error", e.message ?: "Unknown Error"))
     }
   }
 }

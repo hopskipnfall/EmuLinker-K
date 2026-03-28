@@ -104,16 +104,16 @@ object SilenceCommand : ServerCommand {
         access == AccessManager.ACCESS_MODERATOR &&
           ctx.user.accessLevel == AccessManager.ACCESS_MODERATOR
       ) {
-        ctx.sendInfo("You cannot silence a moderator if you're not an admin!")
+        ctx.sendInfo(EmuLang.getString("AdminCommand.CantSilenceModerator"))
         return
       }
       if (ctx.user.accessLevel == AccessManager.ACCESS_MODERATOR) {
         if (ctx.server.accessManager.isSilenced(user.socketAddress!!.address)) {
-          ctx.sendInfo("This User has already been Silenced. Please wait until his time expires.")
+          ctx.sendInfo(EmuLang.getString("AdminCommand.AlreadySilenced"))
           return
         }
         if (mins > 15) {
-          ctx.sendInfo("Moderators can only silence up to 15 minutes!")
+          ctx.sendInfo(EmuLang.getString("AdminCommand.ModeratorSilenceLimit"))
           return
         }
       }
@@ -162,7 +162,7 @@ object ServerKickCommand : ServerCommand {
         access == AccessManager.ACCESS_MODERATOR &&
           ctx.user.accessLevel == AccessManager.ACCESS_MODERATOR
       ) {
-        ctx.sendInfo("You cannot kick a moderator if you're not an admin!")
+        ctx.sendInfo(EmuLang.getString("AdminCommand.CantKickModerator"))
         return
       }
       if (

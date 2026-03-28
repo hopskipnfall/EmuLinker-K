@@ -41,17 +41,14 @@ object P2PCommand : ServerCommand {
           game.players.forEach { u ->
             if (u.loggedIn) {
               u.ignoringUnnecessaryServerActivity = true
-              u.game?.announce("This game will NOT receive any server activity during gameplay!", u)
+              u.game?.announce(EmuLang.getString("P2P.ThisGameIgnoring"), u)
             }
           }
         } else {
           ctx.user.ignoringUnnecessaryServerActivity = true
           game.players.forEach { u ->
             if (u.loggedIn)
-              u.game?.announce(
-                "${ctx.user.name} will NOT receive any server activity during gameplay!",
-                u,
-              )
+              u.game?.announce(EmuLang.getString("P2P.UserIgnoring", ctx.user.name), u)
           }
         }
       }
@@ -61,21 +58,18 @@ object P2PCommand : ServerCommand {
           game.players.forEach { u ->
             if (u.loggedIn) {
               u.ignoringUnnecessaryServerActivity = false
-              u.game?.announce("This game will NOW receive ALL server activity during gameplay!", u)
+              u.game?.announce(EmuLang.getString("P2P.ThisGameReceiving"), u)
             }
           }
         } else {
           ctx.user.ignoringUnnecessaryServerActivity = false
           game.players.forEach { u ->
             if (u.loggedIn)
-              u.game?.announce(
-                "${ctx.user.name} will NOW receive ALL server activity during gameplay!",
-                u,
-              )
+              u.game?.announce(EmuLang.getString("P2P.UserReceiving", ctx.user.name), u)
           }
         }
       }
-      else -> ctx.announceGame("Failed P2P: /p2pon or /p2poff", ctx.user)
+      else -> ctx.announceGame(EmuLang.getString("P2P.Error"), ctx.user)
     }
   }
 }
@@ -200,7 +194,7 @@ class StopCommand(private val lookingForGameReporter: TwitterBroadcaster) : Serv
         ctx.user,
       )
     } else {
-      game.announce("No pending tweets.", ctx.user)
+      game.announce(EmuLang.getString("LFG.NoPendingTweets"), ctx.user)
     }
   }
 }

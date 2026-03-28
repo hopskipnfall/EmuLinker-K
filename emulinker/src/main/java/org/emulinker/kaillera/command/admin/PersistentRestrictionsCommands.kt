@@ -33,7 +33,7 @@ object PermabanCommand : ServerCommand {
             return
           }
       if (user.id == ctx.user.id) {
-        ctx.sendInfo("Can not permaban yourself.")
+        ctx.sendInfo(EmuLang.getString("Permaban.CantBanSelf"))
         return
       }
       val access = ctx.server.accessManager.getAccess(user.connectSocketAddress.address)
@@ -41,7 +41,7 @@ object PermabanCommand : ServerCommand {
         access >= AccessManager.ACCESS_ADMIN &&
           ctx.user.accessLevel != AccessManager.ACCESS_SUPERADMIN
       ) {
-        ctx.sendInfo("Can not permaban an admin.")
+        ctx.sendInfo(EmuLang.getString("Permaban.CantBanAdmin"))
         return
       }
       ctx.server.accessManager.addPermaBan(
@@ -49,10 +49,14 @@ object PermabanCommand : ServerCommand {
         ctx.user.name,
         reason,
       )
-      ctx.server.announce("Admin ${ctx.user.name} permanently banned ${user.name}!", false, null)
-      user.quit("You have been permanently banned.")
+      ctx.server.announce(
+        EmuLang.getString("Permaban.Announcement", ctx.user.name, user.name),
+        false,
+        null,
+      )
+      user.quit(EmuLang.getString("Permaban.QuitMessage"))
     } catch (e: NoSuchElementException) {
-      ctx.sendInfo("Permaban Error: /permaban <UserID> [reason]")
+      ctx.sendInfo(EmuLang.getString("Permaban.Help"))
     }
   }
 }
@@ -82,7 +86,7 @@ object PermaMuteCommand : ServerCommand {
             return
           }
       if (user.id == ctx.user.id) {
-        ctx.sendInfo("Can not permamute yourself.")
+        ctx.sendInfo(EmuLang.getString("Permamute.CantMuteSelf"))
         return
       }
       val access = ctx.server.accessManager.getAccess(user.connectSocketAddress.address)
@@ -90,7 +94,7 @@ object PermaMuteCommand : ServerCommand {
         access >= AccessManager.ACCESS_ADMIN &&
           ctx.user.accessLevel != AccessManager.ACCESS_SUPERADMIN
       ) {
-        ctx.sendInfo("Can not permamute an admin.")
+        ctx.sendInfo(EmuLang.getString("Permamute.CantMuteAdmin"))
         return
       }
       ctx.server.accessManager.addPermaMute(
@@ -98,9 +102,13 @@ object PermaMuteCommand : ServerCommand {
         ctx.user.name,
         reason,
       )
-      ctx.server.announce("Admin ${ctx.user.name} permanently muted ${user.name}!", false, null)
+      ctx.server.announce(
+        EmuLang.getString("Permamute.Announcement", ctx.user.name, user.name),
+        false,
+        null,
+      )
     } catch (e: NoSuchElementException) {
-      ctx.sendInfo("Permamute Error: /permamute <UserID> [reason]")
+      ctx.sendInfo(EmuLang.getString("Permamute.Help"))
     }
   }
 }
@@ -140,11 +148,12 @@ object ClearCommand : ServerCommand {
     return try {
       InetAddress.getByName(targetStr)
     } catch (e: Exception) {
-      val matchedUser = ctx.server.usersMap.values.firstOrNull { it.name.equals(targetStr, ignoreCase = true) }
+      val matchedUser =
+        ctx.server.usersMap.values.firstOrNull { it.name.equals(targetStr, ignoreCase = true) }
       if (matchedUser != null) {
         matchedUser.connectSocketAddress.address
       } else {
-        ctx.sendInfo("Could not find user with ID, IP or Name: $targetStr")
+        ctx.sendInfo(EmuLang.getString("PersistentRestrictions.NotFound", targetStr))
         null
       }
     }
@@ -162,7 +171,7 @@ object InfoCommand : ServerCommand {
   override fun execute(args: String, ctx: CommandExecutionContext) {
     val space = args.indexOf(' ')
     if (space < 0) {
-      ctx.sendInfo("Usage: /info <IP, UserID, or Name>")
+      ctx.sendInfo(EmuLang.getString("InfoCommand.Usage"))
       return
     }
     val targetStr = args.substring(space + 1).trim()
@@ -182,6 +191,7 @@ object InfoCommand : ServerCommand {
       ctx.sendInfo(
         "Active Silence — Issuer: ${silence.issuer}, Reason: ${silence.reason ?: "None"}"
       )
-    if (tempBan == null && silence == null) ctx.sendInfo("No active temporary restrictions.")
+    if (tempBan == null && silence == null)
+      ctx.sendInfo(EmuLang.getString("InfoCommand.NoRestrictions"))
   }
 }

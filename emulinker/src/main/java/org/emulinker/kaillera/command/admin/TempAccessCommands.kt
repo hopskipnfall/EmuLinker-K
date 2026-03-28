@@ -82,16 +82,16 @@ object TempModeratorCommand : ServerCommand {
         return
       }
       if (access == AccessManager.ACCESS_MODERATOR) {
-        ctx.sendInfo("User is already moderator.")
+        ctx.sendInfo(EmuLang.getString("TempAccess.AlreadyModerator"))
         return
       }
       ctx.server.accessManager.addTempModerator(
         user.connectSocketAddress.address.hostAddress,
         mins.minutes,
       )
-      ctx.server.announce("Temp Moderator Granted: ${user.name} for ${mins}min.", false, null)
+      ctx.server.announce(EmuLang.getString("TempAccess.ModeratorGranted", user.name), false, null)
     } catch (e: NoSuchElementException) {
-      ctx.sendInfo("Temp Moderator Error.")
+      ctx.sendInfo(EmuLang.getString("TempAccess.ModeratorError"))
     }
   }
 }
@@ -126,16 +126,16 @@ object TempElevatedCommand : ServerCommand {
         return
       }
       if (access == AccessManager.ACCESS_ELEVATED) {
-        ctx.sendInfo("User is already elevated.")
+        ctx.sendInfo(EmuLang.getString("TempAccess.AlreadyElevated"))
         return
       }
       ctx.server.accessManager.addTempElevated(
         user.connectSocketAddress.address.hostAddress,
         mins.minutes,
       )
-      ctx.server.announce("Temp Elevated Granted: ${user.name} for ${mins}min", false, null)
+      ctx.server.announce(EmuLang.getString("TempAccess.ElevatedGranted", user.name), false, null)
     } catch (e: NoSuchElementException) {
-      ctx.sendInfo("Temp Elevated Error.")
+      ctx.sendInfo(EmuLang.getString("TempAccess.ElevatedError"))
     }
   }
 }
@@ -153,19 +153,19 @@ object StealthCommand : ServerCommand {
 
   override fun execute(args: String, ctx: CommandExecutionContext) {
     if (ctx.user.game != null) {
-      ctx.sendInfo("Can't use /stealth while in a gameroom.")
+      ctx.sendInfo(EmuLang.getString("Stealth.NoGameRoom"))
       return
     }
     when (args) {
       "/stealthon" -> {
         ctx.user.inStealthMode = true
-        ctx.sendInfo("Stealth Mode is on.")
+        ctx.sendInfo(EmuLang.getString("Stealth.On"))
       }
       "/stealthoff" -> {
         ctx.user.inStealthMode = false
-        ctx.sendInfo("Stealth Mode is off.")
+        ctx.sendInfo(EmuLang.getString("Stealth.Off"))
       }
-      else -> ctx.sendInfo("Stealth Mode Error: /stealthon /stealthoff")
+      else -> ctx.sendInfo(EmuLang.getString("Stealth.Help"))
     }
   }
 }

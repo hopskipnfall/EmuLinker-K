@@ -6,6 +6,7 @@ import org.emulinker.kaillera.access.AccessManager
 import org.emulinker.kaillera.command.CommandContext
 import org.emulinker.kaillera.command.CommandExecutionContext
 import org.emulinker.kaillera.command.ServerCommand
+import org.emulinker.util.EmuLang
 
 /** `/ignore <UserID>` — add a user to the caller's ignore list. */
 object IgnoreCommand : ServerCommand {
@@ -21,29 +22,29 @@ object IgnoreCommand : ServerCommand {
       val userID = scanner.nextInt()
       val target = ctx.server.getUser(userID)
       if (target == null) {
-        reply(ctx, "User Not Found!")
+        reply(ctx, EmuLang.getString("MsgCommand.UserNotFound"))
         return
       }
       if (target === ctx.user) {
-        reply(ctx, "You can't ignore yourself!")
+        reply(ctx, EmuLang.getString("IgnoreCommand.CantIgnoreSelf"))
         return
       }
       if (ctx.user.findIgnoredUser(target.connectSocketAddress.address.hostAddress)) {
-        reply(ctx, "You can't ignore a user that is already ignored!")
+        reply(ctx, EmuLang.getString("IgnoreCommand.AlreadyIgnored"))
         return
       }
       if (target.accessLevel >= AccessManager.ACCESS_MODERATOR) {
-        reply(ctx, "You cannot ignore a moderator or admin!")
+        reply(ctx, EmuLang.getString("IgnoreCommand.CantIgnoreAdmin"))
         return
       }
       ctx.user.addIgnoredUser(target.connectSocketAddress.address.hostAddress)
       ctx.server.announce(
-        "${ctx.user.name} is now ignoring <${target.name}> ID: ${target.id}",
+        EmuLang.getString("IgnoreCommand.NowIgnoring", ctx.user.name, target.name),
         false,
         null,
       )
     } catch (e: NoSuchElementException) {
-      reply(ctx, "Ignore User Error: /ignore <UserID>")
+      reply(ctx, EmuLang.getString("IgnoreCommand.Help"))
     }
   }
 
@@ -70,19 +71,19 @@ object UnignoreCommand : ServerCommand {
         return
       }
       if (!ctx.user.findIgnoredUser(target.connectSocketAddress.address.hostAddress)) {
-        reply(ctx, "You can't unignore a user that isn't ignored!")
+        reply(ctx, EmuLang.getString("IgnoreCommand.NotIgnored"))
         return
       }
       if (ctx.user.removeIgnoredUser(target.connectSocketAddress.address.hostAddress, false)) {
         ctx.server.announce(
-          "${ctx.user.name} is now unignoring <${target.name}> ID: ${target.id}",
+          EmuLang.getString("IgnoreCommand.NowUnignoring", ctx.user.name, target.name),
           gamesAlso = false,
         )
       } else {
-        reply(ctx, "User Not Found!")
+        reply(ctx, EmuLang.getString("MsgCommand.UserNotFound"))
       }
     } catch (e: NoSuchElementException) {
-      reply(ctx, "Unignore User Error: /unignore <UserID>")
+      reply(ctx, EmuLang.getString("IgnoreCommand.UnignoreHelp"))
     }
   }
 
@@ -100,7 +101,7 @@ object IgnoreAllCommand : ServerCommand {
 
   override fun execute(args: String, ctx: CommandExecutionContext) {
     ctx.user.ignoreAll = true
-    ctx.server.announce("${ctx.user.name} is now ignoring everyone!", false)
+    ctx.server.announce(EmuLang.getString("IgnoreCommand.IgnoringEveryone", ctx.user.name), false)
   }
 }
 
@@ -113,7 +114,10 @@ object UnignoreAllCommand : ServerCommand {
 
   override fun execute(args: String, ctx: CommandExecutionContext) {
     ctx.user.ignoreAll = false
-    ctx.server.announce("${ctx.user.name} is now unignoring everyone!", gamesAlso = false)
+    ctx.server.announce(
+      EmuLang.getString("IgnoreCommand.UnignoringEveryone", ctx.user.name),
+      gamesAlso = false,
+    )
   }
 }
 
@@ -129,9 +133,7 @@ object FindUserCommand : ServerCommand {
   override fun execute(args: String, ctx: CommandExecutionContext) {
     val space = args.indexOf(' ')
     if (space < 0) {
-      ctx.sendInfo(
-        "Finduser Error: /finduser <nick>  eg. /finduser sup ...will return SupraFast info."
-      )
+      ctx.sendInfo(EmuLang.getString("FindUser.Help"))
       return
     }
     val query = args.substring(space + 1).lowercase(Locale.getDefault())
@@ -159,6 +161,6 @@ object FindUserCommand : ServerCommand {
       ctx.sendInfo(sb.toString())
       found++
     }
-    if (found == 0) ctx.sendInfo("No Users Found!")
+    if (found == 0) ctx.sendInfo(EmuLang.getString("FindUser.NoUsersFound"))
   }
 }

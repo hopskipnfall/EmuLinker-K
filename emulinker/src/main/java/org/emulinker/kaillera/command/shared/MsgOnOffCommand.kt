@@ -3,6 +3,7 @@ package org.emulinker.kaillera.command.shared
 import org.emulinker.kaillera.command.CommandContext
 import org.emulinker.kaillera.command.CommandExecutionContext
 import org.emulinker.kaillera.command.ServerCommand
+import org.emulinker.util.EmuLang
 
 /** `/msgon` — enable incoming private messages. */
 object MsgOnCommand : ServerCommand {
@@ -14,8 +15,8 @@ object MsgOnCommand : ServerCommand {
   override fun execute(args: String, ctx: CommandExecutionContext) {
     ctx.user.isAcceptingDirectMessages = true
     when (ctx.currentContext) {
-      CommandContext.SERVER_LOBBY -> ctx.sendInfo("Private messages are now on.")
-      else -> ctx.announceGame("Private messages are now on.", ctx.user)
+      CommandContext.SERVER_LOBBY -> ctx.sendInfo(EmuLang.getString("MsgCommand.MessagesOn"))
+      else -> ctx.announceGame(EmuLang.getString("MsgCommand.MessagesOn"), ctx.user)
     }
   }
 }
@@ -30,8 +31,8 @@ object MsgOffCommand : ServerCommand {
   override fun execute(args: String, ctx: CommandExecutionContext) {
     ctx.user.isAcceptingDirectMessages = false
     when (ctx.currentContext) {
-      CommandContext.SERVER_LOBBY -> ctx.sendInfo("Private messages are now off.")
-      else -> ctx.announceGame("Private messages are now off.", ctx.user)
+      CommandContext.SERVER_LOBBY -> ctx.sendInfo(EmuLang.getString("MsgCommand.MessagesOff"))
+      else -> ctx.announceGame(EmuLang.getString("MsgCommand.MessagesOff"), ctx.user)
     }
   }
 }
