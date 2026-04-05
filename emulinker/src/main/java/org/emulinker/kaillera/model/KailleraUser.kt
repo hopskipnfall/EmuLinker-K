@@ -133,6 +133,8 @@ class KailleraUser(
   var isAcceptingDirectMessages = true
   var lastMsgID = -1
   var isMuted = false
+  var surveyConsent: Boolean? = null
+  var lastSurveyAskedTimeNs: Long = 0L
 
   private val lostInput: MutableList<ByteBuf> = ArrayList()
 

@@ -134,6 +134,7 @@ class KailleraGame(
   var aEmulator = "any"
   var aConnection = "any"
   val startDate: Date = Date()
+  private var gameStartTimeNs: Long = 0L
 
   @JvmField var swap = false
 
@@ -216,6 +217,27 @@ class KailleraGame(
     l.log("%s, %s gamechat: %s", user, this, message)
 
     addEventForAllPlayers(GameChatEvent(this, user, message))
+
+    if (flags.surveyEnabled) {
+      if (user.surveyConsent == null) {
+        val lowerMessage = message.lowercase()
+        if (lowerMessage == "y" || lowerMessage == "yes") {
+          user.surveyConsent = true
+          announce(EmuLang.getString("Survey.ConsentYes"), user)
+        } else if (lowerMessage == "n" || lowerMessage == "no") {
+          user.surveyConsent = false
+          announce(EmuLang.getString("Survey.ConsentNo"), user)
+        }
+      } else if (user.surveyConsent == true) {
+        // If the user has consented, check if this message is a survey response.
+        if (message.trim().matches(Regex("[1-3]"))) {
+          if (System.nanoTime() - user.lastSurveyAskedTimeNs <= 1.5.minutes.inWholeNanoseconds) {
+            reportSurveyResponse(user, message.trim())
+            announce(EmuLang.getString("Survey.Thanks"), user)
+          }
+        }
+      }
+    }
   }
 
   fun announce(announcement: String, toUser: KailleraUser? = null) {
@@ -357,6 +379,11 @@ class KailleraGame(
       addEventForAllPlayers(
         GameInfoEvent(this, user.name + " using different emulator version: " + user.clientType)
       )
+
+    if (flags.surveyEnabled && user.surveyConsent == null) {
+      announce(EmuLang.getString("Survey.Consent"), user)
+    }
+
     return players.indexOf(user) + 1
   }
 
@@ -432,6 +459,7 @@ class KailleraGame(
     }
     logger.atInfo().log("%s started: %s", user, this)
     status = GameStatus.SYNCHRONIZING
+    gameStartTimeNs = System.nanoTime()
     autoFireDetector.start(players.size)
     val actionQueueBuilder = mutableListOf<PlayerActionQueue>()
 
@@ -735,7 +763,44 @@ class KailleraGame(
     playerActionQueues?.get(playerNumber - 1)?.addActions(data)
     autoFireDetector.addData(playerNumber, data, user.bytesPerAction)
 
+    if (flags.surveyEnabled && status == GameStatus.PLAYING && user.surveyConsent == true) {
+      val nowNs = System.nanoTime()
+      if (nowNs - gameStartTimeNs > 8.minutes.inWholeNanoseconds) {
+        if (nowNs - user.lastSurveyAskedTimeNs > 10.minutes.inWholeNanoseconds) {
+          if (user.frameCount % 3 == 0) {
+            if (checkStartPressed(data, user.bytesPerAction)) {
+              askSurveyQuestion(user)
+              user.lastSurveyAskedTimeNs = nowNs
+            }
+          }
+        }
+      }
+    }
+
     return maybeSendData(user)
+  }
+
+  private fun checkStartPressed(data: ByteBuf, bytesPerAction: Int): Boolean {
+    if (data.readableBytes() < 13) return false
+    return (data.getByte(data.readerIndex() + 12).toInt() and 0b00010000) != 0
+  }
+
+  private fun askSurveyQuestion(player: KailleraUser) {
+    val question = EmuLang.getString("Survey.Question", "10")
+    announce("SURVEY: $question", player)
+  }
+
+  private fun reportSurveyResponse(user: KailleraUser, response: String) {
+    val gameLog = gameLogBuilder?.build()?.toByteArray()
+    logger
+      .atInfo()
+      .log(
+        "Reporting survey response for %s: %s (Proto data size: %d)",
+        user.name,
+        response,
+        gameLog?.size ?: 0,
+      )
+    // TODO: Send response and gameLog to a server for analysis.
   }
 
   /**

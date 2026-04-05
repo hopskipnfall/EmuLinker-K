@@ -49,6 +49,7 @@ data class RuntimeFlags(
   val twitterOAuthConsumerSecret: String,
   val twitterPreventBroadcastNameSuffixes: List<String>,
   val v086BufferSize: Int,
+  val surveyEnabled: Boolean,
 ) {
 
   init {
