@@ -4,10 +4,7 @@ import com.google.common.flogger.FluentLogger
 import com.google.protobuf.util.Timestamps
 import io.netty.buffer.ByteBuf
 import io.netty.buffer.PooledByteBufAllocator
-import java.io.FileOutputStream
 import java.util.Date
-import java.util.zip.GZIPOutputStream
-import kotlin.io.path.createTempDirectory
 import kotlin.time.Clock
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
@@ -135,6 +132,7 @@ class KailleraGame(
   var aConnection = "any"
   val startDate: Date = Date()
   private var gameStartTimeNs: Long = 0L
+  private var pendingSurveyGameLog: ByteArray? = null
 
   @JvmField var swap = false
 
@@ -683,22 +681,6 @@ class KailleraGame(
     }
     autoFireDetector.stop()
     players.clear()
-
-    // Write the game log out to a compressed file.
-    val gameLog = gameLogBuilder?.build()
-    if (gameLog != null) {
-      try {
-        val filePath = createTempDirectory("gamelog").resolve("gamelog.bin.gz").toFile()
-        FileOutputStream(filePath).use { fos ->
-          GZIPOutputStream(fos).use { gzipOut ->
-            gzipOut.write(gameLog.toByteArray())
-            logger.atInfo().log("Stored game log for game %d at %s", id, filePath)
-          }
-        }
-      } catch (e: Exception) {
-        logger.atWarning().withCause(e).log("Failed to save game log for game %d", id)
-      }
-    }
   }
 
   @Synchronized
@@ -763,14 +745,29 @@ class KailleraGame(
     playerActionQueues?.get(playerNumber - 1)?.addActions(data)
     autoFireDetector.addData(playerNumber, data, user.bytesPerAction)
 
-    if (flags.surveyEnabled && status == GameStatus.PLAYING && user.surveyConsent == true) {
+    if (flags.surveyEnabled && status == GameStatus.PLAYING) {
       val nowNs = System.nanoTime()
       if (nowNs - gameStartTimeNs > 8.minutes.inWholeNanoseconds) {
-        if (nowNs - user.lastSurveyAskedTimeNs > 10.minutes.inWholeNanoseconds) {
-          if (user.frameCount % 3 == 0) {
-            if (checkStartPressed(data, user.bytesPerAction)) {
-              askSurveyQuestion(user)
-              user.lastSurveyAskedTimeNs = nowNs
+        val eligiblePlayers =
+          players.filter {
+            it.surveyConsent == true &&
+              (nowNs - it.lastSurveyAskedTimeNs) > 10.minutes.inWholeNanoseconds
+          }
+        if (eligiblePlayers.isNotEmpty() && user.frameCount % 3 == 0) {
+          if (checkStartPressed(data, user.bytesPerAction)) {
+            // Snapshot the rolling 5-minute window
+            val fiveMinsAgoNs = nowNs - 5.minutes.inWholeNanoseconds
+            val recentEvents =
+              gameLogBuilder?.eventsList?.filter { it.timestampNs >= fiveMinsAgoNs }
+            val snapshotBuilder = GameLog.newBuilder()
+            if (recentEvents != null) {
+              snapshotBuilder.addAllEvents(recentEvents)
+            }
+            pendingSurveyGameLog = snapshotBuilder.build().toByteArray()
+
+            for (player in eligiblePlayers) {
+              askSurveyQuestion(player)
+              player.lastSurveyAskedTimeNs = nowNs
             }
           }
         }
@@ -786,21 +783,20 @@ class KailleraGame(
   }
 
   private fun askSurveyQuestion(player: KailleraUser) {
-    val question = EmuLang.getString("Survey.Question", "10")
-    announce("SURVEY: $question", player)
+    announce("SURVEY: ${EmuLang.getString("Survey.Question", "10")}", player)
   }
 
   private fun reportSurveyResponse(user: KailleraUser, response: String) {
-    val gameLog = gameLogBuilder?.build()?.toByteArray()
+    val surveyLog = pendingSurveyGameLog
     logger
       .atInfo()
       .log(
         "Reporting survey response for %s: %s (Proto data size: %d)",
         user.name,
         response,
-        gameLog?.size ?: 0,
+        surveyLog?.size ?: 0,
       )
-    // TODO: Send response and gameLog to a server for analysis.
+    // TODO: Send response and surveyLog to a server for analysis.
   }
 
   /**
@@ -927,6 +923,14 @@ class KailleraGame(
           }
         )
         lastLagstatNs = nowNs
+
+        // Prune the game log to a 5-minute rolling window to prevent unbounded memory growth.
+        val fiveMinsAgoNs = nowNs - 5.minutes.inWholeNanoseconds
+        val recentEvents = glb.eventsList.takeLastWhile { it.timestampNs >= fiveMinsAgoNs }
+        if (recentEvents.size < glb.eventsCount) {
+          glb.clearEvents()
+          glb.addAllEvents(recentEvents)
+        }
       }
     }
 
