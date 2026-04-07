@@ -134,6 +134,9 @@ class ChatAction(private val adminCommandAction: AdminCommandAction) :
           access < AccessManager.ACCESS_SUPERADMIN &&
             clientHandler.user.server.accessManager.isSilenced(
               clientHandler.user.socketAddress!!.address
+            ) &&
+            !clientHandler.user.server.accessManager.isShadowSilenced(
+              clientHandler.user.socketAddress!!.address
             )
         ) {
           try {
@@ -145,7 +148,16 @@ class ChatAction(private val adminCommandAction: AdminCommandAction) :
           val m = announcement
           announcement = "*" + clientHandler.user.name + " " + m
           val user1 = clientHandler.user
-          clientHandler.user.server.announce(announcement, true, user1)
+          if (
+            access < AccessManager.ACCESS_SUPERADMIN &&
+              clientHandler.user.server.accessManager.isShadowSilenced(
+                clientHandler.user.socketAddress!!.address
+              )
+          ) {
+            clientHandler.user.server.announce(announcement, false, user1)
+          } else {
+            clientHandler.user.server.announce(announcement, true, user1)
+          }
         }
       } else if (chatMessage.message.startsWith("/msg")) {
         val user1 = clientHandler.user
@@ -154,17 +166,6 @@ class ChatAction(private val adminCommandAction: AdminCommandAction) :
           clientHandler.user.server.accessManager.getAccess(
             clientHandler.user.socketAddress!!.address
           )
-        if (
-          access < AccessManager.ACCESS_SUPERADMIN &&
-            clientHandler.user.server.accessManager.isSilenced(
-              clientHandler.user.socketAddress!!.address
-            )
-        ) {
-          try {
-            clientHandler.send(InformationMessage(0, "server", "You are silenced!"))
-          } catch (e: Exception) {}
-          return
-        }
         try {
           scanner.next()
           val userID = scanner.nextInt()
@@ -205,7 +206,36 @@ class ChatAction(private val adminCommandAction: AdminCommandAction) :
           }
           var m = sb.toString()
           m = m.trim { it <= ' ' }
-          if (m.isBlank() || m.startsWith("�") || m.startsWith("�")) return
+          if (m.isBlank()) return
+
+          if (
+            access < AccessManager.ACCESS_SUPERADMIN &&
+              org.emulinker.kaillera.access.BadWordsFilter.isMessageInappropriate(m)
+          ) {
+            clientHandler.user.server.accessManager.addPermaShadowSilence(
+              clientHandler.user.connectSocketAddress.address.hostAddress,
+              "System",
+              "Profanity Filter",
+            )
+          }
+          val isShadow =
+            access < AccessManager.ACCESS_SUPERADMIN &&
+              clientHandler.user.server.accessManager.isShadowSilenced(
+                clientHandler.user.socketAddress!!.address
+              )
+          if (
+            !isShadow &&
+              access < AccessManager.ACCESS_SUPERADMIN &&
+              clientHandler.user.server.accessManager.isSilenced(
+                clientHandler.user.socketAddress!!.address
+              )
+          ) {
+            try {
+              clientHandler.send(InformationMessage(0, "server", "You are silenced!"))
+            } catch (e: Exception) {}
+            return
+          }
+
           if (access == AccessManager.ACCESS_NORMAL) {
             val chars = m.toCharArray()
             for (i in chars.indices) {
@@ -233,6 +263,17 @@ class ChatAction(private val adminCommandAction: AdminCommandAction) :
               return
             }
           }
+
+          if (isShadow) {
+            try {
+              clientHandler.send(InformationMessage(0, "server", "TO: <" + user.name + "> " + m))
+            } catch (e: Exception) {}
+            return
+          }
+
+          try {
+            clientHandler.send(InformationMessage(0, "server", "TO: <" + user.name + "> " + m))
+          } catch (e: Exception) {}
           user1.lastMsgID = user.id
           user.lastMsgID = user1.id
           user1.server.announce(

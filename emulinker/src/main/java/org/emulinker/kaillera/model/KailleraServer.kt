@@ -555,12 +555,35 @@ class KailleraServer(
       throw ChatException(EmuLang.getString("KailleraServerImpl.NotLoggedIn"))
     }
     val access = accessManager.getAccess(to.socketAddress!!.address)
-    if (
-      access < AccessManager.ACCESS_SUPERADMIN &&
-        accessManager.isSilenced(to.socketAddress!!.address)
-    ) {
-      logger.atWarning().log("%s chat denied: Silenced: %s", to, message)
-      throw ChatException(EmuLang.getString("KailleraServerImpl.ChatDeniedSilenced"))
+    val isAutoShadowSilenced =
+      if (
+        access < AccessManager.ACCESS_SUPERADMIN &&
+          org.emulinker.kaillera.access.BadWordsFilter.isMessageInappropriate(message)
+      ) {
+        logger
+          .atWarning()
+          .log("User %s triggered profanity filter. Applying permanent shadow silence.", to)
+        accessManager.addPermaShadowSilence(
+          to.connectSocketAddress.address.hostAddress,
+          "System",
+          "Profanity Filter",
+        )
+        true
+      } else false
+
+    if (access < AccessManager.ACCESS_SUPERADMIN) {
+      val shadowSilenced =
+        isAutoShadowSilenced || accessManager.isShadowSilenced(to.socketAddress!!.address)
+      if (shadowSilenced) {
+        logger.atInfo().log("%s chat shadow silenced: %s", to, message)
+        to.doEvent(org.emulinker.kaillera.model.event.ChatEvent(this, to, message))
+        return
+      }
+
+      if (accessManager.isSilenced(to.socketAddress!!.address)) {
+        logger.atWarning().log("%s chat denied: Silenced: %s", to, message)
+        throw ChatException(EmuLang.getString("KailleraServerImpl.ChatDeniedSilenced"))
+      }
     }
     if (
       access == AccessManager.ACCESS_NORMAL &&
@@ -731,12 +754,33 @@ class KailleraServer(
       return false
     }
     val access = accessManager.getAccess(user.socketAddress!!.address)
-    if (
-      access < AccessManager.ACCESS_SUPERADMIN &&
-        accessManager.isSilenced(user.socketAddress!!.address)
-    ) {
-      logger.atWarning().log("%s /me: Silenced: %s", user, message)
-      return false
+
+    val isAutoShadowSilenced =
+      if (
+        access < AccessManager.ACCESS_SUPERADMIN &&
+          org.emulinker.kaillera.access.BadWordsFilter.isMessageInappropriate(message)
+      ) {
+        logger
+          .atWarning()
+          .log("User %s triggered profanity filter. Applying permanent shadow silence.", user)
+        accessManager.addPermaShadowSilence(
+          user.connectSocketAddress.address.hostAddress,
+          "System",
+          "Profanity Filter",
+        )
+        true
+      } else false
+
+    if (access < AccessManager.ACCESS_SUPERADMIN) {
+      val shadowSilenced =
+        isAutoShadowSilenced || accessManager.isShadowSilenced(user.socketAddress!!.address)
+      if (shadowSilenced) {
+        logger.atInfo().log("%s /me shadow silenced: %s", user, message)
+        // Bypass normal silenced return false
+      } else if (accessManager.isSilenced(user.socketAddress!!.address)) {
+        logger.atWarning().log("%s /me: Silenced: %s", user, message)
+        return false
+      }
     }
 
     // if (access == AccessManager.ACCESS_NORMAL && flags.getChatFloodTime() > 0 &&

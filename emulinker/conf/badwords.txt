@@ -1,0 +1,7 @@
+# Add any bad words or slurs here, one per line.
+# If a user types one of these words in game chat or global chat,
+# they will be automatically permanently shadow silenced.
+# Lines starting with # are comments.
+
+badword1
+slur2

@@ -45,6 +45,8 @@ class AccessManager2(private val flags: RuntimeFlags, private val taskScheduler:
   private val tempElevatedList: MutableList<TempElevated> = CopyOnWriteArrayList()
   private val silenceList: MutableList<Silence> = CopyOnWriteArrayList()
   private val permaSilenceList: MutableList<SilenceAccess> = CopyOnWriteArrayList()
+  private val shadowSilenceList: MutableList<Silence> = CopyOnWriteArrayList()
+  private val permaShadowSilenceList: MutableList<SilenceAccess> = CopyOnWriteArrayList()
 
   private val timerTasks = mutableSetOf<ScheduledFuture<*>>()
 
@@ -66,6 +68,7 @@ class AccessManager2(private val flags: RuntimeFlags, private val taskScheduler:
     emulatorList.clear()
     addressList.clear()
     permaSilenceList.clear()
+    permaShadowSilenceList.clear()
     try {
       val file = FileInputStream(af)
       val temp: Reader = InputStreamReader(file, flags.charset)
@@ -83,7 +86,9 @@ class AccessManager2(private val flags: RuntimeFlags, private val taskScheduler:
         // silence lines have the format `silence,<address>` (2 tokens total, 1 remaining after
         // type)
         // all other lines need at least 2 more tokens (3 total)
-        if (type.lowercase() != "silence" && tokenCount < 3) {
+        if (
+          type.lowercase() != "silence" && type.lowercase() != "shadowsilence" && tokenCount < 3
+        ) {
           logger.atSevere().log("Failed to load access line, too few tokens: %s", line)
           continue
         }
@@ -93,6 +98,7 @@ class AccessManager2(private val flags: RuntimeFlags, private val taskScheduler:
           "emulator" -> emulatorList.add(EmulatorAccess(st))
           "ipaddress" -> addressList.add(AddressAccess(st))
           "silence" -> permaSilenceList.add(SilenceAccess(st))
+          "shadowsilence" -> permaShadowSilenceList.add(SilenceAccess(st))
           else ->
             logger
               .atSevere()
@@ -135,6 +141,18 @@ class AccessManager2(private val flags: RuntimeFlags, private val taskScheduler:
     addTemporaryAttributeToList(silenceList, Silence(addressPattern, duration, issuer, reason))
   }
 
+  override fun addShadowSilenced(
+    addressPattern: String,
+    duration: Duration,
+    issuer: String?,
+    reason: String?,
+  ) {
+    addTemporaryAttributeToList(
+      shadowSilenceList,
+      Silence(addressPattern, duration, issuer, reason),
+    )
+  }
+
   @Synchronized
   override fun addPermaBan(addressPattern: String, issuer: String?, reason: String?) {
     val file = accessFile ?: return
@@ -160,6 +178,22 @@ class AccessManager2(private val flags: RuntimeFlags, private val taskScheduler:
         writer.appendLine("# Permanent silence issued by ${issuer ?: "Unknown"}")
         if (reason != null) writer.appendLine("# Reason: $reason")
         writer.appendLine("silence,$addressPattern")
+      }
+      loadAccess()
+    } catch (e: Exception) {
+      logger.atSevere().withCause(e).log("Failed to write to access file")
+    }
+  }
+
+  @Synchronized
+  override fun addPermaShadowSilence(addressPattern: String, issuer: String?, reason: String?) {
+    val file = accessFile ?: return
+    try {
+      java.io.FileWriter(file, true).use { writer ->
+        writer.appendLine()
+        writer.appendLine("# Permanent shadow silence issued by ${issuer ?: "Unknown"}")
+        if (reason != null) writer.appendLine("# Reason: $reason")
+        writer.appendLine("shadowsilence,$addressPattern")
       }
       loadAccess()
     } catch (e: Exception) {
@@ -229,6 +263,12 @@ class AccessManager2(private val flags: RuntimeFlags, private val taskScheduler:
         found = true
       }
     }
+    for (shadowSilence in shadowSilenceList) {
+      if (shadowSilence.matches(userAddress)) {
+        shadowSilenceList.remove(shadowSilence)
+        found = true
+      }
+    }
     for (tempBan in tempBanList) {
       if (tempBan.matches(userAddress) && !tempBan.isExpired) {
         tempBanList.remove(tempBan)
@@ -266,6 +306,19 @@ class AccessManager2(private val flags: RuntimeFlags, private val taskScheduler:
       if (silence.matches(userAddress) && !silence.isExpired) return true
     }
     for (silence in permaSilenceList) {
+      if (silence.matches(userAddress)) return true
+    }
+    return false
+  }
+
+  @Synchronized
+  override fun isShadowSilenced(address: InetAddress): Boolean {
+    checkReload()
+    val userAddress = address.hostAddress
+    for (silence in shadowSilenceList) {
+      if (silence.matches(userAddress) && !silence.isExpired) return true
+    }
+    for (silence in permaShadowSilenceList) {
       if (silence.matches(userAddress)) return true
     }
     return false
@@ -595,6 +648,7 @@ class AccessManager2(private val flags: RuntimeFlags, private val taskScheduler:
         userList.forEach { it.refreshDNS() }
         addressList.forEach { it.refreshDNS() }
         permaSilenceList.forEach { it.refreshDNS() }
+        permaShadowSilenceList.forEach { it.refreshDNS() }
       }
     )
   }

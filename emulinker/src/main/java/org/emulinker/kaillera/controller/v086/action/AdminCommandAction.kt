@@ -34,6 +34,7 @@ class AdminCommandAction : V086Action<Chat> {
         chat.startsWith(COMMAND_HELP) ||
         chat.startsWith(COMMAND_KICK) ||
         chat.startsWith(COMMAND_SILENCE) ||
+        chat.startsWith(COMMAND_SHADOWSILENCE) ||
         chat.startsWith(COMMAND_STEALTH) ||
         chat.startsWith(COMMAND_TEMPADMIN) ||
         chat.startsWith(COMMAND_TEMPELEVATED) ||
@@ -42,6 +43,7 @@ class AdminCommandAction : V086Action<Chat> {
         chat.startsWith(COMMAND_VERSION) ||
         chat.startsWith(COMMAND_PERMABAN) ||
         chat.startsWith(COMMAND_PERMAMUTE) ||
+        chat.startsWith(COMMAND_PERMASHADOWSILENCE) ||
         chat.startsWith(COMMAND_INFO) -> true
       else -> false
     }
@@ -59,6 +61,7 @@ class AdminCommandAction : V086Action<Chat> {
     ) {
       if (
         chat.startsWith(COMMAND_SILENCE) ||
+          chat.startsWith(COMMAND_SHADOWSILENCE) ||
           chat.startsWith(COMMAND_KICK) ||
           chat.startsWith(COMMAND_HELP) ||
           chat.startsWith(COMMAND_FINDUSER) ||
@@ -133,6 +136,12 @@ class AdminCommandAction : V086Action<Chat> {
         }
         chat.startsWith(COMMAND_PERMAMUTE) -> {
           processPermaMute(chat, server, user, clientHandler)
+        }
+        chat.startsWith(COMMAND_SHADOWSILENCE) -> {
+          processShadowSilence(chat, server, user, clientHandler)
+        }
+        chat.startsWith(COMMAND_PERMASHADOWSILENCE) -> {
+          processPermaShadowSilence(chat, server, user, clientHandler)
         }
         chat.startsWith(COMMAND_INFO) -> {
           processInfo(chat, server, user, clientHandler)
@@ -360,6 +369,67 @@ class AdminCommandAction : V086Action<Chat> {
       )
     } catch (e: NoSuchElementException) {
       throw ActionException(EmuLang.getString("AdminCommandAction.SilenceError"))
+    }
+  }
+
+  @Throws(ActionException::class, MessageFormatException::class)
+  private fun processShadowSilence(
+    message: String,
+    server: KailleraServer,
+    admin: KailleraUser,
+    clientHandler: V086ClientHandler?,
+  ) {
+    val scanner = Scanner(message).useDelimiter(" ")
+    try {
+      scanner.next()
+      val userID = scanner.nextInt()
+      val minutes = scanner.nextInt()
+      val reasonStr =
+        if (scanner.hasNext()) {
+          val sb = java.lang.StringBuilder()
+          while (scanner.hasNext()) {
+            sb.append(scanner.next()).append(" ")
+          }
+          sb.toString().trim()
+        } else null
+
+      val user =
+        server.getUser(userID)
+          ?: throw ActionException(EmuLang.getString("AdminCommandAction.UserNotFound", +userID))
+      if (user.id == admin.id) throw ActionException("You cannot shadow silence yourself.")
+      val access = server.accessManager.getAccess(user.connectSocketAddress.address)
+      if (
+        access >= AccessManager.ACCESS_ADMIN && admin.accessLevel != AccessManager.ACCESS_SUPERADMIN
+      )
+        throw ActionException("You cannot shadow silence an admin.")
+      if (
+        access == AccessManager.ACCESS_MODERATOR &&
+          admin.accessLevel == AccessManager.ACCESS_MODERATOR
+      )
+        throw ActionException("You cannot shadow silence a moderator if you're not an admin!")
+      if (admin.accessLevel == AccessManager.ACCESS_MODERATOR) {
+        if (server.accessManager.isShadowSilenced(user.socketAddress!!.address))
+          throw ActionException(
+            "This User has already been shadow silenced.  Please wait until his time expires."
+          )
+        if (minutes > 15)
+          throw ActionException("Moderators can only shadow silence up to 15 minutes!")
+      }
+      server.accessManager.addShadowSilenced(
+        user.connectSocketAddress.address.hostAddress,
+        minutes.minutes,
+        admin.name,
+        reasonStr,
+      )
+      server.announce(
+        "Admin ${admin.name} shadow silenced ${user.name} for $minutes minutes!",
+        false,
+        null,
+      )
+    } catch (e: NoSuchElementException) {
+      throw ActionException(
+        "Shadow Silence Error: /shadowsilence <UserID> <Minutes> <Optional Reason>"
+      )
     }
   }
 
@@ -964,6 +1034,55 @@ class AdminCommandAction : V086Action<Chat> {
   }
 
   @Throws(ActionException::class, MessageFormatException::class)
+  private fun processPermaShadowSilence(
+    message: String,
+    server: KailleraServer,
+    admin: KailleraUser,
+    clientHandler: V086ClientHandler?,
+  ) {
+    if (
+      admin.accessLevel != AccessManager.ACCESS_SUPERADMIN &&
+        admin.accessLevel != AccessManager.ACCESS_ADMIN
+    ) {
+      throw ActionException("You don't have access to permashadowsilence.")
+    }
+    val scanner = Scanner(message).useDelimiter(" ")
+    try {
+      scanner.next()
+      val userID = scanner.nextInt()
+      val reasonStr =
+        if (scanner.hasNext()) {
+          val sb = java.lang.StringBuilder()
+          while (scanner.hasNext()) {
+            sb.append(scanner.next()).append(" ")
+          }
+          sb.toString().trim()
+        } else null
+
+      val user =
+        server.getUser(userID)
+          ?: throw ActionException(EmuLang.getString("AdminCommandAction.UserNotFound", userID))
+      if (user.id == admin.id) throw ActionException("Can not permashadowsilence yourself.")
+      val access = server.accessManager.getAccess(user.connectSocketAddress.address)
+      if (
+        access >= AccessManager.ACCESS_ADMIN && admin.accessLevel != AccessManager.ACCESS_SUPERADMIN
+      )
+        throw ActionException("Can not permashadowsilence an admin.")
+
+      server.accessManager.addPermaShadowSilence(
+        user.connectSocketAddress.address.hostAddress,
+        admin.name,
+        reasonStr,
+      )
+      server.announce("Admin ${admin.name} permanently shadow silenced ${user.name}!", false, null)
+    } catch (e: NoSuchElementException) {
+      throw ActionException(
+        "Permashadowsilence Error: /permashadowsilence <UserID> <Optional Reason>"
+      )
+    }
+  }
+
+  @Throws(ActionException::class, MessageFormatException::class)
   private fun processInfo(
     message: String,
     server: KailleraServer,
@@ -1075,6 +1194,10 @@ class AdminCommandAction : V086Action<Chat> {
     private const val COMMAND_PERMABAN = "/permaban"
 
     private const val COMMAND_PERMAMUTE = "/permamute"
+
+    private const val COMMAND_SHADOWSILENCE = "/shadowsilence"
+
+    private const val COMMAND_PERMASHADOWSILENCE = "/permashadowsilence"
 
     private const val COMMAND_INFO = "/info"
   }

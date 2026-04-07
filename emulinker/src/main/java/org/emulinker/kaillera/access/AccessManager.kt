@@ -30,6 +30,13 @@ interface AccessManager : Closeable {
   fun isSilenced(address: InetAddress): Boolean
 
   /**
+   * Checks if address is shadow silenced
+   *
+   * @param address IP Address of client
+   */
+  fun isShadowSilenced(address: InetAddress): Boolean
+
+  /**
    * Checks if client's emulator is allowed (not filtered)
    *
    * @param emulator Emulator name of client
@@ -105,11 +112,29 @@ interface AccessManager : Closeable {
     reason: String? = null,
   )
 
+  /**
+   * Temporarily adds a user to the shadow silenced list using a pattern algorithm defined by the
+   * AccessManager implementation. While active, [isShadowSilenced] should return `true ` * .
+   *
+   * @param addressPattern A pattern to match to an address
+   * @param duration Duration this grant is valid from the time of addition
+   * @param issuer The admin who issued the silence
+   * @param reason The internal reason for the silence
+   */
+  fun addShadowSilenced(
+    addressPattern: String,
+    duration: Duration,
+    issuer: String? = null,
+    reason: String? = null,
+  )
+
   fun clearTemp(address: InetAddress, clearAll: Boolean): Boolean
 
   fun addPermaBan(addressPattern: String, issuer: String? = null, reason: String? = null)
 
   fun addPermaMute(addressPattern: String, issuer: String? = null, reason: String? = null)
+
+  fun addPermaShadowSilence(addressPattern: String, issuer: String? = null, reason: String? = null)
 
   fun getTempBan(address: InetAddress): TempBan?
 

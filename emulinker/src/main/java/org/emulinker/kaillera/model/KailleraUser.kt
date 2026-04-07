@@ -315,10 +315,38 @@ class KailleraUser(
       game.announce("You are currently muted!", this)
       return
     }
-    if (server.accessManager.isSilenced(socketAddress!!.address)) {
-      logger.atWarning().log("%s gamechat denied: Silenced: %s", this, message)
-      game.announce("You are currently silenced!", this)
-      return
+    val access = server.accessManager.getAccess(socketAddress!!.address)
+
+    val isAutoShadowSilenced =
+      if (
+        access < org.emulinker.kaillera.access.AccessManager.ACCESS_SUPERADMIN &&
+          org.emulinker.kaillera.access.BadWordsFilter.isMessageInappropriate(message)
+      ) {
+        logger
+          .atWarning()
+          .log("User %s triggered profanity filter. Applying permanent shadow silence.", this)
+        server.accessManager.addPermaShadowSilence(
+          connectSocketAddress.address.hostAddress,
+          "System",
+          "Profanity Filter",
+        )
+        true
+      } else false
+
+    if (access < org.emulinker.kaillera.access.AccessManager.ACCESS_SUPERADMIN) {
+      val shadowSilenced =
+        isAutoShadowSilenced || server.accessManager.isShadowSilenced(socketAddress!!.address)
+      if (shadowSilenced) {
+        logger.atInfo().log("%s gamechat shadow silenced: %s", this, message)
+        this.doEvent(org.emulinker.kaillera.model.event.GameChatEvent(game, this, message))
+        return
+      }
+
+      if (server.accessManager.isSilenced(socketAddress!!.address)) {
+        logger.atWarning().log("%s gamechat denied: Silenced: %s", this, message)
+        game.announce("You are currently silenced!", this)
+        return
+      }
     }
 
     game.chat(this, message)
