@@ -351,6 +351,7 @@ class AccessManager2Test {
         twitterPreventBroadcastNameSuffixes = emptyList(),
         v086BufferSize = 4096,
         surveyEnabled = false,
+        surveyGameWhitelist = emptyList(),
       )
   }
 }

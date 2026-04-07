@@ -50,6 +50,7 @@ data class RuntimeFlags(
   val twitterPreventBroadcastNameSuffixes: List<String>,
   val v086BufferSize: Int,
   val surveyEnabled: Boolean,
+  val surveyGameWhitelist: List<String>,
 ) {
 
   init {

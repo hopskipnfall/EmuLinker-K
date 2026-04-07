@@ -136,6 +136,9 @@ class KailleraGame(
   private var gameStartTimeMark: TimeMark? = null
   private var pendingSurveyGameLog: ByteArray? = null
 
+  val isSurveyEligibleForGame =
+    flags.surveyEnabled && flags.surveyGameWhitelist.any { Regex(it).containsMatchIn(romName) }
+
   @JvmField var swap = false
 
   var status = GameStatus.WAITING
@@ -218,7 +221,7 @@ class KailleraGame(
 
     addEventForAllPlayers(GameChatEvent(this, user, message))
 
-    if (flags.surveyEnabled) {
+    if (isSurveyEligibleForGame) {
       if (user.surveyConsent == null) {
         val askedTime = user.surveyConsentAskedTimeMark
         if (askedTime == null || askedTime.elapsedNow() <= SURVEY_CONSENT_TIMEOUT) {
@@ -384,7 +387,7 @@ class KailleraGame(
         GameInfoEvent(this, user.name + " using different emulator version: " + user.clientType)
       )
 
-    if (flags.surveyEnabled && user.surveyConsent == null) {
+    if (isSurveyEligibleForGame && user.surveyConsent == null) {
       announce(EmuLang.getString("Survey.Consent"), user)
       user.surveyConsentAskedTimeMark = TimeSource.Monotonic.markNow()
     }
@@ -752,7 +755,7 @@ class KailleraGame(
     playerActionQueues?.get(playerNumber - 1)?.addActions(data)
     autoFireDetector.addData(playerNumber, data, user.bytesPerAction)
 
-    if (flags.surveyEnabled && status == GameStatus.PLAYING) {
+    if (isSurveyEligibleForGame && status == GameStatus.PLAYING) {
       val gameStart = gameStartTimeMark
       if (gameStart != null && gameStart.elapsedNow() > SURVEY_GAME_START_DELAY) {
         val eligiblePlayers =
