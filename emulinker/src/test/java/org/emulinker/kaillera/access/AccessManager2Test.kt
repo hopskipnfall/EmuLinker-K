@@ -350,6 +350,7 @@ class AccessManager2Test {
         twitterOAuthConsumerSecret = "",
         twitterPreventBroadcastNameSuffixes = emptyList(),
         v086BufferSize = 4096,
+        surveyEnabled = false,
       )
   }
 }

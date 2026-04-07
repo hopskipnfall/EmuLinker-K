@@ -7,6 +7,7 @@ import java.net.InetSocketAddress
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Instant
+import kotlin.time.TimeMark
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.access.AccessManager
 import org.emulinker.kaillera.controller.v086.V086ClientHandler
@@ -134,7 +135,8 @@ class KailleraUser(
   var lastMsgID = -1
   var isMuted = false
   var surveyConsent: Boolean? = null
-  var lastSurveyAskedTimeNs: Long = 0L
+  var surveyConsentAskedTimeMark: TimeMark? = null
+  var lastSurveyAskedTimeMark: TimeMark? = null
 
   private val lostInput: MutableList<ByteBuf> = ArrayList()
 

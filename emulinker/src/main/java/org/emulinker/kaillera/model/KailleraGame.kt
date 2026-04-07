@@ -11,6 +11,8 @@ import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.nanoseconds
 import kotlin.time.Duration.Companion.seconds
+import kotlin.time.TimeMark
+import kotlin.time.TimeSource
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.access.AccessManager
 import org.emulinker.kaillera.master.StatsCollector
@@ -131,7 +133,7 @@ class KailleraGame(
   var aEmulator = "any"
   var aConnection = "any"
   val startDate: Date = Date()
-  private var gameStartTimeNs: Long = 0L
+  private var gameStartTimeMark: TimeMark? = null
   private var pendingSurveyGameLog: ByteArray? = null
 
   @JvmField var swap = false
@@ -218,18 +220,22 @@ class KailleraGame(
 
     if (flags.surveyEnabled) {
       if (user.surveyConsent == null) {
-        val lowerMessage = message.lowercase()
-        if (lowerMessage == "y" || lowerMessage == "yes") {
-          user.surveyConsent = true
-          announce(EmuLang.getString("Survey.ConsentYes"), user)
-        } else if (lowerMessage == "n" || lowerMessage == "no") {
-          user.surveyConsent = false
-          announce(EmuLang.getString("Survey.ConsentNo"), user)
+        val askedTime = user.surveyConsentAskedTimeMark
+        if (askedTime == null || askedTime.elapsedNow() <= SURVEY_CONSENT_TIMEOUT) {
+          val lowerMessage = message.lowercase()
+          if (lowerMessage == "y" || lowerMessage == "yes") {
+            user.surveyConsent = true
+            announce(EmuLang.getString("Survey.ConsentYes"), user)
+          } else if (lowerMessage == "n" || lowerMessage == "no") {
+            user.surveyConsent = false
+            announce(EmuLang.getString("Survey.ConsentNo"), user)
+          }
         }
       } else if (user.surveyConsent == true) {
         // If the user has consented, check if this message is a survey response.
         if (message.trim().matches(Regex("[1-3]"))) {
-          if (System.nanoTime() - user.lastSurveyAskedTimeNs <= 1.5.minutes.inWholeNanoseconds) {
+          val lastAsked = user.lastSurveyAskedTimeMark
+          if (lastAsked != null && lastAsked.elapsedNow() <= MAX_SURVEY_RESPONSE_TIME) {
             reportSurveyResponse(user, message.trim())
             announce(EmuLang.getString("Survey.Thanks"), user)
           }
@@ -380,6 +386,7 @@ class KailleraGame(
 
     if (flags.surveyEnabled && user.surveyConsent == null) {
       announce(EmuLang.getString("Survey.Consent"), user)
+      user.surveyConsentAskedTimeMark = TimeSource.Monotonic.markNow()
     }
 
     return players.indexOf(user) + 1
@@ -457,7 +464,7 @@ class KailleraGame(
     }
     logger.atInfo().log("%s started: %s", user, this)
     status = GameStatus.SYNCHRONIZING
-    gameStartTimeNs = System.nanoTime()
+    gameStartTimeMark = TimeSource.Monotonic.markNow()
     autoFireDetector.start(players.size)
     val actionQueueBuilder = mutableListOf<PlayerActionQueue>()
 
@@ -746,16 +753,18 @@ class KailleraGame(
     autoFireDetector.addData(playerNumber, data, user.bytesPerAction)
 
     if (flags.surveyEnabled && status == GameStatus.PLAYING) {
-      val nowNs = System.nanoTime()
-      if (nowNs - gameStartTimeNs > 8.minutes.inWholeNanoseconds) {
+      val gameStart = gameStartTimeMark
+      if (gameStart != null && gameStart.elapsedNow() > SURVEY_GAME_START_DELAY) {
         val eligiblePlayers =
           players.filter {
             it.surveyConsent == true &&
-              (nowNs - it.lastSurveyAskedTimeNs) > 10.minutes.inWholeNanoseconds
+              (it.lastSurveyAskedTimeMark == null ||
+                it.lastSurveyAskedTimeMark!!.elapsedNow() > SURVEY_COOLDOWN)
           }
         if (eligiblePlayers.isNotEmpty() && user.frameCount % 3 == 0) {
           if (checkStartPressed(data, user.bytesPerAction)) {
             // Snapshot the rolling 5-minute window
+            val nowNs = System.nanoTime()
             val fiveMinsAgoNs = nowNs - 5.minutes.inWholeNanoseconds
             val recentEvents =
               gameLogBuilder?.eventsList?.filter { it.timestampNs >= fiveMinsAgoNs }
@@ -767,7 +776,7 @@ class KailleraGame(
 
             for (player in eligiblePlayers) {
               askSurveyQuestion(player)
-              player.lastSurveyAskedTimeNs = nowNs
+              player.lastSurveyAskedTimeMark = TimeSource.Monotonic.markNow()
             }
           }
         }
@@ -941,6 +950,11 @@ class KailleraGame(
 
   companion object {
     private val logger = FluentLogger.forEnclosingClass()
+
+    private val SURVEY_CONSENT_TIMEOUT = 4.minutes
+    private val MAX_SURVEY_RESPONSE_TIME = 1.5.minutes
+    private val SURVEY_GAME_START_DELAY = 8.minutes
+    private val SURVEY_COOLDOWN = 10.minutes
 
     /** Unfortunately Kaillera is built on the assumption that all games run at 60FPS. */
     const val GAME_FPS = 60
