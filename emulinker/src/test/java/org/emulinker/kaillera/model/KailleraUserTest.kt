@@ -3,6 +3,7 @@ package org.emulinker.kaillera.model
 import com.google.common.truth.Truth.assertThat
 import java.net.InetAddress
 import java.net.InetSocketAddress
+import kotlin.test.assertFailsWith
 import kotlin.time.Clock
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.hours
@@ -22,7 +23,7 @@ import org.emulinker.kaillera.model.exception.GameChatException
 import org.emulinker.kaillera.model.exception.GameKickException
 import org.emulinker.kaillera.model.exception.JoinGameException
 import org.emulinker.kaillera.model.exception.StartGameException
-import org.junit.Assert.assertThrows
+import org.emulinker.kaillera.model.exception.UserReadyException
 import org.junit.Test
 import org.mockito.kotlin.any
 import org.mockito.kotlin.doReturn
@@ -605,7 +606,7 @@ class KailleraUserTest {
     val user = makeUser()
     // user.game is null
 
-    assertThrows(GameKickException::class.java) { user.gameKick(userID = 5) }
+    assertFailsWith<GameKickException> { user.gameKick(userID = 5) }
   }
 
   @Test
@@ -708,7 +709,7 @@ class KailleraUserTest {
   fun `startGame throws StartGameException when not in a game`() {
     val user = makeUser()
 
-    assertThrows(StartGameException::class.java) { user.startGame() }
+    assertFailsWith<StartGameException> { user.startGame() }
   }
 
   @Test
@@ -730,7 +731,7 @@ class KailleraUserTest {
   fun `gameChat throws GameChatException when not in a game`() {
     val user = makeUser()
 
-    assertThrows(GameChatException::class.java) { user.gameChat("hello", messageID = 1) }
+    assertFailsWith<GameChatException> { user.gameChat("hello", messageID = 1) }
   }
 
   @Test
@@ -905,7 +906,7 @@ class KailleraUserTest {
     val existingGame = mock<KailleraGame>()
     user.game = existingGame
 
-    assertThrows(JoinGameException::class.java) { user.joinGame(gameID = 1) }
+    assertFailsWith<JoinGameException> { user.joinGame(gameID = 1) }
   }
 
   @Test
@@ -913,7 +914,7 @@ class KailleraUserTest {
     val user = makeUser()
     user.status = UserStatus.PLAYING
 
-    assertThrows(JoinGameException::class.java) { user.joinGame(gameID = 1) }
+    assertFailsWith<JoinGameException> { user.joinGame(gameID = 1) }
   }
 
   @Test
@@ -922,7 +923,7 @@ class KailleraUserTest {
     user.status = UserStatus.IDLE
     whenever(mockServer.getGame(99)).thenReturn(null)
 
-    assertThrows(JoinGameException::class.java) { user.joinGame(gameID = 99) }
+    assertFailsWith<JoinGameException> { user.joinGame(gameID = 99) }
   }
 
   @Test
@@ -950,9 +951,7 @@ class KailleraUserTest {
   fun `playerReady throws UserReadyException when not in a game`() {
     val user = makeUser()
 
-    assertThrows(org.emulinker.kaillera.model.exception.UserReadyException::class.java) {
-      user.playerReady()
-    }
+    assertFailsWith<UserReadyException> { user.playerReady() }
   }
 
   @Test
