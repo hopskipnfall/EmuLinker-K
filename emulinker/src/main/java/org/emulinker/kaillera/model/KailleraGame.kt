@@ -261,6 +261,7 @@ class KailleraGame(
   @Throws(JoinGameException::class)
   fun join(user: KailleraUser): Int {
     val access = server.accessManager.getAccess(user.socketAddress!!.address)
+    user.surveyConsent = null
 
     // SF MOD - Join room spam protection
     if (lastAddress == user.connectSocketAddress.address.hostAddress) {
@@ -348,10 +349,11 @@ class KailleraGame(
       access < AccessManager.ACCESS_ADMIN &&
         user.clientType != owner.clientType &&
         !owner.game!!.romName.startsWith("*")
-    )
+    ) {
       addEventForAllPlayers(
         GameInfoEvent(this, user.name + " using different emulator version: " + user.clientType)
       )
+    }
 
     surveyManager.onUserJoined(user)
 
