@@ -1,7 +1,6 @@
 package org.emulinker.kaillera.model
 
 import com.google.common.flogger.FluentLogger
-import com.google.protobuf.util.Timestamps
 import io.netty.buffer.ByteBuf
 import io.netty.buffer.PooledByteBufAllocator
 import java.util.Date
@@ -11,8 +10,6 @@ import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.nanoseconds
 import kotlin.time.Duration.Companion.seconds
-import kotlin.time.TimeMark
-import kotlin.time.TimeSource
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.access.AccessManager
 import org.emulinker.kaillera.master.StatsCollector
@@ -38,19 +35,15 @@ import org.emulinker.kaillera.model.exception.StartGameException
 import org.emulinker.kaillera.model.exception.UserReadyException
 import org.emulinker.kaillera.model.impl.AutoFireDetector
 import org.emulinker.kaillera.model.impl.PlayerActionQueue
-import org.emulinker.proto.EventKt.GameStartKt.playerDetails
+import org.emulinker.proto.Event.LagstatSummary
 import org.emulinker.proto.EventKt.LagstatSummaryKt.playerAttributedLag
-import org.emulinker.proto.EventKt.fanOut
-import org.emulinker.proto.EventKt.gameStart
 import org.emulinker.proto.EventKt.lagstatSummary
-import org.emulinker.proto.EventKt.receivedGameData
 import org.emulinker.proto.GameLog
 import org.emulinker.proto.Player
 import org.emulinker.proto.Player.PLAYER_FOUR
 import org.emulinker.proto.Player.PLAYER_ONE
 import org.emulinker.proto.Player.PLAYER_THREE
 import org.emulinker.proto.Player.PLAYER_TWO
-import org.emulinker.proto.event
 import org.emulinker.util.EmuLang
 import org.emulinker.util.EmuUtil.toMillisDouble
 import org.koin.core.component.KoinComponent
@@ -133,11 +126,7 @@ class KailleraGame(
   var aEmulator = "any"
   var aConnection = "any"
   val startDate: Date = Date()
-  private var gameStartTimeMark: TimeMark? = null
-  private var pendingSurveyGameLog: ByteArray? = null
-
-  val isSurveyEligibleForGame =
-    flags.surveyEnabled && flags.surveyGameWhitelist.any { Regex(it).containsMatchIn(romName) }
+  val surveyManager = SurveyManager(this)
 
   @JvmField var swap = false
 
@@ -221,13 +210,7 @@ class KailleraGame(
 
     addEventForAllPlayers(GameChatEvent(this, user, message))
 
-    if (isSurveyEligibleForGame) {
-      when (user.surveyConsent) {
-        null -> handleSurveyConsent(user, message)
-        true -> handleSurveyResponse(user, message)
-        false -> {}
-      }
-    }
+    surveyManager.handleChat(user, message)
   }
 
   fun announce(announcement: String, toUser: KailleraUser? = null) {
@@ -370,10 +353,7 @@ class KailleraGame(
         GameInfoEvent(this, user.name + " using different emulator version: " + user.clientType)
       )
 
-    if (isSurveyEligibleForGame && user.surveyConsent == null) {
-      announce(EmuLang.getString("Survey.Consent"), user)
-      user.surveyConsentAskedTimeMark = TimeSource.Monotonic.markNow()
-    }
+    surveyManager.onUserJoined(user)
 
     return players.indexOf(user) + 1
   }
@@ -450,7 +430,7 @@ class KailleraGame(
     }
     logger.atInfo().log("%s started: %s", user, this)
     status = GameStatus.SYNCHRONIZING
-    gameStartTimeMark = TimeSource.Monotonic.markNow()
+    surveyManager.onGameStarted()
     autoFireDetector.start(players.size)
     val actionQueueBuilder = mutableListOf<PlayerActionQueue>()
 
@@ -489,23 +469,6 @@ class KailleraGame(
     }
     playerActionQueues = actionQueueBuilder.toTypedArray()
     statsCollector?.markGameAsStarted(server, this)
-    gameLogBuilder?.addEvents(
-      event {
-        timestampNs = System.nanoTime()
-        gameStart = gameStart {
-          timestamp = Timestamps.now()
-          for (player in this@KailleraGame.players) {
-            this@gameStart.players += playerDetails {
-              playerNumber = player.playerNumber.toPlayerNumberProto()
-
-              frameDelay = player.frameDelay
-              pingMs = player.ping.toMillisDouble()
-            }
-          }
-        }
-      }
-    )
-
     /*if(user.getConnectionType() > KailleraUser.CONNECTION_TYPE_GOOD || user.getConnectionType() < KailleraUser.CONNECTION_TYPE_GOOD){
     	//sameDelay = true;
     }*/
@@ -717,113 +680,18 @@ class KailleraGame(
       return AddDataResult.IgnoringDesynched
     }
 
-    gameLogBuilder?.addEvents(
-      event {
-        timestampNs =
-          checkNotNull(lagometer?.userDatas[user.playerNumber - 1]?.receivedDataNs) {
-            "user's receivedGameDataNs is null!"
-          }
-        receivedGameData =
-          when (user.playerNumber) {
-            1 -> RECEIVED_FROM_P1
-            2 -> RECEIVED_FROM_P2
-            3 -> RECEIVED_FROM_P3
-            4 -> RECEIVED_FROM_P4
-            else -> throw IllegalStateException("Player number is out of bounds!")
-          }
-      }
+    surveyManager.logReceivedGameData(
+      playerNumber = user.playerNumber,
+      timestampNs = lagometer?.userDatas?.get(user.playerNumber - 1)?.receivedDataNs,
     )
 
     // Add the data for the user to their own player queue.
     playerActionQueues?.get(playerNumber - 1)?.addActions(data)
     autoFireDetector.addData(playerNumber, data, user.bytesPerAction)
 
-    // As we handle incoming controller inputs, check every three frames if a user pressed start. If
-    // they did, trigger the survey for all users who consented.
-    if (isSurveyEligibleForGame && status == GameStatus.PLAYING && user.frameCount % 3 == 0) {
-      val gameStart = gameStartTimeMark
-      if (gameStart != null && gameStart.elapsedNow() > SURVEY_GAME_START_DELAY) {
-        val eligiblePlayers =
-          players.filter { p ->
-            val lastAsked = p.lastSurveyAskedTimeMark
-            p.surveyConsent == true &&
-              (lastAsked == null || lastAsked.elapsedNow() > SURVEY_COOLDOWN)
-          }
-        if (eligiblePlayers.isNotEmpty()) {
-          if (checkStartPressed(data, user.bytesPerAction)) {
-            // Snapshot the rolling 5-minute window.
-            val nowNs = System.nanoTime()
-            val fiveMinsAgoNs = nowNs - 5.minutes.inWholeNanoseconds
-            val recentEvents =
-              gameLogBuilder?.eventsList?.filter { it.timestampNs >= fiveMinsAgoNs }
-            val snapshotBuilder = GameLog.newBuilder()
-            if (recentEvents != null) {
-              snapshotBuilder.addAllEvents(recentEvents)
-            }
-            pendingSurveyGameLog = snapshotBuilder.build().toByteArray()
-
-            for (player in eligiblePlayers) {
-              askSurveyQuestion(player)
-              player.lastSurveyAskedTimeMark = TimeSource.Monotonic.markNow()
-            }
-          }
-        }
-      }
-    }
+    surveyManager.onControllerInput(user, data, user.bytesPerAction)
 
     return maybeSendData(user)
-  }
-
-  private fun checkStartPressed(data: ByteBuf, bytesPerAction: Int): Boolean {
-    if (data.readableBytes() < 13) return false
-    return (data.getByte(data.readerIndex() + 12).toInt() and 0b00010000) != 0
-  }
-
-  private fun askSurveyQuestion(player: KailleraUser) {
-    announce("SURVEY: ${EmuLang.getString("Survey.Question", "10")}", player)
-  }
-
-  private fun reportSurveyResponse(user: KailleraUser, response: String) {
-    val surveyLog = pendingSurveyGameLog
-    logger
-      .atInfo()
-      .log(
-        "Reporting survey response for %s: %s (Proto data size: %d)",
-        user.name,
-        response,
-        surveyLog?.size ?: 0,
-      )
-    // TODO: Send response and surveyLog to a server for analysis.
-  }
-
-  private fun handleSurveyConsent(user: KailleraUser, message: String) {
-    val askedTime = user.surveyConsentAskedTimeMark
-    if (askedTime == null || askedTime.elapsedNow() > SURVEY_CONSENT_TIMEOUT) return
-
-    when (message.lowercase()) {
-      "y",
-      "yes" -> {
-        user.surveyConsent = true
-        announce(EmuLang.getString("Survey.ConsentYes"), user)
-      }
-
-      "n",
-      "no" -> {
-        user.surveyConsent = false
-        announce(EmuLang.getString("Survey.ConsentNo"), user)
-      }
-    }
-  }
-
-  /** Handle user's message as a survey response. */
-  private fun handleSurveyResponse(user: KailleraUser, message: String) {
-    if (message.trim().matches("[1-3]".toRegex())) {
-      val lastAsked = user.lastSurveyAskedTimeMark
-      if (lastAsked != null && lastAsked.elapsedNow() <= MAX_SURVEY_RESPONSE_TIME) {
-        reportSurveyResponse(user, message.trim())
-        announce(EmuLang.getString("Survey.Thanks"), user)
-      }
-    }
   }
 
   /**
@@ -919,47 +787,28 @@ class KailleraGame(
     get() = lagometer?.lag ?: Duration.ZERO
 
   private fun updateGameDrift(nowNs: Long) {
-    val glb = gameLogBuilder
-    if (glb != null) {
-      glb.addEvents(
-        event {
-          timestampNs = nowNs
-          fanOut = FAN_OUT
-        }
-      )
+    var lagstatSummaryData: LagstatSummary? = null
 
-      // Log the /lagstat data once every 1 minute.
-      if ((nowNs - lastLagstatNs).nanoseconds > 1.minutes) {
-        glb.addEvents(
-          event {
-            timestampNs = nowNs
-            lagstatSummary = lagstatSummary {
-              windowDurationMs = flags.lagstatDuration.inWholeMilliseconds.toInt()
-              gameLagMs = currentGameLag.toMillisDouble()
+    // Log the /lagstat data once every 1 minute.
+    if ((nowNs - lastLagstatNs).nanoseconds > 1.minutes) {
+      lagstatSummaryData = lagstatSummary {
+        windowDurationMs = flags.lagstatDuration.inWholeMilliseconds.toInt()
+        gameLagMs = currentGameLag.toMillisDouble()
 
-              val lags = lagometer?.gameLagPerPlayer
-              if (lags != null) {
-                for ((i, p) in players.withIndex()) {
-                  playerAttributedLags += playerAttributedLag {
-                    player = p.playerNumber.toPlayerNumberProto()
-                    attributedLagMs = lags[i].toMillisDouble()
-                  }
-                }
-              }
+        val lags = lagometer?.gameLagPerPlayer
+        if (lags != null) {
+          for ((i, p) in players.withIndex()) {
+            playerAttributedLags += playerAttributedLag {
+              player = p.playerNumber.toPlayerNumberProto()
+              attributedLagMs = lags[i].toMillisDouble()
             }
           }
-        )
-        lastLagstatNs = nowNs
-
-        // Prune the game log to a 5-minute rolling window to prevent unbounded memory growth.
-        val fiveMinsAgoNs = nowNs - 5.minutes.inWholeNanoseconds
-        val recentEvents = glb.eventsList.takeLastWhile { it.timestampNs >= fiveMinsAgoNs }
-        if (recentEvents.size < glb.eventsCount) {
-          glb.clearEvents()
-          glb.addAllEvents(recentEvents)
         }
       }
+      lastLagstatNs = nowNs
     }
+
+    surveyManager.updateDrift(nowNs, lagstatSummaryData)
 
     lagometer?.advanceFrame(nowNs)
 
@@ -969,20 +818,7 @@ class KailleraGame(
   companion object {
     private val logger = FluentLogger.forEnclosingClass()
 
-    private val SURVEY_CONSENT_TIMEOUT = 4.minutes
-    private val MAX_SURVEY_RESPONSE_TIME = 1.5.minutes
-    private val SURVEY_GAME_START_DELAY = 8.minutes
-    private val SURVEY_COOLDOWN = 10.minutes
-
-    /** Unfortunately Kaillera is built on the assumption that all games run at 60FPS. */
     const val GAME_FPS = 60
-
-    // A few logging constants to avoid creating unnecessary objects.
-    private val FAN_OUT = fanOut {}
-    private val RECEIVED_FROM_P1 = receivedGameData { receivedFrom = PLAYER_ONE }
-    private val RECEIVED_FROM_P2 = receivedGameData { receivedFrom = PLAYER_TWO }
-    private val RECEIVED_FROM_P3 = receivedGameData { receivedFrom = PLAYER_THREE }
-    private val RECEIVED_FROM_P4 = receivedGameData { receivedFrom = PLAYER_FOUR }
 
     private fun Int.toPlayerNumberProto(): Player =
       when (this) {

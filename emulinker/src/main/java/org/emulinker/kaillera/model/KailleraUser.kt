@@ -136,7 +136,6 @@ class KailleraUser(
   var isMuted = false
   var surveyConsent: Boolean? = null
   var surveyConsentAskedTimeMark: TimeMark? = null
-  var lastSurveyAskedTimeMark: TimeMark? = null
 
   private val lostInput: MutableList<ByteBuf> = ArrayList()
 

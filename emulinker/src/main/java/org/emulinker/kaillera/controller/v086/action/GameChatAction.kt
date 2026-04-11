@@ -25,7 +25,6 @@ import org.emulinker.kaillera.model.KailleraGame
 import org.emulinker.kaillera.model.event.GameChatEvent
 import org.emulinker.kaillera.model.exception.ActionException
 import org.emulinker.kaillera.model.exception.GameChatException
-import org.emulinker.proto.GameLog
 import org.emulinker.util.EmuLang
 import org.emulinker.util.EmuLang.getStringOrNull
 import org.emulinker.util.EmuUtil.min
@@ -531,15 +530,6 @@ class GameChatAction(
         val newFps = message.message.removePrefix("/fps ").toDouble()
         game.setGameFps(newFps)
         game.announce(EmuLang.getString("Fps.NewFpsMeasurement", newFps))
-      } else if (
-        clientHandler.user.accessLevel >= AccessManager.ACCESS_ADMIN &&
-          message.message.trim() == "/loggame"
-      ) {
-        game.chat(clientHandler.user, message.message)
-        if (game.gameLogBuilder == null) {
-          game.gameLogBuilder = GameLog.newBuilder()
-          game.announce("Enabled logging for session.")
-        }
       } else {
         game.announce(
           EmuLang.getString("ChatAction.UnrecognizedCommand", message.message),
