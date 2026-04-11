@@ -222,27 +222,10 @@ class KailleraGame(
     addEventForAllPlayers(GameChatEvent(this, user, message))
 
     if (isSurveyEligibleForGame) {
-      if (user.surveyConsent == null) {
-        val askedTime = user.surveyConsentAskedTimeMark
-        if (askedTime == null || askedTime.elapsedNow() <= SURVEY_CONSENT_TIMEOUT) {
-          val lowerMessage = message.lowercase()
-          if (lowerMessage == "y" || lowerMessage == "yes") {
-            user.surveyConsent = true
-            announce(EmuLang.getString("Survey.ConsentYes"), user)
-          } else if (lowerMessage == "n" || lowerMessage == "no") {
-            user.surveyConsent = false
-            announce(EmuLang.getString("Survey.ConsentNo"), user)
-          }
-        }
-      } else if (user.surveyConsent == true) {
-        // If the user has consented, check if this message is a survey response.
-        if (message.trim().matches(Regex("[1-3]"))) {
-          val lastAsked = user.lastSurveyAskedTimeMark
-          if (lastAsked != null && lastAsked.elapsedNow() <= MAX_SURVEY_RESPONSE_TIME) {
-            reportSurveyResponse(user, message.trim())
-            announce(EmuLang.getString("Survey.Thanks"), user)
-          }
-        }
+      when (user.surveyConsent) {
+        null -> handleSurveyConsent(user, message)
+        true -> handleSurveyResponse(user, message)
+        false -> {}
       }
     }
   }
@@ -755,18 +738,20 @@ class KailleraGame(
     playerActionQueues?.get(playerNumber - 1)?.addActions(data)
     autoFireDetector.addData(playerNumber, data, user.bytesPerAction)
 
-    if (isSurveyEligibleForGame && status == GameStatus.PLAYING) {
+    // As we handle incoming controller inputs, check every three frames if a user pressed start. If
+    // they did, trigger the survey for all users who consented.
+    if (isSurveyEligibleForGame && status == GameStatus.PLAYING && user.frameCount % 3 == 0) {
       val gameStart = gameStartTimeMark
       if (gameStart != null && gameStart.elapsedNow() > SURVEY_GAME_START_DELAY) {
         val eligiblePlayers =
-          players.filter {
-            it.surveyConsent == true &&
-              (it.lastSurveyAskedTimeMark == null ||
-                it.lastSurveyAskedTimeMark!!.elapsedNow() > SURVEY_COOLDOWN)
+          players.filter { p ->
+            val lastAsked = p.lastSurveyAskedTimeMark
+            p.surveyConsent == true &&
+              (lastAsked == null || lastAsked.elapsedNow() > SURVEY_COOLDOWN)
           }
-        if (eligiblePlayers.isNotEmpty() && user.frameCount % 3 == 0) {
+        if (eligiblePlayers.isNotEmpty()) {
           if (checkStartPressed(data, user.bytesPerAction)) {
-            // Snapshot the rolling 5-minute window
+            // Snapshot the rolling 5-minute window.
             val nowNs = System.nanoTime()
             val fiveMinsAgoNs = nowNs - 5.minutes.inWholeNanoseconds
             val recentEvents =
@@ -809,6 +794,36 @@ class KailleraGame(
         surveyLog?.size ?: 0,
       )
     // TODO: Send response and surveyLog to a server for analysis.
+  }
+
+  private fun handleSurveyConsent(user: KailleraUser, message: String) {
+    val askedTime = user.surveyConsentAskedTimeMark
+    if (askedTime == null || askedTime.elapsedNow() > SURVEY_CONSENT_TIMEOUT) return
+
+    when (message.lowercase()) {
+      "y",
+      "yes" -> {
+        user.surveyConsent = true
+        announce(EmuLang.getString("Survey.ConsentYes"), user)
+      }
+
+      "n",
+      "no" -> {
+        user.surveyConsent = false
+        announce(EmuLang.getString("Survey.ConsentNo"), user)
+      }
+    }
+  }
+
+  /** Handle user's message as a survey response. */
+  private fun handleSurveyResponse(user: KailleraUser, message: String) {
+    if (message.trim().matches("[1-3]".toRegex())) {
+      val lastAsked = user.lastSurveyAskedTimeMark
+      if (lastAsked != null && lastAsked.elapsedNow() <= MAX_SURVEY_RESPONSE_TIME) {
+        reportSurveyResponse(user, message.trim())
+        announce(EmuLang.getString("Survey.Thanks"), user)
+      }
+    }
   }
 
   /**
