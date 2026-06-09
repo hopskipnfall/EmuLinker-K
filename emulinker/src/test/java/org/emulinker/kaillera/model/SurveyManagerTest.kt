@@ -9,6 +9,7 @@ import kotlin.time.Duration.Companion.minutes
 import kotlin.time.TimeMark
 import kotlin.time.TimeSource
 import org.emulinker.config.RuntimeFlags
+import org.emulinker.proto.GameLog
 import org.koin.core.context.startKoin
 import org.koin.core.context.stopKoin
 import org.koin.dsl.module
@@ -294,6 +295,157 @@ class SurveyManagerTest {
 
     // Should return early and NOT trigger survey (never announce)
     verify(playingGame, never()).announce(any(), any())
+    data.release()
+  }
+
+  // ── Telemetry & Pruning ──────────────────────────────────────────────────────
+
+  @Test
+  fun `telemetry is not recorded before 3 minutes from game start`() {
+    val user = consentedUser
+    val playingGame =
+      mock<KailleraGame> {
+        on { romName } doReturn "smash"
+        on { status } doReturn GameStatus.PLAYING
+        on { players } doReturn mutableListOf(user)
+      }
+    val manager = SurveyManager(playingGame)
+    manager.onGameStarted()
+
+    // Game started 2 minutes ago
+    val field = SurveyManager::class.java.getDeclaredField("gameStartTimeMark")
+    field.isAccessible = true
+    field.set(manager, TimeSource.Monotonic.markNow() - 2.minutes)
+
+    // Call updateDrift to run state machine.
+    manager.updateDrift(System.nanoTime(), null)
+
+    // Call logReceivedGameData. It should be ignored because telemetry is not recording.
+    manager.logReceivedGameData(1, System.nanoTime())
+
+    // Set gameStartTimeMark to 9 minutes ago so onControllerInput passes the delay check
+    field.set(manager, TimeSource.Monotonic.markNow() - 9.minutes)
+
+    val data =
+      Unpooled.buffer(24).apply {
+        writeZero(12)
+        writeByte(0x10) // start button pressed
+        writeZero(11)
+      }
+
+    manager.onControllerInput(user, data, 2)
+
+    // Retrieve pendingSurveyGameLog
+    val pendingLogField = SurveyManager::class.java.getDeclaredField("pendingSurveyGameLog")
+    pendingLogField.isAccessible = true
+    val bytes = pendingLogField.get(manager) as ByteArray?
+
+    assertThat(bytes).isNotNull()
+    val gameLog = GameLog.parseFrom(bytes!!)
+    assertThat(gameLog.eventsCount).isEqualTo(0)
+    data.release()
+  }
+
+  @Test
+  fun `telemetry is recorded between 3 and 8 minutes from game start`() {
+    val user = consentedUser
+    val playingGame =
+      mock<KailleraGame> {
+        on { romName } doReturn "smash"
+        on { status } doReturn GameStatus.PLAYING
+        on { players } doReturn mutableListOf(user)
+      }
+    val manager = SurveyManager(playingGame)
+    manager.onGameStarted()
+
+    // Game started 4 minutes ago (satisfies needsToRecordForFirstSurvey: 4 >= 3)
+    val field = SurveyManager::class.java.getDeclaredField("gameStartTimeMark")
+    field.isAccessible = true
+    field.set(manager, TimeSource.Monotonic.markNow() - 4.minutes)
+
+    manager.updateDrift(System.nanoTime(), null) // Appends 1 fanOut event
+
+    // Call logReceivedGameData. It should be recorded.
+    manager.logReceivedGameData(1, System.nanoTime()) // Appends 1 receivedGameData event
+
+    // Set gameStartTimeMark to 9 minutes ago so onControllerInput passes the delay check
+    field.set(manager, TimeSource.Monotonic.markNow() - 9.minutes)
+
+    val data =
+      Unpooled.buffer(24).apply {
+        writeZero(12)
+        writeByte(0x10) // start button pressed
+        writeZero(11)
+      }
+
+    manager.onControllerInput(user, data, 2)
+
+    val pendingLogField = SurveyManager::class.java.getDeclaredField("pendingSurveyGameLog")
+    pendingLogField.isAccessible = true
+    val bytes = pendingLogField.get(manager) as ByteArray?
+
+    assertThat(bytes).isNotNull()
+    val gameLog = GameLog.parseFrom(bytes!!)
+
+    // Should contain 2 events: 1 fanOut and 1 receivedGameData
+    assertThat(gameLog.eventsCount).isEqualTo(2)
+    data.release()
+  }
+
+  @Test
+  fun `telemetry older than 5 minutes is pruned`() {
+    val user = consentedUser
+    val playingGame =
+      mock<KailleraGame> {
+        on { romName } doReturn "smash"
+        on { status } doReturn GameStatus.PLAYING
+        on { players } doReturn mutableListOf(user)
+      }
+    val manager = SurveyManager(playingGame)
+    manager.onGameStarted()
+
+    // Game started 4 minutes ago
+    val field = SurveyManager::class.java.getDeclaredField("gameStartTimeMark")
+    field.isAccessible = true
+    field.set(manager, TimeSource.Monotonic.markNow() - 4.minutes)
+
+    // Event 1 (timestampNs = 0L)
+    manager.updateDrift(0L, null)
+    manager.logReceivedGameData(1, 0L)
+
+    // Event 2 (timestampNs = 2 mins)
+    manager.updateDrift(2.minutes.inWholeNanoseconds, null)
+    manager.logReceivedGameData(1, 2.minutes.inWholeNanoseconds)
+
+    // Event 3 (timestampNs = 6 mins) -> Event 1 is now older than 5 mins (6 - 5 = 1 min), so it
+    // should be pruned.
+    // Event 2 is 4 mins old, so it should be kept.
+    manager.updateDrift(6.minutes.inWholeNanoseconds, null)
+
+    // Set gameStartTimeMark to 10 minutes ago so onControllerInput passes the delay check
+    field.set(manager, TimeSource.Monotonic.markNow() - 10.minutes)
+
+    val data =
+      Unpooled.buffer(24).apply {
+        writeZero(12)
+        writeByte(0x10) // start button pressed
+        writeZero(11)
+      }
+
+    manager.onControllerInput(user, data, 2)
+
+    val pendingLogField = SurveyManager::class.java.getDeclaredField("pendingSurveyGameLog")
+    pendingLogField.isAccessible = true
+    val bytes = pendingLogField.get(manager) as ByteArray?
+
+    assertThat(bytes).isNotNull()
+    val gameLog = GameLog.parseFrom(bytes!!)
+
+    // Check that none of the events in gameLog have timestampNs < 1 minute (6 mins - 5 mins)
+    val oneMinAgoNs = 1.minutes.inWholeNanoseconds
+    for (event in gameLog.eventsList) {
+      assertThat(event.timestampNs).isAtLeast(oneMinAgoNs)
+    }
     data.release()
   }
 }

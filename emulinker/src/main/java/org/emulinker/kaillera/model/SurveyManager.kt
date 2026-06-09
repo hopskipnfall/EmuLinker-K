@@ -29,7 +29,8 @@ class SurveyManager(private val game: KailleraGame) : KoinComponent {
   private var gameStartTimeMark: TimeMark? = null
   var lastSurveyAskedTimeMark: TimeMark? = null
   private var pendingSurveyGameLog: ByteArray? = null
-  private var gameLogBuilder: GameLog.Builder? = null
+  private val telemetryEvents = ArrayDeque<Event>()
+  private var isRecordingTelemetry = false
 
   fun onGameStarted() {
     if (isSurveyEligibleForGame) {
@@ -63,7 +64,8 @@ class SurveyManager(private val game: KailleraGame) : KoinComponent {
 
     if (eligiblePlayers.isNotEmpty()) {
       if (checkStartPressed(data, bytesPerAction)) {
-        pendingSurveyGameLog = gameLogBuilder?.build()?.toByteArray()
+        pendingSurveyGameLog =
+          GameLog.newBuilder().addAllEvents(telemetryEvents).build().toByteArray()
         for (player in eligiblePlayers) {
           game.announce("SURVEY: ${EmuLang.getString("Survey.Question", "10")}", player)
         }
@@ -73,10 +75,14 @@ class SurveyManager(private val game: KailleraGame) : KoinComponent {
   }
 
   fun logReceivedGameData(playerNumber: Int, timestampNs: Long?) {
-    val glb = gameLogBuilder ?: return
-    glb.addEvents(
+    if (!isRecordingTelemetry) return
+    if (timestampNs == null) {
+      logger.atWarning().log("Skipping logReceivedGameData because timestampNs is null")
+      return
+    }
+    telemetryEvents.add(
       event {
-        this.timestampNs = checkNotNull(timestampNs) { "user's receivedGameDataNs is null!" }
+        this.timestampNs = timestampNs
         receivedGameData =
           when (playerNumber) {
             1 -> RECEIVED_FROM_P1
@@ -168,10 +174,9 @@ class SurveyManager(private val game: KailleraGame) : KoinComponent {
   fun updateDrift(nowNs: Long, lagstatData: Event.LagstatSummary?) {
     if (!isSurveyEligibleForGame) return
 
-    if (shouldRecordTelemetry() && gameLogBuilder == null) {
-      gameLogBuilder = GameLog.newBuilder()
-    } else if (!shouldRecordTelemetry()) {
-      gameLogBuilder = null
+    isRecordingTelemetry = shouldRecordTelemetry()
+    if (!isRecordingTelemetry) {
+      telemetryEvents.clear()
     }
 
     if (pendingSurveyGameLog != null) {
@@ -185,9 +190,8 @@ class SurveyManager(private val game: KailleraGame) : KoinComponent {
       }
     }
 
-    val glb = gameLogBuilder
-    if (glb != null) {
-      glb.addEvents(
+    if (isRecordingTelemetry) {
+      telemetryEvents.add(
         event {
           timestampNs = nowNs
           fanOut = FAN_OUT
@@ -195,7 +199,7 @@ class SurveyManager(private val game: KailleraGame) : KoinComponent {
       )
 
       if (lagstatData != null) {
-        glb.addEvents(
+        telemetryEvents.add(
           event {
             timestampNs = nowNs
             lagstatSummary = lagstatData
@@ -205,10 +209,8 @@ class SurveyManager(private val game: KailleraGame) : KoinComponent {
 
       // Prune the game log to a 5-minute rolling window to prevent unbounded memory growth.
       val fiveMinsAgoNs = nowNs - SURVEY_TELEMETRY_WINDOW.inWholeNanoseconds
-      val recentEvents = glb.eventsList.takeLastWhile { it.timestampNs >= fiveMinsAgoNs }
-      if (recentEvents.size < glb.eventsCount) {
-        glb.clearEvents()
-        glb.addAllEvents(recentEvents)
+      while (telemetryEvents.isNotEmpty() && telemetryEvents.first().timestampNs < fiveMinsAgoNs) {
+        telemetryEvents.removeFirst()
       }
     }
   }
