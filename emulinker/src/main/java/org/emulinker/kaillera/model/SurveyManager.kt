@@ -67,7 +67,10 @@ class SurveyManager(private val game: KailleraGame) : KoinComponent {
         pendingSurveyGameLog =
           GameLog.newBuilder().addAllEvents(telemetryEvents).build().toByteArray()
         for (player in eligiblePlayers) {
-          game.announce("SURVEY: ${EmuLang.getString("Survey.Question", "10")}", player)
+          game.announce(
+            "SURVEY: ${EmuLang.getString("Survey.Question", SURVEY_TELEMETRY_WINDOW.inWholeMinutes.toString())}",
+            player,
+          )
         }
         lastSurveyAskedTimeMark = TimeSource.Monotonic.markNow()
       }
