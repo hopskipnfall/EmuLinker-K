@@ -440,6 +440,7 @@ class KailleraUser(
             is AddDataResult.Failure -> return Result.failure(r.exception)
           }
         }
+        frameCount++
       }
       gameDataErrorTime = 0
       return Result.success(Unit)

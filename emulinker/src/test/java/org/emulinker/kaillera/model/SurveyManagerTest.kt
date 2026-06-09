@@ -5,6 +5,7 @@ import io.netty.buffer.Unpooled
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
+import kotlin.time.Duration.Companion.minutes
 import kotlin.time.TimeMark
 import kotlin.time.TimeSource
 import org.emulinker.config.RuntimeFlags
@@ -224,6 +225,75 @@ class SurveyManagerTest {
     // Should not throw and should not announce anything.
     manager.onControllerInput(consentedUser, data, 2)
     verify(waitingGame, never()).announce(any(), any())
+    data.release()
+  }
+
+  @Test
+  fun `onControllerInput checks start button and triggers survey when frameCount is a multiple of 3`() {
+    val user: KailleraUser = mock {
+      on { frameCount } doReturn 6 // 6 is multiple of 3
+      on { surveyConsent } doReturn true
+    }
+    val playingGame =
+      mock<KailleraGame> {
+        on { romName } doReturn "smash"
+        on { status } doReturn GameStatus.PLAYING
+        on { players } doReturn mutableListOf(user)
+      }
+
+    val manager = SurveyManager(playingGame)
+
+    // Use reflection to set gameStartTimeMark to 9 minutes ago
+    val field = SurveyManager::class.java.getDeclaredField("gameStartTimeMark")
+    field.isAccessible = true
+    field.set(manager, TimeSource.Monotonic.markNow() - 9.minutes)
+
+    // N64 controller data layout with start bit set at byte 12 (0x10)
+    val data =
+      Unpooled.buffer(24).apply {
+        writeZero(12)
+        writeByte(0x10) // start button pressed
+        writeZero(11)
+      }
+
+    manager.onControllerInput(user, data, 2)
+
+    verify(playingGame).announce(any(), org.mockito.kotlin.eq(user))
+    data.release()
+  }
+
+  @Test
+  fun `onControllerInput does not check start button when frameCount is not a multiple of 3`() {
+    val user: KailleraUser = mock {
+      on { frameCount } doReturn 7 // 7 is not a multiple of 3
+      on { surveyConsent } doReturn true
+    }
+    val playingGame =
+      mock<KailleraGame> {
+        on { romName } doReturn "smash"
+        on { status } doReturn GameStatus.PLAYING
+        on { players } doReturn mutableListOf(user)
+      }
+
+    val manager = SurveyManager(playingGame)
+
+    // Use reflection to set gameStartTimeMark to 9 minutes ago
+    val field = SurveyManager::class.java.getDeclaredField("gameStartTimeMark")
+    field.isAccessible = true
+    field.set(manager, TimeSource.Monotonic.markNow() - 9.minutes)
+
+    // N64 controller data layout with start bit set at byte 12 (0x10)
+    val data =
+      Unpooled.buffer(24).apply {
+        writeZero(12)
+        writeByte(0x10) // start button pressed
+        writeZero(11)
+      }
+
+    manager.onControllerInput(user, data, 2)
+
+    // Should return early and NOT trigger survey (never announce)
+    verify(playingGame, never()).announce(any(), any())
     data.release()
   }
 }
