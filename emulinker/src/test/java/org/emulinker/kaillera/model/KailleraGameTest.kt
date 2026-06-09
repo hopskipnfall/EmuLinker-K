@@ -46,8 +46,6 @@ class KailleraGameTest {
 
   private val mockFlags =
     mock<RuntimeFlags> {
-      on { surveyEnabled } doReturn false
-      on { surveyGameWhitelist } doReturn emptyList()
       on { maxGameChatLength } doReturn 0
       on { gameBufferSize } doReturn 4096
       on { lagstatDuration } doReturn Duration.ZERO
@@ -273,18 +271,6 @@ class KailleraGameTest {
 
     // Should NOT throw
     game.chat(owner, "hello world")
-  }
-
-  @Test
-  fun `chat delegates to surveyManager`() {
-    // We verify this by checking that calling chat with a valid user
-    // does not throw and reaches the surveyManager indirectly.
-    // A true integration test would inspect the SurveyManager, but we verify
-    // that the game does not blow up on the delegation call.
-    val owner = makeUser(id = 1)
-    val game = makeGame(owner = owner)
-
-    game.chat(owner, "yes") // consent keyword — should be routed to surveyManager
   }
 
   @Test

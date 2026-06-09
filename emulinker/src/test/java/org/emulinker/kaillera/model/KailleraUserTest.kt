@@ -89,8 +89,6 @@ class KailleraUserTest {
       twitterOAuthConsumerSecret = "",
       twitterPreventBroadcastNameSuffixes = emptyList(),
       v086BufferSize = 4096,
-      surveyEnabled = false,
-      surveyGameWhitelist = emptyList(),
     )
 
   private val mockClientHandler = mock<V086ClientHandler>()
@@ -333,36 +331,6 @@ class KailleraUserTest {
     val user = makeUser()
     user.accessLevel = AccessManager.ACCESS_NORMAL
     assertThat(user.accessStr).isEqualTo(AccessManager.ACCESS_NAMES[AccessManager.ACCESS_NORMAL])
-  }
-
-  // ---------------------------------------------------------------------------
-  // surveyConsent / surveyConsentAskedTimeMark
-  // ---------------------------------------------------------------------------
-
-  @Test
-  fun `surveyConsent is null by default`() {
-    val user = makeUser()
-    assertThat(user.surveyConsent).isNull()
-  }
-
-  @Test
-  fun `surveyConsentAskedTimeMark is null by default`() {
-    val user = makeUser()
-    assertThat(user.surveyConsentAskedTimeMark).isNull()
-  }
-
-  @Test
-  fun `surveyConsent can be set to true`() {
-    val user = makeUser()
-    user.surveyConsent = true
-    assertThat(user.surveyConsent).isTrue()
-  }
-
-  @Test
-  fun `surveyConsent can be set to false`() {
-    val user = makeUser()
-    user.surveyConsent = false
-    assertThat(user.surveyConsent).isFalse()
   }
 
   // ---------------------------------------------------------------------------
