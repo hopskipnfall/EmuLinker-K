@@ -178,6 +178,8 @@ val koinModule = module {
           twitterPreventBroadcastNameSuffixes =
             config.getStringArray("twitter.preventBroadcastNameSuffixes").toList(),
           v086BufferSize = config.getInt("controllers.v086.bufferSize", 4096),
+          surveyEnabled = config.getBoolean("survey.enabled", false),
+          surveyGameWhitelist = config.getStringArray("survey.gameWhitelist").toList(),
         )
 
       charsetDoNotUse = flags.charset

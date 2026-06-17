@@ -40,6 +40,7 @@ import org.emulinker.kaillera.controller.v086.protocol.UserJoined
 import org.emulinker.kaillera.controller.v086.protocol.V086Bundle
 import org.emulinker.kaillera.controller.v086.protocol.V086Message
 import org.emulinker.kaillera.model.ConnectionType
+import org.emulinker.kaillera.model.KailleraServer
 import org.emulinker.kaillera.pico.AppModule
 import org.emulinker.kaillera.pico.koinModule
 import org.emulinker.util.FastGameDataCache
@@ -196,6 +197,11 @@ class GameDataE2ETest : KoinComponent {
         expect.that(receivedBytes).isEqualTo(expectedData)
       }
     }
+
+    val server = get<KailleraServer>()
+    val serverUser = checkNotNull(server.usersMap.values.find { it.name == "User1" })
+    expect.that(serverUser.frameCount).isEqualTo(1000)
+
     println("Shutting down...")
     client.quitGame()
     client.quit()

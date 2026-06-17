@@ -1,13 +1,9 @@
 package org.emulinker.kaillera.model
 
 import com.google.common.flogger.FluentLogger
-import com.google.protobuf.util.Timestamps
 import io.netty.buffer.ByteBuf
 import io.netty.buffer.PooledByteBufAllocator
-import java.io.FileOutputStream
 import java.util.Date
-import java.util.zip.GZIPOutputStream
-import kotlin.io.path.createTempDirectory
 import kotlin.time.Clock
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
@@ -39,19 +35,15 @@ import org.emulinker.kaillera.model.exception.StartGameException
 import org.emulinker.kaillera.model.exception.UserReadyException
 import org.emulinker.kaillera.model.impl.AutoFireDetector
 import org.emulinker.kaillera.model.impl.PlayerActionQueue
-import org.emulinker.proto.EventKt.GameStartKt.playerDetails
+import org.emulinker.proto.Event.LagstatSummary
 import org.emulinker.proto.EventKt.LagstatSummaryKt.playerAttributedLag
-import org.emulinker.proto.EventKt.fanOut
-import org.emulinker.proto.EventKt.gameStart
 import org.emulinker.proto.EventKt.lagstatSummary
-import org.emulinker.proto.EventKt.receivedGameData
 import org.emulinker.proto.GameLog
 import org.emulinker.proto.Player
 import org.emulinker.proto.Player.PLAYER_FOUR
 import org.emulinker.proto.Player.PLAYER_ONE
 import org.emulinker.proto.Player.PLAYER_THREE
 import org.emulinker.proto.Player.PLAYER_TWO
-import org.emulinker.proto.event
 import org.emulinker.util.EmuLang
 import org.emulinker.util.EmuUtil.toMillisDouble
 import org.koin.core.component.KoinComponent
@@ -134,6 +126,7 @@ class KailleraGame(
   var aEmulator = "any"
   var aConnection = "any"
   val startDate: Date = Date()
+  val surveyManager = SurveyManager(this)
 
   @JvmField var swap = false
 
@@ -216,6 +209,8 @@ class KailleraGame(
     l.log("%s, %s gamechat: %s", user, this, message)
 
     addEventForAllPlayers(GameChatEvent(this, user, message))
+
+    surveyManager.handleChat(user, message)
   }
 
   fun announce(announcement: String, toUser: KailleraUser? = null) {
@@ -266,6 +261,7 @@ class KailleraGame(
   @Throws(JoinGameException::class)
   fun join(user: KailleraUser): Int {
     val access = server.accessManager.getAccess(user.socketAddress!!.address)
+    user.surveyConsent = null
 
     // SF MOD - Join room spam protection
     if (lastAddress == user.connectSocketAddress.address.hostAddress) {
@@ -353,10 +349,14 @@ class KailleraGame(
       access < AccessManager.ACCESS_ADMIN &&
         user.clientType != owner.clientType &&
         !owner.game!!.romName.startsWith("*")
-    )
+    ) {
       addEventForAllPlayers(
         GameInfoEvent(this, user.name + " using different emulator version: " + user.clientType)
       )
+    }
+
+    surveyManager.onUserJoined(user)
+
     return players.indexOf(user) + 1
   }
 
@@ -432,6 +432,7 @@ class KailleraGame(
     }
     logger.atInfo().log("%s started: %s", user, this)
     status = GameStatus.SYNCHRONIZING
+    surveyManager.onGameStarted()
     autoFireDetector.start(players.size)
     val actionQueueBuilder = mutableListOf<PlayerActionQueue>()
 
@@ -470,23 +471,6 @@ class KailleraGame(
     }
     playerActionQueues = actionQueueBuilder.toTypedArray()
     statsCollector?.markGameAsStarted(server, this)
-    gameLogBuilder?.addEvents(
-      event {
-        timestampNs = System.nanoTime()
-        gameStart = gameStart {
-          timestamp = Timestamps.now()
-          for (player in this@KailleraGame.players) {
-            this@gameStart.players += playerDetails {
-              playerNumber = player.playerNumber.toPlayerNumberProto()
-
-              frameDelay = player.frameDelay
-              pingMs = player.ping.toMillisDouble()
-            }
-          }
-        }
-      }
-    )
-
     /*if(user.getConnectionType() > KailleraUser.CONNECTION_TYPE_GOOD || user.getConnectionType() < KailleraUser.CONNECTION_TYPE_GOOD){
     	//sameDelay = true;
     }*/
@@ -655,22 +639,6 @@ class KailleraGame(
     }
     autoFireDetector.stop()
     players.clear()
-
-    // Write the game log out to a compressed file.
-    val gameLog = gameLogBuilder?.build()
-    if (gameLog != null) {
-      try {
-        val filePath = createTempDirectory("gamelog").resolve("gamelog.bin.gz").toFile()
-        FileOutputStream(filePath).use { fos ->
-          GZIPOutputStream(fos).use { gzipOut ->
-            gzipOut.write(gameLog.toByteArray())
-            logger.atInfo().log("Stored game log for game %d at %s", id, filePath)
-          }
-        }
-      } catch (e: Exception) {
-        logger.atWarning().withCause(e).log("Failed to save game log for game %d", id)
-      }
-    }
   }
 
   @Synchronized
@@ -714,26 +682,16 @@ class KailleraGame(
       return AddDataResult.IgnoringDesynched
     }
 
-    gameLogBuilder?.addEvents(
-      event {
-        timestampNs =
-          checkNotNull(lagometer?.userDatas[user.playerNumber - 1]?.receivedDataNs) {
-            "user's receivedGameDataNs is null!"
-          }
-        receivedGameData =
-          when (user.playerNumber) {
-            1 -> RECEIVED_FROM_P1
-            2 -> RECEIVED_FROM_P2
-            3 -> RECEIVED_FROM_P3
-            4 -> RECEIVED_FROM_P4
-            else -> throw IllegalStateException("Player number is out of bounds!")
-          }
-      }
+    surveyManager.logReceivedGameData(
+      playerNumber = user.playerNumber,
+      timestampNs = lagometer?.userDatas?.get(user.playerNumber - 1)?.receivedDataNs,
     )
 
     // Add the data for the user to their own player queue.
     playerActionQueues?.get(playerNumber - 1)?.addActions(data)
     autoFireDetector.addData(playerNumber, data, user.bytesPerAction)
+
+    surveyManager.onControllerInput(user, data, user.bytesPerAction)
 
     return maybeSendData(user)
   }
@@ -831,39 +789,28 @@ class KailleraGame(
     get() = lagometer?.lag ?: Duration.ZERO
 
   private fun updateGameDrift(nowNs: Long) {
-    val glb = gameLogBuilder
-    if (glb != null) {
-      glb.addEvents(
-        event {
-          timestampNs = nowNs
-          fanOut = FAN_OUT
-        }
-      )
+    var lagstatSummaryData: LagstatSummary? = null
 
-      // Log the /lagstat data once every 1 minute.
-      if ((nowNs - lastLagstatNs).nanoseconds > 1.minutes) {
-        glb.addEvents(
-          event {
-            timestampNs = nowNs
-            lagstatSummary = lagstatSummary {
-              windowDurationMs = flags.lagstatDuration.inWholeMilliseconds.toInt()
-              gameLagMs = currentGameLag.toMillisDouble()
+    // Log the /lagstat data once every 1 minute.
+    if ((nowNs - lastLagstatNs).nanoseconds > 1.minutes) {
+      lagstatSummaryData = lagstatSummary {
+        windowDurationMs = flags.lagstatDuration.inWholeMilliseconds.toInt()
+        gameLagMs = currentGameLag.toMillisDouble()
 
-              val lags = lagometer?.gameLagPerPlayer
-              if (lags != null) {
-                for ((i, p) in players.withIndex()) {
-                  playerAttributedLags += playerAttributedLag {
-                    player = p.playerNumber.toPlayerNumberProto()
-                    attributedLagMs = lags[i].toMillisDouble()
-                  }
-                }
-              }
+        val lags = lagometer?.gameLagPerPlayer
+        if (lags != null) {
+          for ((i, p) in players.withIndex()) {
+            playerAttributedLags += playerAttributedLag {
+              player = p.playerNumber.toPlayerNumberProto()
+              attributedLagMs = lags[i].toMillisDouble()
             }
           }
-        )
-        lastLagstatNs = nowNs
+        }
       }
+      lastLagstatNs = nowNs
     }
+
+    surveyManager.updateDrift(nowNs, lagstatSummaryData)
 
     lagometer?.advanceFrame(nowNs)
 
@@ -873,15 +820,7 @@ class KailleraGame(
   companion object {
     private val logger = FluentLogger.forEnclosingClass()
 
-    /** Unfortunately Kaillera is built on the assumption that all games run at 60FPS. */
     const val GAME_FPS = 60
-
-    // A few logging constants to avoid creating unnecessary objects.
-    private val FAN_OUT = fanOut {}
-    private val RECEIVED_FROM_P1 = receivedGameData { receivedFrom = PLAYER_ONE }
-    private val RECEIVED_FROM_P2 = receivedGameData { receivedFrom = PLAYER_TWO }
-    private val RECEIVED_FROM_P3 = receivedGameData { receivedFrom = PLAYER_THREE }
-    private val RECEIVED_FROM_P4 = receivedGameData { receivedFrom = PLAYER_FOUR }
 
     private fun Int.toPlayerNumberProto(): Player =
       when (this) {
