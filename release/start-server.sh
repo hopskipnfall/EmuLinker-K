@@ -13,10 +13,36 @@ SEARCH_TERM="EmuLinker-K version"
 JAVA_OPTS="-Xms64m -Xmx256m -XX:+UseSerialGC -XX:+AlwaysPreTouch"
 CLASSPATH="./conf:$JAR_FILE"
 
-# Check for foreground flag
+# Check for foreground and jar flags
 FOREGROUND_MODE=false
-if [[ "$1" == "--foreground" ]]; then
-    FOREGROUND_MODE=true
+JAR_OVERRIDE=""
+
+while [[ "$#" -gt 0 ]]; do
+    case $1 in
+        --foreground)
+            FOREGROUND_MODE=true
+            ;;
+        --jar|-j)
+            if [[ -n "$2" && "$2" != -* ]]; then
+                JAR_OVERRIDE="$2"
+                shift
+            else
+                echo "❌ Error: --jar requires a file path argument."
+                exit 1
+            fi
+            ;;
+        *)
+            echo "❌ Error: Unknown parameter: $1"
+            echo "   Usage: $0 [--foreground] [--jar <path>]"
+            exit 1
+            ;;
+    esac
+    shift
+done
+
+if [ -n "$JAR_OVERRIDE" ]; then
+    JAR_FILE="$JAR_OVERRIDE"
+    CLASSPATH="./conf:$JAR_FILE"
 fi
 
 # 3. PRE-FLIGHT CHECKS
@@ -42,37 +68,41 @@ if pgrep -f "$MAIN_CLASS" > /dev/null; then
 fi
 
 # 3.b UPDATE CHECK
-echo "🔍 Checking for updates..."
-PROD_TXT=$(curl -fsSL --max-time 3 "https://raw.githubusercontent.com/hopskipnfall/EmuLinker-K/prod/release/prod.txt" || true)
+if [ -z "$JAR_OVERRIDE" ]; then
+    echo "🔍 Checking for updates..."
+    PROD_TXT=$(curl -fsSL --max-time 3 "https://raw.githubusercontent.com/hopskipnfall/EmuLinker-K/prod/release/prod.txt" || true)
 
-if [ -n "$PROD_TXT" ]; then
-    LATEST_VERSION=$(echo "$PROD_TXT" | grep "^version=" | cut -d'=' -f2)
-    RELEASE_NOTES=$(echo "$PROD_TXT" | grep "^releaseNotes=" | cut -d'=' -f2)
+    if [ -n "$PROD_TXT" ]; then
+        LATEST_VERSION=$(echo "$PROD_TXT" | grep "^version=" | cut -d'=' -f2)
+        RELEASE_NOTES=$(echo "$PROD_TXT" | grep "^releaseNotes=" | cut -d'=' -f2)
 
-    # Extract local version from JAR filename
-    # Assumes JAR_FILE format: .../emulinker-k-VERSION.jar
-    LOCAL_VERSION=$(basename "$JAR_FILE" | sed -E 's/emulinker-k-(.+)\.jar/\1/')
+        # Extract local version from JAR filename
+        # Assumes JAR_FILE format: .../emulinker-k-VERSION.jar
+        LOCAL_VERSION=$(basename "$JAR_FILE" | sed -E 's/emulinker-k-(.+)\.jar/\1/')
 
-    if [ -n "$LATEST_VERSION" ] && [ -n "$LOCAL_VERSION" ]; then
-        if [ "$LATEST_VERSION" != "$LOCAL_VERSION" ]; then
-            echo -e "\n⚠️  \033[1;33mUpdate Available!\033[0m"
-            echo "   Current: $LOCAL_VERSION"
-            echo "   Latest:  $LATEST_VERSION"
-            if [ -n "$RELEASE_NOTES" ]; then
-                echo "   Release Notes: $RELEASE_NOTES"
+        if [ -n "$LATEST_VERSION" ] && [ -n "$LOCAL_VERSION" ]; then
+            if [ "$LATEST_VERSION" != "$LOCAL_VERSION" ]; then
+                echo -e "\n⚠️  \033[1;33mUpdate Available!\033[0m"
+                echo "   Current: $LOCAL_VERSION"
+                echo "   Latest:  $LATEST_VERSION"
+                if [ -n "$RELEASE_NOTES" ]; then
+                    echo "   Release Notes: $RELEASE_NOTES"
+                fi
+                echo "   To upgrade, run:"
+                echo -e "   \033[1mcurl -fsSL https://raw.githubusercontent.com/hopskipnfall/EmuLinker-K/master/release/setup.sh | bash\033[0m\n"
+                echo "   Starting server with current version in 5 seconds..."
+                sleep 5
+            else
+                echo "✅ Server is up to date ($LOCAL_VERSION)."
             fi
-            echo "   To upgrade, run:"
-            echo -e "   \033[1mcurl -fsSL https://raw.githubusercontent.com/hopskipnfall/EmuLinker-K/master/release/setup.sh | bash\033[0m\n"
-            echo "   Starting server with current version in 5 seconds..."
-            sleep 5
         else
-            echo "✅ Server is up to date ($LOCAL_VERSION)."
+             echo "⚠️  Could not determine versions. Skipping check."
         fi
     else
-         echo "⚠️  Could not determine versions. Skipping check."
+        echo "⚠️  Could not fetch update info. Skipping check."
     fi
 else
-    echo "⚠️  Could not fetch update info. Skipping check."
+    echo "ℹ️  Using custom jar. Skipping update check."
 fi
 
 print_startup_logs() {
