@@ -51,6 +51,8 @@ data class RuntimeFlags(
   val v086BufferSize: Int,
   val surveyEnabled: Boolean,
   val surveyGameWhitelist: List<String>,
+  val surveyApiEndpoint: String,
+  val surveyApiKey: String,
 ) {
 
   init {

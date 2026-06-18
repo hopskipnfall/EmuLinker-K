@@ -352,6 +352,8 @@ class AccessManager2Test {
         v086BufferSize = 4096,
         surveyEnabled = false,
         surveyGameWhitelist = emptyList(),
+        surveyApiEndpoint = "",
+        surveyApiKey = "",
       )
   }
 }
