@@ -2,6 +2,8 @@ package org.emulinker.kaillera.model
 
 import com.google.common.truth.Truth.assertThat
 import io.netty.buffer.Unpooled
+import java.net.InetAddress
+import java.net.InetSocketAddress
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -25,6 +27,8 @@ class SurveyManagerTest {
     mock<RuntimeFlags> {
       on { surveyEnabled } doReturn true
       on { surveyGameWhitelist } doReturn listOf("smash", "tekken")
+      on { surveyApiEndpoint } doReturn "http://localhost"
+      on { surveyApiKey } doReturn "test-key"
     }
 
   // A user who has not yet given consent (surveyConsent == null, no timemark set).
@@ -34,8 +38,12 @@ class SurveyManagerTest {
     on { surveyConsentAskedTimeMark } doReturn null
   }
 
-  // A user who has positively consented to surveys.
   private val consentedUser: KailleraUser = mock {
+    on { name } doReturn "PlayerOne"
+    on { socketAddress } doReturn InetSocketAddress(InetAddress.getLoopbackAddress(), 27001)
+    on { clientType } doReturn "MAME 0.119"
+    on { connectionType } doReturn ConnectionType.EXCELLENT
+    on { frameDelay } doReturn 2
     on { frameCount } doReturn 3
     on { surveyConsent } doReturn true
     on { surveyConsentAskedTimeMark } doReturn TimeSource.Monotonic.markNow()
@@ -79,6 +87,8 @@ class SurveyManagerTest {
       mock<RuntimeFlags> {
         on { surveyEnabled } doReturn false
         on { surveyGameWhitelist } doReturn listOf("smash")
+        on { surveyApiEndpoint } doReturn "http://localhost"
+        on { surveyApiKey } doReturn "test-key"
       }
     stopKoin()
     startKoin { modules(module { single { disabledFlags } }) }

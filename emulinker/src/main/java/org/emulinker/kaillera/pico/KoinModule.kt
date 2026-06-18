@@ -4,6 +4,10 @@ import com.codahale.metrics.MetricRegistry
 import com.google.common.flogger.FluentLogger
 import io.github.redouane59.twitter.TwitterClient
 import io.github.redouane59.twitter.signature.TwitterCredentials
+import io.ktor.client.HttpClient
+import io.ktor.client.engine.cio.CIO
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.serialization.kotlinx.json.json
 import java.nio.charset.Charset
 import java.nio.charset.UnsupportedCharsetException
 import java.util.Timer
@@ -15,6 +19,7 @@ import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
+import kotlinx.serialization.json.Json
 import org.apache.commons.configuration.Configuration
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.access.AccessManager
@@ -180,6 +185,8 @@ val koinModule = module {
           v086BufferSize = config.getInt("controllers.v086.bufferSize", 4096),
           surveyEnabled = config.getBoolean("survey.enabled", false),
           surveyGameWhitelist = config.getStringArray("survey.gameWhitelist").toList(),
+          surveyApiEndpoint = config.getString("survey.apiEndpoint", ""),
+          surveyApiKey = config.getString("survey.apiKey", ""),
         )
 
       charsetDoNotUse = flags.charset
@@ -191,6 +198,19 @@ val koinModule = module {
         .withCause(e)
         .log("Failed to create RuntimeFlags.")
       throw e
+    }
+  }
+
+  single<HttpClient> {
+    HttpClient(CIO) {
+      install(ContentNegotiation) {
+        json(
+          Json {
+            ignoreUnknownKeys = true
+            prettyPrint = false
+          }
+        )
+      }
     }
   }
 
