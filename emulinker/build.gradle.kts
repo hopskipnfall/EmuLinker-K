@@ -3,16 +3,16 @@ import java.time.Instant
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompilationTask
 
 plugins {
-  id("com.google.protobuf") version "0.9.6"
+  id("com.google.protobuf") version "0.10.0"
   id("build.buf") version "0.11.0"
-  id("com.diffplug.spotless") version "8.3.0"
-  id("org.jetbrains.dokka") version "2.1.0"
+  id("com.diffplug.spotless") version "8.7.0"
+  id("org.jetbrains.dokka") version "2.2.0"
   application
 
-  kotlin("jvm") version "2.3.0"
-  kotlin("plugin.serialization") version "2.3.0"
+  kotlin("jvm") version "2.3.20"
+  kotlin("plugin.serialization") version "2.3.20"
   id("me.champeau.jmh") version "0.7.3"
-  id("com.github.ben-manes.versions") version "0.53.0"
+  id("com.github.ben-manes.versions") version "0.54.0"
 }
 
 repositories {
@@ -21,22 +21,22 @@ repositories {
 }
 
 dependencies {
-  api("org.jetbrains.kotlin:kotlin-stdlib:2.3.0")
+  api("org.jetbrains.kotlin:kotlin-stdlib:2.3.20")
 
-  implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.10.0")
+  implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.11.0")
 
   implementation("io.github.redouane59.twitter:twittered:2.23")
 
-  implementation(project.dependencies.platform("io.insert-koin:koin-bom:4.1.1"))
+  implementation(project.dependencies.platform("io.insert-koin:koin-bom:4.2.2"))
   implementation("io.insert-koin:koin-core")
   testImplementation("io.insert-koin:koin-test")
   testImplementation("io.insert-koin:koin-test-junit4")
 
-  implementation("com.google.protobuf:protobuf-kotlin:4.34.0")
-  implementation("com.google.protobuf:protobuf-java:4.34.0")
-  implementation("com.google.protobuf:protobuf-java-util:4.34.0")
+  implementation("com.google.protobuf:protobuf-kotlin:4.35.1")
+  implementation("com.google.protobuf:protobuf-java:4.35.1")
+  implementation("com.google.protobuf:protobuf-java-util:4.35.1")
 
-  val dropwizardMetricsVersion = "4.2.38"
+  val dropwizardMetricsVersion = "4.2.39"
   api("io.dropwizard.metrics:metrics-core:$dropwizardMetricsVersion")
   api("io.dropwizard.metrics:metrics-jvm:$dropwizardMetricsVersion")
 
@@ -54,7 +54,7 @@ dependencies {
   implementation("commons-configuration:commons-configuration:1.10")
   implementation("commons-pool:commons-pool:1.6")
 
-  val ktorVersion = "3.4.1"
+  val ktorVersion = "3.5.0"
   implementation("io.ktor:ktor-network-jvm:$ktorVersion")
   implementation("io.ktor:ktor-server-core-jvm:$ktorVersion")
   implementation("io.ktor:ktor-server-netty-jvm:$ktorVersion")
@@ -74,8 +74,8 @@ dependencies {
   testImplementation("com.google.truth:truth:1.4.5")
   testImplementation("com.google.truth.extensions:truth-proto-extension:1.4.5")
   testImplementation(kotlin("test"))
-  testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.2")
-  testImplementation("org.mockito.kotlin:mockito-kotlin:6.2.3")
+  testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.11.0")
+  testImplementation("org.mockito.kotlin:mockito-kotlin:6.3.0")
 }
 
 group = "org.emulinker"
@@ -86,12 +86,12 @@ version = "1.0.2"
 
 kotlin { jvmToolchain(17) }
 
+tasks.withType<AbstractCopyTask>().configureEach {
+  duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
 // Copy/filter files before compiling.
 tasks.processResources {
-  // Fails to compile without this.
-  // https://github.com/google/protobuf-gradle-plugin/issues/522#issuecomment-1195266995
-  duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-
   from("src/main/java-templates") {
     include("**/*")
 
@@ -114,7 +114,6 @@ tasks.processResources {
 
 sourceSets {
   main {
-    proto.srcDir("src/main/proto")
     kotlin.srcDir("src/main/java")
     kotlin.srcDir("build/resources/main")
 
@@ -122,7 +121,6 @@ sourceSets {
   }
 
   test {
-    proto.srcDir("src/main/proto")
     kotlin.srcDir("src/test/java")
     kotlin.srcDir("build/resources/test")
 
@@ -176,7 +174,7 @@ spotless {
 }
 
 protobuf {
-  protoc { artifact = "com.google.protobuf:protoc:4.34.0" }
+  protoc { artifact = "com.google.protobuf:protoc:4.35.1" }
 
   generateProtoTasks {
     ofSourceSet("main").forEach {

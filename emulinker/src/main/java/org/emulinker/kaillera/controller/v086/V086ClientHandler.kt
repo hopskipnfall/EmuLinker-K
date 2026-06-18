@@ -122,8 +122,9 @@ class V086ClientHandler(
 
   private val lastSendMessageNumber = AtomicInteger(0)
 
-  private fun getAndIncrementSendMessageNumber(): Int =
-    lastSendMessageNumber.getAndUpdate { (if (it > 0xFFFF) 0 else it) + 1 }
+  private fun getAndIncrementSendMessageNumber(): Int = lastSendMessageNumber.getAndUpdate {
+    (if (it > 0xFFFF) 0 else it) + 1
+  }
 
   fun resetGameDataCache() {
     clientGameDataCache.clear()

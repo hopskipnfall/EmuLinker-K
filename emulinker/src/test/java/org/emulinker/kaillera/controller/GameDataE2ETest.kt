@@ -353,12 +353,11 @@ class GameDataE2ETest : KoinComponent {
     for (i in 1..333) {
       // 1. Collect Input for this packet (3 frames per client)
       // We keep frames separated first to construct expected combined data (interleaved)
-      val clientFrames =
-        clients.map { client ->
-          val frames = mutableListOf<ByteBuf>()
-          repeat(actionsPerMessage) { frames.add(client.nextInput()) }
-          frames
-        }
+      val clientFrames = clients.map { client ->
+        val frames = mutableListOf<ByteBuf>()
+        repeat(actionsPerMessage) { frames.add(client.nextInput()) }
+        frames
+      }
 
       // 2. Calculate Combined Packet for History
       // Server interleaves: Frame 1 (All Players), Frame 2 (All Players), Frame 3 (All Players)
@@ -373,12 +372,11 @@ class GameDataE2ETest : KoinComponent {
 
       // Prepare packet inputs (Client just concatenates its own frames)
       // Note: This consumes the clientFrames ByteBufs (readerIndex moves)
-      val packetInputs =
-        clientFrames.map { frames ->
-          val buffer = Unpooled.buffer()
-          frames.forEach { buffer.writeBytes(it) }
-          buffer
-        }
+      val packetInputs = clientFrames.map { frames ->
+        val buffer = Unpooled.buffer()
+        frames.forEach { buffer.writeBytes(it) }
+        buffer
+      }
 
       // 3. Send Data (All players send their part)
       clients.forEachIndexed { index, client -> client.sendGameData(packetInputs[index]) }

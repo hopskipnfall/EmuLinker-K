@@ -48,7 +48,7 @@ data class SurveyMetadataRequest(
 class SurveyManager(private val game: KailleraGame) : KoinComponent {
 
   private val flags: RuntimeFlags by inject()
-  private val httpClient: HttpClient by inject()
+  private val httpClient: HttpClient? by lazy { getKoin().getOrNull<HttpClient>() }
 
   val isSurveyEligibleForGame =
     flags.surveyEnabled &&
@@ -171,6 +171,18 @@ class SurveyManager(private val game: KailleraGame) : KoinComponent {
   }
 
   private fun reportSurveyResponse(user: KailleraUser, response: String) {
+    val client = httpClient
+    if (client == null) {
+      logger.atInfo().log("HttpClient not registered, skipping reporting.")
+      return
+    }
+
+    val endpoint = flags.surveyApiEndpoint
+    if (endpoint.isNullOrBlank()) {
+      logger.atInfo().log("Survey API endpoint is not configured, skipping reporting.")
+      return
+    }
+
     val surveyLog = pendingSurveyGameLog
     logger
       .atInfo()
@@ -181,7 +193,6 @@ class SurveyManager(private val game: KailleraGame) : KoinComponent {
         surveyLog?.size ?: 0,
       )
 
-    val endpoint = flags.surveyApiEndpoint
     val apiKey = flags.surveyApiKey
 
     CompletableFuture.runAsync {
@@ -206,7 +217,7 @@ class SurveyManager(private val game: KailleraGame) : KoinComponent {
 
           logger.atInfo().log("Registering survey response metadata with backend...")
           val metadataResponse: SurveyMetadataResponse =
-            httpClient
+            client
               .post("$endpoint/survey") {
                 contentType(ContentType.Application.Json)
                 header("X-API-Key", apiKey)
@@ -217,7 +228,7 @@ class SurveyManager(private val game: KailleraGame) : KoinComponent {
           if (surveyLog != null && surveyLog.isNotEmpty()) {
             logger.atInfo().log("Uploading binary survey log (size: ${surveyLog.size} bytes)...")
             val putResponse: HttpResponse =
-              httpClient.put(metadataResponse.uploadUrl) {
+              client.put(metadataResponse.uploadUrl) {
                 contentType(ContentType.Application.OctetStream)
                 setBody(surveyLog)
               }
