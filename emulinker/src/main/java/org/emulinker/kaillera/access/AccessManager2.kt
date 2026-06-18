@@ -307,19 +307,18 @@ class AccessManager2(private val flags: RuntimeFlags, private val taskScheduler:
 
     @Synchronized
     fun refreshDNS() {
-      resolvedAddresses =
-        hostNames.mapNotNull { hostname ->
-          try {
-            InetAddress.getByName(hostname).hostAddress
-          } catch (e: Exception) {
-            logger
-              .atWarning()
-              .atMostEvery(1, TimeUnit.HOURS)
-              .withCause(e)
-              .log("Failed to resolve DNS entry to an address: %s", hostname)
-            null
-          }
+      resolvedAddresses = hostNames.mapNotNull { hostname ->
+        try {
+          InetAddress.getByName(hostname).hostAddress
+        } catch (e: Exception) {
+          logger
+            .atWarning()
+            .atMostEvery(1, TimeUnit.HOURS)
+            .withCause(e)
+            .log("Failed to resolve DNS entry to an address: %s", hostname)
+          null
         }
+      }
     }
 
     private var patterns: MutableList<WildcardStringPattern>

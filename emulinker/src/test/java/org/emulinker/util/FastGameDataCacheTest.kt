@@ -26,12 +26,11 @@ class FastGameDataCacheTest {
 
     assertThat(cache.size).isEqualTo(5)
     // Validate contents
-    val currentContents =
-      cache.map {
-        val arr = ByteArray(it.readableBytes())
-        it.getBytes(it.readerIndex(), arr)
-        arr.single().toInt()
-      }
+    val currentContents = cache.map {
+      val arr = ByteArray(it.readableBytes())
+      it.getBytes(it.readerIndex(), arr)
+      arr.single().toInt()
+    }
     assertThat(currentContents).containsExactly(2, 3, 4, 5, 6)
 
     for ((index, value) in (2..6).withIndex()) {
@@ -99,12 +98,11 @@ class FastGameDataCacheTest {
     }
 
     // Verify initial state
-    var actualList =
-      cache.map {
-        val arr = ByteArray(it.readableBytes())
-        it.getBytes(it.readerIndex(), arr)
-        arr.single().toInt()
-      }
+    var actualList = cache.map {
+      val arr = ByteArray(it.readableBytes())
+      it.getBytes(it.readerIndex(), arr)
+      arr.single().toInt()
+    }
     assertThat(actualList).containsExactly(1, 4, 3, 4, 5).inOrder()
 
     // Remove element at index 0 (which is 1)
@@ -121,12 +119,11 @@ class FastGameDataCacheTest {
     cache.remove(1)
 
     // Verify after removal
-    actualList =
-      cache.map {
-        val arr = ByteArray(it.readableBytes())
-        it.getBytes(it.readerIndex(), arr)
-        arr.single().toInt()
-      }
+    actualList = cache.map {
+      val arr = ByteArray(it.readableBytes())
+      it.getBytes(it.readerIndex(), arr)
+      arr.single().toInt()
+    }
     assertThat(actualList).containsExactly(1, 3, 4, 5).inOrder()
 
     // Check indexing
@@ -145,12 +142,11 @@ class FastGameDataCacheTest {
     cache.add(Unpooled.wrappedBuffer(byteArrayOf(0x09)))
 
     // Make sure it removed the 4 at the beginning and not the middle.
-    val actualList =
-      cache.map {
-        val arr = ByteArray(it.readableBytes())
-        it.getBytes(it.readerIndex(), arr)
-        arr.single().toInt()
-      }
+    val actualList = cache.map {
+      val arr = ByteArray(it.readableBytes())
+      it.getBytes(it.readerIndex(), arr)
+      arr.single().toInt()
+    }
     assertThat(actualList).containsExactly(1, 3, 4, 5, 9).inOrder()
   }
 
