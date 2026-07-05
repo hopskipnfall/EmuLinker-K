@@ -48,7 +48,7 @@ Use this workflow to build and distribute an unversioned development build for i
 5. **Update Dev Manifest**:
    Update `release/dev.txt` in the `master` branch:
    ```properties
-   tag=0.1.2
+   tag=dev
    version=DEV
    downloadUrl=https://github.com/hopskipnfall/EmuLinker-K/releases/download/0.1.2/emulinker-k-DEV.jar
    ```

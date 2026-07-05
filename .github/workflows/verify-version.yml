@@ -42,8 +42,8 @@ jobs:
       - name: Verify release manifests (dev.txt, beta.txt, prod.txt)
         run: |
           echo "🔍 Verifying release/dev.txt..."
-          if ! grep -q "^tag=0.1.2$" release/dev.txt; then
-            echo "❌ dev.txt 'tag' must be 0.1.2"
+          if ! grep -q "^tag=dev$" release/dev.txt; then
+            echo "❌ dev.txt 'tag' must be dev"
             exit 1
           fi
           if ! grep -q "^version=DEV$" release/dev.txt; then
