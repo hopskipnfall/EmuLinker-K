@@ -26,6 +26,9 @@ To manage a release, locate the corresponding workflow checklist below (Dev, Bet
 
 ## Workflow (Instruction-Only)
 
+> [!IMPORTANT]
+> **Pre-Execution Confirmation Rule**: Because release actions occur infrequently (often months apart), the agent **must explicitly write down, enumerate, and present the exact checklist steps and terminal commands** it will run to the user in chat before taking any action. Specifically, before making any code modification, compile, git commit, tag creation, push, or GitHub Release, the agent must present the list of planned actions and wait for the user to explicitly reply and confirm (e.g. "Proceed").
+
 ### A. Development Build Workflow (`dev`)
 Use this workflow to build and distribute an unversioned development build for internal testing without changing build files or creating official GitHub releases.
 
