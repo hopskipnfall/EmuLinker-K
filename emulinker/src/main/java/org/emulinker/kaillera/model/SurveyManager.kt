@@ -18,6 +18,7 @@ import kotlin.time.TimeSource
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Serializable
 import org.emulinker.config.RuntimeFlags
+import org.emulinker.kaillera.controller.input.N64ControllerInputParser
 import org.emulinker.proto.Event
 import org.emulinker.proto.EventKt.fanOut
 import org.emulinker.proto.EventKt.receivedGameData
@@ -38,7 +39,7 @@ data class SurveyMetadataRequest(
   val romName: String,
   val surveyResponse: String,
   val serverName: String,
-  val emulatorName: String?,
+  val emulatorName: String,
   val connectionType: String,
   val frameDelay: Int,
 )
@@ -48,6 +49,7 @@ data class SurveyMetadataRequest(
 class SurveyManager(private val game: KailleraGame) : KoinComponent {
 
   private val flags: RuntimeFlags by inject()
+  private val inputParser: N64ControllerInputParser by inject()
   private val httpClient: HttpClient? by lazy { getKoin().getOrNull<HttpClient>() }
 
   val isSurveyEligibleForGame =
@@ -93,7 +95,7 @@ class SurveyManager(private val game: KailleraGame) : KoinComponent {
     val eligiblePlayers = game.players.filter { it.surveyConsent == true }
 
     if (eligiblePlayers.isNotEmpty()) {
-      if (checkStartPressed(data, bytesPerAction)) {
+      if (checkStartPressed(data)) {
         pendingSurveyGameLog =
           GameLog.newBuilder().addAllEvents(telemetryEvents).build().toByteArray()
         for (player in eligiblePlayers) {
@@ -128,10 +130,7 @@ class SurveyManager(private val game: KailleraGame) : KoinComponent {
     )
   }
 
-  private fun checkStartPressed(data: ByteBuf, bytesPerAction: Int): Boolean {
-    if (data.readableBytes() < 13) return false
-    return (data.getByte(data.readerIndex() + 12).toInt() and 0b00010000) != 0
-  }
+  private fun checkStartPressed(data: ByteBuf): Boolean = inputParser.parse(data)?.start == true
 
   fun handleChat(user: KailleraUser, message: String): Boolean {
     if (!isSurveyEligibleForGame) return false
@@ -198,21 +197,16 @@ class SurveyManager(private val game: KailleraGame) : KoinComponent {
     CompletableFuture.runAsync {
       try {
         runBlocking {
-          val ipAddress = user.socketAddress!!.address.hostAddress
-          val emulatorName = user.clientType
-          val connectionType = user.connectionType.readableName
-          val frameDelay = user.frameDelay
-
           val requestBody =
             SurveyMetadataRequest(
               username = user.name!!,
-              ipAddress = ipAddress,
+              ipAddress = user.socketAddress?.address?.hostAddress!!,
               romName = game.romName,
               surveyResponse = response,
-              serverName = flags.serverName,
-              emulatorName = emulatorName,
-              connectionType = connectionType,
-              frameDelay = frameDelay,
+              serverName = flags.serverName.takeIf { it.isNotBlank() } ?: "(unset)",
+              emulatorName = user.clientType!!,
+              connectionType = user.connectionType.readableName,
+              frameDelay = user.frameDelay,
             )
 
           logger.atInfo().log("Registering survey response metadata with backend...")
