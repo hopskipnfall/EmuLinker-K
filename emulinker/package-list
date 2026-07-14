@@ -151,6 +151,31 @@ $dokka.location:org.emulinker.kaillera.controller.connectcontroller.protocol/Req
 $dokka.location:org.emulinker.kaillera.controller.connectcontroller.protocol/RequestPrivateKailleraPortResponse/bodyBytesPlusMessageIdType/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.controller.connectcontroller.protocol/-request-private-kaillera-port-response/body-bytes-plus-message-id-type.html
 $dokka.location:org.emulinker.kaillera.controller.connectcontroller.protocol/RequestPrivateKailleraPortResponse/port/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.controller.connectcontroller.protocol/-request-private-kaillera-port-response/port.html
 $dokka.location:org.emulinker.kaillera.controller.connectcontroller.protocol/RequestPrivateKailleraPortResponse/writeTo/#io.netty.buffer.ByteBuf/PointingToDeclaration/emulinker/org.emulinker.kaillera.controller.connectcontroller.protocol/-request-private-kaillera-port-response/write-to.html
+$dokka.location:org.emulinker.kaillera.controller.input////PointingToDeclaration/emulinker/org.emulinker.kaillera.controller.input/index.html
+$dokka.location:org.emulinker.kaillera.controller.input/N64ControllerFrame///PointingToDeclaration/emulinker/org.emulinker.kaillera.controller.input/-n64-controller-frame/index.html
+$dokka.location:org.emulinker.kaillera.controller.input/N64ControllerFrame/N64ControllerFrame/#kotlin.Int#kotlin.Int#kotlin.Byte#kotlin.Byte/PointingToDeclaration/emulinker/org.emulinker.kaillera.controller.input/-n64-controller-frame/-n64-controller-frame.html
+$dokka.location:org.emulinker.kaillera.controller.input/N64ControllerFrame/a/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.controller.input/-n64-controller-frame/a.html
+$dokka.location:org.emulinker.kaillera.controller.input/N64ControllerFrame/b/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.controller.input/-n64-controller-frame/b.html
+$dokka.location:org.emulinker.kaillera.controller.input/N64ControllerFrame/buttonsHigh/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.controller.input/-n64-controller-frame/buttons-high.html
+$dokka.location:org.emulinker.kaillera.controller.input/N64ControllerFrame/buttonsLow/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.controller.input/-n64-controller-frame/buttons-low.html
+$dokka.location:org.emulinker.kaillera.controller.input/N64ControllerFrame/cDown/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.controller.input/-n64-controller-frame/c-down.html
+$dokka.location:org.emulinker.kaillera.controller.input/N64ControllerFrame/cLeft/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.controller.input/-n64-controller-frame/c-left.html
+$dokka.location:org.emulinker.kaillera.controller.input/N64ControllerFrame/cRight/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.controller.input/-n64-controller-frame/c-right.html
+$dokka.location:org.emulinker.kaillera.controller.input/N64ControllerFrame/cUp/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.controller.input/-n64-controller-frame/c-up.html
+$dokka.location:org.emulinker.kaillera.controller.input/N64ControllerFrame/dpadDown/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.controller.input/-n64-controller-frame/dpad-down.html
+$dokka.location:org.emulinker.kaillera.controller.input/N64ControllerFrame/dpadLeft/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.controller.input/-n64-controller-frame/dpad-left.html
+$dokka.location:org.emulinker.kaillera.controller.input/N64ControllerFrame/dpadRight/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.controller.input/-n64-controller-frame/dpad-right.html
+$dokka.location:org.emulinker.kaillera.controller.input/N64ControllerFrame/dpadUp/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.controller.input/-n64-controller-frame/dpad-up.html
+$dokka.location:org.emulinker.kaillera.controller.input/N64ControllerFrame/joystickX/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.controller.input/-n64-controller-frame/joystick-x.html
+$dokka.location:org.emulinker.kaillera.controller.input/N64ControllerFrame/joystickY/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.controller.input/-n64-controller-frame/joystick-y.html
+$dokka.location:org.emulinker.kaillera.controller.input/N64ControllerFrame/l/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.controller.input/-n64-controller-frame/l.html
+$dokka.location:org.emulinker.kaillera.controller.input/N64ControllerFrame/r/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.controller.input/-n64-controller-frame/r.html
+$dokka.location:org.emulinker.kaillera.controller.input/N64ControllerFrame/start/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.controller.input/-n64-controller-frame/start.html
+$dokka.location:org.emulinker.kaillera.controller.input/N64ControllerFrame/toString/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.controller.input/-n64-controller-frame/to-string.html
+$dokka.location:org.emulinker.kaillera.controller.input/N64ControllerFrame/z/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.controller.input/-n64-controller-frame/z.html
+$dokka.location:org.emulinker.kaillera.controller.input/N64ControllerInputParser///PointingToDeclaration/emulinker/org.emulinker.kaillera.controller.input/-n64-controller-input-parser/index.html
+$dokka.location:org.emulinker.kaillera.controller.input/N64ControllerInputParser/N64ControllerInputParser/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.controller.input/-n64-controller-input-parser/-n64-controller-input-parser.html
+$dokka.location:org.emulinker.kaillera.controller.input/N64ControllerInputParser/parse/#io.netty.buffer.ByteBuf/PointingToDeclaration/emulinker/org.emulinker.kaillera.controller.input/-n64-controller-input-parser/parse.html
 $dokka.location:org.emulinker.kaillera.controller.messaging////PointingToDeclaration/emulinker/org.emulinker.kaillera.controller.messaging/index.html
 $dokka.location:org.emulinker.kaillera.controller.messaging/ByteBufferMessage///PointingToDeclaration/emulinker/org.emulinker.kaillera.controller.messaging/-byte-buffer-message/index.html
 $dokka.location:org.emulinker.kaillera.controller.messaging/ByteBufferMessage/bodyBytesPlusMessageIdType/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.controller.messaging/-byte-buffer-message/body-bytes-plus-message-id-type.html
@@ -1381,7 +1406,7 @@ $dokka.location:org.emulinker.kaillera.model/SurveyManager/onGameStarted/#/Point
 $dokka.location:org.emulinker.kaillera.model/SurveyManager/onUserJoined/#org.emulinker.kaillera.model.KailleraUser/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-survey-manager/on-user-joined.html
 $dokka.location:org.emulinker.kaillera.model/SurveyManager/updateDrift/#kotlin.Long#org.emulinker.proto.Event.LagstatSummary?/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-survey-manager/update-drift.html
 $dokka.location:org.emulinker.kaillera.model/SurveyMetadataRequest///PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-survey-metadata-request/index.html
-$dokka.location:org.emulinker.kaillera.model/SurveyMetadataRequest/SurveyMetadataRequest/#kotlin.String#kotlin.String#kotlin.String#kotlin.String#kotlin.String#kotlin.String?#kotlin.String#kotlin.Int/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-survey-metadata-request/-survey-metadata-request.html
+$dokka.location:org.emulinker.kaillera.model/SurveyMetadataRequest/SurveyMetadataRequest/#kotlin.String#kotlin.String#kotlin.String#kotlin.String#kotlin.String#kotlin.String#kotlin.String#kotlin.Int/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-survey-metadata-request/-survey-metadata-request.html
 $dokka.location:org.emulinker.kaillera.model/SurveyMetadataRequest/connectionType/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-survey-metadata-request/connection-type.html
 $dokka.location:org.emulinker.kaillera.model/SurveyMetadataRequest/emulatorName/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-survey-metadata-request/emulator-name.html
 $dokka.location:org.emulinker.kaillera.model/SurveyMetadataRequest/frameDelay/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-survey-metadata-request/frame-delay.html
@@ -1537,6 +1562,7 @@ org.emulinker.config
 org.emulinker.kaillera.access
 org.emulinker.kaillera.controller
 org.emulinker.kaillera.controller.connectcontroller.protocol
+org.emulinker.kaillera.controller.input
 org.emulinker.kaillera.controller.messaging
 org.emulinker.kaillera.controller.v086
 org.emulinker.kaillera.controller.v086.action
