@@ -38,3 +38,56 @@ jobs:
             grep "emulinker-k-.*.jar" release/start-server.bat
             exit 1
           fi
+
+      - name: Verify release manifests (dev.txt, beta.txt, prod.txt)
+        run: |
+          echo "🔍 Verifying release/dev.txt..."
+          if ! grep -q "^tag=dev$" release/dev.txt; then
+            echo "❌ dev.txt 'tag' must be dev"
+            exit 1
+          fi
+          if ! grep -q "^version=DEV$" release/dev.txt; then
+            echo "❌ dev.txt 'version' must be DEV"
+            exit 1
+          fi
+          if ! grep -q "^downloadUrl=https://github.com/hopskipnfall/EmuLinker-K/releases/download/0.1.2/emulinker-k-DEV.jar$" release/dev.txt; then
+            echo "❌ dev.txt 'downloadUrl' is incorrect or missing"
+            exit 1
+          fi
+          echo "✅ dev.txt is valid"
+
+          validate_manifest() {
+            local file=$1
+            echo "🔍 Verifying $file..."
+            local tag=$(grep "^tag=" "$file" | cut -d'=' -f2)
+            local version=$(grep "^version=" "$file" | cut -d'=' -f2)
+            local url=$(grep "^downloadUrl=" "$file" | cut -d'=' -f2)
+
+            if [ -z "$tag" ]; then
+              echo "❌ $file is missing 'tag'"
+              exit 1
+            fi
+            if [ -z "$version" ]; then
+              echo "❌ $file is missing 'version'"
+              exit 1
+            fi
+            if [ -z "$url" ]; then
+              echo "❌ $file is missing 'downloadUrl'"
+              exit 1
+            fi
+
+            local expected_start="https://github.com/hopskipnfall/EmuLinker-K/releases/download/"
+            local expected_end="/emulinker-k-$version.jar"
+            if [[ "$url" != "$expected_start"* ]] || [[ "$url" != *"$expected_end" ]]; then
+              echo "❌ $file downloadUrl does not match the expected URL format:"
+              echo "   Got:      $url"
+              echo "   Expected start: $expected_start"
+              echo "   Expected end:   $expected_end"
+              exit 1
+            fi
+            echo "✅ $file is valid (version: $version, tag: $tag)"
+          }
+
+          validate_manifest release/prod.txt
+          validate_manifest release/beta.txt
+
