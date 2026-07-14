@@ -26,6 +26,7 @@ import org.emulinker.kaillera.access.AccessManager
 import org.emulinker.kaillera.access.AccessManager2
 import org.emulinker.kaillera.controller.CombinedKailleraController
 import org.emulinker.kaillera.controller.KailleraServerController
+import org.emulinker.kaillera.controller.input.N64ControllerInputParser
 import org.emulinker.kaillera.controller.v086.V086Controller
 import org.emulinker.kaillera.lookingforgame.TwitterBroadcaster
 import org.emulinker.kaillera.master.MasterListStatsCollector
@@ -66,6 +67,7 @@ val koinModule = module {
   singleOf(::TwitterBroadcaster)
   singleOf(::ReleaseInfo)
   singleOf(::PublicServerInformation)
+  singleOf(::N64ControllerInputParser)
 
   factoryOf(::EmuLinkerMasterUpdateTask).bind<MasterListUpdateTask>()
   factoryOf(::CombinedKailleraController)

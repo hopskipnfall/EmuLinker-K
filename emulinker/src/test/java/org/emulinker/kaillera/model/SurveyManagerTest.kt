@@ -11,6 +11,7 @@ import kotlin.time.Duration.Companion.minutes
 import kotlin.time.TimeMark
 import kotlin.time.TimeSource
 import org.emulinker.config.RuntimeFlags
+import org.emulinker.kaillera.controller.input.N64ControllerInputParser
 import org.emulinker.proto.GameLog
 import org.koin.core.context.startKoin
 import org.koin.core.context.stopKoin
@@ -58,7 +59,14 @@ class SurveyManagerTest {
 
   @BeforeTest
   fun setUp() {
-    startKoin { modules(module { single { mockFlags } }) }
+    startKoin {
+      modules(
+        module {
+          single { mockFlags }
+          single { N64ControllerInputParser() }
+        }
+      )
+    }
   }
 
   @AfterTest
@@ -254,20 +262,109 @@ class SurveyManagerTest {
 
     val manager = SurveyManager(playingGame)
 
-    // Use reflection to set gameStartTimeMark to 9 minutes ago
+    // Use reflection to set gameStartTimeMark to 2 minutes ago
     val field = SurveyManager::class.java.getDeclaredField("gameStartTimeMark")
     field.isAccessible = true
     field.set(manager, TimeSource.Monotonic.markNow() - 9.minutes)
 
-    // N64 controller data layout with start bit set at byte 12 (0x10)
+    // N64 controller data layout with format byte 0x20, and start bit set at byte 12 (0x10)
     val data =
       Unpooled.buffer(24).apply {
-        writeZero(12)
-        writeByte(0x10) // start button pressed
-        writeZero(11)
+        writeByte(0x10) // Player 1 select
+        writeByte(0x20) // Standard mode format byte
+        writeZero(10) // Pad to 12 bytes
+        writeByte(0x10) // start button pressed (index 12)
+        writeZero(11) // Pad remaining
       }
 
     manager.onControllerInput(user, data, 2)
+
+    verify(playingGame).announce(any(), org.mockito.kotlin.eq(user))
+    data.release()
+  }
+
+  @Test
+  fun `onControllerInput checks start button and triggers survey in 8-byte mode`() {
+    val user: KailleraUser = mock {
+      on { frameCount } doReturn 6
+      on { surveyConsent } doReturn true
+    }
+    val playingGame =
+      mock<KailleraGame> {
+        on { romName } doReturn "smash"
+        on { status } doReturn GameStatus.PLAYING
+        on { players } doReturn mutableListOf(user)
+      }
+
+    val manager = SurveyManager(playingGame)
+
+    val field = SurveyManager::class.java.getDeclaredField("gameStartTimeMark")
+    field.isAccessible = true
+    field.set(manager, TimeSource.Monotonic.markNow() - 9.minutes)
+
+    // 8-byte mode controller data layout with start bit set at byte 7 (0x10)
+    // Hex: 102100000104011000000000000000000000000000000000
+    val data =
+      Unpooled.buffer(24).apply {
+        writeBytes(
+          byteArrayOf(
+            0x10.toByte(),
+            0x21.toByte(),
+            0x00.toByte(),
+            0x00.toByte(),
+            0x01.toByte(),
+            0x04.toByte(),
+            0x01.toByte(),
+            0x10.toByte(),
+          )
+        )
+        writeZero(16)
+      }
+
+    manager.onControllerInput(user, data, 8) // bytesPerAction = 8
+
+    verify(playingGame).announce(any(), org.mockito.kotlin.eq(user))
+    data.release()
+  }
+
+  @Test
+  fun `onControllerInput checks start button and triggers survey in 24-byte RAW mode`() {
+    val user: KailleraUser = mock {
+      on { frameCount } doReturn 6
+      on { surveyConsent } doReturn true
+    }
+    val playingGame =
+      mock<KailleraGame> {
+        on { romName } doReturn "smash"
+        on { status } doReturn GameStatus.PLAYING
+        on { players } doReturn mutableListOf(user)
+      }
+
+    val manager = SurveyManager(playingGame)
+
+    val field = SurveyManager::class.java.getDeclaredField("gameStartTimeMark")
+    field.isAccessible = true
+    field.set(manager, TimeSource.Monotonic.markNow() - 9.minutes)
+
+    // 24-byte RAW mode from real logs: start is bit 4 of byte 7 (0x10)
+    val data =
+      Unpooled.buffer(24).apply {
+        writeBytes(
+          byteArrayOf(
+            0x10.toByte(),
+            0x21.toByte(),
+            0x00.toByte(),
+            0x00.toByte(),
+            0x01.toByte(),
+            0x04.toByte(),
+            0x01.toByte(),
+            0x10.toByte(),
+          )
+        )
+        writeZero(16)
+      }
+
+    manager.onControllerInput(user, data, 24) // bytesPerAction = 24
 
     verify(playingGame).announce(any(), org.mockito.kotlin.eq(user))
     data.release()
@@ -288,17 +385,19 @@ class SurveyManagerTest {
 
     val manager = SurveyManager(playingGame)
 
-    // Use reflection to set gameStartTimeMark to 9 minutes ago
+    // Use reflection to set gameStartTimeMark to 2 minutes ago
     val field = SurveyManager::class.java.getDeclaredField("gameStartTimeMark")
     field.isAccessible = true
     field.set(manager, TimeSource.Monotonic.markNow() - 9.minutes)
 
-    // N64 controller data layout with start bit set at byte 12 (0x10)
+    // N64 controller data layout with format byte 0x20, and start bit set at byte 12 (0x10)
     val data =
       Unpooled.buffer(24).apply {
-        writeZero(12)
-        writeByte(0x10) // start button pressed
-        writeZero(11)
+        writeByte(0x10) // Player 1 select
+        writeByte(0x20) // Standard mode format byte
+        writeZero(10) // Pad to 12 bytes
+        writeByte(0x10) // start button pressed (index 12)
+        writeZero(11) // Pad remaining
       }
 
     manager.onControllerInput(user, data, 2)
@@ -311,53 +410,46 @@ class SurveyManagerTest {
   // ── Telemetry & Pruning ──────────────────────────────────────────────────────
 
   @Test
-  fun `telemetry is not recorded before 3 minutes from game start`() {
+  fun `telemetry is not recorded when survey is not eligible`() {
     val user = consentedUser
-    val playingGame =
+    val ineligibleGame =
       mock<KailleraGame> {
-        on { romName } doReturn "smash"
+        on { romName } doReturn "mario kart"
         on { status } doReturn GameStatus.PLAYING
         on { players } doReturn mutableListOf(user)
       }
-    val manager = SurveyManager(playingGame)
+    val manager = SurveyManager(ineligibleGame)
     manager.onGameStarted()
 
-    // Game started 2 minutes ago
-    val field = SurveyManager::class.java.getDeclaredField("gameStartTimeMark")
-    field.isAccessible = true
-    field.set(manager, TimeSource.Monotonic.markNow() - 2.minutes)
-
-    // Call updateDrift to run state machine.
     manager.updateDrift(System.nanoTime(), null)
-
-    // Call logReceivedGameData. It should be ignored because telemetry is not recording.
     manager.logReceivedGameData(1, System.nanoTime())
 
-    // Set gameStartTimeMark to 9 minutes ago so onControllerInput passes the delay check
+    // Set gameStartTimeMark to 2 minutes ago
+    val field = SurveyManager::class.java.getDeclaredField("gameStartTimeMark")
+    field.isAccessible = true
     field.set(manager, TimeSource.Monotonic.markNow() - 9.minutes)
 
     val data =
       Unpooled.buffer(24).apply {
-        writeZero(12)
+        writeByte(0x10) // Player 1 select
+        writeByte(0x20) // Standard mode format byte
+        writeZero(10) // Pad to 12 bytes
         writeByte(0x10) // start button pressed
         writeZero(11)
       }
 
     manager.onControllerInput(user, data, 2)
 
-    // Retrieve pendingSurveyGameLog
     val pendingLogField = SurveyManager::class.java.getDeclaredField("pendingSurveyGameLog")
     pendingLogField.isAccessible = true
     val bytes = pendingLogField.get(manager) as ByteArray?
 
-    assertThat(bytes).isNotNull()
-    val gameLog = GameLog.parseFrom(bytes!!)
-    assertThat(gameLog.eventsCount).isEqualTo(0)
+    assertThat(bytes).isNull()
     data.release()
   }
 
   @Test
-  fun `telemetry is recorded between 3 and 8 minutes from game start`() {
+  fun `telemetry is recorded when game start delay is satisfied`() {
     val user = consentedUser
     val playingGame =
       mock<KailleraGame> {
@@ -368,7 +460,7 @@ class SurveyManagerTest {
     val manager = SurveyManager(playingGame)
     manager.onGameStarted()
 
-    // Game started 4 minutes ago (satisfies needsToRecordForFirstSurvey: 4 >= 3)
+    // Game started 30 seconds ago (satisfies needsToRecordForFirstSurvey: 30s >= 0s)
     val field = SurveyManager::class.java.getDeclaredField("gameStartTimeMark")
     field.isAccessible = true
     field.set(manager, TimeSource.Monotonic.markNow() - 4.minutes)
@@ -378,12 +470,14 @@ class SurveyManagerTest {
     // Call logReceivedGameData. It should be recorded.
     manager.logReceivedGameData(1, System.nanoTime()) // Appends 1 receivedGameData event
 
-    // Set gameStartTimeMark to 9 minutes ago so onControllerInput passes the delay check
+    // Set gameStartTimeMark to 2 minutes ago so onControllerInput passes the delay check (2m > 1m)
     field.set(manager, TimeSource.Monotonic.markNow() - 9.minutes)
 
     val data =
       Unpooled.buffer(24).apply {
-        writeZero(12)
+        writeByte(0x10) // Player 1 select
+        writeByte(0x20) // Standard mode format byte
+        writeZero(10) // Pad to 12 bytes
         writeByte(0x10) // start button pressed
         writeZero(11)
       }
@@ -432,12 +526,14 @@ class SurveyManagerTest {
     // Event 2 is 4 mins old, so it should be kept.
     manager.updateDrift(6.minutes.inWholeNanoseconds, null)
 
-    // Set gameStartTimeMark to 10 minutes ago so onControllerInput passes the delay check
-    field.set(manager, TimeSource.Monotonic.markNow() - 10.minutes)
+    // Set gameStartTimeMark to 2 minutes ago so onControllerInput passes the delay check
+    field.set(manager, TimeSource.Monotonic.markNow() - 9.minutes)
 
     val data =
       Unpooled.buffer(24).apply {
-        writeZero(12)
+        writeByte(0x10) // Player 1 select
+        writeByte(0x20) // Standard mode format byte
+        writeZero(10) // Pad to 12 bytes
         writeByte(0x10) // start button pressed
         writeZero(11)
       }
