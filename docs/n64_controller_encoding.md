@@ -105,3 +105,23 @@ The analog joystick positions are mapped to Bytes 2 and 3 as signed 8-bit intege
   * Range: `-128` (Fully Left) to `127` (Fully Right). Neutral position is `0`.
 * **Byte 3 (Joystick Y):** Represents the vertical position.
   * Range: `-128` (Fully Down) to `127` (Fully Up). Neutral position is `0`.
+
+---
+
+## 4. Byte Ordering (Big-Endian vs Little-Endian)
+
+Depending on the emulator implementation and target architecture, the 4-byte controller input frame may be encoded in **Big-Endian** (Network order) or **Little-Endian** (Host x86 order):
+
+* **Big-Endian (`[ButtonsHigh, ButtonsLow, JoystickX, JoystickY]`):**
+  * Byte 0: Buttons High
+  * Byte 1: Buttons Low
+  * Byte 2: Joystick X
+  * Byte 3: Joystick Y
+
+* **Little-Endian / `rmg-k` (`[JoystickY, JoystickX, ButtonsLow, ButtonsHigh]`):**
+  * Emulators such as `rmg-k` write the 32-bit controller struct directly in x86 host byte order.
+  * Byte 0: Joystick Y (often `0xFF` or `0xFE` when idle/centered)
+  * Byte 1: Joystick X
+  * Byte 2: Buttons Low (e.g. `0x20` for L)
+  * Byte 3: Buttons High (e.g. `0x10` for Start, `0x80` for A, `0x40` for B, `0xC0` for A+B)
+

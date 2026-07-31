@@ -97,12 +97,35 @@ class N64ControllerInputParser {
 
     val offset = data.readerIndex() + headerSize
     if (offset + 3 < data.writerIndex()) {
-      val buttonsHigh = data.getByte(offset).toInt() and 0xFF
-      val buttonsLow = data.getByte(offset + 1).toInt() and 0xFF
-      val joystickX = data.getByte(offset + 2)
-      val joystickY = data.getByte(offset + 3)
+      val b0 = data.getByte(offset).toInt() and 0xFF
+      val b1 = data.getByte(offset + 1).toInt() and 0xFF
+      val b2 = data.getByte(offset + 2).toInt() and 0xFF
+      val b3 = data.getByte(offset + 3).toInt() and 0xFF
+
+      val littleEndian = isLittleEndian(b0, b1, b2, b3)
+
+      val buttonsHigh = if (littleEndian) b3 else b0
+      val buttonsLow = if (littleEndian) b2 else b1
+      val joystickX = if (littleEndian) b1.toByte() else b2.toByte()
+      val joystickY = if (littleEndian) b0.toByte() else b3.toByte()
+
       return N64ControllerFrame(buttonsHigh, buttonsLow, joystickX, joystickY)
     }
     return null
+  }
+
+  private fun isLittleEndian(b0: Int, b1: Int, b2: Int, b3: Int): Boolean {
+    // rmg-k and Little-Endian emulators transmit frames in [joystickY, joystickX, buttonsLow,
+    // buttonsHigh] order.
+    // b0 is joystickY (often 0xFF or 0xFE when idle) and b1 is joystickX (0x00).
+    if ((b0 == 0xFF || b0 == 0xFE) && b1 == 0x00) return true
+
+    // When b0 and b1 are 0x00, check if b3 has high-byte button bits or b2 has low-byte button
+    // bits.
+    if (b0 == 0x00 && b1 == 0x00 && (b3 != 0x00 || (b2 and 0x3F) != 0) && (b2 and 0xC0) == 0) {
+      return true
+    }
+
+    return false
   }
 }

@@ -218,4 +218,67 @@ class N64ControllerInputTest {
       data.release()
     }
   }
+
+  @Test
+  fun `parse rmg-k Little-Endian controller inputs`() {
+    val cases =
+      listOf(
+        byteArrayOf(0xFF.toByte(), 0x00, 0x00, 0x00) to
+          { f: N64ControllerFrame ->
+            assertThat(f.start).isFalse()
+            assertThat(f.a).isFalse()
+            assertThat(f.b).isFalse()
+            assertThat(f.l).isFalse()
+          },
+        byteArrayOf(0xFF.toByte(), 0x00, 0x00, 0x10) to
+          { f: N64ControllerFrame ->
+            assertThat(f.start).isTrue()
+            assertThat(f.a).isFalse()
+            assertThat(f.b).isFalse()
+            assertThat(f.l).isFalse()
+          },
+        byteArrayOf(0xFF.toByte(), 0x00, 0x00, 0xC0.toByte()) to
+          { f: N64ControllerFrame ->
+            assertThat(f.start).isFalse()
+            assertThat(f.a).isTrue()
+            assertThat(f.b).isTrue()
+            assertThat(f.l).isFalse()
+          },
+        byteArrayOf(0xFF.toByte(), 0x00, 0x00, 0x80.toByte()) to
+          { f: N64ControllerFrame ->
+            assertThat(f.start).isFalse()
+            assertThat(f.a).isTrue()
+            assertThat(f.b).isFalse()
+            assertThat(f.l).isFalse()
+          },
+        byteArrayOf(0xFF.toByte(), 0x00, 0x00, 0x40) to
+          { f: N64ControllerFrame ->
+            assertThat(f.start).isFalse()
+            assertThat(f.a).isFalse()
+            assertThat(f.b).isTrue()
+            assertThat(f.l).isFalse()
+          },
+        byteArrayOf(0xFF.toByte(), 0x00, 0x20, 0x00) to
+          { f: N64ControllerFrame ->
+            assertThat(f.start).isFalse()
+            assertThat(f.a).isFalse()
+            assertThat(f.b).isFalse()
+            assertThat(f.l).isTrue()
+          },
+      )
+
+    for ((bytes, assertions) in cases) {
+      val data =
+        Unpooled.buffer(16).apply {
+          writeByte(0x10)
+          writeByte(0x20)
+          writeZero(10)
+          writeBytes(bytes)
+        }
+      val frame = parser.parse(data)
+      assertThat(frame).isNotNull()
+      assertions(frame!!)
+      data.release()
+    }
+  }
 }
