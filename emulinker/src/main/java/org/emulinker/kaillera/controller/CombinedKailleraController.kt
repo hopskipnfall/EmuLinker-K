@@ -96,10 +96,11 @@ class CombinedKailleraController(
         } else {
           // Expected on macOS and Windows. On Linux it means the native library could not be
           // loaded (for example a noexec temp directory or an unsupported libc), and the portable
-          // transport is noticeably less efficient.
+          // transport is noticeably less efficient, so include the reason there.
+          val onLinux = System.getProperty("os.name").orEmpty().contains("linux", ignoreCase = true)
           logger
             .atInfo()
-            .withCause(Epoll.unavailabilityCause())
+            .withCause(if (onLinux) Epoll.unavailabilityCause() else null)
             .log("Network transport: NIO (native epoll is unavailable)")
         }
         val group = MultiThreadIoEventLoopGroup(ioHandlerFactory)
