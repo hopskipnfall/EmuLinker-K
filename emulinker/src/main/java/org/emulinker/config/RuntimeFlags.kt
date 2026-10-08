@@ -75,4 +75,11 @@ data class RuntimeFlags(
       }
     }
   }
+
+  /**
+   * Deliberately does not use the data class's generated `toString()`, which would include the
+   * Twitter OAuth credentials and the survey API key in plain text.
+   */
+  override fun toString(): String =
+    "RuntimeFlags(serverName=$serverName, serverPort=$serverPort, <other fields and secrets omitted>)"
 }

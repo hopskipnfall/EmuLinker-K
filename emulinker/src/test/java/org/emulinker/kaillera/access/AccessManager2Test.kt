@@ -295,6 +295,35 @@ class AccessManager2Test {
   }
 
   @Test
+  fun addPermaBan_newlineInReasonCannotInjectAccessLines() {
+    accessManager.addPermaBan(
+      "10.0.0.42",
+      issuer = "Evil\nuser,SUPERADMIN,${remoteIp.hostAddress}",
+      reason = "x\r\nuser,SUPERADMIN,${remoteIp.hostAddress}",
+    )
+
+    assertThat(accessManager.getAccess(remoteIp)).isEqualTo(AccessManager.ACCESS_NORMAL)
+    assertThat(accessFile.readLines().filter { it.startsWith("user,") }).isEmpty()
+  }
+
+  @Test
+  fun addPermaBan_commaInPatternCannotChangeFieldsOrInjectLines() {
+    accessManager.addPermaBan("10.0.0.42\nuser,SUPERADMIN,1.2.3.4", issuer = "a", reason = null)
+
+    assertThat(accessFile.readLines().filter { it.startsWith("user,") }).isEmpty()
+  }
+
+  @Test
+  fun malformedLine_doesNotPreventLaterLinesFromLoading() {
+    accessFile.writeText(
+      "user,NOTALEVEL,${localIp.hostAddress}\nipaddress,DENY,${remoteIp.hostAddress}\n"
+    )
+    accessManager.forceReload()
+
+    assertThat(accessManager.isAddressAllowed(remoteIp)).isFalse()
+  }
+
+  @Test
   fun getAccess_returnsNormalForUnknownAddress() {
     assertThat(accessManager.getAccess(remoteIp)).isEqualTo(AccessManager.ACCESS_NORMAL)
   }

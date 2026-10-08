@@ -66,7 +66,7 @@ data class UserJoined(
       if (buffer.readableBytes() < 7) {
         return parseFailure("Failed byte count validation!")
       }
-      val userID = buffer.readShortLE().toInt()
+      val userID = buffer.readUnsignedShortLE()
       val ping = buffer.readIntLE()
       val connectionType = buffer.readByte()
       return Result.success(

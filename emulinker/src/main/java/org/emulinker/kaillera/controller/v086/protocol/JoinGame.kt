@@ -62,8 +62,8 @@ sealed class JoinGame : V086Message() {
       val b = buffer.readByte()
       if (b.toInt() != 0x00)
         throw MessageFormatException("Invalid format: byte 0 = " + b.toHexString())
-      val gameID = buffer.readShortLE().toInt()
-      val val1 = buffer.readShortLE().toInt()
+      val gameID = buffer.readUnsignedShortLE()
+      val val1 = buffer.readUnsignedShortLE()
       val userName = buffer.readString()
       if (buffer.readableBytes() < 7) {
         return parseFailure("Failed byte count validation!")

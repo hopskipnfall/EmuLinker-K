@@ -110,7 +110,7 @@ data class PlayerInformation(override var messageNumber: Int, val players: List<
             return parseFailure("Failed byte count validation!")
           }
           val ping = buffer.readIntLE()
-          val userID = buffer.readShortLE().toInt()
+          val userID = buffer.readUnsignedShortLE()
           val connectionType = buffer.readByte()
           Player(userName, ping.milliseconds, userID, ConnectionType.fromByteValue(connectionType))
         }

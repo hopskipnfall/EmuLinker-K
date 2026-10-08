@@ -343,4 +343,17 @@ class FastGameDataCacheTest {
     b.release()
     c.release()
   }
+
+  @Test
+  fun `get with index equal to size throws`() {
+    cache.add(Unpooled.wrappedBuffer(byteArrayOf(1)))
+    org.junit.Assert.assertThrows(IndexOutOfBoundsException::class.java) { cache.get(1) }
+  }
+
+  @Test
+  fun `get with index equal to size on a full cache throws instead of wrapping`() {
+    repeat(5) { cache.add(Unpooled.wrappedBuffer(byteArrayOf(it.toByte()))) }
+    org.junit.Assert.assertThrows(IndexOutOfBoundsException::class.java) { cache.get(5) }
+    org.junit.Assert.assertThrows(IndexOutOfBoundsException::class.java) { cache.remove(5) }
+  }
 }

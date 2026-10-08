@@ -42,7 +42,7 @@ constructor(override var messageNumber: Int, val userId: Int) : V086Message(), C
         return parseFailure("Failed byte count validation!")
       }
       buffer.readByte() // Skip over 0x00 byte.
-      return Result.success(GameKick(messageNumber, buffer.readShortLE().toInt()))
+      return Result.success(GameKick(messageNumber, buffer.readUnsignedShortLE()))
     }
 
     override fun write(buffer: ByteBuf, message: GameKick) {
