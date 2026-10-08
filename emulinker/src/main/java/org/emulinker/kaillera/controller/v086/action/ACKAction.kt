@@ -14,13 +14,10 @@ import org.emulinker.kaillera.model.UserStatus
 import org.emulinker.kaillera.model.event.ConnectedEvent
 import org.emulinker.kaillera.model.event.UserEvent
 import org.emulinker.kaillera.model.exception.LoginException
-import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
 
-class ACKAction : V086Action<ClientAck>, V086UserEventHandler<UserEvent>, KoinComponent {
+class ACKAction(private val flags: RuntimeFlags) :
+  V086Action<ClientAck>, V086UserEventHandler<UserEvent> {
   override fun toString() = "ACKAction"
-
-  private val flags: RuntimeFlags by inject()
 
   @Throws(FatalActionException::class)
   override fun performAction(message: ClientAck, clientHandler: V086ClientHandler) {

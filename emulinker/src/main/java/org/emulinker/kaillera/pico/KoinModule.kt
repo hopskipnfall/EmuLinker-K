@@ -11,9 +11,6 @@ import io.ktor.serialization.kotlinx.json.json
 import java.nio.charset.Charset
 import java.nio.charset.UnsupportedCharsetException
 import java.util.Timer
-import java.util.concurrent.SynchronousQueue
-import java.util.concurrent.ThreadPoolExecutor
-import java.util.concurrent.TimeUnit
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.milliseconds
@@ -39,13 +36,14 @@ import org.emulinker.kaillera.master.client.MasterListUpdater
 import org.emulinker.kaillera.master.client.ServerCheckinTask
 import org.emulinker.kaillera.model.ConnectionType
 import org.emulinker.kaillera.model.KailleraServer
+import org.emulinker.kaillera.model.SurveyManagerFactory
 import org.emulinker.kaillera.model.impl.AutoFireDetectorFactory
 import org.emulinker.kaillera.model.impl.AutoFireDetectorFactoryImpl
-import org.emulinker.kaillera.pico.AppModule.Companion.charsetDoNotUse
 import org.emulinker.kaillera.release.ReleaseInfo
 import org.emulinker.util.CustomUserStrings
 import org.emulinker.util.EmuLang
 import org.emulinker.util.EmuLinkerPropertiesConfig
+import org.emulinker.util.ProtocolCharset
 import org.emulinker.util.TaskScheduler
 import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.singleOf
@@ -64,7 +62,13 @@ val koinModule = module {
   singleOf(::EmuLinkerPropertiesConfig).bind<Configuration>()
   singleOf(::MetricRegistry)
   singleOf(::KailleraServer)
-  singleOf(::TwitterBroadcaster)
+  single {
+    TwitterBroadcaster(get(), get()) {
+      // Resolved lazily so servers with Twitter disabled never build a client.
+      get<TwitterClient>()
+    }
+  }
+  single { SurveyManagerFactory(get(), get()) { getOrNull<HttpClient>() } }
   singleOf(::ReleaseInfo)
   singleOf(::PublicServerInformation)
   singleOf(::N64ControllerInputParser)
@@ -85,16 +89,6 @@ val koinModule = module {
   }
 
   single { Clock.System }.bind<Clock>()
-
-  single<ThreadPoolExecutor>(named("userActionsExecutor")) {
-    ThreadPoolExecutor(
-      get<RuntimeFlags>().coreThreadPoolSize,
-      /* maximumPoolSize= */ Integer.MAX_VALUE,
-      /* keepAliveTime= */ 60L,
-      TimeUnit.SECONDS,
-      SynchronousQueue(),
-    )
-  }
 
   single { Timer(/* isDaemon= */ true) }
 
@@ -191,7 +185,7 @@ val koinModule = module {
           surveyApiKey = config.getString("survey.apiKey", ""),
         )
 
-      charsetDoNotUse = flags.charset
+      ProtocolCharset.initialize(flags.charset)
       EmuLang.updateLanguage(flags.language)
       flags
     } catch (e: Exception) {

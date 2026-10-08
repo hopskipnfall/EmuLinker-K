@@ -2,7 +2,7 @@ package org.emulinker.kaillera.controller.v086
 
 import java.nio.ByteBuffer
 import java.nio.ByteOrder.LITTLE_ENDIAN
-import org.emulinker.kaillera.pico.AppModule
+import org.emulinker.util.ProtocolCharset
 
 /** Util methods mostly for dealing ByteBuffers. */
 object V086Utils {
@@ -72,5 +72,5 @@ object V086Utils {
    * Gets the number of bytes to represent the string in the charset defined in emulinker.config,
    * plus one for the stop byte.
    */
-  fun String.getNumBytesPlusStopByte(): Int = this.toByteArray(AppModule.charsetDoNotUse).size + 1
+  fun String.getNumBytesPlusStopByte(): Int = this.toByteArray(ProtocolCharset.value).size + 1
 }

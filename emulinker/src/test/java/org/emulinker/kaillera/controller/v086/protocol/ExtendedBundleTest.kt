@@ -3,14 +3,14 @@ package org.emulinker.kaillera.controller.v086.protocol
 import io.netty.buffer.Unpooled
 import java.nio.charset.Charset
 import org.emulinker.kaillera.controller.v086.V086Utils
-import org.emulinker.kaillera.pico.AppModule
+import org.emulinker.util.ProtocolCharset
 import org.junit.Test
 
 class ExtendedBundleTest {
 
   @Test
   fun processBundle() {
-    AppModule.charsetDoNotUse = Charset.forName("Shift_JIS")
+    ProtocolCharset.overrideForTesting(Charset.forName("Shift_JIS"))
     val individualTests = TESTDATA.trimIndent().split("\n\n")
 
     for ((index, data) in individualTests.withIndex()) {

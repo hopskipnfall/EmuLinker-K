@@ -1,5 +1,6 @@
 package org.emulinker.kaillera.controller
 
+import com.codahale.metrics.MetricRegistry
 import com.google.common.flogger.FluentLogger
 import io.ktor.server.engine.EmbeddedServer
 import io.ktor.server.engine.embeddedServer
@@ -40,6 +41,8 @@ class CombinedKailleraController(
   private val accessManager: AccessManager,
   kailleraServerController: KailleraServerController,
   private val server: KailleraServer,
+  /** Shared with the [V086ClientHandler]s this controller creates. */
+  val metrics: MetricRegistry,
 ) : SimpleChannelInboundHandler<DatagramPacket>() {
   private var boundPort: Int? = null
 
@@ -113,6 +116,8 @@ class CombinedKailleraController(
 
             nettyChannel = bind(port).sync().channel()
             boundPort = port
+            // Run server maintenance on the thread that handles packets.
+            server.stateExecutor = nettyChannel.eventLoop()
 
             // Warmup the event loop.
             nettyChannel.eventLoop().submit {

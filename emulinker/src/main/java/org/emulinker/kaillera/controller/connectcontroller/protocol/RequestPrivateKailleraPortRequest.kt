@@ -2,8 +2,8 @@ package org.emulinker.kaillera.controller.connectcontroller.protocol
 
 import io.netty.buffer.ByteBuf
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
-import org.emulinker.kaillera.pico.AppModule
 import org.emulinker.util.EmuUtil
+import org.emulinker.util.ProtocolCharset
 
 /**
  * Message client sends to request a private server port.
@@ -17,8 +17,8 @@ data class RequestPrivateKailleraPortRequest(val protocol: String) : ConnectMess
   override val bodyBytesPlusMessageIdType = ID.length + protocol.length + 1
 
   override fun writeTo(buffer: ByteBuf) {
-    buffer.writeBytes(AppModule.charsetDoNotUse.encode(iD))
-    EmuUtil.writeString(buffer, protocol, 0x00, AppModule.charsetDoNotUse)
+    buffer.writeBytes(ProtocolCharset.value.encode(iD))
+    EmuUtil.writeString(buffer, protocol, 0x00, ProtocolCharset.value)
   }
 
   companion object {

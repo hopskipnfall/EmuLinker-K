@@ -1,6 +1,7 @@
 package org.emulinker.kaillera.controller.v086.action
 
 import org.koin.core.module.dsl.singleOf
+import org.koin.core.qualifier.named
 import org.koin.dsl.module
 
 val ActionModule = module {
@@ -8,7 +9,7 @@ val ActionModule = module {
   singleOf(::AdminCommandAction)
   singleOf(::ChatAction)
   singleOf(::CloseGameAction)
-  singleOf(::CreateGameAction)
+  single { CreateGameAction(get(named("joinGameMessages"))) }
   singleOf(::DropGameAction)
   singleOf(::GameChatAction)
   singleOf(::GameDesynchAction)
@@ -17,7 +18,7 @@ val ActionModule = module {
   singleOf(::GameOwnerCommandAction)
   singleOf(::GameStatusAction)
   singleOf(::InfoMessageAction)
-  singleOf(::JoinGameAction)
+  single { JoinGameAction(get(named("joinGameMessages"))) }
   singleOf(::KeepAliveAction)
   singleOf(::LoginAction)
   singleOf(::PlayerDesynchAction)

@@ -58,13 +58,13 @@ constructor(
       if (buffer.readableBytes() < 4) {
         return parseFailure("Failed byte count validation!")
       }
-      val userID = buffer.readShortLE()
+      val userID = buffer.readUnsignedShortLE()
       if (buffer.readableBytes() < 2) {
         return parseFailure("Failed byte count validation!")
       }
 
       val message = buffer.readString()
-      return Result.success(ConnectionRejected(messageNumber, userName, userID.toInt(), message))
+      return Result.success(ConnectionRejected(messageNumber, userName, userID, message))
     }
 
     override fun write(buffer: ByteBuf, message: ConnectionRejected) {

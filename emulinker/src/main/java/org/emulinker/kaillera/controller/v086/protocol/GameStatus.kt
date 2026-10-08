@@ -61,8 +61,8 @@ constructor(
       require(b.toInt() == 0x00) {
         "Invalid Game Status format: byte 0 = " + b.toHexString(HexFormat.UpperCase)
       }
-      val gameID = buffer.readShortLE().toInt()
-      val val1 = buffer.readShortLE().toInt()
+      val gameID = buffer.readUnsignedShortLE()
+      val val1 = buffer.readUnsignedShortLE()
       val gameStatus = buffer.readByte()
       val numPlayers = buffer.readByte()
       val maxPlayers = buffer.readByte()

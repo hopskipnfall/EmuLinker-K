@@ -6,7 +6,7 @@ import java.nio.ByteBuffer
 import org.emulinker.kaillera.controller.messaging.ByteBufferMessage
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.messaging.ParseException
-import org.emulinker.kaillera.pico.AppModule
+import org.emulinker.util.ProtocolCharset
 import org.emulinker.util.UnsignedUtil.putUnsignedShort
 
 /**
@@ -44,7 +44,7 @@ abstract class V086Message : ByteBufferMessage {
 
   /** Gets the number of bytes to represent the string in the charset defined in emulinker.config */
   protected fun getNumBytes(s: String): Int {
-    return s.toByteArray(AppModule.charsetDoNotUse).size
+    return s.toByteArray(ProtocolCharset.value).size
   }
 
   /** Number of bytes the body of the message takes up (excluding the message ID byte). */

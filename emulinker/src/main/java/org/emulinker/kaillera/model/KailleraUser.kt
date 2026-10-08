@@ -4,6 +4,7 @@ import com.google.common.flogger.FluentLogger
 import io.netty.buffer.ByteBuf
 import io.netty.buffer.PooledByteBufAllocator
 import java.net.InetSocketAddress
+import java.util.concurrent.CopyOnWriteArrayList
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Instant
@@ -139,7 +140,7 @@ class KailleraUser(
 
   private val lostInput: MutableList<ByteBuf> = ArrayList()
 
-  private val ignoredUsers: MutableList<String> = ArrayList()
+  private val ignoredUsers: MutableList<String> = CopyOnWriteArrayList()
   private var gameDataErrorTime: Long = -1
 
   private var stopFlag = false

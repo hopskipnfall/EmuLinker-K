@@ -7,7 +7,6 @@ import java.io.FileInputStream
 import java.io.FileNotFoundException
 import java.io.IOException
 import java.io.InputStreamReader
-import java.io.Reader
 import java.net.InetAddress
 import java.net.URISyntaxException
 import java.security.Security
@@ -31,6 +30,24 @@ class AccessManager2(private val flags: RuntimeFlags, private val taskScheduler:
     }
 
     private val logger = FluentLogger.forEnclosingClass()
+
+    /**
+     * Makes [value] safe to write as a single line of access.cfg. Newlines and other control
+     * characters are replaced with spaces so that user-supplied text (admin names, ban reasons) can
+     * never start a new config line, and commas are replaced when [stripCommas] is set because they
+     * delimit fields.
+     */
+    internal fun sanitizeForConfig(value: String, stripCommas: Boolean = false): String =
+      value
+        .map {
+          when {
+            it.isISOControl() || it == '\u2028' || it == '\u2029' -> ' '
+            stripCommas && it == ',' -> ' '
+            else -> it
+          }
+        }
+        .joinToString("")
+        .trim()
   }
 
   private var accessFile: File?
@@ -67,41 +84,53 @@ class AccessManager2(private val flags: RuntimeFlags, private val taskScheduler:
     addressList.clear()
     permaSilenceList.clear()
     try {
-      val file = FileInputStream(af)
-      val temp: Reader = InputStreamReader(file, flags.charset)
-      val reader = BufferedReader(temp)
-      var line: String?
-      while (reader.readLine().also { line = it } != null) {
-        if (line.isNullOrBlank() || line!!.startsWith("#") || line!!.startsWith("//")) continue
-        val st = StringTokenizer(line, ",")
-        val tokenCount = st.countTokens()
-        if (tokenCount < 2) {
-          logger.atSevere().log("Failed to load access line, too few tokens: %s", line)
-          continue
-        }
-        val type = st.nextToken()
-        // silence lines have the format `silence,<address>` (2 tokens total, 1 remaining after
-        // type)
-        // all other lines need at least 2 more tokens (3 total)
-        if (type.lowercase() != "silence" && tokenCount < 3) {
-          logger.atSevere().log("Failed to load access line, too few tokens: %s", line)
-          continue
-        }
-        when (type.lowercase()) {
-          "user" -> userList.add(UserAccess(st))
-          "game" -> gameList.add(GameAccess(st))
-          "emulator" -> emulatorList.add(EmulatorAccess(st))
-          "ipaddress" -> addressList.add(AddressAccess(st))
-          "silence" -> permaSilenceList.add(SilenceAccess(st))
-          else ->
-            logger
-              .atSevere()
-              .log("Failed to load access line: %s. Unrecognized access type: %s", line, type)
+      BufferedReader(InputStreamReader(FileInputStream(af), flags.charset)).use { reader ->
+        var line: String?
+        while (reader.readLine().also { line = it } != null) {
+          val currentLine = line!!
+          if (
+            currentLine.isBlank() || currentLine.startsWith("#") || currentLine.startsWith("//")
+          ) {
+            continue
+          }
+          // A single malformed line must not prevent the lines after it (e.g. bans) from loading.
+          try {
+            parseAccessLine(currentLine)
+          } catch (e: Exception) {
+            logger.atSevere().withCause(e).log("Failed to load access line: %s", currentLine)
+          }
         }
       }
-      reader.close()
     } catch (e: IOException) {
       logger.atSevere().withCause(e).log("Failed to load access file")
+    }
+  }
+
+  private fun parseAccessLine(line: String) {
+    val st = StringTokenizer(line, ",")
+    val tokenCount = st.countTokens()
+    if (tokenCount < 2) {
+      logger.atSevere().log("Failed to load access line, too few tokens: %s", line)
+      return
+    }
+    val type = st.nextToken()
+    // silence lines have the format `silence,<address>` (2 tokens total, 1 remaining after
+    // type)
+    // all other lines need at least 2 more tokens (3 total)
+    if (type.lowercase() != "silence" && tokenCount < 3) {
+      logger.atSevere().log("Failed to load access line, too few tokens: %s", line)
+      return
+    }
+    when (type.lowercase()) {
+      "user" -> userList.add(UserAccess(st))
+      "game" -> gameList.add(GameAccess(st))
+      "emulator" -> emulatorList.add(EmulatorAccess(st))
+      "ipaddress" -> addressList.add(AddressAccess(st))
+      "silence" -> permaSilenceList.add(SilenceAccess(st))
+      else ->
+        logger
+          .atSevere()
+          .log("Failed to load access line: %s. Unrecognized access type: %s", line, type)
     }
   }
 
@@ -141,9 +170,9 @@ class AccessManager2(private val flags: RuntimeFlags, private val taskScheduler:
     try {
       java.io.FileWriter(file, true).use { writer ->
         writer.appendLine()
-        writer.appendLine("# Permanent ban issued by ${issuer ?: "Unknown"}")
-        if (reason != null) writer.appendLine("# Reason: $reason")
-        writer.appendLine("ipaddress,DENY,$addressPattern")
+        writer.appendLine("# Permanent ban issued by ${sanitizeForConfig(issuer ?: "Unknown")}")
+        if (reason != null) writer.appendLine("# Reason: ${sanitizeForConfig(reason)}")
+        writer.appendLine("ipaddress,DENY,${sanitizeForConfig(addressPattern, stripCommas = true)}")
       }
       loadAccess()
     } catch (e: Exception) {
@@ -157,9 +186,9 @@ class AccessManager2(private val flags: RuntimeFlags, private val taskScheduler:
     try {
       java.io.FileWriter(file, true).use { writer ->
         writer.appendLine()
-        writer.appendLine("# Permanent silence issued by ${issuer ?: "Unknown"}")
-        if (reason != null) writer.appendLine("# Reason: $reason")
-        writer.appendLine("silence,$addressPattern")
+        writer.appendLine("# Permanent silence issued by ${sanitizeForConfig(issuer ?: "Unknown")}")
+        if (reason != null) writer.appendLine("# Reason: ${sanitizeForConfig(reason)}")
+        writer.appendLine("silence,${sanitizeForConfig(addressPattern, stripCommas = true)}")
       }
       loadAccess()
     } catch (e: Exception) {
@@ -305,9 +334,10 @@ class AccessManager2(private val flags: RuntimeFlags, private val taskScheduler:
     var message: String? = null
       private set
 
-    @Synchronized
     fun refreshDNS() {
-      resolvedAddresses = hostNames.mapNotNull { hostname ->
+      // Resolve without holding the lock: a slow resolver must not block [matches], which is called
+      // while handling packets.
+      val resolved = hostNames.mapNotNull { hostname ->
         try {
           InetAddress.getByName(hostname).hostAddress
         } catch (e: Exception) {
@@ -319,6 +349,7 @@ class AccessManager2(private val flags: RuntimeFlags, private val taskScheduler:
           null
         }
       }
+      synchronized(this) { resolvedAddresses = resolved }
     }
 
     private var patterns: MutableList<WildcardStringPattern>
@@ -350,16 +381,6 @@ class AccessManager2(private val flags: RuntimeFlags, private val taskScheduler:
         val pat = pt.nextToken().lowercase(Locale.getDefault())
         if (pat.startsWith("dns:")) {
           if (pat.length <= 5) throw AccessException("Malformatted DNS entry: $s")
-          val hostName = pat.substring(4)
-          try {
-            val a = InetAddress.getByName(hostName)
-            logger.atFine().log("Resolved %s to %s", hostName, a.hostAddress)
-          } catch (e: Exception) {
-            logger
-              .atWarning()
-              .withCause(e)
-              .log("Failed to resolve DNS entry to an address: %s", hostName)
-          }
           hostNames.add(pat.substring(4))
         } else {
           patterns.add(WildcardStringPattern(pat))
@@ -372,17 +393,16 @@ class AccessManager2(private val flags: RuntimeFlags, private val taskScheduler:
 
   private class AddressAccess(st: StringTokenizer) {
     private var hostNames: MutableList<String>
-    private var resolvedAddresses: MutableList<String>
+    private var resolvedAddresses: List<String>
     var access = false
       private set
 
-    @Synchronized
     fun refreshDNS() {
-      resolvedAddresses.clear()
+      // Resolve without holding the lock; see [UserAccess.refreshDNS].
+      val resolved = mutableListOf<String>()
       for (hostName in hostNames) {
         try {
-          val address = InetAddress.getByName(hostName)
-          resolvedAddresses.add(address.hostAddress)
+          resolved.add(InetAddress.getByName(hostName).hostAddress)
         } catch (e: Exception) {
           logger
             .atFine()
@@ -390,6 +410,7 @@ class AccessManager2(private val flags: RuntimeFlags, private val taskScheduler:
             .log("Failed to resolve DNS entry to an address: %s", hostName)
         }
       }
+      synchronized(this) { resolvedAddresses = resolved }
     }
 
     private var patterns: MutableList<WildcardStringPattern>
@@ -423,16 +444,6 @@ class AccessManager2(private val flags: RuntimeFlags, private val taskScheduler:
         val pat = pt.nextToken().lowercase(Locale.getDefault())
         if (pat.startsWith("dns:")) {
           if (pat.length <= 5) throw AccessException("Malformatted DNS entry: $s")
-          val hostName = pat.substring(4)
-          try {
-            val a = InetAddress.getByName(hostName)
-            logger.atFine().log("Resolved %s to %s", hostName, a.hostAddress)
-          } catch (e: Exception) {
-            logger
-              .atWarning()
-              .withCause(e)
-              .log("Failed to resolve DNS entry to an address: %s", hostName)
-          }
           hostNames.add(pat.substring(4))
         } else {
           patterns.add(WildcardStringPattern(pat))
@@ -506,15 +517,14 @@ class AccessManager2(private val flags: RuntimeFlags, private val taskScheduler:
 
   private class SilenceAccess(st: StringTokenizer) {
     private var hostNames: MutableList<String>
-    private var resolvedAddresses: MutableList<String>
+    private var resolvedAddresses: List<String>
 
-    @Synchronized
     fun refreshDNS() {
-      resolvedAddresses.clear()
+      // Resolve without holding the lock; see [UserAccess.refreshDNS].
+      val resolved = mutableListOf<String>()
       for (hostName in hostNames) {
         try {
-          val address = InetAddress.getByName(hostName)
-          resolvedAddresses.add(address.hostAddress)
+          resolved.add(InetAddress.getByName(hostName).hostAddress)
         } catch (e: Exception) {
           logger
             .atFine()
@@ -522,6 +532,7 @@ class AccessManager2(private val flags: RuntimeFlags, private val taskScheduler:
             .log("Failed to resolve DNS entry to an address: %s", hostName)
         }
       }
+      synchronized(this) { resolvedAddresses = resolved }
     }
 
     private var patterns: MutableList<WildcardStringPattern>
@@ -548,16 +559,6 @@ class AccessManager2(private val flags: RuntimeFlags, private val taskScheduler:
         val pat = pt.nextToken().lowercase(Locale.getDefault())
         if (pat.startsWith("dns:")) {
           if (pat.length <= 5) throw AccessException("Malformatted DNS entry: $s")
-          val hostName = pat.substring(4)
-          try {
-            val a = InetAddress.getByName(hostName)
-            logger.atFine().log("Resolved %s to %s", hostName, a.hostAddress)
-          } catch (e: Exception) {
-            logger
-              .atWarning()
-              .withCause(e)
-              .log("Failed to resolve DNS entry to an address: %s", hostName)
-          }
           hostNames.add(pat.substring(4))
         } else {
           patterns.add(WildcardStringPattern(pat))

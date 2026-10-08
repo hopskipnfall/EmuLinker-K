@@ -5,7 +5,7 @@ import kotlin.Result.Companion.failure
 import kotlin.Result.Companion.success
 import org.emulinker.kaillera.controller.messaging.ByteBufferMessage
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
-import org.emulinker.kaillera.pico.AppModule
+import org.emulinker.util.ProtocolCharset
 
 /**
  * Abstract class representing a message for connecting to the server.
@@ -26,14 +26,19 @@ sealed class ConnectMessage : ByteBufferMessage {
 
     fun parse(buffer: ByteBuf): Result<ConnectMessage> {
       val messageStr =
-        try {
-          buffer.readString(buffer.readableBytes(), AppModule.charsetDoNotUse)
-        } catch (e: CharacterCodingException) {
-          return failure(
-            MessageFormatException("Invalid bytes received: failed to decode to a string!", e)
-          )
-        }
+        buffer.readCharSequence(buffer.readableBytes(), ProtocolCharset.value).toString()
 
+      try {
+        return parseString(buffer, messageStr)
+      } catch (e: IllegalArgumentException) {
+        // Anything starting with a known prefix but otherwise malformed (wrong length, missing
+        // terminator, ...). Datagrams come from untrusted senders, so never let this propagate.
+        buffer.resetReaderIndex()
+        return failure(MessageFormatException("Malformed connect message", e))
+      }
+    }
+
+    private fun parseString(buffer: ByteBuf, messageStr: String): Result<ConnectMessage> {
       when {
         messageStr.startsWith(ConnectMessage_ServerFull.ID) -> {
           return success(ConnectMessage_ServerFull.parse(messageStr))

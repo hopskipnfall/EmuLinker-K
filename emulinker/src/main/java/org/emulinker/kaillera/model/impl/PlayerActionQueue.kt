@@ -1,127 +1,110 @@
 package org.emulinker.kaillera.model.impl
 
+import io.netty.buffer.ByteBuf
+
 /**
  * A buffer of game data for one player.
  *
- * Separately remembers how far through the buffer each player in the game has consumed.
+ * Every player in the game reads this player's actions at their own pace, so the queue remembers
+ * how far each reader has consumed. Bytes are copied into a fixed-size ring buffer: this runs once
+ * per player per frame, so it deliberately avoids per-frame allocation and reference counting.
+ *
+ * If a reader falls more than [gameBufferSize] bytes behind, the oldest bytes it has not read yet
+ * are dropped.
  *
  * Not threadsafe.
  */
-import io.netty.buffer.ByteBuf
-import io.netty.buffer.CompositeByteBuf
-import io.netty.buffer.Unpooled
-import org.emulinker.kaillera.model.KailleraUser
-
 class PlayerActionQueue(
   val playerNumber: Int,
-  val player: KailleraUser,
   numPlayers: Int,
-  private val gameBufferSize: Int,
+  gameBufferSize: Int,
 ) {
-  var lastTimeout: PlayerTimeoutException? = null
+  private val capacity = gameBufferSize.coerceAtLeast(1)
+  private val ring = ByteArray(capacity)
 
-  private val data: CompositeByteBuf = Unpooled.compositeBuffer()
+  /** Index in [ring] where the next byte will be written. */
+  private var writePos = 0
 
-  // Total bytes currently available to read from the start of the buffer
-  private var totalWrittenBytes = 0
+  /** Per reader: index in [ring] of the next unread byte. */
+  private val readPos = IntArray(numPlayers)
 
-  // How many bytes this specific player has read from the stream
-  private var readPosition = 0
+  /** Per reader: number of unread bytes. Never exceeds [capacity]. */
+  private val unread = IntArray(numPlayers)
 
   /**
    * Whether the queue is synced with the [org.emulinker.kaillera.model.KailleraGame].
    *
-   * Synced starts as `true` at the beginning of a game, and if it ever is set to false there is no
-   * path where it will resync.
+   * Starts as `false`. It becomes `true` in [markSynced] at the beginning of a game, and if it ever
+   * is set to false there is no path where it will resync.
    */
   var synced = false
     private set
 
   fun markSynced() {
     synced = true
-    if (data.numComponents() > 0) {
-      data.removeComponents(0, data.numComponents())
-    }
-    data.clear()
-    totalWrittenBytes = 0
-    readPosition = 0
+    writePos = 0
+    readPos.fill(0)
+    unread.fill(0)
   }
 
   fun markDesynced() {
     synced = false
-    // TODO(nue): See if this is the correct way to do this. Maybe there is a function to throw away
-    // the rest of the bytes?
-    if (data.refCnt() > 0) data.release()
   }
 
-  /** Adds "actions" to the queue. */
+  /** Adds "actions" to the queue. The caller keeps ownership of [actions]. */
   fun addActions(actions: ByteBuf) {
     if (!synced) {
       return
     }
 
-    data.addComponent(true, actions.retain())
-    totalWrittenBytes += actions.readableBytes()
+    val length = actions.readableBytes()
+    // Only the newest [capacity] bytes can possibly be kept.
+    val toCopy = minOf(length, capacity)
+    val sourceIndex = actions.readerIndex() + length - toCopy
+    val firstStart = Math.floorMod(writePos + length - toCopy, capacity)
+    val firstPart = minOf(toCopy, capacity - firstStart)
+    actions.getBytes(sourceIndex, ring, firstStart, firstPart)
+    if (firstPart < toCopy) {
+      actions.getBytes(sourceIndex + firstPart, ring, 0, toCopy - firstPart)
+    }
+    writePos = Math.floorMod(writePos + length, capacity)
 
-    if (data.readableBytes() > gameBufferSize) {
-      // Discard bytes from the beginning
-      val toDiscard = data.readableBytes() - gameBufferSize
-      data.skipBytes(toDiscard)
-      data.discardReadBytes()
-
-      for (i in heads.indices) {
-        heads[i] = (heads[i] - toDiscard).coerceAtLeast(0)
+    for (i in unread.indices) {
+      val total = unread[i] + length
+      if (total > capacity) {
+        // This reader fell too far behind: skip ahead to the oldest byte we still have.
+        unread[i] = capacity
+        readPos[i] = writePos
+      } else {
+        unread[i] = total
       }
     }
-
-    lastTimeout = null
   }
 
-  private val heads = IntArray(numPlayers)
-
+  /**
+   * Writes the next [actionLength] bytes for [readingPlayerIndex] to [writeTo], or zeroes if this
+   * queue is not synced.
+   */
   fun getActionAndWriteToArray(readingPlayerIndex: Int, writeTo: ByteBuf, actionLength: Int) {
     if (!synced) {
       writeTo.writeZero(actionLength)
       return
     }
 
-    if (containsNewDataForPlayer(readingPlayerIndex, actionLength)) {
-      val relativeHead = heads[readingPlayerIndex]
-
-      if (relativeHead + actionLength > data.writerIndex()) {
-        // Should verify containsNewDataForPlayer check coverage
-        throw IllegalStateException("Not enough data!")
-      }
-
-      writeTo.writeBytes(data, relativeHead, actionLength)
-
-      heads[readingPlayerIndex] += actionLength
-
-      cleanUp()
-    } else {
-      throw IllegalStateException("There is no data available for this synced user!")
-    }
-  }
-
-  private fun cleanUp() {
-    // Find the minimum head. We can discard data before that.
-    var minHead = Int.MAX_VALUE
-    for (h in heads) {
-      if (h < minHead) minHead = h
+    check(containsNewDataForPlayer(readingPlayerIndex, actionLength)) {
+      "There is no data available for this synced user!"
     }
 
-    if (minHead > 0) {
-      data.readerIndex(minHead)
-      data.discardReadBytes()
-      for (i in heads.indices) {
-        heads[i] -= minHead
-      }
+    val start = readPos[readingPlayerIndex]
+    val firstPart = minOf(actionLength, capacity - start)
+    writeTo.writeBytes(ring, start, firstPart)
+    if (firstPart < actionLength) {
+      writeTo.writeBytes(ring, 0, actionLength - firstPart)
     }
+    readPos[readingPlayerIndex] = (start + actionLength) % capacity
+    unread[readingPlayerIndex] -= actionLength
   }
 
-  fun containsNewDataForPlayer(playerIndex: Int, actionLength: Int): Boolean {
-    val head = heads[playerIndex]
-    val available = data.writerIndex() - head
-    return available >= actionLength
-  }
+  fun containsNewDataForPlayer(playerIndex: Int, actionLength: Int): Boolean =
+    unread[playerIndex] >= actionLength
 }

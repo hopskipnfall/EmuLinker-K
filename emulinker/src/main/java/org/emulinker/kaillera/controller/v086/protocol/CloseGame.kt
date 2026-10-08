@@ -47,8 +47,8 @@ data class CloseGame(
         throw MessageFormatException(
           "Invalid Close Game format: byte 0 = " + b.toHexString(HexFormat.UpperCase)
         )
-      val gameID = buffer.readShortLE().toInt()
-      val val1 = buffer.readShortLE().toInt()
+      val gameID = buffer.readUnsignedShortLE()
+      val val1 = buffer.readUnsignedShortLE()
       return Result.success(CloseGame(messageNumber, gameID, val1))
     }
 

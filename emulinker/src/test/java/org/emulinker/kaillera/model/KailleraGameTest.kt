@@ -3,8 +3,6 @@ package org.emulinker.kaillera.model
 import com.google.common.truth.Truth.assertThat
 import java.net.InetAddress
 import java.net.InetSocketAddress
-import kotlin.test.AfterTest
-import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertFailsWith
 import kotlin.time.Clock
@@ -14,6 +12,7 @@ import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.access.AccessManager
 import org.emulinker.kaillera.access.Silence
 import org.emulinker.kaillera.access.TempBan
+import org.emulinker.kaillera.controller.input.N64ControllerInputParser
 import org.emulinker.kaillera.model.event.GameStatusChangedEvent
 import org.emulinker.kaillera.model.exception.GameChatException
 import org.emulinker.kaillera.model.exception.GameKickException
@@ -21,9 +20,6 @@ import org.emulinker.kaillera.model.exception.JoinGameException
 import org.emulinker.kaillera.model.exception.QuitGameException
 import org.emulinker.kaillera.model.exception.StartGameException
 import org.emulinker.kaillera.model.impl.AutoFireDetector
-import org.koin.core.context.startKoin
-import org.koin.core.context.stopKoin
-import org.koin.dsl.module
 import org.mockito.kotlin.any
 import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.mock
@@ -52,6 +48,8 @@ class KailleraGameTest {
       on { allowSinglePlayer } doReturn true
       on { gameAutoFireSensitivity } doReturn 0
     }
+
+  private val surveyFactory = SurveyManagerFactory(mockFlags, N64ControllerInputParser()) { null }
 
   private val mockAutoFireDetector = mock<AutoFireDetector> { on { sensitivity } doReturn 0 }
 
@@ -164,21 +162,12 @@ class KailleraGameTest {
         bufferSize = bufferSize,
         flags = mockFlags,
         clock = Clock.System,
+        surveyManagerFactory = surveyFactory,
       )
     // The owner is always the first player in a real game.
     game.players.add(owner)
     whenever(owner.game) doReturn game
     return game
-  }
-
-  @BeforeTest
-  fun setUp() {
-    startKoin { modules(module { single { mockFlags } }) }
-  }
-
-  @AfterTest
-  fun tearDown() {
-    stopKoin()
   }
 
   // ---------------------------------------------------------------------------
@@ -428,6 +417,7 @@ class KailleraGameTest {
         bufferSize = 4096,
         flags = mockFlags,
         clock = Clock.System,
+        surveyManagerFactory = surveyFactory,
       )
     normalGame.players.add(owner)
     normalGame.maxUsers = 1
@@ -456,6 +446,7 @@ class KailleraGameTest {
         bufferSize = 4096,
         flags = mockFlags,
         clock = Clock.System,
+        surveyManagerFactory = surveyFactory,
       )
     game.players.add(owner)
     game.maxPing = 100 // 100ms limit
@@ -485,6 +476,7 @@ class KailleraGameTest {
         bufferSize = 4096,
         flags = mockFlags,
         clock = Clock.System,
+        surveyManagerFactory = surveyFactory,
       )
     game.players.add(owner)
     game.aEmulator = "Mupen64Plus"
@@ -513,6 +505,7 @@ class KailleraGameTest {
         bufferSize = 4096,
         flags = mockFlags,
         clock = Clock.System,
+        surveyManagerFactory = surveyFactory,
       )
     game.players.add(owner)
     // Manually set status to PLAYING to simulate an in-progress game
@@ -567,6 +560,7 @@ class KailleraGameTest {
         bufferSize = 4096,
         flags = mockFlags,
         clock = Clock.System,
+        surveyManagerFactory = surveyFactory,
       )
     game.players.add(owner)
     game.players.add(kickedUser)
@@ -626,6 +620,7 @@ class KailleraGameTest {
         bufferSize = 4096,
         flags = mockFlags,
         clock = Clock.System,
+        surveyManagerFactory = surveyFactory,
       )
     game.players.add(owner)
     game.players.add(normalPlayer)

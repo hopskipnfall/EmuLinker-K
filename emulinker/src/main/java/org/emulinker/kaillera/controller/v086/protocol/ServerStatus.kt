@@ -177,7 +177,7 @@ data class ServerStatus(
           }
           val ping: Int = buffer.readIntLE()
           val status: Byte = buffer.readByte()
-          val userID: Int = buffer.readShortLE().toInt()
+          val userID: Int = buffer.readUnsignedShortLE()
           val connectionType: Byte = buffer.readByte()
           User(
             userName,

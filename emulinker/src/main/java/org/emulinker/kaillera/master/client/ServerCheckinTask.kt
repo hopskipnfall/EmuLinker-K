@@ -17,6 +17,7 @@ import org.emulinker.kaillera.master.PublicServerInformation
 import org.emulinker.kaillera.pico.AppModule
 import org.emulinker.kaillera.pico.CompiledFlags
 import org.emulinker.kaillera.release.ReleaseInfo
+import org.emulinker.util.ProtocolCharset
 
 @Serializable
 data class ServerInfo(
@@ -89,7 +90,7 @@ class ServerCheckinTask(
           connectPort = flags.serverPort,
           website = publicServerInfo.website,
           location = publicServerInfo.location,
-          charset = AppModule.charsetDoNotUse.name,
+          charset = ProtocolCharset.value.name,
           version = releaseInfo.versionWithElkPrefix,
           isDevBuild = CompiledFlags.DEBUG_BUILD,
           defaultLocale = Locale.getDefault().toString(),

@@ -159,7 +159,7 @@ class FastGameDataCache(override val capacity: Int) : GameDataCache {
   private fun toBufferIndex(absIndex: Int): Int = absIndex % capacity
 
   private fun checkBounds(index: Int) {
-    if (index !in 0..size) {
+    if (index < 0 || index >= size) {
       throw IndexOutOfBoundsException("Index: $index, Size: $size")
     }
   }

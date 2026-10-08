@@ -2,7 +2,7 @@ package org.emulinker.kaillera.controller.connectcontroller.protocol
 
 import io.netty.buffer.ByteBuf
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
-import org.emulinker.kaillera.pico.AppModule
+import org.emulinker.util.ProtocolCharset
 
 // TODO(nue): Turn into a data class?
 object ConnectMessage_PING : ConnectMessage() {
@@ -13,7 +13,7 @@ object ConnectMessage_PING : ConnectMessage() {
   override val bodyBytesPlusMessageIdType = ID.length + 1
 
   override fun writeTo(buffer: ByteBuf) {
-    buffer.writeBytes(AppModule.charsetDoNotUse.encode(ID))
+    buffer.writeBytes(ProtocolCharset.value.encode(ID))
     buffer.writeByte(0x00)
   }
 
