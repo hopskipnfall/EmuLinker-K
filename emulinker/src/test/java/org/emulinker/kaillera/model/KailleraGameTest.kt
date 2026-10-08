@@ -917,4 +917,26 @@ class KailleraGameTest {
     assertThat(game.waitingOnPlayerNumber.size).isEqualTo(10)
     assertThat(game.waitingOnPlayerNumber.all { !it }).isTrue()
   }
+
+  @Test
+  fun `setGameFps with no players does nothing instead of throwing`() {
+    val game = makeGame()
+    game.players.clear()
+
+    game.setGameFps(60.0)
+
+    assertThat(game.lagometer).isNull()
+  }
+
+  @Test
+  fun `setGameFps sizes the lagometer by the highest player number after a mid-game leave`() {
+    val owner = makeUser(id = 1)
+    val game = makeGame(owner = owner)
+    // Players {1, 2, 3} became {1, 3}: player numbers are not renumbered when someone leaves.
+    game.players.add(makeUser(id = 3))
+
+    game.setGameFps(60.0)
+
+    assertThat(game.lagometer!!.userDatas.size).isAtLeast(3)
+  }
 }

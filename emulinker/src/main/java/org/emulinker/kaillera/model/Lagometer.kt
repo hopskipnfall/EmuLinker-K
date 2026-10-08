@@ -86,7 +86,7 @@ class Lagometer(
     }
 
   fun receivedInputsFromUser(playerIndex: Int, nowNs: Long) {
-    userDatas[playerIndex].receivedDataNs = nowNs
+    userDatas.getOrNull(playerIndex)?.receivedDataNs = nowNs
   }
 
   fun advanceFrame(nowNs: Long) {

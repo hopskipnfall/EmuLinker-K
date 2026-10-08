@@ -51,13 +51,18 @@ class SurveyManagerFactory(
   /** Provides the client lazily so that servers with surveys disabled never construct one. */
   private val httpClientProvider: () -> HttpClient?,
 ) {
-  fun create(game: KailleraGame) = SurveyManager(game, flags, inputParser, httpClientProvider)
+  /** Compiled once; an invalid pattern is reported at startup instead of on every game. */
+  private val whitelist = SurveyManager.compileWhitelist(flags)
+
+  fun create(game: KailleraGame) =
+    SurveyManager(game, flags, inputParser, whitelist, httpClientProvider)
 }
 
 class SurveyManager(
   private val game: KailleraGame,
   private val flags: RuntimeFlags,
   private val inputParser: N64ControllerInputParser,
+  private val whitelist: List<Regex> = compileWhitelist(flags),
   httpClientProvider: () -> HttpClient?,
 ) {
   private val httpClient: HttpClient? by lazy(httpClientProvider)
@@ -66,7 +71,7 @@ class SurveyManager(
     flags.surveyEnabled &&
       flags.surveyApiEndpoint.isNotBlank() &&
       flags.surveyApiKey.isNotBlank() &&
-      flags.surveyGameWhitelist.any { Regex(it).containsMatchIn(game.romName) }
+      whitelist.any { it.containsMatchIn(game.romName) }
 
   private var gameStartTimeMark: TimeMark? = null
   var lastSurveyAskedTimeMark: TimeMark? = null
@@ -125,17 +130,19 @@ class SurveyManager(
       logger.atWarning().log("Skipping logReceivedGameData because timestampNs is null")
       return
     }
+    // The telemetry format only has room for four players.
+    val received =
+      when (playerNumber) {
+        1 -> RECEIVED_FROM_P1
+        2 -> RECEIVED_FROM_P2
+        3 -> RECEIVED_FROM_P3
+        4 -> RECEIVED_FROM_P4
+        else -> return
+      }
     telemetryEvents.add(
       event {
         this.timestampNs = timestampNs
-        receivedGameData =
-          when (playerNumber) {
-            1 -> RECEIVED_FROM_P1
-            2 -> RECEIVED_FROM_P2
-            3 -> RECEIVED_FROM_P3
-            4 -> RECEIVED_FROM_P4
-            else -> throw IllegalStateException("Player number is out of bounds!")
-          }
+        receivedGameData = received
       }
     )
   }
@@ -166,8 +173,9 @@ class SurveyManager(
       }
     }
 
-    // Check for survey response
-    if (message.trim().matches("[1-3]".toRegex())) {
+    // Check for survey response. Only players who consented may submit one: it sends their name
+    // and IP address to the survey endpoint.
+    if (user.surveyConsent == true && message.trim().matches(SURVEY_RESPONSE)) {
       val lastAsked = lastSurveyAskedTimeMark
       if (lastAsked != null && lastAsked.elapsedNow() <= MAX_SURVEY_RESPONSE_TIME) {
         reportSurveyResponse(user, message.trim())
@@ -330,6 +338,21 @@ class SurveyManager(
     val SURVEY_GAME_START_DELAY = 8.minutes
     val SURVEY_COOLDOWN = 10.minutes
     val SURVEY_TELEMETRY_WINDOW = 5.minutes
+
+    fun compileWhitelist(flags: RuntimeFlags): List<Regex> =
+      flags.surveyGameWhitelist.mapNotNull {
+        try {
+          Regex(it)
+        } catch (e: java.util.regex.PatternSyntaxException) {
+          logger
+            .atSevere()
+            .withCause(e)
+            .log("Ignoring invalid survey.gameWhitelist pattern: %s", it)
+          null
+        }
+      }
+
+    private val SURVEY_RESPONSE = "[1-3]".toRegex()
 
     private val FAN_OUT = fanOut {}
     private val RECEIVED_FROM_P1 = receivedGameData { receivedFrom = PLAYER_ONE }

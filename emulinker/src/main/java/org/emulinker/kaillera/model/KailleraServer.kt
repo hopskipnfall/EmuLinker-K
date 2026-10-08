@@ -252,6 +252,7 @@ class KailleraServer(
       )
     }
     val userListKey = user.id
+    val clientType = user.clientType.orEmpty()
     val u: KailleraUser? = usersMap[userListKey]
     if (u == null) {
       logger.atWarning().log("%s login denied: Connection timed out!", user)
@@ -305,9 +306,7 @@ class KailleraServer(
         PingTimeException(EmuLang.getString("KailleraServerImpl.LoginErrorInvalidPing", user.ping))
       )
     }
-    if (
-      access == AccessManager.ACCESS_NORMAL && user.name.isNullOrEmpty() || user.name!!.isBlank()
-    ) {
+    if (user.name.isNullOrBlank()) {
       logger.atInfo().log("%s login denied: Empty UserName", user)
       discardUnauthenticated(user)
       return Result.failure(
@@ -348,7 +347,7 @@ class KailleraServer(
     if (
       access == AccessManager.ACCESS_NORMAL &&
         flags.maxClientNameLength > 0 &&
-        user.clientType!!.length > maxClientNameLength
+        clientType.length > maxClientNameLength
     ) {
       logger.atInfo().log("%s login denied: Client Name Length > %d", user, maxClientNameLength)
       discardUnauthenticated(user)
@@ -356,7 +355,7 @@ class KailleraServer(
         UserNameException(EmuLang.getString("KailleraServerImpl.LoginDeniedEmulatorNameTooLong"))
       )
     }
-    if (user.clientType!!.lowercase(Locale.getDefault()).contains("|")) {
+    if (clientType.lowercase(Locale.getDefault()).contains("|")) {
       logger.atWarning().log("%s login denied: Illegal characters in EmulatorName", user)
       discardUnauthenticated(user)
       return Result.failure(UserNameException("Illegal characters in Emulator Name"))
@@ -396,9 +395,7 @@ class KailleraServer(
         ClientAddressException(EmuLang.getString("KailleraServerImpl.LoginDeniedAddressMatchError"))
       )
     }
-    if (
-      access == AccessManager.ACCESS_NORMAL && !accessManager.isEmulatorAllowed(user.clientType!!)
-    ) {
+    if (access == AccessManager.ACCESS_NORMAL && !accessManager.isEmulatorAllowed(clientType)) {
       logger
         .atInfo()
         .log("%s login denied: AccessManager denied emulator: %s", user, user.clientType)
@@ -555,8 +552,17 @@ class KailleraServer(
     }
     val userGame = user.game
     if (userGame != null) {
-      user.quitGame()
+      try {
+        // The user must still be logged in here: closing the game when the owner leaves checks it.
+        user.quitGame()
+      } catch (e: Exception) {
+        // The user must still be removed and told they quit even if leaving the game failed.
+        logger.atSevere().withCause(e).log("%s failed to leave game while quitting", user)
+      }
     }
+    // The user is gone, so a second quit is rejected and cannot emit a second UserQuitEvent.
+    // (Callers other than KailleraUser.quit, like run(), do not set this themselves.)
+    user.loggedIn = false
     var quitMsg = message.trim { it <= ' ' }
     if (
       quitMsg.isBlank() ||
@@ -902,8 +908,11 @@ class KailleraServer(
               player.status == UserStatus.IDLE &&
                 game.waitingOnPlayerNumber[player.playerNumber - 1]
             ) {
-              game.maybeSendData(usersMap[player.id]!!)
-              break
+              val stuckUser = usersMap[player.id]
+              if (stuckUser != null) {
+                game.maybeSendData(stuckUser)
+                break
+              }
             }
           }
         }
@@ -962,7 +971,7 @@ class KailleraServer(
         } else if (
           user.loggedIn &&
             access == AccessManager.ACCESS_NORMAL &&
-            !accessManager.isEmulatorAllowed(user.clientType!!)
+            !accessManager.isEmulatorAllowed(user.clientType.orEmpty())
         ) {
           logger.atInfo().log("%s: emulator restricted!", user)
           try {

@@ -23,6 +23,7 @@ import org.emulinker.kaillera.controller.v086.action.ActionModule
 import org.emulinker.kaillera.controller.v086.protocol.AllReady
 import org.emulinker.kaillera.controller.v086.protocol.CachedGameData
 import org.emulinker.kaillera.controller.v086.protocol.ClientAck
+import org.emulinker.kaillera.controller.v086.protocol.CloseGame
 import org.emulinker.kaillera.controller.v086.protocol.CreateGameNotification
 import org.emulinker.kaillera.controller.v086.protocol.CreateGameRequest
 import org.emulinker.kaillera.controller.v086.protocol.GameChatRequest
@@ -257,6 +258,22 @@ class GameChatE2ETest : KoinComponent {
       it.quitGame()
       it.quit()
     }
+  }
+
+  @Test
+  fun ownerQuittingTheServerClosesTheGameForOtherPlayers() {
+    val owner = Client(1, "Owner", this)
+    val guest = Client(2, "Guest", this)
+    owner.login()
+    guest.login()
+    val gameId = owner.createGame()
+    guest.joinGame(gameId)
+
+    // Leaving the server (not just the game) must still close the game the owner created.
+    owner.quit()
+
+    guest.consumeUntil { it is CloseGame }
+    guest.logout()
   }
 
   fun pump() {
