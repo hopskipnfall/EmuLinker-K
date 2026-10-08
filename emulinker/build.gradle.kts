@@ -46,6 +46,11 @@ dependencies {
   }
 
   implementation(project.dependencies.platform("io.netty:netty-bom:4.2.19.Final"))
+  // Native epoll transport (Linux): batches UDP reads/writes into single system calls. The server
+  // falls back to the portable NIO transport anywhere the native library cannot be loaded.
+  implementation("io.netty:netty-transport-classes-epoll")
+  runtimeOnly("io.netty:netty-transport-native-epoll::linux-x86_64")
+  runtimeOnly("io.netty:netty-transport-native-epoll::linux-aarch_64")
   implementation(project.dependencies.platform("io.insert-koin:koin-bom:4.2.2"))
   implementation("io.insert-koin:koin-core")
   testImplementation("io.insert-koin:koin-test")

@@ -808,7 +808,7 @@ class KailleraGame(
     var lagstatSummaryData: LagstatSummary? = null
 
     // Log the /lagstat data once every 1 minute.
-    if ((nowNs - lastLagstatNs).nanoseconds > 1.minutes) {
+    if (nowNs - lastLagstatNs > LAGSTAT_INTERVAL_NS) {
       lagstatSummaryData = lagstatSummary {
         windowDurationMs = flags.lagstatDuration.inWholeMilliseconds.toInt()
         gameLagMs = currentGameLag.toMillisDouble()
@@ -837,6 +837,8 @@ class KailleraGame(
     private val logger = FluentLogger.forEnclosingClass()
 
     const val GAME_FPS = 60
+
+    private val LAGSTAT_INTERVAL_NS = 1.minutes.inWholeNanoseconds
 
     /** The telemetry format only has room for four players. */
     private fun Int.toPlayerNumberProto(): Player? =
