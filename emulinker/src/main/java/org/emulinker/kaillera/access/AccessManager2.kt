@@ -47,6 +47,7 @@ class AccessManager2(private val flags: RuntimeFlags, private val taskScheduler:
           }
         }
         .joinToString("")
+        .trim()
   }
 
   private var accessFile: File?
@@ -333,9 +334,10 @@ class AccessManager2(private val flags: RuntimeFlags, private val taskScheduler:
     var message: String? = null
       private set
 
-    @Synchronized
     fun refreshDNS() {
-      resolvedAddresses = hostNames.mapNotNull { hostname ->
+      // Resolve without holding the lock: a slow resolver must not block [matches], which is called
+      // while handling packets.
+      val resolved = hostNames.mapNotNull { hostname ->
         try {
           InetAddress.getByName(hostname).hostAddress
         } catch (e: Exception) {
@@ -347,6 +349,7 @@ class AccessManager2(private val flags: RuntimeFlags, private val taskScheduler:
           null
         }
       }
+      synchronized(this) { resolvedAddresses = resolved }
     }
 
     private var patterns: MutableList<WildcardStringPattern>
@@ -378,16 +381,6 @@ class AccessManager2(private val flags: RuntimeFlags, private val taskScheduler:
         val pat = pt.nextToken().lowercase(Locale.getDefault())
         if (pat.startsWith("dns:")) {
           if (pat.length <= 5) throw AccessException("Malformatted DNS entry: $s")
-          val hostName = pat.substring(4)
-          try {
-            val a = InetAddress.getByName(hostName)
-            logger.atFine().log("Resolved %s to %s", hostName, a.hostAddress)
-          } catch (e: Exception) {
-            logger
-              .atWarning()
-              .withCause(e)
-              .log("Failed to resolve DNS entry to an address: %s", hostName)
-          }
           hostNames.add(pat.substring(4))
         } else {
           patterns.add(WildcardStringPattern(pat))
@@ -400,17 +393,16 @@ class AccessManager2(private val flags: RuntimeFlags, private val taskScheduler:
 
   private class AddressAccess(st: StringTokenizer) {
     private var hostNames: MutableList<String>
-    private var resolvedAddresses: MutableList<String>
+    private var resolvedAddresses: List<String>
     var access = false
       private set
 
-    @Synchronized
     fun refreshDNS() {
-      resolvedAddresses.clear()
+      // Resolve without holding the lock; see [UserAccess.refreshDNS].
+      val resolved = mutableListOf<String>()
       for (hostName in hostNames) {
         try {
-          val address = InetAddress.getByName(hostName)
-          resolvedAddresses.add(address.hostAddress)
+          resolved.add(InetAddress.getByName(hostName).hostAddress)
         } catch (e: Exception) {
           logger
             .atFine()
@@ -418,6 +410,7 @@ class AccessManager2(private val flags: RuntimeFlags, private val taskScheduler:
             .log("Failed to resolve DNS entry to an address: %s", hostName)
         }
       }
+      synchronized(this) { resolvedAddresses = resolved }
     }
 
     private var patterns: MutableList<WildcardStringPattern>
@@ -451,16 +444,6 @@ class AccessManager2(private val flags: RuntimeFlags, private val taskScheduler:
         val pat = pt.nextToken().lowercase(Locale.getDefault())
         if (pat.startsWith("dns:")) {
           if (pat.length <= 5) throw AccessException("Malformatted DNS entry: $s")
-          val hostName = pat.substring(4)
-          try {
-            val a = InetAddress.getByName(hostName)
-            logger.atFine().log("Resolved %s to %s", hostName, a.hostAddress)
-          } catch (e: Exception) {
-            logger
-              .atWarning()
-              .withCause(e)
-              .log("Failed to resolve DNS entry to an address: %s", hostName)
-          }
           hostNames.add(pat.substring(4))
         } else {
           patterns.add(WildcardStringPattern(pat))
@@ -534,15 +517,14 @@ class AccessManager2(private val flags: RuntimeFlags, private val taskScheduler:
 
   private class SilenceAccess(st: StringTokenizer) {
     private var hostNames: MutableList<String>
-    private var resolvedAddresses: MutableList<String>
+    private var resolvedAddresses: List<String>
 
-    @Synchronized
     fun refreshDNS() {
-      resolvedAddresses.clear()
+      // Resolve without holding the lock; see [UserAccess.refreshDNS].
+      val resolved = mutableListOf<String>()
       for (hostName in hostNames) {
         try {
-          val address = InetAddress.getByName(hostName)
-          resolvedAddresses.add(address.hostAddress)
+          resolved.add(InetAddress.getByName(hostName).hostAddress)
         } catch (e: Exception) {
           logger
             .atFine()
@@ -550,6 +532,7 @@ class AccessManager2(private val flags: RuntimeFlags, private val taskScheduler:
             .log("Failed to resolve DNS entry to an address: %s", hostName)
         }
       }
+      synchronized(this) { resolvedAddresses = resolved }
     }
 
     private var patterns: MutableList<WildcardStringPattern>
@@ -576,16 +559,6 @@ class AccessManager2(private val flags: RuntimeFlags, private val taskScheduler:
         val pat = pt.nextToken().lowercase(Locale.getDefault())
         if (pat.startsWith("dns:")) {
           if (pat.length <= 5) throw AccessException("Malformatted DNS entry: $s")
-          val hostName = pat.substring(4)
-          try {
-            val a = InetAddress.getByName(hostName)
-            logger.atFine().log("Resolved %s to %s", hostName, a.hostAddress)
-          } catch (e: Exception) {
-            logger
-              .atWarning()
-              .withCause(e)
-              .log("Failed to resolve DNS entry to an address: %s", hostName)
-          }
           hostNames.add(pat.substring(4))
         } else {
           patterns.add(WildcardStringPattern(pat))

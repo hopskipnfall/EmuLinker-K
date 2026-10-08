@@ -150,9 +150,10 @@ class KailleraServer(
 
   // not synchronized because I know the caller will be thread safe
   private fun getNextUserID(): Int {
-    // IDs wrap at 0xFFFF; skip any that are still in use so a live user is never overwritten.
-    repeat(0xFFFF) {
-      if (connectionCounter > 0xFFFF) connectionCounter = 1
+    // IDs wrap before 0xFFFF, which clients use as a placeholder for "no user"; skip any that are
+    // still in use so a live user is never overwritten.
+    repeat(0xFFFE) {
+      if (connectionCounter > 0xFFFE) connectionCounter = 1
       val id = connectionCounter++
       if (!usersMap.containsKey(id)) return id
     }

@@ -154,8 +154,12 @@ class V086ClientHandler(
   }
 
   fun stop() {
-    controller.clientHandlers.remove(user.id)
-    combinedKailleraController.clientHandlers.remove(remoteSocketAddress)
+    // Remove only our own registration: a newer handler may already own this id or address.
+    controller.clientHandlers.remove(user.id, this)
+    combinedKailleraController.clientHandlers.remove(
+      remoteSocketAddress ?: connectRemoteSocketAddress,
+      this,
+    )
     synchronized(sendMutex) { lastMessageBuffer.releaseAll() }
     resetGameDataCache()
   }

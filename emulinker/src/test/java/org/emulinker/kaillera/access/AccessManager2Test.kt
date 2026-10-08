@@ -324,6 +324,15 @@ class AccessManager2Test {
   }
 
   @Test
+  fun sanitizeForConfig_replacesControlCharactersAndTrims() {
+    assertThat(AccessManager2.sanitizeForConfig("a\r\nb\u2028c\n")).isEqualTo("a  b c")
+    // A trailing separator must not leave whitespace that would stop the pattern from matching.
+    assertThat(AccessManager2.sanitizeForConfig("10.0.0.1\n", stripCommas = true))
+      .isEqualTo("10.0.0.1")
+    assertThat(AccessManager2.sanitizeForConfig("a,b", stripCommas = true)).isEqualTo("a b")
+  }
+
+  @Test
   fun getAccess_returnsNormalForUnknownAddress() {
     assertThat(accessManager.getAccess(remoteIp)).isEqualTo(AccessManager.ACCESS_NORMAL)
   }
