@@ -532,4 +532,29 @@ class SurveyManagerTest {
     }
     data.release()
   }
+
+  @Test
+  fun `handleChat does not treat a rating from a user who has not consented as a response`() {
+    val manager = newManager(mockGame)
+    manager.lastSurveyAskedTimeMark = TimeSource.Monotonic.markNow()
+
+    // Reporting a response would send this user's name and IP address to the survey endpoint.
+    assertThat(manager.handleChat(pendingConsentUser, "2")).isFalse()
+  }
+
+  @Test
+  fun `an invalid whitelist pattern does not prevent creating a manager`() {
+    val flags =
+      mock<RuntimeFlags> {
+        on { surveyEnabled } doReturn true
+        on { surveyGameWhitelist } doReturn listOf("(unclosed", "smash")
+        on { surveyApiEndpoint } doReturn "http://localhost"
+        on { surveyApiKey } doReturn "test-key"
+      }
+
+    val manager = newManager(mockGame, flags)
+
+    // The valid pattern still applies.
+    assertThat(manager.isSurveyEligibleForGame).isTrue()
+  }
 }

@@ -437,6 +437,8 @@ class KailleraGame(
     }
     logger.atInfo().log("%s started: %s", user, this)
     status = GameStatus.SYNCHRONIZING
+    // A previous round can leave this true (everyone dropped) and it must not carry over.
+    isSynched = false
     surveyManager.onGameStarted()
     autoFireDetector.start(players.size)
     val actionQueueBuilder = mutableListOf<PlayerActionQueue>()
@@ -449,6 +451,7 @@ class KailleraGame(
       val playerNumber = i + 1
       if (!swap) player.playerNumber = playerNumber
       player.frameCount = 0
+      player.discardLostInput()
       actionQueueBuilder.add(
         PlayerActionQueue(
           playerNumber = playerNumber,
@@ -487,7 +490,8 @@ class KailleraGame(
         frameDurationNs = singleFrameDurationForLagCalculationOnlyNs.nanoseconds,
         historyDuration = flags.lagstatDuration,
         historyResolution = 5.seconds,
-        numPlayers = players.size,
+        // Player numbers are not renumbered when someone leaves mid-game, so size by the highest.
+        numPlayers = maxOf(players.size, players.maxOf { it.playerNumber }),
         startTimeNs = System.nanoTime(),
       )
   }
@@ -650,7 +654,7 @@ class KailleraGame(
     if (!isSynched) return
     val playerNumber = user.playerNumber
     val paq = playerActionQueues ?: return
-    if (user.playerNumber > paq.size) {
+    if (playerNumber < 1 || playerNumber > paq.size) {
       logger
         .atInfo()
         .log(
@@ -658,6 +662,7 @@ class KailleraGame(
           this,
           user,
         )
+      return
     }
     if (paq[playerNumber - 1].synced) {
       paq[playerNumber - 1].markDesynced()
@@ -688,7 +693,7 @@ class KailleraGame(
 
     surveyManager.logReceivedGameData(
       playerNumber = user.playerNumber,
-      timestampNs = lagometer?.userDatas?.get(user.playerNumber - 1)?.receivedDataNs,
+      timestampNs = lagometer?.userDatas?.getOrNull(user.playerNumber - 1)?.receivedDataNs,
     )
 
     // Add the data for the user to their own player queue.
@@ -773,8 +778,9 @@ class KailleraGame(
 
   /** Sets the game framerate for lag measuring purposes. */
   fun setGameFps(fps: Double) {
+    val firstPlayer = players.firstOrNull() ?: return
     singleFrameDurationForLagCalculationOnlyNs =
-      (1.seconds / players.first().connectionType.getUpdatesPerSecond(fps)).inWholeNanoseconds
+      (1.seconds / firstPlayer.connectionType.getUpdatesPerSecond(fps)).inWholeNanoseconds
 
     lagometer =
       Lagometer(
@@ -805,8 +811,8 @@ class KailleraGame(
         if (lags != null) {
           for ((i, p) in players.withIndex()) {
             playerAttributedLags += playerAttributedLag {
-              player = p.playerNumber.toPlayerNumberProto()
-              attributedLagMs = lags[i].toMillisDouble()
+              player = p.playerNumber.toPlayerNumberProto() ?: continue
+              attributedLagMs = (lags.getOrNull(i) ?: continue).toMillisDouble()
             }
           }
         }
@@ -826,13 +832,14 @@ class KailleraGame(
 
     const val GAME_FPS = 60
 
-    private fun Int.toPlayerNumberProto(): Player =
+    /** The telemetry format only has room for four players. */
+    private fun Int.toPlayerNumberProto(): Player? =
       when (this) {
         1 -> PLAYER_ONE
         2 -> PLAYER_TWO
         3 -> PLAYER_THREE
         4 -> PLAYER_FOUR
-        else -> throw IllegalStateException("Player number is out of bounds!")
+        else -> null
       }
   }
 }

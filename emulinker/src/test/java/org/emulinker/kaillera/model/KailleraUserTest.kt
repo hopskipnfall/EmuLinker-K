@@ -966,4 +966,16 @@ class KailleraUserTest {
 
     assertThat(users).containsExactlyElementsIn(mockUsers.values)
   }
+
+  @Test
+  fun `removeIgnoredUser removes every adjacent duplicate`() {
+    val user = makeUser()
+    user.addIgnoredUser("1.2.3.4")
+    user.addIgnoredUser("1.2.3.4")
+    user.addIgnoredUser("1.2.3.4")
+
+    user.removeIgnoredUser("1.2.3.4", removeAll = false)
+
+    assertThat(user.findIgnoredUser("1.2.3.4")).isFalse()
+  }
 }

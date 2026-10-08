@@ -917,4 +917,14 @@ class KailleraGameTest {
     assertThat(game.waitingOnPlayerNumber.size).isEqualTo(10)
     assertThat(game.waitingOnPlayerNumber.all { !it }).isTrue()
   }
+
+  @Test
+  fun `setGameFps with no players does nothing instead of throwing`() {
+    val game = makeGame()
+    game.players.clear()
+
+    game.setGameFps(60.0)
+
+    assertThat(game.lagometer).isNull()
+  }
 }

@@ -164,14 +164,7 @@ class KailleraUser(
       ignoredUsers.clear()
       return true
     }
-    var i = 0
-    while (i < ignoredUsers.size) {
-      if (ignoredUsers[i] == address) {
-        ignoredUsers.removeAt(i)
-        here = true
-      }
-      i++
-    }
+    here = ignoredUsers.removeAll { it == address }
     return here
   }
 
@@ -200,6 +193,12 @@ class KailleraUser(
   val accessStr: String
     get() = AccessManager.ACCESS_NAMES[accessLevel]
 
+  /** Releases input buffered for the start of a game that never got to use it. */
+  fun discardLostInput() {
+    lostInput.forEach { it.release() }
+    lostInput.clear()
+  }
+
   fun stop() {
     if (stopFlag) {
       logger.atFine().log("%s  thread stop request ignored: already stopping!", this)
@@ -207,9 +206,7 @@ class KailleraUser(
     }
     stopFlag = true
     clientHandler.stop()
-    // Release any buffered data
-    lostInput.forEach { it.release() }
-    lostInput.clear()
+    discardLostInput()
   }
 
   fun droppedPacket() {
