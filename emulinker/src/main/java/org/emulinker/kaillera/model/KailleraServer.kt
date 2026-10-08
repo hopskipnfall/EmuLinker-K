@@ -550,18 +550,19 @@ class KailleraServer(
     if (usersMap.remove(user.id) == null) {
       logger.atSevere().log("%s quit failed: not in user list", user)
     }
-    // From here on the user is gone, so a second quit is rejected and cannot emit a second
-    // UserQuitEvent. (Callers other than KailleraUser.quit, like run(), do not set this.)
-    user.loggedIn = false
     val userGame = user.game
     if (userGame != null) {
       try {
+        // The user must still be logged in here: closing the game when the owner leaves checks it.
         user.quitGame()
       } catch (e: Exception) {
         // The user must still be removed and told they quit even if leaving the game failed.
-        logger.atWarning().withCause(e).log("%s failed to leave game while quitting", user)
+        logger.atSevere().withCause(e).log("%s failed to leave game while quitting", user)
       }
     }
+    // The user is gone, so a second quit is rejected and cannot emit a second UserQuitEvent.
+    // (Callers other than KailleraUser.quit, like run(), do not set this themselves.)
+    user.loggedIn = false
     var quitMsg = message.trim { it <= ' ' }
     if (
       quitMsg.isBlank() ||

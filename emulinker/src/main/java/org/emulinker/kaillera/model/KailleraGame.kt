@@ -491,7 +491,7 @@ class KailleraGame(
         historyDuration = flags.lagstatDuration,
         historyResolution = 5.seconds,
         // Player numbers are not renumbered when someone leaves mid-game, so size by the highest.
-        numPlayers = maxOf(players.size, players.maxOf { it.playerNumber }),
+        numPlayers = lagometerSize(),
         startTimeNs = System.nanoTime(),
       )
   }
@@ -776,6 +776,12 @@ class KailleraGame(
     lagometer?.reset()
   }
 
+  /**
+   * Player numbers are not renumbered when someone leaves mid-game, so the lagometer has to cover
+   * the highest player number still in the game, not just the number of players.
+   */
+  private fun lagometerSize() = maxOf(players.size, players.maxOfOrNull { it.playerNumber } ?: 0)
+
   /** Sets the game framerate for lag measuring purposes. */
   fun setGameFps(fps: Double) {
     val firstPlayer = players.firstOrNull() ?: return
@@ -787,7 +793,7 @@ class KailleraGame(
         frameDurationNs = singleFrameDurationForLagCalculationOnlyNs.nanoseconds,
         historyDuration = flags.lagstatDuration,
         historyResolution = 5.seconds,
-        numPlayers = players.size,
+        numPlayers = lagometerSize(),
         startTimeNs = System.nanoTime(),
       )
 
@@ -809,10 +815,10 @@ class KailleraGame(
 
         val lags = lagometer?.gameLagPerPlayer
         if (lags != null) {
-          for ((i, p) in players.withIndex()) {
+          for (p in players) {
             playerAttributedLags += playerAttributedLag {
               player = p.playerNumber.toPlayerNumberProto() ?: continue
-              attributedLagMs = (lags.getOrNull(i) ?: continue).toMillisDouble()
+              attributedLagMs = (lags.getOrNull(p.playerNumber - 1) ?: continue).toMillisDouble()
             }
           }
         }

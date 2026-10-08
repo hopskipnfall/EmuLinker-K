@@ -85,11 +85,20 @@ class CombinedKailleraController(
                 Thread.sleep(1_000)
 
                 for (handler in clientHandlers.values) {
-                  server.quit(
-                    handler.user,
-                    getStringOrNull("KailleraServerImpl.ServerShuttingDown")
-                      ?: "The server is shutting down",
-                  )
+                  try {
+                    server.quit(
+                      handler.user,
+                      getStringOrNull("KailleraServerImpl.ServerShuttingDown")
+                        ?: "The server is shutting down",
+                    )
+                  } catch (e: Exception) {
+                    // One user failing to quit (for example one who already left) must not stop
+                    // everyone else from being notified.
+                    logger
+                      .atWarning()
+                      .withCause(e)
+                      .log("Failed to quit %s during shutdown", handler)
+                  }
                 }
                 // Give the server time to notify everyone they are being kicked.
                 Thread.sleep(1_000)
