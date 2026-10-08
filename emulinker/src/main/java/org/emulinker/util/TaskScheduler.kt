@@ -25,7 +25,10 @@ class TaskScheduler {
       {
         try {
           action()
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
+          // Throwable, not Exception: an Error escaping a repeating task makes the executor
+          // silently
+          // stop running it forever.
           logger.atSevere().withCause(e).log("Exception in scheduled task!")
         }
       },
@@ -44,7 +47,10 @@ class TaskScheduler {
         try {
           logger.atFine().log("Starting scheduled task: %s", taskName)
           action()
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
+          // Throwable, not Exception: an Error escaping a repeating task makes the executor
+          // silently
+          // stop running it forever.
           logger.atSevere().withCause(e).log("Exception in scheduled task!")
         } finally {
           logger.atFine().log("Completed scheduled task: %s", taskName)

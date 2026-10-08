@@ -11,10 +11,10 @@ class MasterListStatsCollector : StatsCollector {
     startedGamesList.add(game.romName)
   }
 
-  @Synchronized override fun getStartedGamesList(): MutableList<String> = startedGamesList
-
   @Synchronized
-  override fun clearStartedGamesList() {
+  override fun drainStartedGames(): List<String> {
+    val drained = startedGamesList.toList()
     startedGamesList.clear()
+    return drained
   }
 }

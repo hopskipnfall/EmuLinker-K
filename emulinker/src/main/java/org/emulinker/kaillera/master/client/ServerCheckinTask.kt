@@ -2,9 +2,7 @@ package org.emulinker.kaillera.master.client
 
 import com.google.common.flogger.FluentLogger
 import io.ktor.utils.io.charsets.name
-import java.io.BufferedReader
-import java.io.DataOutputStream
-import java.io.InputStreamReader
+import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.URL
 import java.util.Locale
@@ -69,19 +67,18 @@ class ServerCheckinTask(
     }
 
     logger.atFine().log("CheckinResponse: %s", response)
-    AppModule.messagesToAdmins = response.messagesToAdmins
+    // This text comes from a remote server and is shown to every admin who logs in, so bound it.
+    AppModule.messagesToAdmins =
+      response.messagesToAdmins.take(MAX_ADMIN_MESSAGES).map { it.take(MAX_ADMIN_MESSAGE_LENGTH) }
   }
 
-  /** @return Whether or not the RPC succeeded. */
+  /**
+   * Sends the check-in request to [url].
+   *
+   * @return The server's response, or null if the request failed for any reason (so the caller can
+   *   fall back to another URL).
+   */
   private fun touchMasterWithUrl(url: URL): CheckinResponse? {
-
-    val connection: HttpURLConnection = url.openConnection() as HttpURLConnection
-    connection.setRequestMethod("POST")
-    connection.setRequestProperty("Content-Type", "application/json")
-    connection.setDoOutput(true) // idk if we need this
-    connection.connectTimeout = 2_000 // milliseconds
-    connection.readTimeout = 2_000 // milliseconds
-
     val request =
       CheckinRequest(
         ServerInfo(
@@ -102,41 +99,44 @@ class ServerCheckinTask(
         )
       )
 
-    // Write JSON data to the output stream
-    val os = DataOutputStream(connection.outputStream)
-    os.writeBytes(Json.encodeToString(request))
-    os.flush()
-    os.close()
+    val connection = url.openConnection() as HttpURLConnection
+    try {
+      connection.requestMethod = "POST"
+      connection.setRequestProperty("Content-Type", "application/json; charset=utf-8")
+      connection.doOutput = true
+      connection.connectTimeout = 2_000 // milliseconds
+      connection.readTimeout = 2_000 // milliseconds
 
-    // Get response code
-    val responseCode = connection.responseCode
-
-    // Process response
-    if (responseCode == HttpURLConnection.HTTP_OK) {
-      val response = StringBuilder()
-      var line: String?
-      val br = BufferedReader(InputStreamReader(connection.inputStream))
-      while ((br.readLine().also { line = it }) != null) {
-        response.append(line)
+      // The body must be encoded as UTF-8 explicitly: DataOutputStream.writeBytes() keeps only the
+      // low byte of each character and mangled non-ASCII server names and locations.
+      connection.outputStream.use {
+        it.write(Json.encodeToString(request).toByteArray(Charsets.UTF_8))
       }
-      br.close()
 
-      // Disconnect the connection
-      connection.disconnect()
+      val responseCode = connection.responseCode
+      if (responseCode != HttpURLConnection.HTTP_OK) {
+        logger.atWarning().log("Error: HTTP Response code - %d", responseCode)
+        return null
+      }
 
+      val body = connection.inputStream.bufferedReader(Charsets.UTF_8).use { it.readText() }
       return try {
-        lenientJson.decodeFromString<CheckinResponse?>(response.toString())
+        lenientJson.decodeFromString<CheckinResponse?>(body)
       } catch (e: Exception) {
         logger
           .atWarning()
           .withCause(e)
           .atMostEvery(6, HOURS)
-          .log("Failed to parse to CheckinResponse: %s", response.toString())
+          .log("Failed to parse to CheckinResponse: %s", body)
         null
       }
-    } else {
-      logger.atWarning().log("Error: HTTP Response code - %d", responseCode)
+    } catch (e: IOException) {
+      // Timeouts, DNS failures, refused connections... Report as a failure instead of throwing so
+      // the backup URL is tried.
+      logger.atFine().withCause(e).log("Failed to reach %s", url.host)
       return null
+    } finally {
+      connection.disconnect()
     }
   }
 
@@ -144,6 +144,9 @@ class ServerCheckinTask(
     val logger = FluentLogger.forEnclosingClass()
 
     val lenientJson = Json { ignoreUnknownKeys = true }
+
+    const val MAX_ADMIN_MESSAGES = 5
+    const val MAX_ADMIN_MESSAGE_LENGTH = 500
 
     val LAMBDA_PATH =
       URL("https://plzmuutb32kgr7jx73ettrtwga0ryzis.lambda-url.ap-northeast-1.on.aws/checkin")
