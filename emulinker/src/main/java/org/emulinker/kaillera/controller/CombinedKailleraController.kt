@@ -114,6 +114,13 @@ class CombinedKailleraController(
             channel(NioDatagramChannel::class.java)
             option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
             option(ChannelOption.SO_BROADCAST, true)
+            // All clients send at roughly the same moment every frame, and the thread that reads
+            // them can be paused (garbage collection, a busy core) for several milliseconds.
+            // Whatever does not fit in the socket buffer is dropped by the kernel and costs the
+            // client a retransmit timeout (a visible stall). The default of ~200 KB holds only a
+            // few hundred small datagrams, so ask for more. Linux silently caps this at twice
+            // `net.core.rmem_max`.
+            option(ChannelOption.SO_RCVBUF, REQUESTED_RECEIVE_BUFFER_BYTES)
             handler(
               object : io.netty.channel.ChannelInitializer<Channel>() {
                 override fun initChannel(ch: Channel) {
@@ -127,6 +134,13 @@ class CombinedKailleraController(
             boundPort = port
             // Run server maintenance on the thread that handles packets.
             server.stateExecutor = nettyChannel.eventLoop()
+            logger
+              .atInfo()
+              .log(
+                "UDP receive buffer: %d bytes (requested %d; Linux limits this by net.core.rmem_max)",
+                nettyChannel.config().getOption(ChannelOption.SO_RCVBUF),
+                REQUESTED_RECEIVE_BUFFER_BYTES,
+              )
 
             // Warmup the event loop.
             nettyChannel.eventLoop().submit {
@@ -258,6 +272,8 @@ class CombinedKailleraController(
 
   private companion object {
     val logger = FluentLogger.forEnclosingClass()
+
+    const val REQUESTED_RECEIVE_BUFFER_BYTES = 4 * 1024 * 1024
   }
 
   private object SecurityContext {
