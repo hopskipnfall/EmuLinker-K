@@ -9,6 +9,6 @@ abstract class AppModule {
      *
      * Usually used for update messages.
      */
-    var messagesToAdmins: List<String> = emptyList()
+    @Volatile var messagesToAdmins: List<String> = emptyList()
   }
 }

@@ -2,12 +2,20 @@ package org.emulinker.util
 
 import kotlin.time.Duration
 
-/** A cache used to fetch a single [Long] value on a delay. */
+/**
+ * A cache used to fetch a single [Long] value on a delay.
+ *
+ * Not thread safe: use from one thread, or guard externally.
+ */
 class TimeOffsetCache(delay: Duration, resolution: Duration) {
+  init {
+    require(resolution.isPositive()) { "resolution must be positive" }
+  }
+
   private val resolutionNs = resolution.inWholeNanoseconds
   private var lastUpdatedNs: Long? = null
 
-  private val cache: Array<Long?> = arrayOfNulls((delay / resolution).toInt())
+  private val cache: Array<Long?> = arrayOfNulls(maxOf(1, (delay / resolution).toInt()))
   private val cacheSize = cache.size
   private var last: Int = -1
   var size = 0
@@ -33,7 +41,6 @@ class TimeOffsetCache(delay: Duration, resolution: Duration) {
       else -> cache[(last + 1) % cacheSize]!!
     }
 
-  @Synchronized
   fun clear() {
     last = -1
     size = 0

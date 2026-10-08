@@ -4,12 +4,10 @@ import java.util.concurrent.ScheduledFuture
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 import org.emulinker.config.RuntimeFlags
-import org.emulinker.kaillera.master.StatsCollector
 import org.emulinker.util.TaskScheduler
 
 class MasterListUpdater(
   private val flags: RuntimeFlags,
-  private val statsCollector: StatsCollector,
   private val serverCheckinTask: ServerCheckinTask,
   private val emuLinkerMasterUpdateTask: EmuLinkerMasterUpdateTask,
   private val kailleraMasterUpdateTask: KailleraMasterUpdateTask,
@@ -37,7 +35,6 @@ class MasterListUpdater(
         ) {
           if (flags.touchEmulinker) emuLinkerMasterUpdateTask.reportStatus()
           if (flags.touchKaillera) kailleraMasterUpdateTask.reportStatus()
-          statsCollector.clearStartedGamesList()
         }
     }
     serverCheckinJob =

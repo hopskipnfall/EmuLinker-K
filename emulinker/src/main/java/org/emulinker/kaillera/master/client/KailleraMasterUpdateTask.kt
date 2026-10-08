@@ -24,16 +24,9 @@ class KailleraMasterUpdateTask(
 ) : MasterListUpdateTask {
 
   override fun reportStatus() {
-    val createdGamesList = statsCollector.getStartedGamesList()
-
     val createdGames = StringBuilder()
-    synchronized(createdGamesList) {
-      val iter = createdGamesList.iterator()
-      while (iter.hasNext()) {
-        createdGames.append(iter.next())
-        createdGames.append("|")
-      }
-      createdGamesList.clear()
+    for (romName in statsCollector.drainStartedGames()) {
+      createdGames.append(romName).append("|")
     }
 
     val url = URLBuilder(TOUCH_LIST_URL)
@@ -92,7 +85,7 @@ class KailleraMasterUpdateTask(
         .atWarning()
         .withCause(e)
         .atMostEvery(6, TimeUnit.HOURS)
-        .log("Failed to touch Kaillera Master: %d")
+        .log("Failed to touch Kaillera Master")
     } finally {
       connection.disconnect()
     }

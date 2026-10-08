@@ -87,25 +87,25 @@ class TwitterBroadcaster(
   }
 
   private fun cancelMatchingEvents(predicate: (LookingForGameEvent) -> Boolean): Boolean {
-    if (twitter == null) {
-      return false
-    }
-    val anyModified =
-      pendingReports.keys.asSequence().filter(predicate).any { event: LookingForGameEvent ->
-        val timerTask = pendingReports[event]
-        if (timerTask != null) {
-          try {
-            timerTask.cancel(/* mayInterruptIfRunning= */ false)
-          } catch (e: Exception) {
-            // Throws exceptions if already closed and there's no way to check if it's already been
-            // closed..
-          }
-          pendingReports.remove(event)
+    val twitter = twitter ?: return false
+    // Handle every matching event. (This used to use Sequence.any, which stops at the first
+    // element and so cancelled only one of several matching events.)
+    val pendingMatches = pendingReports.keys.filter(predicate)
+    for (event in pendingMatches) {
+      val timerTask = pendingReports[event]
+      if (timerTask != null) {
+        try {
+          timerTask.cancel(/* mayInterruptIfRunning= */ false)
+        } catch (e: Exception) {
+          // Throws exceptions if already closed and there's no way to check if it's already been
+          // closed..
         }
-        true
+        pendingReports.remove(event)
       }
-    val tweetsClosed =
-      postedTweets.keys.asSequence().filter(predicate).any { event: LookingForGameEvent ->
+    }
+    val postedMatches = postedTweets.keys.filter(predicate)
+    for (event in postedMatches) {
+      run {
         val tweetId = postedTweets[event]
         if (tweetId != null) {
           postedTweets.remove(event)
@@ -128,9 +128,9 @@ class TwitterBroadcaster(
             }
           }
         }
-        true
       }
-    return anyModified || tweetsClosed
+    }
+    return pendingMatches.isNotEmpty() || postedMatches.isNotEmpty()
   }
 
   private companion object {
