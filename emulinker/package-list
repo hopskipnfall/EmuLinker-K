@@ -52,7 +52,7 @@ $dokka.location:org.emulinker.config/RuntimeFlags/twitterPreventBroadcastNameSuf
 $dokka.location:org.emulinker.config/RuntimeFlags/v086BufferSize/#/PointingToDeclaration/emulinker/org.emulinker.config/-runtime-flags/v086-buffer-size.html
 $dokka.location:org.emulinker.kaillera.access////PointingToDeclaration/emulinker/org.emulinker.kaillera.access/index.html
 $dokka.location:org.emulinker.kaillera.access/AccessException///PointingToDeclaration/emulinker/org.emulinker.kaillera.access/-access-exception/index.html
-$dokka.location:org.emulinker.kaillera.access/AccessException/AccessException/#kotlin.String?/PointingToDeclaration/emulinker/org.emulinker.kaillera.access/-access-exception/-access-exception.html
+$dokka.location:org.emulinker.kaillera.access/AccessException/AccessException/#kotlin.String?#kotlin.Throwable?/PointingToDeclaration/emulinker/org.emulinker.kaillera.access/-access-exception/-access-exception.html
 $dokka.location:org.emulinker.kaillera.access/AccessManager.Companion///PointingToDeclaration/emulinker/org.emulinker.kaillera.access/-access-manager/-companion/index.html
 $dokka.location:org.emulinker.kaillera.access/AccessManager.Companion/ACCESS_ADMIN/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.access/-access-manager/-companion/-a-c-c-e-s-s_-a-d-m-i-n.html
 $dokka.location:org.emulinker.kaillera.access/AccessManager.Companion/ACCESS_BANNED/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.access/-access-manager/-companion/-a-c-c-e-s-s_-b-a-n-n-e-d.html
@@ -910,6 +910,7 @@ $dokka.location:org.emulinker.kaillera.controller/CombinedKailleraController/Com
 $dokka.location:org.emulinker.kaillera.controller/CombinedKailleraController/alloc/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.controller/-combined-kaillera-controller/alloc.html
 $dokka.location:org.emulinker.kaillera.controller/CombinedKailleraController/bind/#kotlin.Int/PointingToDeclaration/emulinker/org.emulinker.kaillera.controller/-combined-kaillera-controller/bind.html
 $dokka.location:org.emulinker.kaillera.controller/CombinedKailleraController/bufferSize/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.controller/-combined-kaillera-controller/buffer-size.html
+$dokka.location:org.emulinker.kaillera.controller/CombinedKailleraController/channelReadComplete/#io.netty.channel.ChannelHandlerContext/PointingToDeclaration/emulinker/org.emulinker.kaillera.controller/-combined-kaillera-controller/channel-read-complete.html
 $dokka.location:org.emulinker.kaillera.controller/CombinedKailleraController/channelRegistered/#io.netty.channel.ChannelHandlerContext/PointingToDeclaration/emulinker/org.emulinker.kaillera.controller/-combined-kaillera-controller/channel-registered.html
 $dokka.location:org.emulinker.kaillera.controller/CombinedKailleraController/clientHandlers/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.controller/-combined-kaillera-controller/client-handlers.html
 $dokka.location:org.emulinker.kaillera.controller/CombinedKailleraController/metrics/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.controller/-combined-kaillera-controller/metrics.html
@@ -957,7 +958,7 @@ $dokka.location:org.emulinker.kaillera.master.client/KailleraMasterUpdateTask/re
 $dokka.location:org.emulinker.kaillera.master.client/MasterListUpdateTask///PointingToDeclaration/emulinker/org.emulinker.kaillera.master.client/-master-list-update-task/index.html
 $dokka.location:org.emulinker.kaillera.master.client/MasterListUpdateTask/reportStatus/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.master.client/-master-list-update-task/report-status.html
 $dokka.location:org.emulinker.kaillera.master.client/MasterListUpdater///PointingToDeclaration/emulinker/org.emulinker.kaillera.master.client/-master-list-updater/index.html
-$dokka.location:org.emulinker.kaillera.master.client/MasterListUpdater/MasterListUpdater/#org.emulinker.config.RuntimeFlags#org.emulinker.kaillera.master.StatsCollector#org.emulinker.kaillera.master.client.ServerCheckinTask#org.emulinker.kaillera.master.client.EmuLinkerMasterUpdateTask#org.emulinker.kaillera.master.client.KailleraMasterUpdateTask#org.emulinker.util.TaskScheduler/PointingToDeclaration/emulinker/org.emulinker.kaillera.master.client/-master-list-updater/-master-list-updater.html
+$dokka.location:org.emulinker.kaillera.master.client/MasterListUpdater/MasterListUpdater/#org.emulinker.config.RuntimeFlags#org.emulinker.kaillera.master.client.ServerCheckinTask#org.emulinker.kaillera.master.client.EmuLinkerMasterUpdateTask#org.emulinker.kaillera.master.client.KailleraMasterUpdateTask#org.emulinker.util.TaskScheduler/PointingToDeclaration/emulinker/org.emulinker.kaillera.master.client/-master-list-updater/-master-list-updater.html
 $dokka.location:org.emulinker.kaillera.master.client/MasterListUpdater/run/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.master.client/-master-list-updater/run.html
 $dokka.location:org.emulinker.kaillera.master.client/MasterListUpdater/stop/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.master.client/-master-list-updater/stop.html
 $dokka.location:org.emulinker.kaillera.master.client/ServerCheckinTask///PointingToDeclaration/emulinker/org.emulinker.kaillera.master.client/-server-checkin-task/index.html
@@ -982,8 +983,7 @@ $dokka.location:org.emulinker.kaillera.master.client/ServerInfo/website/#/Pointi
 $dokka.location:org.emulinker.kaillera.master////PointingToDeclaration/emulinker/org.emulinker.kaillera.master/index.html
 $dokka.location:org.emulinker.kaillera.master/MasterListStatsCollector///PointingToDeclaration/emulinker/org.emulinker.kaillera.master/-master-list-stats-collector/index.html
 $dokka.location:org.emulinker.kaillera.master/MasterListStatsCollector/MasterListStatsCollector/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.master/-master-list-stats-collector/-master-list-stats-collector.html
-$dokka.location:org.emulinker.kaillera.master/MasterListStatsCollector/clearStartedGamesList/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.master/-master-list-stats-collector/clear-started-games-list.html
-$dokka.location:org.emulinker.kaillera.master/MasterListStatsCollector/getStartedGamesList/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.master/-master-list-stats-collector/get-started-games-list.html
+$dokka.location:org.emulinker.kaillera.master/MasterListStatsCollector/drainStartedGames/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.master/-master-list-stats-collector/drain-started-games.html
 $dokka.location:org.emulinker.kaillera.master/MasterListStatsCollector/markGameAsStarted/#org.emulinker.kaillera.model.KailleraServer#org.emulinker.kaillera.model.KailleraGame/PointingToDeclaration/emulinker/org.emulinker.kaillera.master/-master-list-stats-collector/mark-game-as-started.html
 $dokka.location:org.emulinker.kaillera.master/PublicServerInformation///PointingToDeclaration/emulinker/org.emulinker.kaillera.master/-public-server-information/index.html
 $dokka.location:org.emulinker.kaillera.master/PublicServerInformation/PublicServerInformation/#org.emulinker.config.RuntimeFlags/PointingToDeclaration/emulinker/org.emulinker.kaillera.master/-public-server-information/-public-server-information.html
@@ -992,8 +992,7 @@ $dokka.location:org.emulinker.kaillera.master/PublicServerInformation/location/#
 $dokka.location:org.emulinker.kaillera.master/PublicServerInformation/serverName/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.master/-public-server-information/server-name.html
 $dokka.location:org.emulinker.kaillera.master/PublicServerInformation/website/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.master/-public-server-information/website.html
 $dokka.location:org.emulinker.kaillera.master/StatsCollector///PointingToDeclaration/emulinker/org.emulinker.kaillera.master/-stats-collector/index.html
-$dokka.location:org.emulinker.kaillera.master/StatsCollector/clearStartedGamesList/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.master/-stats-collector/clear-started-games-list.html
-$dokka.location:org.emulinker.kaillera.master/StatsCollector/getStartedGamesList/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.master/-stats-collector/get-started-games-list.html
+$dokka.location:org.emulinker.kaillera.master/StatsCollector/drainStartedGames/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.master/-stats-collector/drain-started-games.html
 $dokka.location:org.emulinker.kaillera.master/StatsCollector/markGameAsStarted/#org.emulinker.kaillera.model.KailleraServer#org.emulinker.kaillera.model.KailleraGame/PointingToDeclaration/emulinker/org.emulinker.kaillera.master/-stats-collector/mark-game-as-started.html
 $dokka.location:org.emulinker.kaillera.model.event////PointingToDeclaration/emulinker/org.emulinker.kaillera.model.event/index.html
 $dokka.location:org.emulinker.kaillera.model.event/AllReadyEvent///PointingToDeclaration/emulinker/org.emulinker.kaillera.model.event/-all-ready-event/index.html
@@ -1192,6 +1191,7 @@ $dokka.location:org.emulinker.kaillera.model.impl/Trivia/run/#/PointingToDeclara
 $dokka.location:org.emulinker.kaillera.model.impl/Trivia/saveScores/#kotlin.Boolean/PointingToDeclaration/emulinker/org.emulinker.kaillera.model.impl/-trivia/save-scores.html
 $dokka.location:org.emulinker.kaillera.model.impl/Trivia/setQuestionTime/#kotlin.Int/PointingToDeclaration/emulinker/org.emulinker.kaillera.model.impl/-trivia/set-question-time.html
 $dokka.location:org.emulinker.kaillera.model.impl/Trivia/setTriviaPaused/#kotlin.Boolean/PointingToDeclaration/emulinker/org.emulinker.kaillera.model.impl/-trivia/set-trivia-paused.html
+$dokka.location:org.emulinker.kaillera.model.impl/Trivia/stop/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.model.impl/-trivia/stop.html
 $dokka.location:org.emulinker.kaillera.model.impl/Trivia/updateIP/#kotlin.String#kotlin.String/PointingToDeclaration/emulinker/org.emulinker.kaillera.model.impl/-trivia/update-i-p.html
 $dokka.location:org.emulinker.kaillera.model////PointingToDeclaration/emulinker/org.emulinker.kaillera.model/index.html
 $dokka.location:org.emulinker.kaillera.model//CLIENT_WITH_BYTE_ID_BUG/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-c-l-i-e-n-t_-w-i-t-h_-b-y-t-e_-i-d_-b-u-g.html
@@ -1419,9 +1419,8 @@ $dokka.location:org.emulinker.kaillera.model/SurveyMetadataResponse/SurveyMetada
 $dokka.location:org.emulinker.kaillera.model/SurveyMetadataResponse/surveyId/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-survey-metadata-response/survey-id.html
 $dokka.location:org.emulinker.kaillera.model/SurveyMetadataResponse/uploadUrl/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-survey-metadata-response/upload-url.html
 $dokka.location:org.emulinker.kaillera.model/UserData///PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-user-data/index.html
-$dokka.location:org.emulinker.kaillera.model/UserData/UserData/#kotlin.time.Duration#org.emulinker.util.TimeOffsetCache#kotlin.Long#kotlin.time.Duration#kotlin.time.Duration/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-user-data/-user-data.html
+$dokka.location:org.emulinker.kaillera.model/UserData/UserData/#kotlin.time.Duration#org.emulinker.util.TimeOffsetCache#kotlin.Long/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-user-data/-user-data.html
 $dokka.location:org.emulinker.kaillera.model/UserData/calculateLagForUser/#kotlin.Long#kotlin.Long/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-user-data/calculate-lag-for-user.html
-$dokka.location:org.emulinker.kaillera.model/UserData/lagLeeway/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-user-data/lag-leeway.html
 $dokka.location:org.emulinker.kaillera.model/UserData/receivedDataNs/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-user-data/received-data-ns.html
 $dokka.location:org.emulinker.kaillera.model/UserData/reset/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-user-data/reset.html
 $dokka.location:org.emulinker.kaillera.model/UserData/totalDrift/#/PointingToDeclaration/emulinker/org.emulinker.kaillera.model/-user-data/total-drift.html
@@ -1483,8 +1482,17 @@ $dokka.location:org.emulinker.util/EmuLang/getString/#kotlin.String/PointingToDe
 $dokka.location:org.emulinker.util/EmuLang/getStringOrNull/#kotlin.String/PointingToDeclaration/emulinker/org.emulinker.util/-emu-lang/get-string-or-null.html
 $dokka.location:org.emulinker.util/EmuLang/hasString/#kotlin.String/PointingToDeclaration/emulinker/org.emulinker.util/-emu-lang/has-string.html
 $dokka.location:org.emulinker.util/EmuLang/updateLanguage/#kotlin.String/PointingToDeclaration/emulinker/org.emulinker.util/-emu-lang/update-language.html
+$dokka.location:org.emulinker.util/EmuLinkerPropertiesConfig.Companion///PointingToDeclaration/emulinker/org.emulinker.util/-emu-linker-properties-config/-companion/index.html
 $dokka.location:org.emulinker.util/EmuLinkerPropertiesConfig///PointingToDeclaration/emulinker/org.emulinker.util/-emu-linker-properties-config/index.html
 $dokka.location:org.emulinker.util/EmuLinkerPropertiesConfig/EmuLinkerPropertiesConfig/#/PointingToDeclaration/emulinker/org.emulinker.util/-emu-linker-properties-config/-emu-linker-properties-config.html
+$dokka.location:org.emulinker.util/EmuLinkerPropertiesConfig/getBoolean/#kotlin.String#kotlin.Boolean/PointingToDeclaration/emulinker/org.emulinker.util/-emu-linker-properties-config/get-boolean.html
+$dokka.location:org.emulinker.util/EmuLinkerPropertiesConfig/getBoolean/#kotlin.String/PointingToDeclaration/emulinker/org.emulinker.util/-emu-linker-properties-config/get-boolean.html
+$dokka.location:org.emulinker.util/EmuLinkerPropertiesConfig/getInt/#kotlin.String#kotlin.Int/PointingToDeclaration/emulinker/org.emulinker.util/-emu-linker-properties-config/get-int.html
+$dokka.location:org.emulinker.util/EmuLinkerPropertiesConfig/getInt/#kotlin.String/PointingToDeclaration/emulinker/org.emulinker.util/-emu-linker-properties-config/get-int.html
+$dokka.location:org.emulinker.util/EmuLinkerPropertiesConfig/getInteger/#kotlin.String#kotlin.Int?/PointingToDeclaration/emulinker/org.emulinker.util/-emu-linker-properties-config/get-integer.html
+$dokka.location:org.emulinker.util/EmuLinkerPropertiesConfig/getString/#kotlin.String#kotlin.String?/PointingToDeclaration/emulinker/org.emulinker.util/-emu-linker-properties-config/get-string.html
+$dokka.location:org.emulinker.util/EmuLinkerPropertiesConfig/getString/#kotlin.String/PointingToDeclaration/emulinker/org.emulinker.util/-emu-linker-properties-config/get-string.html
+$dokka.location:org.emulinker.util/EmuLinkerPropertiesConfig/getStringArray/#kotlin.String/PointingToDeclaration/emulinker/org.emulinker.util/-emu-linker-properties-config/get-string-array.html
 $dokka.location:org.emulinker.util/EmuLinkerXMLConfig///PointingToDeclaration/emulinker/org.emulinker.util/-emu-linker-x-m-l-config/index.html
 $dokka.location:org.emulinker.util/EmuLinkerXMLConfig/EmuLinkerXMLConfig/#/PointingToDeclaration/emulinker/org.emulinker.util/-emu-linker-x-m-l-config/-emu-linker-x-m-l-config.html
 $dokka.location:org.emulinker.util/EmuUtil///PointingToDeclaration/emulinker/org.emulinker.util/-emu-util/index.html
