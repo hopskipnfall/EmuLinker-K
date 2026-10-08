@@ -216,6 +216,10 @@ class GameOwnerCommandAction : V086Action<GameChat> {
         admin.game!!.announce("Player doesn't exist!", admin)
         return
       }
+      if (user.game !== game) {
+        admin.game!!.announce("Player is not in this game!", admin)
+        return
+      }
       if (user === clientHandler.user) {
         user.game!!.announce("You can't mute yourself!", admin)
         return
@@ -261,6 +265,10 @@ class GameOwnerCommandAction : V086Action<GameChat> {
       val user = clientHandler.user.server.getUser(userID)
       if (user == null) {
         admin.game!!.announce("Player doesn't exist!", admin)
+        return
+      }
+      if (user.game !== game) {
+        admin.game!!.announce("Player is not in this game!", admin)
         return
       }
       if (user === clientHandler.user) {
@@ -324,20 +332,12 @@ class GameOwnerCommandAction : V086Action<GameChat> {
         return
       }
       if (test > 0) {
-        var numCount = 0
-        val num = IntArray(str.length)
-        // before swap check numbers to prevent errors due to incorrectly entered numbers
+        // The digits must be a permutation of 1..n for exactly n players; anything else (repeated
+        // or missing numbers) would leave two players with the same player number.
+        val num = IntArray(str.length) { str[it].digitToInt() }
+        val isPermutation = isValidSwapOrder(str, game.players.size)
         i = 0
-        while (i < num.size) {
-          num[i] = str[i].toString().toInt()
-          numCount = 1
-          if (num[i] == 0 || num[i] > game.players.size) break
-          for (j in num.indices) {
-            if (num[i] != num[j]) numCount++
-          }
-          i++
-        }
-        if (numCount == game.players.size) {
+        if (isPermutation) {
           game.swap = true
           // PlayerActionQueue temp = game.getPlayerActionQueue()[0];
           i = 0
@@ -450,6 +450,15 @@ class GameOwnerCommandAction : V086Action<GameChat> {
   }
 
   companion object {
+    /**
+     * Whether [order] (for example "213") assigns each of [playerCount] players a distinct player
+     * number from 1 to [playerCount].
+     */
+    internal fun isValidSwapOrder(order: String, playerCount: Int): Boolean =
+      order.length == playerCount &&
+        order.all { it in '1'..'9' } &&
+        order.map { it - '0' }.sorted() == (1..playerCount).toList()
+
     private var lastMaxUserChange: Long = 0
     private val logger = FluentLogger.forEnclosingClass()
 

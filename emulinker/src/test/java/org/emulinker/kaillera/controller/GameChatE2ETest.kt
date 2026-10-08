@@ -134,16 +134,8 @@ class GameChatE2ETest : KoinComponent {
 
   @Rule @JvmField val expect = Expect.create()
 
-  @Test
-  fun testSwapCommand() {
-    val controller = get<CombinedKailleraController>()
-    // val v086 = koinModule.get<V086Controller>() // Not exposed directly?
-    // CombinedKailleraController has private 'controllersMap'.
-    // But we can inspect V086Controller if we can get it from Koin.
-    // It is singleOf(::V086Controller).
-    val v086Controller = get<V086Controller>()
-    println("Action for 8: ${v086Controller.actions[8]}")
-
+  /** Logs in two clients, starts a game and gets both through the sync phase. */
+  private fun startSyncedTwoPlayerGame(): List<Client> {
     val p1 = Client(1, "Player1", this)
     val p2 = Client(2, "P2", this)
     val clients = listOf(p1, p2)
@@ -177,6 +169,22 @@ class GameChatE2ETest : KoinComponent {
     println("Syncing...")
     p1.advanceIterator(100)
     p2.advanceIterator(200)
+
+    return clients
+  }
+
+  @Test
+  fun testSwapCommand() {
+    val controller = get<CombinedKailleraController>()
+    // val v086 = koinModule.get<V086Controller>() // Not exposed directly?
+    // CombinedKailleraController has private 'controllersMap'.
+    // But we can inspect V086Controller if we can get it from Koin.
+    // It is singleOf(::V086Controller).
+    val v086Controller = get<V086Controller>()
+    println("Action for 8: ${v086Controller.actions[8]}")
+
+    val clients = startSyncedTwoPlayerGame()
+    val (p1, _) = clients
 
     // Run a few frames to ensure we are synced and check default order
     for (i in 1..20) {
@@ -274,6 +282,36 @@ class GameChatE2ETest : KoinComponent {
 
     guest.consumeUntil { it is CloseGame }
     guest.logout()
+  }
+
+  @Test
+  fun invalidSwapOrderIsRejected() {
+    val clients = startSyncedTwoPlayerGame()
+    val (p1, _) = clients
+
+    // "11" repeats a player number, so it must not be applied.
+    p1.sendChat("/swap 11")
+
+    for (i in 1..30) {
+      val inputs = clients.map { it.nextInput() }
+      val expectedNormal = Unpooled.buffer()
+      expectedNormal.writeBytes(inputs[0].duplicate())
+      expectedNormal.writeBytes(inputs[1].duplicate())
+      val normalBytes = expectedNormal.toByteArray()
+      expectedNormal.release()
+
+      clients.forEachIndexed { idx, client -> client.sendGameData(inputs[idx]) }
+      val received = clients.map { it.receiveGameData().toByteArray() }
+
+      assertThat(received[0]).isEqualTo(received[1])
+      // Once the pipeline is full the order must remain player 1 then player 2.
+      if (i > 15) assertThat(received[0]).isEqualTo(normalBytes)
+    }
+
+    clients.forEach {
+      it.quitGame()
+      it.quit()
+    }
   }
 
   fun pump() {

@@ -14,26 +14,25 @@ class WildcardStringPattern(pattern: String) {
   private val containsStrings = LinkedList<String>()
 
   fun match(s: String): Boolean {
-    var s = s
     if (s.isBlank()) return false
-    if (equals && s != startString) return false
-    if (startsWith && !s.startsWith(startString)) return false
-    if (endsWith && !s.endsWith(endString)) return false
-    if (contains) {
-      for (pattern in containsStrings) {
-        val idx = s.indexOf(pattern)
-        if (idx == -1) return false
-        if (idx + pattern.length == s.length) {
-          // Match occured at the end of the string.
-          // In that case, the substring assignment below
-          // would fail. Continue the loop. If there are
-          // more items to match, the next test will fail.
-          // Otherwise, the match has succeeded.
-          s = ""
-          continue
-        }
-        s = s.substring(idx + pattern.length)
-      }
+    if (equals) return s == startString
+
+    // The start, middle and end parts of the pattern must not overlap each other, so track the
+    // region of [s] that is still available to the next part.
+    var pos = 0
+    var end = s.length
+    if (startsWith) {
+      if (!s.startsWith(startString)) return false
+      pos = startString.length
+    }
+    if (endsWith) {
+      if (!s.endsWith(endString) || s.length - endString.length < pos) return false
+      end = s.length - endString.length
+    }
+    for (part in containsStrings) {
+      val idx = s.indexOf(part, pos)
+      if (idx == -1 || idx + part.length > end) return false
+      pos = idx + part.length
     }
     return true
   }

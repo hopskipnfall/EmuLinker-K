@@ -324,12 +324,82 @@ class AccessManager2Test {
   }
 
   @Test
+  fun addPermaBan_keepsCrLfLineEndings() {
+    accessFile.writeBytes("# comment\r\nipaddress,ALLOW,*\r\n".toByteArray())
+    accessManager.forceReload()
+
+    accessManager.addPermaBan(remoteIp.hostAddress, issuer = "Admin", reason = null)
+
+    val text = accessFile.readText()
+    assertThat(text.replace("\r\n", "")).doesNotContain("\n")
+    assertThat(accessManager.isAddressAllowed(remoteIp)).isFalse()
+  }
+
+  @Test
+  fun addPermaBan_addsANewlineWhenTheFileDoesNotEndWithOne() {
+    accessFile.writeText("# comment with no trailing newline")
+    accessManager.forceReload()
+
+    accessManager.addPermaBan(remoteIp.hostAddress, issuer = "Admin", reason = null)
+
+    assertThat(accessFile.readLines()).contains("# comment with no trailing newline")
+    assertThat(accessManager.isAddressAllowed(remoteIp)).isFalse()
+  }
+
+  @Test
+  fun addPermaBan_leavesTheRestOfTheFileByteForByte() {
+    // 0xFF is not valid UTF-8 and must survive untouched, rewriting must not re-encode the file.
+    val before =
+      "# caf".toByteArray() + byteArrayOf(0xFF.toByte()) + "\nipaddress,ALLOW,*\n".toByteArray()
+    accessFile.writeBytes(before)
+    accessManager.forceReload()
+
+    accessManager.addPermaBan(remoteIp.hostAddress, issuer = "Admin", reason = null)
+
+    val after = accessFile.readBytes()
+    assertThat(after.copyOfRange(0, 7)).isEqualTo(before.copyOfRange(0, 7))
+    assertThat(after.copyOfRange(after.size - 18, after.size))
+      .isEqualTo(before.copyOfRange(before.size - 18, before.size))
+  }
+
+  @Test
   fun sanitizeForConfig_replacesControlCharactersAndTrims() {
     assertThat(AccessManager2.sanitizeForConfig("a\r\nb\u2028c\n")).isEqualTo("a  b c")
     // A trailing separator must not leave whitespace that would stop the pattern from matching.
     assertThat(AccessManager2.sanitizeForConfig("10.0.0.1\n", stripCommas = true))
       .isEqualTo("10.0.0.1")
     assertThat(AccessManager2.sanitizeForConfig("a,b", stripCommas = true)).isEqualTo("a b")
+  }
+
+  @Test
+  fun addPermaBan_takesEffectDespiteTrailingAllowAllRule() {
+    // Mirrors the shipped access.cfg: the first matching ipaddress rule wins.
+    accessFile.writeText("user,SUPERADMIN,${localIp.hostAddress}\nipaddress,ALLOW,*\n")
+    accessManager.forceReload()
+
+    accessManager.addPermaBan(remoteIp.hostAddress, issuer = "Admin", reason = "Cheating")
+
+    assertThat(accessManager.isAddressAllowed(remoteIp)).isFalse()
+    assertThat(accessManager.isAddressAllowed(otherIp)).isTrue()
+    // Existing rules are preserved.
+    assertThat(accessManager.getAccess(localIp)).isEqualTo(AccessManager.ACCESS_SUPERADMIN)
+  }
+
+  @Test
+  fun tempGrantDoesNotLowerConfiguredAccess() {
+    accessFile.writeText("user,SUPERADMIN,${localIp.hostAddress}\nipaddress,ALLOW,*\n")
+    accessManager.forceReload()
+
+    accessManager.addTempElevated(localIp.hostAddress, 5.minutes)
+
+    assertThat(accessManager.getAccess(localIp)).isEqualTo(AccessManager.ACCESS_SUPERADMIN)
+  }
+
+  @Test
+  fun tempGrantRaisesNormalAccess() {
+    accessManager.addTempModerator(remoteIp.hostAddress, 5.minutes)
+
+    assertThat(accessManager.getAccess(remoteIp)).isEqualTo(AccessManager.ACCESS_MODERATOR)
   }
 
   @Test

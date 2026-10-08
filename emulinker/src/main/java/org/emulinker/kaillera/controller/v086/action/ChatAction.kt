@@ -276,7 +276,12 @@ class ChatAction(private val adminCommandAction: AdminCommandAction) :
                 } catch (e1: Exception) {}
                 return
               }
-              if (!user.isAcceptingDirectMessages) {
+              if (
+                !user.isAcceptingDirectMessages ||
+                  user.searchIgnoredUsers(
+                    clientHandler.user.connectSocketAddress.address.hostAddress
+                  )
+              ) {
                 try {
                   clientHandler.send(
                     InformationMessage(
@@ -413,7 +418,7 @@ class ChatAction(private val adminCommandAction: AdminCommandAction) :
             .log(
               "IGNORE USER ERROR: %s: %s",
               user.name,
-              clientHandler.remoteSocketAddress!!.hostName,
+              clientHandler.remoteSocketAddress!!.address.hostAddress,
             )
           return
         }

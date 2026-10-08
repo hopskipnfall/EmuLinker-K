@@ -166,33 +166,91 @@ class AccessManager2(private val flags: RuntimeFlags, private val taskScheduler:
 
   @Synchronized
   override fun addPermaBan(addressPattern: String, issuer: String?, reason: String?) {
-    val file = accessFile ?: return
+    val file = accessFile ?: throw AccessException("The access file is not available.")
     try {
-      java.io.FileWriter(file, true).use { writer ->
-        writer.appendLine()
-        writer.appendLine("# Permanent ban issued by ${sanitizeForConfig(issuer ?: "Unknown")}")
-        if (reason != null) writer.appendLine("# Reason: ${sanitizeForConfig(reason)}")
-        writer.appendLine("ipaddress,DENY,${sanitizeForConfig(addressPattern, stripCommas = true)}")
+      val entry = buildList {
+        add("")
+        add("# Permanent ban issued by ${sanitizeForConfig(issuer ?: "Unknown")}")
+        if (reason != null) add("# Reason: ${sanitizeForConfig(reason)}")
+        add("ipaddress,DENY,${sanitizeForConfig(addressPattern, stripCommas = true)}")
       }
+      // The first matching ipaddress rule wins, and the shipped file ends with `ipaddress,ALLOW,*`,
+      // so a ban appended to the end would never apply. Put it ahead of the existing rules.
+      insertBeforeFirstAddressRule(file, entry)
       loadAccess()
-    } catch (e: Exception) {
+    } catch (e: IOException) {
       logger.atSevere().withCause(e).log("Failed to write to access file")
+      throw AccessException("Could not write to the access file: ${e.message}", e)
     }
+  }
+
+  /**
+   * Inserts [entry] into [file] before the first `ipaddress,` rule (or at the end if there is
+   * none), leaving every other byte as it was.
+   *
+   * The file is rewritten in place rather than replaced by a temporary file: that keeps its
+   * permissions and ownership, follows a symlink, and works for a bind-mounted single file. The
+   * content is a few kilobytes written with a single call.
+   */
+  private fun insertBeforeFirstAddressRule(file: File, entry: List<String>) {
+    val original = file.readBytes()
+    val eol = if (containsCrLf(original)) "\r\n" else "\n"
+    val block = entry.joinToString(separator = eol, postfix = eol).toByteArray(flags.charset)
+
+    val offset = findFirstAddressRule(original)
+    val result =
+      if (offset == -1) {
+        val needsNewline = original.isNotEmpty() && original.last() != '\n'.code.toByte()
+        original + (if (needsNewline) eol.toByteArray(flags.charset) else ByteArray(0)) + block
+      } else {
+        original.copyOfRange(0, offset) + block + original.copyOfRange(offset, original.size)
+      }
+    file.writeBytes(result)
+  }
+
+  private fun containsCrLf(bytes: ByteArray): Boolean =
+    bytes.indices.any {
+      it > 0 && bytes[it] == '\n'.code.toByte() && bytes[it - 1] == '\r'.code.toByte()
+    }
+
+  /** Byte offset of the start of the first line that is an `ipaddress,` rule, or -1. */
+  private fun findFirstAddressRule(bytes: ByteArray): Int {
+    val prefix = "ipaddress,".toByteArray(Charsets.US_ASCII)
+    var lineStart = 0
+    while (lineStart < bytes.size) {
+      val matches =
+        lineStart + prefix.size <= bytes.size &&
+          prefix.indices.all {
+            (bytes[lineStart + it].toInt().toChar()).lowercaseChar() == prefix[it].toInt().toChar()
+          }
+      if (matches) return lineStart
+      val newline = bytes.indexOf('\n'.code.toByte(), lineStart)
+      if (newline == -1) return -1
+      lineStart = newline + 1
+    }
+    return -1
+  }
+
+  private fun ByteArray.indexOf(value: Byte, from: Int): Int {
+    for (i in from until size) if (this[i] == value) return i
+    return -1
   }
 
   @Synchronized
   override fun addPermaMute(addressPattern: String, issuer: String?, reason: String?) {
-    val file = accessFile ?: return
+    val file = accessFile ?: throw AccessException("The access file is not available.")
     try {
-      java.io.FileWriter(file, true).use { writer ->
+      java.io.OutputStreamWriter(java.io.FileOutputStream(file, true), flags.charset).use { writer
+        ->
         writer.appendLine()
         writer.appendLine("# Permanent silence issued by ${sanitizeForConfig(issuer ?: "Unknown")}")
         if (reason != null) writer.appendLine("# Reason: ${sanitizeForConfig(reason)}")
         writer.appendLine("silence,${sanitizeForConfig(addressPattern, stripCommas = true)}")
       }
       loadAccess()
-    } catch (e: Exception) {
+    } catch (e: IOException) {
       logger.atSevere().withCause(e).log("Failed to write to access file")
+      throw AccessException("Could not write to the access file: ${e.message}", e)
     }
   }
 
@@ -232,20 +290,20 @@ class AccessManager2(private val flags: RuntimeFlags, private val taskScheduler:
   override fun getAccess(address: InetAddress): Int {
     checkReload()
     val userAddress = address.hostAddress
-    for (tempAdmin in tempAdminList) {
-      if (tempAdmin.matches(userAddress) && !tempAdmin.isExpired) {
-        return AccessManager.ACCESS_ADMIN
+    val configured =
+      userList.firstOrNull { it.matches(userAddress) }?.access ?: AccessManager.ACCESS_NORMAL
+    val temporary =
+      when {
+        tempAdminList.any { it.matches(userAddress) && !it.isExpired } -> AccessManager.ACCESS_ADMIN
+        tempModeratorList.any { it.matches(userAddress) && !it.isExpired } ->
+          AccessManager.ACCESS_MODERATOR
+        tempElevatedList.any { it.matches(userAddress) && !it.isExpired } ->
+          AccessManager.ACCESS_ELEVATED
+        else -> return configured
       }
-    }
-    for (tempModerator in tempModeratorList) {
-      if (tempModerator.matches(userAddress) && !tempModerator.isExpired)
-        return AccessManager.ACCESS_MODERATOR
-    }
-    for (tempElevated in tempElevatedList) {
-      if (tempElevated.matches(userAddress) && !tempElevated.isExpired)
-        return AccessManager.ACCESS_ELEVATED
-    }
-    return userList.firstOrNull { it.matches(userAddress) }?.access ?: AccessManager.ACCESS_NORMAL
+    // A temporary grant can raise someone's access but must never lower it (a configured
+    // SUPERADMIN given /tempelevated would otherwise be demoted until it expired).
+    return maxOf(configured, temporary)
   }
 
   @Synchronized
