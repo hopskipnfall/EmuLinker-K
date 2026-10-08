@@ -151,81 +151,63 @@ class FastGameDataCacheTest {
   }
 
   @Test
-  fun `reference counting handles duplicates correctly`() {
+  fun `the cache does not retain or release the buffers it is given`() {
     val data = Unpooled.wrappedBuffer(byteArrayOf(1, 2, 3))
-    // Initial RefCount = 1
     assertThat(data.refCnt()).isEqualTo(1)
 
-    // Add first time: RefCount should be 2 (1 original + 1 retained by cache)
     cache.add(data)
-    assertThat(data.refCnt()).isEqualTo(2)
-
-    // Add duplicate: RefCount should be 3 (1 original + 2 retained by cache)
     cache.add(data)
-    assertThat(data.refCnt()).isEqualTo(3)
+    assertThat(data.refCnt()).isEqualTo(1)
 
-    // Remove the FIRST one (index 0).
+    // Remove the FIRST one (index 0): the duplicate shifts down.
     cache.remove(0)
-
-    // RefCount should drop to 2 (1 original + 1 remaining in cache)
-    assertThat(data.refCnt()).isEqualTo(2)
-
     assertThat(cache.contains(data)).isTrue()
-    assertThat(cache.indexOf(data)).isEqualTo(0) // It's now at index 0 because we shifted
+    assertThat(cache.indexOf(data)).isEqualTo(0)
 
-    // Remove the remaining one
     cache.remove(0)
-
-    // RefCount should drop to 1 (1 original)
-    assertThat(data.refCnt()).isEqualTo(1)
     assertThat(cache.isEmpty()).isTrue()
+    assertThat(data.refCnt()).isEqualTo(1)
 
-    // Release the original reference
     data.release()
     assertThat(data.refCnt()).isEqualTo(0)
   }
 
   @Test
-  fun `reproduction scenario for use-after-free`() {
-    // Simulate flow:
-    // 1. Create Data
+  fun `entries are independent of the buffer they were copied from`() {
     val data1 = Unpooled.wrappedBuffer(byteArrayOf(1, 2, 3))
-    // 2. Add to Cache (creates retainedDuplicate)
     cache.add(data1)
 
-    // 3. Simulate Send: Consume the data (move readerIndex)
+    // Consume and release the source, as the sender does once the message has gone out.
     while (data1.isReadable) {
       data1.readByte()
     }
-    assertThat(data1.readerIndex()).isEqualTo(3)
+    data1.release()
 
-    // 4. Verify Cache entry is unaffected (independent index)
+    // The cached entry is unaffected and starts at its own reader index.
     val cachedItem = cache[0]
     assertThat(cachedItem.readerIndex()).isEqualTo(0)
-    assertThat(cachedItem.refCnt()).isEqualTo(3) // 1 original + 1 cache + 1 duplicate
-    cachedItem.release() // Release our duplicate reference
+    assertThat(cachedItem.readableBytes()).isEqualTo(3)
+    cachedItem.release()
 
-    // 5. Add duplicate (fresh buffer, same content)
+    // Evicting it (this cache holds 5) leaves later lookups of equal content working correctly.
     val data2 = Unpooled.wrappedBuffer(byteArrayOf(1, 2, 3))
     cache.add(data2)
-
-    // 6. Evict first item (requires filling cache)
-    val d3 = Unpooled.wrappedBuffer(byteArrayOf(4))
-    val d4 = Unpooled.wrappedBuffer(byteArrayOf(5))
-    val d5 = Unpooled.wrappedBuffer(byteArrayOf(6))
-    val d6 = Unpooled.wrappedBuffer(byteArrayOf(7))
-    cache.add(d3)
-    cache.add(d4)
-    cache.add(d5)
-    cache.add(d6) // This should evict 0 (data1)
-
-    assertThat(data1.refCnt()).isEqualTo(1) // Just data1 ref left.
+    for (value in 4..7) cache.add(Unpooled.wrappedBuffer(byteArrayOf(value.toByte())))
 
     val fresh = Unpooled.wrappedBuffer(byteArrayOf(1, 2, 3))
     assertThat(cache.indexOf(fresh)).isAtLeast(0)
+  }
 
-    data1.release()
-    data2.release()
+  @Test
+  fun `lookup only compares the readable bytes of the buffer`() {
+    cache.add(Unpooled.wrappedBuffer(byteArrayOf(7, 8)))
+
+    // Same content as a slice of a larger buffer.
+    val big = Unpooled.wrappedBuffer(byteArrayOf(0, 7, 8, 9))
+    big.readerIndex(1)
+    big.writerIndex(3)
+
+    assertThat(cache.indexOf(big)).isEqualTo(0)
   }
 
   @Test
@@ -299,7 +281,7 @@ class FastGameDataCacheTest {
     assertThat(first).isEqualTo(data)
     assertThat(second).isEqualTo(data)
 
-    // But they should be distinct objects (retained duplicates)
+    // But they should be distinct objects
     assertThat(first).isNotSameInstanceAs(second)
 
     // Cleanup
