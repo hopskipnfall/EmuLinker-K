@@ -20,6 +20,36 @@ echo -e "\033[0m"
 echo -e "👋 Welcome to the \033[1mEmuLinker-K\033[0m setup wizard!"
 echo ""
 
+# --- Argument Parsing ---
+# Done first so that --help style mistakes or a bad --tag cannot leave a half-upgraded install.
+RELEASE_CHANNEL="prod"
+TAG_ARG=""
+
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --beta)
+            RELEASE_CHANNEL="beta"
+            shift # Remove --beta
+            ;;
+        --tag)
+            TAG_ARG="$2"
+            shift # Remove --tag
+            shift # Remove value
+            ;;
+        *)
+            # Unknown option
+            shift
+            ;;
+    esac
+done
+
+# The tag is interpolated into download URLs, so only allow characters that can appear in a git
+# tag or branch name.
+if [ -n "$TAG_ARG" ] && { [[ ! "$TAG_ARG" =~ ^[A-Za-z0-9._/-]+$ ]] || [[ "$TAG_ARG" == *..* ]]; }; then
+    echo "❌ Error: Invalid --tag value."
+    exit 1
+fi
+
 # --- Detection Logic ---
 
 INSTALL_DIR="EmuLinker-K"
@@ -44,12 +74,8 @@ fi
 echo -e "🔍 Detected mode: \033[1m$MODE\033[0m"
 
 # Pre-flight checks
-if [ -f "$INSTALL_DIR/start-server.sh" ]; then
-    echo "🗑️  Deleting obsolete server scripts..."
-    rm -f "$INSTALL_DIR/start-server.sh"
-    rm -f "$INSTALL_DIR/stop-server.sh"
-fi
- if [ -f "$INSTALL_DIR/server.sh" ]; then
+# The start/stop scripts are replaced below only after the new ones downloaded successfully.
+if [ -f "$INSTALL_DIR/server.sh" ]; then
     echo "🗑️  Deleting obsolete server.sh..."
     rm "$INSTALL_DIR/server.sh"
 fi
@@ -68,29 +94,6 @@ if [ "$MODE" == "INSTALL" ]; then
 fi
 
 
-# --- Argument Parsing ---
-# --- Argument Parsing ---
-RELEASE_CHANNEL="prod"
-TAG_ARG=""
-
-while [[ $# -gt 0 ]]; do
-    case $1 in
-        --beta)
-            RELEASE_CHANNEL="beta"
-            shift # Remove --beta
-            ;;
-        --tag)
-            TAG_ARG="$2"
-            shift # Remove --tag
-            shift # Remove value
-            ;;
-        *)
-            # Unknown option
-            shift
-            ;;
-    esac
-done
-
 if [ -n "$TAG_ARG" ]; then
     echo -e "🏷️  \033[1;33mUsing specific tag: $TAG_ARG\033[0m"
     RELEASE_INFO_URL="https://raw.githubusercontent.com/hopskipnfall/EmuLinker-K/$TAG_ARG/release/prod.txt"
@@ -103,7 +106,7 @@ fi
 
 # Fetch release info
 echo -e "📡 Fetching release information from $RELEASE_CHANNEL..."
-PROD_TXT=$(curl -s "$RELEASE_INFO_URL")
+PROD_TXT=$(curl -fsS --retry 2 "$RELEASE_INFO_URL" || true)
 
 if [ -z "$PROD_TXT" ]; then
     echo "❌ Error: Could not fetch release information."
@@ -139,7 +142,14 @@ download_file() {
     local dest=$2
     local url="${BASE_URL}/${file}"
     echo "   📦 Downloading $file..."
-    curl -s -o "$dest" "$url"
+    # Download to a temporary file first: with -f an HTTP error fails instead of saving the error
+    # page, and the existing file is only replaced once the download succeeded.
+    if ! curl -fsS --retry 2 -o "$dest.download" "$url"; then
+        rm -f "$dest.download"
+        echo "❌ Error: Could not download $file from $url"
+        exit 1
+    fi
+    mv "$dest.download" "$dest"
 }
 
 # Download JAR
@@ -164,7 +174,12 @@ fi
 
 if [ "$DOWNLOAD_JAR" = true ]; then
     echo "   📦 Downloading emulinker-k-$VERSION.jar..."
-    curl -s -L -o "$JAR_PATH" "$DOWNLOAD_URL"
+    if ! curl -fsSL --retry 2 -o "$JAR_PATH.download" "$DOWNLOAD_URL"; then
+        rm -f "$JAR_PATH.download"
+        echo "❌ Error: Could not download the server jar from $DOWNLOAD_URL"
+        exit 1
+    fi
+    mv "$JAR_PATH.download" "$JAR_PATH"
 fi
 
 # Download other files
@@ -227,9 +242,12 @@ if [ -f "$QUESTIONS_FILE" ]; then
         IS_MISSING=false
         IS_EMPTY=false
 
-        if ! grep -q "^$KEY=" "$CFG_FILE"; then
+        # Escape regex metacharacters (the dots in keys, for example).
+        KEY_RE=$(printf '%s' "$KEY" | sed -e 's/[][\\.*^$/]/\\&/g')
+
+        if ! grep -q "^$KEY_RE=" "$CFG_FILE"; then
             IS_MISSING=true
-        elif grep -q "^$KEY=$" "$CFG_FILE"; then
+        elif grep -q "^$KEY_RE=$" "$CFG_FILE"; then
             IS_EMPTY=true
         fi
 
@@ -242,7 +260,7 @@ if [ -f "$QUESTIONS_FILE" ]; then
             ANSWER=""
 
             while [ $ATTEMPTS -lt $MAX_ATTEMPTS ]; do
-                read -p "  $question " INPUT < /dev/tty
+                read -r -p "  $question " INPUT < /dev/tty
                 
                 # Empty input skips
                 if [ -z "$INPUT" ]; then
@@ -278,12 +296,15 @@ if [ -f "$QUESTIONS_FILE" ]; then
                 esac
 
                 if [ "$VALID_INPUT" = true ]; then
+                    # In a .properties file a backslash starts an escape sequence, so double it.
+                    ANSWER_CFG="${ANSWER//\\/\\\\}"
                     if [ "$IS_EMPTY" = true ]; then
-                        # Escape special characters for sed
-                        ANSWER_ESCAPED=$(printf '%s\n' "$ANSWER" | sed -e 's/[]\/$*.^[]/\\&/g')
-                        "${SED_CMD[@]}" "s/^$KEY=$/$KEY=$ANSWER_ESCAPED/" "$CFG_FILE"
+                        # Escape what is special in the replacement part of the sed expression: the
+                        # delimiter, & (which would insert the matched text) and backslashes.
+                        ANSWER_ESCAPED=$(printf '%s' "$ANSWER_CFG" | sed -e 's/[\/&\\]/\\&/g')
+                        "${SED_CMD[@]}" "s/^$KEY_RE=$/$KEY=$ANSWER_ESCAPED/" "$CFG_FILE"
                     else
-                        echo "$KEY=$ANSWER" >> "$CFG_FILE"
+                        printf '%s=%s\n' "$KEY" "$ANSWER_CFG" >> "$CFG_FILE"
                     fi
                     break
                 fi
