@@ -116,6 +116,8 @@ class CombinedKailleraController(
 
             nettyChannel = bind(port).sync().channel()
             boundPort = port
+            // Run server maintenance on the thread that handles packets.
+            server.stateExecutor = nettyChannel.eventLoop()
 
             // Warmup the event loop.
             nettyChannel.eventLoop().submit {

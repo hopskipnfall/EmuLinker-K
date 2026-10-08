@@ -23,6 +23,7 @@ import org.emulinker.kaillera.controller.v086.action.V086GameEventHandler
 import org.emulinker.kaillera.controller.v086.action.V086ServerEventHandler
 import org.emulinker.kaillera.controller.v086.action.V086UserEventHandler
 import org.emulinker.kaillera.controller.v086.protocol.CachedGameData
+import org.emulinker.kaillera.controller.v086.protocol.ClientMessage
 import org.emulinker.kaillera.controller.v086.protocol.GameData
 import org.emulinker.kaillera.controller.v086.protocol.V086Bundle
 import org.emulinker.kaillera.controller.v086.protocol.V086BundleFormatException
@@ -188,7 +189,17 @@ class V086ClientHandler(
         logger
           .atWarning()
           .withCause(e)
-          .log("%s received invalid message: %s}", this, buffer.dumpToByteArray().toHexString())
+          .log("%s received invalid message: %s", this, buffer.dumpToByteArray().toHexString())
+        null
+      } catch (e: RuntimeException) {
+        // Malformed packets can fail in many ways (unknown message type or enum value, a failed
+        // `require`, truncated data). They come from untrusted senders, so drop them quietly
+        // instead of letting each one surface as an unthrottled SEVERE stack trace.
+        logger
+          .atWarning()
+          .atMostEvery(5, TimeUnit.SECONDS)
+          .withCause(e)
+          .log("%s dropped an unparseable packet", this)
         null
       } ?: return
 
@@ -222,6 +233,10 @@ class V086ClientHandler(
         is V086Bundle.Single -> {
           val m = inBundle.message
           lastMessageNumber = m.messageNumber
+          if (m !is ClientMessage) {
+            logIgnoredServerMessage(m)
+            return
+          }
           val action: V086Action<out V086Message>? =
             // Checking for GameData first is a speed optimization.
             when (m.messageTypeId) {
@@ -250,6 +265,10 @@ class V086ClientHandler(
             prevMessageNumber = lastMessageNumber
             val m: V086Message = messages[i]!!
             lastMessageNumber = m.messageNumber
+            if (m !is ClientMessage) {
+              logIgnoredServerMessage(m)
+              continue
+            }
             if (prevMessageNumber + 1 != lastMessageNumber) {
               if (prevMessageNumber == 0xFFFF && lastMessageNumber == 0) {
                 // exception; do nothing
@@ -288,6 +307,17 @@ class V086ClientHandler(
       // Release any GameData messages that were in the bundle.
       inBundle.release()
     }
+  }
+
+  /**
+   * Some message types are only valid from server to client (and the request/notification variants
+   * share a message type), so a client can send something with no action to handle it.
+   */
+  private fun logIgnoredServerMessage(m: V086Message) {
+    logger
+      .atWarning()
+      .atMostEvery(5, TimeUnit.SECONDS)
+      .log("%s sent a message that only the server may send: %s", this, m)
   }
 
   fun actionPerformed(event: KailleraEvent) {

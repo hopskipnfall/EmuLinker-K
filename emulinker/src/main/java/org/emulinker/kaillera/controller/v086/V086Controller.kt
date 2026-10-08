@@ -129,7 +129,8 @@ class V086Controller(
 
   override val version = "v086"
 
-  override val numClients = clientHandlers.size
+  override val numClients
+    get() = clientHandlers.size
 
   override val bufferSize = flags.v086BufferSize
 

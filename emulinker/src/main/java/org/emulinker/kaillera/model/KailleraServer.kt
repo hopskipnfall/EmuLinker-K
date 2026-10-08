@@ -7,12 +7,14 @@ import com.google.common.flogger.LazyArgs
 import java.net.InetSocketAddress
 import java.util.Locale
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.Executor
 import java.util.concurrent.ScheduledFuture
 import java.util.concurrent.TimeUnit.HOURS
 import kotlin.time.Clock
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
 import kotlin.time.DurationUnit
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.access.AccessManager
@@ -121,9 +123,22 @@ class KailleraServer(
         initialDelay = 1.minutes,
         taskName = "run()",
       ) {
-        run()
+        // Mutate server state on the same thread that handles packets; see [stateExecutor].
+        stateExecutor.execute { run() }
       }
   }
+
+  /**
+   * Where periodic maintenance that changes server state ([run]) is executed.
+   *
+   * Packets are all handled on one network thread, but [TaskScheduler] runs on its own. Letting
+   * both mutate users and games would require a consistent lock order across the user, game and
+   * server monitors (they are currently taken in opposite orders by `quit` and `quitGame`).
+   * Instead, [org.emulinker.kaillera.controller.CombinedKailleraController] points this at the
+   * network event loop so maintenance is serialized with packet handling. Defaults to running
+   * inline, which is what unit tests want.
+   */
+  @Volatile var stateExecutor: Executor = Executor { it.run() }
 
   @Synchronized
   fun stop() {
@@ -135,14 +150,23 @@ class KailleraServer(
 
   // not synchronized because I know the caller will be thread safe
   private fun getNextUserID(): Int {
-    if (connectionCounter > 0xFFFF) connectionCounter = 1
-    return connectionCounter++
+    // IDs wrap at 0xFFFF; skip any that are still in use so a live user is never overwritten.
+    repeat(0xFFFF) {
+      if (connectionCounter > 0xFFFF) connectionCounter = 1
+      val id = connectionCounter++
+      if (!usersMap.containsKey(id)) return id
+    }
+    throw IllegalStateException("No free user IDs")
   }
 
   // not synchronized because I know the caller will be thread safe
   private fun getNextGameID(): Int {
-    if (gameCounter > 0xFFFF) gameCounter = 1
-    return gameCounter++
+    repeat(0xFFFF) {
+      if (gameCounter > 0xFFFF) gameCounter = 1
+      val id = gameCounter++
+      if (!gamesMap.containsKey(id)) return id
+    }
+    throw IllegalStateException("No free game IDs")
   }
 
   fun getAutoFireDetector(game: KailleraGame): AutoFireDetector =
@@ -193,6 +217,21 @@ class KailleraServer(
     return user
   }
 
+  /**
+   * Forgets a user who never finished logging in (login was denied, or they timed out).
+   *
+   * The user's network handler is released after a short grace period instead of immediately so the
+   * client can still receive the rejection, and so a client retransmitting during that time is not
+   * mistaken for a brand new connection. Without this the handler (and its ip:port registration)
+   * would stay registered forever.
+   */
+  private fun discardUnauthenticated(user: KailleraUser) {
+    usersMap.remove(user.id)
+    taskScheduler.schedule(delay = UNAUTHENTICATED_HANDLER_GRACE) {
+      stateExecutor.execute { user.stop() }
+    }
+  }
+
   fun login(user: KailleraUser): Result<Unit> {
     logger
       .atInfo()
@@ -222,7 +261,7 @@ class KailleraServer(
     val access = accessManager.getAccess(user.socketAddress!!.address)
     if (access < AccessManager.ACCESS_NORMAL) {
       logger.atInfo().log("%s login denied: Access denied", user)
-      usersMap.remove(userListKey)
+      discardUnauthenticated(user)
       return Result.failure(
         LoginException(EmuLang.getString("KailleraServerImpl.LoginDeniedAccessDenied"))
       )
@@ -233,7 +272,7 @@ class KailleraServer(
         user.ping > flags.maxPing
     ) {
       logger.atInfo().log("%s login denied: Ping %s ms > %s", user, user.ping, flags.maxPing)
-      usersMap.remove(userListKey)
+      discardUnauthenticated(user)
       return Result.failure(
         PingTimeException(
           EmuLang.getString(
@@ -248,7 +287,7 @@ class KailleraServer(
         !allowedConnectionTypes[user.connectionType.byteValue.toInt()]
     ) {
       logger.atInfo().log("%s login denied: Connection %s Not Allowed", user, user.connectionType)
-      usersMap.remove(userListKey)
+      discardUnauthenticated(user)
       return Result.failure(
         LoginException(
           EmuLang.getString(
@@ -260,7 +299,7 @@ class KailleraServer(
     }
     if (user.ping < 0.milliseconds) {
       logger.atWarning().log("%s login denied: Invalid ping: %d", user, user.ping)
-      usersMap.remove(userListKey)
+      discardUnauthenticated(user)
       return Result.failure(
         PingTimeException(EmuLang.getString("KailleraServerImpl.LoginErrorInvalidPing", user.ping))
       )
@@ -269,7 +308,7 @@ class KailleraServer(
       access == AccessManager.ACCESS_NORMAL && user.name.isNullOrEmpty() || user.name!!.isBlank()
     ) {
       logger.atInfo().log("%s login denied: Empty UserName", user)
-      usersMap.remove(userListKey)
+      discardUnauthenticated(user)
       return Result.failure(
         UserNameException(EmuLang.getString("KailleraServerImpl.LoginDeniedUserNameEmpty"))
       )
@@ -289,7 +328,7 @@ class KailleraServer(
             nameLower.contains("�")))
     ) {
       logger.atInfo().log("%s login denied: Illegal characters in UserName", user)
-      usersMap.remove(userListKey)
+      discardUnauthenticated(user)
       return Result.failure(
         UserNameException(
           EmuLang.getString("KailleraServerImpl.LoginDeniedIllegalCharactersInUserName")
@@ -300,7 +339,7 @@ class KailleraServer(
     // access == AccessManager.ACCESS_NORMAL &&
     if (flags.maxUserNameLength > 0 && user.name!!.length > maxUserNameLength) {
       logger.atInfo().log("%s login denied: UserName Length > %d", user, maxUserNameLength)
-      usersMap.remove(userListKey)
+      discardUnauthenticated(user)
       return Result.failure(
         UserNameException(EmuLang.getString("KailleraServerImpl.LoginDeniedUserNameTooLong"))
       )
@@ -311,14 +350,14 @@ class KailleraServer(
         user.clientType!!.length > maxClientNameLength
     ) {
       logger.atInfo().log("%s login denied: Client Name Length > %d", user, maxClientNameLength)
-      usersMap.remove(userListKey)
+      discardUnauthenticated(user)
       return Result.failure(
         UserNameException(EmuLang.getString("KailleraServerImpl.LoginDeniedEmulatorNameTooLong"))
       )
     }
     if (user.clientType!!.lowercase(Locale.getDefault()).contains("|")) {
       logger.atWarning().log("%s login denied: Illegal characters in EmulatorName", user)
-      usersMap.remove(userListKey)
+      discardUnauthenticated(user)
       return Result.failure(UserNameException("Illegal characters in Emulator Name"))
     }
     if (access == AccessManager.ACCESS_NORMAL) {
@@ -326,7 +365,7 @@ class KailleraServer(
       for (i in chars.indices) {
         if (chars[i].code < 32) {
           logger.atInfo().log("%s login denied: Illegal characters in UserName", user)
-          usersMap.remove(userListKey)
+          discardUnauthenticated(user)
           return Result.failure(
             UserNameException(
               EmuLang.getString("KailleraServerImpl.LoginDeniedIllegalCharactersInUserName")
@@ -336,14 +375,14 @@ class KailleraServer(
       }
     }
     if (u.status != UserStatus.CONNECTING) {
-      usersMap.remove(userListKey)
+      discardUnauthenticated(user)
       logger.atWarning().log("%s login denied: Invalid status=%s", user, u.status)
       return Result.failure(
         LoginException(EmuLang.getString("KailleraServerImpl.LoginErrorInvalidStatus", u.status))
       )
     }
     if (u.connectSocketAddress.address != user.socketAddress!!.address) {
-      usersMap.remove(userListKey)
+      discardUnauthenticated(user)
       logger
         .atWarning()
         .log(
@@ -362,7 +401,7 @@ class KailleraServer(
       logger
         .atInfo()
         .log("%s login denied: AccessManager denied emulator: %s", user, user.clientType)
-      usersMap.remove(userListKey)
+      discardUnauthenticated(user)
       return Result.failure(
         LoginException(
           EmuLang.getString("KailleraServerImpl.LoginDeniedEmulatorRestricted", user.clientType)
@@ -388,7 +427,7 @@ class KailleraServer(
             u2.name!!.lowercase(Locale.getDefault()).trim { it <= ' ' } ==
               u.name!!.lowercase(Locale.getDefault()).trim { it <= ' ' }
         ) {
-          usersMap.remove(userListKey)
+          discardUnauthenticated(user)
           logger
             .atWarning()
             .log("%s login denied: Duplicating Names is not allowed! %s", user, u2.name)
@@ -403,7 +442,7 @@ class KailleraServer(
             u.name != u2.name &&
             !flags.allowMultipleConnections
         ) {
-          usersMap.remove(userListKey)
+          discardUnauthenticated(user)
           logger.atWarning().log("%s login denied: Address already logged in as %s", user, u2.name)
           return Result.failure(
             ClientAddressException(
@@ -506,7 +545,7 @@ class KailleraServer(
   fun quit(user: KailleraUser, message: String) = withLock {
     lookingForGameReporter.cancelActionsForUser(user.id)
     if (!user.loggedIn) {
-      usersMap.remove(user.id)
+      discardUnauthenticated(user)
       logger.atSevere().log("%s quit failed: Not logged in", user)
       throw QuitException(EmuLang.getString("KailleraServerImpl.NotLoggedIn"))
     }
@@ -884,6 +923,7 @@ class KailleraServer(
             .atFine()
             .log("%s Timeout: User didn't successfully log in, removing stale entry", user)
           usersMap.remove(user.id)
+          user.stop()
         } else if (user.loggedIn && user.isDead) {
           logger
             .atInfo()
@@ -972,5 +1012,7 @@ class KailleraServer(
 
   companion object {
     private val logger = FluentLogger.forEnclosingClass()
+
+    private val UNAUTHENTICATED_HANDLER_GRACE = 10.seconds
   }
 }

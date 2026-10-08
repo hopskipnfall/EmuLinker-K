@@ -4,6 +4,7 @@ import com.google.common.flogger.FluentLogger
 import io.netty.buffer.ByteBuf
 import io.netty.buffer.PooledByteBufAllocator
 import java.util.Date
+import java.util.concurrent.CopyOnWriteArrayList
 import kotlin.time.Clock
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
@@ -117,12 +118,16 @@ class KailleraGame(
   /** Last time we fanned out data for a frame. */
   private var lastFrameNs = System.nanoTime()
 
-  val players = mutableListOf<KailleraUser>()
+  /**
+   * Players in this game. Copy-on-write because it changes rarely (join/quit) but is read on every
+   * frame and by maintenance tasks running on other threads.
+   */
+  val players: MutableList<KailleraUser> = CopyOnWriteArrayList()
 
   var lagometer: Lagometer? = null
     private set
 
-  val mutedUsers: MutableList<String> = mutableListOf()
+  val mutedUsers: MutableList<String> = CopyOnWriteArrayList()
   var aEmulator = "any"
   var aConnection = "any"
   val startDate: Date = Date()
@@ -141,7 +146,7 @@ class KailleraGame(
   private var isSynched = false
 
   private val statsCollector: StatsCollector? = server.statsCollector
-  private val kickedUsers: MutableList<String> = ArrayList()
+  private val kickedUsers: MutableList<String> = CopyOnWriteArrayList()
 
   private val actionsPerMessage = owner.connectionType.byteValue.toInt()
 

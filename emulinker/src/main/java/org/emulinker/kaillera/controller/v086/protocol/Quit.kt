@@ -116,4 +116,5 @@ data class QuitNotification(
  *
  * Shares a message type ID with [QuitNotification]: `0x01`.
  */
-data class QuitRequest(override var messageNumber: Int, override val message: String) : Quit()
+data class QuitRequest(override var messageNumber: Int, override val message: String) :
+  Quit(), ClientMessage
