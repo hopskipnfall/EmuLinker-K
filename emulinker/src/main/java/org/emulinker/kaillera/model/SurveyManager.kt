@@ -29,8 +29,6 @@ import org.emulinker.proto.Player.PLAYER_THREE
 import org.emulinker.proto.Player.PLAYER_TWO
 import org.emulinker.proto.event
 import org.emulinker.util.EmuLang
-import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
 
 @Serializable
 data class SurveyMetadataRequest(
@@ -46,11 +44,23 @@ data class SurveyMetadataRequest(
 
 @Serializable data class SurveyMetadataResponse(val surveyId: String, val uploadUrl: String)
 
-class SurveyManager(private val game: KailleraGame) : KoinComponent {
+/** Creates a [SurveyManager] for each new game, supplying it with the shared dependencies. */
+class SurveyManagerFactory(
+  private val flags: RuntimeFlags,
+  private val inputParser: N64ControllerInputParser,
+  /** Provides the client lazily so that servers with surveys disabled never construct one. */
+  private val httpClientProvider: () -> HttpClient?,
+) {
+  fun create(game: KailleraGame) = SurveyManager(game, flags, inputParser, httpClientProvider)
+}
 
-  private val flags: RuntimeFlags by inject()
-  private val inputParser: N64ControllerInputParser by inject()
-  private val httpClient: HttpClient? by lazy { getKoin().getOrNull<HttpClient>() }
+class SurveyManager(
+  private val game: KailleraGame,
+  private val flags: RuntimeFlags,
+  private val inputParser: N64ControllerInputParser,
+  httpClientProvider: () -> HttpClient?,
+) {
+  private val httpClient: HttpClient? by lazy(httpClientProvider)
 
   val isSurveyEligibleForGame =
     flags.surveyEnabled &&

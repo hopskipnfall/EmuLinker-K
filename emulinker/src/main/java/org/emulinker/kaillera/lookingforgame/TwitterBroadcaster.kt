@@ -12,8 +12,6 @@ import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.model.KailleraUser
 import org.emulinker.util.EmuLang.getStringOrNull
 import org.emulinker.util.TaskScheduler
-import org.koin.core.component.KoinComponent
-import org.koin.core.component.get
 
 /**
  * Observes when a user is looking for a game opponent and publishes a report to one or more
@@ -22,8 +20,10 @@ import org.koin.core.component.get
 class TwitterBroadcaster(
   private val flags: RuntimeFlags,
   private val taskScheduler: TaskScheduler,
-) : KoinComponent {
-  private val twitter: TwitterClient? = if (flags.twitterEnabled) get<TwitterClient>() else null
+  /** Only invoked when Twitter is enabled, so no client is built for servers that do not use it. */
+  twitterClientProvider: () -> TwitterClient,
+) {
+  private val twitter: TwitterClient? = if (flags.twitterEnabled) twitterClientProvider() else null
 
   private val pendingReports: ConcurrentMap<LookingForGameEvent, ScheduledFuture<*>> =
     ConcurrentHashMap()

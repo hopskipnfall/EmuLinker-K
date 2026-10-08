@@ -6,7 +6,6 @@ import io.netty.channel.embedded.EmbeddedChannel
 import io.netty.channel.socket.DatagramPacket
 import java.net.InetAddress
 import java.net.InetSocketAddress
-import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 import kotlin.time.Duration
 import org.emulinker.kaillera.access.AccessManager
@@ -23,13 +22,12 @@ import org.emulinker.kaillera.controller.v086.protocol.UserJoined
 import org.emulinker.kaillera.controller.v086.protocol.V086Bundle
 import org.emulinker.kaillera.controller.v086.protocol.V086Message
 import org.emulinker.kaillera.model.ConnectionType
-import org.emulinker.kaillera.pico.AppModule
 import org.emulinker.kaillera.pico.koinModule
+import org.emulinker.util.ProtocolCharset
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.get
 import org.koin.core.context.startKoin
 import org.koin.core.context.stopKoin
-import org.koin.core.qualifier.named
 import org.koin.dsl.module
 import org.openjdk.jmh.annotations.Benchmark
 import org.openjdk.jmh.annotations.BenchmarkMode
@@ -48,7 +46,6 @@ import org.openjdk.jmh.infra.Blackhole
 open class LoginBenchmark : KoinComponent {
   lateinit var channel: EmbeddedChannel
   lateinit var controller: CombinedKailleraController
-  lateinit var userActionsExecutor: ThreadPoolExecutor
 
   var succeeded = 0L
 
@@ -59,7 +56,6 @@ open class LoginBenchmark : KoinComponent {
       modules(koinModule, ActionModule, module { single<AccessManager> { FakeAccessManager() } })
     }
     controller = get()
-    userActionsExecutor = get(named("userActionsExecutor"))
     channel = EmbeddedChannel(controller)
   }
 
@@ -67,7 +63,6 @@ open class LoginBenchmark : KoinComponent {
   fun teardown() {
     channel.close()
     controller.stop()
-    userActionsExecutor.shutdown()
     stopKoin()
   }
 
@@ -256,7 +251,7 @@ open class LoginBenchmark : KoinComponent {
 
   private companion object {
     init {
-      AppModule.charsetDoNotUse = Charsets.UTF_8
+      ProtocolCharset.overrideForTesting(Charsets.UTF_8)
     }
 
     val RECIPIENT = InetSocketAddress("127.0.0.1", 27888)

@@ -4,8 +4,6 @@ import com.google.common.truth.Truth.assertThat
 import io.netty.buffer.Unpooled
 import java.net.InetAddress
 import java.net.InetSocketAddress
-import kotlin.test.AfterTest
-import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.TimeMark
@@ -13,9 +11,6 @@ import kotlin.time.TimeSource
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.controller.input.N64ControllerInputParser
 import org.emulinker.proto.GameLog
-import org.koin.core.context.startKoin
-import org.koin.core.context.stopKoin
-import org.koin.dsl.module
 import org.mockito.kotlin.any
 import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.mock
@@ -50,6 +45,9 @@ class SurveyManagerTest {
     on { surveyConsentAskedTimeMark } doReturn TimeSource.Monotonic.markNow()
   }
 
+  private fun newManager(game: KailleraGame, flags: RuntimeFlags = mockFlags) =
+    SurveyManager(game, flags, N64ControllerInputParser()) { null }
+
   private val mockGame =
     mock<KailleraGame> {
       on { romName } doReturn "smash bros"
@@ -57,35 +55,18 @@ class SurveyManagerTest {
       on { players } doReturn mutableListOf(pendingConsentUser)
     }
 
-  @BeforeTest
-  fun setUp() {
-    startKoin {
-      modules(
-        module {
-          single { mockFlags }
-          single { N64ControllerInputParser() }
-        }
-      )
-    }
-  }
-
-  @AfterTest
-  fun tearDown() {
-    stopKoin()
-  }
-
   // ── Eligibility ──────────────────────────────────────────────────────────────
 
   @Test
   fun `isSurveyEligibleForGame is true when romName matches whitelist`() {
-    val manager = SurveyManager(mockGame)
+    val manager = newManager(mockGame)
     assertThat(manager.isSurveyEligibleForGame).isTrue()
   }
 
   @Test
   fun `isSurveyEligibleForGame is false when romName does not match whitelist`() {
     val ineligibleGame = mock<KailleraGame> { on { romName } doReturn "mario kart" }
-    val manager = SurveyManager(ineligibleGame)
+    val manager = newManager(ineligibleGame)
     assertThat(manager.isSurveyEligibleForGame).isFalse()
   }
 
@@ -98,10 +79,7 @@ class SurveyManagerTest {
         on { surveyApiEndpoint } doReturn "http://localhost"
         on { surveyApiKey } doReturn "test-key"
       }
-    stopKoin()
-    startKoin { modules(module { single { disabledFlags } }) }
-
-    val manager = SurveyManager(mockGame)
+    val manager = newManager(mockGame, disabledFlags)
     assertThat(manager.isSurveyEligibleForGame).isFalse()
   }
 
@@ -109,7 +87,7 @@ class SurveyManagerTest {
 
   @Test
   fun `onUserJoined announces consent prompt and sets timemark for unconsenteed user`() {
-    val manager = SurveyManager(mockGame)
+    val manager = newManager(mockGame)
     manager.onUserJoined(pendingConsentUser)
 
     verify(mockGame).announce(any(), org.mockito.kotlin.eq(pendingConsentUser))
@@ -119,7 +97,7 @@ class SurveyManagerTest {
   @Test
   fun `onUserJoined does nothing when game is not eligible`() {
     val ineligibleGame = mock<KailleraGame> { on { romName } doReturn "mario kart" }
-    val manager = SurveyManager(ineligibleGame)
+    val manager = newManager(ineligibleGame)
     manager.onUserJoined(pendingConsentUser)
 
     verify(ineligibleGame, never()).announce(any(), any())
@@ -127,7 +105,7 @@ class SurveyManagerTest {
 
   @Test
   fun `onUserJoined does not re-prompt a user who already consented`() {
-    val manager = SurveyManager(mockGame)
+    val manager = newManager(mockGame)
     manager.onUserJoined(consentedUser)
 
     verify(mockGame, never()).announce(any(), org.mockito.kotlin.eq(consentedUser))
@@ -138,7 +116,7 @@ class SurveyManagerTest {
   @Test
   fun `handleChat returns false for ineligible game`() {
     val ineligibleGame = mock<KailleraGame> { on { romName } doReturn "mario kart" }
-    val manager = SurveyManager(ineligibleGame)
+    val manager = newManager(ineligibleGame)
 
     assertThat(manager.handleChat(pendingConsentUser, "yes")).isFalse()
   }
@@ -151,7 +129,7 @@ class SurveyManagerTest {
       on { surveyConsent } doReturn null
       on { surveyConsentAskedTimeMark } doReturn freshMark
     }
-    val manager = SurveyManager(mockGame)
+    val manager = newManager(mockGame)
 
     val handled = manager.handleChat(user, "yes")
     assertThat(handled).isTrue()
@@ -165,7 +143,7 @@ class SurveyManagerTest {
       on { surveyConsent } doReturn null
       on { surveyConsentAskedTimeMark } doReturn freshMark
     }
-    val manager = SurveyManager(mockGame)
+    val manager = newManager(mockGame)
 
     val handled = manager.handleChat(user, "y")
     assertThat(handled).isTrue()
@@ -179,7 +157,7 @@ class SurveyManagerTest {
       on { surveyConsent } doReturn null
       on { surveyConsentAskedTimeMark } doReturn freshMark
     }
-    val manager = SurveyManager(mockGame)
+    val manager = newManager(mockGame)
 
     val handled = manager.handleChat(user, "no")
     assertThat(handled).isTrue()
@@ -193,7 +171,7 @@ class SurveyManagerTest {
       on { surveyConsent } doReturn null
       on { surveyConsentAskedTimeMark } doReturn null
     }
-    val manager = SurveyManager(mockGame)
+    val manager = newManager(mockGame)
 
     val handled = manager.handleChat(user, "yes")
     assertThat(handled).isFalse()
@@ -204,7 +182,7 @@ class SurveyManagerTest {
 
   @Test
   fun `handleChat accepts a numeric rating when survey was recently asked`() {
-    val manager = SurveyManager(mockGame)
+    val manager = newManager(mockGame)
     // Simulate a survey having just been triggered.
     manager.lastSurveyAskedTimeMark = TimeSource.Monotonic.markNow()
 
@@ -214,7 +192,7 @@ class SurveyManagerTest {
 
   @Test
   fun `handleChat ignores a numeric rating when lastSurveyAskedTimeMark is null`() {
-    val manager = SurveyManager(mockGame) // lastSurveyAskedTimeMark stays null
+    val manager = newManager(mockGame) // lastSurveyAskedTimeMark stays null
 
     val handled = manager.handleChat(consentedUser, "2")
     assertThat(handled).isFalse()
@@ -222,7 +200,7 @@ class SurveyManagerTest {
 
   @Test
   fun `handleChat returns false for unrelated chat messages`() {
-    val manager = SurveyManager(mockGame)
+    val manager = newManager(mockGame)
 
     assertThat(manager.handleChat(consentedUser, "gg wp")).isFalse()
   }
@@ -237,7 +215,7 @@ class SurveyManagerTest {
         on { status } doReturn GameStatus.WAITING
         on { players } doReturn mutableListOf(consentedUser)
       }
-    val manager = SurveyManager(waitingGame)
+    val manager = newManager(waitingGame)
     manager.onGameStarted() // sets gameStartTimeMark
 
     val data = Unpooled.buffer(16).apply { writeZero(16) }
@@ -260,7 +238,7 @@ class SurveyManagerTest {
         on { players } doReturn mutableListOf(user)
       }
 
-    val manager = SurveyManager(playingGame)
+    val manager = newManager(playingGame)
 
     // Use reflection to set gameStartTimeMark to 2 minutes ago
     val field = SurveyManager::class.java.getDeclaredField("gameStartTimeMark")
@@ -296,7 +274,7 @@ class SurveyManagerTest {
         on { players } doReturn mutableListOf(user)
       }
 
-    val manager = SurveyManager(playingGame)
+    val manager = newManager(playingGame)
 
     val field = SurveyManager::class.java.getDeclaredField("gameStartTimeMark")
     field.isAccessible = true
@@ -340,7 +318,7 @@ class SurveyManagerTest {
         on { players } doReturn mutableListOf(user)
       }
 
-    val manager = SurveyManager(playingGame)
+    val manager = newManager(playingGame)
 
     val field = SurveyManager::class.java.getDeclaredField("gameStartTimeMark")
     field.isAccessible = true
@@ -383,7 +361,7 @@ class SurveyManagerTest {
         on { players } doReturn mutableListOf(user)
       }
 
-    val manager = SurveyManager(playingGame)
+    val manager = newManager(playingGame)
 
     // Use reflection to set gameStartTimeMark to 2 minutes ago
     val field = SurveyManager::class.java.getDeclaredField("gameStartTimeMark")
@@ -418,7 +396,7 @@ class SurveyManagerTest {
         on { status } doReturn GameStatus.PLAYING
         on { players } doReturn mutableListOf(user)
       }
-    val manager = SurveyManager(ineligibleGame)
+    val manager = newManager(ineligibleGame)
     manager.onGameStarted()
 
     manager.updateDrift(System.nanoTime(), null)
@@ -457,7 +435,7 @@ class SurveyManagerTest {
         on { status } doReturn GameStatus.PLAYING
         on { players } doReturn mutableListOf(user)
       }
-    val manager = SurveyManager(playingGame)
+    val manager = newManager(playingGame)
     manager.onGameStarted()
 
     // Game started 30 seconds ago (satisfies needsToRecordForFirstSurvey: 30s >= 0s)
@@ -505,7 +483,7 @@ class SurveyManagerTest {
         on { status } doReturn GameStatus.PLAYING
         on { players } doReturn mutableListOf(user)
       }
-    val manager = SurveyManager(playingGame)
+    val manager = newManager(playingGame)
     manager.onGameStarted()
 
     // Game started 4 minutes ago

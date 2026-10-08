@@ -27,7 +27,6 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.format.DateTimeComponents
 import kotlinx.datetime.format.format
 import kotlinx.datetime.offsetIn
-import org.emulinker.kaillera.pico.AppModule
 
 object EmuUtil {
   val LB: String = System.getProperty("line.separator")
@@ -72,7 +71,7 @@ object EmuUtil {
 
   fun ByteBuffer.readString(
     stopByte: Int = 0x00,
-    charset: Charset = AppModule.charsetDoNotUse,
+    charset: Charset = ProtocolCharset.value,
   ): String {
     val tempBuffer = ByteBuffer.allocate(this.remaining())
     while (this.hasRemaining()) {
@@ -85,7 +84,7 @@ object EmuUtil {
 
   fun ByteBuf.readString(
     stopByte: Int = 0x00,
-    charset: Charset = AppModule.charsetDoNotUse,
+    charset: Charset = ProtocolCharset.value,
   ): String {
     val tempBuffer = ByteBuffer.allocate(this.readableBytes())
     while (this.readableBytes() > 0) {
@@ -100,7 +99,7 @@ object EmuUtil {
     buffer: ByteBuffer,
     s: String,
     stopByte: Int = 0x00,
-    charset: Charset = AppModule.charsetDoNotUse,
+    charset: Charset = ProtocolCharset.value,
   ) {
     buffer.put(charset.encode(s))
     //		char[] tempArray = s.toCharArray();
@@ -113,7 +112,7 @@ object EmuUtil {
     buffer: ByteBuf,
     s: String,
     stopByte: Int = 0x00,
-    charset: Charset = AppModule.charsetDoNotUse,
+    charset: Charset = ProtocolCharset.value,
   ) {
     buffer.writeBytes(charset.encode(s))
     buffer.writeByte(stopByte)

@@ -39,8 +39,6 @@ import org.emulinker.util.EmuUtil.timeKt
 import org.emulinker.util.FastGameDataCache
 import org.emulinker.util.GameDataCache
 import org.emulinker.util.stripFromProdBinary
-import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
 
 class V086ClientHandler(
   // TODO(nue): Try to replace this with remoteSocketAddress.
@@ -49,9 +47,9 @@ class V086ClientHandler(
   val controller: V086Controller,
   /** The [CombinedKailleraController] that created this instance. */
   private val combinedKailleraController: CombinedKailleraController,
-) : KoinComponent {
-  private val metrics: MetricRegistry by inject()
-  private val flags: RuntimeFlags by inject()
+  metrics: MetricRegistry,
+  private val flags: RuntimeFlags,
+) {
 
   /** Mutex ensuring that only one packet is processed at a time for this [V086ClientHandler]. */
   private val sendMutex = Object()

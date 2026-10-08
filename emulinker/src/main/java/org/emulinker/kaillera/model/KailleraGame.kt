@@ -46,7 +46,6 @@ import org.emulinker.proto.Player.PLAYER_THREE
 import org.emulinker.proto.Player.PLAYER_TWO
 import org.emulinker.util.EmuLang
 import org.emulinker.util.EmuUtil.toMillisDouble
-import org.koin.core.component.KoinComponent
 
 /**
  * Represents a game instance on the server.
@@ -73,7 +72,8 @@ class KailleraGame(
   val bufferSize: Int,
   private val flags: RuntimeFlags,
   private val clock: Clock,
-) : KoinComponent {
+  surveyManagerFactory: SurveyManagerFactory,
+) {
 
   var highestUserFrameDelay = 0
   var maxPing = 1000
@@ -126,7 +126,7 @@ class KailleraGame(
   var aEmulator = "any"
   var aConnection = "any"
   val startDate: Date = Date()
-  val surveyManager = SurveyManager(this)
+  val surveyManager = surveyManagerFactory.create(this)
 
   @JvmField var swap = false
 
@@ -447,7 +447,6 @@ class KailleraGame(
       actionQueueBuilder.add(
         PlayerActionQueue(
           playerNumber = playerNumber,
-          player,
           numPlayers = players.size,
           gameBufferSize = bufferSize,
         )

@@ -71,7 +71,6 @@ import org.emulinker.kaillera.model.event.UserQuitEvent
 import org.emulinker.kaillera.model.event.UserQuitGameEvent
 import org.emulinker.kaillera.model.exception.NewConnectionException
 import org.emulinker.kaillera.model.exception.ServerFullException
-import org.koin.core.component.KoinComponent
 
 /** High level logic for handling messages on a port. Not tied to an individual user. */
 class V086Controller(
@@ -95,8 +94,8 @@ class V086Controller(
   playerDesynchAction: PlayerDesynchAction,
   gameInfoAction: GameInfoAction,
   infoMessageAction: InfoMessageAction,
-  flags: RuntimeFlags,
-) : KailleraServerController, KoinComponent {
+  private val flags: RuntimeFlags,
+) : KailleraServerController {
   override val clientTypes: Array<String> = flags.allowedProtocols.toTypedArray()
 
   var clientHandlers: MutableMap<Int, V086ClientHandler> = ConcurrentHashMap()
@@ -149,7 +148,13 @@ class V086Controller(
     combinedKailleraController: CombinedKailleraController,
   ): V086ClientHandler {
     val clientHandler =
-      V086ClientHandler(clientSocketAddress, controller = this, combinedKailleraController)
+      V086ClientHandler(
+        clientSocketAddress,
+        controller = this,
+        combinedKailleraController,
+        combinedKailleraController.metrics,
+        flags,
+      )
     val user: KailleraUser = server.newConnection(clientSocketAddress, protocol, clientHandler)
     clientHandler.start(user)
     return clientHandler

@@ -74,7 +74,7 @@
 //
 //  @Before
 //  fun setUp() {
-//    AppModule.charsetDoNotUse = Charsets.ISO_8859_1
+//    ProtocolCharset.overrideForTesting(Charsets.ISO_8859_1)
 //
 //    whenever(connectController.getInt(eq("controllers.connect.port"))) doReturn 42
 //  }

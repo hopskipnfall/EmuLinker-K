@@ -12,8 +12,8 @@ import org.emulinker.kaillera.controller.v086.protocol.V086Message.Companion.SER
 import org.emulinker.kaillera.model.ConnectionType
 import org.emulinker.kaillera.model.GameStatus
 import org.emulinker.kaillera.model.UserStatus
-import org.emulinker.kaillera.pico.AppModule
 import org.emulinker.testing.LoggingRule
+import org.emulinker.util.ProtocolCharset
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -55,7 +55,7 @@ class V086BundleTestShiftJis {
     @Parameterized.Parameters
     @JvmStatic
     fun data(): List<Array<Object>> {
-      AppModule.charsetDoNotUse = Charset.forName("Shift_JIS")
+      ProtocolCharset.overrideForTesting(Charset.forName("Shift_JIS"))
 
       return wrapInArray(
         Params(
@@ -294,7 +294,7 @@ class V086BundleTestShiftUtf8 {
     @Parameterized.Parameters
     @JvmStatic
     fun data(): List<Array<Object>> {
-      AppModule.charsetDoNotUse = StandardCharsets.UTF_8
+      ProtocolCharset.overrideForTesting(StandardCharsets.UTF_8)
 
       return wrapInArray(
         Params(
@@ -322,7 +322,7 @@ class V086BundleTest {
 
   @Before
   fun setup() {
-    AppModule.charsetDoNotUse = StandardCharsets.UTF_8
+    ProtocolCharset.overrideForTesting(StandardCharsets.UTF_8)
   }
 
   @Test

@@ -12,13 +12,9 @@ import org.emulinker.kaillera.model.event.GameInfoEvent
 import org.emulinker.kaillera.model.exception.CreateGameException
 import org.emulinker.kaillera.model.exception.FloodException
 import org.emulinker.util.EmuLang
-import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
-import org.koin.core.qualifier.named
 
-class CreateGameAction :
-  V086Action<CreateGame>, V086ServerEventHandler<GameCreatedEvent>, KoinComponent {
-  private val joinGameMessages: List<String> by inject(named("joinGameMessages"))
+class CreateGameAction(private val joinGameMessages: List<String>) :
+  V086Action<CreateGame>, V086ServerEventHandler<GameCreatedEvent> {
 
   override fun toString() = "CreateGameAction"
 

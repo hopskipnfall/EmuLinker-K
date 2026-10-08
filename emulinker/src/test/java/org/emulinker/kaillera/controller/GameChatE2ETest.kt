@@ -12,7 +12,6 @@ import java.net.InetSocketAddress
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.BlockingQueue
 import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.ThreadPoolExecutor
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 import org.emulinker.kaillera.access.AccessManager
@@ -41,9 +40,9 @@ import org.emulinker.kaillera.controller.v086.protocol.UserJoined
 import org.emulinker.kaillera.controller.v086.protocol.V086Bundle
 import org.emulinker.kaillera.controller.v086.protocol.V086Message
 import org.emulinker.kaillera.model.ConnectionType
-import org.emulinker.kaillera.pico.AppModule
 import org.emulinker.kaillera.pico.koinModule
 import org.emulinker.util.FastGameDataCache
+import org.emulinker.util.ProtocolCharset
 import org.junit.After
 import org.junit.Before
 import org.junit.Rule
@@ -52,14 +51,12 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.get
 import org.koin.core.context.startKoin
 import org.koin.core.context.stopKoin
-import org.koin.core.qualifier.named
 import org.koin.dsl.module
 
 class GameChatE2ETest : KoinComponent {
 
   private lateinit var channel: EmbeddedChannel
   private lateinit var controller: CombinedKailleraController
-  private lateinit var userActionsExecutor: ThreadPoolExecutor
 
   private val clientQueues = ConcurrentHashMap<Int, BlockingQueue<OutgoingMsg>>()
   private val clientMap = ConcurrentHashMap<Int, Client>()
@@ -112,14 +109,13 @@ class GameChatE2ETest : KoinComponent {
 
   @Before
   fun setup() {
-    AppModule.charsetDoNotUse = Charsets.UTF_8
+    ProtocolCharset.overrideForTesting(Charsets.UTF_8)
 
     startKoin {
       allowOverride(true)
       modules(koinModule, ActionModule, module { single<AccessManager> { FakeAccessManager() } })
     }
     controller = get()
-    userActionsExecutor = get(named("userActionsExecutor"))
     channel = EmbeddedChannel(controller)
   }
 
@@ -132,7 +128,6 @@ class GameChatE2ETest : KoinComponent {
     }
     channel.close()
     controller.stop()
-    userActionsExecutor.shutdown()
     stopKoin()
   }
 

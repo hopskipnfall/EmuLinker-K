@@ -13,13 +13,9 @@ import org.emulinker.kaillera.model.event.GameInfoEvent
 import org.emulinker.kaillera.model.event.UserJoinedGameEvent
 import org.emulinker.kaillera.model.exception.JoinGameException
 import org.emulinker.util.EmuLang
-import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
-import org.koin.core.qualifier.named
 
-class JoinGameAction :
-  V086Action<JoinGameRequest>, V086GameEventHandler<UserJoinedGameEvent>, KoinComponent {
-  private val joinGameMessages: List<String> by inject(named("joinGameMessages"))
+class JoinGameAction(private val joinGameMessages: List<String>) :
+  V086Action<JoinGameRequest>, V086GameEventHandler<UserJoinedGameEvent> {
 
   override fun toString() = "JoinGameAction"
 

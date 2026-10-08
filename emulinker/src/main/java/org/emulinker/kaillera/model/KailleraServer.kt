@@ -7,12 +7,8 @@ import com.google.common.flogger.LazyArgs
 import java.net.InetSocketAddress
 import java.util.Locale
 import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.ScheduledFuture
-import java.util.concurrent.ThreadPoolExecutor
-import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeUnit.HOURS
-import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.time.Clock
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
@@ -57,9 +53,6 @@ import org.emulinker.util.CustomUserStrings
 import org.emulinker.util.EmuLang
 import org.emulinker.util.EmuUtil
 import org.emulinker.util.TaskScheduler
-import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
-import org.koin.core.qualifier.named
 
 /** Holds server-wide state. */
 class KailleraServer(
@@ -72,16 +65,8 @@ class KailleraServer(
   metrics: MetricRegistry,
   private val taskScheduler: TaskScheduler,
   private val clock: Clock,
-) : KoinComponent {
-
-  private val eventQueue = LinkedBlockingQueue<Pair<KailleraUser, KailleraEvent>>()
-
-  fun queueEvent(user: KailleraUser, event: KailleraEvent) {
-    eventQueue.offer(user to event)
-  }
-
-  private val userActionsExecutor: ThreadPoolExecutor by
-    inject(qualifier = named("userActionsExecutor"))
+  private val surveyManagerFactory: SurveyManagerFactory,
+) {
 
   private var allowedConnectionTypes = BooleanArray(7)
   private val loginMessages: List<String> = buildList {
@@ -142,7 +127,6 @@ class KailleraServer(
 
   @Synchronized
   fun stop() {
-    stopFlag.set(true)
     usersMap.clear()
     gamesMap.clear()
     timerTask?.cancel(/* mayInterruptIfRunning= */ false)
@@ -666,7 +650,17 @@ class KailleraServer(
     }
     val game: KailleraGame?
     val gameID = getNextGameID()
-    game = KailleraGame(gameID, romName, owner = user, this, flags.gameBufferSize, flags, clock)
+    game =
+      KailleraGame(
+        gameID,
+        romName,
+        owner = user,
+        this,
+        flags.gameBufferSize,
+        flags,
+        clock,
+        surveyManagerFactory,
+      )
     gamesMap[gameID] = game
     addEvent(GameCreatedEvent(this, game))
     logger.atInfo().log("%s created: %s: %s", user, game, game.romName)
@@ -969,32 +963,7 @@ class KailleraServer(
       MetricRegistry.name(this.javaClass, "games", "playing"),
       Gauge { gamesMap.values.count { it.status == GameStatus.PLAYING } },
     )
-
-    userActionsExecutor.submit {
-      logger.atFine().log("Waiting for KailleraEvents")
-      try {
-        while (!stopFlag.get()) {
-          val userToEvent: Pair<KailleraUser, KailleraEvent>? = eventQueue.poll(5, TimeUnit.SECONDS)
-          if (userToEvent == null) {
-            if (Thread.interrupted()) break
-
-            continue
-          }
-          try {
-            userToEvent.first.doEvent(userToEvent.second)
-          } catch (e: RuntimeException) {
-            logger.atSevere().withCause(e).log("%s thread caught unexpected exception!", this)
-          }
-        }
-      } catch (e: InterruptedException) {
-        logger.atSevere().withCause(e).log("%s thread interrupted!", this)
-      } finally {
-        logger.atFine().log("Done waiting for KailleraEvents")
-      }
-    }
   }
-
-  private var stopFlag = AtomicBoolean(false)
 
   private val o = Object()
 
