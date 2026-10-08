@@ -134,13 +134,20 @@ class CombinedKailleraController(
             boundPort = port
             // Run server maintenance on the thread that handles packets.
             server.stateExecutor = nettyChannel.eventLoop()
-            logger
-              .atInfo()
-              .log(
-                "UDP receive buffer: %d bytes (requested %d; Linux limits this by net.core.rmem_max)",
-                nettyChannel.config().getOption(ChannelOption.SO_RCVBUF),
-                REQUESTED_RECEIVE_BUFFER_BYTES,
-              )
+            val grantedReceiveBuffer = nettyChannel.config().getOption(ChannelOption.SO_RCVBUF)
+            logger.atInfo().log("UDP receive buffer: %d bytes", grantedReceiveBuffer)
+            if (grantedReceiveBuffer < REQUESTED_RECEIVE_BUFFER_BYTES) {
+              logger
+                .atWarning()
+                .log(
+                  "The OS only granted a %d byte UDP receive buffer (asked for %d). Packets can be " +
+                    "dropped when many players send at once. On Linux, raise it with e.g. " +
+                    "`sudo sysctl -w net.core.rmem_max=%d` and restart.",
+                  grantedReceiveBuffer,
+                  REQUESTED_RECEIVE_BUFFER_BYTES,
+                  REQUESTED_RECEIVE_BUFFER_BYTES,
+                )
+            }
 
             // Warmup the event loop.
             nettyChannel.eventLoop().submit {
