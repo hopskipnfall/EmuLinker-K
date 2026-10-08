@@ -22,6 +22,13 @@ class FastGameDataCache(override val capacity: Int) : GameDataCache {
   private val entries = arrayOfNulls<ByteArray>(capacity)
   private val hashes = IntArray(capacity)
 
+  /**
+   * Reused by [indexOf] to read the bytes of the buffer being looked up in one bulk call. Reading
+   * them one at a time with `getByte` makes Netty check the buffer's reference count and bounds on
+   * every byte, which was ~18% of server CPU in a profile.
+   */
+  private var scratch = ByteArray(64)
+
   /** Position in [entries] of the oldest element (logical index 0). */
   private var head = 0
 
@@ -47,18 +54,20 @@ class FastGameDataCache(override val capacity: Int) : GameDataCache {
     data.getBytes(data.readerIndex(), bytes)
     val slot = slot(size)
     entries[slot] = bytes
-    hashes[slot] = hash(bytes)
+    hashes[slot] = hash(bytes, bytes.size)
     return size++
   }
 
   override fun indexOf(data: ByteBuf): Int {
     val length = data.readableBytes()
-    val start = data.readerIndex()
-    val hash = hash(data, start, length)
+    if (scratch.size < length) scratch = ByteArray(length)
+    val bytes = scratch
+    data.getBytes(data.readerIndex(), bytes, 0, length)
+    val hash = hash(bytes, length)
     // Newest first: the contract is to return the last occurrence.
     for (index in size - 1 downTo 0) {
       val slot = slot(index)
-      if (hashes[slot] == hash && matches(entries[slot]!!, data, start, length)) return index
+      if (hashes[slot] == hash && matches(entries[slot]!!, bytes, length)) return index
     }
     return -1
   }
@@ -97,22 +106,15 @@ class FastGameDataCache(override val capacity: Int) : GameDataCache {
   }
 
   private companion object {
-    fun hash(bytes: ByteArray): Int {
+    fun hash(bytes: ByteArray, length: Int): Int {
       var h = 1
-      for (b in bytes) h = 31 * h + b
+      for (i in 0 until length) h = 31 * h + bytes[i]
       return h
     }
 
-    /** Must produce the same value as the [ByteArray] overload for equal content. */
-    fun hash(buf: ByteBuf, start: Int, length: Int): Int {
-      var h = 1
-      for (i in start until start + length) h = 31 * h + buf.getByte(i)
-      return h
-    }
-
-    fun matches(bytes: ByteArray, buf: ByteBuf, start: Int, length: Int): Boolean {
-      if (bytes.size != length) return false
-      for (i in 0 until length) if (bytes[i] != buf.getByte(start + i)) return false
+    fun matches(entry: ByteArray, bytes: ByteArray, length: Int): Boolean {
+      if (entry.size != length) return false
+      for (i in 0 until length) if (entry[i] != bytes[i]) return false
       return true
     }
   }
