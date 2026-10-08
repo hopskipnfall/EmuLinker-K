@@ -107,24 +107,24 @@
   <div class="breadcrumbs"><a href="../../../index.html">emulinker</a><span class="delimiter">/</span><a href="../index.html">org.emulinker.kaillera.model.impl</a><span class="delimiter">/</span><span class="current">PlayerActionQueue</span></div>
   <div class="cover ">
     <h1 class="cover"><span>Player</span><wbr></wbr><span>Action</span><wbr></wbr><span><span>Queue</span></span></h1>
-    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="index.html">PlayerActionQueue</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>playerNumber<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>player<span class="token operator">: </span><a href="../../org.emulinker.kaillera.model/-kaillera-user/index.html">KailleraUser</a><span class="token punctuation">, </span></span><span class="parameter ">numPlayers<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter ">gameBufferSize<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a></span></span><span class="token punctuation">)</span></div></div></div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="index.html">PlayerActionQueue</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>playerNumber<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter ">numPlayers<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter ">gameBufferSize<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a></span></span><span class="token punctuation">)</span></div><p class="paragraph">A buffer of game data for one player.</p><p class="paragraph">Every player in the game reads this player's actions at their own pace, so the queue remembers how far each reader has consumed. Bytes are copied into a fixed-size ring buffer: this runs once per player per frame, so it deliberately avoids per-frame allocation and reference counting.</p><p class="paragraph">If a reader falls more than <span data-unresolved-link="org.emulinker.kaillera.model.impl/PlayerActionQueue//#kotlin.Int#kotlin.Int#kotlin.Int/PointingToCallableParameters(2)/">gameBufferSize</span> bytes behind, the oldest bytes it has not read yet are dropped.</p><p class="paragraph">Not threadsafe.</p></div></div>
   </div>
   <div class="tabbedcontent">
     <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION">Members</button></div>
     <div class="tabs-section-body">
       <div data-togglable="CONSTRUCTOR">
         <h2 class="tableheader">Constructors</h2>
-        <div class="table"><a data-name="237676064%2FConstructors%2F-1834219614" anchor-label="PlayerActionQueue" id="237676064%2FConstructors%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+        <div class="table"><a data-name="999410551%2FConstructors%2F-1834219614" anchor-label="PlayerActionQueue" id="999410551%2FConstructors%2F-1834219614" data-filterable-set=":emulinker/main"></a>
           <div class="table-row table-row_content" data-togglable="CONSTRUCTOR" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-player-action-queue.html"><span>Player</span><wbr></wbr><span>Action</span><wbr></wbr><span><span>Queue</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="237676064%2FConstructors%2F-1834219614"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="999410551%2FConstructors%2F-1834219614"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">constructor</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">playerNumber<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter ">player<span class="token operator">: </span><a href="../../org.emulinker.kaillera.model/-kaillera-user/index.html">KailleraUser</a><span class="token punctuation">, </span></span><span class="parameter ">numPlayers<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter ">gameBufferSize<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a></span></span><span class="token punctuation">)</span></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">constructor</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">playerNumber<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter ">numPlayers<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter ">gameBufferSize<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a></span></span><span class="token punctuation">)</span></div></div></div>
                 </div>
               </div>
             </div>
@@ -133,37 +133,7 @@
       </div>
       <div data-togglable="PROPERTY">
         <h2 class="tableheader">Properties</h2>
-        <div class="table"><a data-name="-1285031192%2FProperties%2F-1834219614" anchor-label="lastTimeout" id="-1285031192%2FProperties%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
-            <div class="main-subrow keyValue ">
-              <div class=""><span class="inline-flex">
-                  <div><a href="last-timeout.html"><span>last</span><wbr></wbr><span><span>Timeout</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1285031192%2FProperties%2F-1834219614"></span>
-                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
-                  </span></span></div>
-              <div>
-                <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">var </span><a href="last-timeout.html">lastTimeout</a><span class="token operator">: </span><a href="../-player-timeout-exception/index.html">PlayerTimeoutException</a><span class="token operator">?</span></div></div></div>
-                </div>
-              </div>
-            </div>
-          </div>
-<a data-name="293648262%2FProperties%2F-1834219614" anchor-label="player" id="293648262%2FProperties%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
-            <div class="main-subrow keyValue ">
-              <div class=""><span class="inline-flex">
-                  <div><a href="player.html"><span><span>player</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="293648262%2FProperties%2F-1834219614"></span>
-                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
-                  </span></span></div>
-              <div>
-                <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="player.html">player</a><span class="token operator">: </span><a href="../../org.emulinker.kaillera.model/-kaillera-user/index.html">KailleraUser</a></div></div></div>
-                </div>
-              </div>
-            </div>
-          </div>
-<a data-name="1921920381%2FProperties%2F-1834219614" anchor-label="playerNumber" id="1921920381%2FProperties%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+        <div class="table"><a data-name="1921920381%2FProperties%2F-1834219614" anchor-label="playerNumber" id="1921920381%2FProperties%2F-1834219614" data-filterable-set=":emulinker/main"></a>
           <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
@@ -207,7 +177,7 @@
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="add-actions.html"><span class="token function">addActions</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">actions<span class="token operator">: </span><span data-unresolved-link="io.netty.buffer/ByteBuf///PointingToDeclaration/">ByteBuf</span></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Adds &quot;actions&quot; to the queue.</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="add-actions.html"><span class="token function">addActions</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">actions<span class="token operator">: </span><span data-unresolved-link="io.netty.buffer/ByteBuf///PointingToDeclaration/">ByteBuf</span></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Adds &quot;actions&quot; to the queue. The caller keeps ownership of <a href="add-actions.html">actions</a>.</p></div></div></div>
                 </div>
               </div>
             </div>
@@ -237,7 +207,7 @@
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="get-action-and-write-to-array.html"><span class="token function">getActionAndWriteToArray</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">readingPlayerIndex<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter ">writeTo<span class="token operator">: </span><span data-unresolved-link="io.netty.buffer/ByteBuf///PointingToDeclaration/">ByteBuf</span><span class="token punctuation">, </span></span><span class="parameter ">actionLength<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a></span></span><span class="token punctuation">)</span></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="get-action-and-write-to-array.html"><span class="token function">getActionAndWriteToArray</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">readingPlayerIndex<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter ">writeTo<span class="token operator">: </span><span data-unresolved-link="io.netty.buffer/ByteBuf///PointingToDeclaration/">ByteBuf</span><span class="token punctuation">, </span></span><span class="parameter ">actionLength<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Writes the next <a href="get-action-and-write-to-array.html">actionLength</a> bytes for <a href="get-action-and-write-to-array.html">readingPlayerIndex</a> to <a href="get-action-and-write-to-array.html">writeTo</a>, or zeroes if this queue is not synced.</p></div></div></div>
                 </div>
               </div>
             </div>

@@ -2,7 +2,7 @@
 <html class="no-js" lang="en">
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
-    <title>CreateGameException</title>
+    <title>ProtocolCharset</title>
     <link href="../../../images/logo-icon.svg" rel="icon" type="image/svg">
         <script>var pathToRoot = "../../../";</script>
     <script>document.documentElement.classList.replace("no-js", "js");</script>
@@ -103,62 +103,62 @@
         </nav>
         <div id="resizer" class="resizer" data-item-type="BAR"></div>
         <div id="main" data-item-type="SECTION" role="main">
-<div class="main-content" data-page-type="classlike" id="content" pageIds="emulinker::org.emulinker.kaillera.model.exception/CreateGameException///PointingToDeclaration//-1834219614">
-  <div class="breadcrumbs"><a href="../../../index.html">emulinker</a><span class="delimiter">/</span><a href="../index.html">org.emulinker.kaillera.model.exception</a><span class="delimiter">/</span><span class="current">CreateGameException</span></div>
+<div class="main-content" data-page-type="classlike" id="content" pageIds="emulinker::org.emulinker.util/ProtocolCharset///PointingToDeclaration//-1834219614">
+  <div class="breadcrumbs"><a href="../../../index.html">emulinker</a><span class="delimiter">/</span><a href="../index.html">org.emulinker.util</a><span class="delimiter">/</span><span class="current">ProtocolCharset</span></div>
   <div class="cover ">
-    <h1 class="cover"><span>Create</span><wbr></wbr><span>Game</span><wbr></wbr><span><span>Exception</span></span></h1>
-    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="index.html">CreateGameException</a> : <a href="../-action-exception/index.html">ActionException</a></div></div></div>
+    <h1 class="cover"><span>Protocol</span><wbr></wbr><span><span>Charset</span></span></h1>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">object </span><a href="index.html">ProtocolCharset</a></div><p class="paragraph">The character set used to encode and decode every string on the wire (user names, chat, game names, ...).</p><p class="paragraph">This is process-wide configuration: it is set once at startup from <code class="lang-kotlin">emulinker.charset</code> and never changes while the server runs. It is held here, instead of being injected, because wire messages and their serializers are plain objects created far from the dependency graph. Everything that needs the charset reads <a href="value.html">value</a>; nothing else should store its own copy.</p></div></div>
   </div>
   <div class="tabbedcontent">
     <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION">Members</button></div>
     <div class="tabs-section-body">
-      <div data-togglable="CONSTRUCTOR">
-        <h2 class="tableheader">Constructors</h2>
-        <div class="table"><a data-name="-1743392001%2FConstructors%2F-1834219614" anchor-label="CreateGameException" id="-1743392001%2FConstructors%2F-1834219614" data-filterable-set=":emulinker/main"></a>
-          <div class="table-row table-row_content" data-togglable="CONSTRUCTOR" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
+      <div data-togglable="PROPERTY">
+        <h2 class="tableheader">Properties</h2>
+        <div class="table"><a data-name="-828965424%2FProperties%2F-1834219614" anchor-label="value" id="-828965424%2FProperties%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
-                  <div><a href="-create-game-exception.html"><span>Create</span><wbr></wbr><span>Game</span><wbr></wbr><span><span>Exception</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1743392001%2FConstructors%2F-1834219614"></span>
+                  <div><a href="value.html"><span><span>value</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-828965424%2FProperties%2F-1834219614"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">constructor</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">message<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span></div><div class="symbol monospace"><span class="token keyword">constructor</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">message<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span><span class="token punctuation">, </span></span><span class="parameter ">source<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-exception/index.html">Exception</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="value.html">value</a><span class="token operator">: </span><a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/nio/charset/Charset.html">Charset</a></div><div class="brief "><p class="paragraph">The configured charset. Fails fast if <a href="initialize.html">initialize</a> has not been called yet.</p></div></div></div>
                 </div>
               </div>
             </div>
           </div>
         </div>
       </div>
-      <div data-togglable="PROPERTY">
-        <h2 class="tableheader">Properties</h2>
-        <div class="table"><a data-name="-654012527%2FProperties%2F-1834219614" anchor-label="cause" id="-654012527%2FProperties%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+      <div data-togglable="FUNCTION">
+        <h2 class="tableheader">Functions</h2>
+        <div class="table"><a data-name="-1684419355%2FFunctions%2F-1834219614" anchor-label="initialize" id="-1684419355%2FFunctions%2F-1834219614" data-filterable-set=":emulinker/main"></a>
           <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
-                  <div><a href="../-user-ready-exception/index.html#-654012527%2FProperties%2F-1834219614"><span><span>cause</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-654012527%2FProperties%2F-1834219614"></span>
+                  <div><a href="initialize.html"><span><span>initialize</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1684419355%2FFunctions%2F-1834219614"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">val </span><a href="../-user-ready-exception/index.html#-654012527%2FProperties%2F-1834219614">cause</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-throwable/index.html">Throwable</a><span class="token operator">?</span></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="initialize.html"><span class="token function">initialize</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">charset<span class="token operator">: </span><a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/nio/charset/Charset.html">Charset</a></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Called once at startup after the configuration has been read.</p></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="1824300659%2FProperties%2F-1834219614" anchor-label="message" id="1824300659%2FProperties%2F-1834219614" data-filterable-set=":emulinker/main"></a>
+<a data-name="-98232094%2FFunctions%2F-1834219614" anchor-label="overrideForTesting" id="-98232094%2FFunctions%2F-1834219614" data-filterable-set=":emulinker/main"></a>
           <div class="table-row table-row_content" data-filterable-current=":emulinker/main" data-filterable-set=":emulinker/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
-                  <div><a href="../-user-ready-exception/index.html#1824300659%2FProperties%2F-1834219614"><span><span>message</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1824300659%2FProperties%2F-1834219614"></span>
+                  <div><a href="override-for-testing.html"><span>override</span><wbr></wbr><span>For</span><wbr></wbr><span><span>Testing</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-98232094%2FFunctions%2F-1834219614"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">val </span><a href="../-user-ready-exception/index.html#1824300659%2FProperties%2F-1834219614">message</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":emulinker/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="override-for-testing.html"><span class="token function">overrideForTesting</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">charset<span class="token operator">: </span><a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/nio/charset/Charset.html">Charset</a></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Overrides the charset for a test. Production code must use <a href="initialize.html">initialize</a>.</p></div></div></div>
                 </div>
               </div>
             </div>
