@@ -13,8 +13,8 @@ import org.emulinker.kaillera.model.KailleraServer
 
 class Trivia(private val server: KailleraServer) : Runnable {
 
-  private var exitThread = false
-  private var triviaPaused = false
+  @Volatile private var exitThread = false
+  @Volatile private var triviaPaused = false
   private var newQuestion = true
   private var answer: String? = null
   private var hint: CharArray? = null
@@ -37,6 +37,14 @@ class Trivia(private val server: KailleraServer) : Runnable {
 
   fun getScores(): List<Scores> {
     return scores
+  }
+
+  /**
+   * Asks the trivia thread to finish. Cooperative on purpose: [Thread.stop] was removed in newer
+   * JDKs, where it throws.
+   */
+  fun stop() {
+    exitThread = true
   }
 
   fun setTriviaPaused(triviaPaused: Boolean) {

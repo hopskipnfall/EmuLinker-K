@@ -316,6 +316,7 @@ class AdminCommandAction : V086Action<Chat> {
       scanner.next()
       val userID = scanner.nextInt()
       val minutes = scanner.nextInt()
+      if (minutes <= 0) throw ActionException("The number of minutes must be at least 1.")
       val reasonStr =
         if (scanner.hasNext()) {
           val sb = java.lang.StringBuilder()
@@ -435,6 +436,7 @@ class AdminCommandAction : V086Action<Chat> {
       scanner.next()
       val userID = scanner.nextInt()
       val minutes = scanner.nextInt()
+      if (minutes <= 0) throw ActionException("The number of minutes must be at least 1.")
       val reasonStr =
         if (scanner.hasNext()) {
           val sb = java.lang.StringBuilder()
@@ -459,13 +461,14 @@ class AdminCommandAction : V086Action<Chat> {
         false,
         null,
       )
-      user.quit(EmuLang.getString("AdminCommandAction.QuitBanned"))
+      // Record the ban before kicking so the user cannot reconnect in between.
       server.accessManager.addTempBan(
         user.connectSocketAddress.address.hostAddress,
         minutes.minutes,
         admin.name,
         reasonStr,
       )
+      user.quit(EmuLang.getString("AdminCommandAction.QuitBanned"))
     } catch (e: NoSuchElementException) {
       throw ActionException(EmuLang.getString("AdminCommandAction.BanError"))
     }
@@ -486,6 +489,7 @@ class AdminCommandAction : V086Action<Chat> {
       scanner.next()
       val userID = scanner.nextInt()
       val minutes = scanner.nextInt()
+      if (minutes <= 0) throw ActionException("The number of minutes must be at least 1.")
       val user =
         server.getUser(userID)
           ?: throw ActionException(EmuLang.getString("AdminCommandAction.UserNotFound", userID))
@@ -528,6 +532,7 @@ class AdminCommandAction : V086Action<Chat> {
       scanner.next()
       val userID = scanner.nextInt()
       val minutes = scanner.nextInt()
+      if (minutes <= 0) throw ActionException("The number of minutes must be at least 1.")
       val user =
         server.getUser(userID)
           ?: throw ActionException(EmuLang.getString("AdminCommandAction.UserNotFound", userID))
@@ -569,6 +574,7 @@ class AdminCommandAction : V086Action<Chat> {
       scanner.next()
       val userID = scanner.nextInt()
       val minutes = scanner.nextInt()
+      if (minutes <= 0) throw ActionException("The number of minutes must be at least 1.")
       val user =
         server.getUser(userID)
           ?: throw ActionException(EmuLang.getString("AdminCommandAction.UserNotFound", userID))
@@ -620,7 +626,7 @@ class AdminCommandAction : V086Action<Chat> {
     if (message == "/triviareset") {
       if (server.switchTrivia) {
         server.trivia!!.saveScores(true)
-        server.triviaThread!!.stop()
+        server.trivia!!.stop()
       }
       server.announce("<Trivia> SupraTrivia has been reset!", false, null)
       val trivia = Trivia(server)
@@ -642,7 +648,7 @@ class AdminCommandAction : V086Action<Chat> {
       if (server.trivia == null) throw ActionException("Trivia needs to be started first!")
       server.announce("SupraTrivia has been stopped!", false, null)
       server.trivia!!.saveScores(false)
-      server.triviaThread!!.stop()
+      server.trivia!!.stop()
       server.switchTrivia = false
       server.trivia = null
     } else if (message == "/triviapause") {
@@ -775,24 +781,7 @@ class AdminCommandAction : V086Action<Chat> {
     if (space < 0) throw ActionException(EmuLang.getString("AdminCommandAction.ClearError"))
     val targetStr = message.substring(space + 1).trim()
 
-    var inetAddr: InetAddress? = null
-    try {
-      inetAddr = InetAddress.getByName(targetStr)
-    } catch (e: Exception) {
-      val targetId = targetStr.toIntOrNull()
-      val matchedUser =
-        if (targetId != null) {
-          server.getUser(targetId)
-        } else {
-          server.usersMap.values.firstOrNull { it.name.equals(targetStr, ignoreCase = true) }
-        }
-
-      if (matchedUser != null) {
-        inetAddr = matchedUser.connectSocketAddress.address
-      } else {
-        throw ActionException("Could not find user with ID, IP or Name: $targetStr")
-      }
-    }
+    val inetAddr: InetAddress = resolveTarget(targetStr, server).first
 
     if (
       admin.accessLevel == AccessManager.ACCESS_SUPERADMIN &&
@@ -975,28 +964,10 @@ class AdminCommandAction : V086Action<Chat> {
     if (space < 0) throw ActionException("Usage: /info <IP, UserID, or Name>")
     val targetStr = message.substring(space + 1).trim()
 
-    var inetAddr: InetAddress? = null
-    var userName = targetStr
-    try {
-      inetAddr = InetAddress.getByName(targetStr)
-    } catch (e: Exception) {
-      val targetId = targetStr.toIntOrNull()
-      val matchedUser =
-        if (targetId != null) {
-          server.getUser(targetId)
-        } else {
-          server.usersMap.values.firstOrNull { it.name.equals(targetStr, ignoreCase = true) }
-        }
+    val (inetAddr, matchedUserName) = resolveTarget(targetStr, server)
+    val userName = matchedUserName ?: targetStr
 
-      if (matchedUser != null) {
-        inetAddr = matchedUser.connectSocketAddress.address
-        userName = matchedUser.name ?: "Unknown"
-      } else {
-        throw ActionException("Could not find user with ID, IP or Name: $targetStr")
-      }
-    }
-
-    val tempBan = server.accessManager.getTempBan(inetAddr!!)
+    val tempBan = server.accessManager.getTempBan(inetAddr)
     val silence = server.accessManager.getSilence(inetAddr)
     val access = server.accessManager.getAccess(inetAddr)
 
@@ -1035,7 +1006,47 @@ class AdminCommandAction : V086Action<Chat> {
   }
 
   companion object {
+    /**
+     * Resolves the argument of `/clear` and `/info` to an address (and the matching user's name, if
+     * it identified a user).
+     *
+     * A number is a user ID. It must not be handed to [InetAddress.getByName] first, which accepts
+     * "5" as the IPv4 address 0.0.0.5 and would hide the user with that ID.
+     */
+    internal fun resolveTarget(target: String, server: KailleraServer): Pair<InetAddress, String?> {
+      val targetId = target.toIntOrNull()
+      if (targetId != null) {
+        val user = server.getUser(targetId)
+        if (user != null) return user.connectSocketAddress.address to user.name
+        throw ActionException("Could not find user with ID, IP or Name: $target")
+      }
+
+      if (IP_LITERAL.matches(target) || target.contains(':')) {
+        try {
+          // A literal address, so this cannot trigger a DNS lookup.
+          return InetAddress.getByName(target) to null
+        } catch (e: Exception) {
+          // Fall through to the user name lookup.
+        }
+      }
+
+      val user = server.usersMap.values.firstOrNull { it.name.equals(target, ignoreCase = true) }
+      if (user != null) return user.connectSocketAddress.address to user.name
+
+      // Last resort, kept for admins who pass a host name.
+      if (target.isNotBlank()) {
+        try {
+          return InetAddress.getByName(target) to null
+        } catch (e: Exception) {
+          // Fall through.
+        }
+      }
+      throw ActionException("Could not find user with ID, IP or Name: $target")
+    }
+
     private val logger = FluentLogger.forEnclosingClass()
+
+    private val IP_LITERAL = Regex("""\d{1,3}(\.\d{1,3}){3}""")
 
     private const val COMMAND_ANNOUNCE = "/announce"
 

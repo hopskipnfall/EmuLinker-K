@@ -154,6 +154,10 @@ class GameChatAction(
           game.announce("You are silenced!", clientHandler.user)
           return
         }
+        if (clientHandler.user.isMuted) {
+          game.announce("You are currently muted!", clientHandler.user)
+          return
+        }
         try {
           scanner.next()
           val userID = scanner.nextInt()
@@ -239,6 +243,18 @@ class GameChatAction(
               }
               if (user === clientHandler.user) {
                 game.announce("You can't private message yourself!", clientHandler.user)
+                return
+              }
+              if (
+                !user.isAcceptingDirectMessages ||
+                  user.searchIgnoredUsers(
+                    clientHandler.user.connectSocketAddress.address.hostAddress
+                  )
+              ) {
+                game.announce(
+                  "<" + user.name + "> Is not accepting private messages!",
+                  clientHandler.user,
+                )
                 return
               }
               var m = sb.toString()
@@ -344,7 +360,7 @@ class GameChatAction(
             .log(
               "IGNORE USER ERROR: %s: %s",
               clientHandler.user.name,
-              clientHandler.remoteSocketAddress!!.hostName,
+              clientHandler.remoteSocketAddress!!.address.hostAddress,
             )
           return
         }
@@ -386,7 +402,7 @@ class GameChatAction(
             .log(
               "UNIGNORE USER ERROR: %s: %s",
               clientHandler.user.name,
-              clientHandler.remoteSocketAddress!!.hostName,
+              clientHandler.remoteSocketAddress!!.address.hostAddress,
             )
           return
         }
@@ -413,6 +429,10 @@ class GameChatAction(
             )
         ) {
           game.announce("You are silenced!", clientHandler.user)
+          return
+        }
+        if (clientHandler.user.isMuted) {
+          game.announce("You are currently muted!", clientHandler.user)
           return
         }
         if (clientHandler.user.server.checkMe(clientHandler.user, announcement)) {
