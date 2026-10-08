@@ -9,8 +9,6 @@ import java.io.IOException
 import java.io.InputStreamReader
 import java.net.InetAddress
 import java.net.URISyntaxException
-import java.nio.file.Files
-import java.nio.file.StandardCopyOption
 import java.security.Security
 import java.util.Locale
 import java.util.StringTokenizer
@@ -168,7 +166,7 @@ class AccessManager2(private val flags: RuntimeFlags, private val taskScheduler:
 
   @Synchronized
   override fun addPermaBan(addressPattern: String, issuer: String?, reason: String?) {
-    val file = accessFile ?: return
+    val file = accessFile ?: throw AccessException("The access file is not available.")
     try {
       val entry = buildList {
         add("")
@@ -180,31 +178,67 @@ class AccessManager2(private val flags: RuntimeFlags, private val taskScheduler:
       // so a ban appended to the end would never apply. Put it ahead of the existing rules.
       insertBeforeFirstAddressRule(file, entry)
       loadAccess()
-    } catch (e: Exception) {
+    } catch (e: IOException) {
       logger.atSevere().withCause(e).log("Failed to write to access file")
+      throw AccessException("Could not write to the access file: ${e.message}", e)
     }
   }
 
   /**
-   * Rewrites [file] with [entry] inserted before the first `ipaddress,` rule (or at the end if
-   * there is none). Writes a temporary file and moves it into place so a crash cannot leave a
-   * truncated access file.
+   * Inserts [entry] into [file] before the first `ipaddress,` rule (or at the end if there is
+   * none), leaving every other byte as it was.
+   *
+   * The file is rewritten in place rather than replaced by a temporary file: that keeps its
+   * permissions and ownership, follows a symlink, and works for a bind-mounted single file. The
+   * content is a few kilobytes written with a single call.
    */
   private fun insertBeforeFirstAddressRule(file: File, entry: List<String>) {
-    val lines = file.readLines(flags.charset)
-    val firstRule = lines.indexOfFirst {
-      it.trimStart().startsWith("ipaddress,", ignoreCase = true)
-    }
+    val original = file.readBytes()
+    val eol = if (containsCrLf(original)) "\r\n" else "\n"
+    val block = entry.joinToString(separator = eol, postfix = eol).toByteArray(flags.charset)
+
+    val offset = findFirstAddressRule(original)
     val result =
-      if (firstRule == -1) lines + entry else lines.take(firstRule) + entry + lines.drop(firstRule)
-    val temp = File(file.parentFile, "${file.name}.tmp")
-    temp.writeText(result.joinToString(separator = "\n", postfix = "\n"), flags.charset)
-    Files.move(temp.toPath(), file.toPath(), StandardCopyOption.REPLACE_EXISTING)
+      if (offset == -1) {
+        val needsNewline = original.isNotEmpty() && original.last() != '\n'.code.toByte()
+        original + (if (needsNewline) eol.toByteArray(flags.charset) else ByteArray(0)) + block
+      } else {
+        original.copyOfRange(0, offset) + block + original.copyOfRange(offset, original.size)
+      }
+    file.writeBytes(result)
+  }
+
+  private fun containsCrLf(bytes: ByteArray): Boolean =
+    bytes.indices.any {
+      it > 0 && bytes[it] == '\n'.code.toByte() && bytes[it - 1] == '\r'.code.toByte()
+    }
+
+  /** Byte offset of the start of the first line that is an `ipaddress,` rule, or -1. */
+  private fun findFirstAddressRule(bytes: ByteArray): Int {
+    val prefix = "ipaddress,".toByteArray(Charsets.US_ASCII)
+    var lineStart = 0
+    while (lineStart < bytes.size) {
+      val matches =
+        lineStart + prefix.size <= bytes.size &&
+          prefix.indices.all {
+            (bytes[lineStart + it].toInt().toChar()).lowercaseChar() == prefix[it].toInt().toChar()
+          }
+      if (matches) return lineStart
+      val newline = bytes.indexOf('\n'.code.toByte(), lineStart)
+      if (newline == -1) return -1
+      lineStart = newline + 1
+    }
+    return -1
+  }
+
+  private fun ByteArray.indexOf(value: Byte, from: Int): Int {
+    for (i in from until size) if (this[i] == value) return i
+    return -1
   }
 
   @Synchronized
   override fun addPermaMute(addressPattern: String, issuer: String?, reason: String?) {
-    val file = accessFile ?: return
+    val file = accessFile ?: throw AccessException("The access file is not available.")
     try {
       java.io.OutputStreamWriter(java.io.FileOutputStream(file, true), flags.charset).use { writer
         ->
@@ -214,8 +248,9 @@ class AccessManager2(private val flags: RuntimeFlags, private val taskScheduler:
         writer.appendLine("silence,${sanitizeForConfig(addressPattern, stripCommas = true)}")
       }
       loadAccess()
-    } catch (e: Exception) {
+    } catch (e: IOException) {
       logger.atSevere().withCause(e).log("Failed to write to access file")
+      throw AccessException("Could not write to the access file: ${e.message}", e)
     }
   }
 

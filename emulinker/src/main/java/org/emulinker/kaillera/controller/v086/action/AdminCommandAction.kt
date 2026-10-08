@@ -5,6 +5,7 @@ import java.net.InetAddress
 import java.util.Locale
 import java.util.Scanner
 import kotlin.time.Duration.Companion.minutes
+import org.emulinker.kaillera.access.AccessException
 import org.emulinker.kaillera.access.AccessManager
 import org.emulinker.kaillera.controller.messaging.MessageFormatException
 import org.emulinker.kaillera.controller.v086.V086ClientHandler
@@ -893,11 +894,16 @@ class AdminCommandAction : V086Action<Chat> {
       )
         throw ActionException("Can not permaban an admin.")
 
-      server.accessManager.addPermaBan(
-        user.connectSocketAddress.address.hostAddress,
-        admin.name,
-        reasonStr,
-      )
+      try {
+        server.accessManager.addPermaBan(
+          user.connectSocketAddress.address.hostAddress,
+          admin.name,
+          reasonStr,
+        )
+      } catch (e: AccessException) {
+        // Do not tell everyone the user is banned (or kick them) if the ban was not saved.
+        throw ActionException("Permaban failed: ${e.message}")
+      }
       server.announce("Admin ${admin.name} permanently banned ${user.name}!", false, null)
       user.quit("You have been permanently banned.")
     } catch (e: NoSuchElementException) {
@@ -941,11 +947,15 @@ class AdminCommandAction : V086Action<Chat> {
       )
         throw ActionException("Can not permamute an admin.")
 
-      server.accessManager.addPermaMute(
-        user.connectSocketAddress.address.hostAddress,
-        admin.name,
-        reasonStr,
-      )
+      try {
+        server.accessManager.addPermaMute(
+          user.connectSocketAddress.address.hostAddress,
+          admin.name,
+          reasonStr,
+        )
+      } catch (e: AccessException) {
+        throw ActionException("Permamute failed: ${e.message}")
+      }
       server.announce("Admin ${admin.name} permanently muted ${user.name}!", false, null)
     } catch (e: NoSuchElementException) {
       throw ActionException("Permamute Error: /permamute <UserID> <Optional Reason>")
