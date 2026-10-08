@@ -35,4 +35,25 @@ class EmuLinkerPropertiesConfigTest {
     // Typical list keys in the release configuration.
     assertThat(EmuLinkerPropertiesConfig.splitList("1,2,3,4,5,6")).hasSize(6)
   }
+
+  @Test
+  fun numbersAndBooleansStillAcceptATrailingComma() {
+    val config =
+      object : EmuLinkerPropertiesConfig() {
+        override fun loadConfiguration() {
+          load(StringReader("a=100,\nb=true,\nc=7, 8\nd=Tokyo, Japan\ne=\n"))
+        }
+      }
+
+    assertThat(config.getInt("a")).isEqualTo(100)
+    assertThat(config.getInt("a", 5)).isEqualTo(100)
+    assertThat(config.getInt("c")).isEqualTo(7)
+    assertThat(config.getBoolean("b")).isTrue()
+    assertThat(config.getBoolean("b", false)).isTrue()
+    assertThat(config.getInt("missing", 42)).isEqualTo(42)
+    assertThat(config.getString("d")).isEqualTo("Tokyo, Japan")
+    assertThat(config.getStringArray("c")).asList().containsExactly("7", "8").inOrder()
+    assertThat(config.getStringArray("e")).isEmpty()
+    org.junit.Assert.assertThrows(NoSuchElementException::class.java) { config.getInt("missing") }
+  }
 }

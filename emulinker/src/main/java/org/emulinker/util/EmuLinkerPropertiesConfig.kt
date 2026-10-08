@@ -1,6 +1,7 @@
 package org.emulinker.util
 
 import org.apache.commons.configuration.PropertiesConfiguration
+import org.apache.commons.configuration.PropertyConverter
 
 /**
  * Reads `emulinker.cfg` from the classpath.
@@ -11,15 +12,20 @@ import org.apache.commons.configuration.PropertiesConfiguration
  * before: elements are separated by commas, whitespace around them is trimmed, and `\,` is a
  * literal comma.
  */
-class EmuLinkerPropertiesConfig : PropertiesConfiguration() {
+open class EmuLinkerPropertiesConfig : PropertiesConfiguration() {
   init {
     isDelimiterParsingDisabled = true
+    loadConfiguration()
+    isThrowExceptionOnMissing = true
+  }
+
+  /** Loads the configuration. Overridable only so tests can supply their own text. */
+  protected open fun loadConfiguration() {
     val url =
       requireNotNull(EmuLinkerPropertiesConfig::class.java.getResource("/emulinker.cfg")) {
         "emulinker.cfg was not found on the classpath"
       }
     load(url)
-    isThrowExceptionOnMissing = true
   }
 
   override fun getString(key: String): String = unescapeCommas(super.getString(key))
@@ -29,6 +35,31 @@ class EmuLinkerPropertiesConfig : PropertiesConfiguration() {
 
   override fun getStringArray(key: String): Array<String> =
     super.getStringArray(key).flatMap { splitList(it) }.toTypedArray()
+
+  // Numbers and booleans used to be parsed from the first element of a comma separated value, so a
+  // config with a stray trailing comma (`server.maxUsers=100,`) kept working. Keep accepting that.
+
+  override fun getInt(key: String): Int =
+    firstElement(key)?.let { PropertyConverter.toInteger(it).toInt() } ?: throw missing(key)
+
+  override fun getInt(key: String, defaultValue: Int): Int =
+    firstElement(key)?.let { PropertyConverter.toInteger(it).toInt() } ?: defaultValue
+
+  override fun getInteger(key: String, defaultValue: Int?): Int? =
+    firstElement(key)?.let { PropertyConverter.toInteger(it).toInt() } ?: defaultValue
+
+  override fun getBoolean(key: String): Boolean =
+    firstElement(key)?.let { PropertyConverter.toBoolean(it) } ?: throw missing(key)
+
+  override fun getBoolean(key: String, defaultValue: Boolean): Boolean =
+    firstElement(key)?.let { PropertyConverter.toBoolean(it) } ?: defaultValue
+
+  /** The first comma separated element of [key]'s value, or null if the key is not set. */
+  private fun firstElement(key: String): String? =
+    super.getString(key, null)?.let { splitList(it).firstOrNull() ?: "" }
+
+  private fun missing(key: String) =
+    NoSuchElementException("'$key' doesn't map to an existing object")
 
   companion object {
     private val UNESCAPED_COMMA = Regex("(?<!\\\\),")
