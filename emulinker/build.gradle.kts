@@ -4,15 +4,15 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompilationTask
 
 plugins {
   id("com.google.protobuf") version "0.10.0"
-  id("build.buf") version "0.11.0"
-  id("com.diffplug.spotless") version "8.7.0"
+  id("build.buf") version "0.11.1"
+  id("com.diffplug.spotless") version "8.10.3"
   id("org.jetbrains.dokka") version "2.2.0"
   application
 
-  kotlin("jvm") version "2.3.20"
-  kotlin("plugin.serialization") version "2.3.20"
+  kotlin("jvm") version "2.4.20"
+  kotlin("plugin.serialization") version "2.4.20"
   id("me.champeau.jmh") version "0.7.3"
-  id("com.github.ben-manes.versions") version "0.54.0"
+  id("com.github.ben-manes.versions") version "0.65.0"
 }
 
 repositories {
@@ -21,22 +21,41 @@ repositories {
 }
 
 dependencies {
-  api("org.jetbrains.kotlin:kotlin-stdlib:2.3.20")
+  api("org.jetbrains.kotlin:kotlin-stdlib:2.4.20")
 
   implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.11.0")
 
   implementation("io.github.redouane59.twitter:twittered:2.23")
 
+  // twittered 2.23 drags in very old transitive dependencies with known CVEs (jackson 2.13.4,
+  // snakeyaml 1.31, guava 10.0.1, gson 2.8.9, commons-io 2.4, httpclient 4.5.13, ...). Pin
+  // patched versions here. See docs/code_health_report.md.
+  implementation(project.dependencies.platform("com.fasterxml.jackson:jackson-bom:2.22.3"))
+  constraints {
+    implementation("org.yaml:snakeyaml:2.7") { because("CVE-2022-1471 and others in 1.31") }
+    implementation("com.google.guava:guava:33.7.2-jre") {
+      because("twittered pulls guava 10.0.1 (multiple CVEs)")
+    }
+    implementation("com.google.code.gson:gson:2.14.0") { because("CVE-2022-25647 in 2.8.9") }
+    implementation("commons-io:commons-io:2.22.0") { because("CVE-2021-29425 in 2.4") }
+    implementation("commons-codec:commons-codec:1.22.1") { because("old 1.11 from twittered") }
+    implementation("org.apache.httpcomponents:httpclient:4.5.14") {
+      because("old 4.5.13 from twittered")
+    }
+    implementation("org.apache.httpcomponents:httpcore:4.4.16") { because("see httpclient") }
+  }
+
+  implementation(project.dependencies.platform("io.netty:netty-bom:4.2.19.Final"))
   implementation(project.dependencies.platform("io.insert-koin:koin-bom:4.2.2"))
   implementation("io.insert-koin:koin-core")
   testImplementation("io.insert-koin:koin-test")
   testImplementation("io.insert-koin:koin-test-junit4")
 
-  implementation("com.google.protobuf:protobuf-kotlin:4.35.1")
-  implementation("com.google.protobuf:protobuf-java:4.35.1")
-  implementation("com.google.protobuf:protobuf-java-util:4.35.1")
+  implementation("com.google.protobuf:protobuf-kotlin:4.36.2")
+  implementation("com.google.protobuf:protobuf-java:4.36.2")
+  implementation("com.google.protobuf:protobuf-java-util:4.36.2")
 
-  val dropwizardMetricsVersion = "4.2.39"
+  val dropwizardMetricsVersion = "4.2.40"
   api("io.dropwizard.metrics:metrics-core:$dropwizardMetricsVersion")
   api("io.dropwizard.metrics:metrics-jvm:$dropwizardMetricsVersion")
 
@@ -52,9 +71,8 @@ dependencies {
   implementation("org.slf4j:slf4j-nop:2.0.17")
 
   implementation("commons-configuration:commons-configuration:1.10")
-  implementation("commons-pool:commons-pool:1.6")
 
-  val ktorVersion = "3.5.0"
+  val ktorVersion = "3.6.0"
   implementation("io.ktor:ktor-network-jvm:$ktorVersion")
   implementation("io.ktor:ktor-server-core-jvm:$ktorVersion")
   implementation("io.ktor:ktor-server-netty-jvm:$ktorVersion")
@@ -68,7 +86,7 @@ dependencies {
   implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.7.1")
 
   // https://mvnrepository.com/artifact/io.netty/netty-all
-  testImplementation("io.netty:netty-all:4.2.9.Final")
+  testImplementation("io.netty:netty-all:4.2.19.Final")
 
   testImplementation("junit:junit:4.13.2")
   testImplementation("com.google.truth:truth:1.4.5")
@@ -76,6 +94,15 @@ dependencies {
   testImplementation(kotlin("test"))
   testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.11.0")
   testImplementation("org.mockito.kotlin:mockito-kotlin:6.3.0")
+}
+
+// ktor-server-netty 3.6 depends on Netty's HTTP/3 and QUIC modules, which ship native libraries for
+// every platform (~17 MB compressed in the release jar). The server only uses UDP and plain HTTP,
+// so keep them out of the jar that every install downloads.
+configurations.named("runtimeClasspath") {
+  exclude(group = "io.netty", module = "netty-codec-http3")
+  exclude(group = "io.netty", module = "netty-codec-native-quic")
+  exclude(group = "io.netty", module = "netty-codec-classes-quic")
 }
 
 group = "org.emulinker"
@@ -174,7 +201,7 @@ spotless {
 }
 
 protobuf {
-  protoc { artifact = "com.google.protobuf:protoc:4.35.1" }
+  protoc { artifact = "com.google.protobuf:protoc:4.36.2" }
 
   generateProtoTasks {
     ofSourceSet("main").forEach {
@@ -218,6 +245,11 @@ jmh {
     failOnError = true
     benchmarkMode = listOf("ss") // "Single Shot" mode (runs method once, minimal timing overhead)
     resultFormat = "JSON"
+  } else if (project.hasProperty("jmhQuick")) {
+    // Shorter run for comparing before/after a change: ./gradlew jmh -PjmhQuick
+    warmupIterations = 2
+    iterations = 3
+    fork = 1
   } else {
     profilers = listOf("jfr:dir=build/results/jmh-jfr", "gc")
   }
