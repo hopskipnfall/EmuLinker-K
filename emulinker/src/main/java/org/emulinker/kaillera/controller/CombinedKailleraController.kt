@@ -13,8 +13,12 @@ import io.netty.buffer.PooledByteBufAllocator
 import io.netty.channel.Channel
 import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.ChannelOption
+import io.netty.channel.IoHandlerFactory
 import io.netty.channel.MultiThreadIoEventLoopGroup
 import io.netty.channel.SimpleChannelInboundHandler
+import io.netty.channel.epoll.Epoll
+import io.netty.channel.epoll.EpollDatagramChannel
+import io.netty.channel.epoll.EpollIoHandler
 import io.netty.channel.nio.NioIoHandler
 import io.netty.channel.socket.DatagramPacket
 import io.netty.channel.socket.nio.NioDatagramChannel
@@ -52,8 +56,20 @@ class CombinedKailleraController(
 
   fun alloc(): ByteBufAllocator = SecurityContext.handlerContext?.alloc() ?: nettyChannel.alloc()
 
+  /**
+   * Sends [datagramPacket] to its recipient.
+   *
+   * While a received datagram is being handled the packet is only queued: it is flushed in
+   * [channelReadComplete], after the whole batch of datagrams that arrived together, so the native
+   * transport can send them with a single system call.
+   */
   fun send(datagramPacket: DatagramPacket) {
-    (SecurityContext.handlerContext ?: nettyChannel).writeAndFlush(datagramPacket)
+    val ctx = SecurityContext.handlerContext
+    if (ctx != null) {
+      ctx.write(datagramPacket)
+    } else {
+      nettyChannel.writeAndFlush(datagramPacket)
+    }
   }
 
   @Synchronized
@@ -71,7 +87,13 @@ class CombinedKailleraController(
     port: Int
   ): EmbeddedServer<NettyApplicationEngine, NettyApplicationEngine.Configuration> =
     embeddedServer(Netty, port = port) {
-        val group = MultiThreadIoEventLoopGroup(NioIoHandler.newFactory())
+        val useEpoll = Epoll.isAvailable()
+        val ioHandlerFactory: IoHandlerFactory =
+          if (useEpoll) EpollIoHandler.newFactory() else NioIoHandler.newFactory()
+        logger
+          .atInfo()
+          .log("Network transport: %s", if (useEpoll) "native epoll" else "NIO (epoll unavailable)")
+        val group = MultiThreadIoEventLoopGroup(ioHandlerFactory)
         Runtime.getRuntime()
           .addShutdownHook(
             thread(start = false) {
@@ -111,7 +133,9 @@ class CombinedKailleraController(
         try {
           Bootstrap().apply {
             group(group)
-            channel(NioDatagramChannel::class.java)
+            channel(
+              if (useEpoll) EpollDatagramChannel::class.java else NioDatagramChannel::class.java
+            )
             option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
             option(ChannelOption.SO_BROADCAST, true)
             // All clients send at roughly the same moment every frame, and the thread that reads
@@ -267,6 +291,12 @@ class CombinedKailleraController(
     } finally {
       SecurityContext.remove()
     }
+  }
+
+  override fun channelReadComplete(ctx: ChannelHandlerContext) {
+    // Send everything queued by [send] while handling this batch of datagrams.
+    ctx.flush()
+    super.channelReadComplete(ctx)
   }
 
   override fun channelRegistered(ctx: ChannelHandlerContext) {
