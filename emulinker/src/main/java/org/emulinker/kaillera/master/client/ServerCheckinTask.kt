@@ -119,7 +119,9 @@ class ServerCheckinTask(
         return null
       }
 
-      val body = connection.inputStream.bufferedReader(Charsets.UTF_8).use { it.readText() }
+      // The response is a short JSON document; do not buffer an arbitrarily large body.
+      val body =
+        connection.inputStream.use { String(it.readNBytes(MAX_RESPONSE_BYTES), Charsets.UTF_8) }
       return try {
         lenientJson.decodeFromString<CheckinResponse?>(body)
       } catch (e: Exception) {
@@ -145,6 +147,7 @@ class ServerCheckinTask(
 
     val lenientJson = Json { ignoreUnknownKeys = true }
 
+    const val MAX_RESPONSE_BYTES = 64 * 1024
     const val MAX_ADMIN_MESSAGES = 5
     const val MAX_ADMIN_MESSAGE_LENGTH = 500
 
