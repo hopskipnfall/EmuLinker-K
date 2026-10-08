@@ -61,7 +61,8 @@ class CombinedKailleraController(
    *
    * While a received datagram is being handled the packet is only queued: it is flushed in
    * [channelReadComplete], after the whole batch of datagrams that arrived together, so the native
-   * transport can send them with a single system call.
+   * transport can send them with a single `sendmmsg` system call. (Reads are still one `recvmsg`
+   * per datagram: Netty only batches those when `MAX_DATAGRAM_PAYLOAD_SIZE` is set.)
    */
   fun send(datagramPacket: DatagramPacket) {
     val ctx = SecurityContext.handlerContext
@@ -90,9 +91,17 @@ class CombinedKailleraController(
         val useEpoll = Epoll.isAvailable()
         val ioHandlerFactory: IoHandlerFactory =
           if (useEpoll) EpollIoHandler.newFactory() else NioIoHandler.newFactory()
-        logger
-          .atInfo()
-          .log("Network transport: %s", if (useEpoll) "native epoll" else "NIO (epoll unavailable)")
+        if (useEpoll) {
+          logger.atInfo().log("Network transport: native epoll")
+        } else {
+          // Expected on macOS and Windows. On Linux it means the native library could not be
+          // loaded (for example a noexec temp directory or an unsupported libc), and the portable
+          // transport is noticeably less efficient.
+          logger
+            .atInfo()
+            .withCause(Epoll.unavailabilityCause())
+            .log("Network transport: NIO (native epoll is unavailable)")
+        }
         val group = MultiThreadIoEventLoopGroup(ioHandlerFactory)
         Runtime.getRuntime()
           .addShutdownHook(
