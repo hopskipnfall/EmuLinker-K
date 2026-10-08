@@ -333,6 +333,37 @@ class AccessManager2Test {
   }
 
   @Test
+  fun addPermaBan_takesEffectDespiteTrailingAllowAllRule() {
+    // Mirrors the shipped access.cfg: the first matching ipaddress rule wins.
+    accessFile.writeText("user,SUPERADMIN,${localIp.hostAddress}\nipaddress,ALLOW,*\n")
+    accessManager.forceReload()
+
+    accessManager.addPermaBan(remoteIp.hostAddress, issuer = "Admin", reason = "Cheating")
+
+    assertThat(accessManager.isAddressAllowed(remoteIp)).isFalse()
+    assertThat(accessManager.isAddressAllowed(otherIp)).isTrue()
+    // Existing rules are preserved.
+    assertThat(accessManager.getAccess(localIp)).isEqualTo(AccessManager.ACCESS_SUPERADMIN)
+  }
+
+  @Test
+  fun tempGrantDoesNotLowerConfiguredAccess() {
+    accessFile.writeText("user,SUPERADMIN,${localIp.hostAddress}\nipaddress,ALLOW,*\n")
+    accessManager.forceReload()
+
+    accessManager.addTempElevated(localIp.hostAddress, 5.minutes)
+
+    assertThat(accessManager.getAccess(localIp)).isEqualTo(AccessManager.ACCESS_SUPERADMIN)
+  }
+
+  @Test
+  fun tempGrantRaisesNormalAccess() {
+    accessManager.addTempModerator(remoteIp.hostAddress, 5.minutes)
+
+    assertThat(accessManager.getAccess(remoteIp)).isEqualTo(AccessManager.ACCESS_MODERATOR)
+  }
+
+  @Test
   fun getAccess_returnsNormalForUnknownAddress() {
     assertThat(accessManager.getAccess(remoteIp)).isEqualTo(AccessManager.ACCESS_NORMAL)
   }

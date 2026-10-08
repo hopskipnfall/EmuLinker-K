@@ -9,6 +9,8 @@ import java.io.IOException
 import java.io.InputStreamReader
 import java.net.InetAddress
 import java.net.URISyntaxException
+import java.nio.file.Files
+import java.nio.file.StandardCopyOption
 import java.security.Security
 import java.util.Locale
 import java.util.StringTokenizer
@@ -168,23 +170,44 @@ class AccessManager2(private val flags: RuntimeFlags, private val taskScheduler:
   override fun addPermaBan(addressPattern: String, issuer: String?, reason: String?) {
     val file = accessFile ?: return
     try {
-      java.io.FileWriter(file, true).use { writer ->
-        writer.appendLine()
-        writer.appendLine("# Permanent ban issued by ${sanitizeForConfig(issuer ?: "Unknown")}")
-        if (reason != null) writer.appendLine("# Reason: ${sanitizeForConfig(reason)}")
-        writer.appendLine("ipaddress,DENY,${sanitizeForConfig(addressPattern, stripCommas = true)}")
+      val entry = buildList {
+        add("")
+        add("# Permanent ban issued by ${sanitizeForConfig(issuer ?: "Unknown")}")
+        if (reason != null) add("# Reason: ${sanitizeForConfig(reason)}")
+        add("ipaddress,DENY,${sanitizeForConfig(addressPattern, stripCommas = true)}")
       }
+      // The first matching ipaddress rule wins, and the shipped file ends with `ipaddress,ALLOW,*`,
+      // so a ban appended to the end would never apply. Put it ahead of the existing rules.
+      insertBeforeFirstAddressRule(file, entry)
       loadAccess()
     } catch (e: Exception) {
       logger.atSevere().withCause(e).log("Failed to write to access file")
     }
   }
 
+  /**
+   * Rewrites [file] with [entry] inserted before the first `ipaddress,` rule (or at the end if
+   * there is none). Writes a temporary file and moves it into place so a crash cannot leave a
+   * truncated access file.
+   */
+  private fun insertBeforeFirstAddressRule(file: File, entry: List<String>) {
+    val lines = file.readLines(flags.charset)
+    val firstRule = lines.indexOfFirst {
+      it.trimStart().startsWith("ipaddress,", ignoreCase = true)
+    }
+    val result =
+      if (firstRule == -1) lines + entry else lines.take(firstRule) + entry + lines.drop(firstRule)
+    val temp = File(file.parentFile, "${file.name}.tmp")
+    temp.writeText(result.joinToString(separator = "\n", postfix = "\n"), flags.charset)
+    Files.move(temp.toPath(), file.toPath(), StandardCopyOption.REPLACE_EXISTING)
+  }
+
   @Synchronized
   override fun addPermaMute(addressPattern: String, issuer: String?, reason: String?) {
     val file = accessFile ?: return
     try {
-      java.io.FileWriter(file, true).use { writer ->
+      java.io.OutputStreamWriter(java.io.FileOutputStream(file, true), flags.charset).use { writer
+        ->
         writer.appendLine()
         writer.appendLine("# Permanent silence issued by ${sanitizeForConfig(issuer ?: "Unknown")}")
         if (reason != null) writer.appendLine("# Reason: ${sanitizeForConfig(reason)}")
@@ -232,20 +255,20 @@ class AccessManager2(private val flags: RuntimeFlags, private val taskScheduler:
   override fun getAccess(address: InetAddress): Int {
     checkReload()
     val userAddress = address.hostAddress
-    for (tempAdmin in tempAdminList) {
-      if (tempAdmin.matches(userAddress) && !tempAdmin.isExpired) {
-        return AccessManager.ACCESS_ADMIN
+    val configured =
+      userList.firstOrNull { it.matches(userAddress) }?.access ?: AccessManager.ACCESS_NORMAL
+    val temporary =
+      when {
+        tempAdminList.any { it.matches(userAddress) && !it.isExpired } -> AccessManager.ACCESS_ADMIN
+        tempModeratorList.any { it.matches(userAddress) && !it.isExpired } ->
+          AccessManager.ACCESS_MODERATOR
+        tempElevatedList.any { it.matches(userAddress) && !it.isExpired } ->
+          AccessManager.ACCESS_ELEVATED
+        else -> return configured
       }
-    }
-    for (tempModerator in tempModeratorList) {
-      if (tempModerator.matches(userAddress) && !tempModerator.isExpired)
-        return AccessManager.ACCESS_MODERATOR
-    }
-    for (tempElevated in tempElevatedList) {
-      if (tempElevated.matches(userAddress) && !tempElevated.isExpired)
-        return AccessManager.ACCESS_ELEVATED
-    }
-    return userList.firstOrNull { it.matches(userAddress) }?.access ?: AccessManager.ACCESS_NORMAL
+    // A temporary grant can raise someone's access but must never lower it (a configured
+    // SUPERADMIN given /tempelevated would otherwise be demoted until it expired).
+    return maxOf(configured, temporary)
   }
 
   @Synchronized
