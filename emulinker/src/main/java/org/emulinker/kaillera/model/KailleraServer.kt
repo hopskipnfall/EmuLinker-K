@@ -4,12 +4,14 @@ import com.codahale.metrics.Gauge
 import com.codahale.metrics.MetricRegistry
 import com.google.common.flogger.FluentLogger
 import com.google.common.flogger.LazyArgs
+import java.net.InetAddress
 import java.net.InetSocketAddress
 import java.util.Locale
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Executor
 import java.util.concurrent.ScheduledFuture
 import java.util.concurrent.TimeUnit.HOURS
+import java.util.concurrent.TimeUnit.SECONDS
 import kotlin.time.Clock
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
@@ -18,6 +20,7 @@ import kotlin.time.Duration.Companion.seconds
 import kotlin.time.DurationUnit
 import org.emulinker.config.RuntimeFlags
 import org.emulinker.kaillera.access.AccessManager
+import org.emulinker.kaillera.access.ConnectionGuard
 import org.emulinker.kaillera.controller.v086.V086ClientHandler
 import org.emulinker.kaillera.lookingforgame.LookingForGameEvent
 import org.emulinker.kaillera.lookingforgame.TwitterBroadcaster
@@ -69,6 +72,53 @@ class KailleraServer(
   private val clock: Clock,
   private val surveyManagerFactory: SurveyManagerFactory,
 ) {
+
+  /**
+   * Limits how many users, and how fast, one address may bring in; see `server.maxUsersPerAddress`
+   * and related settings. Users with [AccessManager.ACCESS_ELEVATED] or more (granted in
+   * access.cfg) are exempt, which is also how an authorized load test is allowed.
+   */
+  private val connectionGuard =
+    ConnectionGuard(flags.maxLoginsPerAddressPerMinute, flags.autoBanAfterViolations)
+
+  private fun noteRefusedAddress(address: InetAddress, what: String) {
+    logger
+      .atWarning()
+      .atMostEvery(10, SECONDS)
+      .log("Refused connection from %s: %s", address.hostAddress, what)
+    if (connectionGuard.recordViolation(ConnectionGuard.keyOf(address))) {
+      // A ban keeps everyone on the address out, so never ban one that a trusted user is using.
+      val group = ConnectionGuard.keyOf(address)
+      val trustedUserPresent =
+        usersMap.values.any {
+          it.loggedIn &&
+            it.accessLevel >= AccessManager.ACCESS_ELEVATED &&
+            ConnectionGuard.keyOf(it.connectSocketAddress.address) == group
+        }
+      if (trustedUserPresent) {
+        logger
+          .atInfo()
+          .log(
+            "Not banning %s despite repeated refusals: a trusted user is on it",
+            address.hostAddress,
+          )
+        return
+      }
+      accessManager.addTempBan(
+        ConnectionGuard.banPatternFor(address),
+        flags.autoBanDuration,
+        "automatic",
+        "Too many connections from one address",
+      )
+      logger
+        .atWarning()
+        .log(
+          "Temporarily banned %s for %s after repeated refused connections",
+          ConnectionGuard.banPatternFor(address),
+          flags.autoBanDuration,
+        )
+    }
+  }
 
   private var allowedConnectionTypes = BooleanArray(7)
   private val loginMessages: List<String> = buildList {
@@ -406,6 +456,19 @@ class KailleraServer(
         )
       )
     }
+    // Checked before the duplicate-session handling below, which logs out the user's previous
+    // session: a refusal here must not kill a session that is still fine.
+    if (
+      access < AccessManager.ACCESS_ELEVATED &&
+        !connectionGuard.allowLogin(ConnectionGuard.keyOf(user.connectSocketAddress.address))
+    ) {
+      discardUnauthenticated(user)
+      noteRefusedAddress(user.connectSocketAddress.address, "logging in too quickly")
+      return Result.failure(
+        ClientAddressException(EmuLang.getString("KailleraServerImpl.LoginDeniedTooManyLogins"))
+      )
+    }
+
     for (u2 in usersMap.values) {
       if (u2.loggedIn) {
         if (
@@ -448,6 +511,37 @@ class KailleraServer(
             )
           )
         }
+      }
+    }
+
+    if (flags.maxUsersPerAddress > 0 && access < AccessManager.ACCESS_ELEVATED) {
+      // Counted after the reconnect handling above, so a user replacing their own old session is
+      // not counted twice. Only fully logged-in users count: a connection that has not logged in
+      // exists after a single datagram, which anyone can send with a forged source address, so
+      // counting it would let a stranger fill a victim's allowance. Trusted (ELEVATED+) users are
+      // not counted either, since they are not limited.
+      val group = ConnectionGuard.keyOf(user.connectSocketAddress.address)
+      val others =
+        usersMap.values.count {
+          it.id != user.id &&
+            it.loggedIn &&
+            it.accessLevel < AccessManager.ACCESS_ELEVATED &&
+            ConnectionGuard.keyOf(it.connectSocketAddress.address) == group
+        }
+      if (others >= flags.maxUsersPerAddress) {
+        discardUnauthenticated(user)
+        noteRefusedAddress(user.connectSocketAddress.address, "too many users from one address")
+        logger
+          .atWarning()
+          .log("%s login denied: %d users already connected from this address", user, others)
+        return Result.failure(
+          ClientAddressException(
+            EmuLang.getString(
+              "KailleraServerImpl.LoginDeniedTooManyUsersFromAddress",
+              flags.maxUsersPerAddress,
+            )
+          )
+        )
       }
     }
 
@@ -895,6 +989,8 @@ class KailleraServer(
         },
         usersMap.values.count { it.loggedIn },
       )
+
+    connectionGuard.purgeIdle()
 
     try {
       val stuckGames = mutableListOf<Int>()
