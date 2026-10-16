@@ -24,6 +24,7 @@ import org.emulinker.kaillera.controller.v086.protocol.AllReady
 import org.emulinker.kaillera.controller.v086.protocol.CachedGameData
 import org.emulinker.kaillera.controller.v086.protocol.ClientAck
 import org.emulinker.kaillera.controller.v086.protocol.CloseGame
+import org.emulinker.kaillera.controller.v086.protocol.ConnectionRejected
 import org.emulinker.kaillera.controller.v086.protocol.CreateGameNotification
 import org.emulinker.kaillera.controller.v086.protocol.CreateGameRequest
 import org.emulinker.kaillera.controller.v086.protocol.GameChatRequest
@@ -63,6 +64,12 @@ class GameChatE2ETest : KoinComponent {
   private val clientMap = ConcurrentHashMap<Int, Client>()
 
   class FakeAccessManager : AccessManager {
+    /** The access level every address gets. */
+    var level = AccessManager.ACCESS_ADMIN
+
+    /** Patterns of temporary bans requested, newest last. */
+    val tempBans = mutableListOf<String>()
+
     override fun isAddressAllowed(address: InetAddress): Boolean = true
 
     override fun isSilenced(address: InetAddress): Boolean = false
@@ -71,7 +78,7 @@ class GameChatE2ETest : KoinComponent {
 
     override fun isGameAllowed(game: String): Boolean = true
 
-    override fun getAccess(address: InetAddress): Int = AccessManager.ACCESS_ADMIN
+    override fun getAccess(address: InetAddress): Int = level
 
     override fun getAnnouncement(address: InetAddress): String? = null
 
@@ -80,7 +87,9 @@ class GameChatE2ETest : KoinComponent {
       duration: Duration,
       issuer: String?,
       reason: String?,
-    ) {}
+    ) {
+      tempBans += addressPattern
+    }
 
     override fun addTempAdmin(addressPattern: String, duration: Duration) {}
 
@@ -314,6 +323,92 @@ class GameChatE2ETest : KoinComponent {
     }
   }
 
+  private fun fakeAccess() = get<AccessManager>() as FakeAccessManager
+
+  @Test
+  fun anAddressCannotLogInMoreUsersThanTheLimit() {
+    fakeAccess().level = AccessManager.ACCESS_NORMAL
+    // The default limit is 4 users per address; all test clients share one address.
+    val allowed = (1..4).map { Client(it, "Player$it", this) }
+    allowed.forEach { assertThat(it.loginExpectingRefusal()).isNull() }
+
+    val fifth = Client(5, "Player5", this)
+    val refusal = fifth.loginExpectingRefusal()
+
+    assertThat(refusal).contains("Too many users")
+    assertThat(refusal).contains("4")
+    // The users who are in keep working.
+    allowed.forEach { it.logout() }
+  }
+
+  @Test
+  fun connectionsThatNeverLogInDoNotCountTowardTheLimit() {
+    fakeAccess().level = AccessManager.ACCESS_NORMAL
+    // Anyone can start a connection with a forged source address; it must not use up the allowance.
+    (1..6).forEach { Client(it, "Ghost$it", this).connectWithoutLoggingIn() }
+
+    val real = Client(10, "Real", this)
+
+    assertThat(real.loginExpectingRefusal()).isNull()
+  }
+
+  @Test
+  fun aUserReconnectingWithTheSameNameIsNotCountedTwice() {
+    fakeAccess().level = AccessManager.ACCESS_NORMAL
+    val others = (1..3).map { Client(it, "Player$it", this) }
+    others.forEach { it.login() }
+    val first = Client(4, "Returning", this)
+    first.login()
+
+    // The old session is still around (no Quit was sent); the new login replaces it, so the
+    // address stays at four users and is not refused.
+    val again = Client(5, "Returning", this)
+
+    assertThat(again.loginExpectingRefusal()).isNull()
+  }
+
+  @Test
+  fun usersWithElevatedAccessAreNotLimited() {
+    fakeAccess().level = AccessManager.ACCESS_ELEVATED
+    val clients = (1..6).map { Client(it, "Player$it", this) }
+
+    clients.forEach { assertThat(it.loginExpectingRefusal()).isNull() }
+    clients.forEach { it.logout() }
+  }
+
+  @Test
+  fun anAddressThatKeepsLoggingInAndOutIsSlowedDown() {
+    fakeAccess().level = AccessManager.ACCESS_NORMAL
+    val refusals = mutableListOf<String>()
+
+    // One user at a time, so the limit on simultaneous users is never reached; only the rate is.
+    repeat(25) { i ->
+      val client = Client(100 + i, "Churn$i", this)
+      val refusal = client.loginExpectingRefusal()
+      if (refusal == null) client.quit() else refusals += refusal
+    }
+
+    // The default allows 20 logins per minute per address.
+    assertThat(refusals).isNotEmpty()
+    assertThat(refusals.first()).contains("too quickly")
+    assertThat(refusals.size).isAtLeast(3)
+  }
+
+  @Test
+  fun repeatedRefusalsGetTheAddressBannedForAWhile() {
+    val access = fakeAccess()
+    access.level = AccessManager.ACCESS_NORMAL
+    (1..4).forEach { Client(it, "Player$it", this).login() }
+    assertThat(access.tempBans).isEmpty()
+
+    // Ten refused logins within a minute is the default threshold for an automatic ban.
+    repeat(10) { i ->
+      assertThat(Client(10 + i, "Extra$i", this).loginExpectingRefusal()).isNotNull()
+    }
+
+    assertThat(access.tempBans).containsExactly("127.0.0.1")
+  }
+
   fun pump() {
     channel.runPendingTasks()
     while (true) {
@@ -456,6 +551,58 @@ class GameChatE2ETest : KoinComponent {
       }
     }
 
+    /** Opens a connection but never sends the login, like a forged or abandoned first datagram. */
+    fun connectWithoutLoggingIn() {
+      val request = RequestPrivateKailleraPortRequest("0.83")
+      val buffer =
+        Unpooled.buffer(request.bodyBytesPlusMessageIdType).apply { request.writeTo(this) }
+      testInstance.channel.writeInbound(DatagramPacket(buffer, RECIPIENT, sender))
+      var answered = false
+      while (!answered) {
+        testInstance.pump()
+        val msg = queue.poll()
+        if (msg is OutgoingMsg.ConnectionMessage) answered = true
+        else if (msg == null) Thread.yield()
+      }
+    }
+
+    /** Tries to log in and returns the server's reason if it refused, or null if it accepted. */
+    fun loginExpectingRefusal(): String? {
+      val request = RequestPrivateKailleraPortRequest("0.83")
+      val buffer =
+        Unpooled.buffer(request.bodyBytesPlusMessageIdType).apply { request.writeTo(this) }
+      testInstance.channel.writeInbound(DatagramPacket(buffer, RECIPIENT, sender))
+
+      var answered = false
+      while (!answered) {
+        testInstance.pump()
+        val msg = queue.poll()
+        if (msg is OutgoingMsg.ConnectionMessage) answered = true
+        else if (msg == null) Thread.yield()
+      }
+
+      sendBundle(
+        V086Bundle.Single(
+          UserInformation(++lastMessageNumber, username, "Test Client", connectionType)
+        )
+      )
+      var refusal: String? = null
+      consumeUntil {
+        when {
+          it is ServerAck -> {
+            sendBundle(V086Bundle.Single(ClientAck(++lastMessageNumber)))
+            false
+          }
+          it is ConnectionRejected -> {
+            refusal = it.message
+            true
+          }
+          else -> it is UserJoined && it.username == this.username
+        }
+      }
+      return refusal
+    }
+
     fun createGame(): Int {
       sendBundle(V086Bundle.Single(CreateGameRequest(++lastMessageNumber, "Test Game")))
       var gameId = -1
@@ -544,7 +691,9 @@ class GameChatE2ETest : KoinComponent {
     fun logout() {
       sendBundle(V086Bundle.Single(QuitRequest(++lastMessageNumber, "test done")))
       try {
-        consumeUntil { it is QuitNotification && it.username == this.username }
+        // Best effort (teardown also calls this for clients that are already gone), so do not wait
+        // the full default timeout.
+        consumeUntil(timeoutMs = 500) { it is QuitNotification && it.username == this.username }
       } catch (e: Exception) {}
     }
 

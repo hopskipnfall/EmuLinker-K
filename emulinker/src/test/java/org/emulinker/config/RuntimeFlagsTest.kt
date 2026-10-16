@@ -17,6 +17,10 @@ class RuntimeFlagsTest {
   private fun buildFlags() =
     RuntimeFlags(
       allowMultipleConnections = true,
+      maxUsersPerAddress = 4,
+      maxLoginsPerAddressPerMinute = 20,
+      autoBanAfterViolations = 10,
+      autoBanDuration = 10.minutes,
       allowSinglePlayer = true,
       charset = Charsets.UTF_8,
       chatFloodTime = 0.milliseconds,

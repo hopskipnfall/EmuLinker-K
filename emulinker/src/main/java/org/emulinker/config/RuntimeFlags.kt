@@ -8,6 +8,13 @@ import org.emulinker.kaillera.model.ConnectionType
 /** Configuration flags that are set at startup and do not change until the job is restarted. */
 data class RuntimeFlags(
   val allowMultipleConnections: Boolean,
+  /** Most users one address (IPv6: one /64) may have connected at once; 0 for no limit. */
+  val maxUsersPerAddress: Int,
+  /** Logins one address may complete per minute; 0 for no limit. */
+  val maxLoginsPerAddressPerMinute: Int,
+  /** Refusals within a minute after which an address is temporarily banned; 0 never bans. */
+  val autoBanAfterViolations: Int,
+  val autoBanDuration: Duration,
   val allowSinglePlayer: Boolean,
   val charset: Charset,
   val chatFloodTime: Duration,

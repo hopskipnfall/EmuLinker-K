@@ -98,6 +98,10 @@ val koinModule = module {
       val flags =
         RuntimeFlags(
           allowMultipleConnections = config.getBoolean("server.allowMultipleConnections", true),
+          maxUsersPerAddress = config.getInt("server.maxUsersPerAddress", 4),
+          maxLoginsPerAddressPerMinute = config.getInt("server.maxLoginsPerAddressPerMinute", 20),
+          autoBanAfterViolations = config.getInt("server.autoBanAfterViolations", 10),
+          autoBanDuration = config.getInt("server.autoBanMinutes", 10).coerceAtLeast(1).minutes,
           allowSinglePlayer = config.getBoolean("server.allowSinglePlayer", true),
           charset =
             try {
