@@ -54,7 +54,6 @@ dependencies {
   implementation(project.dependencies.platform("io.insert-koin:koin-bom:4.2.2"))
   implementation("io.insert-koin:koin-core")
   testImplementation("io.insert-koin:koin-test")
-  testImplementation("io.insert-koin:koin-test-junit4")
 
   implementation("com.google.protobuf:protobuf-kotlin:4.36.2")
   implementation("com.google.protobuf:protobuf-java:4.36.2")
@@ -93,10 +92,12 @@ dependencies {
   // https://mvnrepository.com/artifact/io.netty/netty-all
   testImplementation("io.netty:netty-all:4.2.19.Final")
 
-  testImplementation("junit:junit:4.13.2")
-  testImplementation("com.google.truth:truth:1.4.5")
+  val kotestVersion = "6.2.6"
+  testImplementation("io.kotest:kotest-runner-junit5:$kotestVersion")
+  testImplementation("io.kotest:kotest-assertions-core:$kotestVersion")
+  testImplementation("io.kotest:kotest-property:$kotestVersion")
+
   testImplementation("com.google.truth.extensions:truth-proto-extension:1.4.5")
-  testImplementation(kotlin("test"))
   testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.11.0")
   testImplementation("org.mockito.kotlin:mockito-kotlin:6.3.0")
 }
@@ -175,7 +176,6 @@ tasks.named("compileTestKotlin") { dependsOn(":emulinker:processTestResources") 
 
 tasks.withType<Test> {
   useJUnitPlatform()
-  useJUnit()
 
   systemProperty(
     "flogger.backend_factory",

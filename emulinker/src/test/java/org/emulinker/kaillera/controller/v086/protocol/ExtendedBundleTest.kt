@@ -1,34 +1,33 @@
 package org.emulinker.kaillera.controller.v086.protocol
 
+import io.kotest.core.spec.style.FunSpec
 import io.netty.buffer.Unpooled
 import java.nio.charset.Charset
 import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.util.ProtocolCharset
-import org.junit.Test
 
-class ExtendedBundleTest {
+class ExtendedBundleTest :
+  FunSpec({
+    test("processBundle") {
+      ProtocolCharset.overrideForTesting(Charset.forName("Shift_JIS"))
+      val individualTests = TESTDATA.trimIndent().split("\n\n")
 
-  @Test
-  fun processBundle() {
-    ProtocolCharset.overrideForTesting(Charset.forName("Shift_JIS"))
-    val individualTests = TESTDATA.trimIndent().split("\n\n")
+      for ((index, data) in individualTests.withIndex()) {
+        println("Starting test with index: $index")
 
-    for ((index, data) in individualTests.withIndex()) {
-      println("Starting test with index: $index")
+        val byteString = data.trim().lines().joinToString(separator = " ") { it.substring(7..54) }
 
-      val byteString = data.trim().lines().joinToString(separator = " ") { it.substring(7..54) }
+        println(
+          "Parsing legacy way for first line ${byteString.split(" ").take(16).joinToString(" ")}"
+        )
 
-      println(
-        "Parsing legacy way for first line ${byteString.split(" ").take(16).joinToString(" ")}"
-      )
-
-      val buf = Unpooled.buffer(4096)
-      buf.writeBytes(V086Utils.hexStringToByteBuffer(byteString))
-      val oldBundle = V086Bundle.parse(buf)
-      println(oldBundle)
+        val buf = Unpooled.buffer(4096)
+        buf.writeBytes(V086Utils.hexStringToByteBuffer(byteString))
+        val oldBundle = V086Bundle.parse(buf)
+        println(oldBundle)
+      }
     }
-  }
-}
+  })
 
 private const val TESTDATA =
   """

@@ -1,24 +1,25 @@
 package org.emulinker.kaillera.controller.v086.protocol
 
-import com.google.common.truth.Truth.assertThat
+import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.shouldBe
 import io.netty.buffer.Unpooled
 import java.nio.charset.Charset
 import org.emulinker.kaillera.controller.connectcontroller.protocol.ConnectMessage
 import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.kaillera.controller.v086.protocol.MessageTestUtils.assertBufferContainsExactly
-import org.emulinker.testing.LoggingRule
+import org.emulinker.testing.LoggingListener
 import org.emulinker.util.ProtocolCharset
-import org.junit.BeforeClass
-import org.junit.Rule
-import org.junit.Test
 
-abstract class ProtocolBaseTest {
-  @get:Rule val logging = LoggingRule()
+abstract class ProtocolBaseTest(body: FunSpec.() -> Unit = {}) :
+  FunSpec({
+    extension(LoggingListener())
 
+    beforeSpec { ProtocolCharset.overrideForTesting(Charset.forName("Shift_JIS")) }
+
+    body()
+  }) {
   companion object {
-    @BeforeClass
-    @JvmStatic
-    fun setup() {
+    init {
       ProtocolCharset.overrideForTesting(Charset.forName("Shift_JIS"))
     }
 
@@ -26,58 +27,59 @@ abstract class ProtocolBaseTest {
   }
 }
 
-abstract class ConnectMessageTest<K : ConnectMessage> : ProtocolBaseTest() {
+abstract class ConnectMessageTest<K : ConnectMessage> :
+  ProtocolBaseTest({
+    val self = this as ConnectMessageTest<K>
+
+    test("parse") {
+      val byteBuf = Unpooled.buffer(4096)
+      byteBuf.writeBytes(V086Utils.hexStringToByteBuffer(self.byteString))
+
+      val deserialized = ConnectMessage.parse(byteBuf)
+
+      deserialized.getOrThrow() shouldBe self.message
+      byteBuf.readableBytes() shouldBe 0
+    }
+
+    test("write") {
+      val byteBuf = Unpooled.buffer(4096)
+      self.message.writeTo(byteBuf)
+
+      assertBufferContainsExactly(byteBuf, self.byteString)
+    }
+  }) {
   abstract val message: K
   abstract val byteString: String
-
-  @Test
-  fun parse() {
-    val byteBuf = Unpooled.buffer(4096)
-    byteBuf.writeBytes(V086Utils.hexStringToByteBuffer(byteString))
-
-    val deserialized = ConnectMessage.parse(byteBuf)
-
-    assertThat(deserialized.getOrThrow()).isEqualTo(message)
-    assertThat(byteBuf.readableBytes()).isEqualTo(0)
-  }
-
-  @Test
-  fun write() {
-    val byteBuf = Unpooled.buffer(4096)
-    message.writeTo(byteBuf)
-
-    assertBufferContainsExactly(byteBuf, byteString)
-  }
 }
 
-abstract class V086MessageTest<K : V086Message> : ProtocolBaseTest() {
+abstract class V086MessageTest<K : V086Message> :
+  ProtocolBaseTest({
+    val self = this as V086MessageTest<K>
+
+    test("bodyLength") {
+      val byteBuffer = V086Utils.hexStringToByteBuffer(self.byteString)
+      self.message.bodyBytes shouldBe byteBuffer.remaining()
+    }
+
+    test("read") {
+      val byteBuf = Unpooled.buffer(4096)
+      byteBuf.writeBytes(V086Utils.hexStringToByteBuffer(self.byteString))
+
+      val deserialized = self.serializer.read(byteBuf, self.message.messageNumber)
+
+      deserialized.getOrThrow() shouldBe self.message
+      byteBuf.readableBytes() shouldBe 0
+    }
+
+    test("write") {
+      val byteBuf = Unpooled.buffer(4096)
+      self.message.writeBodyTo(byteBuf)
+
+      byteBuf.readableBytes() shouldBe self.message.bodyBytes
+      assertBufferContainsExactly(byteBuf, self.byteString)
+    }
+  }) {
   abstract val message: K
   abstract val byteString: String
   abstract val serializer: MessageSerializer<K>
-
-  @Test
-  fun bodyLength() {
-    val byteBuffer = V086Utils.hexStringToByteBuffer(byteString)
-    assertThat(message.bodyBytes).isEqualTo(byteBuffer.remaining())
-  }
-
-  @Test
-  fun read() {
-    val byteBuf = Unpooled.buffer(4096)
-    byteBuf.writeBytes(V086Utils.hexStringToByteBuffer(byteString))
-
-    val deserialized = serializer.read(byteBuf, message.messageNumber)
-
-    assertThat(deserialized.getOrThrow()).isEqualTo(message)
-    assertThat(byteBuf.readableBytes()).isEqualTo(0)
-  }
-
-  @Test
-  fun write() {
-    val byteBuf = Unpooled.buffer(4096)
-    message.writeBodyTo(byteBuf)
-
-    assertThat(byteBuf.readableBytes()).isEqualTo(message.bodyBytes)
-    assertBufferContainsExactly(byteBuf, byteString)
-  }
 }

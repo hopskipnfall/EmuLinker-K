@@ -1,49 +1,46 @@
 package org.emulinker.util
 
-import com.google.common.truth.Truth.assertThat
+import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.nulls.shouldBeNull
+import io.kotest.matchers.shouldBe
 import kotlin.time.Duration.Companion.nanoseconds
-import org.junit.Test
 
-class TimeOffsetCacheTest {
+class TimeOffsetCacheTest :
+  FunSpec({
+    test("cache and retrieve single value") {
+      val target = TimeOffsetCache(delay = 30.nanoseconds, resolution = 10.nanoseconds)
 
-  @Test
-  fun `cache and retrieve single value`() {
-    val target = TimeOffsetCache(delay = 30.nanoseconds, resolution = 10.nanoseconds)
+      repeat(2) { target.update(latestVal = it.toLong(), nowNs = 10L * it) }
 
-    repeat(2) { target.update(latestVal = it.toLong(), nowNs = 10L * it) }
+      target.getDelayedValue() shouldBe 0L
+    }
 
-    assertThat(target.getDelayedValue()).isEqualTo(0)
-  }
+    test("single value cache should return null") {
+      val target = TimeOffsetCache(delay = 100.nanoseconds, resolution = 10.nanoseconds)
 
-  @Test
-  fun `single value cache should return null`() {
-    val target = TimeOffsetCache(delay = 100.nanoseconds, resolution = 10.nanoseconds)
+      target.update(latestVal = 42, nowNs = 0)
 
-    target.update(latestVal = 42, nowNs = 0)
+      target.getDelayedValue().shouldBeNull()
+    }
 
-    assertThat(target.getDelayedValue()).isNull()
-  }
+    test("update should ignore new values within resolution") {
+      val target = TimeOffsetCache(delay = 100.nanoseconds, resolution = 10.nanoseconds)
 
-  @Test
-  fun `update should ignore new values within resolution`() {
-    val target = TimeOffsetCache(delay = 100.nanoseconds, resolution = 10.nanoseconds)
+      target.update(latestVal = 42, nowNs = 0)
+      target.update(latestVal = 43, nowNs = 10)
 
-    target.update(latestVal = 42, nowNs = 0)
-    target.update(latestVal = 43, nowNs = 10)
+      // Add one more dummy value.
+      target.update(latestVal = 100, nowNs = 10)
 
-    // Add one more dummy value.
-    target.update(latestVal = 100, nowNs = 10)
+      target.getDelayedValue() shouldBe 42L
+    }
 
-    assertThat(target.getDelayedValue()).isEqualTo(42)
-  }
+    test("retrieve from full cache") {
+      val target = TimeOffsetCache(delay = 30.nanoseconds, resolution = 10.nanoseconds)
 
-  @Test
-  fun `retrieve from full cache`() {
-    val target = TimeOffsetCache(delay = 30.nanoseconds, resolution = 10.nanoseconds)
+      repeat(100) { target.update(latestVal = it.toLong(), nowNs = 10L * it) }
 
-    repeat(100) { target.update(latestVal = it.toLong(), nowNs = 10L * it) }
-
-    // The last values we put were 99, 98, 97.
-    assertThat(target.getDelayedValue()).isEqualTo(97)
-  }
-}
+      // The last values we put were 99, 98, 97.
+      target.getDelayedValue() shouldBe 97L
+    }
+  })

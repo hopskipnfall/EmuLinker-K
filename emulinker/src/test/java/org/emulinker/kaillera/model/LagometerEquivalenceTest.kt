@@ -1,6 +1,8 @@
 package org.emulinker.kaillera.model
 
-import com.google.common.truth.Truth.assertThat
+import io.kotest.assertions.assertSoftly
+import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.shouldBe
 import kotlin.random.Random
 import kotlin.time.Clock
 import kotlin.time.Duration
@@ -9,48 +11,49 @@ import kotlin.time.Duration.Companion.nanoseconds
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.Instant
 import org.emulinker.util.TimeOffsetCache
-import org.junit.Test
 
 /**
  * The lag meter arithmetic was rewritten from [Duration] to plain nanosecond longs for speed. This
  * runs both implementations over random input and requires identical results.
  */
-class LagometerEquivalenceTest {
-  @Test
-  fun matchesTheDurationBasedImplementation() {
-    val random = Random(7)
-    repeat(30) {
-      val players = random.nextInt(1, 5)
-      val frame = random.nextInt(8, 40).milliseconds
-      fun <T> build(make: (Duration, Duration, Duration, Int, Long) -> T) =
-        make(frame, 60.seconds, 5.seconds, players, 0L)
-      val fast = build { f, h, r, n, s -> Lagometer(f, h, r, n, s) }
-      val legacy = build { f, h, r, n, s -> LegacyLagometer(f, h, r, n, s) }
+class LagometerEquivalenceTest :
+  FunSpec({
+    test("matchesTheDurationBasedImplementation") {
+      val random = Random(7)
+      repeat(30) {
+        val players = random.nextInt(1, 5)
+        val frame = random.nextInt(8, 40).milliseconds
+        fun <T> build(make: (Duration, Duration, Duration, Int, Long) -> T) =
+          make(frame, 60.seconds, 5.seconds, players, 0L)
+        val fast = build { f, h, r, n, s -> Lagometer(f, h, r, n, s) }
+        val legacy = build { f, h, r, n, s -> LegacyLagometer(f, h, r, n, s) }
 
-      var now = 0L
-      repeat(2000) {
-        now += random.nextLong(frame.inWholeNanoseconds / 2, frame.inWholeNanoseconds * 3)
-        for (p in 0 until players) {
-          if (random.nextInt(4) != 0) {
-            val received = now - random.nextLong(0, frame.inWholeNanoseconds)
-            fast.receivedInputsFromUser(p, received)
-            legacy.receivedInputsFromUser(p, received)
+        var now = 0L
+        repeat(2000) {
+          now += random.nextLong(frame.inWholeNanoseconds / 2, frame.inWholeNanoseconds * 3)
+          for (p in 0 until players) {
+            if (random.nextInt(4) != 0) {
+              val received = now - random.nextLong(0, frame.inWholeNanoseconds)
+              fast.receivedInputsFromUser(p, received)
+              legacy.receivedInputsFromUser(p, received)
+            }
+          }
+          fast.advanceFrame(now)
+          legacy.advanceFrame(now)
+          if (random.nextInt(500) == 0) {
+            fast.reset()
+            legacy.reset()
+          }
+          assertSoftly {
+            fast.lag shouldBe legacy.lag
+            fast.cumulativeLag shouldBe legacy.cumulativeLag
+            fast.gameLagPerPlayer shouldBe legacy.gameLagPerPlayer
+            fast.cumulativeGameLagPerPlayer shouldBe legacy.cumulativeGameLagPerPlayer
           }
         }
-        fast.advanceFrame(now)
-        legacy.advanceFrame(now)
-        if (random.nextInt(500) == 0) {
-          fast.reset()
-          legacy.reset()
-        }
-        assertThat(fast.lag).isEqualTo(legacy.lag)
-        assertThat(fast.cumulativeLag).isEqualTo(legacy.cumulativeLag)
-        assertThat(fast.gameLagPerPlayer).isEqualTo(legacy.gameLagPerPlayer)
-        assertThat(fast.cumulativeGameLagPerPlayer).isEqualTo(legacy.cumulativeGameLagPerPlayer)
       }
     }
-  }
-}
+  })
 
 class LegacyUserData(
   private val frameDurationNs: Duration,
