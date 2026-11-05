@@ -1,10 +1,16 @@
 package org.emulinker.kaillera.model
 
-import com.google.common.truth.Truth.assertThat
+import io.kotest.core.spec.IsolationMode
+import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.booleans.shouldBeFalse
+import io.kotest.matchers.booleans.shouldBeTrue
+import io.kotest.matchers.longs.shouldBeGreaterThanOrEqual
+import io.kotest.matchers.nulls.shouldBeNull
+import io.kotest.matchers.nulls.shouldNotBeNull
+import io.kotest.matchers.shouldBe
 import io.netty.buffer.Unpooled
 import java.net.InetAddress
 import java.net.InetSocketAddress
-import kotlin.test.Test
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.TimeMark
 import kotlin.time.TimeSource
@@ -17,544 +23,533 @@ import org.mockito.kotlin.mock
 import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
 
-class SurveyManagerTest {
+class SurveyManagerTest :
+  FunSpec({
+    isolationMode = IsolationMode.InstancePerLeaf
 
-  private val mockFlags =
-    mock<RuntimeFlags> {
-      on { surveyEnabled } doReturn true
-      on { surveyGameWhitelist } doReturn listOf("smash", "tekken")
-      on { surveyApiEndpoint } doReturn "http://localhost"
-      on { surveyApiKey } doReturn "test-key"
-    }
-
-  // A user who has not yet given consent (surveyConsent == null, no timemark set).
-  private val pendingConsentUser: KailleraUser = mock {
-    on { frameCount } doReturn 3
-    on { surveyConsent } doReturn null
-    on { surveyConsentAskedTimeMark } doReturn null
-  }
-
-  private val consentedUser: KailleraUser = mock {
-    on { name } doReturn "PlayerOne"
-    on { socketAddress } doReturn InetSocketAddress(InetAddress.getLoopbackAddress(), 27001)
-    on { clientType } doReturn "MAME 0.119"
-    on { connectionType } doReturn ConnectionType.EXCELLENT
-    on { frameDelay } doReturn 2
-    on { frameCount } doReturn 3
-    on { surveyConsent } doReturn true
-    on { surveyConsentAskedTimeMark } doReturn TimeSource.Monotonic.markNow()
-  }
-
-  private fun newManager(game: KailleraGame, flags: RuntimeFlags = mockFlags) =
-    SurveyManager(game, flags, N64ControllerInputParser()) { null }
-
-  private val mockGame =
-    mock<KailleraGame> {
-      on { romName } doReturn "smash bros"
-      on { status } doReturn GameStatus.PLAYING
-      on { players } doReturn mutableListOf(pendingConsentUser)
-    }
-
-  // ── Eligibility ──────────────────────────────────────────────────────────────
-
-  @Test
-  fun `isSurveyEligibleForGame is true when romName matches whitelist`() {
-    val manager = newManager(mockGame)
-    assertThat(manager.isSurveyEligibleForGame).isTrue()
-  }
-
-  @Test
-  fun `isSurveyEligibleForGame is false when romName does not match whitelist`() {
-    val ineligibleGame = mock<KailleraGame> { on { romName } doReturn "mario kart" }
-    val manager = newManager(ineligibleGame)
-    assertThat(manager.isSurveyEligibleForGame).isFalse()
-  }
-
-  @Test
-  fun `isSurveyEligibleForGame is false when surveyEnabled is false`() {
-    val disabledFlags =
+    val mockFlags =
       mock<RuntimeFlags> {
-        on { surveyEnabled } doReturn false
-        on { surveyGameWhitelist } doReturn listOf("smash")
+        on { surveyEnabled } doReturn true
+        on { surveyGameWhitelist } doReturn listOf("smash", "tekken")
         on { surveyApiEndpoint } doReturn "http://localhost"
         on { surveyApiKey } doReturn "test-key"
       }
-    val manager = newManager(mockGame, disabledFlags)
-    assertThat(manager.isSurveyEligibleForGame).isFalse()
-  }
 
-  // ── onUserJoined ─────────────────────────────────────────────────────────────
-
-  @Test
-  fun `onUserJoined announces consent prompt and sets timemark for unconsenteed user`() {
-    val manager = newManager(mockGame)
-    manager.onUserJoined(pendingConsentUser)
-
-    verify(mockGame).announce(any(), org.mockito.kotlin.eq(pendingConsentUser))
-    verify(pendingConsentUser).surveyConsentAskedTimeMark = any()
-  }
-
-  @Test
-  fun `onUserJoined does nothing when game is not eligible`() {
-    val ineligibleGame = mock<KailleraGame> { on { romName } doReturn "mario kart" }
-    val manager = newManager(ineligibleGame)
-    manager.onUserJoined(pendingConsentUser)
-
-    verify(ineligibleGame, never()).announce(any(), any())
-  }
-
-  @Test
-  fun `onUserJoined does not re-prompt a user who already consented`() {
-    val manager = newManager(mockGame)
-    manager.onUserJoined(consentedUser)
-
-    verify(mockGame, never()).announce(any(), org.mockito.kotlin.eq(consentedUser))
-  }
-
-  // ── handleChat — consent ──────────────────────────────────────────────────────
-
-  @Test
-  fun `handleChat returns false for ineligible game`() {
-    val ineligibleGame = mock<KailleraGame> { on { romName } doReturn "mario kart" }
-    val manager = newManager(ineligibleGame)
-
-    assertThat(manager.handleChat(pendingConsentUser, "yes")).isFalse()
-  }
-
-  @Test
-  fun `handleChat accepts yes consent when timemark is set and within timeout`() {
-    // Give the user a timemark that is fresh (i.e. just now).
-    val freshMark: TimeMark = TimeSource.Monotonic.markNow()
-    val user: KailleraUser = mock {
-      on { surveyConsent } doReturn null
-      on { surveyConsentAskedTimeMark } doReturn freshMark
-    }
-    val manager = newManager(mockGame)
-
-    val handled = manager.handleChat(user, "yes")
-    assertThat(handled).isTrue()
-    verify(user).surveyConsent = true
-  }
-
-  @Test
-  fun `handleChat accepts y shorthand for yes consent`() {
-    val freshMark: TimeMark = TimeSource.Monotonic.markNow()
-    val user: KailleraUser = mock {
-      on { surveyConsent } doReturn null
-      on { surveyConsentAskedTimeMark } doReturn freshMark
-    }
-    val manager = newManager(mockGame)
-
-    val handled = manager.handleChat(user, "y")
-    assertThat(handled).isTrue()
-    verify(user).surveyConsent = true
-  }
-
-  @Test
-  fun `handleChat accepts no consent when timemark is fresh`() {
-    val freshMark: TimeMark = TimeSource.Monotonic.markNow()
-    val user: KailleraUser = mock {
-      on { surveyConsent } doReturn null
-      on { surveyConsentAskedTimeMark } doReturn freshMark
-    }
-    val manager = newManager(mockGame)
-
-    val handled = manager.handleChat(user, "no")
-    assertThat(handled).isTrue()
-    verify(user).surveyConsent = false
-  }
-
-  @Test
-  fun `handleChat does not accept consent when timemark is null`() {
-    // surveyConsentAskedTimeMark is null => consent window hasn't opened
-    val user: KailleraUser = mock {
+    // A user who has not yet given consent (surveyConsent == null, no timemark set).
+    val pendingConsentUser: KailleraUser = mock {
+      on { frameCount } doReturn 3
       on { surveyConsent } doReturn null
       on { surveyConsentAskedTimeMark } doReturn null
     }
-    val manager = newManager(mockGame)
 
-    val handled = manager.handleChat(user, "yes")
-    assertThat(handled).isFalse()
-    verify(user, never()).surveyConsent = any()
-  }
-
-  // ── handleChat — survey response ──────────────────────────────────────────────
-
-  @Test
-  fun `handleChat accepts a numeric rating when survey was recently asked`() {
-    val manager = newManager(mockGame)
-    // Simulate a survey having just been triggered.
-    manager.lastSurveyAskedTimeMark = TimeSource.Monotonic.markNow()
-
-    val handled = manager.handleChat(consentedUser, "2")
-    assertThat(handled).isTrue()
-  }
-
-  @Test
-  fun `handleChat ignores a numeric rating when lastSurveyAskedTimeMark is null`() {
-    val manager = newManager(mockGame) // lastSurveyAskedTimeMark stays null
-
-    val handled = manager.handleChat(consentedUser, "2")
-    assertThat(handled).isFalse()
-  }
-
-  @Test
-  fun `handleChat returns false for unrelated chat messages`() {
-    val manager = newManager(mockGame)
-
-    assertThat(manager.handleChat(consentedUser, "gg wp")).isFalse()
-  }
-
-  // ── onControllerInput ─────────────────────────────────────────────────────────
-
-  @Test
-  fun `onControllerInput bails early when game status is WAITING`() {
-    val waitingGame =
-      mock<KailleraGame> {
-        on { romName } doReturn "smash"
-        on { status } doReturn GameStatus.WAITING
-        on { players } doReturn mutableListOf(consentedUser)
-      }
-    val manager = newManager(waitingGame)
-    manager.onGameStarted() // sets gameStartTimeMark
-
-    val data = Unpooled.buffer(16).apply { writeZero(16) }
-    // Should not throw and should not announce anything.
-    manager.onControllerInput(consentedUser, data, 2)
-    verify(waitingGame, never()).announce(any(), any())
-    data.release()
-  }
-
-  @Test
-  fun `onControllerInput checks start button and triggers survey when frameCount is a multiple of 3`() {
-    val user: KailleraUser = mock {
-      on { frameCount } doReturn 6 // 6 is multiple of 3
+    val consentedUser: KailleraUser = mock {
+      on { name } doReturn "PlayerOne"
+      on { socketAddress } doReturn InetSocketAddress(InetAddress.getLoopbackAddress(), 27001)
+      on { clientType } doReturn "MAME 0.119"
+      on { connectionType } doReturn ConnectionType.EXCELLENT
+      on { frameDelay } doReturn 2
+      on { frameCount } doReturn 3
       on { surveyConsent } doReturn true
+      on { surveyConsentAskedTimeMark } doReturn TimeSource.Monotonic.markNow()
     }
-    val playingGame =
+
+    fun newManager(game: KailleraGame, flags: RuntimeFlags = mockFlags) =
+      SurveyManager(game, flags, N64ControllerInputParser()) { null }
+
+    val mockGame =
       mock<KailleraGame> {
-        on { romName } doReturn "smash"
+        on { romName } doReturn "smash bros"
         on { status } doReturn GameStatus.PLAYING
-        on { players } doReturn mutableListOf(user)
+        on { players } doReturn mutableListOf(pendingConsentUser)
       }
 
-    val manager = newManager(playingGame)
+    // ── Eligibility ──────────────────────────────────────────────────────────────
 
-    // Use reflection to set gameStartTimeMark to 2 minutes ago
-    val field = SurveyManager::class.java.getDeclaredField("gameStartTimeMark")
-    field.isAccessible = true
-    field.set(manager, TimeSource.Monotonic.markNow() - 9.minutes)
-
-    // N64 controller data layout with format byte 0x20, and start bit set at byte 12 (0x10)
-    val data =
-      Unpooled.buffer(24).apply {
-        writeByte(0x10) // Player 1 select
-        writeByte(0x20) // Standard mode format byte
-        writeZero(10) // Pad to 12 bytes
-        writeByte(0x10) // start button pressed (index 12)
-        writeZero(11) // Pad remaining
+    context("Eligibility") {
+      test("isSurveyEligibleForGame is true when romName matches whitelist") {
+        val manager = newManager(mockGame)
+        manager.isSurveyEligibleForGame.shouldBeTrue()
       }
 
-    manager.onControllerInput(user, data, 2)
+      test("isSurveyEligibleForGame is false when romName does not match whitelist") {
+        val ineligibleGame = mock<KailleraGame> { on { romName } doReturn "mario kart" }
+        val manager = newManager(ineligibleGame)
+        manager.isSurveyEligibleForGame.shouldBeFalse()
+      }
 
-    verify(playingGame).announce(any(), org.mockito.kotlin.eq(user))
-    data.release()
-  }
-
-  @Test
-  fun `onControllerInput checks start button and triggers survey in 8-byte mode`() {
-    val user: KailleraUser = mock {
-      on { frameCount } doReturn 6
-      on { surveyConsent } doReturn true
+      test("isSurveyEligibleForGame is false when surveyEnabled is false") {
+        val disabledFlags =
+          mock<RuntimeFlags> {
+            on { surveyEnabled } doReturn false
+            on { surveyGameWhitelist } doReturn listOf("smash")
+            on { surveyApiEndpoint } doReturn "http://localhost"
+            on { surveyApiKey } doReturn "test-key"
+          }
+        val manager = newManager(mockGame, disabledFlags)
+        manager.isSurveyEligibleForGame.shouldBeFalse()
+      }
     }
-    val playingGame =
-      mock<KailleraGame> {
-        on { romName } doReturn "smash"
-        on { status } doReturn GameStatus.PLAYING
-        on { players } doReturn mutableListOf(user)
+
+    // ── onUserJoined ─────────────────────────────────────────────────────────────
+
+    context("onUserJoined") {
+      test("onUserJoined announces consent prompt and sets timemark for unconsenteed user") {
+        val manager = newManager(mockGame)
+        manager.onUserJoined(pendingConsentUser)
+
+        verify(mockGame).announce(any(), org.mockito.kotlin.eq(pendingConsentUser))
+        verify(pendingConsentUser).surveyConsentAskedTimeMark = any()
       }
 
-    val manager = newManager(playingGame)
+      test("onUserJoined does nothing when game is not eligible") {
+        val ineligibleGame = mock<KailleraGame> { on { romName } doReturn "mario kart" }
+        val manager = newManager(ineligibleGame)
+        manager.onUserJoined(pendingConsentUser)
 
-    val field = SurveyManager::class.java.getDeclaredField("gameStartTimeMark")
-    field.isAccessible = true
-    field.set(manager, TimeSource.Monotonic.markNow() - 9.minutes)
-
-    // 8-byte mode controller data layout with start bit set at byte 7 (0x10)
-    // Hex: 102100000104011000000000000000000000000000000000
-    val data =
-      Unpooled.buffer(24).apply {
-        writeBytes(
-          byteArrayOf(
-            0x10.toByte(),
-            0x21.toByte(),
-            0x00.toByte(),
-            0x00.toByte(),
-            0x01.toByte(),
-            0x04.toByte(),
-            0x01.toByte(),
-            0x10.toByte(),
-          )
-        )
-        writeZero(16)
+        verify(ineligibleGame, never()).announce(any(), any())
       }
 
-    manager.onControllerInput(user, data, 8) // bytesPerAction = 8
+      test("onUserJoined does not re-prompt a user who already consented") {
+        val manager = newManager(mockGame)
+        manager.onUserJoined(consentedUser)
 
-    verify(playingGame).announce(any(), org.mockito.kotlin.eq(user))
-    data.release()
-  }
-
-  @Test
-  fun `onControllerInput checks start button and triggers survey in 24-byte RAW mode`() {
-    val user: KailleraUser = mock {
-      on { frameCount } doReturn 6
-      on { surveyConsent } doReturn true
+        verify(mockGame, never()).announce(any(), org.mockito.kotlin.eq(consentedUser))
+      }
     }
-    val playingGame =
-      mock<KailleraGame> {
-        on { romName } doReturn "smash"
-        on { status } doReturn GameStatus.PLAYING
-        on { players } doReturn mutableListOf(user)
+
+    // ── handleChat — consent ──────────────────────────────────────────────────────
+
+    context("handleChat — consent") {
+      test("handleChat returns false for ineligible game") {
+        val ineligibleGame = mock<KailleraGame> { on { romName } doReturn "mario kart" }
+        val manager = newManager(ineligibleGame)
+
+        manager.handleChat(pendingConsentUser, "yes").shouldBeFalse()
       }
 
-    val manager = newManager(playingGame)
+      test("handleChat accepts yes consent when timemark is set and within timeout") {
+        // Give the user a timemark that is fresh (i.e. just now).
+        val freshMark: TimeMark = TimeSource.Monotonic.markNow()
+        val user: KailleraUser = mock {
+          on { surveyConsent } doReturn null
+          on { surveyConsentAskedTimeMark } doReturn freshMark
+        }
+        val manager = newManager(mockGame)
 
-    val field = SurveyManager::class.java.getDeclaredField("gameStartTimeMark")
-    field.isAccessible = true
-    field.set(manager, TimeSource.Monotonic.markNow() - 9.minutes)
-
-    // 24-byte RAW mode from real logs: start is bit 4 of byte 7 (0x10)
-    val data =
-      Unpooled.buffer(24).apply {
-        writeBytes(
-          byteArrayOf(
-            0x10.toByte(),
-            0x21.toByte(),
-            0x00.toByte(),
-            0x00.toByte(),
-            0x01.toByte(),
-            0x04.toByte(),
-            0x01.toByte(),
-            0x10.toByte(),
-          )
-        )
-        writeZero(16)
+        val handled = manager.handleChat(user, "yes")
+        handled.shouldBeTrue()
+        verify(user).surveyConsent = true
       }
 
-    manager.onControllerInput(user, data, 24) // bytesPerAction = 24
+      test("handleChat accepts y shorthand for yes consent") {
+        val freshMark: TimeMark = TimeSource.Monotonic.markNow()
+        val user: KailleraUser = mock {
+          on { surveyConsent } doReturn null
+          on { surveyConsentAskedTimeMark } doReturn freshMark
+        }
+        val manager = newManager(mockGame)
 
-    verify(playingGame).announce(any(), org.mockito.kotlin.eq(user))
-    data.release()
-  }
+        val handled = manager.handleChat(user, "y")
+        handled.shouldBeTrue()
+        verify(user).surveyConsent = true
+      }
 
-  @Test
-  fun `onControllerInput does not check start button when frameCount is not a multiple of 3`() {
-    val user: KailleraUser = mock {
-      on { frameCount } doReturn 7 // 7 is not a multiple of 3
-      on { surveyConsent } doReturn true
+      test("handleChat accepts no consent when timemark is fresh") {
+        val freshMark: TimeMark = TimeSource.Monotonic.markNow()
+        val user: KailleraUser = mock {
+          on { surveyConsent } doReturn null
+          on { surveyConsentAskedTimeMark } doReturn freshMark
+        }
+        val manager = newManager(mockGame)
+
+        val handled = manager.handleChat(user, "no")
+        handled.shouldBeTrue()
+        verify(user).surveyConsent = false
+      }
+
+      test("handleChat does not accept consent when timemark is null") {
+        // surveyConsentAskedTimeMark is null => consent window hasn't opened
+        val user: KailleraUser = mock {
+          on { surveyConsent } doReturn null
+          on { surveyConsentAskedTimeMark } doReturn null
+        }
+        val manager = newManager(mockGame)
+
+        val handled = manager.handleChat(user, "yes")
+        handled.shouldBeFalse()
+        verify(user, never()).surveyConsent = any()
+      }
     }
-    val playingGame =
-      mock<KailleraGame> {
-        on { romName } doReturn "smash"
-        on { status } doReturn GameStatus.PLAYING
-        on { players } doReturn mutableListOf(user)
+
+    // ── handleChat — survey response ──────────────────────────────────────────────
+
+    context("handleChat — survey response") {
+      test("handleChat accepts a numeric rating when survey was recently asked") {
+        val manager = newManager(mockGame)
+        // Simulate a survey having just been triggered.
+        manager.lastSurveyAskedTimeMark = TimeSource.Monotonic.markNow()
+
+        val handled = manager.handleChat(consentedUser, "2")
+        handled.shouldBeTrue()
       }
 
-    val manager = newManager(playingGame)
+      test("handleChat ignores a numeric rating when lastSurveyAskedTimeMark is null") {
+        val manager = newManager(mockGame) // lastSurveyAskedTimeMark stays null
 
-    // Use reflection to set gameStartTimeMark to 2 minutes ago
-    val field = SurveyManager::class.java.getDeclaredField("gameStartTimeMark")
-    field.isAccessible = true
-    field.set(manager, TimeSource.Monotonic.markNow() - 9.minutes)
-
-    // N64 controller data layout with format byte 0x20, and start bit set at byte 12 (0x10)
-    val data =
-      Unpooled.buffer(24).apply {
-        writeByte(0x10) // Player 1 select
-        writeByte(0x20) // Standard mode format byte
-        writeZero(10) // Pad to 12 bytes
-        writeByte(0x10) // start button pressed (index 12)
-        writeZero(11) // Pad remaining
+        val handled = manager.handleChat(consentedUser, "2")
+        handled.shouldBeFalse()
       }
 
-    manager.onControllerInput(user, data, 2)
+      test("handleChat returns false for unrelated chat messages") {
+        val manager = newManager(mockGame)
 
-    // Should return early and NOT trigger survey (never announce)
-    verify(playingGame, never()).announce(any(), any())
-    data.release()
-  }
-
-  // ── Telemetry & Pruning ──────────────────────────────────────────────────────
-
-  @Test
-  fun `telemetry is not recorded when survey is not eligible`() {
-    val user = consentedUser
-    val ineligibleGame =
-      mock<KailleraGame> {
-        on { romName } doReturn "mario kart"
-        on { status } doReturn GameStatus.PLAYING
-        on { players } doReturn mutableListOf(user)
+        manager.handleChat(consentedUser, "gg wp").shouldBeFalse()
       }
-    val manager = newManager(ineligibleGame)
-    manager.onGameStarted()
-
-    manager.updateDrift(System.nanoTime(), null)
-    manager.logReceivedGameData(1, System.nanoTime())
-
-    // Set gameStartTimeMark to 2 minutes ago
-    val field = SurveyManager::class.java.getDeclaredField("gameStartTimeMark")
-    field.isAccessible = true
-    field.set(manager, TimeSource.Monotonic.markNow() - 9.minutes)
-
-    val data =
-      Unpooled.buffer(24).apply {
-        writeByte(0x10) // Player 1 select
-        writeByte(0x20) // Standard mode format byte
-        writeZero(10) // Pad to 12 bytes
-        writeByte(0x10) // start button pressed
-        writeZero(11)
-      }
-
-    manager.onControllerInput(user, data, 2)
-
-    val pendingLogField = SurveyManager::class.java.getDeclaredField("pendingSurveyGameLog")
-    pendingLogField.isAccessible = true
-    val bytes = pendingLogField.get(manager) as ByteArray?
-
-    assertThat(bytes).isNull()
-    data.release()
-  }
-
-  @Test
-  fun `telemetry is recorded when game start delay is satisfied`() {
-    val user = consentedUser
-    val playingGame =
-      mock<KailleraGame> {
-        on { romName } doReturn "smash"
-        on { status } doReturn GameStatus.PLAYING
-        on { players } doReturn mutableListOf(user)
-      }
-    val manager = newManager(playingGame)
-    manager.onGameStarted()
-
-    // Game started 30 seconds ago (satisfies needsToRecordForFirstSurvey: 30s >= 0s)
-    val field = SurveyManager::class.java.getDeclaredField("gameStartTimeMark")
-    field.isAccessible = true
-    field.set(manager, TimeSource.Monotonic.markNow() - 4.minutes)
-
-    manager.updateDrift(System.nanoTime(), null) // Appends 1 fanOut event
-
-    // Call logReceivedGameData. It should be recorded.
-    manager.logReceivedGameData(1, System.nanoTime()) // Appends 1 receivedGameData event
-
-    // Set gameStartTimeMark to 2 minutes ago so onControllerInput passes the delay check (2m > 1m)
-    field.set(manager, TimeSource.Monotonic.markNow() - 9.minutes)
-
-    val data =
-      Unpooled.buffer(24).apply {
-        writeByte(0x10) // Player 1 select
-        writeByte(0x20) // Standard mode format byte
-        writeZero(10) // Pad to 12 bytes
-        writeByte(0x10) // start button pressed
-        writeZero(11)
-      }
-
-    manager.onControllerInput(user, data, 2)
-
-    val pendingLogField = SurveyManager::class.java.getDeclaredField("pendingSurveyGameLog")
-    pendingLogField.isAccessible = true
-    val bytes = pendingLogField.get(manager) as ByteArray?
-
-    assertThat(bytes).isNotNull()
-    val gameLog = GameLog.parseFrom(bytes!!)
-
-    // Should contain 2 events: 1 fanOut and 1 receivedGameData
-    assertThat(gameLog.eventsCount).isEqualTo(2)
-    data.release()
-  }
-
-  @Test
-  fun `telemetry older than 5 minutes is pruned`() {
-    val user = consentedUser
-    val playingGame =
-      mock<KailleraGame> {
-        on { romName } doReturn "smash"
-        on { status } doReturn GameStatus.PLAYING
-        on { players } doReturn mutableListOf(user)
-      }
-    val manager = newManager(playingGame)
-    manager.onGameStarted()
-
-    // Game started 4 minutes ago
-    val field = SurveyManager::class.java.getDeclaredField("gameStartTimeMark")
-    field.isAccessible = true
-    field.set(manager, TimeSource.Monotonic.markNow() - 4.minutes)
-
-    // Event 1 (timestampNs = 0L)
-    manager.updateDrift(0L, null)
-    manager.logReceivedGameData(1, 0L)
-
-    // Event 2 (timestampNs = 2 mins)
-    manager.updateDrift(2.minutes.inWholeNanoseconds, null)
-    manager.logReceivedGameData(1, 2.minutes.inWholeNanoseconds)
-
-    // Event 3 (timestampNs = 6 mins) -> Event 1 is now older than 5 mins (6 - 5 = 1 min), so it
-    // should be pruned.
-    // Event 2 is 4 mins old, so it should be kept.
-    manager.updateDrift(6.minutes.inWholeNanoseconds, null)
-
-    // Set gameStartTimeMark to 2 minutes ago so onControllerInput passes the delay check
-    field.set(manager, TimeSource.Monotonic.markNow() - 9.minutes)
-
-    val data =
-      Unpooled.buffer(24).apply {
-        writeByte(0x10) // Player 1 select
-        writeByte(0x20) // Standard mode format byte
-        writeZero(10) // Pad to 12 bytes
-        writeByte(0x10) // start button pressed
-        writeZero(11)
-      }
-
-    manager.onControllerInput(user, data, 2)
-
-    val pendingLogField = SurveyManager::class.java.getDeclaredField("pendingSurveyGameLog")
-    pendingLogField.isAccessible = true
-    val bytes = pendingLogField.get(manager) as ByteArray?
-
-    assertThat(bytes).isNotNull()
-    val gameLog = GameLog.parseFrom(bytes!!)
-
-    // Check that none of the events in gameLog have timestampNs < 1 minute (6 mins - 5 mins)
-    val oneMinAgoNs = 1.minutes.inWholeNanoseconds
-    for (event in gameLog.eventsList) {
-      assertThat(event.timestampNs).isAtLeast(oneMinAgoNs)
     }
-    data.release()
-  }
 
-  @Test
-  fun `handleChat does not treat a rating from a user who has not consented as a response`() {
-    val manager = newManager(mockGame)
-    manager.lastSurveyAskedTimeMark = TimeSource.Monotonic.markNow()
+    // ── onControllerInput ─────────────────────────────────────────────────────────
 
-    // Reporting a response would send this user's name and IP address to the survey endpoint.
-    assertThat(manager.handleChat(pendingConsentUser, "2")).isFalse()
-  }
+    context("onControllerInput") {
+      test("onControllerInput bails early when game status is WAITING") {
+        val waitingGame =
+          mock<KailleraGame> {
+            on { romName } doReturn "smash"
+            on { status } doReturn GameStatus.WAITING
+            on { players } doReturn mutableListOf(consentedUser)
+          }
+        val manager = newManager(waitingGame)
+        manager.onGameStarted() // sets gameStartTimeMark
 
-  @Test
-  fun `an invalid whitelist pattern does not prevent creating a manager`() {
-    val flags =
-      mock<RuntimeFlags> {
-        on { surveyEnabled } doReturn true
-        on { surveyGameWhitelist } doReturn listOf("(unclosed", "smash")
-        on { surveyApiEndpoint } doReturn "http://localhost"
-        on { surveyApiKey } doReturn "test-key"
+        val data = Unpooled.buffer(16).apply { writeZero(16) }
+        // Should not throw and should not announce anything.
+        manager.onControllerInput(consentedUser, data, 2)
+        verify(waitingGame, never()).announce(any(), any())
+        data.release()
       }
 
-    val manager = newManager(mockGame, flags)
+      test(
+        "onControllerInput checks start button and triggers survey when frameCount is a multiple of 3"
+      ) {
+        val user: KailleraUser = mock {
+          on { frameCount } doReturn 6 // 6 is multiple of 3
+          on { surveyConsent } doReturn true
+        }
+        val playingGame =
+          mock<KailleraGame> {
+            on { romName } doReturn "smash"
+            on { status } doReturn GameStatus.PLAYING
+            on { players } doReturn mutableListOf(user)
+          }
 
-    // The valid pattern still applies.
-    assertThat(manager.isSurveyEligibleForGame).isTrue()
-  }
-}
+        val manager = newManager(playingGame)
+
+        // Use reflection to set gameStartTimeMark to 2 minutes ago
+        val field = SurveyManager::class.java.getDeclaredField("gameStartTimeMark")
+        field.isAccessible = true
+        field.set(manager, TimeSource.Monotonic.markNow() - 9.minutes)
+
+        // N64 controller data layout with format byte 0x20, and start bit set at byte 12 (0x10)
+        val data =
+          Unpooled.buffer(24).apply {
+            writeByte(0x10) // Player 1 select
+            writeByte(0x20) // Standard mode format byte
+            writeZero(10) // Pad to 12 bytes
+            writeByte(0x10) // start button pressed (index 12)
+            writeZero(11) // Pad remaining
+          }
+
+        manager.onControllerInput(user, data, 2)
+
+        verify(playingGame).announce(any(), org.mockito.kotlin.eq(user))
+        data.release()
+      }
+
+      test("onControllerInput checks start button and triggers survey in 8-byte mode") {
+        val user: KailleraUser = mock {
+          on { frameCount } doReturn 6
+          on { surveyConsent } doReturn true
+        }
+        val playingGame =
+          mock<KailleraGame> {
+            on { romName } doReturn "smash"
+            on { status } doReturn GameStatus.PLAYING
+            on { players } doReturn mutableListOf(user)
+          }
+
+        val manager = newManager(playingGame)
+
+        val field = SurveyManager::class.java.getDeclaredField("gameStartTimeMark")
+        field.isAccessible = true
+        field.set(manager, TimeSource.Monotonic.markNow() - 9.minutes)
+
+        // 8-byte mode controller data layout with start bit set at byte 7 (0x10)
+        // Hex: 102100000104011000000000000000000000000000000000
+        val data =
+          Unpooled.buffer(24).apply {
+            writeBytes(
+              byteArrayOf(
+                0x10.toByte(),
+                0x21.toByte(),
+                0x00.toByte(),
+                0x00.toByte(),
+                0x01.toByte(),
+                0x04.toByte(),
+                0x01.toByte(),
+                0x10.toByte(),
+              )
+            )
+            writeZero(16)
+          }
+
+        manager.onControllerInput(user, data, 8) // bytesPerAction = 8
+
+        verify(playingGame).announce(any(), org.mockito.kotlin.eq(user))
+        data.release()
+      }
+
+      test("onControllerInput checks start button and triggers survey in 24-byte RAW mode") {
+        val user: KailleraUser = mock {
+          on { frameCount } doReturn 6
+          on { surveyConsent } doReturn true
+        }
+        val playingGame =
+          mock<KailleraGame> {
+            on { romName } doReturn "smash"
+            on { status } doReturn GameStatus.PLAYING
+            on { players } doReturn mutableListOf(user)
+          }
+
+        val manager = newManager(playingGame)
+
+        val field = SurveyManager::class.java.getDeclaredField("gameStartTimeMark")
+        field.isAccessible = true
+        field.set(manager, TimeSource.Monotonic.markNow() - 9.minutes)
+
+        // 24-byte RAW mode from real logs: start is bit 4 of byte 7 (0x10)
+        val data =
+          Unpooled.buffer(24).apply {
+            writeBytes(
+              byteArrayOf(
+                0x10.toByte(),
+                0x21.toByte(),
+                0x00.toByte(),
+                0x00.toByte(),
+                0x01.toByte(),
+                0x04.toByte(),
+                0x01.toByte(),
+                0x10.toByte(),
+              )
+            )
+            writeZero(16)
+          }
+
+        manager.onControllerInput(user, data, 24) // bytesPerAction = 24
+
+        verify(playingGame).announce(any(), org.mockito.kotlin.eq(user))
+        data.release()
+      }
+
+      test("onControllerInput does not check start button when frameCount is not a multiple of 3") {
+        val user: KailleraUser = mock {
+          on { frameCount } doReturn 7 // 7 is not a multiple of 3
+          on { surveyConsent } doReturn true
+        }
+        val playingGame =
+          mock<KailleraGame> {
+            on { romName } doReturn "smash"
+            on { status } doReturn GameStatus.PLAYING
+            on { players } doReturn mutableListOf(user)
+          }
+
+        val manager = newManager(playingGame)
+
+        // Use reflection to set gameStartTimeMark to 2 minutes ago
+        val field = SurveyManager::class.java.getDeclaredField("gameStartTimeMark")
+        field.isAccessible = true
+        field.set(manager, TimeSource.Monotonic.markNow() - 9.minutes)
+
+        // N64 controller data layout with format byte 0x20, and start bit set at byte 12 (0x10)
+        val data =
+          Unpooled.buffer(24).apply {
+            writeByte(0x10) // Player 1 select
+            writeByte(0x20) // Standard mode format byte
+            writeZero(10) // Pad to 12 bytes
+            writeByte(0x10) // start button pressed (index 12)
+            writeZero(11) // Pad remaining
+          }
+
+        manager.onControllerInput(user, data, 2)
+
+        // Should return early and NOT trigger survey (never announce)
+        verify(playingGame, never()).announce(any(), any())
+        data.release()
+      }
+    }
+
+    // ── Telemetry & Pruning ──────────────────────────────────────────────────────
+
+    context("Telemetry & Pruning") {
+      test("telemetry is not recorded when survey is not eligible") {
+        val user = consentedUser
+        val ineligibleGame =
+          mock<KailleraGame> {
+            on { romName } doReturn "mario kart"
+            on { status } doReturn GameStatus.PLAYING
+            on { players } doReturn mutableListOf(user)
+          }
+        val manager = newManager(ineligibleGame)
+        manager.onGameStarted()
+
+        manager.updateDrift(System.nanoTime(), null)
+        manager.logReceivedGameData(1, System.nanoTime())
+
+        // Set gameStartTimeMark to 2 minutes ago
+        val field = SurveyManager::class.java.getDeclaredField("gameStartTimeMark")
+        field.isAccessible = true
+        field.set(manager, TimeSource.Monotonic.markNow() - 9.minutes)
+
+        val data =
+          Unpooled.buffer(24).apply {
+            writeByte(0x10) // Player 1 select
+            writeByte(0x20) // Standard mode format byte
+            writeZero(10) // Pad to 12 bytes
+            writeByte(0x10) // start button pressed
+            writeZero(11)
+          }
+
+        manager.onControllerInput(user, data, 2)
+
+        val pendingLogField = SurveyManager::class.java.getDeclaredField("pendingSurveyGameLog")
+        pendingLogField.isAccessible = true
+        val bytes = pendingLogField.get(manager) as ByteArray?
+
+        bytes.shouldBeNull()
+        data.release()
+      }
+
+      test("telemetry is recorded when game start delay is satisfied") {
+        val user = consentedUser
+        val playingGame =
+          mock<KailleraGame> {
+            on { romName } doReturn "smash"
+            on { status } doReturn GameStatus.PLAYING
+            on { players } doReturn mutableListOf(user)
+          }
+        val manager = newManager(playingGame)
+        manager.onGameStarted()
+
+        // Game started 30 seconds ago (satisfies needsToRecordForFirstSurvey: 30s >= 0s)
+        val field = SurveyManager::class.java.getDeclaredField("gameStartTimeMark")
+        field.isAccessible = true
+        field.set(manager, TimeSource.Monotonic.markNow() - 4.minutes)
+
+        manager.updateDrift(System.nanoTime(), null) // Appends 1 fanOut event
+
+        // Call logReceivedGameData. It should be recorded.
+        manager.logReceivedGameData(1, System.nanoTime()) // Appends 1 receivedGameData event
+
+        // Set gameStartTimeMark to 2 minutes ago so onControllerInput passes the delay check (2m >
+        // 1m)
+        field.set(manager, TimeSource.Monotonic.markNow() - 9.minutes)
+
+        val data =
+          Unpooled.buffer(24).apply {
+            writeByte(0x10) // Player 1 select
+            writeByte(0x20) // Standard mode format byte
+            writeZero(10) // Pad to 12 bytes
+            writeByte(0x10) // start button pressed
+            writeZero(11)
+          }
+
+        manager.onControllerInput(user, data, 2)
+
+        val pendingLogField = SurveyManager::class.java.getDeclaredField("pendingSurveyGameLog")
+        pendingLogField.isAccessible = true
+        val bytes = (pendingLogField.get(manager) as ByteArray?).shouldNotBeNull()
+        val gameLog = GameLog.parseFrom(bytes)
+
+        // Should contain 2 events: 1 fanOut and 1 receivedGameData
+        gameLog.eventsCount shouldBe 2
+        data.release()
+      }
+
+      test("telemetry older than 5 minutes is pruned") {
+        val user = consentedUser
+        val playingGame =
+          mock<KailleraGame> {
+            on { romName } doReturn "smash"
+            on { status } doReturn GameStatus.PLAYING
+            on { players } doReturn mutableListOf(user)
+          }
+        val manager = newManager(playingGame)
+        manager.onGameStarted()
+
+        // Game started 4 minutes ago
+        val field = SurveyManager::class.java.getDeclaredField("gameStartTimeMark")
+        field.isAccessible = true
+        field.set(manager, TimeSource.Monotonic.markNow() - 4.minutes)
+
+        // Event 1 (timestampNs = 0L)
+        manager.updateDrift(0L, null)
+        manager.logReceivedGameData(1, 0L)
+
+        // Event 2 (timestampNs = 2 mins)
+        manager.updateDrift(2.minutes.inWholeNanoseconds, null)
+        manager.logReceivedGameData(1, 2.minutes.inWholeNanoseconds)
+
+        // Event 3 (timestampNs = 6 mins) -> Event 1 is now older than 5 mins (6 - 5 = 1 min), so it
+        // should be pruned.
+        // Event 2 is 4 mins old, so it should be kept.
+        manager.updateDrift(6.minutes.inWholeNanoseconds, null)
+
+        // Set gameStartTimeMark to 2 minutes ago so onControllerInput passes the delay check
+        field.set(manager, TimeSource.Monotonic.markNow() - 9.minutes)
+
+        val data =
+          Unpooled.buffer(24).apply {
+            writeByte(0x10) // Player 1 select
+            writeByte(0x20) // Standard mode format byte
+            writeZero(10) // Pad to 12 bytes
+            writeByte(0x10) // start button pressed
+            writeZero(11)
+          }
+
+        manager.onControllerInput(user, data, 2)
+
+        val pendingLogField = SurveyManager::class.java.getDeclaredField("pendingSurveyGameLog")
+        pendingLogField.isAccessible = true
+        val bytes = (pendingLogField.get(manager) as ByteArray?).shouldNotBeNull()
+        val gameLog = GameLog.parseFrom(bytes)
+
+        // Check that none of the events in gameLog have timestampNs < 1 minute (6 mins - 5 mins)
+        val oneMinAgoNs = 1.minutes.inWholeNanoseconds
+        for (event in gameLog.eventsList) {
+          event.timestampNs shouldBeGreaterThanOrEqual oneMinAgoNs
+        }
+        data.release()
+      }
+
+      test("handleChat does not treat a rating from a user who has not consented as a response") {
+        val manager = newManager(mockGame)
+        manager.lastSurveyAskedTimeMark = TimeSource.Monotonic.markNow()
+
+        // Reporting a response would send this user's name and IP address to the survey endpoint.
+        manager.handleChat(pendingConsentUser, "2").shouldBeFalse()
+      }
+
+      test("an invalid whitelist pattern does not prevent creating a manager") {
+        val flags =
+          mock<RuntimeFlags> {
+            on { surveyEnabled } doReturn true
+            on { surveyGameWhitelist } doReturn listOf("(unclosed", "smash")
+            on { surveyApiEndpoint } doReturn "http://localhost"
+            on { surveyApiKey } doReturn "test-key"
+          }
+
+        val manager = newManager(mockGame, flags)
+
+        // The valid pattern still applies.
+        manager.isSurveyEligibleForGame.shouldBeTrue()
+      }
+    }
+  })

@@ -4,48 +4,30 @@ import com.google.common.flogger.backend.LogData
 import com.google.common.flogger.backend.LoggerBackend
 import com.google.common.flogger.backend.SimpleMessageFormatter
 import com.google.common.flogger.backend.system.BackendFactory
-import com.google.common.truth.Fact.simpleFact
-import com.google.common.truth.FailureMetadata
-import com.google.common.truth.Subject
-import com.google.common.truth.Truth.assertAbout
-import com.google.common.truth.Truth.assertWithMessage
+import io.kotest.assertions.fail
+import io.kotest.assertions.withClue
+import io.kotest.core.listeners.AfterEachListener
+import io.kotest.core.listeners.BeforeEachListener
+import io.kotest.core.test.TestCase
+import io.kotest.engine.test.TestResult
+import io.kotest.matchers.collections.shouldBeEmpty
 import java.lang.RuntimeException
 import java.util.logging.Level
 import java.util.logging.Level.SEVERE
 import java.util.logging.Level.WARNING
-import org.junit.rules.TestRule
-import org.junit.runner.Description
-import org.junit.runners.model.Statement
-
-/** Enforces that logs of levels [WARNING] and [SEVERE] are explicitly expected in tests. */
-class LoggingRule : TestRule {
-
-  /**
-   * Starts a fluent Truth assertion about [WARNING] and [SEVERE]-level logs that happened during
-   * the test.
-   */
-  fun assertThat(): LogCollectionSubject =
-    assertAbout(LogCollectionSubject.logCollection).that(TestLoggingBackend.logs)
-
-  override fun apply(test: Statement, desc: Description) =
-    object : Statement() {
-      override fun evaluate() {
-        TestLoggingBackend.logs.loggerToMessage.clear()
-
-        // Execute the test.
-        test.evaluate()
-
-        // Fluent assertions in LogLogSubject subtract from the list of logs as they match.
-        assertWithMessage("Found unexpected log messages")
-          .that(TestLoggingBackend.logs.loggerToMessage)
-          .isEmpty()
-      }
-    }
-}
 
 /** Stores information about logs that occurred during test execution. */
 class LogCollection {
   val loggerToMessage = mutableListOf<Pair<String, String>>()
+
+  fun shouldHaveLoggedMatching(regex: Regex) {
+    val matched = loggerToMessage.filter { it.second.matches(regex) }
+    if (matched.isNotEmpty()) {
+      loggerToMessage.remove(matched.first())
+    } else {
+      fail("Regex $regex did not match any logs in $loggerToMessage.")
+    }
+  }
 }
 
 // Note: This is invoked by Flogger via reflection.
@@ -78,22 +60,19 @@ object TestLoggingBackend : LoggerBackend() {
   }
 }
 
-class LogCollectionSubject(failureMetadata: FailureMetadata, private val subject: LogCollection) :
-  Subject(failureMetadata, subject) {
-
-  fun messageWasLoggedMatching(regex: Regex) {
-    val matched = subject.loggerToMessage.filter { it.second.matches(regex) }
-    if (matched.isNotEmpty()) {
-      subject.loggerToMessage.remove(matched.first())
-    } else {
-      failWithActual(simpleFact("Regex did not match any logs."))
-    }
+/**
+ * Enforces that logs of levels [WARNING] and [SEVERE] are explicitly expected in tests: clears
+ * recorded [WARNING]/[SEVERE] logs before each leaf test and asserts that no unexpected logs remain
+ * afterward.
+ */
+class LoggingListener : BeforeEachListener, AfterEachListener {
+  override suspend fun beforeEach(testCase: TestCase) {
+    TestLoggingBackend.logs.loggerToMessage.clear()
   }
 
-  companion object {
-    /** Start a Truth assertion with `assertAbout(logCollection())`. */
-    val logCollection = { metadata: FailureMetadata, actual: LogCollection? ->
-      LogCollectionSubject(metadata, checkNotNull(actual))
+  override suspend fun afterEach(testCase: TestCase, result: TestResult) {
+    withClue("Found unexpected log messages") {
+      TestLoggingBackend.logs.loggerToMessage.shouldBeEmpty()
     }
   }
 }

@@ -1,59 +1,65 @@
 package org.emulinker.util
 
-import com.google.common.truth.Truth.assertThat
+import io.kotest.assertions.assertSoftly
+import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.booleans.shouldBeTrue
+import io.kotest.matchers.collections.shouldBeEmpty
+import io.kotest.matchers.collections.shouldContainExactly
+import io.kotest.matchers.collections.shouldHaveSize
+import io.kotest.matchers.ints.shouldBeGreaterThan
+import io.kotest.matchers.shouldBe
 import java.io.StringReader
 import org.apache.commons.configuration.PropertiesConfiguration
-import org.junit.Test
 
-class EmuLinkerPropertiesConfigTest {
-  @Test
-  fun splitListMatchesTheOldCommonsConfigurationRules() {
-    assertThat(EmuLinkerPropertiesConfig.splitList("1, 2 ,3")).containsExactly("1", "2", "3")
-    assertThat(EmuLinkerPropertiesConfig.splitList("a\\,b, c")).containsExactly("a,b", "c")
-    assertThat(EmuLinkerPropertiesConfig.splitList("1,,2")).containsExactly("1", "", "2")
-    assertThat(EmuLinkerPropertiesConfig.splitList("single")).containsExactly("single")
-    assertThat(EmuLinkerPropertiesConfig.splitList("")).isEmpty()
-  }
+class EmuLinkerPropertiesConfigTest :
+  FunSpec({
+    test("splitList matches the old Commons Configuration rules") {
+      EmuLinkerPropertiesConfig.splitList("1, 2 ,3").shouldContainExactly("1", "2", "3")
+      EmuLinkerPropertiesConfig.splitList("a\\,b, c").shouldContainExactly("a,b", "c")
+      EmuLinkerPropertiesConfig.splitList("1,,2").shouldContainExactly("1", "", "2")
+      EmuLinkerPropertiesConfig.splitList("single").shouldContainExactly("single")
+      EmuLinkerPropertiesConfig.splitList("").shouldBeEmpty()
+    }
 
-  @Test
-  fun delimiterParsingOffKeepsCommasInPlainValues() {
-    val config = PropertiesConfiguration()
-    config.isDelimiterParsingDisabled = true
-    config.load(StringReader("masterList.serverLocation=Tokyo, Japan"))
+    test("delimiterParsingOff keeps commas in plain values") {
+      val config = PropertiesConfiguration()
+      config.isDelimiterParsingDisabled = true
+      config.load(StringReader("masterList.serverLocation=Tokyo, Japan"))
 
-    assertThat(config.getString("masterList.serverLocation")).isEqualTo("Tokyo, Japan")
-  }
+      config.getString("masterList.serverLocation") shouldBe "Tokyo, Japan"
+    }
 
-  @Test
-  fun shippedConfigLoadsAndUsesTheListAccessors() {
-    val config = EmuLinkerPropertiesConfig()
+    test("shipped config loads and uses the list accessors") {
+      val config = EmuLinkerPropertiesConfig()
 
-    assertThat(config.getString("masterList.serverName")).isEqualTo("Local Dev Server")
-    assertThat(config.getInt("server.maxPing")).isGreaterThan(0)
-    // A missing list key is an empty list, as before.
-    assertThat(config.getStringArray("this.key.does.not.exist")).isEmpty()
-    // Typical list keys in the release configuration.
-    assertThat(EmuLinkerPropertiesConfig.splitList("1,2,3,4,5,6")).hasSize(6)
-  }
+      config.getString("masterList.serverName") shouldBe "Local Dev Server"
+      config.getInt("server.maxPing") shouldBeGreaterThan 0
+      // A missing list key is an empty list, as before.
+      config.getStringArray("this.key.does.not.exist").shouldBeEmpty()
+      // Typical list keys in the release configuration.
+      EmuLinkerPropertiesConfig.splitList("1,2,3,4,5,6") shouldHaveSize 6
+    }
 
-  @Test
-  fun numbersAndBooleansStillAcceptATrailingComma() {
-    val config =
-      object : EmuLinkerPropertiesConfig() {
-        override fun loadConfiguration() {
-          load(StringReader("a=100,\nb=true,\nc=7, 8\nd=Tokyo, Japan\ne=\n"))
+    test("numbers and booleans still accept a trailing comma") {
+      val config =
+        object : EmuLinkerPropertiesConfig() {
+          override fun loadConfiguration() {
+            load(StringReader("a=100,\nb=true,\nc=7, 8\nd=Tokyo, Japan\ne=\n"))
+          }
         }
-      }
 
-    assertThat(config.getInt("a")).isEqualTo(100)
-    assertThat(config.getInt("a", 5)).isEqualTo(100)
-    assertThat(config.getInt("c")).isEqualTo(7)
-    assertThat(config.getBoolean("b")).isTrue()
-    assertThat(config.getBoolean("b", false)).isTrue()
-    assertThat(config.getInt("missing", 42)).isEqualTo(42)
-    assertThat(config.getString("d")).isEqualTo("Tokyo, Japan")
-    assertThat(config.getStringArray("c")).asList().containsExactly("7", "8").inOrder()
-    assertThat(config.getStringArray("e")).isEmpty()
-    org.junit.Assert.assertThrows(NoSuchElementException::class.java) { config.getInt("missing") }
-  }
-}
+      assertSoftly {
+        config.getInt("a") shouldBe 100
+        config.getInt("a", 5) shouldBe 100
+        config.getInt("c") shouldBe 7
+        config.getBoolean("b").shouldBeTrue()
+        config.getBoolean("b", false).shouldBeTrue()
+        config.getInt("missing", 42) shouldBe 42
+        config.getString("d") shouldBe "Tokyo, Japan"
+        config.getStringArray("c").toList().shouldContainExactly("7", "8")
+        config.getStringArray("e").shouldBeEmpty()
+      }
+      shouldThrow<NoSuchElementException> { config.getInt("missing") }
+    }
+  })

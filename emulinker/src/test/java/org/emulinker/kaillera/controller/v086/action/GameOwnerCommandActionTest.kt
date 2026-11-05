@@ -1,29 +1,28 @@
 package org.emulinker.kaillera.controller.v086.action
 
-import com.google.common.truth.Truth.assertThat
-import org.junit.Test
+import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.booleans.shouldBeFalse
+import io.kotest.matchers.booleans.shouldBeTrue
 
-class GameOwnerCommandActionTest {
-  @Test
-  fun swapOrderMustBeAPermutationOfAllPlayerNumbers() {
-    assertThat(GameOwnerCommandAction.isValidSwapOrder("21", 2)).isTrue()
-    assertThat(GameOwnerCommandAction.isValidSwapOrder("12", 2)).isTrue()
-    assertThat(GameOwnerCommandAction.isValidSwapOrder("312", 3)).isTrue()
-  }
+class GameOwnerCommandActionTest :
+  FunSpec({
+    test("swapOrderMustBeAPermutationOfAllPlayerNumbers") {
+      GameOwnerCommandAction.isValidSwapOrder("21", 2).shouldBeTrue()
+      GameOwnerCommandAction.isValidSwapOrder("12", 2).shouldBeTrue()
+      GameOwnerCommandAction.isValidSwapOrder("312", 3).shouldBeTrue()
+    }
 
-  @Test
-  fun swapOrderRejectsRepeatedNumbers() {
-    // The old check only compared the last digit, so these passed with 3 players.
-    assertThat(GameOwnerCommandAction.isValidSwapOrder("112", 3)).isFalse()
-    assertThat(GameOwnerCommandAction.isValidSwapOrder("121", 3)).isFalse()
-    assertThat(GameOwnerCommandAction.isValidSwapOrder("11", 2)).isFalse()
-  }
+    test("swapOrderRejectsRepeatedNumbers") {
+      // The old check only compared the last digit, so these passed with 3 players.
+      GameOwnerCommandAction.isValidSwapOrder("112", 3).shouldBeFalse()
+      GameOwnerCommandAction.isValidSwapOrder("121", 3).shouldBeFalse()
+      GameOwnerCommandAction.isValidSwapOrder("11", 2).shouldBeFalse()
+    }
 
-  @Test
-  fun swapOrderRejectsWrongLengthOrOutOfRangeNumbers() {
-    assertThat(GameOwnerCommandAction.isValidSwapOrder("1", 2)).isFalse()
-    assertThat(GameOwnerCommandAction.isValidSwapOrder("123", 2)).isFalse()
-    assertThat(GameOwnerCommandAction.isValidSwapOrder("5", 1)).isFalse()
-    assertThat(GameOwnerCommandAction.isValidSwapOrder("304", 3)).isFalse()
-  }
-}
+    test("swapOrderRejectsWrongLengthOrOutOfRangeNumbers") {
+      GameOwnerCommandAction.isValidSwapOrder("1", 2).shouldBeFalse()
+      GameOwnerCommandAction.isValidSwapOrder("123", 2).shouldBeFalse()
+      GameOwnerCommandAction.isValidSwapOrder("5", 1).shouldBeFalse()
+      GameOwnerCommandAction.isValidSwapOrder("304", 3).shouldBeFalse()
+    }
+  })

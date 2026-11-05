@@ -1,63 +1,58 @@
 package org.emulinker.util
 
-import com.google.common.truth.Truth.assertThat
-import org.junit.Test
+import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.booleans.shouldBeFalse
+import io.kotest.matchers.booleans.shouldBeTrue
 
-class WildcardStringPatternTest {
-  private fun matches(pattern: String, s: String) = WildcardStringPattern(pattern).match(s)
+class WildcardStringPatternTest :
+  FunSpec({
+    fun matches(pattern: String, s: String) = WildcardStringPattern(pattern).match(s)
 
-  @Test
-  fun exactPattern() {
-    assertThat(matches("10.0.0.1", "10.0.0.1")).isTrue()
-    assertThat(matches("10.0.0.1", "10.0.0.10")).isFalse()
-  }
+    test("exact pattern") {
+      matches("10.0.0.1", "10.0.0.1").shouldBeTrue()
+      matches("10.0.0.1", "10.0.0.10").shouldBeFalse()
+    }
 
-  @Test
-  fun starMatchesAnyNonBlankString() {
-    assertThat(matches("*", "anything")).isTrue()
-    assertThat(matches("*", "")).isFalse()
-    assertThat(matches("*", "  ")).isFalse()
-  }
+    test("star matches any non-blank string") {
+      matches("*", "anything").shouldBeTrue()
+      matches("*", "").shouldBeFalse()
+      matches("*", "  ").shouldBeFalse()
+    }
 
-  @Test
-  fun prefixSuffixAndContains() {
-    assertThat(matches("192.168.*", "192.168.1.5")).isTrue()
-    assertThat(matches("192.168.*", "10.168.1.5")).isFalse()
-    assertThat(matches("*.1.5", "192.168.1.5")).isTrue()
-    assertThat(matches("*.1.5", "192.168.1.6")).isFalse()
-    assertThat(matches("*168*", "192.168.1.5")).isTrue()
-    assertThat(matches("*999*", "192.168.1.5")).isFalse()
-  }
+    test("prefix, suffix, and contains") {
+      matches("192.168.*", "192.168.1.5").shouldBeTrue()
+      matches("192.168.*", "10.168.1.5").shouldBeFalse()
+      matches("*.1.5", "192.168.1.5").shouldBeTrue()
+      matches("*.1.5", "192.168.1.6").shouldBeFalse()
+      matches("*168*", "192.168.1.5").shouldBeTrue()
+      matches("*999*", "192.168.1.5").shouldBeFalse()
+    }
 
-  @Test
-  fun octetWildcardsInTheMiddle() {
-    assertThat(matches("10.*.*.1", "10.20.30.1")).isTrue()
-    assertThat(matches("10.*.*.1", "10.20.30.2")).isFalse()
-  }
+    test("octet wildcards in the middle") {
+      matches("10.*.*.1", "10.20.30.1").shouldBeTrue()
+      matches("10.*.*.1", "10.20.30.2").shouldBeFalse()
+    }
 
-  @Test
-  fun partsMustNotOverlap() {
-    // The shared "b" must not be used for both the start and the end.
-    assertThat(matches("ab*bc", "abc")).isFalse()
-    assertThat(matches("ab*bc", "abbc")).isTrue()
-    assertThat(matches("a*a", "a")).isFalse()
-    assertThat(matches("a*a", "aa")).isTrue()
-    // The contains part may not reuse characters of the suffix either.
-    assertThat(matches("x*ab*b", "xab")).isFalse()
-    assertThat(matches("x*ab*b", "xabb")).isTrue()
-  }
+    test("parts must not overlap") {
+      // The shared "b" must not be used for both the start and the end.
+      matches("ab*bc", "abc").shouldBeFalse()
+      matches("ab*bc", "abbc").shouldBeTrue()
+      matches("a*a", "a").shouldBeFalse()
+      matches("a*a", "aa").shouldBeTrue()
+      // The contains part may not reuse characters of the suffix either.
+      matches("x*ab*b", "xab").shouldBeFalse()
+      matches("x*ab*b", "xabb").shouldBeTrue()
+    }
 
-  @Test
-  fun containsPartsMatchInOrderWithoutReuse() {
-    assertThat(matches("*ab*cd*", "abcd")).isTrue()
-    assertThat(matches("*ab*cd*", "cdab")).isFalse()
-    assertThat(matches("*aa*aa*", "aaa")).isFalse()
-    assertThat(matches("*aa*aa*", "aaaa")).isTrue()
-  }
+    test("contains parts match in order without reuse") {
+      matches("*ab*cd*", "abcd").shouldBeTrue()
+      matches("*ab*cd*", "cdab").shouldBeFalse()
+      matches("*aa*aa*", "aaa").shouldBeFalse()
+      matches("*aa*aa*", "aaaa").shouldBeTrue()
+    }
 
-  @Test
-  fun emptyPatternMatchesAnyNonBlankString() {
-    assertThat(matches("", "1.2.3.4")).isTrue()
-    assertThat(matches("", "")).isFalse()
-  }
-}
+    test("empty pattern matches any non-blank string") {
+      matches("", "1.2.3.4").shouldBeTrue()
+      matches("", "").shouldBeFalse()
+    }
+  })

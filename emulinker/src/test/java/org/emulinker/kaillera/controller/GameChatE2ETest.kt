@@ -1,8 +1,9 @@
 package org.emulinker.kaillera.controller
 
-import com.google.common.truth.Expect
-import com.google.common.truth.Truth.assertThat
-import com.google.common.truth.Truth.assertWithMessage
+import io.kotest.assertions.withClue
+import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.booleans.shouldBeTrue
+import io.kotest.matchers.shouldBe
 import io.netty.buffer.ByteBuf
 import io.netty.buffer.Unpooled
 import io.netty.channel.embedded.EmbeddedChannel
@@ -44,17 +45,13 @@ import org.emulinker.kaillera.model.ConnectionType
 import org.emulinker.kaillera.pico.koinModule
 import org.emulinker.util.FastGameDataCache
 import org.emulinker.util.ProtocolCharset
-import org.junit.After
-import org.junit.Before
-import org.junit.Rule
-import org.junit.Test
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.get
 import org.koin.core.context.startKoin
 import org.koin.core.context.stopKoin
 import org.koin.dsl.module
 
-class GameChatE2ETest : KoinComponent {
+class GameChatE2ETest : FunSpec(), KoinComponent {
 
   private lateinit var channel: EmbeddedChannel
   private lateinit var controller: CombinedKailleraController
@@ -108,32 +105,6 @@ class GameChatE2ETest : KoinComponent {
     override fun close() {}
   }
 
-  @Before
-  fun setup() {
-    ProtocolCharset.overrideForTesting(Charsets.UTF_8)
-
-    startKoin {
-      allowOverride(true)
-      modules(koinModule, ActionModule, module { single<AccessManager> { FakeAccessManager() } })
-    }
-    controller = get()
-    channel = EmbeddedChannel(controller)
-  }
-
-  @After
-  fun teardown() {
-    try {
-      clientMap.values.forEach { it.logout() }
-    } catch (e: Exception) {
-      // ignore
-    }
-    channel.close()
-    controller.stop()
-    stopKoin()
-  }
-
-  @Rule @JvmField val expect = Expect.create()
-
   /** Logs in two clients, starts a game and gets both through the sync phase. */
   private fun startSyncedTwoPlayerGame(): List<Client> {
     val p1 = Client(1, "Player1", this)
@@ -173,144 +144,167 @@ class GameChatE2ETest : KoinComponent {
     return clients
   }
 
-  @Test
-  fun testSwapCommand() {
-    val controller = get<CombinedKailleraController>()
-    // val v086 = koinModule.get<V086Controller>() // Not exposed directly?
-    // CombinedKailleraController has private 'controllersMap'.
-    // But we can inspect V086Controller if we can get it from Koin.
-    // It is singleOf(::V086Controller).
-    val v086Controller = get<V086Controller>()
-    println("Action for 8: ${v086Controller.actions[8]}")
+  init {
+    beforeEach {
+      ProtocolCharset.overrideForTesting(Charsets.UTF_8)
 
-    val clients = startSyncedTwoPlayerGame()
-    val (p1, _) = clients
+      startKoin {
+        allowOverride(true)
+        modules(koinModule, ActionModule, module { single<AccessManager> { FakeAccessManager() } })
+      }
+      controller = get()
+      channel = EmbeddedChannel(controller)
+    }
 
-    // Run a few frames to ensure we are synced and check default order
-    for (i in 1..20) {
-      val inputs = clients.map { it.nextInput() }
+    afterEach {
+      try {
+        clientMap.values.forEach { it.logout() }
+      } catch (e: Exception) {
+        // ignore
+      }
+      clientQueues.clear()
+      clientMap.clear()
+      channel.close()
+      controller.stop()
+      stopKoin()
+    }
 
-      // Expected: P1 then P2
-      val expectedBuffer = Unpooled.buffer()
-      expectedBuffer.writeBytes(inputs[0].duplicate())
-      expectedBuffer.writeBytes(inputs[1].duplicate())
-      val expectedBytes = ByteArray(expectedBuffer.readableBytes())
-      expectedBuffer.readBytes(expectedBytes)
-      expectedBuffer.release()
+    test("testSwapCommand") {
+      val controller = get<CombinedKailleraController>()
+      // val v086 = koinModule.get<V086Controller>() // Not exposed directly?
+      // CombinedKailleraController has private 'controllersMap'.
+      // But we can inspect V086Controller if we can get it from Koin.
+      // It is singleOf(::V086Controller).
+      val v086Controller = get<V086Controller>()
+      println("Action for 8: ${v086Controller.actions[8]}")
 
-      clients.forEachIndexed { idx, client -> client.sendGameData(inputs[idx]) }
+      val clients = startSyncedTwoPlayerGame()
+      val (p1, _) = clients
 
-      clients.forEach { client ->
-        val received = client.receiveGameData()
-        val receivedBytes = received.toByteArray()
-        if (i > 10) { // Give some time for buffer to drain
-          // We skip strict assertion here because of potential frame delays during startup.
-          // The swap verification phase is more important and robust.
+      // Run a few frames to ensure we are synced and check default order
+      for (i in 1..20) {
+        val inputs = clients.map { it.nextInput() }
+
+        // Expected: P1 then P2
+        val expectedBuffer = Unpooled.buffer()
+        expectedBuffer.writeBytes(inputs[0].duplicate())
+        expectedBuffer.writeBytes(inputs[1].duplicate())
+        val expectedBytes = ByteArray(expectedBuffer.readableBytes())
+        expectedBuffer.readBytes(expectedBytes)
+        expectedBuffer.release()
+
+        clients.forEachIndexed { idx, client -> client.sendGameData(inputs[idx]) }
+
+        clients.forEach { client ->
+          val received = client.receiveGameData()
+          val receivedBytes = received.toByteArray()
+          if (i > 10) { // Give some time for buffer to drain
+            // We skip strict assertion here because of potential frame delays during startup.
+            // The swap verification phase is more important and robust.
+          }
         }
       }
-    }
 
-    println("Sending Swap Command...")
-    // Player 1 sends /swap 21
-    p1.sendChat("/swap 21")
+      println("Sending Swap Command...")
+      // Player 1 sends /swap 21
+      p1.sendChat("/swap 21")
 
-    // Give the server a moment to process.
-    // Since it's handled by action executor, we might need to drain queue or wait.
-    // We will loop through frames and expect the change to happen eventually.
+      // Give the server a moment to process.
+      // Since it's handled by action executor, we might need to drain queue or wait.
+      // We will loop through frames and expect the change to happen eventually.
 
-    println("Verifying Swapped Order...")
-    var swapped = false
+      println("Verifying Swapped Order...")
+      var swapped = false
 
-    for (i in 1..40) {
-      val inputs = clients.map { it.nextInput() }
+      for (i in 1..40) {
+        val inputs = clients.map { it.nextInput() }
 
-      // Expected Normal: P1 then P2
-      val expectedNormalBuffer = Unpooled.buffer()
-      expectedNormalBuffer.writeBytes(inputs[0].duplicate())
-      expectedNormalBuffer.writeBytes(inputs[1].duplicate())
-      val expectedNormalBytes = expectedNormalBuffer.toByteArray()
-      expectedNormalBuffer.release()
+        // Expected Normal: P1 then P2
+        val expectedNormalBuffer = Unpooled.buffer()
+        expectedNormalBuffer.writeBytes(inputs[0].duplicate())
+        expectedNormalBuffer.writeBytes(inputs[1].duplicate())
+        val expectedNormalBytes = expectedNormalBuffer.toByteArray()
+        expectedNormalBuffer.release()
 
-      // Expected Swapped: P2 then P1
-      val expectedSwappedBuffer = Unpooled.buffer()
-      expectedSwappedBuffer.writeBytes(inputs[1].duplicate()) // P2 input first
-      expectedSwappedBuffer.writeBytes(inputs[0].duplicate()) // P1 input second
-      val expectedSwappedBytes = expectedSwappedBuffer.toByteArray()
-      expectedSwappedBuffer.release()
+        // Expected Swapped: P2 then P1
+        val expectedSwappedBuffer = Unpooled.buffer()
+        expectedSwappedBuffer.writeBytes(inputs[1].duplicate()) // P2 input first
+        expectedSwappedBuffer.writeBytes(inputs[0].duplicate()) // P1 input second
+        val expectedSwappedBytes = expectedSwappedBuffer.toByteArray()
+        expectedSwappedBuffer.release()
 
-      clients.forEachIndexed { idx, client -> client.sendGameData(inputs[idx]) }
+        clients.forEachIndexed { idx, client -> client.sendGameData(inputs[idx]) }
 
-      val receivedList = clients.map { it.receiveGameData().toByteArray() }
+        val receivedList = clients.map { it.receiveGameData().toByteArray() }
 
-      // Check consistency between clients
-      assertThat(receivedList[0]).isEqualTo(receivedList[1])
-      val received = receivedList[0]
+        // Check consistency between clients
+        receivedList[0] shouldBe receivedList[1]
+        val received = receivedList[0]
 
-      // We ignore the first few frames as they might be pre-swap or in-flight
-      if (received.contentEquals(expectedSwappedBytes)) {
-        swapped = true
-        println("Swapped frame detected at iteration $i")
-      } else if (received.contentEquals(expectedNormalBytes)) {
-        // Normal
-      } else {
-        println(
-          "Frame $i: Received UNEXPECTED content: ${received.contentToString()} Expected Normal: ${expectedNormalBytes.contentToString()} Expected Swapped: ${expectedSwappedBytes.contentToString()}"
-        )
+        // We ignore the first few frames as they might be pre-swap or in-flight
+        if (received.contentEquals(expectedSwappedBytes)) {
+          swapped = true
+          println("Swapped frame detected at iteration $i")
+        } else if (received.contentEquals(expectedNormalBytes)) {
+          // Normal
+        } else {
+          println(
+            "Frame $i: Received UNEXPECTED content: ${received.contentToString()} Expected Normal: ${expectedNormalBytes.contentToString()} Expected Swapped: ${expectedSwappedBytes.contentToString()}"
+          )
+        }
+      }
+
+      withClue("Should have swapped inputs. Swapped=$swapped") { swapped.shouldBeTrue() }
+
+      println("Shutting down...")
+      clients.forEach {
+        it.quitGame()
+        it.quit()
       }
     }
 
-    assertWithMessage("Should have swapped inputs. Swapped=$swapped").that(swapped).isTrue()
+    test("ownerQuittingTheServerClosesTheGameForOtherPlayers") {
+      val owner = Client(1, "Owner", this@GameChatE2ETest)
+      val guest = Client(2, "Guest", this@GameChatE2ETest)
+      owner.login()
+      guest.login()
+      val gameId = owner.createGame()
+      guest.joinGame(gameId)
 
-    println("Shutting down...")
-    clients.forEach {
-      it.quitGame()
-      it.quit()
-    }
-  }
+      // Leaving the server (not just the game) must still close the game the owner created.
+      owner.quit()
 
-  @Test
-  fun ownerQuittingTheServerClosesTheGameForOtherPlayers() {
-    val owner = Client(1, "Owner", this)
-    val guest = Client(2, "Guest", this)
-    owner.login()
-    guest.login()
-    val gameId = owner.createGame()
-    guest.joinGame(gameId)
-
-    // Leaving the server (not just the game) must still close the game the owner created.
-    owner.quit()
-
-    guest.consumeUntil { it is CloseGame }
-    guest.logout()
-  }
-
-  @Test
-  fun invalidSwapOrderIsRejected() {
-    val clients = startSyncedTwoPlayerGame()
-    val (p1, _) = clients
-
-    // "11" repeats a player number, so it must not be applied.
-    p1.sendChat("/swap 11")
-
-    for (i in 1..30) {
-      val inputs = clients.map { it.nextInput() }
-      val expectedNormal = Unpooled.buffer()
-      expectedNormal.writeBytes(inputs[0].duplicate())
-      expectedNormal.writeBytes(inputs[1].duplicate())
-      val normalBytes = expectedNormal.toByteArray()
-      expectedNormal.release()
-
-      clients.forEachIndexed { idx, client -> client.sendGameData(inputs[idx]) }
-      val received = clients.map { it.receiveGameData().toByteArray() }
-
-      assertThat(received[0]).isEqualTo(received[1])
-      // Once the pipeline is full the order must remain player 1 then player 2.
-      if (i > 15) assertThat(received[0]).isEqualTo(normalBytes)
+      guest.consumeUntil { it is CloseGame }
+      guest.logout()
     }
 
-    clients.forEach {
-      it.quitGame()
-      it.quit()
+    test("invalidSwapOrderIsRejected") {
+      val clients = startSyncedTwoPlayerGame()
+      val (p1, _) = clients
+
+      // "11" repeats a player number, so it must not be applied.
+      p1.sendChat("/swap 11")
+
+      for (i in 1..30) {
+        val inputs = clients.map { it.nextInput() }
+        val expectedNormal = Unpooled.buffer()
+        expectedNormal.writeBytes(inputs[0].duplicate())
+        expectedNormal.writeBytes(inputs[1].duplicate())
+        val normalBytes = expectedNormal.toByteArray()
+        expectedNormal.release()
+
+        clients.forEachIndexed { idx, client -> client.sendGameData(inputs[idx]) }
+        val received = clients.map { it.receiveGameData().toByteArray() }
+
+        received[0] shouldBe received[1]
+        // Once the pipeline is full the order must remain player 1 then player 2.
+        if (i > 15) received[0] shouldBe normalBytes
+      }
+
+      clients.forEach {
+        it.quitGame()
+        it.quit()
+      }
     }
   }
 

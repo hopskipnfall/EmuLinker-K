@@ -1,39 +1,40 @@
 package org.emulinker.kaillera.controller.connectcontroller.protocol
 
-import com.google.common.truth.Truth.assertThat
+import io.kotest.datatest.withTests
+import io.kotest.matchers.booleans.shouldBeTrue
+import io.kotest.matchers.shouldBe
 import io.netty.buffer.Unpooled
 import org.emulinker.kaillera.controller.v086.V086Utils
 import org.emulinker.kaillera.controller.v086.protocol.ProtocolBaseTest
-import org.junit.Test
 
-class ConnectMessageTest : ProtocolBaseTest() {
-
-  @Test
-  fun invalidCase_shouldResetPosition() {
-    val byteBuf = Unpooled.buffer(4096)
-    byteBuf.writeBytes(V086Utils.hexStringToByteBuffer(UNKNOWN_BYTES))
-    assertThat(byteBuf.readableBytes()).isEqualTo(2)
-
-    val result = ConnectMessage.parse(byteBuf)
-
-    assertThat(result.isFailure)
-    assertThat(byteBuf.readableBytes()).isEqualTo(2)
-  }
-
-  @Test
-  fun malformedMessagesWithKnownPrefixesFailInsteadOfThrowing() {
-    // Datagrams from unknown senders are parsed here first, so these must never throw.
-    for (text in
-      listOf("HELLO", "HELLO\u0000", "HELLOD00D", "PING", "PONG", "TOO", "HELLOD00D\u0000")) {
-      val byteBuf = Unpooled.buffer(64)
-      byteBuf.writeBytes(text.toByteArray(Charsets.ISO_8859_1))
+class ConnectMessageTest :
+  ProtocolBaseTest({
+    test("invalidCase shouldResetPosition") {
+      val byteBuf = Unpooled.buffer(4096)
+      byteBuf.writeBytes(V086Utils.hexStringToByteBuffer(UNKNOWN_BYTES))
+      byteBuf.readableBytes() shouldBe 2
 
       val result = ConnectMessage.parse(byteBuf)
 
-      assertThat(result.isFailure).isTrue()
-      assertThat(byteBuf.readableBytes()).isEqualTo(text.length)
+      result.isFailure.shouldBeTrue()
+      byteBuf.readableBytes() shouldBe 2
     }
-  }
+
+    context("malformed messages with known prefixes fail instead of throwing") {
+      // Datagrams from unknown senders are parsed here first, so these must never throw.
+      withTests(
+        listOf("HELLO", "HELLO\u0000", "HELLOD00D", "PING", "PONG", "TOO", "HELLOD00D\u0000")
+      ) { text ->
+        val byteBuf = Unpooled.buffer(64)
+        byteBuf.writeBytes(text.toByteArray(Charsets.ISO_8859_1))
+
+        val result = ConnectMessage.parse(byteBuf)
+
+        result.isFailure.shouldBeTrue()
+        byteBuf.readableBytes() shouldBe text.length
+      }
+    }
+  }) {
 
   private companion object {
     const val UNKNOWN_BYTES = "42, 42"

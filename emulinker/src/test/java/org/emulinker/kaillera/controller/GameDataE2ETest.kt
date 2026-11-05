@@ -1,6 +1,10 @@
 package org.emulinker.kaillera.controller
 
-import com.google.common.truth.Expect
+import io.kotest.assertions.assertSoftly
+import io.kotest.core.spec.style.FunSpec
+import io.kotest.core.test.TestCase
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import io.netty.buffer.ByteBuf
 import io.netty.buffer.Unpooled
 import io.netty.channel.embedded.EmbeddedChannel
@@ -43,18 +47,13 @@ import org.emulinker.kaillera.model.KailleraServer
 import org.emulinker.kaillera.pico.koinModule
 import org.emulinker.util.FastGameDataCache
 import org.emulinker.util.ProtocolCharset
-import org.junit.After
-import org.junit.Assume.assumeTrue
-import org.junit.Before
-import org.junit.Rule
-import org.junit.Test
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.get
 import org.koin.core.context.startKoin
 import org.koin.core.context.stopKoin
 import org.koin.dsl.module
 
-class GameDataE2ETest : KoinComponent {
+class GameDataE2ETest : FunSpec(), KoinComponent {
 
   private lateinit var channel: EmbeddedChannel
   private lateinit var controller: CombinedKailleraController
@@ -108,566 +107,572 @@ class GameDataE2ETest : KoinComponent {
     override fun close() {}
   }
 
-  @Before
-  fun setup() {
+  init {
     // Disable tests if CI flag is present.
     // For some reason these tests tend to fail.
-    assumeTrue(System.getenv("CI") == null)
+    val notInCi: (TestCase) -> Boolean = { System.getenv("CI") == null }
 
-    ProtocolCharset.overrideForTesting(Charsets.UTF_8)
+    beforeEach {
+      ProtocolCharset.overrideForTesting(Charsets.UTF_8)
 
-    startKoin {
-      allowOverride(true)
-      modules(koinModule, ActionModule, module { single<AccessManager> { FakeAccessManager() } })
-    }
-    controller = get()
-    channel = EmbeddedChannel(controller)
-  }
-
-  @After
-  fun teardown() {
-    try {
-      clientMap.values.forEach { it.logout() }
-    } catch (e: Exception) {
-      // ignore
-    }
-
-    if (::channel.isInitialized) {
-      channel.close()
-    }
-    if (::controller.isInitialized) {
-      controller.stop()
-    }
-    stopKoin()
-  }
-
-  @Rule @JvmField val expect = Expect.create()
-
-  @Test
-  fun test1PlayerGameDataSync() {
-    val port = 11111
-    val client = Client(port, "User1", this)
-    clientMap[port] = client
-    client.login()
-    val gameId = client.createGame()
-    client.startGame()
-    client.sendReady()
-    client.waitForReady()
-
-    // Advance iterator as requested (100 * playerNumber, player 1)
-    client.advanceIterator(100)
-
-    // Store history of sent packets to verify delayed echo
-    val sentHistory = java.util.ArrayList<ByteArray>()
-
-    // Loop 1000 times as requested
-    for (i in 1..1000) {
-      val inputData = client.nextInput()
-      client.sendGameData(inputData)
-      sentHistory.add(inputData.toByteArray())
-
-      val received = client.receiveGameData()
-      val receivedBytes = received.toByteArray()
-
-      if (i <= 6) {
-        // Phase 1: Buffering (FrameCount < TotalDelay)
-        // Server buffers input, buffers are calculated based on input size.
-        // We expect a packet of Zeros with the same size as the input.
-        expect.that(receivedBytes.size).isEqualTo(inputData.toByteArray().size)
-        expect.that(receivedBytes).isEqualTo(ByteArray(receivedBytes.size) { 0 })
-      } else if (i <= 12) {
-        // Phase 2: Draining (FrameCount >= TotalDelay, Buffer not empty)
-        // Server processes buffered packets (1-6). Current inputs (7-12) are DROPPED.
-        val historicIndex = i - 7 // i=7 -> index 0 (Packet 1)
-        val expectedData = sentHistory[historicIndex]
-        expect.that(receivedBytes).isEqualTo(expectedData)
-      } else {
-        // Phase 3: Synced (Buffer empty)
-        // Server processes current inputs. Packets 7-12 were lost.
-        // In 1-player mode with empty buffer,
-        // newly added data triggers immediate send.
-        val expectedData = inputData.toByteArray()
-        expect.that(receivedBytes).isEqualTo(expectedData)
+      startKoin {
+        allowOverride(true)
+        modules(koinModule, ActionModule, module { single<AccessManager> { FakeAccessManager() } })
       }
+      controller = get()
+      channel = EmbeddedChannel(controller)
     }
 
-    val server = get<KailleraServer>()
-    val serverUser = checkNotNull(server.usersMap.values.find { it.name == "User1" })
-    expect.that(serverUser.frameCount).isEqualTo(1000)
-
-    println("Shutting down...")
-    client.quitGame()
-    client.quit()
-  }
-
-  @Test
-  fun test4PlayerGameDataSync() {
-    println("Initializing 4 clients...")
-    val p1 = Client(1, "P1", this)
-    val p2 = Client(2, "P2", this)
-    val p3 = Client(3, "P3", this)
-    val p4 = Client(4, "P4", this)
-    val clients = listOf(p1, p2, p3, p4)
-
-    println("Logging in clients...")
-    clients.forEach { it.login() }
-
-    // P1 Create Game
-    println("P1 creating game...")
-    p1.createGame()
-
-    // Others Join
-    println("Others joining game...")
-    p2.joinGame(1)
-    p3.joinGame(1)
-    p4.joinGame(1)
-
-    // P1 Start Game
-    println("P1 starting game...")
-    p1.startGame()
-
-    // Wait for GameStarted
-    println("Waiting for GameStarted...")
-    clients.filter { it != p1 }.forEach { it.waitForGameStarted() }
-
-    // Send Ready
-    println("Sending Ready...")
-    clients.forEach { it.sendReady() }
-    println("Waiting for AllReady...")
-    clients.forEach { it.waitForReady() }
-
-    // Advance iterators to ensure unique data streams
-    println("Advancing iterators...")
-    p1.advanceIterator(100)
-    p2.advanceIterator(200)
-    p3.advanceIterator(300)
-    p4.advanceIterator(400)
-
-    // History of COMBINED packets (P1+P2+P3+P4)
-    val sentHistory = java.util.ArrayList<ByteArray>()
-
-    println("Starting 4-player loop...")
-    for (i in 1..1000) {
-      // 1. Collect Input for this frame
-      val inputs = clients.map { it.nextInput() }
-
-      // 2. Calculate Combined Packet for History
-      // Server fans out: [P1_Data][P2_Data][P3_Data][P4_Data]
-      val combinedPacket = java.io.ByteArrayOutputStream()
-      inputs.forEach { combinedPacket.write(it.toByteArray()) }
-      val expectedCombinedData = combinedPacket.toByteArray()
-      sentHistory.add(expectedCombinedData)
-
-      // 3. Send Data (All players send their part)
-      clients.forEachIndexed { index, client -> client.sendGameData(inputs[index]) }
-
-      // 4. Receive Data (All players receive the SAME combined packet)
-      clients.forEach { client ->
-        val received = client.receiveGameData()
-        val receivedBytes = received.toByteArray()
-
-        if (i <= 6) {
-          // Phase 1: Buffering
-          // Server buffers inputs. Returns Zeros.
-          // Size = Sum of all input sizes
-          expect.that(receivedBytes.size).isEqualTo(expectedCombinedData.size)
-          expect.that(receivedBytes).isEqualTo(ByteArray(receivedBytes.size) { 0 })
-        } else if (i <= 12) {
-          // Phase 2: Draining
-          // Server processes buffered packets (1-6). i-7 is the historic index.
-          val historicIndex = i - 7
-          val expectedData = sentHistory[historicIndex]
-          expect.that(receivedBytes).isEqualTo(expectedData)
-        } else {
-          // Phase 3: Synced
-          // Buffer empty. Receive current combined input.
-          expect.that(receivedBytes).isEqualTo(expectedCombinedData)
-        }
+    afterEach {
+      try {
+        clientMap.values.forEach { it.logout() }
+      } catch (e: Exception) {
+        // ignore
       }
+      clientQueues.clear()
+      clientMap.clear()
+
+      if (::channel.isInitialized) {
+        channel.close()
+      }
+      if (::controller.isInitialized) {
+        controller.stop()
+      }
+      stopKoin()
     }
-    println("4-player loop complete.")
-    println("Shutting down...")
-    // If player 1 quits, it closes the game. reverse() to make sure player 1 is last to quit.
-    clients.reversed().forEach {
-      it.quitGame()
-      it.quit()
-    }
-  }
 
-  @Test
-  fun test4PlayerGoodConnection() {
-    println("Initializing 4 clients with GOOD connection...")
-    val p1 = Client(1, "P1", this, connectionType = ConnectionType.GOOD)
-    val p2 = Client(2, "P2", this, connectionType = ConnectionType.GOOD)
-    val p3 = Client(3, "P3", this, connectionType = ConnectionType.GOOD)
-    val p4 = Client(4, "P4", this, connectionType = ConnectionType.GOOD)
-    val clients = listOf(p1, p2, p3, p4)
+    test("test1PlayerGameDataSync").config(enabledIf = notInCi) {
+      val port = 11111
+      val client = Client(port, "User1", this@GameDataE2ETest)
+      clientMap[port] = client
+      client.login()
+      val gameId = client.createGame()
+      client.startGame()
+      client.sendReady()
+      client.waitForReady()
 
-    println("Logging in clients...")
-    clients.forEach { it.login() }
+      // Advance iterator as requested (100 * playerNumber, player 1)
+      client.advanceIterator(100)
 
-    // P1 Create Game
-    println("P1 creating game...")
-    p1.createGame()
+      // Store history of sent packets to verify delayed echo
+      val sentHistory = java.util.ArrayList<ByteArray>()
 
-    // Others Join
-    println("Others joining game...")
-    p2.joinGame(1)
-    p3.joinGame(1)
-    p4.joinGame(1)
+      assertSoftly {
+        // Loop 1000 times as requested
+        for (i in 1..1000) {
+          val inputData = client.nextInput()
+          client.sendGameData(inputData)
+          sentHistory.add(inputData.toByteArray())
 
-    // P1 Start Game
-    println("P1 starting game...")
-    p1.startGame()
-
-    // Wait for GameStarted
-    println("Waiting for GameStarted...")
-    clients.filter { it != p1 }.forEach { it.waitForGameStarted() }
-
-    // Send Ready
-    println("Sending Ready...")
-    clients.forEach { it.sendReady() }
-    println("Waiting for AllReady...")
-    clients.forEach { it.waitForReady() }
-
-    // Advance iterators to ensure unique data streams
-    println("Advancing iterators...")
-    p1.advanceIterator(100)
-    p2.advanceIterator(200)
-    p3.advanceIterator(300)
-    p4.advanceIterator(400)
-
-    // History of COMBINED packets (P1+P2+P3+P4)
-    val sentHistory = java.util.ArrayList<ByteArray>()
-
-    println("Starting 4-player GOOD connection loop...")
-    val actionsPerMessage = ConnectionType.GOOD.byteValue.toInt() // 3
-
-    for (i in 1..333) {
-      // 1. Collect Input for this packet (3 frames per client)
-      // We keep frames separated first to construct expected combined data (interleaved)
-      val clientFrames = clients.map { client ->
-        val frames = mutableListOf<ByteBuf>()
-        repeat(actionsPerMessage) { frames.add(client.nextInput()) }
-        frames
-      }
-
-      // 2. Calculate Combined Packet for History
-      // Server interleaves: Frame 1 (All Players), Frame 2 (All Players), Frame 3 (All Players)
-      val combinedPacket = java.io.ByteArrayOutputStream()
-      for (frameIdx in 0 until actionsPerMessage) {
-        for (clientIdx in clients.indices) {
-          combinedPacket.write(clientFrames[clientIdx][frameIdx].toByteArray())
-        }
-      }
-      val expectedCombinedData = combinedPacket.toByteArray()
-      sentHistory.add(expectedCombinedData)
-
-      // Prepare packet inputs (Client just concatenates its own frames)
-      // Note: This consumes the clientFrames ByteBufs (readerIndex moves)
-      val packetInputs = clientFrames.map { frames ->
-        val buffer = Unpooled.buffer()
-        frames.forEach { buffer.writeBytes(it) }
-        buffer
-      }
-
-      // 3. Send Data (All players send their part)
-      clients.forEachIndexed { index, client -> client.sendGameData(packetInputs[index]) }
-
-      // 4. Receive Data (All players receive the SAME combined packet)
-      clients.forEach { client ->
-        val received = client.receiveGameData()
-        val receivedBytes = received.toByteArray()
-
-        if (i <= 6) {
-          // Phase 1: Buffering
-          // Server buffers inputs. Returns Zeros.
-          // Size = Sum of all input sizes
-          expect.that(receivedBytes.size).isEqualTo(expectedCombinedData.size)
-          expect.that(receivedBytes).isEqualTo(ByteArray(receivedBytes.size) { 0 })
-        } else if (i <= 12) {
-          // Phase 2: Draining
-          // Server processes buffered packets (1-6). i-7 is the historic index.
-          val historicIndex = i - 7
-          val expectedData = sentHistory[historicIndex]
-          expect.that(receivedBytes).isEqualTo(expectedData)
-        } else {
-          // Phase 3: Synced
-          // Buffer empty. Receive current combined input.
-          expect.that(receivedBytes).isEqualTo(expectedCombinedData)
-        }
-      }
-    }
-    println("Shutting down...")
-    // If player 1 quits, it closes the game. reverse() to make sure player 1 is last to quit.
-    clients.reversed().forEach {
-      it.quitGame()
-      it.quit()
-    }
-  }
-
-  @Test
-  fun test3PlayerVariableDelay() {
-    println("Initializing 3 clients with variable delays...")
-    // Target Delays: P1=2 frames, P2=3 frames, P3=4 frames.
-    val p1 = Client(1, "P1", this, loginDelay = 25.milliseconds)
-    val p2 = Client(2, "P2", this, loginDelay = 41.milliseconds)
-    val p3 = Client(3, "P3", this, loginDelay = 58.milliseconds)
-    val clients = listOf(p1, p2, p3)
-
-    println("Logging in clients...")
-    clients.forEach { it.login() }
-
-    // P1 Create Game
-    println("P1 creating game...")
-    p1.createGame()
-
-    // Others Join
-    println("Others joining game...")
-    p2.joinGame(1)
-    p3.joinGame(1)
-
-    // P1 Start Game
-    println("P1 starting game...")
-    p1.startGame()
-
-    // Wait for GameStarted
-    println("Waiting for GameStarted...")
-    clients.filter { it != p1 }.forEach { it.waitForGameStarted() }
-
-    // Send Ready
-    println("Sending Ready...")
-    clients.forEach { it.sendReady() }
-    println("Waiting for AllReady...")
-    clients.forEach { it.waitForReady() }
-
-    // Advance iterators to ensure unique data streams
-    println("Advancing iterators...")
-    p1.advanceIterator(100)
-    p2.advanceIterator(200)
-    p3.advanceIterator(300)
-
-    println("Starting 3-player variable delay loop...")
-    val sentHistory = java.util.ArrayList<ByteArray>()
-
-    // We use a shorter timeout for receive in the loop to allow fast clients to progress
-    // while slow clients (P3) wait for sync.
-    for (i in 1..50) {
-      val inputs = clients.map { it.nextInput() }
-
-      val combinedPacket = java.io.ByteArrayOutputStream()
-      inputs.forEach { combinedPacket.write(it.toByteArray()) }
-      val expectedCombinedData = combinedPacket.toByteArray()
-      sentHistory.add(expectedCombinedData)
-
-      clients.forEachIndexed { index, client -> client.sendGameData(inputs[index]) }
-
-      val currentReceived = java.util.ArrayList<ByteArray>()
-      clients.forEach { client ->
-        try {
-          // Use very short timeout to avoid deadlock during disparate buffering phases
-          val received = client.receiveGameData(timeout = 50.milliseconds)
+          val received = client.receiveGameData()
           val receivedBytes = received.toByteArray()
-          currentReceived.add(receivedBytes)
-        } catch (e: Exception) {
-          // It is expected that some clients (like P3) might timeout in early frames.
+
+          if (i <= 6) {
+            // Phase 1: Buffering (FrameCount < TotalDelay)
+            // Server buffers input, buffers are calculated based on input size.
+            // We expect a packet of Zeros with the same size as the input.
+            receivedBytes.size shouldBe inputData.toByteArray().size
+            receivedBytes shouldBe ByteArray(receivedBytes.size) { 0 }
+          } else if (i <= 12) {
+            // Phase 2: Draining (FrameCount >= TotalDelay, Buffer not empty)
+            // Server processes buffered packets (1-6). Current inputs (7-12) are DROPPED.
+            val historicIndex = i - 7 // i=7 -> index 0 (Packet 1)
+            val expectedData = sentHistory[historicIndex]
+            receivedBytes shouldBe expectedData
+          } else {
+            // Phase 3: Synced (Buffer empty)
+            // Server processes current inputs. Packets 7-12 were lost.
+            // In 1-player mode with empty buffer,
+            // newly added data triggers immediate send.
+            val expectedData = inputData.toByteArray()
+            receivedBytes shouldBe expectedData
+          }
         }
+
+        val server = get<KailleraServer>()
+        val serverUser = checkNotNull(server.usersMap.values.find { it.name == "User1" })
+        serverUser.frameCount shouldBe 1000
       }
 
-      if (i > 35) {
-        // Verify that we received packets from ALL clients (Sync achieved)
-        expect.that(currentReceived.size).isEqualTo(clients.size)
+      println("Shutting down...")
+      client.quitGame()
+      client.quit()
+    }
 
-        // Verify Consistency: All players must receive the IDENTICAL packet
-        // and it must be non-zero (actual game data)
-        if (currentReceived.isNotEmpty()) {
-          val first = currentReceived[0]
-          currentReceived.forEach {
-            expect.that(it).isEqualTo(first)
-            expect.that(it).isNotEqualTo(ByteArray(it.size) { 0 })
+    test("test4PlayerGameDataSync").config(enabledIf = notInCi) {
+      println("Initializing 4 clients...")
+      val p1 = Client(1, "P1", this@GameDataE2ETest)
+      val p2 = Client(2, "P2", this@GameDataE2ETest)
+      val p3 = Client(3, "P3", this@GameDataE2ETest)
+      val p4 = Client(4, "P4", this@GameDataE2ETest)
+      val clients = listOf(p1, p2, p3, p4)
+
+      println("Logging in clients...")
+      clients.forEach { it.login() }
+
+      // P1 Create Game
+      println("P1 creating game...")
+      p1.createGame()
+
+      // Others Join
+      println("Others joining game...")
+      p2.joinGame(1)
+      p3.joinGame(1)
+      p4.joinGame(1)
+
+      // P1 Start Game
+      println("P1 starting game...")
+      p1.startGame()
+
+      // Wait for GameStarted
+      println("Waiting for GameStarted...")
+      clients.filter { it != p1 }.forEach { it.waitForGameStarted() }
+
+      // Send Ready
+      println("Sending Ready...")
+      clients.forEach { it.sendReady() }
+      println("Waiting for AllReady...")
+      clients.forEach { it.waitForReady() }
+
+      // Advance iterators to ensure unique data streams
+      println("Advancing iterators...")
+      p1.advanceIterator(100)
+      p2.advanceIterator(200)
+      p3.advanceIterator(300)
+      p4.advanceIterator(400)
+
+      // History of COMBINED packets (P1+P2+P3+P4)
+      val sentHistory = java.util.ArrayList<ByteArray>()
+
+      println("Starting 4-player loop...")
+      assertSoftly {
+        for (i in 1..1000) {
+          // 1. Collect Input for this frame
+          val inputs = clients.map { it.nextInput() }
+
+          // 2. Calculate Combined Packet for History
+          // Server fans out: [P1_Data][P2_Data][P3_Data][P4_Data]
+          val combinedPacket = java.io.ByteArrayOutputStream()
+          inputs.forEach { combinedPacket.write(it.toByteArray()) }
+          val expectedCombinedData = combinedPacket.toByteArray()
+          sentHistory.add(expectedCombinedData)
+
+          // 3. Send Data (All players send their part)
+          clients.forEachIndexed { index, client -> client.sendGameData(inputs[index]) }
+
+          // 4. Receive Data (All players receive the SAME combined packet)
+          clients.forEach { client ->
+            val received = client.receiveGameData()
+            val receivedBytes = received.toByteArray()
+
+            if (i <= 6) {
+              // Phase 1: Buffering
+              // Server buffers inputs. Returns Zeros.
+              // Size = Sum of all input sizes
+              receivedBytes.size shouldBe expectedCombinedData.size
+              receivedBytes shouldBe ByteArray(receivedBytes.size) { 0 }
+            } else if (i <= 12) {
+              // Phase 2: Draining
+              // Server processes buffered packets (1-6). i-7 is the historic index.
+              val historicIndex = i - 7
+              val expectedData = sentHistory[historicIndex]
+              receivedBytes shouldBe expectedData
+            } else {
+              // Phase 3: Synced
+              // Buffer empty. Receive current combined input.
+              receivedBytes shouldBe expectedCombinedData
+            }
           }
         }
       }
-    }
-    println("3-player variable delay loop complete.")
-    println("Shutting down...")
-    // If player 1 quits, it closes the game. reverse() to make sure player 1 is last to quit.
-    clients.reversed().forEach {
-      it.quitGame()
-      it.quit()
-    }
-  }
-
-  @Test
-  fun test4PlayerCachedGameDataSync() {
-    println("Initializing 4 clients with OUTGOING CACHE ENABLED...")
-    val p1 = Client(1, "P1", this, useOutgoingCache = true)
-    val p2 = Client(2, "P2", this, useOutgoingCache = true)
-    val p3 = Client(3, "P3", this, useOutgoingCache = true)
-    val p4 = Client(4, "P4", this, useOutgoingCache = true)
-    val clients = listOf(p1, p2, p3, p4)
-
-    println("Logging in clients...")
-    clients.forEach { it.login() }
-
-    // P1 Create Game
-    println("P1 creating game...")
-    p1.createGame()
-
-    // Others Join
-    println("Others joining game...")
-    p2.joinGame(1)
-    p3.joinGame(1)
-    p4.joinGame(1)
-
-    // P1 Start Game
-    println("P1 starting game...")
-    p1.startGame()
-
-    // Wait for GameStarted
-    println("Waiting for GameStarted...")
-    clients.filter { it != p1 }.forEach { it.waitForGameStarted() }
-
-    // Send Ready
-    println("Sending Ready...")
-    clients.forEach { it.sendReady() }
-    println("Waiting for AllReady...")
-    clients.forEach { it.waitForReady() }
-
-    // Advance iterators to ensure unique data streams
-    println("Advancing iterators...")
-    p1.advanceIterator(100)
-    p2.advanceIterator(200)
-    p3.advanceIterator(300)
-    p4.advanceIterator(400)
-
-    // History of COMBINED packets (P1+P2+P3+P4)
-    val sentHistory = java.util.ArrayList<ByteArray>()
-
-    println("Starting 4-player CACHED loop...")
-    for (i in 1..1000) {
-      // 1. Collect Input for this frame
-      val inputs = clients.map { it.nextInput() }
-
-      // 2. Calculate Combined Packet for History
-      // Server fans out: [P1_Data][P2_Data][P3_Data][P4_Data]
-      val combinedPacket = java.io.ByteArrayOutputStream()
-      inputs.forEach { combinedPacket.write(it.toByteArray()) }
-      val expectedCombinedData = combinedPacket.toByteArray()
-      sentHistory.add(expectedCombinedData)
-
-      // 3. Send Data (All players send their part, potentially as CachedGameData)
-      clients.forEachIndexed { index, client -> client.sendGameData(inputs[index]) }
-
-      // 4. Receive Data (All players receive the SAME combined packet)
-      clients.forEach { client ->
-        val received = client.receiveGameData()
-        val receivedBytes = received.toByteArray()
-
-        if (i <= 6) {
-          // Phase 1: Buffering
-          expect.that(receivedBytes.size).isEqualTo(expectedCombinedData.size)
-          expect.that(receivedBytes).isEqualTo(ByteArray(receivedBytes.size) { 0 })
-        } else if (i <= 12) {
-          // Phase 2: Draining
-          val historicIndex = i - 7
-          val expectedData = sentHistory[historicIndex]
-          expect.that(receivedBytes).isEqualTo(expectedData)
-        } else {
-          // Phase 3: Synced
-          expect.that(receivedBytes).isEqualTo(expectedCombinedData)
-        }
+      println("4-player loop complete.")
+      println("Shutting down...")
+      // If player 1 quits, it closes the game. reverse() to make sure player 1 is last to quit.
+      clients.reversed().forEach {
+        it.quitGame()
+        it.quit()
       }
     }
-    println("4-player CACHED loop complete.")
-    println("Shutting down...")
-    // If player 1 quits, it closes the game. reverse() to make sure player 1 is last to quit.
-    clients.reversed().forEach { it.quit() }
-  }
 
-  @Test
-  fun test4PlayerGameWithP4Drop() {
-    println("Initializing 4 clients...")
-    val p1 = Client(1, "P1", this)
-    val p2 = Client(2, "P2", this)
-    val p3 = Client(3, "P3", this)
-    val p4 = Client(4, "P4", this)
-    val clients = listOf(p1, p2, p3, p4)
+    test("test4PlayerGoodConnection").config(enabledIf = notInCi) {
+      println("Initializing 4 clients with GOOD connection...")
+      val p1 = Client(1, "P1", this@GameDataE2ETest, connectionType = ConnectionType.GOOD)
+      val p2 = Client(2, "P2", this@GameDataE2ETest, connectionType = ConnectionType.GOOD)
+      val p3 = Client(3, "P3", this@GameDataE2ETest, connectionType = ConnectionType.GOOD)
+      val p4 = Client(4, "P4", this@GameDataE2ETest, connectionType = ConnectionType.GOOD)
+      val clients = listOf(p1, p2, p3, p4)
 
-    println("Logging in clients...")
-    clients.forEach { it.login() }
+      println("Logging in clients...")
+      clients.forEach { it.login() }
 
-    // P1 Create Game
-    p1.createGame()
+      // P1 Create Game
+      println("P1 creating game...")
+      p1.createGame()
 
-    // Others Join
-    p2.joinGame(1)
-    p3.joinGame(1)
-    p4.joinGame(1)
+      // Others Join
+      println("Others joining game...")
+      p2.joinGame(1)
+      p3.joinGame(1)
+      p4.joinGame(1)
 
-    // P1 Start Game
-    p1.startGame()
+      // P1 Start Game
+      println("P1 starting game...")
+      p1.startGame()
 
-    // Wait for GameStarted
-    clients.filter { it != p1 }.forEach { it.waitForGameStarted() }
+      // Wait for GameStarted
+      println("Waiting for GameStarted...")
+      clients.filter { it != p1 }.forEach { it.waitForGameStarted() }
 
-    // Send Ready
-    clients.forEach { it.sendReady() }
-    clients.forEach { it.waitForReady() }
+      // Send Ready
+      println("Sending Ready...")
+      clients.forEach { it.sendReady() }
+      println("Waiting for AllReady...")
+      clients.forEach { it.waitForReady() }
 
-    // Advance iterators
-    p1.advanceIterator(100)
-    p2.advanceIterator(200)
-    p3.advanceIterator(300)
-    p4.advanceIterator(400)
+      // Advance iterators to ensure unique data streams
+      println("Advancing iterators...")
+      p1.advanceIterator(100)
+      p2.advanceIterator(200)
+      p3.advanceIterator(300)
+      p4.advanceIterator(400)
 
-    val remainingClients = listOf(p1, p2, p3)
+      // History of COMBINED packets (P1+P2+P3+P4)
+      val sentHistory = java.util.ArrayList<ByteArray>()
 
-    // Run for 100 frames with all 4 players
-    println("Running 4-player loop (pre-drop)...")
-    for (i in 1..100) {
-      val inputs = clients.map { it.nextInput() }
-      clients.forEachIndexed { index, client -> client.sendGameData(inputs[index]) }
-      clients.forEach { client -> client.receiveGameData() }
+      println("Starting 4-player GOOD connection loop...")
+      val actionsPerMessage = ConnectionType.GOOD.byteValue.toInt() // 3
+
+      assertSoftly {
+        for (i in 1..333) {
+          // 1. Collect Input for this packet (3 frames per client)
+          // We keep frames separated first to construct expected combined data (interleaved)
+          val clientFrames = clients.map { client ->
+            val frames = mutableListOf<ByteBuf>()
+            repeat(actionsPerMessage) { frames.add(client.nextInput()) }
+            frames
+          }
+
+          // 2. Calculate Combined Packet for History
+          // Server interleaves: Frame 1 (All Players), Frame 2 (All Players), Frame 3 (All Players)
+          val combinedPacket = java.io.ByteArrayOutputStream()
+          for (frameIdx in 0 until actionsPerMessage) {
+            for (clientIdx in clients.indices) {
+              combinedPacket.write(clientFrames[clientIdx][frameIdx].toByteArray())
+            }
+          }
+          val expectedCombinedData = combinedPacket.toByteArray()
+          sentHistory.add(expectedCombinedData)
+
+          // Prepare packet inputs (Client just concatenates its own frames)
+          // Note: This consumes the clientFrames ByteBufs (readerIndex moves)
+          val packetInputs = clientFrames.map { frames ->
+            val buffer = Unpooled.buffer()
+            frames.forEach { buffer.writeBytes(it) }
+            buffer
+          }
+
+          // 3. Send Data (All players send their part)
+          clients.forEachIndexed { index, client -> client.sendGameData(packetInputs[index]) }
+
+          // 4. Receive Data (All players receive the SAME combined packet)
+          clients.forEach { client ->
+            val received = client.receiveGameData()
+            val receivedBytes = received.toByteArray()
+
+            if (i <= 6) {
+              // Phase 1: Buffering
+              // Server buffers inputs. Returns Zeros.
+              // Size = Sum of all input sizes
+              receivedBytes.size shouldBe expectedCombinedData.size
+              receivedBytes shouldBe ByteArray(receivedBytes.size) { 0 }
+            } else if (i <= 12) {
+              // Phase 2: Draining
+              // Server processes buffered packets (1-6). i-7 is the historic index.
+              val historicIndex = i - 7
+              val expectedData = sentHistory[historicIndex]
+              receivedBytes shouldBe expectedData
+            } else {
+              // Phase 3: Synced
+              // Buffer empty. Receive current combined input.
+              receivedBytes shouldBe expectedCombinedData
+            }
+          }
+        }
+      }
+      println("Shutting down...")
+      // If player 1 quits, it closes the game. reverse() to make sure player 1 is last to quit.
+      clients.reversed().forEach {
+        it.quitGame()
+        it.quit()
+      }
     }
 
-    // P4 Drops
-    println("P4 Dropping...")
-    p4.quitGame()
+    test("test3PlayerVariableDelay").config(enabledIf = notInCi) {
+      println("Initializing 3 clients with variable delays...")
+      // Target Delays: P1=2 frames, P2=3 frames, P3=4 frames.
+      val p1 = Client(1, "P1", this@GameDataE2ETest, loginDelay = 25.milliseconds)
+      val p2 = Client(2, "P2", this@GameDataE2ETest, loginDelay = 41.milliseconds)
+      val p3 = Client(3, "P3", this@GameDataE2ETest, loginDelay = 58.milliseconds)
+      val clients = listOf(p1, p2, p3)
 
-    // Remaining players continue
-    println("Running 3-player loop (post-drop)...")
-    val zeroData = ByteArray(p4.nextInput().toByteArray().size) { 0 }
+      println("Logging in clients...")
+      clients.forEach { it.login() }
 
-    for (i in 1..100) {
-      // 1. Collect Input for this frame (only remaining players)
-      val inputs = remainingClients.map { it.nextInput() }
+      // P1 Create Game
+      println("P1 creating game...")
+      p1.createGame()
 
-      // 2. Send Data
-      remainingClients.forEachIndexed { index, client -> client.sendGameData(inputs[index]) }
+      // Others Join
+      println("Others joining game...")
+      p2.joinGame(1)
+      p3.joinGame(1)
 
-      // 3. Receive Data
-      // We expect P4's data to be ZEROS in the combined packet
-      remainingClients.forEach { client ->
-        val received = client.receiveGameData()
-        val receivedBytes = received.toByteArray()
+      // P1 Start Game
+      println("P1 starting game...")
+      p1.startGame()
 
-        // Verify the packet structure: [P1][P2][P3][P4(Zeros)]
-        // We know the sizes from the inputs.
-        val p1Size = inputs[0].toByteArray().size
-        val p2Size = inputs[1].toByteArray().size
-        val p3Size = inputs[2].toByteArray().size
-        val p4Size = zeroData.size
+      // Wait for GameStarted
+      println("Waiting for GameStarted...")
+      clients.filter { it != p1 }.forEach { it.waitForGameStarted() }
 
-        val receivedP1 = receivedBytes.copyOfRange(0, p1Size)
-        val receivedP2 = receivedBytes.copyOfRange(p1Size, p1Size + p2Size)
-        val receivedP3 = receivedBytes.copyOfRange(p1Size + p2Size, p1Size + p2Size + p3Size)
-        val receivedP4 = receivedBytes.copyOfRange(p1Size + p2Size + p3Size, receivedBytes.size)
+      // Send Ready
+      println("Sending Ready...")
+      clients.forEach { it.sendReady() }
+      println("Waiting for AllReady...")
+      clients.forEach { it.waitForReady() }
 
-        expect.that(receivedP1).isEqualTo(inputs[0].toByteArray())
-        expect.that(receivedP2).isEqualTo(inputs[1].toByteArray())
-        expect.that(receivedP3).isEqualTo(inputs[2].toByteArray())
-        expect.that(receivedP4).isEqualTo(zeroData)
+      // Advance iterators to ensure unique data streams
+      println("Advancing iterators...")
+      p1.advanceIterator(100)
+      p2.advanceIterator(200)
+      p3.advanceIterator(300)
+
+      println("Starting 3-player variable delay loop...")
+      val sentHistory = java.util.ArrayList<ByteArray>()
+
+      assertSoftly {
+        // We use a shorter timeout for receive in the loop to allow fast clients to progress
+        // while slow clients (P3) wait for sync.
+        for (i in 1..50) {
+          val inputs = clients.map { it.nextInput() }
+
+          val combinedPacket = java.io.ByteArrayOutputStream()
+          inputs.forEach { combinedPacket.write(it.toByteArray()) }
+          val expectedCombinedData = combinedPacket.toByteArray()
+          sentHistory.add(expectedCombinedData)
+
+          clients.forEachIndexed { index, client -> client.sendGameData(inputs[index]) }
+
+          val currentReceived = java.util.ArrayList<ByteArray>()
+          clients.forEach { client ->
+            try {
+              // Use very short timeout to avoid deadlock during disparate buffering phases
+              val received = client.receiveGameData(timeout = 50.milliseconds)
+              val receivedBytes = received.toByteArray()
+              currentReceived.add(receivedBytes)
+            } catch (e: Exception) {
+              // It is expected that some clients (like P3) might timeout in early frames.
+            }
+          }
+
+          if (i > 35) {
+            // Verify that we received packets from ALL clients (Sync achieved)
+            currentReceived.size shouldBe clients.size
+
+            // Verify Consistency: All players must receive the IDENTICAL packet
+            // and it must be non-zero (actual game data)
+            if (currentReceived.isNotEmpty()) {
+              val first = currentReceived[0]
+              currentReceived.forEach {
+                it shouldBe first
+                it shouldNotBe ByteArray(it.size) { 0 }
+              }
+            }
+          }
+        }
+      }
+      println("3-player variable delay loop complete.")
+      println("Shutting down...")
+      // If player 1 quits, it closes the game. reverse() to make sure player 1 is last to quit.
+      clients.reversed().forEach {
+        it.quitGame()
+        it.quit()
+      }
+    }
+
+    test("test4PlayerCachedGameDataSync").config(enabledIf = notInCi) {
+      println("Initializing 4 clients with OUTGOING CACHE ENABLED...")
+      val p1 = Client(1, "P1", this@GameDataE2ETest, useOutgoingCache = true)
+      val p2 = Client(2, "P2", this@GameDataE2ETest, useOutgoingCache = true)
+      val p3 = Client(3, "P3", this@GameDataE2ETest, useOutgoingCache = true)
+      val p4 = Client(4, "P4", this@GameDataE2ETest, useOutgoingCache = true)
+      val clients = listOf(p1, p2, p3, p4)
+
+      println("Logging in clients...")
+      clients.forEach { it.login() }
+
+      // P1 Create Game
+      println("P1 creating game...")
+      p1.createGame()
+
+      // Others Join
+      println("Others joining game...")
+      p2.joinGame(1)
+      p3.joinGame(1)
+      p4.joinGame(1)
+
+      // P1 Start Game
+      println("P1 starting game...")
+      p1.startGame()
+
+      // Wait for GameStarted
+      println("Waiting for GameStarted...")
+      clients.filter { it != p1 }.forEach { it.waitForGameStarted() }
+
+      // Send Ready
+      println("Sending Ready...")
+      clients.forEach { it.sendReady() }
+      println("Waiting for AllReady...")
+      clients.forEach { it.waitForReady() }
+
+      // Advance iterators to ensure unique data streams
+      println("Advancing iterators...")
+      p1.advanceIterator(100)
+      p2.advanceIterator(200)
+      p3.advanceIterator(300)
+      p4.advanceIterator(400)
+
+      // History of COMBINED packets (P1+P2+P3+P4)
+      val sentHistory = java.util.ArrayList<ByteArray>()
+
+      println("Starting 4-player CACHED loop...")
+      assertSoftly {
+        for (i in 1..1000) {
+          // 1. Collect Input for this frame
+          val inputs = clients.map { it.nextInput() }
+
+          // 2. Calculate Combined Packet for History
+          // Server fans out: [P1_Data][P2_Data][P3_Data][P4_Data]
+          val combinedPacket = java.io.ByteArrayOutputStream()
+          inputs.forEach { combinedPacket.write(it.toByteArray()) }
+          val expectedCombinedData = combinedPacket.toByteArray()
+          sentHistory.add(expectedCombinedData)
+
+          // 3. Send Data (All players send their part, potentially as CachedGameData)
+          clients.forEachIndexed { index, client -> client.sendGameData(inputs[index]) }
+
+          // 4. Receive Data (All players receive the SAME combined packet)
+          clients.forEach { client ->
+            val received = client.receiveGameData()
+            val receivedBytes = received.toByteArray()
+
+            if (i <= 6) {
+              // Phase 1: Buffering
+              receivedBytes.size shouldBe expectedCombinedData.size
+              receivedBytes shouldBe ByteArray(receivedBytes.size) { 0 }
+            } else if (i <= 12) {
+              // Phase 2: Draining
+              val historicIndex = i - 7
+              val expectedData = sentHistory[historicIndex]
+              receivedBytes shouldBe expectedData
+            } else {
+              // Phase 3: Synced
+              receivedBytes shouldBe expectedCombinedData
+            }
+          }
+        }
+      }
+      println("4-player CACHED loop complete.")
+      println("Shutting down...")
+      // If player 1 quits, it closes the game. reverse() to make sure player 1 is last to quit.
+      clients.reversed().forEach { it.quit() }
+    }
+
+    test("test4PlayerGameWithP4Drop").config(enabledIf = notInCi) {
+      println("Initializing 4 clients...")
+      val p1 = Client(1, "P1", this@GameDataE2ETest)
+      val p2 = Client(2, "P2", this@GameDataE2ETest)
+      val p3 = Client(3, "P3", this@GameDataE2ETest)
+      val p4 = Client(4, "P4", this@GameDataE2ETest)
+      val clients = listOf(p1, p2, p3, p4)
+
+      println("Logging in clients...")
+      clients.forEach { it.login() }
+
+      // P1 Create Game
+      p1.createGame()
+
+      // Others Join
+      p2.joinGame(1)
+      p3.joinGame(1)
+      p4.joinGame(1)
+
+      // P1 Start Game
+      p1.startGame()
+
+      // Wait for GameStarted
+      clients.filter { it != p1 }.forEach { it.waitForGameStarted() }
+
+      // Send Ready
+      clients.forEach { it.sendReady() }
+      clients.forEach { it.waitForReady() }
+
+      // Advance iterators
+      p1.advanceIterator(100)
+      p2.advanceIterator(200)
+      p3.advanceIterator(300)
+      p4.advanceIterator(400)
+
+      val remainingClients = listOf(p1, p2, p3)
+
+      // Run for 100 frames with all 4 players
+      println("Running 4-player loop (pre-drop)...")
+      for (i in 1..100) {
+        val inputs = clients.map { it.nextInput() }
+        clients.forEachIndexed { index, client -> client.sendGameData(inputs[index]) }
+        clients.forEach { client -> client.receiveGameData() }
+      }
+
+      // P4 Drops
+      println("P4 Dropping...")
+      p4.quitGame()
+
+      // Remaining players continue
+      println("Running 3-player loop (post-drop)...")
+      val zeroData = ByteArray(p4.nextInput().toByteArray().size) { 0 }
+
+      assertSoftly {
+        for (i in 1..100) {
+          // 1. Collect Input for this frame (only remaining players)
+          val inputs = remainingClients.map { it.nextInput() }
+
+          // 2. Send Data
+          remainingClients.forEachIndexed { index, client -> client.sendGameData(inputs[index]) }
+
+          // 3. Receive Data
+          // We expect P4's data to be ZEROS in the combined packet
+          remainingClients.forEach { client ->
+            val received = client.receiveGameData()
+            val receivedBytes = received.toByteArray()
+
+            // Verify the packet structure: [P1][P2][P3][P4(Zeros)]
+            // We know the sizes from the inputs.
+            val p1Size = inputs[0].toByteArray().size
+            val p2Size = inputs[1].toByteArray().size
+            val p3Size = inputs[2].toByteArray().size
+            val p4Size = zeroData.size
+
+            val receivedP1 = receivedBytes.copyOfRange(0, p1Size)
+            val receivedP2 = receivedBytes.copyOfRange(p1Size, p1Size + p2Size)
+            val receivedP3 = receivedBytes.copyOfRange(p1Size + p2Size, p1Size + p2Size + p3Size)
+            val receivedP4 = receivedBytes.copyOfRange(p1Size + p2Size + p3Size, receivedBytes.size)
+
+            receivedP1 shouldBe inputs[0].toByteArray()
+            receivedP2 shouldBe inputs[1].toByteArray()
+            receivedP3 shouldBe inputs[2].toByteArray()
+            receivedP4 shouldBe zeroData
+          }
+        }
       }
     }
   }
