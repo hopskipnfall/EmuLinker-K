@@ -5,7 +5,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompilationTask
 plugins {
   id("com.google.protobuf") version "0.10.0"
   id("build.buf") version "0.11.1"
-  id("com.diffplug.spotless") version "8.10.3"
+  id("com.diffplug.spotless") version "8.11.0"
   id("org.jetbrains.dokka") version "2.2.0"
   application
 
@@ -190,7 +190,7 @@ spotless {
   kotlin {
     target("**/*.kt", "**/*.kts")
     targetExclude("bin/", "build/", ".git/", ".idea/", ".mvn", "src/main/java-templates/")
-    ktfmt().googleStyle()
+    ktfmt("0.64").googleStyle()
   }
 
   yaml {
